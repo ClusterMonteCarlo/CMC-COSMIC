@@ -493,7 +493,7 @@ void write_ss_dyn_param(fitsfile *fptr){
 	sprintf(ttype[7],"Old k");
 	sprintf(tform[7],"1J");
 	sprintf(tunit[7],"Index");
-	sprintf(ttype[8],"Sgravity");
+	sprintf(ttype[8],"Sphi");
 	sprintf(tform[8],"1D");
 	sprintf(tunit[8],"Nbody");
 
@@ -560,9 +560,9 @@ void write_ss_dyn_param(fitsfile *fptr){
 	}
 	fits_write_col(fptr, TLONG, 8, firstrow, firstelem, nrows, lng_arr, &status);
 	*/
-	/* gravity */
+	/* potential */
 	for(i=0;i<=N+1;i++){
-		dbl_arr[i] = star[i].gravity;
+		dbl_arr[i] = star[i].phi;
 	}
 	fits_write_col(fptr, TDOUBLE, 9, firstrow, firstelem, nrows, dbl_arr,
                    &status);

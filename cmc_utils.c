@@ -194,13 +194,13 @@ void RecomputeEnergy(void) {
 	if (E_CONS == 0) { /* recompute new sE[] and sJ[], using the new potential */
 		for (i = 1; i <= clus.N_MAX; i++) {
 			k = i;
-			star[k].E = star[k].gravity + 0.5 * (SQR(star[k].vr) + SQR(star[k].vt));
+			star[k].E = star[k].phi + 0.5 * (SQR(star[k].vr) + SQR(star[k].vt));
 			star[k].J = star[k].r * star[k].vt;
 
 			Etotal.K += 0.5 * (SQR(star[k].vr) + SQR(star[k].vt)) * star[k].m / clus.N_STAR;
 
-			/* Compute PE using Henon method using star[].gravity */
-			Etotal.P += star[k].gravity * star[k].m / clus.N_STAR;
+			/* Compute PE using Henon method using star[].phi */
+			Etotal.P += star[k].phi * star[k].m / clus.N_STAR;
 
 			/* add up internal energies */
 			Etotal.Eint += star[k].Eint;
@@ -215,7 +215,7 @@ void RecomputeEnergy(void) {
 			/* Note: svt[] = J/r_new is already computed in get_positions() */
 			/* ignore stars near pericenter, and those with strong interactions */
 			if (star[k].X > 0.05 && star[k].interacted == 1) {
-				dtemp = star[k].EI - star[k].gravity + potential(star[k].rOld);
+				dtemp = star[k].EI - star[k].phi + potential(star[k].rOld);
 
 				if (dtemp - star[k].vr * star[k].vr > 0) {
 					/* preserve star[k].vr and change star[k].vt */
@@ -237,11 +237,11 @@ void RecomputeEnergy(void) {
 			}
 
 			/* recompute new sE[] and sJ[], using the new potential */
-			star[k].E = star[k].gravity + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
+			star[k].E = star[k].phi + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
 			star[k].J = star[k].r * star[k].vt;
 
 			Etotal.K += 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt) * star[k].m / clus.N_STAR;
-			Etotal.P += star[k].gravity * star[k].m / clus.N_STAR;
+			Etotal.P += star[k].phi * star[k].m / clus.N_STAR;
 
 			/* add up internal energies */
 			Etotal.Eint += star[k].Eint;
@@ -264,7 +264,7 @@ void ComputeIntermediateEnergy(void)
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
 		/* but do only for NON-Escaped stars */
 		if (star[j].rnew < 1.0e6) {
-			star[j].EI = sqr(star[j].vr) + sqr(star[j].vt) + star[j].gravity - potential(star[j].rnew);
+			star[j].EI = sqr(star[j].vr) + sqr(star[j].vt) + star[j].phi - potential(star[j].rnew);
 		}
 	}
 	
@@ -411,7 +411,7 @@ void ComputeEnergy2(void)
 
 	for (i = 1; i <= clus.N_MAX; i++) {
 		k = i;
-		star[k].E = star[k].gravity + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
+		star[k].E = star[k].phi + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
 
 		star[k].J = star[k].r * star[k].vt;
 	}
@@ -434,13 +434,13 @@ void ComputeEnergy(void)
 	star[0].E = star[0].J = 0.0;
 	for (i = 1; i <= clus.N_MAX; i++) {
 		k = i;
-		star[k].E = star[k].gravity + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
+		star[k].E = star[k].phi + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
 
 		star[k].J = star[k].r * star[k].vt;
 
 		Etotal.K += 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt) * star[k].m / clus.N_STAR;
 
-		Etotal.P += star[k].gravity * star[k].m / clus.N_STAR;
+		Etotal.P += star[k].phi * star[k].m / clus.N_STAR;
 
 		Etotal.Eint += star[k].Eint;
 	}
@@ -455,17 +455,17 @@ void ComputeEnergy(void)
 	fprintf(stdout, "Total KE = %.8G, Total PE = %.8G\n", Etotal.K, Etotal.P);
 }
 
-/* Computing the gravity at each star sorted by increasing 
+/* Computing the potential at each star sorted by increasing 
    radius. Units: G = 1  and  Mass is in units of total INITIAL mass.
    Total mass is computed by SUMMING over all stars that have NOT ESCAPED 
    i.e., over all stars upto N_MAX <= N_STAR. N_MAX is computed in this 
    routine by counting all stars with radius < SF_INFINITY and Radius of the 
    (N_MAX+1)th star is set to infinity i.e., star[N_MAX+1].r = 
-   SF_INFINITY. Also setting star[N_MAX+1].gravity = 0. Assuming 
-   star[0].r = 0. star[].gravity is also indexed i.e. it
-   is the gravity of the kth star at radius star[k].r 
+   SF_INFINITY. Also setting star[N_MAX+1].phi = 0. Assuming 
+   star[0].r = 0. star[].phi is also indexed i.e. it
+   is the value of the potential at radius star[k].r 
    NOTE: Assming here that NO two stars are at the SAME RADIUS upto 
-   double precision. Returns N_MAX. Gravity returned in star[].gravity
+   double precision. Returns N_MAX. Potential given in star[].phi
 */
 long potential_calculate(void) {
 	long k, ii;
@@ -503,24 +503,24 @@ long potential_calculate(void) {
 	Rtidal = orbit_r * pow(Mtotal, 1.0 / 3.0);
 
 	star[clus.N_MAX + 1].r = SF_INFINITY;
-	star[clus.N_MAX + 1].gravity = 0.0;
+	star[clus.N_MAX + 1].phi = 0.0;
 	mprev = Mtotal;
-	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute gravity at each r */
-		star[k].gravity = star[k + 1].gravity 
+	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute potential at each r */
+		star[k].phi = star[k + 1].phi 
 			- mprev * (1.0 / star[k].r 
 					- 1.0 / star[k + 1].r);
 		mprev -= star[k].m / clus.N_STAR;
 	}
 
 	for (k = 1; k <= clus.N_MAX; k++){
-		star[k].gravity -= cenma.m / clus.N_STAR
+		star[k].phi -= cenma.m / clus.N_STAR
 			/ star[k].r;
-		if(isnan(star[k].gravity)){
+		if(isnan(star[k].phi)){
 			eprintf("NaN detected\n");
 			exit_cleanly(-1);
 		}
 	}
-	star[0].gravity = star[1].gravity; /* U(r=0) is U_1 */
+	star[0].phi = star[1].phi; /* U(r=0) is U_1 */
 
 	return (clus.N_MAX);
 }
@@ -556,7 +556,7 @@ void comp_mass_percent(){
 	}
 }
 
-/* The potential computed using the star[].gravity computed at the star 
+/* The potential computed using the star[].phi computed at the star 
    locations in star[].r sorted by increasing r. */
 double potential(double r)
 {
@@ -565,7 +565,7 @@ double potential(double r)
 
 	/* root finding using indexed values of sr[] & bisection */
 	if (r < star[1].r)
-		return (star[1].gravity);
+		return (star[1].phi);
 
 	if (r * INDEX_UNIT <= MAX_INDEX) {	/* use tabulated value of r */
 		i = r * INDEX_UNIT;
@@ -588,12 +588,12 @@ double potential(double r)
 	k = i - 1;
 
 
-	/* Henon's method of computing the potential using star[].gravity */ 
+	/* Henon's method of computing the potential using star[].phi */ 
 	if (k == 0)
-		henon = (star[1].gravity);
+		henon = (star[1].phi);
 	else
-		henon = (star[k].gravity + (star[k + 1].gravity
-		       - star[k].gravity) 
+		henon = (star[k].phi + (star[k + 1].phi
+		       - star[k].phi) 
 			* (1.0/star[k].r - 1.0/r) /
 			 (1.0/star[k].r - 1.0/star[k + 1].r));
 	
@@ -696,7 +696,7 @@ void mini_sshot(){
 				star[i].id, star[i].m, star[i].r_peri, 
 				star[i].r, star[i].r_apo);
 		fprintf(mss, "%.16e %.16e %.16e %.16e\n", 
-				star[i].vr, star[i].vt, star[i].E, star[i].gravity);
+				star[i].vr, star[i].vt, star[i].E, star[i].phi);
 	}
 	fclose(mss);
 }

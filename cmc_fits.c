@@ -241,7 +241,7 @@ void read_fits_file_data_new(fitsfile *fptr) {
 	fits_read_col(fptr, TDOUBLE, 9, frow, felem, nelem, NULL, dbl_arr, 
 			&anynull, &status);
 	for(i=0; i<=N+1; i++){
-		star[i].gravity = dbl_arr[i];
+		star[i].phi = dbl_arr[i];
 	}
 	printerror(status);
 

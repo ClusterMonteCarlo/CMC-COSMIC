@@ -54,7 +54,7 @@ long FindZero_r(long x1, long x2, double r)
 /* Requires the root to be bracketed between x1 and x2. */
 #define JMAX 500
 #define FUNC(k, E, J) \
-	(2.0 * (E - star[k].gravity) - SQR(J / star[k].r))
+	(2.0 * (E - star[k].phi) - SQR(J / star[k].r))
 
 long FindZero_Q(long x1, long x2, double E, double J)
 {
@@ -101,7 +101,7 @@ long FindZero_Q(long x1, long x2, double E, double J)
 /* find zero of Q */
 /* Requires the root to be bracketed between x1 and x2. */
 #define JMAX 500
-#define FUNC(k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - star[(k)].gravity) - SQR(J))
+#define FUNC(k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - star[(k)].phi) - SQR(J))
 long new_FindZero_Q(long x1, long x2, double E, double J)
 {
 	int j;

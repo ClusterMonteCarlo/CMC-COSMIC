@@ -191,7 +191,7 @@ void remove_star_center(long j){
 
 /**************** Get Positions and Velocities ***********************/
 /*	Requires indexed (sorted in increasing r) stars with potential
-	computed in star[].gravity and N_MAX set. Uses sE[], sJ[] and sr[]
+	computed in star[].phi and N_MAX set. Uses sE[], sJ[] and sr[]
 	from previous iteration. Returns positions and velocities in
 	srnew[], svrnew[], and svtnew[]. Returns Max r for all stars, or
 	-1 on error. */
@@ -288,8 +288,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		i1 = kmin + 1;
 		rk = star[i].r;
 		rk1 = star[i1].r;
-		Uk = star[i].gravity;
-		Uk1 = star[i1].gravity;
+		Uk = star[i].phi;
+		Uk1 = star[i1].phi;
 		Q = 2.0 * E - 2.0 * Uk1 - J * J / (rk1 * rk1);
 
 		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
@@ -313,8 +313,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		i1 = kmax + 1;
 		rk = star[i].r;
 		rk1 = star[i1].r;
-		Uk = star[i].gravity;
-		Uk1 = star[i1].gravity;
+		Uk = star[i].phi;
+		Uk1 = star[i1].phi;
 		Q = 2.0 * E - 2.0 * Uk1 - J * J / (rk1 * rk1);
 
 		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
@@ -392,12 +392,12 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (r<MINIMUM_R && rmin>0.3*rmax){
 #ifdef USE_THREADS
 			get_pos_dat->CMincr.m += star[j].m;
-			get_pos_dat->CMincr.E += (star[j].gravity 
+			get_pos_dat->CMincr.E += (star[j].phi 
 				+ star[j].vr*star[j].vr	+ star[j].vt*star[j].vt ) 
 					/2.0 *star[j].m/clus.N_STAR;
 #else
 			cenma.m += star[j].m;
-			cenma.E += (star[j].gravity + star[j].vr*star[j].vr
+			cenma.E += (star[j].phi + star[j].vr*star[j].vr
 				+ star[j].vt*star[j].vt ) / 2.0 *star[j].m/clus.N_STAR;
 #endif
 			remove_star_center(j);

@@ -202,8 +202,8 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 				star[kpp].vr = vcm[3];
 				star[kpp].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 				star[kpp].m = m + mp;
-				star[kpp].gravity = potential(star[kpp].r);
-				star[kpp].E = star[kpp].gravity + 0.5*(sqr(star[kpp].vr) + sqr(star[kpp].vt));
+				star[kpp].phi = potential(star[kpp].r);
+				star[kpp].E = star[kpp].phi + 0.5*(sqr(star[kpp].vr) + sqr(star[kpp].vt));
 				star[kpp].J = star[kpp].r * star[kpp].vt;
 				star[kpp].EI = 0.0;
 				/* Calculate internal energy assuming potential doesn't change during collision.
@@ -212,9 +212,9 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 					+ 0.5 * star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
 					+ 0.5 * star[kp].m * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
 					- 0.5 * star[kpp].m * madhoc * (sqr(star[kpp].vr) + sqr(star[kpp].vt))
-					+ 0.5 * star[k].m * madhoc * star[k].gravity
-					+ 0.5 * star[kp].m * madhoc * star[kp].gravity
-					- 0.5 * star[kpp].m * madhoc * star[kpp].gravity;
+					+ 0.5 * star[k].m * madhoc * star[k].phi
+					+ 0.5 * star[kp].m * madhoc * star[kp].phi
+					- 0.5 * star[kpp].m * madhoc * star[kpp].phi;
 				star[kpp].rnew = star[kpp].r;
 				star[kpp].vrnew = star[kpp].vr;
 				star[kpp].vtnew = star[kpp].vt;
@@ -306,9 +306,9 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 					/*****************************************************************************/
 					
 					/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
-					star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+					star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 					star[k].J = r * vt_new;
-					star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+					star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 					star[kp].J = rp * vtp_new;
 					
 					/* set new velocities for both stars */
@@ -751,9 +751,9 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 										DeltaE = 0.5 * (vr_new * vr_new + vt_new * vt_new - vr * vr - vt * vt);
 										DeltaEp = 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new - vrp * vrp - vtp * vtp);
 										
-										star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+										star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 										star[k].J = r * vt_new;
-										star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+										star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 										star[kp].J = rp * vtp_new;
 										
 										star[k].vr = vr_new;
@@ -841,7 +841,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 											mpp = star[kpp].m = bb_hier.obj[tid]->obj[s1id]->m * bb_sf_units.m / madhoc;
 											rpp = star[kp].r;
 											star[kpp].r = rpp;
-											star[kpp].gravity = star[kp].gravity;
+											star[kpp].phi = star[kp].phi;
 											vrpp = star[kp].vr;
 											vtpp = star[kp].vt;
 											
@@ -878,7 +878,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 											mpp = star[kpp].m = bb_hier.obj[tid]->obj[s1id]->m * bb_sf_units.m / madhoc;
 											rpp = star[k].r;
 											star[kpp].r = rpp;
-											star[kpp].gravity = star[k].gravity;
+											star[kpp].phi = star[k].phi;
 											vrpp = star[k].vr;
 											vtpp = star[k].vt;
 											
@@ -919,7 +919,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 											mpp = star[kpp].m = bb_hier.obj[tid]->obj[s1id]->m * bb_sf_units.m / madhoc;
 											rpp = star[kp].r;
 											star[kpp].r = rpp;
-											star[kpp].gravity = star[kp].gravity;
+											star[kpp].phi = star[kp].phi;
 											vrpp = star[kp].vr;
 											vtpp = star[kp].vt;
 											
@@ -959,12 +959,12 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 										DeltaEpp = 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new - vrpp * vrpp - vtpp * vtpp);
 										
 										/* Calculate new energies by recomputing E = PE + KE using new velocity */
-										star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+										star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 										star[k].J = r * vt_new;
-										star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+										star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 										star[kp].J = rp * vtp_new;
-										/* star[].gravity is not yet computed for kpp, so use position of kp, already set in star[kpp].gravity */
-										star[kpp].E = star[kpp].gravity + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
+										/* star[].phi is not yet computed for kpp, so use position of kp, already set in star[kpp].phi */
+										star[kpp].E = star[kpp].phi + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
 										star[kpp].J = rpp * vtpp_new;
 										
 										/* set new velocities for both stars */
@@ -976,7 +976,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 										star[kpp].vt = vtpp_new;
 										
 										/* now set the potential at new particle's position to zero */
-										star[kpp].gravity = 0.0;
+										star[kpp].phi = 0.0;
 										
 										/* Binary-binary interaction done; does "3" mean binary-binary interaction? */
 										star[k].interacted = star[kp].interacted = star[kpp].interacted = 3;
@@ -1033,7 +1033,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 										mpp = star[kpp].m = bb_hier.obj[s2id]->m * bb_sf_units.m / madhoc;
 										rpp = star[kp].r;
 										star[kpp].r = rpp;
-										star[kpp].gravity = star[kp].gravity;
+										star[kpp].phi = star[kp].phi;
 										vrpp = star[kp].vr;
 										vtpp = star[kp].vt;
 										
@@ -1072,7 +1072,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 										mpp = star[kpp].m = bb_hier.obj[s2id]->m * bb_sf_units.m / madhoc;
 										rpp = star[k].r;
 										star[kpp].r = rpp;
-										star[kpp].gravity = star[k].gravity;
+										star[kpp].phi = star[k].phi;
 										vrpp = star[k].vr;
 										vtpp = star[k].vt;
 										
@@ -1115,7 +1115,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 										mpp = star[kpp].m = bb_hier.obj[s2id]->m * bb_sf_units.m / madhoc;
 										rpp = star[kp].r;
 										star[kpp].r = rpp;
-										star[kpp].gravity = star[kp].gravity;
+										star[kpp].phi = star[kp].phi;
 										vrpp = star[kp].vr;
 										vtpp = star[kp].vt;
 										
@@ -1155,12 +1155,12 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 									DeltaEpp = 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new - vrpp * vrpp - vtpp * vtpp);
 									
 									/* Calculate new energies by recomputing E = PE + KE using new velocity */
-									star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+									star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 									star[k].J = r * vt_new;
-									star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+									star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 									star[kp].J = rp * vtp_new;
-									/* star[].gravity is not yet computed for kpp, so use position of kp, already set in star[kpp].gravity */
-									star[kpp].E = star[kpp].gravity + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
+									/* star[].phi is not yet computed for kpp, so use position of kp, already set in star[kpp].phi */
+									star[kpp].E = star[kpp].phi + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
 									star[kpp].J = rpp * vtpp_new;
 									
 									/* set new velocities for both stars */
@@ -1172,7 +1172,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 									star[kpp].vt = vtpp_new;
 									
 									/* now set the potential at new particle's position to zero */
-									star[kpp].gravity = 0.0;
+									star[kpp].phi = 0.0;
 									
 									/* Binary-binary interaction done; does "3" mean binary-binary interaction? */
 									star[k].interacted = star[kp].interacted = star[kpp].interacted = 3;
@@ -1312,12 +1312,12 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 						DeltaEpp = 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new - vrpp * vrpp - vtpp * vtpp);
 						
 						/* Calculate new energies by recomputing E = PE + KE using new velocity */
-						star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+						star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 						star[k].J = r * vt_new;
-						star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+						star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 						star[kp].J = rp * vtp_new;
-						/* star[].gravity is not yet computed for kpp, so use position of kp */
-						star[kpp].E = star[kp].gravity + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
+						/* star[].phi is not yet computed for kpp, so use position of kp */
+						star[kpp].E = star[kp].phi + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
 						star[kpp].J = rpp * vtpp_new;
 						
 						/* set new velocities for both stars */
@@ -1581,7 +1581,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 								mpp = star[kpp].m = bs_hier.obj[2]->m * bs_sf_units.m / madhoc;
 								rpp = star[kp].r;
 								star[kpp].r = rpp;
-								star[kpp].gravity = star[kp].gravity;
+								star[kpp].phi = star[kp].phi;
 								vrpp = star[kp].vr;
 								vtpp = star[kp].vt;
 								
@@ -1619,12 +1619,12 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 								DeltaEpp = 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new - vrpp * vrpp - vtpp * vtpp);
 								
 								/* Calculate new energies by recomputing E = PE + KE using new velocity */
-								star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+								star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 								star[k].J = r * vt_new;
-								star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+								star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 								star[kp].J = rp * vtp_new;
-								/* star[].gravity is not yet computed for kpp, so use position of kp, already set in star[kpp].gravity */
-								star[kpp].E = star[kpp].gravity + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
+								/* star[].phi is not yet computed for kpp, so use position of kp, already set in star[kpp].phi */
+								star[kpp].E = star[kpp].phi + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
 								star[kpp].J = rpp * vtpp_new;
 								
 								/* set new velocities for both stars */
@@ -1636,7 +1636,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 								star[kpp].vt = vtpp_new;
 								
 								/* now set the potential at new particle's position to zero */
-								star[kpp].gravity = 0.0;
+								star[kpp].phi = 0.0;
 								
 								/* Binary-single interaction done; does "2" mean binary-single interaction? */
 								interactiondone = 1;
@@ -1698,9 +1698,9 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 								DeltaE = 0.5 * (vr_new * vr_new + vt_new * vt_new - vr * vr - vt * vt);
 								DeltaEp = 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new - vrp * vrp - vtp * vtp);
 								/* Calculate new energies by recomputing E = PE + KE using new velocity */
-								star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+								star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 								star[k].J = r * vt_new;
-								star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+								star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 								star[kp].J = rp * vtp_new;
 								
 								/* set new velocities for both stars */
@@ -1785,9 +1785,9 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 					DeltaEp = 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new - vrp * vrp - vtp * vtp);
 					
 					/* Calculate new energies by recomputing E = PE + KE using new velocity */
-					star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+					star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 					star[k].J = r * vt_new;
-					star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+					star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 					star[kp].J = rp * vtp_new;
 					
 					/* set new velocities for both stars */
@@ -1930,9 +1930,9 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 					DeltaEp = 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new - vrp * vrp - vtp * vtp);
 					
 					/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
-					star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+					star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 					star[k].J = r * vt_new;
-					star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+					star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 					star[kp].J = rp * vtp_new;
 
 					/* set new velocities for both stars */
@@ -2015,17 +2015,17 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 				star[k].vt = vt;
 				star[kp].vr = vrp;
 				star[kp].vt = vtp;
-				star[kp].gravity = star[k].gravity;
+				star[kp].phi = star[k].phi;
 				star[kp].r = rp;
 
 				/* Calculate new energies by recomputing E = PE + KE using new velocity */
-				star[k].E = star[k].gravity + 0.5 * (sqr(vr) + sqr(vt));
+				star[k].E = star[k].phi + 0.5 * (sqr(vr) + sqr(vt));
 				star[k].J = r * vt;
-				star[kp].E = star[kp].gravity + 0.5 * (sqr(vrp) + sqr(vtp));
+				star[kp].E = star[kp].phi + 0.5 * (sqr(vrp) + sqr(vtp));
 				star[kp].J = rp * vtp;
 
 				/* now set the potential at new particle's position to zero */
-				star[kp].gravity = 0.0;
+				star[kp].phi = 0.0;
 
 				/* now give binary's binding energy to nearby field star */
 				/* FIXME */
@@ -2249,7 +2249,7 @@ void perturb_stars(double dt)
 				/* use same positions and velocities as star kp */
 				
 				star[kpp].r = star[kp].r;
-				star[kpp].gravity = 0.0;
+				star[kpp].phi = 0.0;
 				star[kpp].vr = star[kp].vr;
 				star[kpp].vt = star[kp].vt;	/* OK to assign velocities though */
 
@@ -2306,12 +2306,12 @@ void perturb_stars(double dt)
 				DeltaEpp = 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new - vrpp * vrpp - vtpp * vtpp);
 
 				/*      Calculate new energies by recomputing E = PE + KE using new velocity
-				 */ star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+				 */ star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 				star[k].J = r * vt_new;
-				star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+				star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 				star[kp].J = rp * vtp_new;
-				/* star[].gravity is not yet computed for kpp, so use position of kp */
-				star[kpp].E = star[kp].gravity + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
+				/* star[].phi is not yet computed for kpp, so use position of kp */
+				star[kpp].E = star[kp].phi + 0.5 * (vrpp_new * vrpp_new + vtpp_new * vtpp_new);
 				star[kpp].J = rpp * vtpp_new;
 
 				/* set new velocities for both stars 
@@ -2497,9 +2497,9 @@ void perturb_stars(double dt)
 				DeltaEp = 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new - vrp * vrp - vtp * vtp);
 
 				/*      Calculate new energies by recomputing E = PE + KE using new velocity
-				 */ star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+				 */ star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 				star[k].J = r * vt_new;
-				star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+				star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 				star[kp].J = rp * vtp_new;
 
 				/* set new velocities for both stars 
@@ -2642,9 +2642,9 @@ void perturb_stars(double dt)
 					DeltaEp = 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new - vrp * vrp - vtp * vtp);
 					
 					/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
-					star[k].E = star[k].gravity + 0.5 * (vr_new * vr_new + vt_new * vt_new);
+					star[k].E = star[k].phi + 0.5 * (vr_new * vr_new + vt_new * vt_new);
 					star[k].J = r * vt_new;
-					star[kp].E = star[kp].gravity + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
+					star[kp].E = star[kp].phi + 0.5 * (vrp_new * vrp_new + vtp_new * vtp_new);
 					star[kp].J = rp * vtp_new;
 
 					/* set new velocities for both stars */

@@ -57,7 +57,7 @@ typedef struct{
 	double X; /* ? */
 	double r_peri; /* pericenter distance */
 	double r_apo; /* apocenter distance */
-	double gravity; /* value of potential at position of star (only updated at end of timestep) */
+	double phi; /* value of potential at position of star (only updated at end of timestep) */
 	long   interacted; /* whether or not the star has undergone an interaction */
 	long   binind; /* index to the binary */
 	long id; 	/* the star's unique identifier */
@@ -155,8 +155,8 @@ void setup_sub_time_step(void);
 void sniff_stars(void);
 void remove_star_center(long j);
 void print_results(void);
-double potential(double r);	       /* get potential using star.gravity */
-long potential_calculate(void);	/* calculate potential at star locations in star.gravity */
+double potential(double r);	       /* get potential using star.phi */
+long potential_calculate(void);	/* calculate potential at star locations in star.phi */
 void comp_mass_percent(void);
 double get_positions(void);	/* get positions and velocities */
 void perturb_stars(double Dt);	/* take a time step (perturb E,J) */
@@ -244,7 +244,7 @@ static double sqrarg;
 #endif
 
 /* macros */
-#define function_Q(k, E, J) (2.0 * ((E) - star[(k)].gravity) - SQR((J) / star[(k)].r))
+#define function_Q(k, E, J) (2.0 * ((E) - star[(k)].phi) - SQR((J) / star[(k)].r))
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 #define wprintf(args...) {fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 #define eprintf(args...) {fprintf(stderr, "ERROR: %s:%d in %s(): ", __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}

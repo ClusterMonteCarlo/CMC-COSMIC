@@ -188,7 +188,7 @@ void PrintFileOutput(void) {
 	/* output Time,N_MAX,TotalE,TotalKE,TotalPE,Mtotal */
 	fprintf(out[1], "%.8G  %8ld  %.8G  %.8G  %.8G  %.8G  %.8G  %.8G  %.8G  %8ld  %.8G  %.8G %.8G %.8G %.8G %.8G\n",
 		TotalTime, clus.N_MAX, Etotal.tot, Etotal.K, Etotal.P, Mtotal, Etotal.New, Eescaped, Jescaped,
-		tcount, max_r, core_radius, N_core, star[1].gravity, star[1].m, Ebescaped);
+		tcount, max_r, core_radius, N_core, star[1].phi, star[1].m, Ebescaped);
 	
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
 	   whereas N_b only counts EXISTING BOUND binaries. */
