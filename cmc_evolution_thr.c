@@ -342,6 +342,14 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #else
 			X = rng_t113_dbl();
 #endif
+			/* Stodolkiewicz's method to prevent very circular orbits. 
+			   Note that, 1.2 in F = 1.2 * ...  may still be
+			   inadequate, and Marc has a better but more complicated
+			   method for that problem. What's below helps with energy
+			   conservation more than anything else. */
+			if(X>0.95) X=0.97;
+			if(X<0.05) X=0.03;
+
 			s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
 #ifdef USE_THREADS
 			g0 = F * gsl_rng_uniform(thr_rng); /* random  0 < g0 < F */
