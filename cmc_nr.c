@@ -8,6 +8,27 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
+long FindZero_r(long kmin, long kmax, double r){
+	/* binary search:
+	 * given the array star[].r and the two indices kmin and kmax,
+	 * with the conditions 
+	 * 1) array is monotonic in its indices,
+	 * 2) kmin<kmax,
+	 * find and return the index k, such that star[k].r<r<star[k+1].r */
+	long ktry;
+	do {
+		ktry = (kmin+kmax+1)/2;
+		if (star[ktry].r<r){
+			kmin = ktry;
+		} else {
+			kmax = ktry-1;
+		}
+	} while (kmax!=kmin);
+
+	return kmin;
+}
+#if 0
+
 #define JMAX 500
 #define FUNC(k, r) (star[(k)].r - (r))
 
@@ -23,7 +44,6 @@ long FindZero_r(long x1, long x2, double r)
 		eprintf("x1=%ld x2=%ld r=%g f=%g fmid=%g\n", x1, x2, r, f, fmid);
 		nrerror("Root must be bracketed for bisection in FindZero_r");
 	}
-//	rtb = f < 0.0 ? (rdx = -1, fdx = 1, dx = x2 - x1, x1) : (rdx = 0, fdx = -1, dx = x1 - x2, x2);
 	if (f<0.0){
 		rdx = -1;
 		fdx = 1;
@@ -59,6 +79,7 @@ long FindZero_r(long x1, long x2, double r)
 
 #undef FUNC
 #undef JMAX
+#endif
 
 /* Find Zero OF Q */
 /* Finding the root of the function defined in 'func' by bisection.  */
