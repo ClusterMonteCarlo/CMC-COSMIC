@@ -389,9 +389,6 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "IDUM") == 0) {
 				sscanf(values, "%ld", &IDUM);
 				parsed.IDUM = 1;
-			} else if (strcmp(parameter_name, "INDEX_UNIT") == 0) {
-				sscanf(values, "%ld", &INDEX_UNIT);
-				parsed.INDEX_UNIT = 1;
 			} else if (strcmp(parameter_name, "INPUT_FILE") == 0) {
 				sscanf(values, "%s", INPUT_FILE);
 				parsed.INPUT_FILE = 1;
@@ -401,9 +398,6 @@ int parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(curr_mass, "%ld", &NUM_MASS_RADII_BINS);
 				for (MASS_PC_COUNT = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; MASS_PC_COUNT++);
 				parsed.MASS_PC = 1;
-			} else if (strcmp(parameter_name, "MAX_INDEX") == 0) {
-				sscanf(values, "%ld", &MAX_INDEX);
-				parsed.MAX_INDEX = 1;
 			} else if (strcmp(parameter_name, "MEGA_YEAR") == 0) {
 				sscanf(values, "%lf", &MEGA_YEAR);
 				parsed.MEGA_YEAR = 1;
@@ -498,10 +492,8 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(DUMPS);
 	CHECK_PARSED(E_CONS);
 	CHECK_PARSED(IDUM);
-	CHECK_PARSED(INDEX_UNIT);
 	CHECK_PARSED(INPUT_FILE);
 	CHECK_PARSED(MASS_PC);
-	CHECK_PARSED(MAX_INDEX);
 	CHECK_PARSED(MEGA_YEAR);
 	CHECK_PARSED(METALLICITY);
 	CHECK_PARSED(MINIMUM_R);

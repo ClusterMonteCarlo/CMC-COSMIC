@@ -73,9 +73,6 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	dvar=malloc(no_of_doub*sizeof(double));
 
 	nrows = MASS_PC_COUNT;
-	if ((MAX_INDEX + 5) > nrows){
-		nrows = MAX_INDEX + 5;
-	}
 	if (rng_size>nrows){
 		nrows = rng_size;
 	}
@@ -178,10 +175,6 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"E_CONS", &status);
 	/* fits_write_key(fptr, TLONG, "DTMOD", &(DT_MODE), 
 	   "DT_MODE", &status); */
-	fits_write_key(fptr, TLONG, "MAXIND", &(MAX_INDEX), 
-			"MAX_INDEX", &status);
-	fits_write_key(fptr, TLONG, "INDUNT", &(INDEX_UNIT), 
-			"INDEX_UNIT", &status);
 	fits_write_key(fptr, TLONG, "PERTURB", &(PERTURB), 
 			"PERTURB", &status);
 	fits_write_key(fptr, TLONG, "NUMMASS", &(NUM_MASS), 

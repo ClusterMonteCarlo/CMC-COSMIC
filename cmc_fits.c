@@ -375,8 +375,6 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	fits_read_key(fptr, TLONG, "DUMPS", &(DUMPS), NULL, &status);
 	fits_read_key(fptr, TLONG, "ECONS", &(E_CONS), NULL, &status);
 	/* fits_read_key(fptr, TLONG, "DTMOD", &(DT_MODE), NULL, &status); */
-	fits_read_key(fptr, TLONG, "MAXIND", &(MAX_INDEX), NULL, &status);
-	fits_read_key(fptr, TLONG, "INDUNT", &(INDEX_UNIT), NULL, &status);
 	fits_read_key(fptr, TLONG, "PERTURB", &(PERTURB), NULL, &status);
 	fits_read_key(fptr, TLONG, "NUMMASS", &(NUM_MASS), NULL, &status);
 	fits_read_key(fptr, TLONG, "TOTPAR", &(TOTAL_PARAMS), NULL, &status);
@@ -473,9 +471,6 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	printerror(status);
 
 	nelem = MASS_PC_COUNT;
-	if ((MAX_INDEX + 5) > nelem){
-		nelem = MAX_INDEX + 5;
-	}
 	if (rng_size>nelem){
 		nelem = rng_size;
 	}

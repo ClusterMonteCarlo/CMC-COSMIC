@@ -35,7 +35,7 @@ double Eescaped, Ebescaped, Jescaped;
 double initial_total_mass, Mtotal;
 /******************* Input file parameters *************************/
 long N_STAR_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, SS_COLLISION;
-long DUMPS, E_CONS, MAX_INDEX, INDEX_UNIT;
+long DUMPS, E_CONS;
 long IDUM, PERTURB;
 long NUM_MASS, TOTAL_PARAMS, NUM_MASS_RADII_BINS, NUM_CENTRAL_STARS;
 double T_PRINT_STEP, T_MAX, SIN2BETA_MAX;
