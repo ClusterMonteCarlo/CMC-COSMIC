@@ -1,5 +1,3 @@
-* Fix collision code to keep track of internal energy stored in stars due to
-  collisions.
 * Decouple the potential from the star structure.  They are physically
   different things, and the fact that they're tied together has caused
   significant problems already.  We just need a quickly searchable array
@@ -18,4 +16,4 @@
   main sequence evolution?  This is relevant for stars less massive than ~2-3
   M_o, whose radii can be several times larger than their MS values for times 
   longer than ~3 Myr (Freitag, et al. 2005).
-* Updated FITS code to reflect deleted/added input file parameters, etc.
+* Update FITS code to reflect deleted/added input file parameters, etc.
