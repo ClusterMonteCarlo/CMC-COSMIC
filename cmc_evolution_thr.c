@@ -68,18 +68,15 @@ double GetTimeStep(void)
 	/* DEBUG */
 	m_max = m_avg;
 	m_min = m_avg;
-	for (i=1; i<=NUM_CORE_STARS; i++) {
+	for (i=1; i<=MIN(N_core, clus.N_STAR); i++) {
 		m_max = MAX(m_max, star[i].m);
 		m_min = MIN(m_min, star[i].m);
 	}
-	dprintf("dt_factor=%g\n", m_max/m_min);
+	DT_FACTOR = m_max/m_min;
+	dprintf("TotalTime=%g DT_FACTOR=%g\n", TotalTime, DT_FACTOR);
 	/* DEBUG */
 
-	/* calculate the relaxation timestep (there are many different ways to do this) */
-	/* compute using Henon's method (can this be correct without a factor of N/ln(gamma N)?) */
-	/* DTrel = (factor < 1) * ((double) clus.N_MAX) / ((double) clus.N_STAR) * pow(Mtotal, 2.5) / pow(fabs(Etotal.K+Etotal.P), 1.5); */
-	/* take to be a fraction of the core relaxation time */
-	/* DTrel = (factor < 1) * Trc; */
+	/* calculate the relaxation timestep */
 	/* set by the maximum allowed value of sin^2 beta */
 	DTrel = SIN2BETA_MAX * ((double) clus.N_STAR) / Ai / DT_FACTOR;
 
@@ -96,16 +93,14 @@ double GetTimeStep(void)
 
 	Tcoll = 1.0 / (16.0 * sqrt(PI) * n_core * (v_core/sqrt(3.0)) * R2_core * (1.0 + MR_core/(2.0*sqr(v_core/sqrt(3.0))*R2_core))) * 
 		log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-	DTcoll = 0.0001 * Tcoll;
+	DTcoll = 1.0e-4 * Tcoll;
 	
-	/* a little debugging */
-	dprintf("DTrel=%g DTcoll=%g\n", DTrel, DTcoll);
-	
+	/* DEBUG */
+	dprintf("TotalTime=%g DTrel=%g DTcoll=%g\n", TotalTime, DTrel, DTcoll);
+	/* DEBUG */
+
 	/* set Dt to minimum of all relevant timescales */
 	Dt = MIN(DTrel, DTcoll);
-
-	/* Enforce minimum allowed Dt: note that this is dangerous! */
-	/* Dt = MAX(Dt, 1.0e-3); */
 
 	/* this variable is not used except to be printed out */
 	Sin2Beta = Ai * Dt / ((double) clus.N_STAR);

@@ -367,6 +367,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 				parsed.CENTRAL_MASS = 1;
 			} else if (strcmp(parameter_name, "DT_FACTOR") == 0) {
 				sscanf(values, "%lf", &DT_FACTOR);
+				wprintf("The DTrel scaling factor is calculated automatically now, so DT_FACTOR is unused.\n");
 				parsed.DT_FACTOR = 1;
 			} else if (strcmp(parameter_name, "DUMPS") == 0) {
 				sscanf(values, "%ld", &DUMPS);
