@@ -1,0 +1,479 @@
+0.21-devel (Fri Nov 21 18:08:32 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added an important item to the TODO list.
+	
+0.21-devel (Mon Oct  6 11:53:19 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added final printout of story (after main loop).
+	
+0.20 (Mon Sep  8 01:41:12 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Time for a new version.  There are no changes in the interface
+	  between this version and the previous.  The bug fixes are minor and
+	  do not affect the physics.  There is a new utility, "cluster", which
+	  evolves a small Plummer model cluster of stars.  The documentation
+	  is also significantly more detailed.
+	
+0.20-devel (Sun Sep  7 22:57:49 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Cleaned up the install target in the Makefile.
+	* Updated documentation, included Mac OSX install instructions.
+	* Stress-tested the new string-handling by using tiny 4 character long
+	  strings.  There were no memory errors.
+	* Changed some parameters in cluster.h.
+	
+0.20-devel (Sat Sep  6 22:21:26 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Re-fixed the fb_dprintf() macro so that Fewbody compiles on Mac OSX.
+	
+0.20-devel (Thu Sep  4 18:16:40 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed string handling throughout the code so that the bounds of a
+	  character array are never exceeded.  This will prevent all memory
+	  errors.
+	
+0.20-devel (Thu Sep  4 09:29:58 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed the fb_dprintf() macro so that Fewbody compiles on Mac OSX.
+	* Added a Makefile for Mac OSX.
+	* Dropped units as an argument to fewbody(), since fewbody() really
+	  shouldn't need to know anything about units.
+	* Removed the contrib directory.
+	
+0.20-devel (Wed Jul 23 11:31:03 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added a physical stopping time to cluster.c.  tstop is set to 
+	  the minimum of tstop and tphysstop/units.t.  tphysstop can be 
+	  set with the -P flag.
+	* Changed the default R_MAX in cluster.h to 0.1 parsec.
+
+0.20-devel (Fri Jul 18 11:37:33 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added install and uninstall targets to the Makefile.
+	
+0.20-devel (Fri Jul 18 10:20:35 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed the CPU time calculation.  For real this time.
+	
+0.20-devel (Thu Jul 17 01:29:46 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed the calculation of CPU time in fewbody.c so that it does
+	  not overflow every 72 minutes.
+	
+0.20-devel (Thu Jul 10 12:45:34 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* The current time is now printed when debugging is turned on.
+	* Modified cluster.c to use Plummer model initial conditions.
+
+0.20-devel (Wed Jun 18 12:58:32 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added some new constants to fewbody.h.
+	* Created a new Fewbody wrapper that evolves a small cluster of stars.
+	* Cleaned up the maximum length of strings and logentries throughout.
+	  This allows Fewbody to do more than ~25 stars without segfaulting
+	  because of writing to memory beyond character array bounds.
+	
+0.19 (Sat Jun  7 12:23:46 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* This new version has f_exp, the expansion parameter of a merger
+	  product, as a parameter.  The only other change is that now all
+	  #define's in binsingle.h, binbin.h, and triplebin.h have "FB_"
+	  prepended.
+	
+0.19-devel (Sat Jun  7 12:16:21 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Made f_exp, the expansion parameter of a merger product, a parameter,
+	  called fexp in fb_input_t.  A good value for this parameter is 3,
+	  which yields a cross section for multiple collisions comfortably
+	  inbetween the cross sections for f_exp=1 and f_exp=10, probably
+	  the lower and upper limits on what's physically reasonable.
+	
+0.19-devel (Tue May 27 10:25:30 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Changed the prescription for the radius of a collision product from
+	  R_merger = 2(R_1+R_2) to R_merger = 3(R_1+R_2).  This value yields
+	  a multiple collision cross section comfortably between those
+	  obtained from the extreme cases R_merger = R_1+R_2 and 
+	  R_merger = 10(R_1+R_2).
+	
+0.19-devel (Mon May 26 13:32:10 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Updated the TODO file.
+	* Changed all the #defines in binsingle.h, binbin.h, and triplebin.h
+	  so they are preceded by "FB_".  This should it make it easier to
+	  incorporate these header files directly into another code should
+	  one wish to do that.
+	
+0.18 (Wed May 21 11:57:06 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* For the Love of God...  There are no changes in the interface from
+	  the previous version.  The only changes are bug fixes.
+
+0.18-devel (Tue May 20 15:03:04 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed a sign error in the calculation of the Laplace-Runge-Lenz
+	  vector, A, in fb_upsync().  The magnitude of the vector was still
+	  correct, it was just pointing in the wrong direction.
+	* Fixed an error in fb_downsync() in the analytical treatment of
+	  binaries.  Basically rdot had the wrong sign for half the orbit.
+	  A sign error in rdot affects neither energy nor angular momentum
+	  conservation, so the error is probably most relevant to subtle
+	  phase or eccentricity effects.
+	* Fixed a bug in fb_upsync() where zero eccentricity orbits were not
+	  treated properly in the unlikely case that e was exactly numerically
+	  zero.
+
+0.17 (Mon May 12 10:23:56 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* "Izena duen guzia omen da" -- Euskera (the language of the Basques)
+	  for "That which has a name exists".
+	
+0.17-devel (Mon May 12 09:53:26 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Created fewbody_scat.c, which adds general functions for scattering
+	  experiments: fb_init_scattering() and fb_normalize().
+	* Modified the collision criterion so it is now r<R1+R2.  Also
+	  modified the prescription for the radius of a collision product so
+	  it is now R=2(R1+R2).
+	
+0.17-devel (Sat May 10 12:02:24 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed a nasty NAN-producing bug in fb_expand() that's existed 
+	  since 0.10.  It would only manifest itself every few hundred to 
+	  a thousand scattering experiments, so it was hard to track down.  
+	  But now it's fixed.
+	* Fixed some of the logentry stuff, where the code was 
+	  accidentally reading from uninitialized memory.
+	* Fixed (for real this time) a NAN-producing bug in 
+	  init_scattering().  I think this is the last of the large impact 
+	  parameter NAN-producing bugs in init_scattering().
+
+0.16 (Tue May  6 19:50:03 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Time to unleash 0.16 upon the world, which includes several bugfixes
+	  and a new routine for doing triple-binary scattering.  I present to
+	  you "Harry Hood"...
+
+0.16-devel (Tue May  6 19:13:28 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed a harmless typo in print_usage() in binsingle.c.
+	* Changed fb_sprint_hier_hr() so it is general in n.
+	* Created the file BUGS, which details known bugs in the code.
+	* Updated TODO and THANKS.
+	
+0.16-devel (Tue May  6 01:22:02 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed another NAN-producing bug in init_scattering() in triplebin.c,
+	  binbin.c, and binsingle.c.
+	* triplebin.c might be done now...
+	
+0.16-devel (Mon May  5 16:19:51 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Renamed fourbody -> binbin and threebody -> binsingle, since those
+	  names are more descriptive.
+	* Created triplebin for doing triple-binary scattering interactions.
+	* Updated the README and INSTALL files.
+	
+0.15 (Sun May  4 10:28:18 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Rubina...
+
+0.15-devel (Sun May  4 10:18:27 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed a bug in init_scattering() in fourbody.c and threebody.c 
+	  where if the desired r for starting the integration was less 
+	  than r_peri, init_scattering() would give NANs.  Now r is simply 
+	  set to r_peri if r_peri > rtid.  Of course, in this case, since 
+	  there is no perturbation the integrator will only take one step 
+	  and finish, but at least the code doesn't give NANs now.  Thanks 
+	  to Natasha Ivanova <nata@northwestern.edu> for finding and 
+	  helping fix this bug.
+
+0.14 (Tue Apr 29 15:59:35 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Time for a release.  This version now does physical collisions in
+	  the sticky star approximation.
+	
+0.14-devel (Tue Apr 29 15:07:42 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added fb_is_stable_binary(), since there is now the possibility that
+	  a binary is unstable if its two members will ever collide (e.g. near
+	  pericenter).
+	* Added a stability test in fb_collapse(), since now the tidal
+	  tolerance criterion is not sufficient to guarantee stability (e.g.
+	  an unperturbed binary that will eventually merge).
+	* Added fb_is_collision().  Now the collision criterion is just in this
+	  one place.  In fact, everything having to do with collisions is in
+	  fb_is_collision() and fb_merge().  Because of this modularity, it
+	  would be easy to incorporate Jamie Lombardi's fluid-sorting routine
+	  for stellar collisions, if one wanted to do this.
+	* Cleaned up the debugging a bit.
+	
+0.14-devel (Mon Apr 28 17:23:38 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Updated fb_sprint_hier() and fb_sprint_hier_hr().
+	
+0.14-devel (Mon Apr 28 11:13:36 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* I've been adding physical collisions for the past few days.  They're
+	  almost ready for industrial use.  I think I've got all the bugs
+	  worked out; there are just a few minor things to clean up, like
+	  updating fb_sprint_hier() and fb_sprint_hier_hr().  I must also add
+	  an is_stable_binary() function, since now a binary can be unstable
+	  if its two members will ever get close enough to merge.  Must also
+	  add a similar test to is_stable_triple().  These new instability
+	  tests should be reflected both in classify() and isolate().
+
+0.13 (Tue Apr 15 14:42:39 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Time for a release: "Lucky 13"!
+
+0.13-devel (Tue Apr 15 12:27:59 EDT 2003) John Fregeau <fregeau@mit.edu>
+
+	* Made K-S regularization a run-time option.  Now it can be turned on
+	  or off by setting input.ks to 1 or 0, respectively.  You should
+	  definitely turn it off when trying to detect the distance of closest
+	  approach between stars.  With regularization on you may miss closest
+	  approach by a factor of up to 10!
+
+0.12 (Tue Apr  1 02:48:57 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Time for a release.  This one is called "Suzy Greenberg," which is
+	  a great Phish song.
+
+0.12-devel (Mon Mar 31 19:13:51 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Moved all the functions to their own namespace: func() -> fb_func().
+	  This makes Fewbody much easier to incorporate into other codes.
+	
+0.11 (Thu Mar 27 00:09:13 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Time for a release!  This one is called "Bouncing Around the Room."
+
+0.11-devel (Wed Mar 26 23:17:29 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added Rmin to fewbody_ret_t.  Now the distance of closest approach
+	  during the scattering experiment is output, as well as the indices
+	  of the stars, in Rmin_i and Rmin_j.  Note that this functionality is
+	  primarily to compare with Bacon, Sigurdsson, and Davies (1996), and
+	  will probably be removed when I implement full stellar collisions.
+	* Added Rmin output to fourbody and threebody.
+	* Added a section to the README that asks for credit for this work
+	  where credit is due.
+	
+0.10 (Fri Mar 21 00:50:10 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* The first stable release in a long time!
+	
+0.10-devel (Thu Mar 20 13:38:37 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed a nasty bug where collapse() would collapse a hierarchy,
+	  such as a triple or a quad, as long as the external tide was small
+	  enough.  This is clearly wrong since we have no guarantee of being
+	  able to do the orbit analytically unless the internal tide is also
+	  less than the tidal tolerance.  This is now fixed.
+	* Changed L and A to Lhat and Ahat in fewbody_obj_t.
+	* Fixed the random choice of angles in randorient().
+	* Removed debug from the input struct.  Debugging is turned on or off
+	  through the global variable fewbody_debug.
+	* Fixed a bug where if phier.nobj=1 the code would crash since it
+	  would try to integrate the 0 equations of motion!  The error was:
+	  gsl: brent.c:57: ERROR: function not continuous
+	* Fixed a memory leak in fewbody(), where phier was never freed.
+	* Added mkscatterings.c.  This is a program for performing series of
+	  scattering experiments.
+	
+0.10-devel (Wed Mar 12 17:03:24 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Fixed the calculation of perturbing tides, so that it always sums
+	  over all tides, using reltide(), and does so in the same manner 
+	  everywhere it is used, in classify(), expand(), and collapse().
+	  This fixes the random segfault, which was caused by trying to expand
+	  the same object twice, and consenquently dereferencing a NULL
+	  pointer!
+	
+0.10-devel (Wed Mar 12 02:13:34 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Now is_stable_quad() uses the Mardling stability criterion for
+	  triples, applied twice.
+	* Getting closer to finding the cause of the random segfaults.
+	
+0.10-devel (Tue Mar 11 17:12:58 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* I've been cleaning and reorganizing everything for the past week or
+	  so without documenting it...  Binary isolation started working last
+	  week with only minimal problems.  (Still a segfault here and there.)
+
+0.10-devel (Tue Mar  4 02:56:27 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Almost done with the binary isolation stuff.  Just need to make
+	  the distinction between nstar and ks_params.nstar in fewbody().
+
+0.10-devel (Mon Mar  3 19:56:46 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Working on the binary isolation stuff...
+	
+0.10-devel (Fri Feb 28 23:44:00 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Changed the name from fourbody to fewbody, and isolated the heart
+	  of the code into its own routine, fewbody(), that does all the work.
+	  This will make it easier to implement the binary collapsing scheme.
+	* Created threebody for doing binary-single scattering experiments.
+	
+0.10-devel (Thu Feb 27 16:01:50 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Cleaned and compartmentalized things.  Moved all I/O to
+	  fourbody_io.c.
+	* Changed the behavior of the -D flag so that there is no output 
+	  unless the -D flag is used.
+	* Removed -pedantic from the default compilation flags, to get rid of
+	  many warnings.
+	* Created some structs that will aid in separating the heart of the
+	  code into a callable function.
+	
+0.10-devel (Thu Feb 27 00:54:33 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Finished removing NSTAR and K so that the number of stars being
+	  integrated can change while the code is running.
+
+0.10-devel (Wed Feb 26 05:05:42 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Started the effort to kill NSTAR and K as #defines.  Wrote some
+	  routines for malloc()'ing and free()'ing vectors and matrices.
+
+0.9 (Tue Feb 25 15:13:29 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Released 0.9 before I start futzing with the Bulirsch-Stoer
+	  integrator.
+
+0.9-devel (Mon Feb 24 00:46:43 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Cleaned up a few little things.
+
+0.9-devel (Fri Feb 21 14:13:18 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* K-S regularization works now!  There were two bugs: in one place I
+	  forgot a minus sign, in the other I typed "=" when I meant "+=".  But
+	  now it works.  Unfortunately, it's not as fast as I had hoped.  For
+	  most resonant encounters it is much faster and more accurate than 
+	  without regularization, but for other encounters, such as fly-by's,
+	  it is slower.  The derivatives function could definitely use some 
+	  tweaking, and hopefully I can squeeze some more performance out of
+	  it.
+	
+0.9-devel (Thu Feb 20 01:59:09 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Finished coding the K-S regularization.  Of course it doesn't work!
+	  Time to debug.
+	
+0.8 (Tue Feb 18 17:19:53 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* 'Bout time for a release before I start modifying fourbody.c for K-S
+	  regularization.
+	
+0.8-devel (Tue Feb 18 17:19:53 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added a new test to classify(), to make sure a system whose outer
+	  objects are collectively bound (but none of whose pairs are) keeps
+	  getting integrated.
+	* Started adding support for K-S regularization.
+
+0.7 (Thu Feb 13 15:36:29 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added command line flags using getopt.
+	* Implemented Mardling's criterion for triple stability.
+	* A whole bunch of other stuff.
+
+0.7-devel (Tue Feb 11 17:40:24 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Added an empty slot for K-S regularization.
+
+0.7-devel (Sat Feb  1 09:12:48 EST 2003) John Fregeau <fregeau@mit.edu>
+
+	* Made output format compatible with Starlab.
+
+0.6 (Wed Oct 30 02:33:07 EST 2002) John Fregeau <fregeau@mit.edu>
+
+	* Released 0.6, because the state of the code was looking pretty good.
+
+0.6-devel (Wed Oct 30 02:33:07 EST 2002) John Fregeau <fregeau@mit.edu>
+
+	* Implemented a maximum CPU time, available from the command line.
+
+0.6-devel (Fri Oct 25 15:07:38 EDT 2002) John Fregeau <fregeau@mit.edu>
+
+	* Fixed the part of the code that determines a binary's random true
+	  anomaly.  This was initially done by selecting the true anomaly from
+	  a uniform distribution, which is wrong.  Now the code chooses the
+	  mean anomaly from a uniform distribution, and then solves the Kepler
+	  equation to get the eccentric anomaly, and consequently the true
+	  anomaly.
+	
+0.6-devel (Thu Oct 24 22:28:02 EDT 2002) John Fregeau <fregeau@mit.edu>
+
+	* Fixed init_scattering() so that nearly parabolic (b->0 or vinf->0) 
+	  and parabolic orbits are handled properly.
+
+	* Cleaned up the human-readable output just a little bit.
+	
+0.6-devel (Thu Oct 24 00:25:18 EDT 2002) John Fregeau <fregeau@mit.edu>
+
+        * Optimized the dot and mod functions for an overall few percent speed
+	  increase.
+
+0.6-devel (Wed Oct 23 11:50:13 EDT 2002) John Fregeau <fregeau@mit.edu>
+
+        * Fixed a bug where circular orbits weren't dealt with properly.
+	  Specifically, rdot^2 for a circular orbit is zero, which numerically
+	  can be negative, e.g., -2.0e-17.  Taking the square root of this
+	  lead to NANs...
+
+0.5 (Wed Oct 23 01:26:14 EDT 2002) John Fregeau <fregeau@mit.edu>
+
+        * Released 0.5, mainly as a stepping stone.
+
+0.5-devel (Wed Oct 23 01:02:51 EDT 2002) John Fregeau <fregeau@mit.edu>
+
+	* Tested out different integrators, including the implicit
+	  Bulirsch-Stoer as coded up in GSL.  The 8th order Runge-Kutta
+	  was by far the fastest and most accurate.
+
+	* Implemented the tidal starting criteria: the binaries are brought in
+	  analytically on hyperbolic orbits until the tidal tolerance is 
+	  exceeded.  Unfortunately it doesn't work so well for nearly parabolic
+	  encounters.
+
+	* Profiled the code.  98% of the computing time is spent in the
+	  derivatives function, as expected.  So no need to worry about 
+	  optimizing other parts of the code.
+
+	* Generalized the memory storage of hierarchical objects so that the
+	  implementation of the code is in fact general in N.  The array of
+	  hierarchical objects looks like this:
+
+	    array[NSTAR...|NSTAR/2...|NSTAR/3...|NSTAR/4...|...]
+	          ^singles ^binaries  ^triples   ^quads
+
+	  The code will now work with an arbitrary number of stars, with some 
+	  minimal modification of the initialization.
+
+	* Wrote a routine to calculate the angular momentum.  Angular momentum
+	  conservation is now checked.
+
+0.5-devel (Mon Oct 21 17:34:20 EDT 2002) John Fregeau <fregeau@mit.edu>
+
+	* Sped up derivatives function by storing interparticle forces in a 
+	  matrix for later use.  Resulted in at least a factor of 2 speedup.
+
+0.5-devel (Wed Oct 16 16:21:15 EDT 2002) John Fregeau <fregeau@mit.edu>
+
+	* Fixed a bug where full ionizations weren't dealt with properly.
+
+	* Prettied up the output by introducing an ID string.  Now hierarchical
+	  objects are obvious by bracketing.
+
+0.5-devel (Tue Oct  8 13:09:26 EDT 2002) John Fregeau <fregeau@mit.edu>
+
+	* Added AUTHORS, ChangeLog, COPYING, INSTALL, THANKS, and TODO.
+
+	* Implemented a basic command line.

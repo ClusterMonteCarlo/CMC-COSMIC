@@ -1,0 +1,131 @@
+Fewbody is a package for performing small number N-body gravitational
+scattering experiments.  It can be downloaded from www.mit.edu/~fregeau/,
+and is licensed under the GNU GPL.
+
+I would appreciate credit for this work where credit is due.  If you
+publish a paper based on results from this code, I ask that you mention my
+name and the code itself, and cite the following papers:
+
+  "Stellar collisions during binary--binary and binary--single star
+  interactions", Fregeau, J.M., Cheung, P., Portegies Zwart, S.,
+  Rappaport, S.A., \& Rasio, F.A., 2004, submitted to MNRAS 
+  (astro-ph/0401004)
+
+  "Fewbody: a numerical toolkit for simulating small $N$ gravitational
+  dynamics", Fregeau, J.M., \& Rappaport, S.A., 2004, in preparation
+
+The first paper has a reasonably detailed overview of the inner workings
+of Fewbody, and should be read before using it (www.arxiv.org).  The 
+second paper is in preparation.
+
+If you consider Fewbody to be a crucial and major part of your research, I
+suggest that you consider offering me the option of being an author on
+your paper.
+
+Fewbody has, at its core, an integrator that is general in N, and can
+understand arbitrary hierarchies.  For example, if the outcome of a
+scattering experiment between two hierarchical triples is a hierarchical
+triple of binaries, the code is smart enough to understand this hierarchy,
+and terminate the integration if it is stable.
+
+Fewbody can be understood as two distinct pieces: an integrator and a
+classification routine.  The integrator advances the stars' positions and
+feeds them to the classification routine.  The classification routine
+tells the integrator whether or not to continue.  The integrator
+(optionally) uses full pairwise K-S regularization (Mikkola 1985) for
+increased accuracy during close encounters between stars, with an 8th
+order Runge-Kutta Prince-Dormand ODE integrator from GSL.  It also uses
+binary isolation to isolate unperturbed hierarchies from the integrator,
+so they can be treated as points; this often results in huge speed-ups.  
+The classification routine uses a binary tree to build hierarchies and
+Mardling's criterion (Mardling 2001) to test for the stability of triples
+and quadruples at each level in the hierarchy.  Fewbody also performs
+physical collisions using the sticky star approximation.
+
+Look at the file "INSTALL" to learn how to compile and install Fewbody.  
+Compiling will create several executable utilities, such as "binsingle",
+"binbin", and "cluster".  Compiling will also create object files that can
+be linked into other programs.
+
+Once you have Fewbody compiled, run "binsingle -h" to experiment with the
+binary-single star scattering utility.  The "-h" flag prints detailed
+documentation to the screen.  It should be pretty self-explanatory.
+
+The output format of Fewbody is the Starlab story format.  It is easily
+greppable.  It can also be sent to a nice 3D OpenGL viewer I wrote called
+"GLStarView", which you can also download from www.mit.edu/~fregeau/.  It
+works like this:
+
+	binsingle -D 1 | glstarview
+
+where 1 is the approximate time interval between output snapshots, and I
+have assumed that the "binsingle" and "glstarview" executables are in your
+path.
+
+Here's an example run of the "triplebin" utility, showing what's printed to the
+screen in stderr:
+
+PARAMETERS:
+  ks=0  seed=0
+  a00=1 AU  e00=0  m000=1 MSUN  m001=1 MSUN  r000=1 RSUN  r001=1 RSUN
+  a0=5 AU  e0=0  m01=1 MSUN  r01=1 RSUN
+  a1=5 AU  e1=0  m10=1 MSUN  m11=1 MSUN  r10=1 RSUN  r11=1 RSUN
+  vinf=0.3  b=2.1  tstop=1e+06  tcpustop=3600
+  tidaltol=1e-05  abs_acc=1e-09  rel_acc=1e-09  ncount=500  fexp=3
+
+UNITS:
+  v_crit=34.476 km/s  v=34.3929 km/s  l=10 AU  t=t_dyn=1.37838 yr
+  M=13.3333 M_sun  E=3.13697e+47 erg
+
+OUTCOME:
+  encounter complete:  t=1.33911e+06 (1.84579e+06 yr)  nstar=4 nobj=2:  4 [[1:2 3] 0]  (single-triple)
+
+FINAL:
+  t_final=1.33911e+06 (1.84579e+06 yr)  t_cpu=5.31 s
+  L0=0.0560012  DeltaL/L0=1.68075e-08  DeltaL=9.41239e-10
+  E0=-0.0411482  DeltaE/E0=5.23554e-07  DeltaE=-2.15433e-08
+  Rmin=0.000862291 (1.85346 RSUN)  Rmin_i=1  Rmin_j=2
+
+Most of the output should be self-explanatory.  The most important part
+that's printed to the screen is the outcome.  First, it says that the
+outcome is complete, which means that the triple-binary scattering
+experiment reached an unambiguous outcome within the CPU time and physical
+time allowed.  There are 4 stars (and not 5) because there was a
+collision.  There are 2 objects, which means there are two independently
+bound, stable hierarchical systems that are unbound from each other, and
+whose internal elements will not be influenced by the other objects to
+within the specified tidal tolerance.  In this case the two objects are a
+single star and a (dynamically) stable triple.  The brackets on the right
+show the hierarchies more explicitly.  Each number represents an initial
+star.  Brackets ("[]") enclose two things that are bound to each other.  
+Colons (":") represent collisions.  In this example, stars 1 and 2
+collided.  Star 3 with the collision product of stars 1 and 2 forms the
+inner binary of the triple.  The outer star in the triple is star 0.  The
+unbound single star is star 4.  The bracket notation is often very
+convenient for viewing the outcomes of scattering experiments.
+
+It is important to look at energy and angular momentum conservation, since
+they are often good tests of whether or not a code is obeying the laws of
+physics.  In general with Fewbody, angular momentum conservation shows how
+well the integrator works, since total angular momentum is conserved
+independent of the value of the tidal tolerance.  Energy conservation, on
+the other hand, shows the integrator plus the tidal tolerance.  If the
+tidal tolerance were zero, energy conservation would test only the
+integrator.  As you increase the tidal tolerance, energy conservation
+reveals the validity of the specified tidal tolerance.
+
+If you are unsure of the original hierarchical structure of the scattering 
+experiment, run "triplebin" with the debug ("-d") flag and look at the 
+first bracket you see:
+
+fewbody: current status:  t=0.01  nstar=5 nobj=2:  [[0 1] 2] [3 4]  (triple-binary)
+
+So stars 0, 1, and 2 form the triple, and 3 and 4 form the binary.
+
+This has so far been a very cursory look at the code.  Please see the first
+reference mentioned above for a reasonably detailed look at the inner workings
+of Fewbody.
+
+Have fun,
+John M. Fregeau
+MIT Department of Physics

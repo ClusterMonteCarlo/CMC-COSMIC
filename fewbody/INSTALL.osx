@@ -1,0 +1,14 @@
+I don't have much experience with Mac OSX, so you may disagree with some
+of my instructions...
+
+You need to have GCC, GSL, and GNU getopt installed.  GCC is included in
+the Apple development suite, which apparently comes with OSX, and is
+therefore easy to install if it isn't already.  GSL and GNU getopt are
+easiest installed via Fink (http://fink.sourceforge.net).  At the time of
+writing (Sep. 7, 2003), GSL is only in "unstable" so you'll have to track
+that distribution.  Check out the Fink documentation on the website.  
+Once you have Fink installed and set to use "unstable", install "gsl",
+"gsl-shlibs", and "libgnugetopt".  These will all be installed in "/sw",
+which means Fewbody won't know where to find them.  The file Makefile.osx
+includes all the relevant fixes for OSX, so anywhere you see a "make"
+command in the file INSTALL, replace it with "make -f Makefile.osx".

@@ -1,0 +1,140 @@
+##############################################################################
+### This documentation may be quite out of date.
+##############################################################################
+# The input file is where you specify all the necessary parameters to run the 
+# code.  It uses the format "keyword value", with the following syntax allowed:
+# "KEYWORD value", "KEYWORD = value", "keyword value", or "keyword = value".
+# In other words, whitespace is equivalent to an equal sign, and the case of
+# the keyword doesn't matter.  Also, only one keyword-value pair is allowed per
+# line.
+
+# No longer used.
+#RESTART 0
+
+# Random number generator seed.
+IDUM -116
+
+# Should we write ouput snapshot files to disk?
+DUMPS 1
+
+# Approximate snapshot timesteps.
+T_PRINT_STEP 1.0
+
+# Max number of timesteps.
+T_MAX_COUNT 20000
+
+# Max code time.
+T_MAX 20.0
+
+# Criterion used to determine core collapse.
+TERMINAL_ENERGY_DISPLACEMENT 0.5
+
+# Criterion used to determine core collapse.
+MIN_LAGRANGIAN_RADIUS 0.001
+
+# \Delta E between output snapshots.
+DUMP_ENERGY_DISPLACEMENT 0.05
+
+# 0=Plummer, 1=read in King model, 2=read in King model and then assign masses, 3=?, 4=power law mass function (King).
+# All the options are actually well-documented in the code.
+MODEL 1
+
+# Input file used for initial cluster snapshot (only for MODEL=1,2,3,4...).
+INPUT_SNAPSHOT_FILE kingw7100k.dat
+
+# Total number of stars + binaries.
+# E.g. for 80000 stars and 20000 binaries, N_STAR=100000, even though there are actually 120000 stars.
+N_STAR 100000
+
+# In units of M_sun; must be specified properly.
+TOTAL_MASS 100000
+
+# Tidal radius, in virial units (you can read this from the header of the king input file).
+R_MAX 6.985816
+
+# Do stellar evolution?
+STELLAR_EVOLUTION 0
+
+# Used to specify physical units in the code.  See Kris's paper II.
+FAMILY 5.93e5
+
+# Used to convert code to real time for stellar evolution.
+T_RELAX 6.5e10
+
+# Number of binaries.
+N_BINARY 2000
+
+# Parameters pertaining to the cluster's orbit about the galaxy.  Set ORBIT_ELLIPTICAL to 0 to turn this off.
+ORBIT_ELLIPTICAL 0
+ORBIT_ECCENTRICITY 0.6
+ORBIT_PERI 5.76
+ORBIT_VC 220
+ORBIT_PERIOD 6.18e8
+ORBIT_PHASE 0
+ORBIT_MAX_DT 0.05
+
+# Parameters pertaining to trace stars. Set TRACE_STARS to 0 to turn this off.
+TRACE_STARS 0
+
+# Number of trace stars.  This number is NOT in addition to N_STAR.
+TRACE_N 100
+
+# Mass of tracer species 1, in units of the average mass in the cluster.
+TRACE_MASS1 0.994475
+
+# Mass of tracer species 2, in units of the average mass in the cluster.
+TRACE_MASS2 1.54696
+
+# Specification of the mass function.  All this is documented in the function mass_spec_dist().
+# Mass of each species in a multi-component distribution, separated by commas.
+MASS_SPEC 1.0,2.0
+
+# Type of mass distribution; percent by mass of each species.
+MASS_DIST_PARAMS 1;1.0,0.0
+
+# Lagrange radii.
+MASS_PC 1;0.003535,0.005,0.00707,0.01,0.03535,0.05,0.0707,0.1,0.1414,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9
+
+# Exponent in power-law IMF.
+ALPHA -2.35
+
+# Under normal circumstances, you shouldn't need to change these parameters.
+# Perturb stars?
+PERTURB 1
+
+# Normalize energy?
+E_NORMALIZE 0
+
+# Try to conserve energy?
+E_CONS 1
+
+# Mode for calculating Dt.
+DT_MODE 2
+
+# Factor by which to shrink TRC.
+TRC_FACTOR .0003
+
+# Minimum timestep.  Should be set to zero if you want to do core rebound and gravithermal oscillations
+# correctly.  If DT_MIN is too big, you will see your virial ratio jumping every time the core shrinks.
+DT_MIN 0.000001
+
+# Maximum timestep.
+DT_MAX 0.05
+
+# Maximum sin^2\beta.  \beta is the deflection angle.  See Henon's paper.
+SIN2BETA_MAX 0.05
+
+# Number of stars used to define the core.
+NUM_CORE_STARS 100
+
+# ?
+MAX_INDEX 200000
+
+# ?
+INDEX_UNIT 10000 
+  
+# ?
+N_TRY 50000
+
+# ?
+R_PRINT_STEP 1   

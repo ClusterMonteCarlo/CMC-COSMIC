@@ -1,0 +1,32 @@
+You will need to have the GNU Scientific Library (GSL) installed before
+compiling Fewbody.  If you are running GNU/Linux, it's possible that you
+already have GSL installed on your machine, since it comes with many
+distributions, such as Red Hat, Debian, Mandrake, Gentoo, etc.
+
+If you don't have GSL installed, take a look at
+http://sources.redhat.com/gsl/ to learn how to download and install it.  
+If you are running an RPM-based GNU/Linux distribution, check out
+rpmfind.net and search for "gsl" and "gsl-devel".  Hopefully there will be
+RPMs there for your distribution.  If you are running Debian GNU/Linux,
+just do "apt-get install libgsl0 libgsl0-dev" (for Debian 3.0).  If you
+are running Mac OSX, please see the file "INSTALL.osx".
+
+Once you have GSL installed, extract Fewbody with "tar xvzf
+fewbody-[version].tar.gz".  cd into the Fewbody directory with "cd
+fewbody-[version]".  Then type "make" to build it.  This will create
+several Fewbody executables (such as binsingle, binbin, and cluster), as
+well as object files that can be linked into other programs.  Type "make
+install" to install the executables into $HOME/bin.  You can change the
+installation location by editing the PREFIX variable near the top of the
+Makefile.  Type "uninstall" to remove the executables from the
+installation directory.
+
+The following executables will be installed:
+
+	binsingle	binary-single scattering
+	binbin		binary-binary scattering
+	triplebin	triple-binary scattering
+	cluster		Plummer model cluster
+
+To get detailed instructions on each utility, use the "-h" (or "--help")  
+flag.

@@ -1,0 +1,21 @@
+* Fix collision code to keep track of internal energy stored in stars due to
+  collisions.
+* Decouple the potential from the star structure.  They are physically
+  different things, and the fact that they're tied together has caused
+  significant problems already.  We just need a quickly searchable array
+  containing (radius, potential) pairs.
+* Make units more persistent in code, and accessible by everyone.
+* Set criterion for stopping calculation based on tstop in code and physical
+  units.
+* Create much better system for setting physical units in the input file.
+  Perhaps it should be that the input FITS files are minimal representations
+  of N-body systems, in N-body units, and everything else is set in the input
+  file?  No, this fails when binaries are added to the input FITS file.
+  Physical units are a necessary part of this file once all scales are (over-)
+  specified.  Need utilities for modifying properties of input FITS files:
+  fits_add_binaries, fits_set_scales, etc.
+* For runaways, include not only "standard" stellar evolution, but also pre-
+  main sequence evolution?  This is relevant for stars less massive than ~2-3
+  M_o, whose radii can be several times larger than their MS values for times 
+  longer than ~3 Myr (Freitag, et al. 2005).
+* Updated FITS code to reflect deleted/added input file parameters, etc.

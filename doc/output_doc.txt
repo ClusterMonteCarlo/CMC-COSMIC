@@ -1,0 +1,70 @@
+##############################################################################
+### This documentation may be quite out of date.
+##############################################################################
+
+out_0 (general information):
+
+
+out_1 (Lagrange radii):
+1  2          3...
+j, TotalTime, Lagrange radii...
+
+out_3 (energy, etc.):
+1          2      3       4        5        6          7           8         9         10      11     12     13      14     15           16
+TotalTime, N_MAX, Etotal, KEtotal, PEtotal, Mtotal[0], Etotal_New, Eescaped, Jescaped, tcount, DEavg, DEmax, DEdiff, max_r, core_radius, N_core
+
+out_4 (?):
+
+
+out_binary (binary information):
+1       2          3         4        5         6          7          8          9                10            11           12           13     14     15    16
+tcount, TotalTime, N_BINARY, count_5, M_binary, E_binding, rh_single, rh_binary, rho_core_single, rho_core_bin, Delta_BE_bb, Delta_BE_bs, DE_bb, DE_bs, N_bb, N_bs
+tcount = current timestep
+TotalTime = current time (in code units)
+N_BINARY = *initial* number of binaries in system
+count_5 = current number of binaries in system (this is the worst variable name I've ever heard!)
+M_binary = current total mass of binaries
+E_binding = current total binding energy in binaries
+rh_single = current half-mass radius of the single stars
+rh_binary = current half-mass radius of the binaries
+rho_core_single = current central density in single stars
+rho_core_bin = current central density in binaries
+Delta_BE_bb = total bin-bin energy generated in the timestep
+Delta_BE_bs = total bin-single energy generated in the timestep
+DE_bb = cumulative total bin-bin energy generated
+DE_bs = cumulative total bin-single energy generated
+N_bb = cumulative number of binary-binary interactions
+N_bs = cumulative number of binary-single interactions
+
+out_esc (profile of stars that escape the cluster):
+
+
+out_scatter3 (information from binary-single interactions):
+[human readable]
+
+out_snapxx (snapshot of the cluster at a given time):
+tcount, i, sr[j], rxy, x, y, z, mass, svr[j], svt[j], stype[j]
+
+out_stellar ():
+
+
+out_trace1 ():
+1  2      3      4    5
+i, sr[i], rho_r, n_r, t_r
+
+out_trace2 ():
+1  2          3      4           5          6      7      8      9       10
+i, TotalTime, sr[i], sr_peri[i], sr_apo[i], sl[i], sE[i], sJ[i], sDE[i], sDJ[i]
+
+out_trace3 ():
+1  2       3          4      5           6          7      8               9            10           11
+i, tcount, TotalTime, sr[i], sr_peri[i], sr_apo[i], sl[i], trace_r_ini[i], trace_tr[i], core_radius, trace_stat[i]
+
+out_trace4 ():
+1       2          3   4          5          6        7           8           9           10          11               12
+tcount, TotalTime, rh, rh_single, rh_binary, count_2, Trace_n[4], Trace_n[3], Trace_n[2], Trace_n[1], rho_core_single, rho_core_bin
+count2=number of tracers
+typically, Trace_n[4]=number of tracers within r_c(t)
+	   Trace_n[3]=number of tracers within r_c(0)
+	   Trace_n[2]=number of tracers within the average of r_h(0) and r_c(0)
+	   Trace_n[1]=number of tracers within r_h(0)

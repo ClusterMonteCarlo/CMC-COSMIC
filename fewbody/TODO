@@ -1,0 +1,31 @@
+* Add Hut & Bahcall (1983) style test for resonance.
+* Add flag to fewbody input for continuing integrations after they are
+  complete.
+* Fix string handling to ensure that there is a newline character at the end of
+  every string that needs it.  This is important for log entries in the output
+  data stream.
+* Test on Mac OSX.  Need -traditional-cpp?
+* Play around with __inline__ thing?
+* Must add tests in fb_is_stable_triple() and fb_is_stable_quad() to look for
+  possible collisions that would cause the hierarchy to be unstable.  This is
+  probably relevant only when the stars are huge, like red giants.
+* Whenever the outer binary in a hierarchy can be done analytically for part of
+  the orbit, it should be done, instead of doing it numerically.  Currently, an
+  outer binary will only be done analytically when it can be done for the whole
+  orbit, i.e. as long as the inner binaries will never be perturbed in the
+  orbit.  One way to implement the new scheme is by collapse()'ing such an
+  outer binary and giving it an expiration date so that it is turned back on
+  when one of the inner binaries will be perturbed.
+* Instead of using L and A and the Kepler equation to advance a Kepler orbit,
+  possibly use Gauss's f(t,t_0) and g(t,t_0) functions and the position and
+  velocity at t_0:
+	r(t) = f(t,t_0)*r(t_0) + g(t,t_0)*v(t_0)
+	v(t) = df/dt*r(t_0) + dg/dt*v(t_0)
+  as described in Solar System Dynamics by Murray and Dermott, near pages
+  30-40.  If this scheme is more accurate for very small or very large
+  eccentricities it may be worthwhile.
+* Perhaps incorporate Jamie Lombardi's "Make Me a Star" routine for stellar
+  collisions?
+* Do away with dynamic memory in ks_func() by putting all those matrices in 
+  params?  This would probably speed things up.
+* Remove gsl_matrix functions from fb_nonks_jac()?
