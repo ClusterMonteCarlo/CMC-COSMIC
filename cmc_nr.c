@@ -23,7 +23,18 @@ long FindZero_r(long x1, long x2, double r)
 		eprintf("x1=%ld x2=%ld r=%g f=%g fmid=%g\n", x1, x2, r, f, fmid);
 		nrerror("Root must be bracketed for bisection in FindZero_r");
 	}
-	rtb = f < 0.0 ? (rdx = -1, fdx = 1, dx = x2 - x1, x1) : (rdx = 0, fdx = -1, dx = x1 - x2, x2);
+//	rtb = f < 0.0 ? (rdx = -1, fdx = 1, dx = x2 - x1, x1) : (rdx = 0, fdx = -1, dx = x1 - x2, x2);
+	if (f<0.0){
+		rdx = -1;
+		fdx = 1;
+		dx = x2 - x1;
+		rtb = x1;
+	} else {
+		rdx = 0;
+		fdx = -1;
+		dx = x1 - x2;
+		rtb = x2;
+	}
 	for (j = 1; j <= JMAX; j++) {
 		xmid = rtb + (dx /= 2);
 		fmid = FUNC(xmid, r);
