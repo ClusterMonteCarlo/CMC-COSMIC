@@ -104,11 +104,11 @@ void setup_sub_time_step(void){
 			Dt_local *= Mtotal;
 			/* DEBUG */
 
-			/* DEBUG */
-			/* do away with sub timestep business for now */
-			/* break; */
-			/* DEBUG */
-
+			/* to turn off sub-zoning */
+			if (!SUBZONING) {
+				break;
+			}
+			
 //			if (Dt_local >= Dt * 500 && sub.FACTOR < 500) {
 //				if (si * 1.0 / clus.N_MAX <
 //				    1.0 / sub.FACTOR * (sub.N_MAX * 1.0 / clus.N_MAX * sub.FACTOR + 1.0) - 1.0 / 500.0) {
@@ -160,11 +160,12 @@ void setup_sub_time_step(void){
 		}
 
 		sub.rmax = star[sub.N_MAX].r;
-		sub.count = 1;
-		/* DEBUG */
-		/* I'm pretty sure this should be 0 to turn off the sub timestep stuff */
-		/* sub.count = 0; */
-		/* DEBUG */
+		/* I'm pretty sure this should be 0 to turn off sub-zoning */
+		if (!SUBZONING) {
+			sub.count = 0;
+		} else {
+			sub.count = 1;
+		}
 		sub.totaltime = Dt;
 
 	} else { /** core timestep only **/

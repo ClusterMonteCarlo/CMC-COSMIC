@@ -276,8 +276,10 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		{NULL, 0, NULL, 0}
 	};
 	
-	/* set parameters to default values */
+	/* DEFAULT PARAMETER VALUES */
 	debug = 0;
+	SUBZONING = 1;
+	/* DEFAULT PARAMETER VALUES */
 	
 	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
 		switch (i) {
@@ -459,6 +461,9 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "GAMMA") == 0) {
 				sscanf(values, "%lf", &GAMMA);
 				parsed.GAMMA = 1;
+			} else if (strcmp(parameter_name, "SUBZONING") == 0) {
+				sscanf(values, "%d", &SUBZONING);
+				parsed.SUBZONING = 1;
 			} else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -473,7 +478,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	   but this would still be a *little* bit easier in python :)) */
 #define CHECK_PARSED(A) \
 	if (parsed.A == 0) { \
-		eprintf("parameter unset: \"%s\".\n", #A); \
+		eprintf("parameter \"%s\" unset.\n", #A); \
 		allparsed = 0; \
 	}
 	
@@ -510,6 +515,16 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(T_PRINT_STEP);
 	CHECK_PARSED(WIND_FACTOR);
 	CHECK_PARSED(GAMMA);
+	
+#undef CHECK_PARSED
+
+/* but only warn if some other parameters are unset and default values are used */
+#define CHECK_PARSED(A) \
+	if (parsed.A == 0) { \
+		wprintf("parameter \"%s\" unset: using default value (see function \"%s()\" in file \"%s\").\n", #A, __FUNCTION__, __FILE__); \
+	}
+	
+	CHECK_PARSED(SUBZONING);
 	
 #undef CHECK_PARSED
 

@@ -49,6 +49,7 @@ double GAMMA;
 struct CenMa cenma;
 int BINSINGLE, BINBIN, BINSINGLE_FEWBODY, BINBIN_FEWBODY;
 int ORIGINAL_PERTURB_STARS;
+int SUBZONING;
 /* binary stuff */
 long N_b, N_bb, N_bs;
 double M_b, Delta_BE_bb, Delta_BE_bs, E_b, DE_bb, DE_bs;

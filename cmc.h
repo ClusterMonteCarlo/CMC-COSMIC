@@ -133,6 +133,7 @@ typedef struct{
 	int T_PRINT_STEP;
 	int WIND_FACTOR;
 	int GAMMA;
+	int SUBZONING;
 } parsed_t;
 
 /* a struct containing the units used */
