@@ -202,8 +202,6 @@ void RecomputeEnergy(void) {
 			/* add up internal energies */
 			Etotal.Eint += star[i].Eint;
 
-			/* reset star[].interacted flag to 0 */
-			star[i].interacted = 0;
 		}
 	} else { /* Try to conserve energy by using intermediate potential */
 		for (i = 1; i <= clus.N_MAX; i++) {
@@ -240,9 +238,6 @@ void RecomputeEnergy(void) {
 
 			/* add up internal energies */
 			Etotal.Eint += star[i].Eint;
-
-			/* reset star[].interacted flag to 0 */
-			star[i].interacted = 0;
 		}
 	}
 

@@ -199,6 +199,11 @@ int main(int argc, char *argv[])
 
 		/* Recompute Energy. Uses the specified ECONS_MODE */
 		RecomputeEnergy();
+
+		/* reset interacted flag */
+		for (i = 1; i <= clus.N_MAX; i++) {
+			star[i].interacted = 0;
+		}
 		
 		/* update variables, then print */
 		update_vars();
