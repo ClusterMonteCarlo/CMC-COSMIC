@@ -46,7 +46,6 @@ void free_arrays(void){
 	free(mass_pc); free(densities_r); free(no_star_r); 
 	free(ave_mass_r); free(mass_r);
 	free(star); free(binary);
-	free(IndexTable);
 }
 
 /* GSL error handler */
@@ -477,17 +476,11 @@ long potential_calculate(void) {
 			break;
 
 		}
-		while (ii <= MAX_INDEX && rtemp >= (double) ii / INDEX_UNIT) {
-			IndexTable[ii] = k;
-			ii++;
-		}
 	}
 	clus.N_MAX = k - 1;		/* New N_MAX */
+
 	/* New total Mass; This IS correct for multiple components */
 	Mtotal = mprev/clus.N_STAR + cenma.m/clus.N_STAR;	
-
-	for (k = ii; k <= MAX_INDEX; k++)
-		IndexTable[k] = clus.N_MAX + 1;
 
 	/* Compute new tidal radius using new Mtotal */
 

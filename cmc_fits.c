@@ -504,15 +504,6 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 		mass_pc[i] = dbl_arr[i];
 	}
 	/* comp_mass_percent() will be called after reading position etc. */
-	/* reading and restoring IndexTable */
-	IndexTable = malloc((MAX_INDEX + 5) * sizeof(long));
-	frow = 1; felem = 1;  
-	fits_read_col(fptr, TLONG, 2, frow, felem, nelem, NULL, lng_arr, 
-			&anynull, &status);
-	printerror(status);
-	for(i=0; i<(MAX_INDEX+5); i++){
-		IndexTable[i] = lng_arr[i];
-	}
 	/* reading and restoring RNG state */
 	frow = 1; felem = 1;  
 	fits_read_col(fptr, TINT, 3, frow, felem, nelem, NULL, int_arr, 

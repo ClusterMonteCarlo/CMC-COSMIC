@@ -414,15 +414,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	fits_write_col(fptr, TDOUBLE, 1, firstrow, firstelem, nrows,
 			dbl_arr, &status);
 	printerror(status);
-	for(i=0; i<nrows; i++){
-		lng_arr[i] = 0;
-	}
-	for(i=0; i<(MAX_INDEX+5); i++){
-		lng_arr[i] = IndexTable[i];
-	}
-	fits_write_col(fptr, TLONG, 2, firstrow, firstelem, nrows,
-			lng_arr, &status);
-	printerror(status);
+	
 	rng_st_ptr = rng->state;
 	for(i=0; i<nrows; i++){
 		int_arr[i] = 0;
@@ -434,6 +426,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	fits_write_col(fptr, TINT, 3, firstrow, firstelem, nrows,
 			int_arr, &status);
 	printerror(status);
+	
 	for(i=0; i<nrows; i++){
 		dbl_arr[i] = 0.0;
 	}

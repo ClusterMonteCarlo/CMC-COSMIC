@@ -70,7 +70,6 @@ int ReadSnapshot;
 /* arrays */
 star_t *star;
 double *mass_pc, *mass_r, *ave_mass_r, *densities_r, *no_star_r;
-long *IndexTable;
 /* debugging */
 int debug;
 /* units */

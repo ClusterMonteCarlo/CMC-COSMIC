@@ -563,9 +563,6 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		/* the main binary array containing all binary parameters */
 		binary = malloc(N_STAR_DIM * sizeof(binary_t));
 
-		/* This looks like the lookup table index for calculating pot */
-		IndexTable = (long *) malloc((MAX_INDEX + 5) * sizeof(long));
-
 		/* quantities calculated for various lagrange radii */
 		mass_r = malloc((NUM_MASS_RADII_BINS + 1) 
 					* MASS_PC_COUNT * sizeof(double));
