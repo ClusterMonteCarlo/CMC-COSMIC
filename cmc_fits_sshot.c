@@ -190,8 +190,8 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"TOTAL_PARAMS", &status);
 	fits_write_key(fptr, TLONG, "NMSRADB", &(NUM_MASS_RADII_BINS), 
 			"NUM_MASS_RADII_BINS", &status);
-	fits_write_key(fptr, TLONG, "NCRSTR", &(NUM_CORE_STARS), 
-			"NUM_CORE_STARS", &status);
+	fits_write_key(fptr, TLONG, "NCNSTR", &(NUM_CENTRAL_STARS), 
+			"NUM_CENTRAL_STARS", &status);
 	fits_write_key(fptr, TDOUBLE, "TPRSTP", &(T_PRINT_STEP), 
 			"T_PRINT_STEP", &status);
 	fits_write_key(fptr, TDOUBLE, "TMAX", &(T_MAX), 

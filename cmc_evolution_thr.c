@@ -18,94 +18,71 @@
 
 double GetTimeStep(void) {
 	long i;
-	double m_core, m_single, m_bin, m_avg, w2_avg, Ai;
-	double n_core, R2_core, MR_core, DTrel, Tcoll, DTcoll;
-	double m_min, m_max, DTrel_old;
+	double Ai, m_min, m_max, DTrel, Xcoll, Tcoll, DTcoll;
+	double Xbb, Tbb, DTbb, Xbs, Tbs, DTbs;
+	
+	/* calculate Ai for central region */
+	Ai = 6.0 * ((double) central.N) * sqr(central.m_ave * ((double) clus.N_STAR)) / 
+		((cub(star[central.N].r)-cub(star[1].r)) * sqrt(cub(central.w2_ave)));
 
-	/* Calculation of Relaxation time in the core in order to compute Dt */
-	m_core = 0.0;
-	m_single = 0.0;
-	m_bin = 0.0;
-	v_core = 0.0;
-	for (i = 1; i <= NUM_CORE_STARS; i++) {
-		m_core += star[i].m;
-		if (star[i].binind == 0) {
-			m_single += star[i].m;
-		} else {
-			m_bin += star[i].m;
-		}
-		v_core += sqr(star[i].vr) + sqr(star[i].vt);
-	}
-	v_core = sqrt(v_core / ((double) NUM_CORE_STARS));
-	rho_core = (m_core / ((double) clus.N_STAR)) / (4.0 / 3.0 * PI * cub(star[NUM_CORE_STARS + 1].r));
-	n_core = ((double) NUM_CORE_STARS) / (4.0 / 3.0 * PI * cub(star[NUM_CORE_STARS + 1].r));
-
-	/* these variables are not used except to be printed out */
-	rho_core_single = (m_single / ((double) clus.N_STAR)) / (4.0 / 3.0 * PI * cub(star[NUM_CORE_STARS + 1].r));
-	rho_core_bin = (m_bin / ((double) clus.N_STAR)) / (4.0 / 3.0 * PI * cub(star[NUM_CORE_STARS + 1].r));
-	core_radius = sqrt(3.0 * sqr(v_core) / (4.0 * PI * rho_core));
-	/* calculate the number of stars in the core; Kris Joshi's original expression was:
-	   N_core = 2.0 / 3.0 * PI * cub(core_radius) * (1.0 * clus.N_STAR) * rho_core; */
-	N_core = 4.0 / 3.0 * PI * cub(core_radius) * n_core;
-
-	/* core relaxation time, Spitzer (1987) eq. (2-62) */
-	Trc = 0.065 * cub(v_core) / (rho_core * (m_core / ((double) NUM_CORE_STARS)));
-
-	/* calculate Ai for innermost zone */
-	m_avg = 0.0;
-	w2_avg = 0.0;
-	for (i = 1; i <= NUM_CORE_STARS; i++) {
-		m_avg += star[i].m;
-		w2_avg += star[i].m * (sqr(star[i].vr) + sqr(star[i].vt));
-	}
-	m_avg = m_avg / ((double) NUM_CORE_STARS);
-	w2_avg = w2_avg * 2.0 / m_avg / ((double) NUM_CORE_STARS);
-	Ai = 6.0 * ((double) NUM_CORE_STARS) * sqr(m_avg) / (cub(star[NUM_CORE_STARS].r) - cub(star[1].r)) / sqrt(cub(w2_avg));
-
-	/* DEBUG */
-	m_max = m_avg;
-	m_min = m_avg;
-	for (i=1; i<=MIN(N_core, clus.N_STAR); i++) {
+	/* set DT_FACTOR automatically */
+	m_max = central.m_ave * ((double) clus.N_STAR);
+	m_min = central.m_ave * ((double) clus.N_STAR);
+	for (i=1; i<=MIN(((long) N_core), clus.N_MAX); i++) {
 		m_max = MAX(m_max, star[i].m);
 		m_min = MIN(m_min, star[i].m);
 	}
 	DT_FACTOR = m_max/m_min;
-	dprintf("TotalTime=%g m_min=%g m_max=%g DT_FACTOR=%g\n", TotalTime, m_min, m_max, DT_FACTOR);
-	/* DEBUG */
 
 	/* calculate the relaxation timestep */
 	/* set by the maximum allowed value of sin^2 beta */
-	DTrel_old = SIN2BETA_MAX * ((double) clus.N_STAR) / Ai / DT_FACTOR;
+	DTrel = SIN2BETA_MAX * ((double) clus.N_STAR) / Ai / DT_FACTOR;
 	/* set to be a fraction of the central relaxation time, as is done by Freitag */
-	DTrel = 1.0e-2 * PI/128.0 * cub(v_core) / (n_core*sqr(m_avg/((double) clus.N_STAR))) / ((double) clus.N_STAR) / DT_FACTOR;
-
-	/* DEBUG */
-	dprintf("TotalTime=%g DTrel/DTrel_old=%g\n", TotalTime, DTrel/DTrel_old);
-	/* use old version of calculating timestep for now */
-	DTrel = DTrel_old;
-	/* DEBUG */
+	/* DTrel = 1.0e-2 * PI/128.0 * cub(central.v_rms) / (central.n*sqr(central.m_ave)) / ((double) clus.N_STAR) / DT_FACTOR; */
+	Dt = DTrel;
 
 	/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
-	/* G=1 in our code units */
-	R2_core = 0.0;
-	MR_core = 0.0;
-	for (i = 1; i <= NUM_CORE_STARS; i++) {
-		R2_core += sqr(star[i].rad);
-		MR_core += star[i].m/clus.N_STAR * star[i].rad;
+	if (central.N_sin != 0) {
+		/* X defines pericenter needed for collision: r_p = X (R_1+R_2) */
+		Xcoll = 1.0;
+		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(Xcoll) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
+			       (1.0 + central.mR_ave/(2.0*Xcoll*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
+			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+	} else {
+		Tcoll = GSL_POSINF;
 	}
-	R2_core /= (double) NUM_CORE_STARS;
-	MR_core /= (double) NUM_CORE_STARS;
-
-	Tcoll = 1.0 / (16.0 * sqrt(PI) * n_core * (v_core/sqrt(3.0)) * R2_core * (1.0 + MR_core/(2.0*sqr(v_core/sqrt(3.0))*R2_core))) * 
-		log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
 	DTcoll = 1.0e-4 * Tcoll;
-	
-	/* DEBUG */
-	dprintf("TotalTime=%g DTrel=%g DTcoll=%g\n", TotalTime, DTrel, DTcoll);
-	/* DEBUG */
+	Dt = MIN(Dt, DTcoll);
 
-	/* set Dt to minimum of all relevant timescales */
-	Dt = MIN(DTrel, DTcoll);
+	/* calculate DTbb, using a generalization of the expression for Tcoll */
+	if (central.N_bin != 0) {
+		/* X defines pericenter needed for "strong" interaction: r_p = X (a_1+a_2) */	
+		Xbb = 3.5;
+		Tbb = 1.0 / (16.0 * sqrt(PI) * central.n_bin * sqr(Xbb) * (central.v_bin_rms/sqrt(3.0)) * central.a2_ave * 
+			     (1.0 + central.ma_ave/(2.0*Xbb*sqr(central.v_bin_rms/sqrt(3.0))*central.a2_ave))) * 
+			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+	} else {
+		Tbb = GSL_POSINF;
+	}
+	DTbb = 1.0e-4 * Tbb;
+	Dt = MIN(Dt, DTbb);
+
+	/* calculate DTbs, using a generalization of the expression for Tcoll */
+	if (central.N_bin != 0 && central.N_sin != 0) {
+		/* X defines pericenter needed for "strong" interaction: r_p = X a */
+		Xbs = 3.5;
+		Tbs = 1.0 / (4.0 * sqrt(PI) * central.n_sin * sqr(Xbs) * (central.v_rms/sqrt(3.0)) * central.a2_ave * 
+			     (1.0 + central.m_ave/(Xbs*sqr(central.v_rms/sqrt(3.0))*central.a_ave))) * 
+			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+	} else {
+		Tbs = GSL_POSINF;
+	}
+	DTbs = 1.0e-4 * Tbs;
+	Dt = MIN(Dt, DTbs);
+
+	/* DEBUG */
+	dprintf("TotalTime=%g Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g\n", TotalTime, Dt, DTrel, DTcoll, DTbb, DTbs);
+	/* DEBUG */
 
 	/* this variable is not used except to be printed out */
 	Sin2Beta = Ai * Dt / ((double) clus.N_STAR);
@@ -313,13 +290,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
 		dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
 
-		/* DEBUG */
-		if (rmin < star[i].r || rmin > star[i1].r || function_Q(i, E, J) > 0 || function_Q(i1, E, J) < 0) {
-			dprintf("WTF: Q(%.8g)=%.8g rmin=%.8g Q(%.8g)=%.8g\n", 
-				star[i].r, function_Q(i, E, J), rmin, star[i1].r, function_Q(i1, E, J));
-		}
-		/* DEBUG */
-		
 		/*  For rmax- Look for rk, rk1 such that 
 		 *  Q(rk) > 0 > Q(rk1) */
 
@@ -344,13 +314,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
 		dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
-
-		/* DEBUG */
-		if (rmax < star[i].r || rmax > star[i1].r || function_Q(i, E, J) < 0 || function_Q(i1, E, J) > 0) {
-			dprintf("WTF: Q(%.8g)=%.8g rmax=%.8g Q(%.8g)=%.8g\n", 
-				star[i].r, function_Q(i, E, J), rmax, star[i1].r, function_Q(i1, E, J));
-		}
-		/* DEBUG */
 
 		if (rmin > rmax) {
 			star[j].rnew = star[j].r;

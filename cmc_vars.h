@@ -37,7 +37,7 @@ double initial_total_mass, Mtotal;
 long N_STAR_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, SS_COLLISION;
 long DUMPS, E_CONS, MAX_INDEX, INDEX_UNIT;
 long IDUM, PERTURB;
-long NUM_MASS, TOTAL_PARAMS, NUM_MASS_RADII_BINS, NUM_CORE_STARS;
+long NUM_MASS, TOTAL_PARAMS, NUM_MASS_RADII_BINS, NUM_CENTRAL_STARS;
 double T_PRINT_STEP, T_MAX, SIN2BETA_MAX;
 double TERMINAL_ENERGY_DISPLACEMENT, R_MAX;
 double MIN_LAGRANGIAN_RADIUS, DT_FACTOR;
@@ -75,3 +75,5 @@ long *IndexTable;
 int debug;
 /* units */
 units_t units;
+/* etc. */
+central_t central;

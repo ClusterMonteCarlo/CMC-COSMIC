@@ -128,8 +128,7 @@ int main(int argc, char *argv[])
 			ch2 = 1;
 		}
 #endif
-		
-		
+
 		/*write stellar data from time to time */
 		/*if (((tcount-1) % 20 == 0) && (STELLAR_EVOLUTION > 0)){
 			write_stellar_data();
@@ -139,6 +138,9 @@ int main(int argc, char *argv[])
 		if (CheckStop() != 0)
 			break;
 
+		/* calculate central quantities */
+		central_calculate();
+		
 		/* Get new time step */
 		Dt = GetTimeStep();
 

@@ -383,7 +383,7 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	printerror(status);
 	fits_read_key(fptr, TLONG, "NMSRADB", &(NUM_MASS_RADII_BINS),
 		     								NULL, &status);
-	fits_read_key(fptr, TLONG, "NCRSTR", &(NUM_CORE_STARS), NULL, &status);
+	fits_read_key(fptr, TLONG, "NCNSTR", &(NUM_CENTRAL_STARS), NULL, &status);
 	printerror(status);
 	fits_read_key(fptr, TDOUBLE, "TPRSTP", &(T_PRINT_STEP), NULL, &status);
 	printerror(status);

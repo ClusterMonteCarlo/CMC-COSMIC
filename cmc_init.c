@@ -27,10 +27,10 @@ void assign_binaries(void)
 	
 	/* calculate core temperature to get scale for binary semimajor axis distribution */
 	kTcore = 0.0;
-	for (i=1; i<=NUM_CORE_STARS; i++) {
+	for (i=1; i<=NUM_CENTRAL_STARS; i++) {
 		kTcore += (1.0/3.0) * (star[i].m/clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
 	}
-	kTcore = kTcore/NUM_CORE_STARS;
+	kTcore = kTcore/NUM_CENTRAL_STARS;
 	
 	/* set max and min binding energies */
 	Ebmin = 1.0 * kTcore;

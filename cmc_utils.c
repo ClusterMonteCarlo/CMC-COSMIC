@@ -689,3 +689,104 @@ void units_set(void)
 	units.m = clus.N_STAR * initial_total_mass / SOLAR_MASS_DYN * MSUN;
 	units.l = pow(units.t, 2.0/3.0) * pow(G, 1.0/3.0) * pow(units.m, 1.0/3.0);
 }
+
+/* calculate central quantities */
+void central_calculate(void)
+{
+	long i;
+
+	central.N = 0;
+	central.N_sin = 0;
+	central.N_bin = 0;
+
+	central.M = 0.0;
+	central.M_sin = 0.0;
+	central.M_bin = 0.0;
+
+	central.v_rms = 0.0;
+	central.v_sin_rms = 0.0;
+	central.v_bin_rms = 0.0;
+
+	central.w2_ave = 0.0;
+	central.R2_ave = 0.0;
+	central.mR_ave = 0.0;
+
+	central.a_ave = 0.0;
+	central.a2_ave = 0.0;
+	central.ma_ave = 0.0;
+
+	for (i=1; i<=MIN(NUM_CENTRAL_STARS,clus.N_STAR); i++) {
+		central.N++;
+		/* use only code units here, so always divide star[].m by clus.N_STAR */
+		central.M += star[i].m / ((double) clus.N_STAR);
+		central.v_rms += sqr(star[i].vr) + sqr(star[i].vt);
+		central.w2_ave += 2.0 * star[i].m / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
+
+		if (star[i].binind == 0) {
+			central.N_sin++;
+			central.M_sin += star[i].m / ((double) clus.N_STAR);
+			central.v_sin_rms += sqr(star[i].vr) + sqr(star[i].vt);
+			central.R2_ave += sqr(star[i].rad);
+			central.mR_ave += star[i].m / ((double) clus.N_STAR) * star[i].rad;
+		} else {
+			central.N_bin++;
+			central.M_bin += star[i].m / ((double) clus.N_STAR);
+			central.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
+			central.a_ave += binary[star[i].binind].a;
+			central.a2_ave += sqr(binary[star[i].binind].a);
+			central.ma_ave += star[i].m / ((double) clus.N_STAR) * binary[star[i].binind].a;
+		}
+	}
+	/* object quantities */
+	central.r = star[central.N + 1].r;
+	central.V = 4.0/3.0 * PI * cub(central.r);
+	central.n = ((double) central.N) / central.V;
+	central.rho = central.M / central.V;
+	central.m_ave = central.M / ((double) central.N);
+	central.v_rms = sqrt(central.v_rms / ((double) central.N));
+	central.w2_ave /= central.m_ave * ((double) central.N);
+	
+	/* single star quantities */
+	central.n_sin = ((double) central.N_sin) / central.V;
+	central.rho_sin = central.M_sin / central.V;
+	if (central.N_sin != 0) {
+		central.m_sin_ave = central.M_sin / ((double) central.N_sin);
+		central.v_sin_rms = sqrt(central.v_sin_rms / ((double) central.N_sin));
+		central.R2_ave /= ((double) central.N_sin);
+		central.mR_ave /= ((double) central.N_sin);
+	} else {
+		central.m_sin_ave = 0.0;
+		central.v_sin_rms = 0.0;
+		central.R2_ave = 0.0;
+		central.mR_ave = 0.0;
+	}
+	
+	/* binary star quantities */
+	central.n_bin = ((double) central.N_bin) / central.V;
+	central.rho_bin = central.M_bin / central.V;
+	if (central.N_bin != 0) {
+		central.m_bin_ave = central.M_bin / ((double) central.N_bin);
+		central.v_bin_rms = sqrt(central.v_bin_rms / ((double) central.N_bin));
+		central.a_ave /= ((double) central.N_bin);
+		central.a2_ave /= ((double) central.N_bin);
+		central.ma_ave /= ((double) central.N_bin);
+	} else {
+		central.m_bin_ave = 0.0;
+		central.v_bin_rms = 0.0;
+		central.a_ave = 0.0;
+		central.a2_ave = 0.0;
+		central.ma_ave = 0.0;
+	}
+
+	/* set global variables that are used throughout the code */
+	v_core = central.v_rms;
+	rho_core = central.rho;
+	rho_core_single = central.rho_sin;
+	rho_core_bin = central.rho_bin;
+	core_radius = sqrt(3.0 * sqr(central.v_rms) / (4.0 * PI * central.rho));
+	/* Kris Joshi's original expression was 
+	   N_core = 2.0 / 3.0 * PI * cub(core_radius) * (1.0 * clus.N_STAR) * central.rho; */
+	N_core = 4.0 / 3.0 * PI * cub(core_radius) * central.n;
+	/* core relaxation time, Spitzer (1987) eq. (2-62) */
+	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.M);
+}

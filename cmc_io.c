@@ -420,8 +420,14 @@ int parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(values, "%ld", &clus.N_BINARY);
 				parsed.N_BINARY = 1;
 			} else if (strcmp(parameter_name, "NUM_CORE_STARS") == 0) {
-				sscanf(values, "%ld", &NUM_CORE_STARS);
-				parsed.NUM_CORE_STARS = 1;
+				wprintf("The parameter \"NUM_CORE_STARS\" has been changed to \"NUM_CENTRAL_STARS\" for clarity.\n");
+				wprintf("Please update your input file appropriately.\n");
+				wprintf("Using \"NUM_CORE_STARS\" for \"NUM_CENTRAL_STARS\".\n");
+				sscanf(values, "%ld", &NUM_CENTRAL_STARS);
+				parsed.NUM_CENTRAL_STARS = 1;
+			} else if (strcmp(parameter_name, "NUM_CENTRAL_STARS") == 0) {
+				sscanf(values, "%ld", &NUM_CENTRAL_STARS);
+				parsed.NUM_CENTRAL_STARS = 1;
 			} else if (strcmp(parameter_name, "ORIGINAL_PERTURB_STARS") == 0) {
 				sscanf(values, "%d", &ORIGINAL_PERTURB_STARS);
 				parsed.ORIGINAL_PERTURB_STARS = 1;
@@ -501,7 +507,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(MINIMUM_R);
 	CHECK_PARSED(MIN_LAGRANGIAN_RADIUS);
 	CHECK_PARSED(N_BINARY);
-	CHECK_PARSED(NUM_CORE_STARS);
+	CHECK_PARSED(NUM_CENTRAL_STARS);
 	CHECK_PARSED(ORIGINAL_PERTURB_STARS);
 	CHECK_PARSED(PERTURB);
 	CHECK_PARSED(R_MAX);

@@ -119,7 +119,7 @@ typedef struct{
 	int MINIMUM_R;
 	int MIN_LAGRANGIAN_RADIUS;
 	int N_BINARY;
-	int NUM_CORE_STARS;
+	int NUM_CENTRAL_STARS;
 	int ORIGINAL_PERTURB_STARS;
 	int PERTURB;
 	int R_MAX;
@@ -156,6 +156,42 @@ typedef struct{
 	double *r; /* radius */
 	double *force; /* force */
 } force_t;
+
+/* useful structure for central quantities */
+typedef struct{
+	long N; /* number of objects used to calculate central quantities */
+	long N_sin; /* number of objects that are single */
+	long N_bin; /* number of objects that are binary */
+	double r; /* radius of central region */
+	double V; /* volume of central region */
+	double n; /* number density of objects */
+	double n_sin; /* single star number density */
+	double n_bin; /* binary star number density */
+	double M; /* total mass of central region */
+	double M_sin; /* mass in single stars */
+	double M_bin; /* mass in binaries */
+	double rho; /* central mass density */
+	double rho_sin; /* central single star mass density */
+	double rho_bin; /* central binary star mass density */
+	double m_ave; /* average object mass */
+	double m_sin_ave; /*average single star mass */
+	double m_bin_ave; /* average binary star mass */
+	double v_rms; /* rms object velocity */
+	double v_sin_rms; /* rms single star velocity */
+	double v_bin_rms; /* rms binary star velocity */
+	double w2_ave; /* average of 2*m*v^2 per average mass for all objects */
+	double R2_ave; /* average of R^2 for single stars */
+	double mR_ave; /* average of m*R for single stars */
+	double a_ave; /* average of a for binaries */
+	double a2_ave; /* average of a^2 for binaries */
+	double ma_ave; /* average of m*a for binaries */
+} central_t;
+
+/* useful structure for core quantities */
+typedef struct{
+	double N;
+	double kT;
+} core_t;
 
 /********************** Function Declarations ************************/
 inline double sqr(double x);
@@ -235,6 +271,7 @@ void fits_sanity_check(void);
 int move_to_hdu(fitsfile *fptr, char *sea_extname);
 void mini_sshot(void);
 void units_set(void);
+void central_calculate(void);
 
 /* signal/GSL error handling stuff */
 void toggle_debugging(int signal);
