@@ -668,7 +668,7 @@ void mini_sshot(){
 	fname_len += strlen("miniss.");
 	fname_len += 10;
 	mss_fname = malloc(fname_len*sizeof(char));
-	sprintf(mss_fname,"%sminiss.%05ld", outprefix, tcount);
+	sprintf(mss_fname,"%s_miniss.%05ld", outprefix, tcount);
 	mss = fopen(mss_fname, "w+");
 	for(i=0; i<1000; i++){
 		fprintf(mss, "%8ld %.16e %.16e %.16e %.16e ", 

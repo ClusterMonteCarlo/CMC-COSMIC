@@ -164,7 +164,7 @@ void write_stellar_data(void){
 	char filename[1024];
 
 	se_file_counter++;
-	sprintf(filename, "%sstellar_info.%05d", outprefix, se_file_counter);
+	sprintf(filename, "%s_stellar_info.%05d", outprefix, se_file_counter);
 	stel_file = fopen(filename, "w");
 	if (stel_file==NULL){
 		fprintf(stderr,

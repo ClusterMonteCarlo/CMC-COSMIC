@@ -54,7 +54,7 @@ long N_b, N_bb, N_bs;
 double M_b, Delta_BE_bb, Delta_BE_bs, E_b, DE_bb, DE_bs;
 binary_t *binary;
 /* file pointers */
-FILE *out[3], *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file;
+FILE *lagradfile, *dynfile, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file;
 FILE *binaryfile, *binsinglefile, *binbinfile;
 /* everything else except arrays */
 char outprefix[100];

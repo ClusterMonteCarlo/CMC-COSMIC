@@ -28,13 +28,8 @@ void print_usage(FILE *stream, char *argv[])
 	fprintf(stream, "  -d --debug   : turn on debugging\n");
 	fprintf(stream, "  -V --version : print version info\n");
 	fprintf(stream, "  -h --help    : display this help text\n");
-	fprintf(stream, "\n");
-	fprintf(stream, "OUTPUT:\n");
-	fprintf(stream, "\toutput_file_prefix_0 = log file\n");
-	fprintf(stream, "\toutput_file_prefix_1 = lagrange radii\n");
-	fprintf(stream, "\toutput_file_prefix_3 = total energy, virial ratio\n");
-	fprintf(stream, "\toutput_file_prefix_4 = component-wise fraction of total mass\n");
 }
+
 void print_results(void){
 	PrintLogOutput();
 	PrintFileOutput();
@@ -51,7 +46,7 @@ void print_2Dsnapshot(void)
 	units_set();
 
 	/* open file for 2D snapshot */
-	sprintf(outfile, "%ssnap%04ld.dat.gz", outprefix, snap_num);
+	sprintf(outfile, "%s.snap%04ld.dat.gz", outprefix, snap_num);
 	if ((snapfile = gzopen(outfile, "wb")) == NULL) {
 		eprintf("cannot create 2D snapshot file %s\n", outfile);
 		exit_cleanly(1);
@@ -167,7 +162,16 @@ void PrintFileOutput(void) {
 	/* Also note that there are only MASS_PC_COUNT-1 radii 
 	 * from 0...MASS_PC_COUNT-1 
 	 * So output only needs to go over i = 0 to MASS_PC_COUNT-2. */
-	fprintf(out[0], "%.9e  ", TotalTime);
+	/* print useful header */
+	if (tcount == 1) {
+		fprintf(lagradfile, "# Lagrange radii [code units]\n");
+		fprintf(lagradfile, "# t");
+		for (i=0; i<MASS_PC_COUNT-1; i++) {
+			fprintf(lagradfile, " r(%g)", mass_pc[i]);
+		}
+		fprintf(lagradfile, "\n");
+	}
+	fprintf(lagradfile, "%.9e  ", TotalTime);
 	fprintf(ave_mass_file, "%.9e  ",TotalTime);
 	fprintf(no_star_file, "%.9e  ",TotalTime);
 	fprintf(densities_file, "%.9e  ",TotalTime);
@@ -178,18 +182,23 @@ void PrintFileOutput(void) {
 					Etotal.tot, Etotal.K, Etotal.P);
 
 	for (i = 0; i < MASS_PC_COUNT - 1; i++) {
-		fprintf(out[0], "%e   ", mass_r[i]);
+		fprintf(lagradfile, "%e   ", mass_r[i]);
 		fprintf(ave_mass_file,"%e ", ave_mass_r[i]);
 		fprintf(no_star_file,"%g ", no_star_r[i]);
 		fprintf(densities_file,"%e ", densities_r[i]);
 	}
-	fprintf(out[0], "\n");
+	fprintf(lagradfile, "\n");
 	fprintf(ave_mass_file,"\n");
 	fprintf(no_star_file,"\n");
 	fprintf(densities_file,"\n");
 	
 	/* output Time,N_MAX,TotalE,TotalKE,TotalPE,Mtotal */
-	fprintf(out[1], "%.8G  %8ld  %.8G  %.8G  %.8G  %.8G  %.8G  %.8G  %.8G  %8ld  %.8G  %.8G %.8G %.8G %.8G %.8G\n",
+	/* print useful header */
+	if (tcount == 1) {
+		fprintf(dynfile, "# Dynamical information [code units]\n");
+		fprintf(dynfile, "# t N_MAX Etot T W Mtot Etot_new Eesc Jesc tcount max_r r_c N_c star[1].phi star[1].m Eb_esc\n");
+	}
+	fprintf(dynfile, "%.8g %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %.8g %.8g %.8g %.8g %.8g %.8g\n",
 		TotalTime, clus.N_MAX, Etotal.tot, Etotal.K, Etotal.P, Mtotal, Etotal.New, Eescaped, Jescaped,
 		tcount, max_r, core_radius, N_core, star[1].phi, star[1].m, Ebescaped);
 	
@@ -296,7 +305,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	
 	/* set inputfile and outprefix now that the options have been parsed */
 	sprintf(inputfile, "%s", argv[optind]);
-	sprintf(outprefix, "%s_", argv[optind+1]);
+	sprintf(outprefix, "%s", argv[optind+1]);
 	dprintf("inputfile=%s outprefix=%s\n", inputfile, outprefix);
 
 	/*======= Opening of input & output files =======*/
@@ -560,43 +569,38 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	/*======= Opening of output files =======*/
 	sscanf("w", "%s", outfilemode);
 	
-	sprintf(outfile, "%s1", outprefix);
-	if ((out[0] = fopen(outfile, outfilemode)) == NULL) {
+	sprintf(outfile, "%s.lagrad.dat", outprefix);
+	if ((lagradfile = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-	sprintf(outfile, "%s3", outprefix);
-	if ((out[1] = fopen(outfile, outfilemode)) == NULL) {
+	sprintf(outfile, "%s.dyn.dat", outprefix);
+	if ((dynfile = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-	sprintf(outfile, "%s4", outprefix);
-	if ((out[2] = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s6", outprefix);
+	sprintf(outfile, "%s_6", outprefix);
 	if ((ave_mass_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-	sprintf(outfile, "%s7", outprefix);
+	sprintf(outfile, "%s_7", outprefix);
 	if ((no_star_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-	sprintf(outfile, "%s8", outprefix);
+	sprintf(outfile, "%s_8", outprefix);
 	if ((densities_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-	sprintf(outfile, "%s9", outprefix);
+	sprintf(outfile, "%s_9", outprefix);
 	if ((centmass_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
 
-	sprintf(outfile, "%s0", outprefix);
+	sprintf(outfile, "%s.log", outprefix);
 	if ((logfile = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create log output file \"%s\".\n", outfile);
 		exit(1);
@@ -605,19 +609,19 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	/* output files for binaries */
 	if (clus.N_BINARY > 0) {
 		/* general binary information */
-		sprintf(outfile, "%sbinary", outprefix);
+		sprintf(outfile, "%s_binary", outprefix);
 		if ((binaryfile = fopen(outfile, outfilemode)) == NULL) {
 			eprintf("cannot create binary file \"%s\".\n", outfile);
 			exit(1);
 		}
 		/* file for binary-single information */
-		sprintf(outfile, "%sbinsinglelog.gz", outprefix);
+		sprintf(outfile, "%s_binsinglelog.gz", outprefix);
 		if ((binsinglefile = gzopen(outfile, "wb")) == NULL) {
 			eprintf("cannot create binsinglelog file \"%s\".\n", outfile);
 			exit(1);
 		}
 		/* file for fewbody information */
-		sprintf(outfile, "%sbinbinlog.gz", outprefix);
+		sprintf(outfile, "%s_binbinlog.gz", outprefix);
 		if ((binbinfile = gzopen(outfile, "wb")) == NULL) {
 			eprintf("cannot create binbinlog file \"%s\".\n", outfile);
 			exit(1);
@@ -625,7 +629,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	}
 
 	/* File for parameters of escaping stars */
-	sprintf(outfile, "%sesc", outprefix);
+	sprintf(outfile, "%s_esc", outprefix);
 	if ((escfile = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create escapers file \"%s\".\n", outfile);
 		exit(1);
@@ -637,9 +641,8 @@ int parser(int argc, char *argv[], gsl_rng *r)
 /* close buffers */
 void close_buffers(void)
 {
-	fclose(out[0]);
-	fclose(out[1]);
-	fclose(out[2]);
+	fclose(lagradfile);
+	fclose(dynfile);
 	fclose(logfile);
 	fclose(ave_mass_file);
 	fclose(no_star_file);

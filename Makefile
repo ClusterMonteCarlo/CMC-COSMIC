@@ -134,5 +134,5 @@ fewbodyclean:
 	rm -f $(FEWBODYOBJS) $(EXE)
 
 mrproper: clean
-	rm -f   *~   .smhist   *.dat   *out_*   *.stdout   *.stderr
-	rm -f */*~ */.smhist */*.dat */*out_* */*.stdout */*.stderr
+	rm -f   *~   .smhist   *.dat   *.dat.gz    *out_*   *.stdout   *.stderr   *.log
+	rm -f */*~ */.smhist */*.dat */*.dat.gz  */*out_* */*.stdout */*.stderr */*.log
