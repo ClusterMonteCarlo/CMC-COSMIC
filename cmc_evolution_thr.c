@@ -22,7 +22,7 @@ double GetTimeStep(void)
 	long i;
 	double m_core, m_single, m_bin, m_avg, w2_avg, Ai;
 	double n_core, R2_core, MR_core, DTrel, Tcoll, DTcoll;
-	double m_min, m_max;
+	double m_min, m_max, DTrel_old;
 
 	/* Calculation of Relaxation time in the core in order to compute Dt */
 	m_core = 0.0;
@@ -51,8 +51,7 @@ double GetTimeStep(void)
 	N_core = 4.0 / 3.0 * PI * cub(core_radius) * n_core;
 
 	/* core relaxation time, Spitzer (1987) eq. (2-62) */
-	Trc = (0.065 * cub(v_core) / rho_core) / (m_core / ((double) NUM_CORE_STARS)) / 
-		(log((double) clus.N_MAX) / log((double) clus.N_STAR));
+	Trc = 0.065 * cub(v_core) / (rho_core * (m_core / ((double) NUM_CORE_STARS)));
 
 	/* calculate Ai for innermost zone */
 	m_avg = 0.0;
@@ -73,12 +72,18 @@ double GetTimeStep(void)
 		m_min = MIN(m_min, star[i].m);
 	}
 	DT_FACTOR = m_max/m_min;
-	dprintf("TotalTime=%g DT_FACTOR=%g\n", TotalTime, DT_FACTOR);
+	dprintf("TotalTime=%g m_min=%g m_max=%g DT_FACTOR=%g\n", TotalTime, m_min, m_max, DT_FACTOR);
 	/* DEBUG */
 
 	/* calculate the relaxation timestep */
 	/* set by the maximum allowed value of sin^2 beta */
-	DTrel = SIN2BETA_MAX * ((double) clus.N_STAR) / Ai / DT_FACTOR;
+	DTrel_old = SIN2BETA_MAX * ((double) clus.N_STAR) / Ai / DT_FACTOR;
+	/* set to be a fraction of the central relaxation time, as is done by Freitag */
+	DTrel = 1.0e-2 * PI/128.0 * cub(v_core) / (n_core*sqr(m_avg/((double) clus.N_STAR))) / ((double) clus.N_STAR) / DT_FACTOR;
+
+	/* DEBUG */
+	dprintf("TotalTime=%g DTrel/DTrel_old=%g\n", TotalTime, DTrel/DTrel_old);
+	/* DEBUG */
 
 	/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
 	/* G=1 in our code units */
