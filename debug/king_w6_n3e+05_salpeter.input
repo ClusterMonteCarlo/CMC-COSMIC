@@ -15,7 +15,7 @@ N_BINARY = 0
 MMIN = 1.0
 
 ### other params ###
-INPUT_FILE = king_w6_n3e+05_salpeter.fits
+INPUT_FILE = king_w6_n3e+05_salpeter.fits.gz
 R_MAX = 5.46076
 
 ### physics ###

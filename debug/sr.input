@@ -14,7 +14,7 @@ IDUM = 6804
 N_BINARY = 10000
 
 ### other params ###
-INPUT_FILE = plummer_100000.fit
+INPUT_FILE = plummer_100000.fit.gz
 R_MAX = 1000000
 
 ### physics ###

@@ -15,7 +15,7 @@ MINIMUM_R 0.0
 # initial value of CentralMass
 CENTRAL_MASS 0.0
 
-INPUT_FILE plummer_100000.fit
+INPUT_FILE plummer_100000.fit.gz
 N_BINARY 10000
 R_MAX 1000000.0
 
