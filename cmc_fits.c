@@ -371,6 +371,7 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	fits_read_key(fptr, TLONG, "MPCCNT", &(MASS_PC_COUNT), NULL, &status);
 	/* fits_read_key(fptr, TLONG, "NTRY", &(N_TRY), NULL, &status); */
 	fits_read_key(fptr, TLONG, "STEVOL", &(STELLAR_EVOLUTION), NULL, &status);
+	fits_read_key(fptr, TLONG, "SSCOLL", &(SS_COLLISION), NULL, &status);
 	fits_read_key(fptr, TLONG, "DUMPS", &(DUMPS), NULL, &status);
 	fits_read_key(fptr, TLONG, "ECONS", &(E_CONS), NULL, &status);
 	/* fits_read_key(fptr, TLONG, "DTMOD", &(DT_MODE), NULL, &status); */

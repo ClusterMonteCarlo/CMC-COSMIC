@@ -296,8 +296,8 @@ int main(){
 	double rmax=300.0;
 	double rcr = 1.0/(6.0*(PI/32.0));
 	double cms=1.0;
-	long int N=1000000;
-	char filename[]="plummer_n1e+06.fit";
+	long int N=300000;
+	char filename[]="plummer_n3e+05.fit";
 
 	X = malloc((N+2)*sizeof(double));
 	r = malloc((N+2)*sizeof(double));

@@ -425,6 +425,9 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "STELLAR_EVOLUTION") == 0) {
 				sscanf(values, "%ld", &STELLAR_EVOLUTION);
 				parsed.STELLAR_EVOLUTION = 1;
+			} else if (strcmp(parameter_name, "SS_COLLISION") == 0) {
+				sscanf(values, "%ld", &SS_COLLISION);
+				parsed.SS_COLLISION = 1;
 			} else if (strcmp(parameter_name, "TERMINAL_ENERGY_DISPLACEMENT") == 0) {
 				sscanf(values, "%lf", &TERMINAL_ENERGY_DISPLACEMENT);
 				parsed.TERMINAL_ENERGY_DISPLACEMENT = 1;
@@ -487,6 +490,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(SIN2BETA_MAX);
 	CHECK_PARSED(SOLAR_MASS_DYN);
 	CHECK_PARSED(STELLAR_EVOLUTION);
+	CHECK_PARSED(SS_COLLISION);
 	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT);
 	CHECK_PARSED(T_MAX);
 	CHECK_PARSED(T_MAX_COUNT);

@@ -170,6 +170,8 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	   "N_TRY", &status); */
 	fits_write_key(fptr, TLONG, "STEVOL", &(STELLAR_EVOLUTION), 
 			"STELLAR_EVOLUTION", &status);
+	fits_write_key(fptr, TLONG, "SSCOLL", &(SS_COLLISION), 
+			"SS_COLLISION", &status);
 	fits_write_key(fptr, TLONG, "DUMPS", &(DUMPS), 
 			"DUMPS", &status);
 	fits_write_key(fptr, TLONG, "ECONS", &(E_CONS), 
