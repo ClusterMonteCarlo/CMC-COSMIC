@@ -117,7 +117,7 @@ $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 .PHONY: FITS install clean fewbodyclean mrproper
 
 FITS:
-	cd ato-fits && $(MAKE)
+	cd ato-fits && $(MAKE) -s
 
 install: $(EXE) $(CONTRIBS)
 	mkdir -p $(PREFIX)/bin/
