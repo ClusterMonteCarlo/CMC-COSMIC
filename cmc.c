@@ -159,6 +159,10 @@ int main(int argc, char *argv[])
 		TotalTime = TotalTime + Dt;
 
 		setup_sub_time_step();
+
+		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
+		clus.N_MAX_NEW = clus.N_MAX;
+
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
 		if (PERTURB > 0) {
