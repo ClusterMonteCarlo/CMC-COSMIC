@@ -38,6 +38,7 @@ typedef struct{
 	double m2; /* mass of star 2 */
 	double a; /* semimajor axis */
 	double e; /* eccentricity */
+	int inuse; /* whether or not binary exists */
 } binary_t;
 
 typedef struct{
@@ -265,7 +266,9 @@ void bb_calcunits(fb_obj_t *obj[2], fb_units_t *units);
 fb_ret_t binbin(double *t, double m00, double m01, double m10, double m11, double r00, double r01, double r10, double r11, double a0, double a1, double e0, double e1, double vinf, double b, fb_units_t *units, fb_hier_t *hier, gsl_rng *rng);
 void bs_calcunits(fb_obj_t *obj[2], fb_units_t *units);
 fb_ret_t binsingle(double *t, double m0, double m10, double m11, double r0, double r10, double r11, double a1, double e1, double vinf, double b, fb_units_t *units, fb_hier_t *hier, gsl_rng *rng);
-long destroy_binary(long kp);
+void destroy_binary(long i);
+long create_binary(void);
+void destroy_star(long i);
 long create_star(void);
 void perturb_stars_new(double dt, gsl_rng *rng);
 void perturb_stars_fewbody(double dt, gsl_rng *rng);

@@ -45,7 +45,7 @@ void exit_cleanly(int signal)
 void free_arrays(void){
 	free(mass_pc); free(densities_r); free(no_star_r); 
 	free(ave_mass_r); free(mass_r);
-	free(star); free(binary);
+	free(star); free(binary+1);
 }
 
 /* GSL error handler */

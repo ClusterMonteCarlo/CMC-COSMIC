@@ -25,6 +25,11 @@ void assign_binaries(void)
 		star[i].binind = 0;
 	}
 	
+	/* and make all binaries "not in use" */
+	for (i=1; i<=clus.N_BINARY+1; i++) {
+		binary[i].inuse = 0;
+	}
+
 	/* calculate core temperature to get scale for binary semimajor axis distribution */
 	kTcore = 0.0;
 	for (i=1; i<=NUM_CENTRAL_STARS; i++) {
@@ -51,7 +56,8 @@ void assign_binaries(void)
 			
 			/* make this star a binary */
 			star[i].binind = j;
-			
+			binary[j].inuse = 1;
+
 			/* set masses from mass ratio distribution */
 			binary[j].m1 = star[i].m;
 			binary[j].m2 = binary[j].m1 + rng_t113_dbl() * (binary[j].m1 - MMIN / (initial_total_mass / SOLAR_MASS_DYN));

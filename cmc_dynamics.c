@@ -8,36 +8,110 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/* destroys a binary; returns the index of the new star */
-long destroy_binary(long kp)
+/* destroy a binary */
+void destroy_binary(long i)
 {
-	long kpp;
+	/* mark binary as "not in use" */
+	binary[i].inuse = 0;
+}
 
-	/* destroy binary */
-	star[kp].binind = 0;
+/* create a new binary, returning its index */
+long create_binary(void)
+{
+	long i;
 	
-	/* create new star, and assign some properties */
-	kpp = create_star();
+	/* find first free binary */
+	i = 1;
+	while (i <= clus.N_BINARY+1 && binary[i].inuse) {
+		i++;
+	}
+	
+	/* problem! */
+	if (i > clus.N_BINARY+1) {
+		eprintf("cannot find unused binary.\n");
+		exit_cleanly(1);
+	}
+	
+	/* mark binary as being in use */
+	binary[i].inuse = 1;
 
-	star[kpp].m = binary[star[kp].binind].m2;
-	star[kpp].binind = 0;
+	/* initialize to zero for safety */
+	binary[i].m1 = 0.0;
+	binary[i].m2 = 0.0;
+	binary[i].a = 0.0;
+	binary[i].e = 0.0;
 
-	return(kpp);
+	return(i);
+}
+
+/* destroy a star */
+void destroy_star(long i)
+{
+	if (star[i].binind) {
+		destroy_binary(star[i].binind);
+	}
+
+	remove_star_center(i);
 }
 
 /* create a new star, returning its index */
 long create_star(void)
 {
-	long kpp;
+	long i;
 	
 	/* account for new star */
 	clus.N_STAR_NEW++;
 	clus.N_MAX_NEW++;
 	
 	/* put new star at end */
-	kpp = clus.N_MAX_NEW;
+	i = clus.N_MAX_NEW;
 
-	return(kpp);
+	/* initialize to zero for safety */
+	star[i].r = 0.0;
+	star[i].vr = 0.0;
+	star[i].vt = 0.0;
+	star[i].m = 0.0;
+	star[i].E = 0.0;
+	star[i].J = 0.0;
+	star[i].EI = 0.0;
+	star[i].Eint = 0.0;
+	star[i].rnew = 0.0;
+	star[i].vrnew = 0.0;
+	star[i].vtnew = 0.0;
+	star[i].rOld = 0.0;
+	star[i].X = 0.0;
+	star[i].r_peri = 0.0;
+	star[i].r_apo = 0.0;
+	star[i].phi = 0.0;
+	star[i].interacted = 0;
+	star[i].binind = 0;
+	star[i].id = 0;
+	star[i].rad = 0.0;
+	star[i].Uoldrold = 0.0;
+	star[i].Uoldrnew = 0.0;
+	star[i].vtold = 0.0;
+	star[i].vrold = 0.0;
+#ifdef SE
+	star[i].mzams = 0.0;
+	star[i].m0 = 0.0;
+	star[i].mass = 0.0;
+	star[i].tbeg = 0.0;
+	star[i].tvir = 0.0;
+	star[i].tend = 0.0;
+	star[i].lum = 0.0;
+	star[i].mc = 0.0;
+	star[i].mcHe = 0.0;
+	star[i].mcCO = 0.0;
+	star[i].dt = 0.0;
+	star[i].mpre = 0.0;
+	star[i].tstart = 0.0;
+	star[i].init_no = 0;
+	star[i].k = 0;
+	star[i].flag = 0;
+	star[i].kpre = 0;
+#endif
+
+	return(i);
 }
 
 /* the next generation of perturb_stars() */
@@ -220,8 +294,8 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 				star[kp].interacted = 1;
 				
 				/* remove the two merger progenitor stars */
-				remove_star_center(k);
-				remove_star_center(kp);
+				destroy_star(k);
+				destroy_star(kp);
 			}
 		} else {
 			/* do two-body relaxation */
@@ -823,7 +897,9 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 												sqr(madhoc) / (2.0 * binary[star[k].binind].a);
 											
 											/* destroy other binary */
-											kpp = destroy_binary(kp);
+											kpp = create_star();
+											star[kpp].m = binary[star[kp].binind].m2;
+											destroy_binary(star[kp].binind);
 											
 											/* assign other stars */
 											mp = star[kp].m = bb_hier.obj[sid]->m * bb_sf_units.m / madhoc;
@@ -860,7 +936,9 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 												sqr(madhoc) / (2.0 * binary[star[kp].binind].a);
 											
 											/* destroy other binary */
-											kpp = destroy_binary(k);
+											kpp = create_star();
+											star[kpp].m = binary[star[k].binind].m2;
+											destroy_binary(star[k].binind);
 											
 											/* assign other stars */
 											m = star[k].m = bb_hier.obj[sid]->m * bb_sf_units.m / madhoc;
@@ -901,7 +979,9 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 												sqr(madhoc) / (2.0 * binary[star[k].binind].a);
 											
 											/* destroy other binary */
-											kpp = destroy_binary(kp);
+											kpp = create_star();
+											star[kpp].m = binary[star[kp].binind].m2;
+											destroy_binary(star[kp].binind);
 											
 											/* assign other stars */
 											mp = star[kp].m = bb_hier.obj[sid]->m * bb_sf_units.m / madhoc;
@@ -1015,8 +1095,10 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 											sqr(madhoc) / (2.0 * binary[star[k].binind].a);
 										
 										/* destroy other binary */
-										kpp = destroy_binary(kp);
-										
+										kpp = create_star();
+										star[kpp].m = binary[star[kp].binind].m2;
+										destroy_binary(star[kp].binind);
+											
 										/* assign other stars */
 										mp = star[kp].m = bb_hier.obj[s1id]->m * bb_sf_units.m / madhoc;
 										mpp = star[kpp].m = bb_hier.obj[s2id]->m * bb_sf_units.m / madhoc;
@@ -1054,8 +1136,10 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 											sqr(madhoc) / (2.0 * binary[star[kp].binind].a);
 										
 										/* destroy other binary */
-										kpp = destroy_binary(k);
-										
+										kpp = create_star();
+										star[kpp].m = binary[star[k].binind].m2;
+										destroy_binary(star[k].binind);
+											
 										/* assign other stars */
 										m = star[k].m = bb_hier.obj[s1id]->m * bb_sf_units.m / madhoc;
 										mpp = star[kpp].m = bb_hier.obj[s2id]->m * bb_sf_units.m / madhoc;
@@ -1097,8 +1181,10 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 											sqr(madhoc) / (2.0 * binary[star[k].binind].a);
 										
 										/* destroy other binary */
-										kpp = destroy_binary(kp);
-										
+										kpp = create_star();
+										star[kpp].m = binary[star[kp].binind].m2;
+										destroy_binary(star[kp].binind);
+											
 										/* assign other stars */
 										mp = star[kp].m = bb_hier.obj[s1id]->m * bb_sf_units.m / madhoc;
 										mpp = star[kpp].m = bb_hier.obj[s2id]->m * bb_sf_units.m / madhoc;
@@ -1249,8 +1335,10 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 						
 						mp = star[kp].m = binary[star[kp].binind].m1; /* keep first star of the binary as single */
 						
-						kpp = destroy_binary(kp);
-						
+						kpp = create_star();
+						star[kpp].m = binary[star[kp].binind].m2;
+						destroy_binary(star[kp].binind);
+											
 						star[kpp].vr = star[kp].vr;
 						star[kpp].vt = star[kp].vt;
 						
@@ -1561,8 +1649,10 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 								gzprintf(binsinglefile, "final:\toutcome=ionization\n");
 								
 								/* destroy binary */
-								kpp = destroy_binary(k);
-								
+								kpp = create_star();
+								star[kpp].m = binary[star[k].binind].m2;
+								destroy_binary(star[k].binind);
+											
 								/* assign stars */
 								/* FIXME: should be rpp=star[k].r, etc.? */
 								m = star[k].m = bs_hier.obj[0]->m * bs_sf_units.m / madhoc;
@@ -1995,8 +2085,10 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 				vtp = vt;
 				
 				/* this destroys the binary and sets the new star's mass to binary.m2 and radius to SF_INFINITY */
-				kp = destroy_binary(k);
-				
+				kp = create_star();
+				star[kp].m = binary[star[k].binind].m2;
+				destroy_binary(star[k].binind);
+											
 				/* set masses, radii, and potential */
 				star[k].m = m;
 				star[kp].m = mp;
