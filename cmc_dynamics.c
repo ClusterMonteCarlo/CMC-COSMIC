@@ -166,8 +166,8 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 			/* binary--single cross section */
 			S = 0.0;
 		} else {
+			/* single--single star physical collision cross section */
 			if(SS_COLLISION){
-				/* single--single star physical collision cross section */
 				R = star[k].rad;
 				Rp = star[kp].rad;
 				S = PI * sqr(R + Rp) * (1.0 + 2.0*madhoc*(m+mp)/((R+Rp)*sqr(W)));
@@ -175,7 +175,7 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 				S = 0.0; 
 			}
 		}
-
+		
 		/* calculate encounter probability */
 		P_enc = n_local * W * S * (dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)));
 		
