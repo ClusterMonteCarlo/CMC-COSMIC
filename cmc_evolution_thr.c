@@ -66,7 +66,7 @@ double GetTimeStep(void)
 
 	/* calculate the relaxation timestep (there are many different ways to do this) */
 	/* compute using Henon's method (can this be correct without a factor of N/ln(gamma N)?) */
-	/* DTrel = (factor < 1) * ((double) clus.N_MAX) / ((double) clus.N_STAR) * pow(Mtotal, 2.5) / pow(fabs(Etotal.tot), 1.5); */
+	/* DTrel = (factor < 1) * ((double) clus.N_MAX) / ((double) clus.N_STAR) * pow(Mtotal, 2.5) / pow(fabs(Etotal.K+Etotal.P), 1.5); */
 	/* take to be a fraction of the core relaxation time */
 	/* DTrel = (factor < 1) * Trc; */
 	/* set by the maximum allowed value of sin^2 beta */
@@ -145,7 +145,7 @@ void sniff_stars(void){
 					star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
 					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J);
 
-				if (Etotal.tot - Etidal >= 0)
+				if (Etotal.K + Etotal.P - Etidal >= 0)
 					break;
 			}
 		}
@@ -155,7 +155,7 @@ void sniff_stars(void){
 			j, TidalMassLoss, DTidalMassLoss);
 		fprintf(logfile, "sniff_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 			j, TidalMassLoss, DTidalMassLoss);
-	} while (DTidalMassLoss > 0 && (Etotal.tot - Etidal) < 0);
+	} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
 }
 
 static void remove_star(long j, double phi_rtidal, double phi_zero){

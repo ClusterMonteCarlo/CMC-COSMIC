@@ -188,18 +188,22 @@ void RecomputeEnergy(void) {
 	Etotal.tot = 0.0;
 	Etotal.K = 0.0;
 	Etotal.P = 0.0;
+	Etotal.Eint = 0.0;
 	dtemp = 0;
 
 	if (E_CONS == 0) { /* recompute new sE[] and sJ[], using the new potential */
 		for (i = 1; i <= clus.N_MAX; i++) {
 			k = i;
-			star[k].E = star[k].gravity + 1.0 / 2.0 * (SQR(star[k].vr) + SQR(star[k].vt));
+			star[k].E = star[k].gravity + 0.5 * (SQR(star[k].vr) + SQR(star[k].vt));
 			star[k].J = star[k].r * star[k].vt;
 
-			Etotal.K += 1.0 / 2.0 * (SQR(star[k].vr) + SQR(star[k].vt)) * star[k].m / clus.N_STAR;
+			Etotal.K += 0.5 * (SQR(star[k].vr) + SQR(star[k].vt)) * star[k].m / clus.N_STAR;
 
 			/* Compute PE using Henon method using star[].gravity */
 			Etotal.P += star[k].gravity * star[k].m / clus.N_STAR;
+
+			/* add up internal energies */
+			Etotal.Eint += star[k].Eint;
 
 			/* reset star[].interacted flag to 0 */
 			star[k].interacted = 0;
@@ -233,20 +237,22 @@ void RecomputeEnergy(void) {
 			}
 
 			/* recompute new sE[] and sJ[], using the new potential */
-			star[k].E = star[k].gravity + 1.0 / 2.0 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
+			star[k].E = star[k].gravity + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
 			star[k].J = star[k].r * star[k].vt;
 
 			Etotal.K += 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt) * star[k].m / clus.N_STAR;
 			Etotal.P += star[k].gravity * star[k].m / clus.N_STAR;
+
+			/* add up internal energies */
+			Etotal.Eint += star[k].Eint;
+
 			/* reset star[].interacted flag to 0 */
 			star[k].interacted = 0;
-
 		}
+	}
 
-	} /* End ELSE - conserve energy */
-
-	Etotal.P = Etotal.P / 2.0;
-	Etotal.tot = Etotal.K + Etotal.P + cenma.E/clus.N_STAR;
+	Etotal.P *= 0.5;
+	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + cenma.E/clus.N_STAR;
 }
 
 /* computes intermediate energies, and transfers "new" dynamical params to the standard variables */
@@ -296,8 +302,8 @@ long CheckStop(void) {
 		return (1);
 	}
 
-	/* Stop of Etotal > 0 */
-	if (Etotal.tot > 0.0) {
+	/* Stop if Etotal > 0 */
+	if (Etotal.K + Etotal.P > 0.0) {
 		if (DUMPS == 1)
 			print_2Dsnapshot();
 		dprintf("Etotal > 0 ... Terminating.\n");
@@ -397,16 +403,17 @@ long CheckStop(void) {
 	return (0); /* NOT stopping time yet */
 }
 
+/* energy calculation function that is called for a restart (so it's not necessary to 
+   re-set all global energy variables */
 void ComputeEnergy2(void)
 {
 	long k, i;
 
 	for (i = 1; i <= clus.N_MAX; i++) {
 		k = i;
-		star[k].E = star[k].gravity + 1.0 / 2.0 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
+		star[k].E = star[k].gravity + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
 
 		star[k].J = star[k].r * star[k].vt;
-
 	}
 	
 	fprintf(stdout, "Time = %.8G   Tcount = %ld\n", TotalTime, tcount);
@@ -422,22 +429,25 @@ void ComputeEnergy(void)
 	Etotal.tot = 0.0;
 	Etotal.K = 0.0;
 	Etotal.P = 0.0;
+	Etotal.Eint = 0.0;
 
 	star[0].E = star[0].J = 0.0;
 	for (i = 1; i <= clus.N_MAX; i++) {
 		k = i;
-		star[k].E = star[k].gravity + 1.0 / 2.0 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
+		star[k].E = star[k].gravity + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
 
 		star[k].J = star[k].r * star[k].vt;
 
-		Etotal.K += 1.0 / 2.0 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt) * star[k].m / clus.N_STAR;
+		Etotal.K += 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt) * star[k].m / clus.N_STAR;
 
 		Etotal.P += star[k].gravity * star[k].m / clus.N_STAR;
+
+		Etotal.Eint += star[k].Eint;
 	}
 	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
 	
-	Etotal.P = Etotal.P / 2.0;
-	Etotal.tot = Etotal.K + Etotal.P + cenma.E/clus.N_STAR;
+	Etotal.P *= 0.5;
+	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + cenma.E/clus.N_STAR;
 
 	fprintf(stdout, "Time = %.8G   Tcount = %ld\n", TotalTime, tcount);
 	fprintf(stdout, "N = %ld, Total E = %.8G, Total Mass = %.8G, Virial ratio = %.8G\n",
@@ -445,20 +455,19 @@ void ComputeEnergy(void)
 	fprintf(stdout, "Total KE = %.8G, Total PE = %.8G\n", Etotal.K, Etotal.P);
 }
 
-/* ********************  gravity  *********************
-	Computing the gravity at each star sorted by increasing 
-	radius. Units: G = 1  and  Mass is in units of total INITIAL mass.
-	Total mass is computed by SUMMING over all stars that have NOT ESCAPED 
-	i.e., over all stars upto N_MAX <= N_STAR. N_MAX is computed in this 
-	routine by counting all stars with radius < SF_INFINITY and Radius of the 
-	(N_MAX+1)th star is set to infinity i.e., star[N_MAX+1].r = 
-	SF_INFINITY. Also setting gravity[N_MAX+1] = 0. Assuming 
-	star[0].r = 0. gravity[] is also indexed i.e. gravity[k] 
-	is the gravity of the kth star at radius star[k].r 
-	NOTE: Assming here that NO two stars are at the SAME RADIUS upto 
-	double precision. Returns N_MAX. Gravity returned in star[].gravity
+/* Computing the gravity at each star sorted by increasing 
+   radius. Units: G = 1  and  Mass is in units of total INITIAL mass.
+   Total mass is computed by SUMMING over all stars that have NOT ESCAPED 
+   i.e., over all stars upto N_MAX <= N_STAR. N_MAX is computed in this 
+   routine by counting all stars with radius < SF_INFINITY and Radius of the 
+   (N_MAX+1)th star is set to infinity i.e., star[N_MAX+1].r = 
+   SF_INFINITY. Also setting star[N_MAX+1].gravity = 0. Assuming 
+   star[0].r = 0. star[].gravity is also indexed i.e. it
+   is the gravity of the kth star at radius star[k].r 
+   NOTE: Assming here that NO two stars are at the SAME RADIUS upto 
+   double precision. Returns N_MAX. Gravity returned in star[].gravity
 */
-long gravity(void) {
+long potential_calculate(void) {
 	long k, ii;
 	double mprev, rtemp;
 
@@ -547,10 +556,8 @@ void comp_mass_percent(){
 	}
 }
 
-/*********************** potential **********************
-  The potential computed using the star[].gravity computed at the star 
-  locations in sr[] sorted by increasing r.
-*/
+/* The potential computed using the star[].gravity computed at the star 
+   locations in star[].r sorted by increasing r. */
 double potential(double r)
 {
 	long i, k;

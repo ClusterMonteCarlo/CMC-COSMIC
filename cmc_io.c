@@ -352,7 +352,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(values, "%d", &BINBIN_FEWBODY);
 				parsed.BINBIN_FEWBODY = 1;
 			} else if (strcmp(parameter_name, "BINSINGLE") == 0) {
-				dprintf("warning: parameter BINSINGLE not yet implemented...\n");
+				wprintf("parameter BINSINGLE not yet implemented...\n");
 				sscanf(values, "%d", &BINSINGLE);
 				parsed.BINSINGLE = 1;
 			} else if (strcmp(parameter_name, "BINSINGLE_FEWBODY") == 0) {
@@ -444,7 +444,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(values, "%lf", &GAMMA);
 				parsed.GAMMA = 1;
 			} else {
-				dprintf("warning: unknown parameter: \"%s\".\n", line);
+				wprintf("unknown parameter: \"%s\".\n", line);
 			}
 		} else if (sscanf(line, "%s", parameter_name) == 1) {
 			eprintf("too few values for parameter: \"%s\".\n", line);

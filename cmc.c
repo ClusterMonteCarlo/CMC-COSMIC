@@ -84,10 +84,11 @@ int main(int argc, char *argv[])
 		   Results returned in star[].gravity. Returns N_MAX. Also computes
 		   Rtidal using Mtotal and orbit_r. */
 		orbit_r = R_MAX;
-		errstat = gravity();
-		Etotal.ini = Etotal.tot;   /* Noting the total initial energy, 
-							in order to set termination energy. */
+		errstat = potential_calculate();
+
 		ComputeEnergy();
+		Etotal.ini = Etotal.tot;   /* Noting the total initial energy, in order to set termination energy. */
+
 		Etotal.New = 0.0; Eescaped = 0.0; Ebescaped = 0.0; Jescaped = 0.0;
 		
 		comp_mass_percent();
@@ -196,12 +197,12 @@ int main(int argc, char *argv[])
 		//mqsort(star, 1, clus.N_MAX_NEW);
 		qsorts(star+1,clus.N_MAX_NEW);
 
-		/* Computing the gravity at the star locations provided in sr[].
+		/* Computing the potential at the star locations provided in star[].r.
 		   Results returned in star[].gravity. Computes Mtotal 
 		   (total mass).  Returns N_MAX. 
 		   This is the  only place where N_MAX can change.
 		   Also computes new Rtidal using Mtotal and orbit_r */
-		errstat = gravity();
+		errstat = potential_calculate();
 
 		comp_mass_percent();
 
@@ -211,6 +212,13 @@ int main(int argc, char *argv[])
 		/* update variables, then print */
 		update_vars();
 		tcount++;
+		
+		/* DEBUG */
+		if (errstat != clus.N_MAX) {
+			wprintf("errstat=%ld clus.N_MAX=%ld\n", errstat, clus.N_MAX);
+		}
+		/* DEBUG */
+
 		print_results();
 		/* FIXME: FITS snapshotting not working yet? */
 		/* if(tcount%1==0 && DUMPS) sshot_fits(rng); */

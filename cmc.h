@@ -49,6 +49,7 @@ typedef struct{
 	double E; /* kinetic plus potential energy per unit mass */
 	double J; /* angular momentum per unit mass */
 	double EI; /* "intermediate" energy per unit mass */
+	double Eint; /* internal energy (due to collisions, e.g.) */
 	double rnew; /* new radial coordinate */
 	double vrnew; /* new radial velocity */
 	double vtnew; /* new tangential velocity */
@@ -154,8 +155,8 @@ void setup_sub_time_step(void);
 void sniff_stars(void);
 void remove_star_center(long j);
 void print_results(void);
-double potential(double r);	/* get potential using gravity */
-long gravity(void);		/* get potential at star locations in gravity */
+double potential(double r);	       /* get potential using star.gravity */
+long potential_calculate(void);	/* calculate potential at star locations in star.gravity */
 void comp_mass_percent(void);
 double get_positions(void);	/* get positions and velocities */
 void perturb_stars(double Dt);	/* take a time step (perturb E,J) */
@@ -242,9 +243,10 @@ static double sqrarg;
 #define SQR(a) ((sqrarg=(a)) == 0.0 ? 0.0 : sqrarg*sqrarg)
 #endif
 
-/* the Q function, in a handy macro */
+/* macros */
 #define function_Q(k, E, J) (2.0 * ((E) - star[(k)].gravity) - SQR((J) / star[(k)].r))
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
+#define wprintf(args...) {fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 #define eprintf(args...) {fprintf(stderr, "ERROR: %s:%d in %s(): ", __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}
 #define MAX(a, b) ((a)>=(b)?(a):(b))
 #define MIN(a, b) ((a)<=(b)?(a):(b))

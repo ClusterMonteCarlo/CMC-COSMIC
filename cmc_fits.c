@@ -136,6 +136,11 @@ void read_fits_file_data_old(fitsfile *fptr) {
 		star[i].rad = r_of_m(star[i].m);
 	}
 
+	/* zero each star's internal energy */
+	for (i=0; i<=NSTAR+1; i++) {
+		star[i].Eint = 0.0;
+	}
+
 	fits_close_file(fptr, &status);
 	printerror(status);
 
@@ -263,6 +268,11 @@ void read_fits_file_data_new(fitsfile *fptr) {
 	   in the input file is non-zero */
 	for (i=0; i<=N+1; i++) {
 		star[i].rad = r_of_m(star[i].m);
+	}
+
+	/* zero each star's internal energy */
+	for (i=0; i<=NSTAR+1; i++) {
+		star[i].Eint = 0.0;
 	}
 
 	fits_close_file(fptr, &status);

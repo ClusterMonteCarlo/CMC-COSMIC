@@ -15,11 +15,12 @@ struct {
 } sub;
 
 struct {
-	double tot;
-	double New;
-	double ini;
-	double K;
-	double P;
+	double tot; /* total = K + P + Eint + cenma.E */
+	double New; /* ??? */
+	double ini; /* initial total energy */
+	double K; /* total kinetic */
+	double P; /* total potential */
+	double Eint; /* total internal */
 } Etotal;
 
 /* tidal truncation stuff */

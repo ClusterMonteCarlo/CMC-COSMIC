@@ -179,7 +179,7 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 		
 		/* warn if something went wrong with the calculation of Dt */
 		if (P_enc >= 1.0) {
-			dprintf("WARNING: P_enc = %g >= 1!\n", P_enc);
+			wprintf("P_enc = %g >= 1!\n", P_enc);
 		}
 
 		/* do encounter or two-body relaxation */
@@ -195,12 +195,6 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 					star[k].id, m * madhoc * units.m / MSUN, 
 					star[kp].id, mp * madhoc * units.m / MSUN);
 				
-				/* DEBUG */
-				/* Got to fix this create-a-star/remove-a-star business; it doesn't work! */
-				/* The reason we need to understand it is for when we get ionizations, etc., with
-				   binary interactions. */
-				/* DEBUG */
-
 				kpp = create_star();
 
 				/* conserve mass and momentum in collision */
@@ -208,9 +202,19 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 				star[kpp].vr = vcm[3];
 				star[kpp].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 				star[kpp].m = m + mp;
-				star[kpp].E = potential(star[kpp].r) + 0.5*(sqr(star[kpp].vr) + sqr(star[kpp].vt));
+				star[kpp].gravity = potential(star[kpp].r);
+				star[kpp].E = star[kpp].gravity + 0.5*(sqr(star[kpp].vr) + sqr(star[kpp].vt));
 				star[kpp].J = star[kpp].r * star[kpp].vt;
 				star[kpp].EI = 0.0;
+				/* Calculate internal energy assuming potential doesn't change during collision.
+				   Should there be a factor of 1/2 for the potential energy? */
+				star[kpp].Eint = star[k].Eint + star[kp].Eint 
+					+ 0.5 * star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
+					+ 0.5 * star[kp].m * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+					- 0.5 * star[kpp].m * madhoc * (sqr(star[kpp].vr) + sqr(star[kpp].vt))
+					+ 0.5 * star[k].m * madhoc * star[k].gravity
+					+ 0.5 * star[kp].m * madhoc * star[kp].gravity
+					- 0.5 * star[kpp].m * madhoc * star[kpp].gravity;
 				star[kpp].rnew = star[kpp].r;
 				star[kpp].vrnew = star[kpp].vr;
 				star[kpp].vtnew = star[kpp].vt;
@@ -218,7 +222,6 @@ void perturb_stars_new(double dt, gsl_rng *rng)
 				star[kpp].X = 0.0;
 				star[kpp].r_peri = star[kpp].r;
 				star[kpp].r_apo = star[kpp].r;
-				star[kpp].gravity = potential(star[kpp].r);
 				star[kpp].interacted = 1;
 				star[kpp].binind = 0;
 				star[kpp].id = -5;
@@ -499,8 +502,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 					/* Probability of bin-bin encounter P = PI*p_max^2*W*n*dt */
 					P_enc = PI * p_max * p_max * W * dt * (1.0 * clus.N_STAR) / log(GAMMA * clus.N_STAR) * n_bin_local / 1.0;
 					if (P_enc > 1.0) {
-						fprintf(stderr, "perturb_stars_fewbody(): WARNING: P_enc=%g>1.0!\n", P_enc);
-						fprintf(logfile, "perturb_stars_fewbody(): WARNING: P_enc=%g>1.0!\n", P_enc);
+						wprintf("P_enc = %g >= 1!\n", P_enc);
 					}
 				}
 				
@@ -1437,8 +1439,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng)
 			/* Probability of binary-single collision P = PI*p_max^2*W*n*dt */
 			P_enc = PI * p_max * p_max * W * dt * (1.0 * clus.N_STAR) / log(GAMMA * clus.N_STAR) * n_local / 1.0;
 			if (P_enc > 1.0) {
-				fprintf(stderr, "perturb_stars_fewbody(): WARNING: P_enc=%g>1.0!\n", P_enc);
-				fprintf(logfile, "perturb_stars_fewbody(): WARNING: P_enc=%g>1.0!\n", P_enc);
+				wprintf("P_enc = %g >= 1!\n", P_enc);
 			}
 			
 			/* perform binary-single interaction */
@@ -2171,8 +2172,7 @@ void perturb_stars(double dt)
 				/* Probability of bin-bin encounter P = pi*p_max^2*W*n*dt */
 				P_enc = PI * p_max * p_max * W * dt * (1.0 * clus.N_STAR) / log(GAMMA * clus.N_STAR) * n_bin_local / 1.0;
 				if (P_enc > 1.0) {
-					fprintf(stderr, "perturb_stars(): WARNING: P_enc=%g>1.0!\n", P_enc);
-					fprintf(logfile, "perturb_stars(): WARNING: P_enc=%g>1.0!\n", P_enc);
+					wprintf("P_enc = %g >= 1!\n", P_enc);
 				}
 			}
 
@@ -2435,8 +2435,7 @@ void perturb_stars(double dt)
 			/* Probability of binary-single collision P = pi*p_max^2*W*n*dt */
 			P_enc = PI * p_max * p_max * W * dt * (1.0 * clus.N_STAR) / log(GAMMA * clus.N_STAR) * n_local / 1.0;
 			if (P_enc > 1.0) {
-				fprintf(stderr, "perturb_stars(): WARNING: P_enc=%g>1.0!\n", P_enc);
-				fprintf(logfile, "perturb_stars(): WARNING: P_enc=%g>1.0!\n", P_enc);
+				wprintf("P_enc = %g >= 1!\n", P_enc);
 			}
 			
 			if (rng_t113_dbl() < P_enc) {	/* binary-single Collision DUE */
