@@ -97,7 +97,7 @@ FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_utils.o
 CONTRIBS = contrib/calc_2ddensity.pl contrib/calc_3ddensity.pl \
 	contrib/calc_distfunc.pl contrib/pluck0.pl contrib/pluckbindata.pl \
-	contrib/prunedata.pl
+	contrib/prunedata.pl contrib/beo-genpbs.pl
 EXTRAS = FITS
 
 all: $(EXE) $(EXTRAS)
