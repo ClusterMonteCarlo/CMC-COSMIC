@@ -538,7 +538,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		clus.N_STAR_NEW = clus.N_STAR;
 		/* add 2 * clus.N_BINARY for binary disruptions */
 		/* add 0.1 * clus.N_STAR for safety */
-		N_STAR_DIM = clus.N_STAR + 2 + 2 * clus.N_BINARY * floorl(0.1 * ((double) clus.N_STAR));
+		N_STAR_DIM = clus.N_STAR + 2 + 2 * clus.N_BINARY + floorl(0.1 * ((double) clus.N_STAR));
 
 		/*********************************************/
 		/* allocation of memory for global variables */
@@ -547,15 +547,13 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		/* the main star array containing all star parameters */
 		star = malloc(N_STAR_DIM * sizeof(star_t));
 	
-		/* make all stars initially uninteracted - this fixes an 
-		   uninitialized memory read found by Valgrind */
+		/* make all stars initially uninteracted */
 		for (i=0; i<N_STAR_DIM; i++) {
 			star[i].interacted = 0;
 		}
 		
 		/* the main binary array containing all binary parameters */
-		/* decrement for fortran-style use of the array */
-		binary = malloc((clus.N_BINARY+1) * sizeof(binary_t)) - 1;
+		binary = malloc((clus.N_BINARY+2) * sizeof(binary_t));
 		
 		/* quantities calculated for various lagrange radii */
 		mass_r = malloc((NUM_MASS_RADII_BINS + 1) 
