@@ -309,8 +309,8 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 		"Everything else", &status);
 	fits_write_key(fptr, TINT, "SEFCNT", &se_file_counter, 
 			"se_file_counter", &status);
-	fits_write_key(fptr, TLONG, "ERRSTA", &errstat, 
-			"errstat", &status);
+	/* fits_write_key(fptr, TLONG, "ERRSTA", &errstat, 
+	   "errstat", &status); */
 	fits_write_key(fptr, TLONG, "TCOUNT", &tcount, 
 			"tcount", &status);
 	fits_write_key(fptr, TLONG, "ECHECK", &Echeck, 

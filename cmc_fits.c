@@ -458,7 +458,7 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	/* reading outprefix does not make much sense :-) 
 	 * fits_read_key(fptr, TSTRING, "OUTPRE", &(outprefix), NULL, &status);*/
 	fits_read_key(fptr, TINT, "SEFCNT", &(se_file_counter), NULL, &status);
-	fits_read_key(fptr, TLONG, "ERRSTA", &(errstat), NULL, &status);
+	/* fits_read_key(fptr, TLONG, "ERRSTA", &(errstat), NULL, &status); */
 	fits_read_key(fptr, TLONG, "TCOUNT", &(tcount), NULL, &status);
 	fits_read_key(fptr, TLONG, "ECHECK", &(Echeck), NULL, &status);
 	fits_read_key(fptr, TLONG, "SNAPNO", &(snap_num), NULL, &status);

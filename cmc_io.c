@@ -129,8 +129,8 @@ void PrintLogOutput(void)
 	fprintf(stdout, "sub.count=%ld sub.FACTOR=%ld sub.N_MAX=%ld sub.rmax=%g\n", sub.count, sub.FACTOR, sub.N_MAX, sub.rmax);
 	fprintf(logfile, "sub.count=%ld sub.FACTOR=%ld sub.N_MAX=%ld sub.rmax=%g\n", sub.count, sub.FACTOR, sub.N_MAX, sub.rmax);
 	
-	fprintf(stdout, "Etotal=%g max_r=%g N(bound)=%ld Rtidal=%g\n", Etotal.tot, max_r, errstat, Rtidal);
-	fprintf(logfile, "Etotal=%g max_r=%g N(bound)=%ld Rtidal=%g\n", Etotal.tot, max_r, errstat, Rtidal);
+	fprintf(stdout, "Etotal=%g max_r=%g N(bound)=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
+	fprintf(logfile, "Etotal=%g max_r=%g N(bound)=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
 	
 	fprintf(stdout, "Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
 	fprintf(logfile, "Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);

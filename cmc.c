@@ -80,11 +80,8 @@ int main(int argc, char *argv[])
 		/* assign binaries */
 		assign_binaries();
 
-		/* Computing the gravity at the star locations provided in sr[].
-		   Results returned in star[].gravity. Returns N_MAX. Also computes
-		   Rtidal using Mtotal and orbit_r. */
 		orbit_r = R_MAX;
-		errstat = potential_calculate();
+		potential_calculate();
 
 		ComputeEnergy();
 		Etotal.ini = Etotal.tot;   /* Noting the total initial energy, in order to set termination energy. */
@@ -197,12 +194,7 @@ int main(int argc, char *argv[])
 		//mqsort(star, 1, clus.N_MAX_NEW);
 		qsorts(star+1,clus.N_MAX_NEW);
 
-		/* Computing the potential at the star locations provided in star[].r.
-		   Results returned in star[].gravity. Computes Mtotal 
-		   (total mass).  Returns N_MAX. 
-		   This is the  only place where N_MAX can change.
-		   Also computes new Rtidal using Mtotal and orbit_r */
-		errstat = potential_calculate();
+		potential_calculate();
 
 		comp_mass_percent();
 
@@ -213,12 +205,6 @@ int main(int argc, char *argv[])
 		update_vars();
 		tcount++;
 		
-		/* DEBUG */
-		if (errstat != clus.N_MAX) {
-			wprintf("errstat=%ld clus.N_MAX=%ld\n", errstat, clus.N_MAX);
-		}
-		/* DEBUG */
-
 		print_results();
 		/* FIXME: FITS snapshotting not working yet? */
 		/* if(tcount%1==0 && DUMPS) sshot_fits(rng); */

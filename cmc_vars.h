@@ -59,7 +59,7 @@ FILE *binaryfile, *binsinglefile, *binbinfile;
 /* everything else except arrays */
 char outprefix[100];
 int se_file_counter;
-long errstat, tcount;
+long tcount;
 long Echeck;
 long snap_num, StepCount;
 double rho_core_single, rho_core_bin, rh_single, rh_binary;
