@@ -18,7 +18,7 @@ while () {
 	/* sorts stars by radius */
 	qsorts(star+1,clus.N_MAX_NEW);
 	/* calculates potential at positions of stars */
-	errstat = gravity();
+	errstat = potential_calculate();
 	/* calculates Lagrange radii */
 	comp_mass_percent();
 	/* recomputes global cluster energies */
