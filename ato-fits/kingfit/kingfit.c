@@ -42,7 +42,8 @@ void print_usage(FILE *stream)
 	fprintf(stream, "OPTIONS:\n");
 	fprintf(stream, "  -w --W0 <W_0 parameter> : set King model W_0 parameter [%.6g]\n", W0);
 	fprintf(stream, "  -N --N <N>              : set number of stars [%ld]\n", NSTAR);
-	fprintf(stream, "  -o --outfile <outfile>  : set name of outfile (must be set after W_0 and N) [%s]\n", outfile);
+	fprintf(stream, "  -o --outfile <outfile>  : set name of outfile [king_w<w0>_n<N>.fits]\n");
+	fprintf(stream, "                            where <w0> and <N> are replaced by their respective values\n");
 	fprintf(stream, "  -s --seed <seed>        : set random seed [%ld]\n", SEED);
 	fprintf(stream, "  -d --debug              : turn on debugging\n");
 	fprintf(stream, "  -V --version            : print version info\n");
@@ -276,6 +277,8 @@ void check_for_file(char *filename){
 			system("rm debug");
 		} else if (strncmp(filename, "debug.fit", 9)==0 ){
 			system("rm debug.fit");
+		} else if (strncmp(filename, "debug.fits", 9)==0 ){
+			system("rm debug.fits");
 		} else {
 			printf("the given filename, %s, exists!\n", filename);
 			exit(EXIT_FAILURE);
@@ -313,17 +316,15 @@ int main(int argc, char *argv[]){
 		{NULL, 0, NULL, 0}
 	};
 	
-	sprintf(filename, OUTFILE_FORMAT, w0, (double) N);
+	filename[0] = 0;	/* setting a meaningless default name */
 
 	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
 		switch (i) {
 		case 'w':
 			w0 = atof(optarg);
-			sprintf(filename, OUTFILE_FORMAT, w0, (double) N);
 			break;
 		case 'N':
 			N = atol(optarg);
-			sprintf(filename, OUTFILE_FORMAT, w0, (double) N);
 			break;
 		case 'o':
 			sprintf(filename, "%s", optarg);
@@ -351,6 +352,10 @@ int main(int argc, char *argv[]){
 	if (optind < argc) {
 		print_usage(stdout);
 		return(1);
+	}
+	
+	if (filename[0]==0){
+		sprintf(filename, OUTFILE_FORMAT, w0, (double) N);
 	}
 
 	check_for_file(filename);
