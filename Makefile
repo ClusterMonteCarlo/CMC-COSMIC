@@ -98,6 +98,9 @@ FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 CONTRIBS = contrib/calc_2ddensity.pl contrib/calc_3ddensity.pl \
 	contrib/calc_distfunc.pl contrib/pluck0.pl contrib/pluckbindata.pl \
 	contrib/prunedata.pl
+EXTRAS = FITS
+
+all: $(EXE) $(EXTRAS)
 
 $(EXE): $(OBJS) $(FEWBODYOBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
@@ -111,12 +114,18 @@ $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 %.o: %.c $(NAME).h $(NAME)_vars.h Makefile
 	$(CC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
 
+.PHONY: FITS install clean fewbodyclean mrproper
+
+FITS:
+	cd ato-fits && $(MAKE)
+
 install: $(EXE) $(CONTRIBS)
 	mkdir -p $(PREFIX)/bin/
 	install -m 0755 $^ $(PREFIX)/bin/
 
 clean:
 	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE)
+	cd ato-fits && $(MAKE) clean
 
 $(NAME)clean:
 	rm -f $(OBJS) $(EXE)
