@@ -15,7 +15,7 @@ N_BINARY = 10000
 MMIN = 1.0
 
 ### other params ###
-INPUT_FILE = plummer_100000.fit.gz
+INPUT_FILE = plummer_100000.fits.gz
 R_MAX = 1000000
 
 ### physics ###

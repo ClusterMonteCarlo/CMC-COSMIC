@@ -30,7 +30,7 @@ MINIMUM_R 0.0
 E_CONS = 1
 
 ### other params ###
-INPUT_FILE = plummer_100000.fit.gz
+INPUT_FILE = plummer_100000.fits.gz
 R_MAX = 1000000
 
 ### output settings ###

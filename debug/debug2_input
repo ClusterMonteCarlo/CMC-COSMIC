@@ -15,7 +15,7 @@ MINIMUM_R 0.0
 # Initial value of CentralMass
 CENTRAL_MASS 0.0
 
-INPUT_FILE continue.fit
+INPUT_FILE continue.fits
 R_MAX 10000000
 
 # whether to have stellar evolution or not
