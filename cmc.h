@@ -150,6 +150,13 @@ typedef struct{
 	double *phi; /* potential */
 } potential_t;
 
+/* a struct for the force, must be malloc'ed */
+typedef struct{
+	long n; /* number of elements */
+	double *r; /* radius */
+	double *force; /* force */
+} force_t;
+
 /********************** Function Declarations ************************/
 inline double sqr(double x);
 inline double cub(double x);

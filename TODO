@@ -1,3 +1,6 @@
+* Rewrite get_positions().  Can solve dQ/dr=0 to get r at v_r,max, which can be
+  used to bisect the r interval into two portions, each containing a root of
+  Q(r)=0.  This is what the force_t variable type is for.
 * Fix massive energy loss visible when relaxation is turned off.  
   Something is wrong with either the calculation of the potential, or 
   get_positions().

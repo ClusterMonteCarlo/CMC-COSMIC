@@ -237,30 +237,33 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		E = star[j].E;
 		J = star[j].J;
 		
+		/* ignore halo stars during sub timesteps */
 		if (si > N_LIMIT && si <= clus.N_MAX && star[j].r_peri > sub.rmax) {
-			/* do nothing, since this is a sub timestep and star is in the halo */
 			continue;
 		}
-		if (E >= 0.0 || star[j].m < ZERO) {
-		/* Remove stars with positive Energy, or those with 
-		 * mass ZERO (< 1.0e-20) due to stellar evolution. Note 
-		 * that energy lost due to stellar evolution is subtracted
+
+		/* remove unbound or massless stars */
+		/* note that energy lost due to stellar evolution is subtracted
 		   at the time of mass loss in DoStellarEvolution */
+		if (E >= 0.0 || star[j].m < ZERO) {
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
 		}
 
-		/* Q(si) must be +ve (selected that way in last time step!) */
+		/* Q(si) must be positive (selected that way in last time step!) */
 		ktemp = si;
 
-		/* for new stars due to binary disruptions, position si is not ordered, so search */
+		/* for newly created stars, position si is not ordered, so search */
 		if (si > clus.N_MAX) {
+			dprintf("doing stupid linear search due to newly created star: si=%ld\n", si);
 			ktemp = 0;
 			while (ktemp < clus.N_MAX && star[ktemp].r < star[j].rnew) {
 				ktemp++;
 			}
 		}
 
+		/* this is not right for newly created stars; can be negative since it just uses
+		   the position at ktemp */
 		Qtemp = function_Q(ktemp, E, J);
 
 		kk = ktemp;
@@ -310,6 +313,13 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
 		dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
 
+		/* DEBUG */
+		if (rmin < star[i].r || rmin > star[i1].r || function_Q(i, E, J) > 0 || function_Q(i1, E, J) < 0) {
+			dprintf("WTF: Q(%.8g)=%.8g rmin=%.8g Q(%.8g)=%.8g\n", 
+				star[i].r, function_Q(i, E, J), rmin, star[i1].r, function_Q(i1, E, J));
+		}
+		/* DEBUG */
+		
 		/*  For rmax- Look for rk, rk1 such that 
 		 *  Q(rk) > 0 > Q(rk1) */
 
@@ -335,6 +345,13 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
 		dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
 
+		/* DEBUG */
+		if (rmax < star[i].r || rmax > star[i1].r || function_Q(i, E, J) < 0 || function_Q(i1, E, J) > 0) {
+			dprintf("WTF: Q(%.8g)=%.8g rmax=%.8g Q(%.8g)=%.8g\n", 
+				star[i].r, function_Q(i, E, J), rmax, star[i1].r, function_Q(i1, E, J));
+		}
+		/* DEBUG */
+
 		if (rmin > rmax) {
 			star[j].rnew = star[j].r;
 			star[j].vrnew = star[j].vr;
@@ -354,10 +371,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		g1 = sqrt(3.0 * (rmax - rmin) / dQdr_min);	/* g(-1) */
 		g2 = sqrt(-3.0 * (rmax - rmin) / dQdr_max);	/* g(+1) */
 
-		if (g2 > g1)
-			F = 1.2 * g2;	/* F = 1.2 * Max(g(-1),g(+1)) */
-		else
-			F = 1.2 * g1;
+		F = 1.2 * MAX(g1, g2);
 		
 		for (k = 1; k <= N_TRY; k++) {
 #ifdef USE_THREADS
