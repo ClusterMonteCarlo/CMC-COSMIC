@@ -125,7 +125,7 @@ install: $(EXE) $(CONTRIBS)
 
 clean:
 	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE)
-	cd ato-fits && $(MAKE) clean
+	cd ato-fits && $(MAKE) -s clean
 
 $(NAME)clean:
 	rm -f $(OBJS) $(EXE)
