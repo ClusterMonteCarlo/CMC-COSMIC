@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 		static ch1=0, ch2=0;
 
 		if(ch2==0 && cenma.m>0){
-			DT_FACTOR /=10.0;
+			/* DT_FACTOR /=10.0; */
 			ch2 = 1;
 		}
 #endif
@@ -156,7 +156,6 @@ int main(int argc, char *argv[])
 			Dt = Prev_Dt * 1.1;
 		}
 
-		Dt /= DT_FACTOR;
 		TotalTime = TotalTime + Dt;
 
 		setup_sub_time_step();

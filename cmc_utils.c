@@ -97,11 +97,9 @@ void setup_sub_time_step(void){
 			w2_avg = w2_avg * 2.0 / m_avg / zk;
 			zr_min = star[si_minus_p].r;
 			zr_max = star[si_plus_p].r;
-			Ai = 6.0 * zk * m_avg * m_avg /
-			    (zr_max * zr_max * zr_max - zr_min * zr_min * zr_min) / pow(w2_avg, 1.5);
+			Ai = 6.0 * zk * sqr(m_avg) / (cub(zr_max) - cub(zr_min)) / sqrt(cub(w2_avg));
 
-			Dt_local = SIN2BETA_MAX / Ai * clus.N_STAR;
-			Dt_local /= DT_FACTOR;
+			Dt_local = SIN2BETA_MAX / Ai * clus.N_STAR / DT_FACTOR;
 			/* DEBUG */
 			Dt_local *= Mtotal;
 			/* DEBUG */

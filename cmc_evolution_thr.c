@@ -22,6 +22,7 @@ double GetTimeStep(void)
 	long i;
 	double m_core, m_single, m_bin, m_avg, w2_avg, Ai;
 	double n_core, R2_core, MR_core, DTrel, Tcoll, DTcoll;
+	double m_min, m_max;
 
 	/* Calculation of Relaxation time in the core in order to compute Dt */
 	m_core = 0.0;
@@ -64,13 +65,23 @@ double GetTimeStep(void)
 	w2_avg = w2_avg * 2.0 / m_avg / ((double) NUM_CORE_STARS);
 	Ai = 6.0 * ((double) NUM_CORE_STARS) * sqr(m_avg) / (cub(star[NUM_CORE_STARS].r) - cub(star[1].r)) / sqrt(cub(w2_avg));
 
+	/* DEBUG */
+	m_max = m_avg;
+	m_min = m_avg;
+	for (i=1; i<=NUM_CORE_STARS; i++) {
+		m_max = MAX(m_max, star[i].m);
+		m_min = MIN(m_min, star[i].m);
+	}
+	dprintf("dt_factor=%g\n", m_max/m_min);
+	/* DEBUG */
+
 	/* calculate the relaxation timestep (there are many different ways to do this) */
 	/* compute using Henon's method (can this be correct without a factor of N/ln(gamma N)?) */
 	/* DTrel = (factor < 1) * ((double) clus.N_MAX) / ((double) clus.N_STAR) * pow(Mtotal, 2.5) / pow(fabs(Etotal.K+Etotal.P), 1.5); */
 	/* take to be a fraction of the core relaxation time */
 	/* DTrel = (factor < 1) * Trc; */
 	/* set by the maximum allowed value of sin^2 beta */
-	DTrel = SIN2BETA_MAX * ((double) clus.N_STAR) / Ai;
+	DTrel = SIN2BETA_MAX * ((double) clus.N_STAR) / Ai / DT_FACTOR;
 
 	/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
 	/* G=1 in our code units */
