@@ -10,8 +10,9 @@ my ($outfile, @file);
 
 # generate random string, used for job name
 @chars=(0..9, 'A'..'Z', 'a'..'z');
-$randstring = '';
-for ($i=0; $i<8; $i++) {
+# PBS name has to start with a letter
+$randstring = ('A'..'Z', 'a'..'z')[int(rand(52))];
+for ($i=0; $i<7; $i++) {
     $randstring = $randstring.$chars[int(rand($#chars+1))];
 }
 
