@@ -62,6 +62,8 @@ typedef struct{
 	long   binind; /* index to the binary */
 	long id; 	/* the star's unique identifier */
 	double rad; /* radius */
+	double Uoldrold, Uoldrnew; /* variables for Stodolkiewicz */
+	double vtold, vrold;       /* energy conservation scheme  */
 	/* stellar evolution variables */
 #ifdef SE
 	double mzams;  /* ZAMS mass                                       */
@@ -214,6 +216,7 @@ void PrintLogOutput(void);
 double GetTimeStep(void);
 long CheckStop(void);
 void ComputeIntermediateEnergy(void);
+void set_velocities(void);
 void RecomputeEnergy(void);
 double rtbis(double (*func) (double), double x1, double x2, double xacc);
 double trapzd(double (*func) (double), double a, double b, long n);

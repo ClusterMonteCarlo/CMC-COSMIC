@@ -185,7 +185,36 @@ int main(int argc, char *argv[])
 
 		Prev_Dt = Dt;
 
+		/* some numbers necessary to implement Stodolkiewicz's
+	 	 * energy conservation scheme */
+		if(E_CONS==2){
+			for (i = 1; i <= clus.N_MAX_NEW; i++) {
+				/* saving velocities */
+				star[i].vtold = star[i].vt;
+				star[i].vrold = star[i].vr;
+				
+				/* the following will get updated after sorting and
+				 * calling potential_calculate(), needs to be saved 
+				 * now */  
+				star[i].Uoldrold = star[i].phi;
+				
+				/* Unewrold will be calculated after 
+				 * potential_calculate() using [].rOld
+				 * Unewrnew is [].phi after potential_calculate() */
+			}
+		}
+
 		sniff_stars();
+
+		/* more numbers necessary to implement Stodolkiewicz's
+	 	 * energy conservation scheme */
+		if(E_CONS==2){
+			for (i = 1; i <= clus.N_MAX_NEW; i++) {
+				/* the following cannot be calculated after sorting 
+				 * and calling potential_calculate() */
+				star[i].Uoldrnew = potential(star[i].rnew);
+			}
+		}
 
 		/* Compute Intermediate Energies of stars. 
 		 * Also transfers new positions and velocities from srnew[], 
@@ -200,6 +229,10 @@ int main(int argc, char *argv[])
 		qsorts(star+1,clus.N_MAX_NEW);
 
 		potential_calculate();
+
+		if(E_CONS==2){
+			set_velocities();
+		}
 
 		comp_mass_percent();
 

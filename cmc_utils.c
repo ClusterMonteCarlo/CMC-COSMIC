@@ -178,6 +178,60 @@ void setup_sub_time_step(void){
 
 }
 
+void set_velocities(void){
+	/* set velocities a la Stodolkiewicz to be able to conserve energy */
+	double vold2, vnew2, Unewrold, Unewrnew;
+	double vt, vr;
+	double Eexcess, exc_ratio;
+	long i, k;
+	
+	k = 0;
+	Eexcess = 0.0;
+	for (i = 1; i <= clus.N_MAX; i++) {
+		Unewrold = potential(star[i].rOld);
+		Unewrnew = star[i].phi;
+		vold2 = star[i].vtold*star[i].vtold + 
+			  star[i].vrold*star[i].vrold;
+		vnew2 = vold2 + star[i].Uoldrold + Unewrold
+				  - star[i].Uoldrnew - Unewrnew;
+		vt = star[i].vtold * star[i].rOld / star[i].rnew;
+		if( vnew2 < vt*vt ) {
+//			printf("*** OOOPSSS, trouble...\n");
+			k++;
+	     		vr = 0.0;
+//			printf("% 7ld %11.4e %11.4e %11.4e\n" , 
+//					i, star[i].vtold, star[i].vrold, vold2);
+//			printf("        %11.4e %11.4e\n", 
+//					star[i].Uoldrold, Unewrold);
+//			printf("        %11.4e %11.4e %11.4e\n", 
+//					star[i].Uoldrnew, Unewrnew, vnew2);
+			/* by setting vr to 0, we add this much energy 
+			   to the system */
+			Eexcess += 0.5*(vt*vt-vnew2)*star[i].m;
+		} else {
+			vr = sqrt(vnew2-vt*vt);
+			/* if there is excess energy added, try to remove at 
+			   least part of it from this star */
+			if(Eexcess > 0){
+				if(Eexcess < 0.5*(vt*vt+vr*vr)*star[i].m){
+					exc_ratio = 
+					 sqrt((vt*vt+vr*vr-2*Eexcess/star[i].m)/
+						(vt*vt+vr*vr));
+					vt *= exc_ratio;
+					vr *= exc_ratio;
+					Eexcess = 0.0;
+				}
+			}
+		}
+		star[i].vt = vt;
+		star[i].vr = vr;
+	}
+//	if(k>0){
+//		printf("** DAMN ! %ld out of %ld cases of TROUBLE!! **\n",
+//				k, clus.N_MAX);
+//	}
+}
+
 void RecomputeEnergy(void) {
 	double dtemp;
 	long i;
@@ -189,7 +243,7 @@ void RecomputeEnergy(void) {
 	Etotal.Eint = 0.0;
 	dtemp = 0;
 
-	if (E_CONS == 0) { /* recompute new sE[] and sJ[], using the new potential */
+	if (E_CONS == 0 || E_CONS == 2) { /* recompute new sE[] and sJ[], using the new potential */
 		for (i = 1; i <= clus.N_MAX; i++) {
 			star[i].E = star[i].phi + 0.5 * (SQR(star[i].vr) + SQR(star[i].vt));
 			star[i].J = star[i].r * star[i].vt;
@@ -203,7 +257,7 @@ void RecomputeEnergy(void) {
 			Etotal.Eint += star[i].Eint;
 
 		}
-	} else { /* Try to conserve energy by using intermediate potential */
+	} else if (E_CONS ==1) { /* Try to conserve energy by using intermediate potential */
 		for (i = 1; i <= clus.N_MAX; i++) {
 			/* Note: svt[] = J/r_new is already computed in get_positions() */
 			/* ignore stars near pericenter, and those with strong interactions */
