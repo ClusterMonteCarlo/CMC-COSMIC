@@ -47,6 +47,9 @@ void print_2Dsnapshot(void)
 	long i;
 	char outfile[100];
 
+	/* set the units */
+	units_set();
+
 	/* open file for 2D snapshot */
 	sprintf(outfile, "%ssnap%04ld.dat.gz", outprefix, snap_num);
 	if ((snapfile = gzopen(outfile, "wb")) == NULL) {
@@ -61,7 +64,7 @@ void print_2Dsnapshot(void)
 	/* then print data */
 	for (i=1; i<=clus.N_MAX; i++) {
 		gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g\n", 
-			 star[i].id, star[i].m * initial_total_mass, star[i].r, star[i].vr, star[i].vt, star[i].E, star[i].J);
+			 star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, star[i].r, star[i].vr, star[i].vt, star[i].E, star[i].J);
 	}
 
 	gzclose(snapfile);
