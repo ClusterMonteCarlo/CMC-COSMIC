@@ -1,3 +1,5 @@
+* Fix mechanism for turning off relaxation and testing spurious relaxation:
+  PERTURB input file parameter.
 * *sigh*: The first Lagrange radius is lost when reading in from the input
   file.  This needs to be fixed.
 * Decouple the potential from the star structure.  They are physically

@@ -16,9 +16,7 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/* FIXME: must fix to account for bin-bin, bin-single, and single-single */
-double GetTimeStep(void)
-{
+double GetTimeStep(void) {
 	long i;
 	double m_core, m_single, m_bin, m_avg, w2_avg, Ai;
 	double n_core, R2_core, MR_core, DTrel, Tcoll, DTcoll;
@@ -83,6 +81,8 @@ double GetTimeStep(void)
 
 	/* DEBUG */
 	dprintf("TotalTime=%g DTrel/DTrel_old=%g\n", TotalTime, DTrel/DTrel_old);
+	/* use old version of calculating timestep for now */
+	DTrel = DTrel_old;
 	/* DEBUG */
 
 	/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
@@ -114,13 +114,14 @@ double GetTimeStep(void)
 }
 
 /* removes tidally-stripped stars */
-void sniff_stars(void){
+void sniff_stars(void) {
 	double phi_rtidal, phi_zero;
 	long i, j;
 	
 	j = 0;
 	Etidal = 0.0;
 	OldTidalMassLoss = TidalMassLoss;
+	/* get new particle positions */
 	max_r = get_positions();
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 		
@@ -169,7 +170,7 @@ void sniff_stars(void){
 	} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
 }
 
-static void remove_star(long j, double phi_rtidal, double phi_zero){
+static void remove_star(long j, double phi_rtidal, double phi_zero) {
 	double E, J;
 
 	dprintf("removing star: id=%ld m=%g\n", star[j].id, star[j].m);
@@ -191,7 +192,7 @@ static void remove_star(long j, double phi_rtidal, double phi_zero){
 		0.0, 0.0, Rtidal, phi_rtidal, phi_zero, E, J);
 }
 
-void remove_star_center(long j){
+void remove_star_center(long j) {
 	dprintf("removing star: id=%ld m=%g\n", star[j].id, star[j].m);
 	
 	star[j].rnew = SF_INFINITY;	/* send star to infinity         */
