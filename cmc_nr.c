@@ -81,6 +81,45 @@ long FindZero_r(long x1, long x2, double r)
 #undef JMAX
 #endif
 
+/*
+#define FUNC(k, E, J) \
+	(2.0 * (E - star[k].phi) - SQR(J / star[k].r))
+*/
+#define FUNC(k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - star[(k)].phi) - SQR(J))
+
+long FindZero_Q(long kmin, long kmax, double E, double J){
+	/* another binary search:
+	 * anologous to above, except FUNC(k) may be decreasing 
+	 * rather than increasing */
+	long ktry;
+
+	if(FUNC(kmin, E, J)<FUNC(kmax, E, J)){
+		do {
+			ktry = (kmin+kmax+1)/2;
+			if (FUNC(ktry, E,J)<0){
+				kmin = ktry;
+			} else {
+				kmax = ktry-1;
+			}
+		} while (kmax!=kmin);
+	} else {
+		do {
+			ktry = (kmin+kmax+1)/2;
+			if (FUNC(ktry, E,J)>0){
+				kmin = ktry;
+			} else {
+				kmax = ktry-1;
+			}
+		} while (kmax!=kmin);
+	}
+
+
+	return kmin;
+}
+
+	
+#if 0
+
 /* Find Zero OF Q */
 /* Finding the root of the function defined in 'func' by bisection.  */
 /* Requires the root to be bracketed between x1 and x2. */
@@ -88,7 +127,7 @@ long FindZero_r(long x1, long x2, double r)
 #define FUNC(k, E, J) \
 	(2.0 * (E - star[k].phi) - SQR(J / star[k].r))
 
-long FindZero_Q(long x1, long x2, double E, double J)
+long FindZero_Q_old(long x1, long x2, double E, double J)
 {
 	void nrerror(char error_text[]);
 	int j;
@@ -171,3 +210,5 @@ long new_FindZero_Q(long x1, long x2, double E, double J)
 
 #undef FUNC
 #undef JMAX
+
+#endif
