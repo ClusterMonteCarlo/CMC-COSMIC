@@ -180,7 +180,7 @@ void setup_sub_time_step(void){
 
 void RecomputeEnergy(void) {
 	double dtemp;
-	long k, i;
+	long i;
 
 	/* Recalculating Energies */
 	Etotal.tot = 0.0;
@@ -191,61 +191,58 @@ void RecomputeEnergy(void) {
 
 	if (E_CONS == 0) { /* recompute new sE[] and sJ[], using the new potential */
 		for (i = 1; i <= clus.N_MAX; i++) {
-			k = i;
-			star[k].E = star[k].phi + 0.5 * (SQR(star[k].vr) + SQR(star[k].vt));
-			star[k].J = star[k].r * star[k].vt;
+			star[i].E = star[i].phi + 0.5 * (SQR(star[i].vr) + SQR(star[i].vt));
+			star[i].J = star[i].r * star[i].vt;
 
-			Etotal.K += 0.5 * (SQR(star[k].vr) + SQR(star[k].vt)) * star[k].m / clus.N_STAR;
+			Etotal.K += 0.5 * (SQR(star[i].vr) + SQR(star[i].vt)) * star[i].m / clus.N_STAR;
 
 			/* Compute PE using Henon method using star[].phi */
-			Etotal.P += star[k].phi * star[k].m / clus.N_STAR;
+			Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
 
 			/* add up internal energies */
-			Etotal.Eint += star[k].Eint;
+			Etotal.Eint += star[i].Eint;
 
 			/* reset star[].interacted flag to 0 */
-			star[k].interacted = 0;
+			star[i].interacted = 0;
 		}
 	} else { /* Try to conserve energy by using intermediate potential */
 		for (i = 1; i <= clus.N_MAX; i++) {
-			k = i;
-			
 			/* Note: svt[] = J/r_new is already computed in get_positions() */
 			/* ignore stars near pericenter, and those with strong interactions */
-			if (star[k].X > 0.05 && star[k].interacted == 1) {
-				dtemp = star[k].EI - star[k].phi + potential(star[k].rOld);
+			if (star[i].X > 0.05 && star[i].interacted == 1) {
+				dtemp = star[i].EI - star[i].phi + potential(star[i].rOld);
 
-				if (dtemp - star[k].vr * star[k].vr > 0) {
-					/* preserve star[k].vr and change star[k].vt */
-					star[k].vt = sqrt(dtemp - star[k].vr * star[k].vr);
+				if (dtemp - star[i].vr * star[i].vr > 0) {
+					/* preserve star[i].vr and change star[i].vt */
+					star[i].vt = sqrt(dtemp - star[i].vr * star[i].vr);
 				} else {
 					if (dtemp > 0) {
-						if (dtemp > star[k].vt * star[k].vt) {
-							star[k].vr = sqrt(dtemp - star[k].vt * star[k].vt);
+						if (dtemp > star[i].vt * star[i].vt) {
+							star[i].vr = sqrt(dtemp - star[i].vt * star[i].vt);
 						} else {
-							star[k].vt = sqrt(dtemp / 2.0);
-							star[k].vr = sqrt(dtemp / 2.0);
+							star[i].vt = sqrt(dtemp / 2.0);
+							star[i].vr = sqrt(dtemp / 2.0);
 						}
 					} else {
 						/* reduce the energy of the next star to compensate */ 
 						if (i < clus.N_MAX)
-							star[i + 1].EI += dtemp - (star[k].vt * star[k].vt + star[k].vr * star[k].vr);
+							star[i + 1].EI += dtemp - (star[i].vt * star[i].vt + star[i].vr * star[i].vr);
 					}
 				}
 			}
 
 			/* recompute new sE[] and sJ[], using the new potential */
-			star[k].E = star[k].phi + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
-			star[k].J = star[k].r * star[k].vt;
+			star[i].E = star[i].phi + 0.5 * (star[i].vr * star[i].vr + star[i].vt * star[i].vt);
+			star[i].J = star[i].r * star[i].vt;
 
-			Etotal.K += 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt) * star[k].m / clus.N_STAR;
-			Etotal.P += star[k].phi * star[k].m / clus.N_STAR;
+			Etotal.K += 0.5 * (star[i].vr * star[i].vr + star[i].vt * star[i].vt) * star[i].m / clus.N_STAR;
+			Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
 
 			/* add up internal energies */
-			Etotal.Eint += star[k].Eint;
+			Etotal.Eint += star[i].Eint;
 
 			/* reset star[].interacted flag to 0 */
-			star[k].interacted = 0;
+			star[i].interacted = 0;
 		}
 	}
 
