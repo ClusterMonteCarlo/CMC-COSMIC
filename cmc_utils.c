@@ -556,44 +556,33 @@ void comp_mass_percent(){
 
 /* The potential computed using the star[].phi computed at the star 
    locations in star[].r sorted by increasing r. */
-double potential(double r)
-{
-	long i, k;
+double potential(double r) {
+	long i;
 	double henon;
 
 	/* root finding using indexed values of sr[] & bisection */
 	if (r < star[1].r)
 		return (star[1].phi);
 
-	if (r * INDEX_UNIT <= MAX_INDEX) {	/* use tabulated value of r */
-		i = r * INDEX_UNIT;
-		i = IndexTable[i];
-	} else if (IndexTable[MAX_INDEX] == clus.N_MAX + 1) {	/* ALL stars are WITHIN MAX_INDEX*1000 */
-		i = clus.N_MAX;
-	} else {		/* beyond tabulated values of r */
-		i = FindZero_r(IndexTable[MAX_INDEX] - 1, clus.N_MAX + 1, r);
-		if (i < 0) {
-			eprintf("Error finding zero: i = %5ld   r = %.5G\n", i, r);
-			exit_cleanly(-1);
-		}
+	i =  FindZero_r(1 ,clus.N_MAX + 1, r);
+	
+	if(star[i].r > r || star[i+1].r < r){
+		eprintf("binary search (FindZero_r) failed!!\n");
+		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, r = %e\n",
+				i, star[i].r, star[i+1].r, r);
+		exit_cleanly(-2);
 	}
-	while (star[i].r > r) {
-		i--;
-	}
-	while (star[i].r < r) {
-		i++;
-	}
-	k = i - 1;
-
 
 	/* Henon's method of computing the potential using star[].phi */ 
-	if (k == 0)
+	if (i == 0){ /* I think this is impossible, due to early return earlier,
+			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
 		henon = (star[1].phi);
-	else
-		henon = (star[k].phi + (star[k + 1].phi
-		       - star[k].phi) 
-			* (1.0/star[k].r - 1.0/r) /
-			 (1.0/star[k].r - 1.0/star[k + 1].r));
+	} else {
+		henon = (star[i].phi + (star[i + 1].phi
+		       - star[i].phi) 
+			* (1.0/star[i].r - 1.0/r) /
+			 (1.0/star[i].r - 1.0/star[i + 1].r));
+	}
 	
 	return (henon);
 }
