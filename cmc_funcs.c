@@ -14,9 +14,6 @@ double bin_single_sigma(double y)
 /* radius is output in code (N-body) units */
 double r_of_m(double M)
 {
-	/* set the (N-body) units, written in CGS */
-	units_set();
-	
 	if (M == 0.0) {
 		/* special case of massless particles */
 		return(0.0);

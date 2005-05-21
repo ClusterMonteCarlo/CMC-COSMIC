@@ -25,10 +25,12 @@ if ($#ARGV != -1) {
 # read in snapfile
 while ($line = <STDIN>) {
     
-    @vals = split(/[\s]+/, $line);
-    
-    push(@r, $vals[2]);
-    push(@m, $vals[3]);
+    if ($line !~ /^\#/) {
+	@vals = split(/[\s]+/, $line);
+	
+	push(@r, $vals[2]);
+	push(@m, $vals[1]);
+    }
 }
 
 # this is the total number of stars

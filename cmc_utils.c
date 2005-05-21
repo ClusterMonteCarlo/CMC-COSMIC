@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <time.h>
+#include <unistd.h>
+#include <sys/times.h>
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_spline.h>
 #include "cmc.h"
 #include "cmc_vars.h"
 
@@ -65,7 +68,7 @@ void setup_sub_time_step(void){
 	 * boundary between core and halo. */
 
 	if (sub.count == 0) {		/** do a full timestep **/
-		p = 20;
+		p = AVEKERNEL;
 		sub.N_MAX = clus.N_MAX;	/* default -- if Dt does not 
 					   change much up to r_h */
 		sub.FACTOR = 1;
@@ -98,7 +101,9 @@ void setup_sub_time_step(void){
 			zr_max = star[si_plus_p].r;
 			Ai = 6.0 * zk * sqr(m_avg) / (cub(zr_max) - cub(zr_min)) / sqrt(cub(w2_avg));
 
-			Dt_local = SIN2BETA_MAX / Ai * clus.N_STAR / DT_FACTOR;
+			/* FIXME: subzoning does not work correctly with the new relaxation
+			   scheme! */
+			Dt_local = sqr(sin(THETASEMAX)) / Ai * clus.N_STAR / DT_FACTOR;
 			/* DEBUG */
 			Dt_local *= Mtotal;
 			/* DEBUG */
@@ -188,115 +193,219 @@ void set_velocities(void){
 	k = 0;
 	Eexcess = 0.0;
 	for (i = 1; i <= clus.N_MAX; i++) {
-		Unewrold = potential(star[i].rOld);
-		Unewrnew = star[i].phi;
-		vold2 = star[i].vtold*star[i].vtold + 
-			  star[i].vrold*star[i].vrold;
-		vnew2 = vold2 + star[i].Uoldrold + Unewrold
-				  - star[i].Uoldrnew - Unewrnew;
-		vt = star[i].vtold * star[i].rOld / star[i].rnew;
-		if( vnew2 < vt*vt ) {
+		/* modify velocities of stars that have only undergone relaxation */
+		if (star[i].interacted == 0) {
+			Unewrold = potential(star[i].rOld) + PHI_S(star[i].rOld, i);
+			Unewrnew = star[i].phi + PHI_S(star[i].r, i);
+			vold2 = star[i].vtold*star[i].vtold + 
+				star[i].vrold*star[i].vrold;
+			vnew2 = vold2 + star[i].Uoldrold + Unewrold
+				- star[i].Uoldrnew - Unewrnew;
+			vt = star[i].vtold * star[i].rOld / star[i].rnew;
+			if( vnew2 < vt*vt ) {
 //			printf("*** OOOPSSS, trouble...\n");
-			k++;
-	     		vr = 0.0;
+				k++;
+				vr = 0.0;
 //			printf("% 7ld %11.4e %11.4e %11.4e\n" , 
 //					i, star[i].vtold, star[i].vrold, vold2);
 //			printf("        %11.4e %11.4e\n", 
 //					star[i].Uoldrold, Unewrold);
 //			printf("        %11.4e %11.4e %11.4e\n", 
 //					star[i].Uoldrnew, Unewrnew, vnew2);
-			/* by setting vr to 0, we add this much energy 
-			   to the system */
-			Eexcess += 0.5*(vt*vt-vnew2)*star[i].m;
-		} else {
-			vr = sqrt(vnew2-vt*vt);
-			/* if there is excess energy added, try to remove at 
-			   least part of it from this star */
-			if(Eexcess > 0){
-				if(Eexcess < 0.5*(vt*vt+vr*vr)*star[i].m){
-					exc_ratio = 
-					 sqrt((vt*vt+vr*vr-2*Eexcess/star[i].m)/
-						(vt*vt+vr*vr));
-					vt *= exc_ratio;
-					vr *= exc_ratio;
-					Eexcess = 0.0;
+				/* by setting vr to 0, we add this much energy 
+				   to the system */
+				Eexcess += 0.5*(vt*vt-vnew2)*star[i].m;
+			} else {
+				/* choose randomized sign for vr, based on how vr was already
+				   randomized in get_positions() -- don't want to waste random
+				   numbers! */
+				if (star[i].vr >= 0.0) {
+					vr = sqrt(vnew2-vt*vt);
+				} else {
+					vr = -sqrt(vnew2-vt*vt);
+				}
+				/* if there is excess energy added, try to remove at 
+				   least part of it from this star */
+				if(Eexcess > 0){
+					if(Eexcess < 0.5*(vt*vt+vr*vr)*star[i].m){
+						exc_ratio = 
+							sqrt((vt*vt+vr*vr-2*Eexcess/star[i].m)/
+							     (vt*vt+vr*vr));
+						vt *= exc_ratio;
+						vr *= exc_ratio;
+						Eexcess = 0.0;
+					}
 				}
 			}
+			star[i].vt = vt;
+			star[i].vr = vr;
 		}
-		star[i].vt = vt;
-		star[i].vr = vr;
 	}
+		
+	/* keep track of the energy that's vanishing due to our negligence */
+	Eoops += -Eexcess * madhoc;
+
 //	if(k>0){
 //		printf("** DAMN ! %ld out of %ld cases of TROUBLE!! **\n",
 //				k, clus.N_MAX);
 //	}
 }
 
+void set_velocities3(void){
+	/* set velocities a la Stodolkiewicz to be able to conserve energy */
+	double vold2, vnew2, Unewrold, Unewrnew;
+	double Eexcess, exc_ratio;
+	double q=0.5; /* q=0.5 -> Stodolkiewicz, q=0 -> Delta U all from rnew */
+	double alpha;
+	long i;
+	
+	Eexcess = 0.0;
+	for (i = 1; i <= clus.N_MAX; i++) {
+		/* modify velocities of stars that have only undergone relaxation */
+		if (star[i].interacted == 0) {
+			Unewrold = potential(star[i].rOld) + PHI_S(star[i].rOld, i);
+			Unewrnew = star[i].phi + PHI_S(star[i].r, i);
+			vold2 = star[i].vtold*star[i].vtold + 
+				star[i].vrold*star[i].vrold;
+			/* predict new velocity */
+			vnew2 = vold2 + 2.0*(1.0-q)*(star[i].Uoldrold - star[i].Uoldrnew)
+				+ 2.0*q*(Unewrold - Unewrnew);
+			/* new velocity can be unphysical, so just use value predicted by old potential
+			   (this is already set in .vr and .vt) */
+			if (vnew2 <= 0.0) {
+				Eexcess += 0.5*(sqr(star[i].vr)+sqr(star[i].vt)-vnew2)*star[i].m;
+			} else {
+				/* scale velocity, preserving v_t/v_r */
+				alpha = sqrt(vnew2/(sqr(star[i].vr)+sqr(star[i].vt)));
+				star[i].vr *= alpha;
+				star[i].vt *= alpha;
+				
+				/* if there is excess energy added, try to remove at 
+				   least part of it from this star */
+				if(Eexcess > 0 && Eexcess < 0.5*(sqr(star[i].vt)+sqr(star[i].vr))*star[i].m){
+					exc_ratio = 
+						sqrt( (sqr(star[i].vt)+sqr(star[i].vr)-2*Eexcess/star[i].m)/
+						      (sqr(star[i].vt)+sqr(star[i].vr)) );
+					star[i].vr *= exc_ratio;
+					star[i].vt *= exc_ratio;
+					Eexcess = 0.0;
+				}
+			}
+		}
+	}
+	
+	/* keep track of the energy that's vanishing due to our negligence */
+	Eoops += -Eexcess * madhoc;
+}
+
 void RecomputeEnergy(void) {
 	double dtemp;
-	long i;
+	long i, neligible=0, ntrustvr=0, nstodol=0, nsplit=0, ntransfer=0;
 
 	/* Recalculating Energies */
 	Etotal.tot = 0.0;
 	Etotal.K = 0.0;
 	Etotal.P = 0.0;
 	Etotal.Eint = 0.0;
-	dtemp = 0;
-
-	if (E_CONS == 0 || E_CONS == 2) { /* recompute new sE[] and sJ[], using the new potential */
-		for (i = 1; i <= clus.N_MAX; i++) {
-			star[i].E = star[i].phi + 0.5 * (SQR(star[i].vr) + SQR(star[i].vt));
-			star[i].J = star[i].r * star[i].vt;
-
-			Etotal.K += 0.5 * (SQR(star[i].vr) + SQR(star[i].vt)) * star[i].m / clus.N_STAR;
-
-			/* Compute PE using Henon method using star[].phi */
-			Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
-
-			/* add up internal energies */
-			Etotal.Eint += star[i].Eint;
-
-		}
-	} else if (E_CONS ==1) { /* Try to conserve energy by using intermediate potential */
-		for (i = 1; i <= clus.N_MAX; i++) {
-			/* Note: svt[] = J/r_new is already computed in get_positions() */
-			/* ignore stars near pericenter, and those with strong interactions */
-			if (star[i].X > 0.05 && star[i].interacted == 1) {
+	Etotal.Eb = 0.0;
+	
+	/* Kris Joshi: Try to conserve energy by using intermediate potential */
+	/* John Fregeau: This is an obfuscated and incorrect way of applying 
+	   the scheme of Stodolkiewicz (1982) to better conserve energy.  See eq. (33) 
+	   of that paper.  Here are the important variables:
+	   
+	   r_old, vr_old, vt_old = values taken after dynamics_apply() but before get_positions()
+	   r, vr, vt = values taken after get_positions(), these are "predicted" values based 
+	               on old potential
+	   r_new=r, vr_new, vt_new = values calculated based on improved energy conservation scheme
+	                             of Stodolkiewicz (1982)
+	   Phi_old = the potential before it is updated
+	   Phi = the "predicted" potential after it is updated
+	   EI = v_old^2 + Phi_old(r_old) - Phi_old(r)
+	   dtemp = v_old^2 + Phi_old(r_old) - Phi_old(r) - Phi(r) + Phi(r_old) = v_new^2
+	*/
+	
+	if (E_CONS==1) {
+		for (i=1; i<=clus.N_MAX; i++) {
+			/* Kris Joshi: Note: svt[] = J/r_new is already computed in get_positions() */
+			/* John Fregeau: In other words, vt_new = vt_old * r_old / r_new, as specified 
+			   in eq. (34) of Stodolkiewicz (1982) (as long as J == vt_old * r_old, which I'm
+			   not exactly sure of). */
+			/* Kris Joshi: ignore stars near pericenter, and those with strong interactions */
+			if (star[i].X > 0.05 && star[i].interacted == 0) {
+				/* count up number of stars on which we could have applied the energy correction technique */
+				neligible++;
+				/* John Fregeau: dtemp = v_new^2; see eq. (33) of Stodolkiewicz (1982) */
 				dtemp = star[i].EI - star[i].phi + potential(star[i].rOld);
 
-				if (dtemp - star[i].vr * star[i].vr > 0) {
-					/* preserve star[i].vr and change star[i].vt */
+				if (dtemp > sqr(star[i].vr)) {
+					ntrustvr++;
+					/* Kris Joshi: preserve star[i].vr and change star[i].vt */
+					/* John Fregeau: I guess for some reason one assumes that if v_new^2 > vr_predicted^2,
+					   then we should trust vr.  I don't see why this should be true. */
 					star[i].vt = sqrt(dtemp - star[i].vr * star[i].vr);
 				} else {
 					if (dtemp > 0) {
 						if (dtemp > star[i].vt * star[i].vt) {
-							star[i].vr = sqrt(dtemp - star[i].vt * star[i].vt);
+							nstodol++;
+							/* John Fregeau: this is the standard Stodolkiewicz scheme */
+							/* choose randomized sign for vr, based on how vr was already
+							   randomized in get_positions() -- don't want to waste random
+							   numbers! */
+							if (star[i].vr >= 0.0) {
+								star[i].vr = sqrt(dtemp - sqr(star[i].vt));
+							} else {
+								star[i].vr = -sqrt(dtemp - sqr(star[i].vt));
+							}
 						} else {
+							nsplit++;
+							/* John Fregeau: just arbitrarily split the kinetic energy equally
+							   into radial and tangential?!? */
 							star[i].vt = sqrt(dtemp / 2.0);
 							star[i].vr = sqrt(dtemp / 2.0);
 						}
 					} else {
-						/* reduce the energy of the next star to compensate */ 
-						if (i < clus.N_MAX)
-							star[i + 1].EI += dtemp - (star[i].vt * star[i].vt + star[i].vr * star[i].vr);
+						/* Kris Joshi: reduce the energy of the next star to compensate */ 
+						/* John Fregeau: ad hoc energy transfer from star to star to conserve
+						   energy. */
+						if (i < clus.N_MAX) {
+							ntransfer++;
+							star[i + 1].EI += dtemp - (sqr(star[i].vt) + sqr(star[i].vr));
+						}
 					}
 				}
 			}
+		}
+	}
 
-			/* recompute new sE[] and sJ[], using the new potential */
-			star[i].E = star[i].phi + 0.5 * (star[i].vr * star[i].vr + star[i].vt * star[i].vt);
-			star[i].J = star[i].r * star[i].vt;
+	/* report statistics on Stodolkiewicz scheme */
+	/* dprintf("Stodolkiewicz energy scheme: neligible=%ld of %ld ntrustvr=%.3g%% nstodol=%.3g%% nsplit=%.3g%% ntransfer=%.3g%%\n",
+		neligible, clus.N_MAX, 100.0*((double) ntrustvr)/((double) neligible), 100.0*((double) nstodol)/((double) neligible), 
+		100.0*((double) nsplit)/((double) neligible), 100.0*((double) ntransfer)/((double) neligible)); */
 
-			Etotal.K += 0.5 * (star[i].vr * star[i].vr + star[i].vt * star[i].vt) * star[i].m / clus.N_STAR;
-			Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
+	/* calculate energies */
+	for (i=1; i<=clus.N_MAX; i++) {
+		star[i].E = star[i].phi + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
+		star[i].J = star[i].r * star[i].vt;
+		
+		Etotal.K += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star[i].m / clus.N_STAR;
+		
+		/* Compute PE using Henon method using star[].phi */
+		Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
 
-			/* add up internal energies */
+		if (star[i].binind == 0) {
 			Etotal.Eint += star[i].Eint;
+		} else {
+			if (binary[star[i].binind].inuse){
+				Etotal.Eb += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
+					(2.0 * binary[star[i].binind].a);
+				Etotal.Eint += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
+			}
 		}
 	}
 
 	Etotal.P *= 0.5;
-	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + cenma.E/clus.N_STAR;
+	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E/clus.N_STAR + Eescaped + Ebescaped + Eintescaped;
 }
 
 /* computes intermediate energies, and transfers "new" dynamical params to the standard variables */
@@ -321,51 +430,68 @@ void ComputeIntermediateEnergy(void)
 	}
 }
 
-long CheckStop(void) {
+long CheckStop(struct tms tmsbufref) {
+	struct tms tmsbuf;
+	long tspent;
 
-	if (tcount >= T_MAX_COUNT) {
-		if (DUMPS == 1)
+	times(&tmsbuf);
+	tspent  = tmsbuf.tms_utime-tmsbufref.tms_utime;
+	tspent += tmsbuf.tms_stime-tmsbufref.tms_stime;
+	tspent += tmsbuf.tms_cutime-tmsbufref.tms_cutime;
+	tspent += tmsbuf.tms_cstime-tmsbufref.tms_cstime;
+	tspent /= sysconf(_SC_CLK_TCK);
+	tspent /= 60;
+
+	if (tspent >= MAX_WCLOCK_TIME) {
+		if (SNAPSHOT_PERIOD)
 			print_2Dsnapshot();
-		dprintf("No. of timesteps > T_MAX_COUNT ... Terminating.\n");
+		diaprintf("MAX_WCLOCK_TIME exceeded ... Terminating.\n");
+		return (1);
+	}
+	
+	if (tcount >= T_MAX_COUNT) {
+		if (SNAPSHOT_PERIOD)
+			print_2Dsnapshot();
+		diaprintf("No. of timesteps > T_MAX_COUNT ... Terminating.\n");
 		return (1);
 	}
 
 	if (TotalTime >= T_MAX) {
-		if (DUMPS == 1)
+		if (SNAPSHOT_PERIOD)
 			print_2Dsnapshot();
-		dprintf("TotalTime > T_MAX ... Terminating.\n");
+		diaprintf("TotalTime > T_MAX ... Terminating.\n");
 		return (1);
 	}
 
 	/* Stop if cluster is disrupted -- N_MAX is too small */
 	/* if (clus.N_MAX < (0.02 * clus.N_STAR)) { */
 	if (clus.N_MAX < (0.005 * clus.N_STAR)) {
-		if (DUMPS == 1)
+		if (SNAPSHOT_PERIOD)
 			print_2Dsnapshot();
-		dprintf("N_MAX < 0.005 * N_STAR ... Terminating.\n");
+		diaprintf("N_MAX < 0.005 * N_STAR ... Terminating.\n");
 		return (1);
 	}
 
 	/* Stop if Etotal > 0 */
 	if (Etotal.K + Etotal.P > 0.0) {
-		if (DUMPS == 1)
+		if (SNAPSHOT_PERIOD)
 			print_2Dsnapshot();
-		dprintf("Etotal > 0 ... Terminating.\n");
+		diaprintf("Etotal > 0 ... Terminating.\n");
 		return (1);
 	}
 
 
 	/* If inner-most Lagrangian radius is too small, then stop: */
 	if (mass_r[0] < MIN_LAGRANGIAN_RADIUS) {
-		if (DUMPS == 1)
+		if (SNAPSHOT_PERIOD)
 			print_2Dsnapshot();
-		dprintf("Min Lagrange radius < %.6G ... Terminating.\n", MIN_LAGRANGIAN_RADIUS);
+		diaprintf("Min Lagrange radius < %.6G ... Terminating.\n", MIN_LAGRANGIAN_RADIUS);
 		return (1);
 	}
 
 	/* Output some snapshots near core collapse 
 	 * (if core density is high enough) */
-	if (DUMPS==1){
+	if (SNAPSHOT_PERIOD){
 		if (rho_core > 50.0 && Echeck == 0) {
 			print_2Dsnapshot();
 			Echeck++;
@@ -439,9 +565,9 @@ long CheckStop(void) {
 
 	/* If total Energy has diminished by TERMINAL_ENERGY_DISPLACEMENT, then stop */
 	if (Etotal.tot < Etotal.ini - TERMINAL_ENERGY_DISPLACEMENT) {
-		if (DUMPS == 1)
+		if (SNAPSHOT_PERIOD)
 			print_2Dsnapshot();
-		dprintf("Terminal Energy reached... Terminating.\n");
+		diaprintf("Terminal Energy reached... Terminating.\n");
 		return (1);
 	}
 	return (0); /* NOT stopping time yet */
@@ -474,6 +600,7 @@ void ComputeEnergy(void)
 	Etotal.K = 0.0;
 	Etotal.P = 0.0;
 	Etotal.Eint = 0.0;
+	Etotal.Eb = 0.0;
 
 	star[0].E = star[0].J = 0.0;
 	for (i = 1; i <= clus.N_MAX; i++) {
@@ -486,12 +613,18 @@ void ComputeEnergy(void)
 
 		Etotal.P += star[k].phi * star[k].m / clus.N_STAR;
 
-		Etotal.Eint += star[k].Eint;
+		if (star[k].binind == 0) {
+			Etotal.Eint += star[k].Eint;
+		} else if (binary[star[k].binind].inuse) {
+			Etotal.Eb += -(binary[star[k].binind].m1/clus.N_STAR) * (binary[star[k].binind].m2/clus.N_STAR) / 
+						(2.0 * binary[star[k].binind].a);
+			Etotal.Eint += binary[star[k].binind].Eint1 + binary[star[k].binind].Eint2;
+		}
 	}
 	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
 	
 	Etotal.P *= 0.5;
-	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + cenma.E/clus.N_STAR;
+	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E/clus.N_STAR + Eescaped + Ebescaped + Eintescaped;
 
 	fprintf(stdout, "Time = %.8G   Tcount = %ld\n", TotalTime, tcount);
 	fprintf(stdout, "N = %ld, Total E = %.8G, Total Mass = %.8G, Virial ratio = %.8G\n",
@@ -512,26 +645,38 @@ void ComputeEnergy(void)
    double precision. Returns N_MAX. Potential given in star[].phi
 */
 long potential_calculate(void) {
-	long k, ii;
-	double mprev, rtemp;
+	long k;
+	double mprev;
+	static int firstcall=1;
+	static double M, KE, a;
 
-	mprev = 0.0;
-
-	ii = 0;
-	for (k = 1; k <= clus.N_STAR_NEW; k++) { /* Recompute total Mass and N_MAX */
-		rtemp = star[k].r;
-		if (rtemp < 1000000 - 1) {
-			mprev = mprev + star[k].m;
-			if(isnan(mprev)){
-				eprintf("NaN (2) detected\n");
-				exit_cleanly(-1);
-			}
-		} else {
-			break;
-
+	/* calculate Plummer parameters on first function call */
+	if (firstcall) {
+		firstcall = 0;
+		M = 0.0;
+		KE = 0.0;
+		for (k=1; k<=clus.N_STAR; k++) {
+			M += star[k].m/clus.N_STAR;
+			KE += 0.5 * star[k].m/clus.N_STAR * (sqr(star[k].vr)+sqr(star[k].vt));
 		}
+		a = (3.0*PI/64.0) * sqr(M) / KE;
 	}
-	clus.N_MAX = k - 1;		/* New N_MAX */
+
+	/* count up all the mass and set N_MAX */
+	k = 1;
+	mprev = 0.0;
+	while (star[k].r < SF_INFINITY && k <= clus.N_STAR_NEW) {
+		mprev += star[k].m;
+		/* I guess NaNs do happen... */
+		if(isnan(mprev)){
+			eprintf("NaN (2) detected\n");
+			exit_cleanly(-1);
+		}
+		k++;
+	}
+
+	/* New N_MAX */
+	clus.N_MAX = k - 1;
 
 	/* New total Mass; This IS correct for multiple components */
 	Mtotal = mprev/clus.N_STAR + cenma.m/clus.N_STAR;	
@@ -540,29 +685,154 @@ long potential_calculate(void) {
 
 	Rtidal = orbit_r * pow(Mtotal, 1.0 / 3.0);
 
+	/* zero boundary star first for safety */
+	zero_star(clus.N_MAX + 1);
+
 	star[clus.N_MAX + 1].r = SF_INFINITY;
 	star[clus.N_MAX + 1].phi = 0.0;
+
 	mprev = Mtotal;
 	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute potential at each r */
-		star[k].phi = star[k + 1].phi 
-			- mprev * (1.0 / star[k].r 
-					- 1.0 / star[k + 1].r);
+		star[k].phi = star[k + 1].phi - mprev * (1.0 / star[k].r - 1.0 / star[k + 1].r);
 		mprev -= star[k].m / clus.N_STAR;
+		/* explicitly do Plummer potential */
+		/* star[k].phi = -(M/a) / sqrt(1.0 + sqr(star[k].r/a)); */
 	}
 
 	for (k = 1; k <= clus.N_MAX; k++){
-		star[k].phi -= cenma.m / clus.N_STAR
-			/ star[k].r;
+		star[k].phi -= cenma.m / clus.N_STAR / star[k].r;
 		if(isnan(star[k].phi)){
 			eprintf("NaN detected\n");
 			exit_cleanly(-1);
 		}
 	}
+	
 	star[0].phi = star[1].phi; /* U(r=0) is U_1 */
 
 	return (clus.N_MAX);
 }
 
+#define GENSEARCH_NAME 				m_binsearch
+#define GENSEARCH_TYPE 				double
+#define GENSEARCH_KEYTYPE			double
+#define GENSEARCH_GETKEY(a)			a
+#define GENSEARCH_COMPAREKEYS(k1, k2)	k1 < k2
+
+#include "gensearch.h"
+
+int find_stars_mass_bin(double smass){
+	/* find the star[i]'s mass bin */
+	/* return -1 on failure */
+	int bn;
+
+	if ( (smass < mass_bins[0]) || 
+	     (smass > mass_bins[NO_MASS_BINS-1]) ) return -1;
+	
+	bn = m_binsearch(mass_bins, 0, NO_MASS_BINS-1, smass);
+	return bn;
+}
+
+void comp_multi_mass_percent(){
+	/* computing the Lagrange radii for various mass bins */
+	/* mass bins are stored in the array mass_bins[NO_MASS_BINS] */
+	double *mtotal_inbin; // total mass in each mass bin
+	long *number_inbin;   // # of stars in each mass bin
+	double *mcount_inbin, *r_inbin;
+	long *ncount_inbin;
+	int *star_bins;       // array holding which bin each star is in
+	double **rs, **percents;
+	long i;
+
+	/* GSL interpolation function and accelerators. See:
+	 * http://sources.redhat.com/gsl/ref/gsl-ref_26.html#SEC391*/
+	gsl_interp_accel **acc;
+	gsl_spline **spline;
+
+	if (NO_MASS_BINS <=1) return;
+
+	mtotal_inbin = calloc(NO_MASS_BINS, sizeof(double));
+	number_inbin = calloc(NO_MASS_BINS, sizeof(long));
+	r_inbin = calloc(NO_MASS_BINS, sizeof(double));
+	star_bins = malloc((clus.N_MAX+2)*sizeof(int));
+	for (i = 1; i <= clus.N_MAX; i++) {
+		star_bins[i] = find_stars_mass_bin(star[i].m/SOLAR_MASS_DYN);
+		if (star_bins[i] == -1) continue; /* -1: star isn't in legal bin */
+		mtotal_inbin[star_bins[i]] += star[i].m; /* no unit problem, since 
+								        we are interested in
+							   	        percentage only. */
+		number_inbin[star_bins[i]]++;
+		r_inbin[star_bins[i]] = star[i].r;
+	}
+	/* populate arrays rs[NO_MASS_BINS][j] and percents[][] */
+	rs = malloc(NO_MASS_BINS*sizeof(double *));
+	percents = malloc(NO_MASS_BINS*sizeof(double *));
+	for(i=0; i<NO_MASS_BINS; i++){
+		/* +1 below is to accomodate rs=0 <-> percents=0 point */
+		rs[i] = malloc((number_inbin[i]+1)*sizeof(double));
+		percents[i] = malloc((number_inbin[i]+1)*sizeof(double));
+	}
+	for(i=0; i<NO_MASS_BINS; i++){
+		/* at r=0 there is 0% of mass */
+		rs[i][0] = percents[i][0] = 0.0;
+	}
+	
+	mcount_inbin = calloc(NO_MASS_BINS, sizeof(double));
+	ncount_inbin = calloc(NO_MASS_BINS, sizeof(long));
+	for (i = 1; i <= clus.N_MAX; i++) {
+		int sbin = star_bins[i];
+		if (sbin == -1) continue;
+		mcount_inbin[sbin] += star[i].m;
+		ncount_inbin[sbin]++;
+		rs[sbin][ncount_inbin[sbin]] = star[i].r;
+		percents[sbin][ncount_inbin[sbin]] = 
+				mcount_inbin[sbin]/mtotal_inbin[sbin];
+	}
+	free(mcount_inbin); free(ncount_inbin);
+	
+	acc = malloc(NO_MASS_BINS*sizeof(gsl_interp_accel));
+	spline = malloc(NO_MASS_BINS*sizeof(gsl_spline));
+	for(i=0; i<NO_MASS_BINS; i++){
+		if((number_inbin[i] == 1) || (number_inbin[i] == 0)) continue;
+		acc[i] = gsl_interp_accel_alloc();
+		/* change gsl_interp_linear to gsl_interp_cspline below,
+		 * for spline interpolation; however, this may result in
+		 * negative LR values for small mass percentages! */ 
+		/* +1's below are to accomodate rs=0 <-> percents=0 point */
+		spline[i] = gsl_spline_alloc(gsl_interp_linear, number_inbin[i]+1);
+		gsl_spline_init (spline[i], percents[i], rs[i], number_inbin[i]+1);
+	}
+	for(i=0; i<NO_MASS_BINS; i++){
+		free(rs[i]); free(percents[i]);
+	}
+	free(rs); free(percents);
+	
+	/* fill multi_mass_r[][] by calling gsl_spline_eval() */
+	for (i = 0; i <NO_MASS_BINS; i++) {
+		int mcnt;
+		if (number_inbin[i] == 0) {
+			continue;
+		} else if (number_inbin[i] == 1) {
+			for(mcnt=0; mcnt<MASS_PC_COUNT; mcnt++){
+				multi_mass_r[i][mcnt] = r_inbin[i];
+			}
+		} else {
+			for(mcnt=0; mcnt<MASS_PC_COUNT; mcnt++){
+				multi_mass_r[i][mcnt] = 
+					gsl_spline_eval(spline[i], mass_pc[mcnt], acc[i]);
+			}
+		}
+	}
+	for(i=0; i<NO_MASS_BINS; i++){
+		if((number_inbin[i] == 1) || (number_inbin[i] == 0)) continue;
+		gsl_interp_accel_free(acc[i]); 
+		gsl_spline_free(spline[i]);
+	}
+	free(acc); free(spline);
+	
+	free(mtotal_inbin); free(number_inbin); free(r_inbin); 
+	free(star_bins);
+}
+		
 void comp_mass_percent(){
 	double mprev;
 	long int k, mcount;
@@ -588,7 +858,7 @@ void comp_mass_percent(){
 			densities_r[mcount] = mprev*clus.N_STAR/
 				(4/3*3.1416*pow(star[k].r,3));
 			mcount++;
-			if (mcount == MASS_PC_COUNT - 1)
+			if (mcount == MASS_PC_COUNT)
 				break;
 		}
 	}
@@ -604,12 +874,14 @@ double potential(double r) {
 	if (r < star[1].r)
 		return (star[1].phi);
 
-	i =  FindZero_r(1 ,clus.N_MAX + 1, r);
-	
+	i =  FindZero_r(1, clus.N_MAX + 1, r);
+
 	if(star[i].r > r || star[i+1].r < r){
 		eprintf("binary search (FindZero_r) failed!!\n");
-		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, r = %e\n",
-				i, star[i].r, star[i+1].r, r);
+		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
+				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
+		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
+			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
 		exit_cleanly(-2);
 	}
 
@@ -618,9 +890,8 @@ double potential(double r) {
 			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
 		henon = (star[1].phi);
 	} else {
-		henon = (star[i].phi + (star[i + 1].phi
-		       - star[i].phi) 
-			* (1.0/star[i].r - 1.0/r) /
+		henon = (star[i].phi + (star[i + 1].phi - star[i].phi) 
+			 * (1.0/star[i].r - 1.0/r) /
 			 (1.0/star[i].r - 1.0/star[i + 1].r));
 	}
 	
@@ -692,16 +963,9 @@ void update_vars(void)
 		if (k != 0) {
 			N_b++;
 			M_b += star[j].m;
-			E_b += (binary[k].m1/clus.N_STAR) * (binary[k].m2/clus.N_STAR) / (2.0 * binary[k].a);
-		}
-	}
-	
-	/* ejected binaries */
-	Ebescaped = 0.0;
-	for (i=clus.N_MAX+1; i<=clus.N_STAR; i++) {
-		k = star[i].binind;
-		if (k != 0) {
-			Ebescaped += (binary[k].m1/clus.N_STAR) * (binary[k].m2/clus.N_STAR) / (2.0 * binary[k].a);
+			if (binary[k].inuse){
+				E_b += (binary[k].m1/clus.N_STAR) * (binary[k].m2/clus.N_STAR) / (2.0 * binary[k].a);
+			}
 		}
 	}
 }
@@ -735,6 +999,19 @@ void units_set(void)
 	units.t = log(GAMMA * clus.N_STAR)/(clus.N_STAR * MEGA_YEAR) * 1.0e6 * YEAR;
 	units.m = clus.N_STAR * initial_total_mass / SOLAR_MASS_DYN * MSUN;
 	units.l = pow(units.t, 2.0/3.0) * pow(G, 1.0/3.0) * pow(units.m, 1.0/3.0);
+	/* FIXME: I'm not sure if units.E (or any units for that matter) are correct anymore */
+	units.E = -0.25 * G * sqr(units.m) / units.l;
+	/* FIXME */
+	/* stars' masses are kept in different units */
+	units.mstar = initial_total_mass / SOLAR_MASS_DYN * MSUN;
+
+	/* Masses such as star.m and binary.m1 and binary.m2 are not stored in code units, 
+	   but rather in code units * clus.N_STAR.  This means that whenever you want to
+	   calculate a quantity that involves masses and lengths, or masses and times, you
+	   have to divide any masses in the expression by clus.N_STAR.  This is that 
+	   factor.
+	*/
+	madhoc = 1.0/((double) clus.N_STAR);
 }
 
 /* calculate central quantities */

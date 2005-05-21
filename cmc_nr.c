@@ -27,6 +27,28 @@ long FindZero_r(long kmin, long kmax, double r){
 
 	return kmin;
 }
+
+double sigma_r(double r){
+	/* binary search:
+	 * given the array sigma_array.r[] and the two indices kmin and kmax,
+	 * with the conditions 
+	 * 1) array is monotonic in its indices,
+	 * 2) kmin<kmax,
+	 * find the index k, such that sigma_array.r[k]<r<sigma_array.r[k+1] */
+	long ktry, kmin=1, kmax=sigma_array.n;
+	do {
+		ktry = (kmin+kmax+1)/2;
+		if (sigma_array.r[ktry]<r){
+			kmin = ktry;
+		} else {
+			kmax = ktry-1;
+		}
+	} while (kmax!=kmin);
+	
+	/* don't even bother with interpolating */
+	return(sigma_array.sigma[kmin]);
+}
+
 #if 0
 
 #define JMAX 500
@@ -83,20 +105,21 @@ long FindZero_r(long x1, long x2, double r)
 
 /*
 #define FUNC(k, E, J) \
-	(2.0 * (E - star[k].phi) - SQR(J / star[k].r))
+       (2.0 * (E - star[k].phi) - SQR(J / star[k].r))
 */
-#define FUNC(k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - star[(k)].phi) - SQR(J))
+/* #define FUNC(j, k, E, J) (2.0 * (E - (star[k].phi)) - SQR(J / star[k].r)) */
+#define FUNC(j, k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J))
 
-long FindZero_Q(long kmin, long kmax, double E, double J){
+long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 	/* another binary search:
 	 * anologous to above, except FUNC(k) may be decreasing 
 	 * rather than increasing */
 	long ktry;
 
-	if(FUNC(kmin, E, J)<FUNC(kmax, E, J)){
+	if(FUNC(j, kmin, E, J)<FUNC(j, kmax, E, J)){
 		do {
 			ktry = (kmin+kmax+1)/2;
-			if (FUNC(ktry, E,J)<0){
+			if (FUNC(j, ktry, E,J)<0){
 				kmin = ktry;
 			} else {
 				kmax = ktry-1;
@@ -105,7 +128,7 @@ long FindZero_Q(long kmin, long kmax, double E, double J){
 	} else {
 		do {
 			ktry = (kmin+kmax+1)/2;
-			if (FUNC(ktry, E,J)>0){
+			if (FUNC(j, ktry, E,J)>0){
 				kmin = ktry;
 			} else {
 				kmax = ktry-1;

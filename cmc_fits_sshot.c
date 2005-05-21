@@ -7,6 +7,7 @@
 #include <string.h>
 #include <fitsio.h>
 #include <gsl/gsl_rng.h>
+#include <errno.h>
 #include "cmc.h"
 #include "cmc_vars.h"
 
@@ -68,8 +69,8 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 
 	status = 0;
 	sprintf(extname,"SF_RESTART_PARAM");
-	tfields = 4; 
-	no_of_doub = 59;
+	tfields = 3; 
+	no_of_doub = 61;
 	dvar=malloc(no_of_doub*sizeof(double));
 
 	nrows = MASS_PC_COUNT;
@@ -89,20 +90,13 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	sprintf(ttype[0],"Mass_PC");
 	sprintf(tform[0],"1D");
 	sprintf(tunit[0],"Internal");
-	sprintf(ttype[1],"IndTab");
-	sprintf(tform[1],"1J");
+	sprintf(ttype[1],"RNG State");
+	sprintf(tform[1],"1I");
 	sprintf(tunit[1],"Internal");
-	sprintf(ttype[2],"RNG State");
-	sprintf(tform[2],"1I");
-	sprintf(tunit[2],"Internal");
-	sprintf(ttype[3],"Variables");
-	sprintf(tform[3],"1D");
-	sprintf(tunit[3],"Various");
+	sprintf(ttype[2],"Variables");
+	sprintf(tform[2],"1D");
+	sprintf(tunit[2],"Various");
 
-	/* FIXME */
-	/* need to add MMIN */
-	/* FIXME */
-	
 	fits_create_tbl(fptr, BINARY_TBL, nrows, tfields, ttype, tform,
               tunit, extname, &status);
 	/* variables related to progress */
@@ -110,8 +104,11 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Age of cluster", &status);
 	fits_write_key(fptr, TLONG, "Step", &tcount, 
 			"Iteration Step", &status);
+	printerror(status);
 	/* random number state */
 	get_rng_t113(&rng_st);
+	fits_write_comment(fptr,
+		"random number state", &status);
 	fits_write_key(fptr, TULONG, "RNG_Z1", &(rng_st.z1), 
 			"RNG STATE Z1", &status);
 	fits_write_key(fptr, TULONG, "RNG_Z2", &(rng_st.z2), 
@@ -120,7 +117,10 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"RNG STATE Z3", &status);
 	fits_write_key(fptr, TULONG, "RNG_Z4", &(rng_st.z4), 
 			"RNG STATE Z4", &status);
+	printerror(status);
 	/* Total Energy in various forms */
+	fits_write_comment(fptr,
+		"Total Energy in various forms", &status);
 	fits_write_key(fptr, TDOUBLE, "Etotal", &(Etotal.tot), 
 			"Total Energy of Cluster", &status);
 	fits_write_key(fptr, TDOUBLE, "EtotalN", &(Etotal.New), 
@@ -131,7 +131,14 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Total Kinetic Energy", &status);
 	fits_write_key(fptr, TDOUBLE, "PEtotal", &(Etotal.P), 
 			"Total Potential Energy", &status);
+	fits_write_key(fptr, TDOUBLE, "Eintot", &(Etotal.Eint), 
+			"Total Intermediate Energy", &status);
+	fits_write_key(fptr, TDOUBLE, "Ebtotal", &(Etotal.Eb), 
+			"Total binary Energy", &status);
+	printerror(status);
 	/* Sub timestep stuff */
+	fits_write_comment(fptr,
+		"Sub timestep stuff", &status);
 	fits_write_key(fptr, TLONG, "S_NMAX", &(sub.N_MAX), 
 			"Substep NMAX", &status);
 	fits_write_key(fptr, TLONG, "S_CNT", &(sub.count), 
@@ -142,6 +149,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Substep Total time", &status);
 	fits_write_key(fptr, TDOUBLE, "S_rmax", &(sub.rmax), 
 			"Substep rmax", &status);
+	printerror(status);
 	/* various N's of cluster */
 	fits_write_comment(fptr,
 		"It is not clear what the following different N's do", &status);
@@ -155,54 +163,46 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Number of stars in cluster (all)", &status);
 	fits_write_key(fptr, TLONG, "NBINARY", &(clus.N_BINARY), 
 			"Number of binaries in cluster", &status);
+	printerror(status);
 	/* Input file parameters */
-	/* removed DUMP_ENERGY_DISPLACEMENT, BINSINGLE_PROB_SCALE_FAC, and BINBIN_PROB_SCALE_FAC since they are unused */
 	fits_write_comment(fptr,
 		"Input file parameters", &status);
-	fits_write_key(fptr, TLONG, "NSTRDIM", &(N_STAR_DIM), 
+	fits_write_key(fptr, TLONG, "NSTDIM", &(N_STAR_DIM), 
 			"N_STAR_DIM", &status);
+	fits_write_key(fptr, TLONG, "NBIDIM", &(N_BIN_DIM), 
+			"N_BIN_DIM", &status);
+	fits_write_key(fptr, TLONG, "TMXCNT", &(T_MAX_COUNT), 
+			"T_MAX_COUNT", &status);
 	fits_write_key(fptr, TLONG, "MPCCNT", &(MASS_PC_COUNT), 
 			"MASS_PC_COUNT", &status);
-	/* fits_write_key(fptr, TLONG, "NTRY", &(N_TRY), 
-	   "N_TRY", &status); */
 	fits_write_key(fptr, TLONG, "STEVOL", &(STELLAR_EVOLUTION), 
 			"STELLAR_EVOLUTION", &status);
 	fits_write_key(fptr, TLONG, "SSCOLL", &(SS_COLLISION), 
 			"SS_COLLISION", &status);
-	fits_write_key(fptr, TLONG, "DUMPS", &(DUMPS), 
-			"DUMPS", &status);
 	fits_write_key(fptr, TLONG, "ECONS", &(E_CONS), 
 			"E_CONS", &status);
-	/* fits_write_key(fptr, TLONG, "DTMOD", &(DT_MODE), 
-	   "DT_MODE", &status); */
-	fits_write_key(fptr, TLONG, "PERTURB", &(PERTURB), 
+	printerror(status);
+	/* IDUM is unnecessary to save, since RNG state is restored */
+	fits_write_key(fptr, TLONG, "PERTUR", &(PERTURB), 
 			"PERTURB", &status);
-	fits_write_key(fptr, TLONG, "NUMMASS", &(NUM_MASS), 
-			"NUM_MASS", &status);
-	fits_write_key(fptr, TLONG, "TOTPAR", &(TOTAL_PARAMS), 
-			"TOTAL_PARAMS", &status);
-	fits_write_key(fptr, TLONG, "NMSRADB", &(NUM_MASS_RADII_BINS), 
-			"NUM_MASS_RADII_BINS", &status);
+	fits_write_key(fptr, TLONG, "RELAX", &(RELAXATION), 
+			"RELAXATION", &status);
 	fits_write_key(fptr, TLONG, "NCNSTR", &(NUM_CENTRAL_STARS), 
 			"NUM_CENTRAL_STARS", &status);
 	fits_write_key(fptr, TDOUBLE, "TPRSTP", &(T_PRINT_STEP), 
 			"T_PRINT_STEP", &status);
 	fits_write_key(fptr, TDOUBLE, "TMAX", &(T_MAX), 
 			"T_MAX", &status);
-	/* fits_write_key(fptr, TDOUBLE, "TRCFAC", &(TRC_FACTOR), 
-	   "TRC_FACTOR", &status); */
-	fits_write_key(fptr, TDOUBLE, "S2BMAX", &(SIN2BETA_MAX), 
-			"SIN2BETA_MAX", &status);
+	fits_write_key(fptr, TDOUBLE, "TSEMAX", &(THETASEMAX), 
+			"THETASEMAX", &status);
 	fits_write_key(fptr, TDOUBLE, "TENEDI", &(TERMINAL_ENERGY_DISPLACEMENT), 
 			"TERMINAL_ENERGY_DISPLACEMENT", &status);
 	fits_write_key(fptr, TDOUBLE, "RMAX", &(R_MAX), 
 			"R_MAX", &status);
-	/* fits_write_key(fptr, TDOUBLE, "DTMAX", &(DT_MAX), 
-	   "DT_MAX", &status);  */
-	/* fits_write_key(fptr, TDOUBLE, "DTMIN", &(DT_MIN), 
-	   "DT_MIN", &status); */
 	fits_write_key(fptr, TDOUBLE, "MINLR", &(MIN_LAGRANGIAN_RADIUS), 
 			"MIN_LAGRANGIAN_RADIUS", &status);
+	fits_write_key(fptr, TDOUBLE, "DTFACT", &(DT_FACTOR), 
+	   "DT_FACTOR", &status); 
 	fits_write_key(fptr, TDOUBLE, "MEGAYR", &(MEGA_YEAR), 
 			"MEGA_YEAR", &status);
 	fits_write_key(fptr, TDOUBLE, "SMDYN", &(SOLAR_MASS_DYN), 
@@ -211,24 +211,23 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"METALLICITY", &status);
 	fits_write_key(fptr, TDOUBLE, "WINFAC", &(WIND_FACTOR), 
 			"WIND_FACTOR", &status);
+	fits_write_key(fptr, TDOUBLE, "MMIN", &(MMIN), 
+			"MMIN", &status);
 	fits_write_key(fptr, TDOUBLE, "MINR", &(MINIMUM_R), 
 			"MINIMUM_R", &status);
+	fits_write_key(fptr, TDOUBLE, "GAMMA", &(GAMMA), 
+			"GAMMA", &status);
 	fits_write_key(fptr, TDOUBLE, "CENMAS", &(cenma.m), 
 			"CentralMass_mass", &status);
 	fits_write_key(fptr, TDOUBLE, "CENMAE", &(cenma.E), 
 			"CentralMass_energy", &status);
-	fits_write_key(fptr, TDOUBLE, "DTFACT", &(DT_FACTOR), 
-			"DT_FACTOR", &status);
 	fits_write_key(fptr, TINT, "BINSIN", &(BINSINGLE), 
 			"BINSINGLE", &status);
 	fits_write_key(fptr, TINT, "BINBIN", &(BINBIN), 
 			"BINBIN", &status);
-	fits_write_key(fptr, TINT, "BSFEWB", &(BINSINGLE_FEWBODY), 
-			"BINSINGLE_FEWBODY", &status);
-	fits_write_key(fptr, TINT, "BBFEWB", &(BINBIN_FEWBODY), 
-			"BINBIN_FEWBODY", &status);
-	fits_write_key(fptr, TINT, "OPERST", &(ORIGINAL_PERTURB_STARS), 
-			"ORIGINAL_PERTURB_STARS", &status);
+	fits_write_key(fptr, TINT, "SUBZON", &(SUBZONING), 
+			"SUBZONING", &status);
+	printerror(status);
 	/* variables related to tidal truncation */
 	fits_write_comment(fptr,
 		"Tidal Truncation parameters", &status);
@@ -238,8 +237,6 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Rtidal", &status);
 	fits_write_key(fptr, TDOUBLE, "TMLOSS", &TidalMassLoss, 
 			"TidalMassLoss", &status);
-	fits_write_key(fptr, TDOUBLE, "PREVDT", &Prev_Dt, 
-			"Prev_Dt", &status);
 	fits_write_key(fptr, TDOUBLE, "ORBR", &orbit_r, 
 			"orbit_r", &status);
 	fits_write_key(fptr, TDOUBLE, "OTMLOS", &OldTidalMassLoss, 
@@ -250,6 +247,11 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Prev_Dt", &status);
 	fits_write_key(fptr, TDOUBLE, "ETIDAL", &Etidal, 
 			"Etidal", &status);
+	fits_write_key(fptr, TDOUBLE, "CLGAMR", &clus_gal_mass_ratio, 
+			"Cluster to Galaxy Mass Ratio", &status);
+	fits_write_key(fptr, TDOUBLE, "DISGLC", &dist_gal_center, 
+			"Distance to Galactic Center", &status);
+	printerror(status);
 	/* variables related to binaries */
 	fits_write_comment(fptr,
 		"Binary parameters", &status);
@@ -263,14 +265,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"M_b", &status);
 	fits_write_key(fptr, TDOUBLE, "EB", &E_b, 
 			"E_b", &status);
-	fits_write_key(fptr, TDOUBLE, "DEBB", &DE_bb, 
-			"DE_bb", &status);
-	fits_write_key(fptr, TDOUBLE, "DEBS", &DE_bs, 
-			"DE_bs", &status);
-	fits_write_key(fptr, TDOUBLE, "DBEBB", &Delta_BE_bb, 
-			"Delta_BE_bb", &status);
-	fits_write_key(fptr, TDOUBLE, "DBEBS", &Delta_BE_bs, 
-			"Delta_BE_bs", &status);
+	printerror(status);
 	/* variables related to core  */
 	fits_write_comment(fptr,
 		"Core parameters", &status);
@@ -284,14 +279,19 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"v_core", &status);
 	fits_write_key(fptr, TDOUBLE, "CORER", &core_radius, 
 			"core_radius", &status);
+	printerror(status);
 	/* variables related to escaped stars  */
 	fits_write_comment(fptr,
 		"Escaped stars' parameters", &status);
 	fits_write_key(fptr, TDOUBLE, "EESC", &Eescaped, 
 			"Eescaped", &status);
-	/* FIXME_ATO: Need to put Ebescaped (the total binding energy of escaped binaries) here */
 	fits_write_key(fptr, TDOUBLE, "JESC", &Jescaped, 
 			"Jescaped", &status);
+	fits_write_key(fptr, TDOUBLE, "EINESC", &Eintescaped, 
+			"Escaped Stars Int Energy", &status);
+	fits_write_key(fptr, TDOUBLE, "EBESC", &Ebescaped, 
+			"Escaped Binaries Energy", &status);
+	printerror(status);
 	/* Total mass and co.  */
 	fits_write_comment(fptr,
 		"Total mass and co.", &status);
@@ -299,13 +299,15 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"initial_total_mass", &status);
 	fits_write_key(fptr, TDOUBLE, "MTOTAL", &Mtotal, 
 			"Mtotal", &status);
+	printerror(status);
 	/* everything else except arrays */
 	fits_write_comment(fptr,
 		"Everything else", &status);
+	/* integers */
 	fits_write_key(fptr, TINT, "SEFCNT", &se_file_counter, 
 			"se_file_counter", &status);
-	/* fits_write_key(fptr, TLONG, "ERRSTA", &errstat, 
-	   "errstat", &status); */
+	printerror(status);
+	/* long integers */
 	fits_write_key(fptr, TLONG, "TCOUNT", &tcount, 
 			"tcount", &status);
 	fits_write_key(fptr, TLONG, "ECHECK", &Echeck, 
@@ -314,6 +316,8 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"snap_num", &status);
 	fits_write_key(fptr, TLONG, "STCNT", &StepCount, 
 			"StepCount", &status);
+	printerror(status);
+	/* doubles */
 	fits_write_key(fptr, TDOUBLE, "DECORS", &rho_core_single, 
 			"rho_core_single", &status);
 	fits_write_key(fptr, TDOUBLE, "DECORB", &rho_core_bin, 
@@ -326,77 +330,96 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Dt", &status);
 	fits_write_key(fptr, TDOUBLE, "S2BETA", &Sin2Beta, 
 			"Sin2Beta", &status);
+	fits_write_key(fptr, TDOUBLE, "MADHOC", &madhoc, 
+			"madhoc", &status);
+	printerror(status);
+	/* units */
+	fits_write_key(fptr, TDOUBLE, "UNITT", &(units.t), 
+			"Time unit", &status);
+	fits_write_key(fptr, TDOUBLE, "UNITM", &(units.m), 
+			"Mass unit", &status);
+	fits_write_key(fptr, TDOUBLE, "UNITL", &(units.l), 
+			"Length unit", &status);
+	fits_write_key(fptr, TDOUBLE, "UNITE", &(units.E), 
+			"Energy unit", &status);
+	fits_write_key(fptr, TDOUBLE, "UNITSM", &(units.mstar), 
+			"Star mass unit", &status);
+	printerror(status);
+	/* it may be necessary to save and restore central.* variables */
 
+	i = 0;
 	/* variables related to progress */
-	dvar[0]  = TotalTime;
+	dvar[i++]  = TotalTime;
 	/* Total Energy in various forms */
-	dvar[1]  = Etotal.tot;
-	dvar[2]  = Etotal.New;
-	dvar[3]  = Etotal.ini;
-	dvar[4]  = Etotal.K;
-	dvar[5]  = Etotal.P;
+	dvar[i++]  = Etotal.tot;
+	dvar[i++]  = Etotal.New;
+	dvar[i++]  = Etotal.ini;
+	dvar[i++]  = Etotal.K;
+	dvar[i++]  = Etotal.P;
+	dvar[i++]  = Etotal.Eint;
+	dvar[i++]  = Etotal.Eb;
 	/* Sub timestep stuff */
-	dvar[6]  = sub.totaltime;
-	dvar[7]  = sub.rmax;
+	dvar[i++]  = sub.totaltime;
+	dvar[i++]  = sub.rmax;
 	/* Input file parameters */
-	dvar[8]  = T_PRINT_STEP;
-	dvar[9]  = T_MAX;
-	/* dvar[10] = TRC_FACTOR; */
-	dvar[11] = 0.0; /* this was mistakenly skipped in orig. imple. (ato)*/
-	dvar[12] = SIN2BETA_MAX;
-	dvar[13] = TERMINAL_ENERGY_DISPLACEMENT;
-	dvar[14] = 0.0;
-	dvar[15] = R_MAX;
-	/* dvar[16] = DT_MAX; */
-	/* dvar[17] = DT_MIN; */
-	dvar[18] = MIN_LAGRANGIAN_RADIUS;
-	dvar[19] = MEGA_YEAR;
-	dvar[20] = SOLAR_MASS_DYN;
-	dvar[21] = METALLICITY;
-	dvar[22] = WIND_FACTOR;
-	dvar[23] = MINIMUM_R;
-	dvar[24] = cenma.m;
-	dvar[25] = 0.0;
-	dvar[26] = 0.0;
-	dvar[27] = DT_FACTOR;
+	dvar[i++]  = T_PRINT_STEP;
+	dvar[i++]  = T_MAX;
+	dvar[i++] = THETASEMAX;
+	dvar[i++] = TERMINAL_ENERGY_DISPLACEMENT;
+	dvar[i++] = R_MAX;
+	dvar[i++] = MIN_LAGRANGIAN_RADIUS;
+	dvar[i++] = DT_FACTOR;
+	dvar[i++] = MEGA_YEAR;
+	dvar[i++] = SOLAR_MASS_DYN;
+	dvar[i++] = METALLICITY;
+	dvar[i++] = WIND_FACTOR;
+	dvar[i++] = MMIN;
+	dvar[i++] = MINIMUM_R;
+	dvar[i++] = GAMMA;
+	dvar[i++] = cenma.m;
+	dvar[i++] = cenma.E;
 	/* variables related to tidal truncation */
-	dvar[28] = max_r;
-	dvar[29] = Rtidal;
-	dvar[30] = TidalMassLoss;
-	dvar[31] = Prev_Dt;
-	dvar[32] = orbit_r;
-	dvar[33] = OldTidalMassLoss;
-	dvar[34] = DTidalMassLoss;
-	dvar[35] = Prev_Dt;
-	dvar[36] = Etidal;
+	dvar[i++] = max_r;
+	dvar[i++] = Rtidal;
+	dvar[i++] = TidalMassLoss;
+	dvar[i++] = orbit_r;
+	dvar[i++] = OldTidalMassLoss;
+	dvar[i++] = DTidalMassLoss;
+	dvar[i++] = Prev_Dt;
+	dvar[i++] = Etidal;
+	dvar[i++] = clus_gal_mass_ratio;
+	dvar[i++] = dist_gal_center;
 	/* variables related to binaries */
-	dvar[37] = M_b;
-	dvar[38] = E_b;
-	dvar[39] = DE_bb;
-	dvar[40] = DE_bs;
-	dvar[41] = Delta_BE_bb;
-	dvar[42] = Delta_BE_bs;
+	dvar[i++] = M_b;
+	dvar[i++] = E_b;
 	/* variables related to core  */
-	dvar[43] = N_core;
-	dvar[44] = Trc;
-	dvar[45] = rho_core;
-	dvar[46] = v_core;
-	dvar[47] = core_radius;
+	dvar[i++] = N_core;
+	dvar[i++] = Trc;
+	dvar[i++] = rho_core;
+	dvar[i++] = v_core;
+	dvar[i++] = core_radius;
 	/* variables related to escaped stars  */
-	dvar[48] = Eescaped;
-	/* FIXME_ATO: Need to put Ebescaped (the total binding energy of escaped binaries) here */
-	dvar[49] = Jescaped;
+	dvar[i++] = Eescaped;
+	dvar[i++] = Jescaped;
+	dvar[i++] = Eintescaped;
+	dvar[i++] = Ebescaped;
 	/* Total mass and co.  */
-	dvar[50] = initial_total_mass;
-	dvar[51] = Mtotal;
+	dvar[i++] = initial_total_mass;
+	dvar[i++] = Mtotal;
 	/* everything else except arrays */
-	dvar[52] = rho_core_single;
-	dvar[53] = rho_core_bin;
-	dvar[54] = rh_single;
-	dvar[55] = rh_binary;
-	dvar[56] = Dt;
-	dvar[57] = Sin2Beta;
-	dvar[58] = cenma.E;
+	dvar[i++] = rho_core_single;
+	dvar[i++] = rho_core_bin;
+	dvar[i++] = rh_single;
+	dvar[i++] = rh_binary;
+	dvar[i++] = Dt;
+	dvar[i++] = Sin2Beta;
+	dvar[i++] = madhoc;
+	/* units */
+	dvar[i++] = units.t;
+	dvar[i++] = units.m;
+	dvar[i++] = units.l;
+	dvar[i++] = units.E;
+	dvar[i++] = units.mstar;
 
 	for(i=0; i<nrows; i++){
 		dbl_arr[i] = 0.0;
@@ -413,10 +436,10 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 		int_arr[i] = 0;
 	}
 	for(i=0; i<rng_size; i++){
-		/* XXX I am a not sure the below casting works !!! (ato) */
+		/* XXX I am not sure the below casting works !!! (ato) */
 		int_arr[i] += (int) rng_st_ptr[i];
 	}
-	fits_write_col(fptr, TINT, 3, firstrow, firstelem, nrows,
+	fits_write_col(fptr, TINT, 2, firstrow, firstelem, nrows,
 			int_arr, &status);
 	printerror(status);
 	
@@ -426,7 +449,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	for(i=0; i<no_of_doub; i++){
 		dbl_arr[i] = dvar[i];
 	}
-	fits_write_col(fptr, TDOUBLE, 4, firstrow, firstelem, nrows,
+	fits_write_col(fptr, TDOUBLE, 3, firstrow, firstelem, nrows,
 			dbl_arr, &status);
 	printerror(status);
 	FREE_TSTUFF
@@ -478,7 +501,7 @@ void write_ss_dyn_param(fitsfile *fptr){
 	sprintf(ttype[6],"Interaction Flag");
 	sprintf(tform[6],"1J");
 	sprintf(tunit[6],"Flag");
-	sprintf(ttype[7],"Old k");
+	sprintf(ttype[7],"ID number");
 	sprintf(tform[7],"1J");
 	sprintf(tunit[7],"Index");
 	sprintf(ttype[8],"Sphi");
@@ -541,13 +564,11 @@ void write_ss_dyn_param(fitsfile *fptr){
 	fits_write_col(fptr, TLONG, 7, firstrow, firstelem, nrows, lng_arr,
                    &status);
 
-	/* oldk */
-	/* 
+	/* id */
 	for(i=0;i<=N+1;i++){
-		lng_arr[i] = star[i].oldk;
+		lng_arr[i] = star[i].id;
 	}
 	fits_write_col(fptr, TLONG, 8, firstrow, firstelem, nrows, lng_arr, &status);
-	*/
 	/* potential */
 	for(i=0;i<=N+1;i++){
 		dbl_arr[i] = star[i].phi;
@@ -650,28 +671,207 @@ void write_basic_info(fitsfile *fptr){
 	printerror(status);
 }
 
+void write_bs_dyn_param(fitsfile *fptr){
+	char extname[1024];	/* extension name */
+	int tfields;       	/* number of columns */
+	long nrows;	
+	long firstrow, firstelem;
+	char **ttype, **tform, **tunit;
+	int status;
+
+	long i, N;
+	double *dbl_arr;
+	long *lng_arr;
+	int *int_arr;
+
+	status = 0;
+
+	sprintf(extname,"BS_DYN_PARAM");
+	N = N_BIN_DIM;
+	tfields = 11; nrows = N;
+	firstrow  = 1;  /* first row in table to write   */
+	firstelem = 1;  /* first element in row          */
+	lng_arr = saf_malloc(N*sizeof(long));
+	dbl_arr = saf_malloc(N*sizeof(double));
+	int_arr = saf_malloc(N*sizeof(int));
+
+	ALLOC_TSTUFF
+	sprintf(ttype[0],"ID1");
+	sprintf(tform[0],"1J");
+	sprintf(tunit[0],"Index");
+	
+	sprintf(ttype[1],"ID2");
+	sprintf(tform[1],"1J");
+	sprintf(tunit[1],"Index");
+
+	sprintf(ttype[2],"Rad1");
+	sprintf(tform[2],"1D");
+	sprintf(tunit[2],"Unknown"); /* FIXME it should be known though! */
+
+	sprintf(ttype[3],"Rad2");
+	sprintf(tform[3],"1D");
+	sprintf(tunit[3],"Unknown");
+
+	sprintf(ttype[4],"Mass1");
+	sprintf(tform[4],"1D");
+	sprintf(tunit[4],"Unknown");
+
+	sprintf(ttype[5],"Mass2");
+	sprintf(tform[5],"1D");
+	sprintf(tunit[5],"Unknown");
+
+	sprintf(ttype[6],"Eint1");
+	sprintf(tform[6],"1D");
+	sprintf(tunit[6],"Unknown");
+
+	sprintf(ttype[7],"Eint2");
+	sprintf(tform[7],"1D");
+	sprintf(tunit[7],"Unknown");
+
+	sprintf(ttype[8],"SMajAxis");
+	sprintf(tform[8],"1D");
+	sprintf(tunit[8],"Unknown");
+
+	sprintf(ttype[9],"Eccentricity");
+	sprintf(tform[9],"1D");
+	sprintf(tunit[9],"Unknown");
+
+	sprintf(ttype[10],"Inuse");
+	sprintf(tform[10],"1I");
+	sprintf(tunit[10],"Flag");
+
+	fits_create_tbl(fptr, BINARY_TBL, nrows, tfields, ttype, tform,
+                tunit, extname, &status);
+	fits_write_key(fptr, TLONG, "NBIN", &(clus.N_BINARY), 
+			"Number of binaries", &status);
+	fits_write_key(fptr, TLONG, "NBINW", &(N), 
+			"Number of binaries written", &status);
+	printerror(status);
+
+	/* id1 */
+	for(i=0;i<N;i++){
+		lng_arr[i] = binary[i].id1;
+	}
+	fits_write_col(fptr, TLONG, 1, firstrow, firstelem, nrows, lng_arr,
+                   &status);
+	printerror(status);
+	/* id2 */
+	for(i=0;i<N;i++){
+		lng_arr[i] = binary[i].id2;
+	}
+	fits_write_col(fptr, TLONG, 2, firstrow, firstelem, nrows, lng_arr,
+                   &status);
+	printerror(status);
+	/* radius1 */
+	for(i=0;i<N;i++){
+		dbl_arr[i] =  binary[i].rad1;
+	}
+	fits_write_col(fptr, TDOUBLE, 3, firstrow, firstelem, nrows, dbl_arr,
+                   &status);
+	printerror(status);
+	/* radius2 */
+	for(i=0;i<N;i++){
+		dbl_arr[i] =  binary[i].rad2;
+	}
+	fits_write_col(fptr, TDOUBLE, 4, firstrow, firstelem, nrows, dbl_arr,
+                   &status);
+	printerror(status);
+	/* mass1 */
+	for(i=0;i<N;i++){
+		dbl_arr[i] =  binary[i].m1;
+	}
+	fits_write_col(fptr, TDOUBLE, 5, firstrow, firstelem, nrows, dbl_arr,
+                   &status);
+	printerror(status);
+	/* mass2 */
+	for(i=0;i<N;i++){
+		dbl_arr[i] =  binary[i].m2;
+	}
+	fits_write_col(fptr, TDOUBLE, 6, firstrow, firstelem, nrows, dbl_arr,
+                   &status);
+	printerror(status);
+	/* Internal energy 1 */
+	for(i=0;i<N;i++){
+		dbl_arr[i] =  binary[i].Eint1;
+	}
+	fits_write_col(fptr, TDOUBLE, 7, firstrow, firstelem, nrows, dbl_arr,
+                   &status);
+	printerror(status);
+	/* Internal energy 2 */
+	for(i=0;i<N;i++){
+		dbl_arr[i] =  binary[i].Eint2;
+	}
+	fits_write_col(fptr, TDOUBLE, 8, firstrow, firstelem, nrows, dbl_arr,
+                   &status);
+	printerror(status);
+	/* semimajor axis */
+	for(i=0;i<N;i++){
+		dbl_arr[i] =  binary[i].a;
+	}
+	fits_write_col(fptr, TDOUBLE, 9, firstrow, firstelem, nrows, dbl_arr,
+                   &status);
+	printerror(status);
+	/* eccentricity */
+	for(i=0;i<N;i++){
+		dbl_arr[i] =  binary[i].e;
+	}
+	fits_write_col(fptr, TDOUBLE, 10, firstrow, firstelem, nrows, dbl_arr,
+                   &status);
+	printerror(status);
+	/* binary inuse flag */
+	for(i=0;i<N;i++){
+		int_arr[i] =  binary[i].inuse;
+	}
+	fits_write_col(fptr, TINT, 11, firstrow, firstelem, nrows, int_arr,
+                   &status);
+	printerror(status);
+
+
+	FREE_TSTUFF
+	free(dbl_arr); free(lng_arr); free(int_arr);
+
+}
+
 
 /* Initially the extensions will be:
  * 0: This is just headers, 
  * 1: Meta information written here
- * 2: Restart parameters
+ * 2: Restart parameters, in particular the global variables
  * 3: Single star dynamical parameters
  * 4: Single star stellar evolution parameters
  * 5: Binaries' dynamical parameters
  * 6: Binaries' stellar evolution parameters
  */
 
-void sshot_fits(gsl_rng *rng){
+void chkpnt_fits(gsl_rng *rng){
 	fitsfile *fptr;
-	char filename[1024];
 	int status;
+	static char filename[3][2048];	
+				/* we will keep only three files per session */
+	static int fileno=0;	/* counter for ensuring only three files per
+				 * session are kept to save space. 
+				 * these variables aren't kept in snapshot file,
+				 * despite being static. this is intentional!
+				 *   -- ato 19:25,  5 Apr 2005 (UTC) */
 
-	if (sub.count != sub.FACTOR-1){ 
-		return;
+	/* this is now commented out as subzoning is never used and
+	   will not break snapshotting */
+//	if (sub.count != sub.FACTOR-1){ 
+//		return;
+//	}
+
+	if(fileno==3){
+		/* try removing filename[0] */
+		unlink(filename[0]+1); /* +1 is for preceding "!" */
+		/* shift filenames */
+		strncpy(filename[0], filename[1], 2048);
+		strncpy(filename[1], filename[2], 2048);
+		/* decrease counter */
+		fileno--;
 	}
+	sprintf(filename[fileno], "!%s_chkpnt%ld.fit", outprefix, tcount);
 	status = 0;
-	sprintf(filename, "!dummy%ld.fit", tcount);
-	fits_create_file(&fptr, filename, &status);
+	fits_create_file(&fptr, filename[fileno], &status);
 	printerror(status);
 
 	/* 1st Extension, Basic info */
@@ -684,9 +884,14 @@ void sshot_fits(gsl_rng *rng){
 	if (STELLAR_EVOLUTION > 0){
 		write_ss_se_param(fptr);
 	}
+	/* 5th Extension: Binary Star Dynamical Parameters */
+	if (clus.N_BINARY > 0) {
+		write_bs_dyn_param(fptr);
+	}
 
 	fits_close_file(fptr, &status);
 	printerror(status);
+	fileno++;
 }
 
 #undef ALLOC_TSTUFF 

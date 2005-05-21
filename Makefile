@@ -7,7 +7,6 @@ PREFIX = $(HOME)
 ### the name of the code can be changed (with some work)
 ##############################################################################
 NAME = cmc
-PRETTYNAME = ClusterMonteCarlo
 
 ##############################################################################
 ### C compiler
@@ -33,14 +32,14 @@ endif
 UNAME = $(shell uname)
 
 ifeq ($(UNAME),Linux)
-CFLAGS = -Wall -O3 -DPRETTYNAME=\"$(PRETTYNAME)\"
+CFLAGS = -Wall -O3
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
 else
 ifeq ($(UNAME),Darwin)
-CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DPRETTYNAME=\"$(PRETTYNAME)\"
+CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm
 else
-CFLAGS = -Wall -O3 -DPRETTYNAME=\"$(PRETTYNAME)\"
+CFLAGS = -Wall -O3
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
 endif
 endif
@@ -71,23 +70,35 @@ CHRISCFLAGS = -Wno-uninitialized -Wno-unused
 ifeq ($(HOSTNAME),chinook.astro.northwestern.edu)
 CC = gcc3.3.2
 #CFLAGS := $(CFLAGS) -mcpu=pentium4 -mmmx -msse -msse2
-else
+endif
+
 ifeq ($(HOSTNAME),master.cluster)
+#CC = gcc
 CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow
 LIBFLAGS := $(LIBFLAGS) -static
-else
 endif
+
+DOMNAME = $(shell dnsdomainname)
+ifeq ($(DOMNAME),ncsa.uiuc.edu)
+CC = icc
+CFLAGS := -wd864,1188 -I $(HOME)/libs_et_al/include
+# redefine libflags, leave out -lm to link with intel math library
+# turn of diagn. 864: extern inline function ... was referenced but not defined
+#           and 1188: floating-point value cannot be represented exactly
+LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio
+LIBFLAGS := $(LIBFLAGS) -L $(HOME)/libs_et_al/lib -static
+CHRISCFLAGS = 
 endif
 
 ##############################################################################
 ### the dependencies
 ##############################################################################
 EXE = $(NAME)
-OBJS = $(NAME)_binbin.o $(NAME)_binsingle.o \
-	$(NAME)_dynamics.o $(NAME)_evolution_thr.o $(NAME)_funcs.o \
+OBJS = $(NAME)_binbin.o $(NAME)_binsingle.o $(NAME)_dynamics.o \
+	$(NAME)_dynamics_helper.o $(NAME)_evolution_thr.o $(NAME)_funcs.o \
 	$(NAME)_init.o $(NAME)_io.o $(NAME).o $(NAME)_nr.o \
 	$(NAME)_utils.o taus113-v2.o $(NAME)_fits.o singl.o belgy.o \
-	$(NAME)_fits_sshot.o $(NAME)_sort.o
+	$(NAME)_fits_sshot.o $(NAME)_sort.o $(NAME)_sscollision.o
 FEWBODYDIR = fewbody
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
@@ -97,7 +108,9 @@ FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_utils.o
 CONTRIBS = contrib/calc_2ddensity.pl contrib/calc_3ddensity.pl \
 	contrib/calc_distfunc.pl contrib/pluck0.pl contrib/pluckbindata.pl \
-	contrib/prunedata.pl contrib/beo-genpbs.pl
+	contrib/prunedata.pl contrib/beo-genpbs.pl \
+	contrib/quick_cluster_plot.sh contrib/quick_rel_plot.sh \
+	contrib/extract_merger_tree.pl contrib/quick_binary_plot.sh
 EXTRAS = FITS
 
 all: $(EXE) $(EXTRAS)
@@ -117,15 +130,16 @@ $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 .PHONY: FITS install clean fewbodyclean mrproper
 
 FITS:
-	cd ato-fits && $(MAKE) -s
+	cd ato-fits && $(MAKE)
 
 install: $(EXE) $(CONTRIBS)
 	mkdir -p $(PREFIX)/bin/
 	install -m 0755 $^ $(PREFIX)/bin/
+	cd ato-fits && $(MAKE) install
 
 clean:
 	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE)
-	cd ato-fits && $(MAKE) -s clean
+	cd ato-fits && $(MAKE) clean
 
 $(NAME)clean:
 	rm -f $(OBJS) $(EXE)

@@ -4,12 +4,19 @@ use Getopt::Std;
 use strict;
 
 # "declare" variables
-my ($usage, %Options, $col, $dx, $n, $outfile, $datafile);
+my ($usage, %Options, $col, $dx, $dlogx, $n, $outfile, $datafile);
 my ($firstline, $line, @vals, $x, $ctr, $xnext, $lastline, $lastlineprinted);
+
+# base 10 logarithm
+sub log10 {
+    my $inval = shift(@_);
+    return(log($inval)/log(10));
+}
 
 # default options
 $col = 1;
 $dx = 0;
+$dlogx = 0;
 $n = 1;
 $outfile = "-";
 
@@ -22,12 +29,13 @@ USAGE:
 OPTIONS:
   -x <col>     : x column in data file [$col]
   -d <dx>      : approximate output interval [$dx]
+  -l <dlogx>   : approximate logarithmic (base 10) ouput interval [$dlogx]
   -n <n>       : print every n lines [$n]
   -o <outfile> : output file [$outfile]
   -h           : display this help text\n";
 
 # get options
-if (!getopts('x:d:n:o:h', \%Options)) {
+if (!getopts('x:d:l:n:o:h', \%Options)) {
     die("$usage");
 }
 
@@ -41,9 +49,10 @@ if ($Options{h}) {
     die("$usage");
 }
 
-# two options are mutually exclusive
-if ($Options{d} && $Options{n}) {
-    die("You must specify only one of -d or -n.\n");
+# these options are mutually exclusive
+if (($Options{d} && ($Options{l} || $Options{n})) || 
+    ($Options{l} && $Options{n})) {
+    die("You must specify only one of -d, -l, or -n.\n");
 }
 
 $datafile = $ARGV[0];
@@ -55,6 +64,10 @@ if ($Options{x}) {
 
 if ($Options{d}) {
     $dx = $Options{d};
+}
+
+if ($Options{l}) {
+    $dlogx = $Options{l};
 }
 
 if ($Options{n}) {
@@ -91,7 +104,7 @@ while ($line = <FP>) {
 	# and last line, too
 	$lastlineprinted = 0;
 	
-	# two different modes
+	# three different modes
 	if ($Options{n}) {
 	    # number mode
 	    $ctr++;
@@ -100,10 +113,22 @@ while ($line = <FP>) {
 		print(OP $line);
 		$lastlineprinted = 1;
 	    }
-	} else {
+	} elsif ($Options{d}) {
 	    # dx mode
 	    if ($x >= $xnext) {
 		$xnext = $x + $dx;
+		print(OP $line);
+		$lastlineprinted = 1;
+	    }
+	} else {
+	    # dlogx mode
+	    if ($x >= $xnext) {
+		# can only work with positive values
+		if ($x >= 0.0) {
+		    $xnext = 10**(log10($x) + $dlogx);
+		} else {
+		    $xnext = $x;
+		}
 		print(OP $line);
 		$lastlineprinted = 1;
 	    }

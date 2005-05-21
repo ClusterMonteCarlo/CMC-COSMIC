@@ -1,13 +1,36 @@
-* Fix massive energy loss visible when relaxation is turned off.  
-  Something is wrong with either the calculation of the potential, or 
-  get_positions().
-* *sigh*: The first Lagrange radius is lost when reading in from the input
-  file.  This needs to be fixed.
+***********************************************************
+*** things that _have_ to be done, in order of priority ***
+***********************************************************
+
+* Fix units!  Most importantly, they need to be consistent for binaries!
+* Remove the code for sub timesteps, since they don't work anymore
+  with the new relaxation.
+* Predictor-corrector for phi?
+* Double check binary implementation, especially indices, and the setting of
+  initial conditions in binbin() and binsingle().
+* Write Perl (or some other language) script to parse collision log file and 
+  reconstruct merger history in a tree.
+* Fix FITS routines, which are severely out of date with recent changes. Make
+  sure snapshotting works, in particular with binaries. This will form basis
+  of FITS programs that will create binaries for initial conditions.
+
+*************************************************************
+*** things that would be nice to do, in order of priority ***
+*************************************************************
+
+* Resurrect binary interaction logging.
+* Release latest version of Fewbody, so we have access to the more accurate
+  tidal acceleration calculations.
+* Update scripts in contrib/ to reflect changes in output files.
+* Keep triples?  This should be easier to do now that the dynamical
+  interaction part of the code has been generalized.
+* Perhaps automate writing of snapshotting routines?  This could be done with,
+  e.g., a Perl script that catalogs all global variables, then writes the 
+  routines to dump them to a FITS file.
 * Decouple the potential from the star structure.  They are physically
   different things, and the fact that they're tied together has caused
   significant problems already.  We just need a quickly searchable array
   containing (radius, potential) pairs.
-* Make units more persistent in code, and accessible by everyone.
 * Set criterion for stopping calculation based on tstop in code and physical
   units.
 * Create much better system for setting physical units in the input file.
@@ -17,11 +40,12 @@
   Physical units are a necessary part of this file once all scales are (over-)
   specified.  Need utilities for modifying properties of input FITS files:
   fits_add_binaries, fits_set_scales, etc.
+* Rewrite get_positions().  Can solve dQ/dr=0 to get r at v_r,max, which can be
+  used to bisect the r interval into two portions, each containing a root of
+  Q(r)=0.  This is what the force_t variable type is for.
 * For runaways, include not only "standard" stellar evolution, but also pre-
   main sequence evolution?  This is relevant for stars less massive than ~2-3
   M_o, whose radii can be several times larger than their MS values for times 
   longer than ~3 Myr (Freitag, et al. 2005).
-* Update FITS code to reflect deleted/added input file parameters, etc.
-* Rewrite get_positions().  Can solve dQ/dr=0 to get r at v_r,max, which can be
-  used to bisect the r interval into two portions, each containing a root of
-  Q(r)=0.  This is what the force_t variable type is for.
+* Write test suite that, e.g., makes sure the code compiles, then makes sure
+  t_cc for a single-component Plummer model is about 15 t_rh.

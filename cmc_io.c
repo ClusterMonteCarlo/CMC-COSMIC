@@ -42,9 +42,6 @@ void print_2Dsnapshot(void)
 	long i;
 	char outfile[100];
 
-	/* set the units */
-	units_set();
-
 	/* open file for 2D snapshot */
 	sprintf(outfile, "%s.snap%04ld.dat.gz", outprefix, snap_num);
 	if ((snapfile = gzopen(outfile, "wb")) == NULL) {
@@ -141,9 +138,6 @@ void PrintLogOutput(void)
 	fprintf(logfile, "core_radius=%g rho_core=%g v_core=%g Trc=%g conc_param=%g N_core=%g\n",
 		core_radius, rho_core, v_core, Trc, conc_param, N_core);
 	
-	fprintf(stdout, "Sin2Beta=%g\n", Sin2Beta);
-	fprintf(logfile, "Sin2Beta=%g\n", Sin2Beta);
-	
 	fprintf(stdout, "trh=%g rh=%g rh_single=%g rh_binary=%g\n", trh, rh, rh_single, rh_binary);
 	fprintf(logfile, "trh=%g rh=%g rh_single=%g rh_binary=%g\n", trh, rh, rh_single, rh_binary);
 	
@@ -155,52 +149,102 @@ void PrintLogOutput(void)
 }
 
 void PrintFileOutput(void) {
-	long i, n_single, n_binary;
+	long i, j, n_single, n_binary;
 	double fb, fb_core;
+	int *multimassr_empty  = malloc((NO_MASS_BINS-1)*sizeof(int));
 
-	/* print lagrangian radii */
-	/* Also note that there are only MASS_PC_COUNT-1 radii 
-	 * from 0...MASS_PC_COUNT-1 
-	 * So output only needs to go over i = 0 to MASS_PC_COUNT-2. */
-	/* print useful header */
+	/* print useful headers */
 	if (tcount == 1) {
 		fprintf(lagradfile, "# Lagrange radii [code units]\n");
-		fprintf(lagradfile, "# t");
-		for (i=0; i<MASS_PC_COUNT-1; i++) {
-			fprintf(lagradfile, " r(%g)", mass_pc[i]);
+		fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
+		fprintf(no_star_file, "# Number of stars within Lagrange radii [dimensionless]\n");
+		fprintf(densities_file, "# Density within Lagrange radii [code units]\n");
+		for(i=0; i<NO_MASS_BINS-1; i++){
+			fprintf(mlagradfile[i], "# Lagrange radii for %g < m < %g range [code units]\n", mass_bins[i], mass_bins[i+1]);
 		}
-		fprintf(lagradfile, "\n");
-	}
-	fprintf(lagradfile, "%.9e  ", TotalTime);
-	fprintf(ave_mass_file, "%.9e  ",TotalTime);
-	fprintf(no_star_file, "%.9e  ",TotalTime);
-	fprintf(densities_file, "%.9e  ",TotalTime);
-	fprintf(centmass_file, "%.9e  %.9e %.9e %.9e %.9e %.9e %.9e\n",
-					TotalTime,
-					cenma.m/clus.N_STAR/Mtotal, 
-					Dt, rho_core,
-					Etotal.tot, Etotal.K, Etotal.P);
 
-	for (i = 0; i < MASS_PC_COUNT - 1; i++) {
-		fprintf(lagradfile, "%e   ", mass_r[i]);
-		fprintf(ave_mass_file,"%e ", ave_mass_r[i]);
+		fprintf(lagradfile, "# 1:t");
+		fprintf(ave_mass_file, "# 1:t");
+		fprintf(no_star_file, "# 1:t");
+		fprintf(densities_file, "# 1:t");
+		for(i=0; i<NO_MASS_BINS-1; i++){
+			fprintf(mlagradfile[i], "# 1:t");
+		}
+
+		for (i=0; i<MASS_PC_COUNT; i++) {
+			fprintf(lagradfile, " %ld:r(%g)", i+2, mass_pc[i]);
+			fprintf(ave_mass_file, " %ld:<m>(%g)", i+2, mass_pc[i]);
+			fprintf(no_star_file, " %ld:N(%g)", i+2, mass_pc[i]);
+			fprintf(densities_file, " %ld:rho(%g)", i+2, mass_pc[i]);
+			for(j=0; j<NO_MASS_BINS-1; j++){
+				fprintf(mlagradfile[j], " %ld:r(%g)", i+2, mass_pc[i]);
+			}
+		}
+
+		fprintf(lagradfile, "\n");
+		fprintf(ave_mass_file, "\n");
+		fprintf(no_star_file, "\n");
+		fprintf(densities_file, "\n");
+		for(i=0; i<NO_MASS_BINS-1; i++){
+			fprintf(mlagradfile[i], "\n");
+		}
+	}
+
+	/* print data */
+	fprintf(lagradfile, "%.9e ", TotalTime);
+	fprintf(ave_mass_file, "%.9e ",TotalTime);
+	fprintf(no_star_file, "%.9e ",TotalTime);
+	fprintf(densities_file, "%.9e ",TotalTime);
+	for(i=0; i<NO_MASS_BINS-1; i++){
+		multimassr_empty[i] = 1;
+		for(j=0; j<NO_MASS_BINS-1; j++){
+			if (multi_mass_r[j][i] > 0.0) multimassr_empty[i] = 0;
+		}
+	}
+	for(i=0; i<NO_MASS_BINS-1; i++){
+		if ( !multimassr_empty[i] ){
+			fprintf(mlagradfile[i], "%.9e ", TotalTime);
+		}
+	}
+
+	for (i = 0; i < MASS_PC_COUNT ; i++) {
+		fprintf(lagradfile, "%e ", mass_r[i]);
+		fprintf(ave_mass_file,"%e ", ave_mass_r[i] * units.m / MSUN);
 		fprintf(no_star_file,"%g ", no_star_r[i]);
 		fprintf(densities_file,"%e ", densities_r[i]);
+		for(j=0; j<NO_MASS_BINS-1; j++){
+			if ( !multimassr_empty[j] ){
+				fprintf(mlagradfile[j], "%e ", multi_mass_r[j][i]);
+			}
+		}
 	}
 	fprintf(lagradfile, "\n");
 	fprintf(ave_mass_file,"\n");
 	fprintf(no_star_file,"\n");
 	fprintf(densities_file,"\n");
+	for(i=0; i<NO_MASS_BINS-1; i++){
+		if ( !multimassr_empty[i] ){
+			fprintf(mlagradfile[i], "\n");
+		}
+	}
+
+	/* information on the central BH */
+	fprintf(centmass_file, "%.9e %.9e %.9e %.9e %.9e %.9e %.9e\n",
+		TotalTime,
+		cenma.m/clus.N_STAR/Mtotal, 
+		Dt, rho_core,
+		Etotal.tot, Etotal.K, Etotal.P);
 	
 	/* output Time,N_MAX,TotalE,TotalKE,TotalPE,Mtotal */
 	/* print useful header */
 	if (tcount == 1) {
 		fprintf(dynfile, "# Dynamical information [code units]\n");
-		fprintf(dynfile, "# t N_MAX Etot T W Mtot Etot_new Eesc Jesc tcount max_r r_c N_c star[1].phi star[1].m Eb_esc\n");
+		fprintf(dynfile, "# 1:t 2:Dt 3:tcount 4:N 5:M 6:VR 7:N_c 8:r_c 9:r_max 10:Etot 11:KE 12:PE 13:Etot_int 14:Etot_bin 15:E_cenma 16:Eesc 17:Ebesc 18:Eintesc 19:Eoops 20:Etot+Eoops\n");
 	}
-	fprintf(dynfile, "%.8g %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %.8g %.8g %.8g %.8g %.8g %.8g\n",
-		TotalTime, clus.N_MAX, Etotal.tot, Etotal.K, Etotal.P, Mtotal, Etotal.New, Eescaped, Jescaped,
-		tcount, max_r, core_radius, N_core, star[1].phi, star[1].m, Ebescaped);
+	fprintf(dynfile, "%.8g %.8g %ld %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
+		TotalTime, Dt, tcount, clus.N_MAX, Mtotal, -2.0*Etotal.K/Etotal.P, N_core, core_radius, max_r, 
+		Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E/clus.N_STAR, Eescaped, Ebescaped, Eintescaped, 
+		Eoops, Etotal.tot+Eoops);
 	
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
 	   whereas N_b only counts EXISTING BOUND binaries. */
@@ -239,19 +283,24 @@ void PrintFileOutput(void) {
 			fb = ((double) n_binary)/((double) (n_single + n_binary));
 		}
 		
-		/* print to file */
+		/* print useful header */
+		if (tcount == 1) {
+			fprintf(binaryfile, "# Binary information [code units]\n");
+			fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs\n");
+		}
+		/* print data */
 		fprintf(binaryfile,
-			"%.6g %ld %.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g\n",
+			"%.6g %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g\n",
 			TotalTime, N_b, M_b, E_b, rh_single, 
-			rh_binary, rho_core_single, rho_core_bin, Delta_BE_bb, Delta_BE_bs, 
-			DE_bb, DE_bs, N_bb, N_bs, fb_core, 
-			fb);
+			rh_binary, rho_core_single, rho_core_bin, 
+			N_bb, N_bs, fb_core, 
+			fb, E_bb, E_bs, DE_bb, DE_bs);
 	}
 
 	/* also saves INITIAL snapshot (StepCount=0) */
 	if (TotalTime >= T_PRINT_STEP * StepCount) {
 		StepCount++;
-		if (DUMPS == 1) {
+		if (SNAPSHOT_PERIOD) {
 			print_2Dsnapshot();
 		}
 	}
@@ -265,7 +314,8 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	char *curr_mass;
 	parsed_t parsed;
 	parsed_t *spp;
-	int i, allparsed=1;
+	long i;
+	int allparsed=1;
 	/* int *ip; */
 	FILE *in;
 	const char *short_opts = "dVh";
@@ -278,7 +328,8 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	
 	/* DEFAULT PARAMETER VALUES */
 	debug = 0;
-	SUBZONING = 1;
+	SUBZONING = 0;
+	NO_MASS_BINS = 0;
 	/* DEFAULT PARAMETER VALUES */
 	
 	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
@@ -316,9 +367,9 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 
-	/* nothing is set yet (you rock Ato - nice code) */
-	/* in C it is a complicated for loop that depends on the fact that
-	 * all members of the struct is int, this is the fun way */
+	/* nothing is set yet, so assigning all zeros to variable parsed */
+	/* one way to do it is a complicated for loop (?which depends on the 
+	 * fact that all members of the struct is int?), this is the fun way */
 	//ip = (int *) &parsed;
 	//for(i=0; i<(sizeof(parsed)/sizeof(int)); i++){
 	//	*(ip++) = 0;
@@ -362,27 +413,19 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "BINBIN") == 0) {
 				sscanf(values, "%d", &BINBIN);
 				parsed.BINBIN = 1;
-			} else if (strcmp(parameter_name, "BINBIN_FEWBODY") == 0) {
-				sscanf(values, "%d", &BINBIN_FEWBODY);
-				parsed.BINBIN_FEWBODY = 1;
 			} else if (strcmp(parameter_name, "BINSINGLE") == 0) {
-				wprintf("parameter BINSINGLE not yet implemented...\n");
 				sscanf(values, "%d", &BINSINGLE);
 				parsed.BINSINGLE = 1;
-			} else if (strcmp(parameter_name, "BINSINGLE_FEWBODY") == 0) {
-				sscanf(values, "%d", &BINSINGLE_FEWBODY);
-				parsed.BINSINGLE_FEWBODY = 1;
 			} else if (strcmp(parameter_name, "CENTRAL_MASS") == 0) {
 				sscanf(values, "%lf", &cenma.m);
 				cenma.E = 0.0;
 				parsed.CENTRAL_MASS = 1;
-			} else if (strcmp(parameter_name, "DT_FACTOR") == 0) {
-				sscanf(values, "%lf", &DT_FACTOR);
-				wprintf("The DTrel scaling factor is calculated automatically now, so DT_FACTOR is unused.\n");
-				parsed.DT_FACTOR = 1;
-			} else if (strcmp(parameter_name, "DUMPS") == 0) {
-				sscanf(values, "%ld", &DUMPS);
-				parsed.DUMPS = 1;
+			} else if (strcmp(parameter_name, "CHECKPOINT_PERIOD") == 0) {
+				sscanf(values, "%ld", &CHECKPOINT_PERIOD);
+				parsed.CHECKPOINT_PERIOD = 1;
+			} else if (strcmp(parameter_name, "SNAPSHOT_PERIOD") == 0) {
+				sscanf(values, "%ld", &SNAPSHOT_PERIOD);
+				parsed.SNAPSHOT_PERIOD = 1;
 			} else if (strcmp(parameter_name, "E_CONS") == 0) {
 				sscanf(values, "%ld", &E_CONS);
 				parsed.E_CONS = 1;
@@ -395,9 +438,14 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "MASS_PC") == 0) {
 				strcpy(MASS_PC, values);
 				curr_mass = (char *) strtok(values, ",; ");
-				sscanf(curr_mass, "%ld", &NUM_MASS_RADII_BINS);
 				for (MASS_PC_COUNT = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; MASS_PC_COUNT++);
 				parsed.MASS_PC = 1;
+			} else if (strcmp(parameter_name, "MASS_BINS") == 0) {
+				/* we recycle variable "curr_mass" for mass bins */
+				strcpy(MASS_BINS, values);
+				curr_mass = (char *) strtok(values, ",; ");
+				for (NO_MASS_BINS = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_MASS_BINS++);
+				parsed.MASS_BINS = 1;
 			} else if (strcmp(parameter_name, "MEGA_YEAR") == 0) {
 				sscanf(values, "%lf", &MEGA_YEAR);
 				parsed.MEGA_YEAR = 1;
@@ -422,18 +470,18 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "NUM_CENTRAL_STARS") == 0) {
 				sscanf(values, "%ld", &NUM_CENTRAL_STARS);
 				parsed.NUM_CENTRAL_STARS = 1;
-			} else if (strcmp(parameter_name, "ORIGINAL_PERTURB_STARS") == 0) {
-				sscanf(values, "%d", &ORIGINAL_PERTURB_STARS);
-				parsed.ORIGINAL_PERTURB_STARS = 1;
 			} else if (strcmp(parameter_name, "PERTURB") == 0) {
 				sscanf(values, "%ld", &PERTURB);
 				parsed.PERTURB = 1;
+			} else if (strcmp(parameter_name, "RELAXATION") == 0) {
+				sscanf(values, "%ld", &RELAXATION);
+				parsed.RELAXATION = 1;
+			} else if (strcmp(parameter_name, "THETASEMAX") == 0) {
+				sscanf(values, "%lf", &THETASEMAX);
+				parsed.THETASEMAX = 1;
 			} else if (strcmp(parameter_name, "R_MAX") == 0) {
 				sscanf(values, "%lf", &R_MAX);
 				parsed.R_MAX = 1;
-			} else if (strcmp(parameter_name, "SIN2BETA_MAX") == 0) {
-				sscanf(values, "%lf", &SIN2BETA_MAX);
-				parsed.SIN2BETA_MAX = 1;
 			} else if (strcmp(parameter_name, "SOLAR_MASS_DYN") == 0) {
 				sscanf(values, "%lf", &SOLAR_MASS_DYN);
 				parsed.SOLAR_MASS_DYN = 1;
@@ -452,6 +500,9 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "T_MAX_COUNT") == 0) {
 				sscanf(values, "%ld", &T_MAX_COUNT);
 				parsed.T_MAX_COUNT = 1;
+			} else if (strcmp(parameter_name, "MAX_WCLOCK_TIME") == 0) {
+				sscanf(values, "%ld", &MAX_WCLOCK_TIME);
+				parsed.MAX_WCLOCK_TIME = 1;
 			} else if (strcmp(parameter_name, "T_PRINT_STEP") == 0) {
 				sscanf(values, "%lf", &T_PRINT_STEP);
 				parsed.T_PRINT_STEP = 1;
@@ -463,6 +514,10 @@ int parser(int argc, char *argv[], gsl_rng *r)
 				parsed.GAMMA = 1;
 			} else if (strcmp(parameter_name, "SUBZONING") == 0) {
 				sscanf(values, "%d", &SUBZONING);
+				if (SUBZONING != 0) {
+					eprintf("SUBZONING does not work with the new implementation of relaxation!\n");
+					exit(1);
+				}
 				parsed.SUBZONING = 1;
 			} else {
 				wprintf("unknown parameter: \"%s\".\n", line);
@@ -474,8 +529,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	}
 	fclose(in);
 	
-	/* quit if some parameters are unset (Ato is a master programmer, 
-	   but this would still be a *little* bit easier in python :)) */
+	/* quit if some parameters are unset */
 #define CHECK_PARSED(A) \
 	if (parsed.A == 0) { \
 		eprintf("parameter \"%s\" unset.\n", #A); \
@@ -484,32 +538,32 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	
 	CHECK_PARSED(MMIN);
 	CHECK_PARSED(BINBIN);
-	CHECK_PARSED(BINBIN_FEWBODY);
 	CHECK_PARSED(BINSINGLE);
-	CHECK_PARSED(BINSINGLE_FEWBODY);
 	CHECK_PARSED(CENTRAL_MASS);
-	//CHECK_PARSED(DT_FACTOR);
-	CHECK_PARSED(DUMPS);
+	CHECK_PARSED(CHECKPOINT_PERIOD);
+	CHECK_PARSED(SNAPSHOT_PERIOD);
 	CHECK_PARSED(E_CONS);
 	CHECK_PARSED(IDUM);
 	CHECK_PARSED(INPUT_FILE);
 	CHECK_PARSED(MASS_PC);
+	CHECK_PARSED(MASS_BINS);
 	CHECK_PARSED(MEGA_YEAR);
 	CHECK_PARSED(METALLICITY);
 	CHECK_PARSED(MINIMUM_R);
 	CHECK_PARSED(MIN_LAGRANGIAN_RADIUS);
 	CHECK_PARSED(N_BINARY);
 	CHECK_PARSED(NUM_CENTRAL_STARS);
-	CHECK_PARSED(ORIGINAL_PERTURB_STARS);
 	CHECK_PARSED(PERTURB);
+	CHECK_PARSED(RELAXATION);
+	CHECK_PARSED(THETASEMAX);
 	CHECK_PARSED(R_MAX);
-	CHECK_PARSED(SIN2BETA_MAX);
 	CHECK_PARSED(SOLAR_MASS_DYN);
 	CHECK_PARSED(STELLAR_EVOLUTION);
 	CHECK_PARSED(SS_COLLISION);
 	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT);
 	CHECK_PARSED(T_MAX);
 	CHECK_PARSED(T_MAX_COUNT);
+	CHECK_PARSED(MAX_WCLOCK_TIME);
 	CHECK_PARSED(T_PRINT_STEP);
 	CHECK_PARSED(WIND_FACTOR);
 	CHECK_PARSED(GAMMA);
@@ -537,43 +591,55 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	if(!ReadSnapshot){
 		clus.N_STAR_NEW = clus.N_STAR;
 		/* add 2 * clus.N_BINARY for binary disruptions */
-		/* add 0.1 * clus.N_STAR for safety */
-		N_STAR_DIM = clus.N_STAR + 2 + 2 * clus.N_BINARY + floorl(0.1 * ((double) clus.N_STAR));
+		N_STAR_DIM = 2 + clus.N_STAR + 2 * clus.N_BINARY;
+		N_BIN_DIM = 2 + clus.N_BINARY;
+
+		/* safety factors, so we don't have to worry about memory management/garbage collection */
+		N_STAR_DIM = floorl(1.5 * ((double) N_STAR_DIM));
+		N_BIN_DIM = floorl(1.5 * ((double) N_BIN_DIM));
 
 		/*********************************************/
 		/* allocation of memory for global variables */
 		/*********************************************/
 
 		/* the main star array containing all star parameters */
-		star = malloc(N_STAR_DIM * sizeof(star_t));
-	
-		/* make all stars initially uninteracted */
-		for (i=0; i<N_STAR_DIM; i++) {
-			star[i].interacted = 0;
-		}
+		star = calloc(N_STAR_DIM, sizeof(star_t));
 		
+		/* allocate memory for velocity dispersion array */
+		sigma_array.n = 0;
+		sigma_array.r = calloc(N_STAR_DIM, sizeof(double));
+		sigma_array.sigma = calloc(N_STAR_DIM, sizeof(double));
+
 		/* the main binary array containing all binary parameters */
-		binary = malloc((clus.N_BINARY+2) * sizeof(binary_t));
+		binary = calloc(N_BIN_DIM, sizeof(binary_t));
 		
 		/* quantities calculated for various lagrange radii */
-		mass_r = malloc((NUM_MASS_RADII_BINS + 1) 
-					* MASS_PC_COUNT * sizeof(double));
-		ave_mass_r = malloc((NUM_MASS_RADII_BINS + 1) 
-					* MASS_PC_COUNT * sizeof(double));
-		no_star_r = malloc((NUM_MASS_RADII_BINS + 1) 
-					* MASS_PC_COUNT * sizeof(double));
-		densities_r = malloc((NUM_MASS_RADII_BINS + 1) 
-					* MASS_PC_COUNT * sizeof(double));
-		mass_pc = malloc(MASS_PC_COUNT * sizeof(double));
-		for(i=0;i<MASS_PC_COUNT; i++){
-			mass_pc[i] = 0.0;
+		mass_r = malloc(MASS_PC_COUNT * sizeof(double));
+		ave_mass_r = malloc(MASS_PC_COUNT * sizeof(double));
+		no_star_r = malloc(MASS_PC_COUNT * sizeof(double));
+		densities_r = malloc(MASS_PC_COUNT * sizeof(double));
+		mass_pc = calloc(MASS_PC_COUNT, sizeof(double));
+		mass_bins = calloc(NO_MASS_BINS, sizeof(double));
+		multi_mass_r = malloc(NO_MASS_BINS * sizeof(double *));
+		for(i=0; i<NO_MASS_BINS; i++){
+			multi_mass_r[i] = malloc(MASS_PC_COUNT * sizeof(double));
 		}
 
-		/*======= Reading of values for the Lagrange radii =======*/
+		/*======= Reading values for the Lagrange radii =======*/
 		curr_mass = (char *) strtok(MASS_PC, ",; ");
+		sscanf(curr_mass, "%lf", &mass_pc[0]);
 
-		for (i = 0; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++)
+		for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
 			sscanf(curr_mass, "%lf", &mass_pc[i]);
+		}
+		
+	}
+	/*======= Reading values for the mass bins =======*/
+	curr_mass = (char *) strtok(MASS_BINS, ",; ");
+	sscanf(curr_mass, "%lf", &mass_bins[0]);
+
+	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
+		sscanf(curr_mass, "%lf", &mass_bins[i]);
 	}
 
 	/*======= Opening of output files =======*/
@@ -589,22 +655,22 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-	sprintf(outfile, "%s_6", outprefix);
+	sprintf(outfile, "%s.avemass_lagrad.dat", outprefix);
 	if ((ave_mass_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-	sprintf(outfile, "%s_7", outprefix);
+	sprintf(outfile, "%s.nostar_lagrad.dat", outprefix);
 	if ((no_star_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-	sprintf(outfile, "%s_8", outprefix);
+	sprintf(outfile, "%s.rho_lagrad.dat", outprefix);
 	if ((densities_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-	sprintf(outfile, "%s_9", outprefix);
+	sprintf(outfile, "%s.centmass.dat", outprefix);
 	if ((centmass_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
@@ -619,21 +685,15 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	/* output files for binaries */
 	if (clus.N_BINARY > 0) {
 		/* general binary information */
-		sprintf(outfile, "%s_binary", outprefix);
+		sprintf(outfile, "%s.bin.dat", outprefix);
 		if ((binaryfile = fopen(outfile, outfilemode)) == NULL) {
 			eprintf("cannot create binary file \"%s\".\n", outfile);
 			exit(1);
 		}
-		/* file for binary-single information */
-		sprintf(outfile, "%s_binsinglelog.gz", outprefix);
-		if ((binsinglefile = gzopen(outfile, "wb")) == NULL) {
-			eprintf("cannot create binsinglelog file \"%s\".\n", outfile);
-			exit(1);
-		}
-		/* file for fewbody information */
-		sprintf(outfile, "%s_binbinlog.gz", outprefix);
-		if ((binbinfile = gzopen(outfile, "wb")) == NULL) {
-			eprintf("cannot create binbinlog file \"%s\".\n", outfile);
+		/* file for binary interaction information */
+		sprintf(outfile, "%s.binint.log", outprefix);
+		if ((binintfile = fopen(outfile, "wb")) == NULL) {
+			eprintf("cannot create binintlog file \"%s\".\n", outfile);
 			exit(1);
 		}
 	}
@@ -645,12 +705,42 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 
+	/* Collision log file */
+	sprintf(outfile, "%s.collision.log", outprefix);
+	if ((collisionfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create collision log file \"%s\".\n", outfile);
+		exit(1);
+	}
+	/* print header */
+	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):...\n");
+
+	/* Relaxation data file */
+	sprintf(outfile, "%s.relaxation.dat", outprefix);
+	if ((relaxationfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create relaxation data file \"%s\".\n", outfile);
+		exit(1);
+	}
+
+	/* lagrange radii for multiple mass bins */
+	mlagradfile = malloc((NO_MASS_BINS-1)*sizeof(FILE *));
+	for(i=0; i<NO_MASS_BINS-1; i++){ /* NO_MASS_BINS need to be >=2 to be
+							meaningful */
+		sprintf(outfile, "%s.lagrad%ld-%g-%g.dat", outprefix, i,
+							mass_bins[i], mass_bins[i+1]);
+		if ((mlagradfile[i] = fopen(outfile, outfilemode)) == NULL) {
+			eprintf("cannot create output file \"%s\".\n", outfile);
+			exit(1);
+		}
+	}
+
 	return(1);
 }
 
 /* close buffers */
 void close_buffers(void)
 {
+	int i;
+
 	fclose(lagradfile);
 	fclose(dynfile);
 	fclose(logfile);
@@ -659,10 +749,15 @@ void close_buffers(void)
 	fclose(densities_file);
 	fclose(centmass_file);
 	fclose(escfile);
-	
+	fclose(collisionfile);
+	fclose(relaxationfile);
+
 	if (clus.N_BINARY > 0) {
 		fclose(binaryfile);
-		gzclose(binsinglefile);
-		gzclose(binbinfile);
+		fclose(binintfile);
+	}
+
+	for(i=0; i<NO_MASS_BINS-1; i++){
+		fclose(mlagradfile[i]);
 	}
 }

@@ -5,12 +5,13 @@ use Getopt::Std;
 
 # declare variables and subroutines
 my (@chars, $randstring, $i, $invokedas, $date);
-my ($srcdir, $jobname, $cmdline, $files, $nodes, $cput, $ncpus, $queue, $usage);
+my ($srcdir, $jobname, $wrkdir, $cmdline, $files, $nodes, $cput, $ncpus, $queue, $usage);
 my ($outfile, @file);
 
-# generate random string, used for job name
+# generate random string, used as part of job directory
 @chars=(0..9, 'A'..'Z', 'a'..'z');
-# PBS name has to start with a letter
+# The first character was chosen this way because $randstring used to be
+# used for the PBS job name, which has to start with a letter
 $randstring = ('A'..'Z', 'a'..'z')[int(rand(52))];
 for ($i=0; $i<7; $i++) {
     $randstring = $randstring.$chars[int(rand($#chars+1))];
@@ -19,7 +20,7 @@ for ($i=0; $i<7; $i++) {
 # default options
 $srcdir = `pwd`;
 $srcdir =~ s/\n$//;
-$jobname = $randstring;
+$jobname = "myjob";
 $cmdline = "echo \"this is a test\"";
 $files = "";
 $nodes = 1;
@@ -35,7 +36,7 @@ USAGE:
 
 OPTIONS:
   -d <srcdir>  : source directory [$srcdir]
-  -j <jobname> : job name (random)
+  -j <jobname> : job name [$jobname]
   -c <cmdline> : command line [$cmdline]
   -f <files>   : comma-separated list of required files [$files]
   -m <nodes>   : number of nodes required [$nodes]
@@ -88,6 +89,8 @@ if ($Options{t}) {$cput = $Options{t};}
 if ($Options{n}) {$ncpus = $Options{n};}
 if ($Options{q}) {$queue = $Options{q};}
 
+$wrkdir=$jobname.'_'.$randstring;
+
 # open outfile
 open(OP, ">$outfile") or die("Can't open outfile \"$outfile\" for writing.\n");
 
@@ -108,12 +111,12 @@ print(OP "\n");
 print(OP "# Define variables to make PBS script more flexible.\n");
 print(OP "SRCDIR=$srcdir\n");
 print(OP "LOCDIR=/usr/local/cluster/users/`whoami`\n");
-print(OP "JOBNAME=$jobname\n");
+print(OP "WRKDIR=$wrkdir\n");
 print(OP "\n");
 print(OP "# Create working directory based on job name.\n");
 print(OP "cd \$LOCDIR\n");
-print(OP "mkdir \$JOBNAME\n");
-print(OP "cd \$JOBNAME\n");
+print(OP "mkdir \$WRKDIR\n");
+print(OP "cd \$WRKDIR\n");
 print(OP "\n");
 if ($files !~ /^$/) {
     print(OP "# Copy needed files to working directory.\n");
@@ -132,7 +135,7 @@ print(OP "rcp * master:\$SRCDIR && rm -f *\n");
 print(OP "\n");
 print(OP "# And clean up.\n");
 print(OP "cd ..\n");
-print(OP "rmdir \$JOBNAME\n");
+print(OP "rmdir \$WRKDIR\n");
 print(OP "\n");
 print(OP "# This is just in case the previous command fails for some reason.\n");
 print(OP "exit 0\n");

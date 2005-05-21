@@ -1,5 +1,6 @@
 /* -*- linux-c -*- */
 
+#include <sys/times.h>
 #include <zlib.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_errno.h>
@@ -10,6 +11,7 @@
 #define VERSION "0.1"
 #define NICK "Blah"
 #define DATE "Mon Dec 20 14:23:25 CST 2004"
+#define PRETTYNAME "ClusterMonteCarlo"
 
 /* toggle stellar evolution */
 /* #define SE */
@@ -24,6 +26,8 @@
 
 #define N_TRY 50000
 
+#define AVEKERNEL 20
+
 #define MSUN 1.989e+33
 #define SOLAR_MASS MSUN
 #define RSUN 6.9599e10
@@ -33,14 +37,30 @@
 #define AU 1.496e+13
 #define PARSEC 3.0857e+18
 
+/* defining maximum pericenters for "strong" interactions */
+/* rperi = XCOLL * (R_1 + R_2) */
+#define XCOLL 1.0
+/* rperi = XBS * a */
+#define XBS 2.0
+/* rperi = XBB * (a_1 + a_2) */
+#define XBB 2.0
+
+/* binaries */
 typedef struct{
+	long id1; /* unique id of star 1 */
+	long id2; /* unique id of star 2 */
+	double rad1; /* radius of star 1 */
+	double rad2; /* radius of star 2 */
 	double m1; /* mass of star 1 */
 	double m2; /* mass of star 2 */
+	double Eint1; /* internal energy of star 1 */
+	double Eint2; /* internal energy of star 2 */
 	double a; /* semimajor axis */
 	double e; /* eccentricity */
 	int inuse; /* whether or not binary exists */
 } binary_t;
 
+/* single stars/objects */
 typedef struct{
 	/* dynamical evolution variables */
 	double r;  /* radial coordinate */
@@ -56,12 +76,13 @@ typedef struct{
 	double vtnew; /* new tangential velocity */
 	double rOld; /* ? */
 	double X; /* ? */
+	double Y; /* random variable that must be stored */
 	double r_peri; /* pericenter distance */
 	double r_apo; /* apocenter distance */
 	double phi; /* value of potential at position of star (only updated at end of timestep) */
-	long   interacted; /* whether or not the star has undergone an interaction */
+	long   interacted; /* whether or not the star has undergone a strong interaction (i.e., not relaxation) */
 	long   binind; /* index to the binary */
-	long id; 	/* the star's unique identifier */
+	long   id; 	/* the star's unique identifier */
 	double rad; /* radius */
 	double Uoldrold, Uoldrnew; /* variables for Stodolkiewicz */
 	double vtold, vrold;       /* energy conservation scheme  */
@@ -105,17 +126,16 @@ struct get_pos_str {
 typedef struct{
 	int MMIN;
 	int BINBIN;
-	int BINBIN_FEWBODY;
 	int BINSINGLE;
-	int BINSINGLE_FEWBODY;
 	int CENTRAL_MASS;
-	int DT_FACTOR;
-	int DUMPS;
+	int SNAPSHOT_PERIOD;
+	int CHECKPOINT_PERIOD;
 	int E_CONS;
 	int IDUM;
 	int INDEX_UNIT;
 	int INPUT_FILE;
 	int MASS_PC;
+	int MASS_BINS;
 	int MAX_INDEX;
 	int MEGA_YEAR;
 	int METALLICITY;
@@ -123,16 +143,17 @@ typedef struct{
 	int MIN_LAGRANGIAN_RADIUS;
 	int N_BINARY;
 	int NUM_CENTRAL_STARS;
-	int ORIGINAL_PERTURB_STARS;
 	int PERTURB;
+	int RELAXATION;
+	int THETASEMAX;
 	int R_MAX;
-	int SIN2BETA_MAX;
 	int SOLAR_MASS_DYN;
 	int STELLAR_EVOLUTION;
 	int SS_COLLISION;
 	int TERMINAL_ENERGY_DISPLACEMENT;
 	int T_MAX;
 	int T_MAX_COUNT;
+	int MAX_WCLOCK_TIME;
 	int T_PRINT_STEP;
 	int WIND_FACTOR;
 	int GAMMA;
@@ -144,6 +165,8 @@ typedef struct{
 	double t; /* time */
 	double m; /* mass */
 	double l; /* length */
+	double E; /* energy */
+	double mstar; /* stars' masses are kept in different units */
 } units_t;
 
 /* a struct for the potential, must be malloc'ed */
@@ -196,6 +219,13 @@ typedef struct{
 	double kT;
 } core_t;
 
+/* to store the velocity dispersion profile */
+typedef struct{
+	long n;
+	double *r;
+	double *sigma;
+} sigma_t;
+
 /********************** Function Declarations ************************/
 inline double sqr(double x);
 inline double cub(double x);
@@ -206,18 +236,19 @@ void print_results(void);
 double potential(double r);	       /* get potential using star.phi */
 long potential_calculate(void);	/* calculate potential at star locations in star.phi */
 void comp_mass_percent(void);
+void comp_multi_mass_percent(void);
 double get_positions(void);	/* get positions and velocities */
 void perturb_stars(double Dt);	/* take a time step (perturb E,J) */
 long FindZero_r(long x1, long x2, double r);
-long FindZero_Q(long x1, long x2, double E, double J);
+long FindZero_Q(long j, long x1, long x2, double E, double J);
 void ComputeEnergy(void);
 void ComputeEnergy2(void);
-void NormalizeEnergy(void);
 void PrintLogOutput(void);
-double GetTimeStep(void);
-long CheckStop(void);
+double GetTimeStep(gsl_rng *rng);
+long CheckStop(struct tms tmsbuf);
 void ComputeIntermediateEnergy(void);
 void set_velocities(void);
+void set_velocities3(void);
 void RecomputeEnergy(void);
 double rtbis(double (*func) (double), double x1, double x2, double xacc);
 double trapzd(double (*func) (double), double a, double b, long n);
@@ -231,6 +262,7 @@ void update_vars(void);
 
 /******* Binary routines **********/
 void assign_binaries(void);
+void assign_binaries_test(void);
 double bin_single_sigma(double y);
 
 void print_version(FILE *stream);
@@ -252,7 +284,7 @@ void read_fits_file_data_new(fitsfile *fptr);
 void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *r);
 void read_fits_file_parameters_old(fitsfile *fptr, gsl_rng *r);
 void read_fits_file_parameters(char *fits_file_name, gsl_rng *r);
-void sshot_fits(gsl_rng *r);
+void chkpnt_fits(gsl_rng *r);
 void printerror(int status);
 
 /* stellar evolution stuff */
@@ -262,15 +294,11 @@ void write_stellar_data(void);
 double r_of_m(double M);
 
 /* Fewbody stuff */
-void bb_calcunits(fb_obj_t *obj[2], fb_units_t *units);
-fb_ret_t binbin(double *t, double m00, double m01, double m10, double m11, double r00, double r01, double r10, double r11, double a0, double a1, double e0, double e1, double vinf, double b, fb_units_t *units, fb_hier_t *hier, gsl_rng *rng);
-void bs_calcunits(fb_obj_t *obj[2], fb_units_t *units);
-fb_ret_t binsingle(double *t, double m0, double m10, double m11, double r0, double r10, double r11, double a1, double e1, double vinf, double b, fb_units_t *units, fb_hier_t *hier, gsl_rng *rng);
 void destroy_obj(long i);
 void destroy_binary(long i);
 long create_star(void);
 long create_binary(void);
-void perturb_stars_new(double dt, gsl_rng *rng);
+void dynamics_apply(double dt, gsl_rng *rng);
 void perturb_stars_fewbody(double dt, gsl_rng *rng);
 void qsorts(star_t *s, long n);
 void fits_sanity_check(void);
@@ -279,6 +307,35 @@ void mini_sshot(void);
 void units_set(void);
 void central_calculate(void);
 void print_interaction_status(char status_text[]);
+void print_interaction_error(void);
+long star_get_id_new(void);
+double calc_n_local(long k, long p, long N_LIMIT);
+double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT);
+void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4], double *W, double *rcm, double vcm[4], gsl_rng *rng, int setY);
+void set_star_EJ(long k);
+void set_star_news(long k);
+void set_star_olds(long k);
+void zero_star(long j);
+void zero_binary(long j);
+
+void sscollision_do(long k, long kp, double rcm, double vcm[4]);
+
+void bs_calcunits(fb_obj_t *obj[2], fb_units_t *bs_units);
+fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hier_t *hier, gsl_rng *rng);
+
+void bb_calcunits(fb_obj_t *obj[2], fb_units_t *bb_units);
+fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hier, gsl_rng *rng);
+
+double binint_get_mass(long k, long kp, long id);
+void binint_log_obj(fb_obj_t *obj, fb_units_t units);
+void binint_log_status(fb_ret_t retval);
+void binint_log_collision(char interaction_type[], long id, double mass, fb_obj_t obj, long k, long kp);
+void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng);
+
+double simul_relax(gsl_rng *rng);
+void break_wide_binaries(void);
+void calc_sigma_r(void);
+double sigma_r(double r);
 
 /* signal/GSL error handling stuff */
 void toggle_debugging(int signal);
@@ -297,7 +354,12 @@ static double sqrarg;
 #endif
 
 /* macros */
-#define function_Q(k, E, J) (2.0 * ((E) - star[(k)].phi) - SQR((J) / star[(k)].r))
+/* correction to potential due to subtracting star's contribution, and adding self-gravity */
+/* #define PHI_S(rad, j) ( ((rad)>=star[(j)].r ? star[(j)].m/(rad) : star[(j)].m/star[(j)].r) * (1.0/clus.N_STAR) - 0.5*star[(j)].m/clus.N_STAR/(rad) ) */
+/* correction to potential due to subtracting star's contribution (this is what Marc uses) */
+#define PHI_S(rad, j) ( ((rad)>=star[(j)].r ? star[(j)].m/(rad) : star[(j)].m/star[(j)].r) * (1.0/clus.N_STAR) )
+#define function_Q(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[(k)].r, j))) - SQR((J) / star[(k)].r))
+#define diaprintf(args...) if (1) {fprintf(stdout, "DIAGNOSTIC: %s(): ", __FUNCTION__); fprintf(stdout, args);}
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 #define wprintf(args...) {fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 #define eprintf(args...) {fprintf(stderr, "ERROR: %s:%d in %s(): ", __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}

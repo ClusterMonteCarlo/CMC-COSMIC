@@ -29,6 +29,8 @@ struct strpar {
 	double rk;
 };
 
+#define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
+
 /* print the usage */
 void print_usage(FILE *stream)
 {
@@ -296,7 +298,7 @@ int main(int argc, char *argv[]){
 	double h;
 	double k1, k2, k3, k4, k5, k6, l1, l2, l3, l4, l5, l6;
 	double rho_rho0;
-	int i=0, array_incr = 10000, array_size=array_incr;
+	int i, array_incr = 10000, array_size=array_incr;
 	int num_point;
 	double *pos, *den, *pot, *mR;
 	double X1, X2, X3, *X;
@@ -347,7 +349,7 @@ int main(int argc, char *argv[]){
 			break;
 		}
 	}
-	
+
 	/* check to make sure there was nothing crazy on the command line */
 	if (optind < argc) {
 		print_usage(stdout);
@@ -357,6 +359,8 @@ int main(int argc, char *argv[]){
 	if (filename[0]==0){
 		sprintf(filename, OUTFILE_FORMAT, w0, (double) N);
 	}
+	
+	dprintf("w0=%g N=%ld filename=%s seed=%ld\n", w0, N, filename, seed);
 
 	check_for_file(filename);
 	/* reset_rng_t113(2718234592UL); */
@@ -368,6 +372,7 @@ int main(int argc, char *argv[]){
 	pos = malloc(array_size*sizeof(double));
 	den = malloc(array_size*sizeof(double));
 	pot = malloc(array_size*sizeof(double));
+	i = 0;
 	while(x>0 && (rho_rho0=calc_rho_rho0(t,x,y,w0))>0){
 		pos[i] = t; 
 		den[i] = rho_rho0; 

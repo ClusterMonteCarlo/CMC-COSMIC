@@ -1,0 +1,51 @@
+###########################################################################
+# Runaway comparison: should yield a runaway according to Figure 1 of 
+# Freitag, G\"urkan, & Rasio (2005) if R_NB<~0.2pc.  This is set via
+# MEGA_YEAR, and is output to stderr as units.l if cmc is invoked
+# with debugging (-d).  By the way, SOLAR_MASS_DYN is 1/<m>, where <m>
+# is in solar units.  Since the Salpeter for this model goes from 0.2 to
+# 120, <m>=0.69.
+###########################################################################
+
+### units ###
+MEGA_YEAR 0.001
+SOLAR_MASS_DYN 1.449275
+
+### random seed ###
+IDUM = 6805
+
+### physics ###
+GAMMA = 0.01
+NUM_CENTRAL_STARS = 300
+PERTURB = 1
+RELAXATION = 1
+THETASEMAX = 1.0
+SUBZONING = 0
+
+STELLAR_EVOLUTION = 0
+WIND_FACTOR 1.0
+METALLICITY 0.02
+
+N_BINARY = 0
+MMIN = 1.0
+BINSINGLE = 0
+BINBIN = 0
+SS_COLLISION = 1
+
+CENTRAL_MASS 0.0
+MINIMUM_R 0.0
+
+E_CONS = 2
+
+### other params ###
+INPUT_FILE = king_w3_n1.25e6_salpeter.fits.gz
+R_MAX = 1000000
+
+### output settings ###
+DUMPS = 0
+T_PRINT_STEP = 0.0
+T_MAX = 2
+T_MAX_COUNT = 500000
+MASS_PC = 0.00001,0.00003,0.0001,0.0002,0.0003,0.0004,0.0005,0.0008,0.001,0.0012,0.0014,0.0016,0.0018,0.002,0.0022,0.0024,0.0026,0.0028,0.003,0.0035,0.004,0.005,0.008,0.01,0.013,0.015,0.018,0.02,0.05,0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95,0.99
+MIN_LAGRANGIAN_RADIUS = 1.0e-5
+TERMINAL_ENERGY_DISPLACEMENT = 0.5

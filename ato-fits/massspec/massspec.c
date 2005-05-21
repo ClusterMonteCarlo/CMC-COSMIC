@@ -10,6 +10,7 @@
 
 struct imf_param {
 	int imf;
+	int Ntrace;
 	int oflag;
 	double mmin;
 	double mmax;
@@ -60,10 +61,12 @@ void write_usage(void){
 	printf("            4: Kroupa (a la starlab)\n");
 	printf("            5: Scalo (from Kroupa etal 1993 eq.15)\n");
 	printf("            6: Kroupa (old form, for comparison reasons)\n");
+	printf("            7: Tracers (1 species, the rest are 1 Msun)\n");
 	printf("-w        : overwrite flag\n");
-	printf("-m <dbl>  : minimum mass\n");
+	printf("-m <dbl>  : minimum mass, or tracer mass\n");
 	printf("-M <dbl>  : maximum mass\n");
 	printf("-p <dbl>  : power-law index (-2.35 is Salpeter)\n");
+	printf("-N <int>  : number of tracers\n");
 	printf("-r <dbl>  : rcr, the value of r within which average mass");
 	printf(" is different\n");
 	printf("-C <dbl>  : Cms, how much will the masses be different\n");
@@ -80,12 +83,13 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 	param->mmin = 0.2;
 	param->mmax = 120.0;
 	param->pl_index = -2.35;
+	param->Ntrace = 0;
 	param->rcr = 1.00;
 	param->Cms = 1.00;
 	(param->infile)[0] = '\0';
 	(param->outfile)[0] = '\0';
 
-	while((c = getopt(argc, argv, "i:o:I:wm:M:p:r:C:h")) != -1)
+	while((c = getopt(argc, argv, "i:o:I:wm:M:p:N:r:C:h")) != -1)
 		switch(c) {
 		case 'i':
 			strncpy(param->infile, optarg, 1024);
@@ -95,6 +99,9 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 			break;
 		case 'I':
 			param->imf = strtol(optarg, NULL, 10);
+			break;
+		case 'N':
+			param->Ntrace = strtol(optarg, NULL, 10);
 			break;
 		case 'w':
 			param->oflag = 1;
@@ -150,8 +157,13 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
-	if (param->imf<1 || param->imf>6){
+	if (param->imf<1 || param->imf>7){
 		printf("Invalid IMF model value\n");
+		write_usage();
+		exit(EXIT_FAILURE);
+	}
+	if (param->imf==7 && param->Ntrace<1 ){
+		printf("Number of tracers has to be positive\n");
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
@@ -165,7 +177,10 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
-		
+	
+	fprintf(stderr, "infile=%s outfile=%s imf=%d Mmin=%g Mmax=%g pl_index=%g rcr=%g Cms=%g\n", 
+		param->infile, param->outfile, param->imf, param->mmin, param->mmax, param->pl_index, 
+		param->rcr, param->Cms);
 }
 
 void read_input(struct imf_param param, struct star *s[],
@@ -390,6 +405,27 @@ void set_masses(struct imf_param param, struct star *s[],
 			(*s)[i].m = m;
 			total_mass += m;
 		}
+	} else if (param.imf==7){ /* Tracers */
+		if(c.NSTAR <= param.Ntrace){
+			printf("Number of tracers = %d\n", param.Ntrace);
+			printf("Number of stars = %ld\n", c.NSTAR);
+			printf("something wrong\n");
+			exit(EXIT_FAILURE);
+		}
+		for(i=1; i<=c.NSTAR; i++){
+			m = 1.0;
+			(*s)[i].m = m;
+			total_mass += m;
+		}
+		/* note that the following algorithm puts trace stars 
+		 * uniformly. for a random selection algorithm, see:
+		 *  Knuth, vol2, section 3.4.3, Algorithm S */
+		for(i=0; i<param.Ntrace; i++){
+			m = param.mmin;
+			(*s)[c.NSTAR / (2*param.Ntrace) 
+				+ i*c.NSTAR/param.Ntrace + 1].m = m;
+			total_mass += m - 1.0;
+		}
 	} else {
 		printf("This can't happen!\n");
 		exit(EXIT_FAILURE);
@@ -481,7 +517,7 @@ int main(int argc, char *argv[]){
 	struct star *s;
 	struct cluster clus;
 	struct code_par cp;
-	int i;
+	/* int i; */
 	
 	parse_options(&param, argc, argv);
 	read_input(param, &s, &clus, &cp);

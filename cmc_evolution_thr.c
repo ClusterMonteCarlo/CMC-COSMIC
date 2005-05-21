@@ -16,77 +16,66 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-double GetTimeStep(void) {
-	long i;
-	double Ai, m_min, m_max, DTrel, Xcoll, Tcoll, DTcoll;
-	double Xbb, Tbb, DTbb, Xbs, Tbs, DTbs;
+double GetTimeStep(gsl_rng *rng) {
+	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs;
 	
-	/* calculate Ai for central region */
-	Ai = 6.0 * ((double) central.N) * sqr(central.m_ave * ((double) clus.N_STAR)) / 
-		((cub(star[central.N].r)-cub(star[1].r)) * sqrt(cub(central.w2_ave)));
-
-	/* set DT_FACTOR automatically */
-	m_max = central.m_ave * ((double) clus.N_STAR);
-	m_min = central.m_ave * ((double) clus.N_STAR);
-	for (i=1; i<=MIN(((long) N_core), clus.N_MAX); i++) {
-		m_max = MAX(m_max, star[i].m);
-		m_min = MIN(m_min, star[i].m);
-	}
-	DT_FACTOR = m_max/m_min;
-
 	/* calculate the relaxation timestep */
-	/* set by the maximum allowed value of sin^2 beta */
-	DTrel = SIN2BETA_MAX * ((double) clus.N_STAR) / Ai / DT_FACTOR;
-	/* set to be a fraction of the central relaxation time, as is done by Freitag */
-	/* DTrel = 1.0e-2 * PI/128.0 * cub(central.v_rms) / (central.n*sqr(central.m_ave)) / ((double) clus.N_STAR) / DT_FACTOR; */
+	if (RELAXATION) {
+		DTrel = simul_relax(rng);
+	} else {
+		DTrel = GSL_POSINF;
+	}
 	Dt = DTrel;
 
 	/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
-	if (central.N_sin != 0) {
+	if (central.N_sin != 0 && SS_COLLISION) {
 		/* X defines pericenter needed for collision: r_p = X (R_1+R_2) */
-		Xcoll = 1.0;
-		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(Xcoll) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
-			       (1.0 + central.mR_ave/(2.0*Xcoll*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
+		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(XCOLL) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
+			       (1.0 + central.mR_ave/(2.0*XCOLL*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
 			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
 	} else {
 		Tcoll = GSL_POSINF;
 	}
-	DTcoll = 1.0e-4 * Tcoll;
+	DTcoll = 5.0e-3 * Tcoll;
 	Dt = MIN(Dt, DTcoll);
 
 	/* calculate DTbb, using a generalization of the expression for Tcoll */
-	if (central.N_bin != 0) {
+	if (central.N_bin != 0 && BINBIN) {
 		/* X defines pericenter needed for "strong" interaction: r_p = X (a_1+a_2) */	
-		Xbb = 3.5;
-		Tbb = 1.0 / (16.0 * sqrt(PI) * central.n_bin * sqr(Xbb) * (central.v_bin_rms/sqrt(3.0)) * central.a2_ave * 
-			     (1.0 + central.ma_ave/(2.0*Xbb*sqr(central.v_bin_rms/sqrt(3.0))*central.a2_ave))) * 
+		Tbb = 1.0 / (16.0 * sqrt(PI) * central.n_bin * sqr(XBB) * (central.v_bin_rms/sqrt(3.0)) * central.a2_ave * 
+			     (1.0 + central.ma_ave/(2.0*XBB*sqr(central.v_bin_rms/sqrt(3.0))*central.a2_ave))) * 
 			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
 	} else {
 		Tbb = GSL_POSINF;
 	}
-	DTbb = 1.0e-4 * Tbb;
+	DTbb = 5.0e-3 * Tbb;
 	Dt = MIN(Dt, DTbb);
 
 	/* calculate DTbs, using a generalization of the expression for Tcoll */
-	if (central.N_bin != 0 && central.N_sin != 0) {
+	if (central.N_bin != 0 && central.N_sin != 0 && BINSINGLE) {
 		/* X defines pericenter needed for "strong" interaction: r_p = X a */
-		Xbs = 3.5;
-		Tbs = 1.0 / (4.0 * sqrt(PI) * central.n_sin * sqr(Xbs) * (central.v_rms/sqrt(3.0)) * central.a2_ave * 
-			     (1.0 + central.m_ave/(Xbs*sqr(central.v_rms/sqrt(3.0))*central.a_ave))) * 
+		Tbs = 1.0 / (4.0 * sqrt(PI) * central.n_sin * sqr(XBS) * (central.v_rms/sqrt(3.0)) * central.a2_ave * 
+			     (1.0 + central.m_ave*central.a_ave/(XBS*sqr(central.v_rms/sqrt(3.0))*central.a2_ave))) * 
 			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
 	} else {
 		Tbs = GSL_POSINF;
 	}
-	DTbs = 1.0e-4 * Tbs;
+	DTbs = 5.0e-3 * Tbs;
 	Dt = MIN(Dt, DTbs);
 
-	/* DEBUG */
-	dprintf("TotalTime=%g Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g\n", TotalTime, Dt, DTrel, DTcoll, DTbb, DTbs);
-	/* DEBUG */
+	/* take a reasonable timestep if all physics is turned off */
+	if (Dt == GSL_POSINF) {
+		Dt = 1.0;
+	}
 
-	/* this variable is not used except to be printed out */
-	Sin2Beta = Ai * Dt / ((double) clus.N_STAR);
+	/* debugging */
+	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs);
 
+	/* XXX very dangerous, should be removed! limitin Dt by hand!! XXX */
+//	if (Dt<5e-7){
+//	    printf("Dt limit hit! adjusting\n");
+//	    Dt = 5e-7;
+//	}
 	return (Dt);
 }
 
@@ -119,20 +108,33 @@ void sniff_stars(void) {
 		DTidalMassLoss = 0.0;
 		/* XXX maybe we should use clus.N_MAX_NEW below?? */
 		for (i = 1; i <= clus.N_MAX; i++) {
-			if (star[i].r_apo > Rtidal
-					&& star[i].rnew < 1000000) {
+			if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) {
+				/* dprintf("tidally stripping star i=%ld id=%ld m=%g E=%g\n", i, star[i].id, star[i].m, star[i].E); */
 				star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 				star[i].vrnew = 0.0;
 				star[i].vtnew = 0.0;
 				Eescaped += star[i].E * star[i].m / clus.N_STAR;
 				Jescaped += star[i].J * star[i].m / clus.N_STAR;
+				if (star[i].binind == 0) {
+					Eintescaped += star[i].Eint;
+				} else {
+					Ebescaped += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
+						(2.0 * binary[star[i].binind].a);
+					Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
+				}
 				DTidalMassLoss += star[i].m / clus.N_STAR;
 				Etidal += star[i].E * star[i].m / clus.N_STAR;
+
+				/* logging */
 				fprintf(escfile,
 					"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
 					tcount, TotalTime, star[i].m,
 					star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
 					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J);
+
+				/* perhaps this will fix the problem wherein stars are ejected (and counted)
+				   multiple times */
+				destroy_obj(i);
 
 				if (Etotal.K + Etotal.P - Etidal >= 0)
 					break;
@@ -150,7 +152,7 @@ void sniff_stars(void) {
 static void remove_star(long j, double phi_rtidal, double phi_zero) {
 	double E, J;
 
-	dprintf("removing star: id=%ld m=%g\n", star[j].id, star[j].m);
+	/* dprintf("removing star: i=%ld id=%ld m=%g E=%g bin=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 
 	E = star[j].E;
 	J = star[j].J;
@@ -159,19 +161,30 @@ static void remove_star(long j, double phi_rtidal, double phi_zero) {
 	star[j].vtnew = 0.0;
 	Eescaped += E * star[j].m / clus.N_STAR;
 	Jescaped += J * star[j].m / clus.N_STAR;
+	if (star[j].binind == 0) {
+		Eintescaped += star[j].Eint;
+	} else {
+		Ebescaped += -(binary[star[j].binind].m1/clus.N_STAR) * (binary[star[j].binind].m2/clus.N_STAR) / 
+			(2.0 * binary[star[j].binind].a);
+		Eintescaped += binary[star[j].binind].Eint1 + binary[star[j].binind].Eint2;
+	}
 	TidalMassLoss += star[j].m / clus.N_STAR;
 	Etidal += E * star[j].m / clus.N_STAR;
+
+	/* logging */
 	fprintf(escfile, "%ld %.8g %.8g ",
 		tcount, TotalTime, star[j].m);
 	fprintf(escfile, "%.8g %.8g %.8g ",
 		star[j].r, star[j].vr, star[j].vt);
 	fprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
 		0.0, 0.0, Rtidal, phi_rtidal, phi_zero, E, J);
+
+	/* perhaps this will fix the problem wherein stars are ejected (and counted)
+	   multiple times */
+	destroy_obj(j);
 }
 
 void remove_star_center(long j) {
-	dprintf("removing star: id=%ld m=%g\n", star[j].id, star[j].m);
-	
 	star[j].rnew = SF_INFINITY;	/* send star to infinity         */
 	star[j].m = DBL_MIN;		/* set mass to very small number */
 	star[j].vrnew = 0.0;		/* setup vr and vt for           */
@@ -211,7 +224,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
 		j = si;
 
-		E = star[j].E;
+		E = star[j].E + PHI_S(star[j].r, j);
 		J = star[j].J;
 		
 		/* ignore halo stars during sub timesteps */
@@ -219,20 +232,27 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			continue;
 		}
 
-		/* remove unbound or massless stars */
+		/* remove massless stars (boundary stars or stellar evolution victims) */
 		/* note that energy lost due to stellar evolution is subtracted
 		   at the time of mass loss in DoStellarEvolution */
-		if (E >= 0.0 || star[j].m < ZERO) {
-			remove_star(j, phi_rtidal, phi_zero);
+		if (star[j].m < ZERO) {
+			destroy_obj(j);
 			continue;
 		}
 
+		/* remove unbound stars */
+		if (E >= 0.0) {
+			remove_star(j, phi_rtidal, phi_zero);
+			continue;
+		}
+		
 		/* Q(si) must be positive (selected that way in last time step!) */
 		ktemp = si;
 
 		/* for newly created stars, position si is not ordered, so search */
 		if (si > clus.N_MAX) {
-			dprintf("doing stupid linear search due to newly created star: si=%ld\n", si);
+			/* dprintf("doing stupid linear search due to newly created star: si=%ld id=%ld m=%g E=%g\n", 
+			   si, star[si].id, star[si].m, star[si].E); */
 			ktemp = 0;
 			while (ktemp < clus.N_MAX && star[ktemp].r < star[j].rnew) {
 				ktemp++;
@@ -241,22 +261,36 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		/* this is not right for newly created stars; can be negative since it just uses
 		   the position at ktemp */
-		Qtemp = function_Q(ktemp, E, J);
+		Qtemp = function_Q(j, ktemp, E, J);
+
+		if (Qtemp < 0.0) {
+			/* dprintf("doing linear search for nearly circular orbit.\n"); */
+			ktemp = -1;
+			do {
+				ktemp++;
+				Qtemp = function_Q(j, ktemp, E, J);
+			} while (Qtemp < 0.0 && ktemp <= clus.N_MAX);		
+			/* dprintf("ktemp=%ld\n", ktemp); */
+			if (ktemp >= clus.N_MAX) {
+				dprintf("linear search failed\n");
+				ktemp = si;
+			}
+		}
 
 		kk = ktemp;
 		if (Qtemp <= 0) { /* possibly a circular orbit */
-			while (function_Q(kk + 1, E, J) > function_Q(kk, E, J) 
-			    && function_Q(kk, E, J) < 0 && kk <= clus.N_MAX) {
+			while (function_Q(j, kk + 1, E, J) > function_Q(j, kk, E, J) 
+			    && function_Q(j, kk, E, J) < 0 && kk <= clus.N_MAX) {
 				kk++;
 			}
-			while (function_Q(kk - 1, E, J) > function_Q(kk, E, J) 
-			    && function_Q(kk, E, J) < 0 && kk >= 1) {
+			while (function_Q(j, kk - 1, E, J) > function_Q(j, kk, E, J) 
+			    && function_Q(j, kk, E, J) < 0 && kk >= 1) {
 				kk--;
 			}
 
 			ktemp = kk;
 
-			if (function_Q(ktemp, E, J) < 0) {
+			if (function_Q(j, ktemp, E, J) < 0) {
 				/* star is on an almost circular orbit... 
 				 * so rmin = rmax (approx) */
 				star[j].rnew = star[j].r;
@@ -268,11 +302,11 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			continue;
 		}
 
-		kmin = FindZero_Q(0, ktemp, E, J);
+		kmin = FindZero_Q(j, 0, ktemp, E, J);
 		
-		while (function_Q(kmin, E, J) > 0 && kmin > 0)
+		while (function_Q(j, kmin, E, J) > 0 && kmin > 0)
 			kmin--;
-		while (function_Q(kmin + 1, E, J) < 0 
+		while (function_Q(j, kmin + 1, E, J) < 0 
 				&& kmin + 1 < ktemp)
 			kmin++;
 		
@@ -280,9 +314,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		i1 = kmin + 1;
 		rk = star[i].r;
 		rk1 = star[i1].r;
-		Uk = star[i].phi;
-		Uk1 = star[i1].phi;
-		Q = 2.0 * E - 2.0 * Uk1 - J * J / (rk1 * rk1);
+		Uk = star[i].phi + PHI_S(rk, j);
+		Uk1 = star[i1].phi + PHI_S(rk1, j);
 
 		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
 		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
@@ -293,21 +326,20 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		/*  For rmax- Look for rk, rk1 such that 
 		 *  Q(rk) > 0 > Q(rk1) */
 
-		kmax = FindZero_Q(ktemp, clus.N_MAX + 1, E, J);
+		kmax = FindZero_Q(j, ktemp, clus.N_MAX + 1, E, J);
 
-		while (function_Q(kmax, E, J) < 0 && kmax > ktemp)
+		while (function_Q(j, kmax, E, J) < 0 && kmax > ktemp)
 			kmax--;
 		while (kmax + 1 < clus.N_MAX
-				&& function_Q(kmax + 1, E, J) > 0 )
+				&& function_Q(j, kmax + 1, E, J) > 0 )
 			kmax++;
 
 		i = kmax;
 		i1 = kmax + 1;
 		rk = star[i].r;
 		rk1 = star[i1].r;
-		Uk = star[i].phi;
-		Uk1 = star[i1].phi;
-		Q = 2.0 * E - 2.0 * Uk1 - J * J / (rk1 * rk1);
+		Uk = star[i].phi + PHI_S(rk, j);
+		Uk1 = star[i1].phi  + PHI_S(rk1, j);
 
 		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
 		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
@@ -324,8 +356,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			eprintf("\trmin=%g rmax=%g kmin=%ld kmax=%ld\n", rmin, rmax, kmin, kmax);
 			continue;
 		}
-		/* Check for rmax > R_MAX (tidal radius) */
 
+		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
@@ -347,8 +379,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			   inadequate, and Marc has a better but more complicated
 			   method for that problem. What's below helps with energy
 			   conservation more than anything else. */
-			if(X>0.95) X=0.97;
-			if(X<0.05) X=0.03;
+			/* if(X>0.95) X=0.97; */
+			/* if(X<0.05) X=0.03; */
 
 			s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
 #ifdef USE_THREADS
@@ -359,17 +391,17 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 			r = 0.5 * (rmin + rmax) + 0.25 * (rmax - rmin) * (3.0 * s0 - s0 * s0 * s0);
 
-			pot = potential(r);
+			pot = potential(r) + PHI_S(r, j);
 
 			drds = 0.25 * (rmax - rmin) * (3.0 - 3.0 * s0 * s0);
-			pot = 2.0 * E - 2.0 * pot - J * J / r / r;
+			Q = 2.0 * E - 2.0 * pot - J * J / r / r;
 
-			if (pot >= 0.0) {
-				vr = sqrt(pot);
+			if (Q >= 0.0) {
+				vr = sqrt(Q);
 			} else {
-				dprintf("circular orbit: vr^2<0: setting vr=0: si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g\n", si, r, rmin, rmax, pot, X, E, J);
-				if (isnan(pot)) {
-					eprintf("fatal error: pot=vr^2==nan!\n");
+				dprintf("circular orbit: vr^2<0: setting vr=0: si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g\n", si, r, rmin, rmax, Q, X, E, J);
+				if (isnan(Q)) {
+					eprintf("fatal error: Q=vr^2==nan!\n");
 					exit_cleanly(-1);
 				}
 				vr = 0;
@@ -397,7 +429,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			cenma.E += (star[j].phi + star[j].vr*star[j].vr
 				+ star[j].vt*star[j].vt ) / 2.0 *star[j].m/clus.N_STAR;
 #endif
-			remove_star_center(j);
+			destroy_obj(j);
 			continue;
 		}
 

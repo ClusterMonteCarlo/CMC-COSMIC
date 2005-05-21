@@ -7,45 +7,37 @@
 #include "cmc_vars.h"
 
 /* calculate the units used */
-void bs_calcunits(fb_obj_t *obj[2], fb_units_t *units)
+void bs_calcunits(fb_obj_t *obj[2], fb_units_t *bs_units)
 {
-	units->v = sqrt(FB_CONST_G*(obj[0]->m + obj[1]->m)/(obj[0]->m * obj[1]->m) * \
+	bs_units->v = sqrt(FB_CONST_G*(obj[0]->m + obj[1]->m)/(obj[0]->m * obj[1]->m) * \
 			(obj[1]->obj[0]->m * obj[1]->obj[1]->m / obj[1]->a));
-	units->l = obj[1]->a;
-	units->t = units->l / units->v;
-	units->m = units->l * fb_sqr(units->v) / FB_CONST_G;
-	units->E = units->m * fb_sqr(units->v);
+	bs_units->l = obj[1]->a;
+	bs_units->t = bs_units->l / bs_units->v;
+	bs_units->m = bs_units->l * fb_sqr(bs_units->v) / FB_CONST_G;
+	bs_units->E = bs_units->m * fb_sqr(bs_units->v);
 }
 
-/* the input units are CGS */
-fb_ret_t binsingle(double *t, double m0, double m10, double m11, double r0, double r10, double r11, double a1, double e1, double vinf, double b, fb_units_t *units, fb_hier_t *hier, gsl_rng *rng)
+fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hier_t *hier, gsl_rng *rng)
 {
 	int j;
-	double rtid, m1;
+	long jbin;
+	double vc, b, rtid, m0, m1, a1, e1, m10, m11;
+	fb_units_t fb_units;
 	fb_input_t input;
 	fb_ret_t retval;
+	
+	/* a useful definition */
+	jbin = star[kbin].binind;
 
-	/* sanity check */
-	if (m0 <= 0.0 || m10 <= 0.0 || m11 <= 0.0) {
-		eprintf("unphysical mass: m0=%g m10=%g m11=%g\n", m0, m10, m11);
-		exit_cleanly(1);
-	} else if (r0 < 0.0 || r10 < 0.0 || r11 < 0.0) {
-		eprintf("unphysical radius: r0=%g r10=%g r11=%g\n", r0, r10, r11);
-		exit_cleanly(1);
-	} else if (a1 <= 0.0) {
-		eprintf("unphysical semimajor axis: a1=%g\n", a1);
-		exit_cleanly(1);
-	} else if (e1 < 0.0 || e1 >= 1.0) {
-		eprintf("unphysical eccentricity: e1=%g\n", e1);
-		exit_cleanly(1);
-	} else if (vinf < 0.0 || b < 0.0) {
-		eprintf("unphysical scattering parameters: vinf=%g b=%g\n", vinf, b);
-		exit_cleanly(1);
-	}
-
+	/* v_inf should be in units of v_crit */
+	vc = sqrt(binary[jbin].m1 * binary[jbin].m2 * (star[kbin].m + star[ksin].m) / \
+		  (binary[jbin].a * star[kbin].m * star[ksin].m * ((double) clus.N_STAR)));
+	/* b should be in units of a */
+	b = sqrt(rng_t113_dbl()) * bmax / binary[jbin].a;
+				
 	/* set parameters */
 	input.ks = 0;
-	input.tstop = 1.0e9;
+	input.tstop = 1.0e7;
 	input.Dflag = 0;
 	input.dt = 0.0;
 	input.tcpustop = 60.0;
@@ -70,37 +62,60 @@ fb_ret_t binsingle(double *t, double m0, double m10, double m11, double r0, doub
 	/* give the objects some properties */
 	for (j=0; j<hier->nstar; j++) {
 		hier->hier[hier->hi[1]+j].ncoll = 1;
-		hier->hier[hier->hi[1]+j].id[0] = j;
 		sprintf(hier->hier[hier->hi[1]+j].idstring, "%d", j);
 		hier->hier[hier->hi[1]+j].n = 1;
 		hier->hier[hier->hi[1]+j].obj[0] = NULL;
 		hier->hier[hier->hi[1]+j].obj[1] = NULL;
-		hier->hier[hier->hi[1]+j].Eint = 0.0;
 		hier->hier[hier->hi[1]+j].Lint[0] = 0.0;
 		hier->hier[hier->hi[1]+j].Lint[1] = 0.0;
 		hier->hier[hier->hi[1]+j].Lint[2] = 0.0;
 	}
+	
+	hier->hier[hier->hi[1]+0].id[0] = star[ksin].id;
+	hier->hier[hier->hi[1]+1].id[0] = binary[jbin].id1;
+	hier->hier[hier->hi[1]+2].id[0] = binary[jbin].id2;
 
-	hier->hier[hier->hi[1]+0].R = r0;
-	hier->hier[hier->hi[1]+1].R = r10;
-	hier->hier[hier->hi[1]+2].R = r11;
+	if (SS_COLLISION) {
+		hier->hier[hier->hi[1]+0].R = star[ksin].rad * units.l;
+		hier->hier[hier->hi[1]+1].R = binary[jbin].rad1 * units.l;
+		hier->hier[hier->hi[1]+2].R = binary[jbin].rad2 * units.l;
+	} else {
+		hier->hier[hier->hi[1]+0].R = 0.0;
+		hier->hier[hier->hi[1]+1].R = 0.0;
+		hier->hier[hier->hi[1]+2].R = 0.0;
+	}
 
-	hier->hier[hier->hi[1]+0].m = m0;
-	hier->hier[hier->hi[1]+1].m = m10;
-	hier->hier[hier->hi[1]+2].m = m11;
+	hier->hier[hier->hi[1]+0].m = star[ksin].m * units.mstar;
+	hier->hier[hier->hi[1]+1].m = binary[jbin].m1 * units.mstar;
+	hier->hier[hier->hi[1]+2].m = binary[jbin].m2 * units.mstar;
 
-	hier->hier[hier->hi[2]+0].m = m10 + m11;
+	hier->hier[hier->hi[2]+0].m = hier->hier[hier->hi[1]+1].m + hier->hier[hier->hi[1]+2].m;
 
-	hier->hier[hier->hi[2]+0].a = a1;
-	hier->hier[hier->hi[2]+0].e = e1;
+	hier->hier[hier->hi[1]+0].Eint = star[ksin].Eint * units.E;
+	hier->hier[hier->hi[1]+1].Eint = binary[jbin].Eint1 * units.E;
+	hier->hier[hier->hi[1]+2].Eint = binary[jbin].Eint2 * units.E;
+
+	hier->hier[hier->hi[2]+0].a = binary[jbin].a * units.l;
+	hier->hier[hier->hi[2]+0].e = binary[jbin].e;
 
 	hier->obj[0] = &(hier->hier[hier->hi[1]+0]);
 	hier->obj[1] = &(hier->hier[hier->hi[2]+0]);
 	hier->obj[2] = NULL;
 
+	/* logging */
+	fprintf(binintfile, "********************************************************************************\n");
+	fprintf(binintfile, "type=BS t=%.9g\n", TotalTime);
+	fprintf(binintfile, "params: b=%g v=%g\n", b, W/vc);
+	/* set units to 1 since we're already in CGS */
+	fb_units.v = fb_units.l = fb_units.t = fb_units.m = fb_units.E = 1.0;
+	fprintf(binintfile, "input: ");
+	binint_log_obj(hier->obj[0], fb_units);
+	fprintf(binintfile, "input: ");
+	binint_log_obj(hier->obj[1], fb_units);
+
 	/* get the units and normalize */
-	bs_calcunits(hier->obj, units);
-	fb_normalize(hier, *units);
+	bs_calcunits(hier->obj, &fb_units);
+	fb_normalize(hier, fb_units);
 	
 	/* move objects in from infinity along hyperbolic orbit */
 	m0 = hier->obj[0]->m;
@@ -112,7 +127,7 @@ fb_ret_t binsingle(double *t, double m0, double m10, double m11, double r0, doub
 
 	rtid = pow(2.0*m0*m1/input.tidaltol, 1.0/3.0) * pow(m10*m11, -1.0/3.0)*a1*(1.0+e1);
 
-	fb_init_scattering(hier->obj, vinf, b, rtid);
+	fb_init_scattering(hier->obj, W/vc, b, rtid);
 	
 	/* trickle down the binary properties, then back up */
 	fb_randorient(&(hier->hier[hier->hi[2]+0]), rng);

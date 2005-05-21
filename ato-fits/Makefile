@@ -2,20 +2,22 @@
 ### A simple Makefile to execute make in subdirectories
 ##############################################################################
 
-all: kingfit massspec plumcik
+all: kingfit/kingfit massspec/massspec plumcik/plumcik
 
-.PHONY : clean kingfit massspec plumcik
-kingfit: 
-	@echo "*** making kingfit ***"
+.PHONY: clean kingfit massspec plumcik
+kingfit/kingfit: 
 	cd kingfit && $(MAKE) kingfit
 
-massspec: 
-	@echo "*** making massspec ***"
+massspec/massspec: 
 	cd massspec && $(MAKE) massspec
 
-plumcik:
-	@echo "*** making plumcik ***"
+plumcik/plumcik:
 	cd plumcik && $(MAKE) plumcik
+
+install: kingfit/kingfit massspec/massspec plumcik/plumcik
+	cd kingfit && $(MAKE) install
+	cd massspec && $(MAKE) install
+	cd plumcik && $(MAKE) install
 
 clean:
 	cd kingfit && $(MAKE) clean

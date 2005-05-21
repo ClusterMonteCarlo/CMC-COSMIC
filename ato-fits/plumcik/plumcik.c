@@ -1,21 +1,59 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <math.h>
 #include <float.h>
-#include <fitsio.h>
+#include <unistd.h>
 #include <string.h>
+#include <getopt.h>
+#include <fitsio.h>
 #include "taus113-v2.h"
 
 #define LARGE_DISTANCE 1.0e40
 #define PI 3.14159265358979323
 
+/* default parameters */
+#define RMAX 300.0
+#define NSTAR 100000UL
+#define OUTFILE_FORMAT "plummer_n%.3g.fits"
+#define SEED 0UL
+
+/* define version */
+#define VERSION "0.0.0"
+#define NICK "Bad Horsie"
+#define DATE "Thu Feb 10 16:58:35 CST 2005"
+
+int debug=0;
+
 double Mrtotal;
 
-/* smaller cms means less number of stars near the center  */
-/* rcr is the radius within which there is a different IMF 
- * it is given in units of plummer radius and converted
- * to Nboody units by dividing out with (3.0*PI/16.0)      */
+#define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
+
+/* print the usage */
+void print_usage(FILE *stream)
+{
+	char outfile[1024];
+	
+	sprintf(outfile, OUTFILE_FORMAT, (double) NSTAR);
+	
+	fprintf(stream, "USAGE:\n");
+	fprintf(stream, "  plumcik [options...]\n");
+	fprintf(stream, "\n");
+	fprintf(stream, "OPTIONS:\n");
+	fprintf(stream, "  -r --rmax <r_max>      : set maximum radius [%.6g]\n", RMAX);
+	fprintf(stream, "  -N --N <N>             : set number of stars [%ld]\n", NSTAR);
+	fprintf(stream, "  -o --outfile <outfile> : set name of outfile [plummer_n<N>.fits]\n");
+	fprintf(stream, "                           where <N> is replaced by its value\n");
+	fprintf(stream, "  -s --seed <seed>       : set random seed [%ld]\n", SEED);
+	fprintf(stream, "  -d --debug             : turn on debugging\n");
+	fprintf(stream, "  -V --version           : print version info\n");
+	fprintf(stream, "  -h --help              : display this help text\n");
+}
+
+/* print the version */
+void print_version(FILE *stream)
+{
+	fprintf(stream, "** plumcik %s (%s) [%s] **\n", VERSION, NICK, DATE);
+}
 
 void printerror( int status)
 {
@@ -31,6 +69,11 @@ void printerror( int status)
     }
     return;
 }
+
+/* smaller cms means less number of stars near the center  */
+/* rcr is the radius within which there is a different IMF 
+ * it is given in units of plummer radius and converted
+ * to Nboody units by dividing out with (3.0*PI/16.0)      */
 
 double calc_M(double r, double rcr, double rmax, double cms){
 	double M;
@@ -291,20 +334,76 @@ void scale_pos_and_vel(double *m, double *r, double *vr,
 	printf("value of rcr is: %e\n", rcr*rfac);
 }
 	
-int main(){
+int main(int argc, char *argv[]){
 	double *X, *r, *vr, *vt, *m;
-	double rmax=300.0;
+	double rmax=RMAX;
 	double rcr = 1.0/(6.0*(PI/32.0));
 	double cms=1.0;
-	long int N=300000;
-	char filename[]="plummer_n3e+05.fit";
+	unsigned long int N=NSTAR, seed=SEED;
+	char filename[1024];
+	int i;
+	const char *short_opts = "r:N:o:s:dVh";
+	const struct option long_opts[] = {
+		{"rmax", required_argument, NULL, 'r'},
+		{"N", required_argument, NULL, 'N'},
+		{"outfile", required_argument, NULL, 'o'},
+		{"seed", required_argument, NULL, 's'},
+		{"debug", no_argument, NULL, 'd'},
+		{"version", no_argument, NULL, 'V'},
+		{"help", no_argument, NULL, 'h'},
+		{NULL, 0, NULL, 0}
+	};
+
+	filename[0] = 0;	/* setting a meaningless default name */
+
+	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
+		switch (i) {
+		case 'r':
+			rmax = atof(optarg);
+			break;
+		case 'N':
+			N = atol(optarg);
+			break;
+		case 'o':
+			sprintf(filename, "%s", optarg);
+			break;
+		case 's':
+			seed = atol(optarg);
+			break;
+		case 'd':
+			debug = 1;
+			break;
+		case 'V':
+			print_version(stdout);
+			return(0);
+		case 'h':
+			print_version(stdout);
+			fprintf(stdout, "\n");
+			print_usage(stdout);
+			return(0);
+		default:
+			break;
+		}
+	}
+	
+	/* check to make sure there was nothing crazy on the command line */
+	if (optind < argc) {
+		print_usage(stdout);
+		return(1);
+	}
+	
+	if (filename[0]==0){
+		sprintf(filename, OUTFILE_FORMAT, (double) N);
+	}
+
+	dprintf("rmax=%g N=%ld filename=%s seed=%ld\n", rmax, N, filename, seed);
 
 	X = malloc((N+2)*sizeof(double));
 	r = malloc((N+2)*sizeof(double));
 	vr = malloc((N+2)*sizeof(double));
 	vt = malloc((N+2)*sizeof(double));
 	m = malloc((N+2)*sizeof(double));
-	reset_rng_t113(12989);
+	reset_rng_t113(seed);
 
 	Mrtotal = (cms-1.0)*rcr*rcr*rcr*pow(1.0+rcr*rcr,-3.0/2.0)
 		+ rmax*rmax*rmax*pow(1.0+rmax*rmax,-3.0/2.0);

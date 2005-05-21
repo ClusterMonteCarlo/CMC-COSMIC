@@ -12,8 +12,6 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-void take_snapshot(void);
-
 int main(int argc, char *argv[])
 {
 	struct tms tmsbuf, tmsbufref;
@@ -38,6 +36,9 @@ int main(int argc, char *argv[])
 	
 	ReadSnapshot = 0;	/* this becomes 1 if a snapshot is used for restart */
 
+	/* set other variables */
+	newstarid = 0;
+
 	/* parses input file, allocates memory, initializes some variables, 
 	 * and readies file I/O */
 	if (parser(argc, argv, rng) == 0) {
@@ -55,6 +56,8 @@ int main(int argc, char *argv[])
 		Etidal = 0.0;
 		N_bb = 0;			/* number of bin-bin interactions */
 		N_bs = 0;
+		E_bb = 0.0;
+		E_bs = 0.0;
 		Echeck = 0; 		
 		se_file_counter = 0; 	
 		snap_num = 0; 		
@@ -70,15 +73,13 @@ int main(int argc, char *argv[])
 		}
 		
 		/* assign star id's */
-		for(i=0; i<=clus.N_STAR_NEW; i++) {
-			star[i].id = i;
-		}
-		for (i=clus.N_STAR_NEW+1; i<N_STAR_DIM; i++) {
-			star[i].id = -1;
+		for(i=1; i<=clus.N_STAR_NEW; i++) {
+			star[i].id = star_get_id_new();
 		}
 		
 		/* assign binaries */
 		assign_binaries();
+		/* assign_binaries_test(); */
 
 		orbit_r = R_MAX;
 		potential_calculate();
@@ -86,9 +87,15 @@ int main(int argc, char *argv[])
 		ComputeEnergy();
 		Etotal.ini = Etotal.tot;   /* Noting the total initial energy, in order to set termination energy. */
 
-		Etotal.New = 0.0; Eescaped = 0.0; Ebescaped = 0.0; Jescaped = 0.0;
+		Etotal.New = 0.0;
+		Eescaped = 0.0;
+		Jescaped = 0.0;
+		Eintescaped = 0.0;
+		Ebescaped = 0.0;
+		Eoops = 0.0;
 		
 		comp_mass_percent();
+		comp_multi_mass_percent();
 		
 		/* initialize stellar evolution things */
 #ifdef SE
@@ -104,18 +111,19 @@ int main(int argc, char *argv[])
 	} else {
 		ComputeEnergy2();
 	}
-
+	
 	times(&tmsbufref);
+
+	/* calculate central quantities */
+	central_calculate();
 
 	/* Printing Results for initial model */
 	print_results();
 	
-	/* FIXME: FITS snapshotting not working yet? */
-	/* 
-	if (DUMPS) {
-		sshot_fits(rng);
-	}
-	*/
+	/* take an initial snapshot, just for fun */
+//	if (CHECKPOINT_PERIOD) {
+//		chkpnt_fits(rng);
+//	}
 	
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
@@ -124,10 +132,22 @@ int main(int argc, char *argv[])
 		static ch1=0, ch2=0;
 
 		if(ch2==0 && cenma.m>0){
-			/* DT_FACTOR /=10.0; */
 			ch2 = 1;
 		}
 #endif
+		/* DEBUG
+		for (i=0; i<N_STAR_DIM; i++) {
+			fprintf(stdout, "i=%ld m=%g rad=%g binind=%ld",
+				i, star[i].m * units.mstar / MSUN, star[i].rad * units.l / RSUN, star[i].binind);
+			if (star[i].binind) {
+				fprintf(stdout, " m1=%g m2=%g rad1=%g rad2=%g",
+					binary[star[i].binind].m1 * units.mstar / MSUN, binary[star[i].binind].m2 * units.mstar / MSUN,
+					binary[star[i].binind].rad1 * units.l / RSUN, binary[star[i].binind].rad2 * units.l / RSUN);
+			}
+			fprintf(stdout, "\n");
+		}
+		exit_cleanly(1);
+		DEBUG */
 
 		/*write stellar data from time to time */
 		/*if (((tcount-1) % 20 == 0) && (STELLAR_EVOLUTION > 0)){
@@ -135,14 +155,14 @@ int main(int argc, char *argv[])
 		}*/
 
 		/* Check for END of simulation */
-		if (CheckStop() != 0)
+		if (CheckStop(tmsbufref) != 0)
 			break;
 
 		/* calculate central quantities */
 		central_calculate();
 		
 		/* Get new time step */
-		Dt = GetTimeStep();
+		Dt = GetTimeStep(rng);
 
 		/* Make sure stellar mass loss is not greater than 
 		 * 1% in the timestep */
@@ -151,10 +171,10 @@ int main(int argc, char *argv[])
 		/* if tidal mass loss in previous time step is > 5% reduce 
 		   PREVIOUS timestep by 20% */
 		if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
-			dprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
+			diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
 			Dt = Prev_Dt * 0.8;
 		} else if (Dt > 1.1 * Prev_Dt && Prev_Dt > 0 && (TidalMassLoss - OldTidalMassLoss) > 0.02) {
-			dprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
+			diaprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
 			Dt = Prev_Dt * 1.1;
 		}
 
@@ -168,14 +188,12 @@ int main(int argc, char *argv[])
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
 		if (PERTURB > 0) {
-			if (ORIGINAL_PERTURB_STARS) {
-				/* perturb_stars(Dt); */
-				perturb_stars_new(Dt, rng);
-			} else {
-				/* perturb_stars_fewbody(Dt, rng); */
-				perturb_stars_new(Dt, rng);
-			}
+			dynamics_apply(Dt, rng);
 		}
+
+		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
+		   will disappear! */
+		clus.N_MAX_NEW++;
 
 #ifdef SE
 		if (STELLAR_EVOLUTION > 0) {
@@ -187,7 +205,7 @@ int main(int argc, char *argv[])
 
 		/* some numbers necessary to implement Stodolkiewicz's
 	 	 * energy conservation scheme */
-		if(E_CONS==2){
+		if(E_CONS==2 || E_CONS==3){
 			for (i = 1; i <= clus.N_MAX_NEW; i++) {
 				/* saving velocities */
 				star[i].vtold = star[i].vt;
@@ -196,7 +214,7 @@ int main(int argc, char *argv[])
 				/* the following will get updated after sorting and
 				 * calling potential_calculate(), needs to be saved 
 				 * now */  
-				star[i].Uoldrold = star[i].phi;
+				star[i].Uoldrold = star[i].phi + PHI_S(star[i].r, i);
 				
 				/* Unewrold will be calculated after 
 				 * potential_calculate() using [].rOld
@@ -208,11 +226,11 @@ int main(int argc, char *argv[])
 
 		/* more numbers necessary to implement Stodolkiewicz's
 	 	 * energy conservation scheme */
-		if(E_CONS==2){
+		if(E_CONS==2 || E_CONS==3){
 			for (i = 1; i <= clus.N_MAX_NEW; i++) {
 				/* the following cannot be calculated after sorting 
 				 * and calling potential_calculate() */
-				star[i].Uoldrnew = potential(star[i].rnew);
+				star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);
 			}
 		}
 
@@ -232,9 +250,12 @@ int main(int argc, char *argv[])
 
 		if(E_CONS==2){
 			set_velocities();
+		} else if (E_CONS == 3) {
+			set_velocities3();
 		}
 
 		comp_mass_percent();
+		comp_multi_mass_percent();
 
 		/* Recompute Energy. Uses the specified ECONS_MODE */
 		RecomputeEnergy();
@@ -249,8 +270,15 @@ int main(int argc, char *argv[])
 		tcount++;
 		
 		print_results();
-		/* FIXME: FITS snapshotting not working yet? */
-		/* if(tcount%1==0 && DUMPS) sshot_fits(rng); */
+		/* take a snapshot, we need more accurate 
+		 * and meaningful criterion 
+		 */
+		if(CHECKPOINT_PERIOD && (tcount%CHECKPOINT_PERIOD==0)) {
+			chkpnt_fits(rng);
+		}
+		if(SNAPSHOT_PERIOD && (tcount%SNAPSHOT_PERIOD==0)) {
+			print_2Dsnapshot();
+		}
 	} /* End FOR (time step iteration loop) */
 
 	times(&tmsbuf);
