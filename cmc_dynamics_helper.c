@@ -336,17 +336,23 @@ void binint_log_status(fb_ret_t retval)
 		retval.DeltaEfrac, retval.DeltaE, retval.DeltaLfrac, retval.DeltaL, retval.tcpu);
 }
 
-void binint_log_collision(char interaction_type[], long id, double mass, fb_obj_t obj, long k, long kp)
+void binint_log_collision(char interaction_type[], long id,
+			  double mass, double r, fb_obj_t obj, long k, long kp)
 {
 	int j;
 	
 	fprintf(collisionfile, "t=%g %s idm=%ld(mm=%g) id1=%ld(m1=%g)",
-		TotalTime, interaction_type, id, mass * units.mstar / FB_CONST_MSUN,
-		obj.id[0], binint_get_mass(k, kp, obj.id[0]) * units.mstar / FB_CONST_MSUN);
+		TotalTime, interaction_type, id, 
+		mass * units.mstar / FB_CONST_MSUN, obj.id[0], 
+		binint_get_mass(k, kp, obj.id[0]) * units.mstar 
+						  / FB_CONST_MSUN);
 	for (j=1; j<obj.ncoll; j++) {
-		fprintf(collisionfile, ":id%d=%ld(m%d=%g)", j+1, obj.id[j], j+1,
-			binint_get_mass(k, kp, obj.id[j]) * units.mstar / FB_CONST_MSUN);
+		fprintf(collisionfile, ":id%d=%ld(m%d=%g)", 
+			j+1, obj.id[j], j+1,
+			binint_get_mass(k, kp, obj.id[j]) * units.mstar 
+							  / FB_CONST_MSUN);
 	}
+	fprintf(collisionfile," r=%g", r);
 	fprintf(collisionfile, "\n");
 }
 
@@ -581,8 +587,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					star[knew].id = star_get_id_new();
 
 					/* log collision */
-					binint_log_collision(isbinbin?"binary-binary":"binary-single", star[knew].id, 
-							     star[knew].m, *(hier.obj[i]), k, kp);
+					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
+						star[knew].id, star[knew].m, 
+						star[knew].r,
+						*(hier.obj[i]), k, kp);
 				}
 				
 				/* radius */
@@ -608,8 +616,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					binary[star[knew].binind].id1 = star_get_id_new();
 					
 					/* log collision */
-					binint_log_collision(isbinbin?"binary-binary":"binary-single", binary[star[knew].binind].id1,
-							     binary[star[knew].binind].m1, *(hier.obj[i]->obj[0]), k, kp);
+					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
+						binary[star[knew].binind].id1,
+						binary[star[knew].binind].m1, 
+						star[knew].r,
+						*(hier.obj[i]->obj[0]), k, kp);
 				}
 				if (hier.obj[i]->obj[1]->ncoll == 1) {
 					binary[star[knew].binind].id2 = hier.obj[i]->obj[1]->id[0];
@@ -617,8 +628,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					binary[star[knew].binind].id2 = star_get_id_new();
 					
 					/* log collision */
-					binint_log_collision(isbinbin?"binary-binary":"binary-single", binary[star[knew].binind].id2,
-							     binary[star[knew].binind].m2, *(hier.obj[i]->obj[1]), k, kp);
+					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
+						binary[star[knew].binind].id2,
+						binary[star[knew].binind].m2, 
+						star[knew].r,
+						*(hier.obj[i]->obj[1]), k, kp);
 				}
 				
 				/* radii */
@@ -670,8 +684,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					star[knewp].id = star_get_id_new();
 
 					/* log collision */
-					binint_log_collision(isbinbin?"binary-binary":"binary-single", star[knewp].id, 
-							     star[knewp].m, *(hier.obj[i]->obj[sid]), k, kp);
+					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
+						star[knewp].id, star[knewp].m, 
+						star[knewp].r,
+						*(hier.obj[i]->obj[sid]), k, kp);
 				}
 
 				/* radius */
@@ -699,8 +715,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					binary[star[knew].binind].id1 = star_get_id_new();
 					
 					/* log collision */
-					binint_log_collision(isbinbin?"binary-binary":"binary-single", binary[star[knew].binind].id1,
-							     binary[star[knew].binind].m1, *(hier.obj[i]->obj[bid]->obj[0]), k, kp);
+					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
+						binary[star[knew].binind].id1,
+						binary[star[knew].binind].m1, 
+						star[knew].r,
+						*(hier.obj[i]->obj[bid]->obj[0]), k, kp);
 				}
 				if (hier.obj[i]->obj[bid]->obj[1]->ncoll == 1) {
 					binary[star[knew].binind].id2 = hier.obj[i]->obj[bid]->obj[1]->id[0];
@@ -708,8 +727,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					binary[star[knew].binind].id2 = star_get_id_new();
 					
 					/* log collision */
-					binint_log_collision(isbinbin?"binary-binary":"binary-single", binary[star[knew].binind].id2,
-							     binary[star[knew].binind].m2, *(hier.obj[i]->obj[bid]->obj[1]), k, kp);
+					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
+						binary[star[knew].binind].id2,
+						binary[star[knew].binind].m2, 
+						star[knew].r,
+						*(hier.obj[i]->obj[bid]->obj[1]), k, kp);
 				}
 				
 				/* radii */

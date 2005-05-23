@@ -329,7 +329,7 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hi
 double binint_get_mass(long k, long kp, long id);
 void binint_log_obj(fb_obj_t *obj, fb_units_t units);
 void binint_log_status(fb_ret_t retval);
-void binint_log_collision(char interaction_type[], long id, double mass, fb_obj_t obj, long k, long kp);
+void binint_log_collision(char interaction_type[], long id, double mass, double r, fb_obj_t obj, long k, long kp);
 void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng);
 
 double simul_relax(gsl_rng *rng);

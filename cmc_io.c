@@ -712,7 +712,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 	/* print header */
-	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):...\n");
+	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r)\n");
 
 	/* Relaxation data file */
 	sprintf(outfile, "%s.relaxation.dat", outprefix);

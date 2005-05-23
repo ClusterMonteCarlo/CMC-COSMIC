@@ -36,10 +36,12 @@ void sscollision_do(long k, long kp, double rcm, double vcm[4])
 	star[knew].rad = r_of_m(star[knew].m);
 
 	/* log collision */
-	fprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g)\n", 
-		TotalTime, star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN, 
+	fprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
+		TotalTime, 
+		star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN, 
 		star[k].id, star[k].m * units.mstar / FB_CONST_MSUN, 
-		star[kp].id, star[kp].m * units.mstar / FB_CONST_MSUN);
+		star[kp].id, star[kp].m * units.mstar / FB_CONST_MSUN,
+		star[knew].r);
 	
 	/* destroy two progenitors */
 	destroy_obj(k);
