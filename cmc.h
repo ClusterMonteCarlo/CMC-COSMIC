@@ -44,6 +44,8 @@
 #define XBS 2.0
 /* rperi = XBB * (a_1 + a_2) */
 #define XBB 2.0
+/* hard soft boundary XHS=vorb/W */
+#define XHS 0.7
 
 /* binaries */
 typedef struct{

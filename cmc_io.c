@@ -408,8 +408,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			exit(1);
 		} else if (sscanf(line, "%s %s", parameter_name, values) == 2) {
 			if (strcmp(parameter_name, "MMIN") == 0) {
-				sscanf(values, "%lf", &MMIN);
-				parsed.MMIN = 1;
+				wprintf("MMIN is now set automatically by sampling from the input file.\n");
 			} else if (strcmp(parameter_name, "BINBIN") == 0) {
 				sscanf(values, "%d", &BINBIN);
 				parsed.BINBIN = 1;
@@ -536,7 +535,6 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		allparsed = 0; \
 	}
 	
-	CHECK_PARSED(MMIN);
 	CHECK_PARSED(BINBIN);
 	CHECK_PARSED(BINSINGLE);
 	CHECK_PARSED(CENTRAL_MASS);
