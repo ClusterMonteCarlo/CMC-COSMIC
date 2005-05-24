@@ -352,7 +352,7 @@ void binint_log_collision(char interaction_type[], long id,
 			binint_get_mass(k, kp, obj.id[j]) * units.mstar 
 							  / FB_CONST_MSUN);
 	}
-	fprintf(collisionfile," r=%g", r);
+	fprintf(collisionfile," (r=%g)", r);
 	fprintf(collisionfile, "\n");
 }
 
