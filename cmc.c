@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
 		}
 		
 		/* assign binaries */
+		clus.N_MAX = clus.N_STAR;
 		assign_binaries();
-		/* assign_binaries_test(); */
 
 		orbit_r = R_MAX;
 		potential_calculate();
