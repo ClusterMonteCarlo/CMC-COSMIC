@@ -28,14 +28,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 
 	/* useful debugging and file headers */
 	if (tcount == 1) {
-		diaprintf("MEGA_YEAR=%g\n", MEGA_YEAR);
-		diaprintf("SOLAR_MASS_DYN=%g\n", SOLAR_MASS_DYN);
-		diaprintf("initial_total_mass=%g\n", initial_total_mass);
-		diaprintf("units.t=%g YEAR\n", units.t/YEAR);
-		diaprintf("units.m=%g MSUN\n", units.m/MSUN);
-		diaprintf("units.mstar=%g MSUN\n", units.mstar/MSUN);
-		diaprintf("units.l=%g PARSEC\n", units.l/PARSEC);
-
 		fprintf(relaxationfile, "# time");
 		for (i=0; i<4; i++) {
 			fprintf(relaxationfile, " thetase>%g:f,q,<M>,<r>", relbeta[i]);
