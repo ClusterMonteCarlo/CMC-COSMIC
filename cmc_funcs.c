@@ -14,20 +14,16 @@ double bin_single_sigma(double y)
 /* radius is output in code (N-body) units */
 double r_of_m(double M)
 {
-	if (SS_COLLISION == 0) {
+	if (M == 0.0) {
+		/* special case of massless particles */
 		return(0.0);
+	} else if (M / clus.N_STAR * units.m / MSUN < 0.1) {
+		return(0.1 * RSUN / units.l);
+	} else if (M / clus.N_STAR * units.m / MSUN < 1.0) {
+		return(RSUN / units.l * (M / clus.N_STAR * units.m / MSUN));
+	} else if (M / clus.N_STAR * units.m / MSUN < 120.0) {
+		return(RSUN / units.l * pow(M / clus.N_STAR * units.m / MSUN, 0.57));
 	} else {
-		if (M == 0.0) {
-			/* special case of massless particles */
-			return(0.0);
-		} else if (M / clus.N_STAR * units.m / MSUN < 0.1) {
-			return(0.1 * RSUN / units.l);
-		} else if (M / clus.N_STAR * units.m / MSUN < 1.0) {
-			return(RSUN / units.l * (M / clus.N_STAR * units.m / MSUN));
-		} else if (M / clus.N_STAR * units.m / MSUN < 120.0) {
-			return(RSUN / units.l * pow(M / clus.N_STAR * units.m / MSUN, 0.57));
-		} else {
-			return(1.6 * RSUN / units.l * pow(M / clus.N_STAR * units.m / MSUN, 0.47));
-		}
+		return(1.6 * RSUN / units.l * pow(M / clus.N_STAR * units.m / MSUN, 0.47));
 	}
 }
