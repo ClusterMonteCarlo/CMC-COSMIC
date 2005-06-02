@@ -1022,6 +1022,7 @@ void units_set(void)
 	diaprintf("units.mstar=%g MSUN\n", units.mstar/MSUN);
 	diaprintf("units.l=%g PARSEC\n", units.l/PARSEC);
 	diaprintf("units.E=%g erg\n", units.E);
+	diaprintf("t_rel=%g YEAR\n", units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / YEAR);
 }
 
 /* calculate central quantities */
