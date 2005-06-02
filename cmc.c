@@ -81,6 +81,9 @@ int main(int argc, char *argv[])
 		clus.N_MAX = clus.N_STAR;
 		assign_binaries();
 
+		/* print out binary properties to a file */
+		print_initial_binaries();
+
 		orbit_r = R_MAX;
 		potential_calculate();
 

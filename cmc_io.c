@@ -690,7 +690,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		}
 		/* file for binary interaction information */
 		sprintf(outfile, "%s.binint.log", outprefix);
-		if ((binintfile = fopen(outfile, "wb")) == NULL) {
+		if ((binintfile = fopen(outfile, outfilemode)) == NULL) {
 			eprintf("cannot create binintlog file \"%s\".\n", outfile);
 			exit(1);
 		}

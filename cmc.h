@@ -264,6 +264,7 @@ void update_vars(void);
 
 /******* Binary routines **********/
 void assign_binaries(void);
+void print_initial_binaries(void);
 void assign_binaries_test(void);
 double bin_single_sigma(double y);
 
