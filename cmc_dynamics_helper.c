@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include "cmc.h"
 #include "cmc_vars.h"
 
@@ -299,16 +300,38 @@ double binint_get_mass(long k, long kp, long id)
 
 void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 {
-	int bid, sid;
-
+	int bid, sid, i;
+	char dumstring[FB_MAX_STRING_LENGTH], idstring1[FB_MAX_STRING_LENGTH], idstring2[FB_MAX_STRING_LENGTH], idstring3[FB_MAX_STRING_LENGTH];
+	
 	if (fb_n_hier(obj) == 1) {
-		fprintf(binintfile, "type=single m=%g R=%g\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN);
+		/* first write id string */
+		snprintf(idstring1, FB_MAX_STRING_LENGTH, "%ld", obj->id[0]);
+		for (i=1; i<obj->ncoll; i++) {
+			snprintf(dumstring, FB_MAX_STRING_LENGTH, ":%ld", obj->id[i]);
+			strncat(idstring1, dumstring, FB_MAX_STRING_LENGTH);
+		}
+		/* then print to log */
+		fprintf(binintfile, "type=single m=%g R=%g id=%s\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, idstring1);
 	} else if (fb_n_hier(obj) == 2) {
-		fprintf(binintfile, "type=binary m0=%g m1=%g R0=%g R1=%g a=%g e=%g\n", 
+		/* first write id strings */
+		snprintf(idstring1, FB_MAX_STRING_LENGTH, "%ld", obj->obj[0]->id[0]);
+		for (i=1; i<obj->obj[0]->ncoll; i++) {
+			snprintf(dumstring, FB_MAX_STRING_LENGTH, ":%ld", obj->obj[0]->id[i]);
+			strncat(idstring1, dumstring, FB_MAX_STRING_LENGTH);
+		}
+		snprintf(idstring2, FB_MAX_STRING_LENGTH, "%ld", obj->obj[1]->id[0]);
+		for (i=1; i<obj->obj[1]->ncoll; i++) {
+			snprintf(dumstring, FB_MAX_STRING_LENGTH, ":%ld", obj->obj[1]->id[i]);
+			strncat(idstring2, dumstring, FB_MAX_STRING_LENGTH);
+		}
+		/* then print to log */
+		fprintf(binintfile, "type=binary m0=%g m1=%g R0=%g R1=%g id0=%s id1=%s a=%g e=%g\n", 
 			obj->obj[0]->m*units.m/MSUN, obj->obj[1]->m*units.m/MSUN, 
 			obj->obj[0]->R*units.l/RSUN, obj->obj[1]->R*units.l/RSUN, 
+			idstring1, idstring2, 
 			obj->a*units.l/AU, obj->e);
 	} else if (fb_n_hier(obj) == 3) {
+		/* identify inner binary */
 		if (obj->obj[0]->n==2) {
 			bid = 0;
 			sid = 1;
@@ -316,10 +339,27 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			bid = 1;
 			sid = 0;
 		}
-
-		fprintf(binintfile, "type=triple min0=%g min1=%g mout=%g Rin0=%g Rin1=%g Rout=%g ain=%g aout=%g ein=%g eout=%g\n",
+		/* first write id strings */
+		snprintf(idstring1, FB_MAX_STRING_LENGTH, "%ld", obj->obj[bid]->obj[0]->id[0]);
+		for (i=1; i<obj->obj[bid]->obj[0]->ncoll; i++) {
+			snprintf(dumstring, FB_MAX_STRING_LENGTH, ":%ld", obj->obj[bid]->obj[0]->id[i]);
+			strncat(idstring1, dumstring, FB_MAX_STRING_LENGTH);
+		}
+		snprintf(idstring2, FB_MAX_STRING_LENGTH, "%ld", obj->obj[bid]->obj[1]->id[0]);
+		for (i=1; i<obj->obj[bid]->obj[1]->ncoll; i++) {
+			snprintf(dumstring, FB_MAX_STRING_LENGTH, ":%ld", obj->obj[bid]->obj[1]->id[i]);
+			strncat(idstring2, dumstring, FB_MAX_STRING_LENGTH);
+		}
+		snprintf(idstring3, FB_MAX_STRING_LENGTH, "%ld", obj->obj[sid]->id[0]);
+		for (i=1; i<obj->obj[sid]->ncoll; i++) {
+			snprintf(dumstring, FB_MAX_STRING_LENGTH, ":%ld", obj->obj[sid]->id[i]);
+			strncat(idstring3, dumstring, FB_MAX_STRING_LENGTH);
+		}
+		/* then print to log */
+		fprintf(binintfile, "type=triple min0=%g min1=%g mout=%g Rin0=%g Rin1=%g Rout=%g idin1=%s idin2=%s idout=%s ain=%g aout=%g ein=%g eout=%g\n",
 			obj->obj[bid]->obj[0]->m*units.m/MSUN, obj->obj[bid]->obj[1]->m*units.m/MSUN, obj->obj[sid]->m*units.m/MSUN,
 			obj->obj[bid]->obj[0]->R*units.l/RSUN, obj->obj[bid]->obj[1]->R*units.l/RSUN, obj->obj[sid]->R*units.l/RSUN,
+			idstring1, idstring2, idstring3, 
 			obj->obj[bid]->a*units.l/AU, obj->a*units.l/AU,
 			obj->obj[bid]->e, obj->e);
 	} else {
