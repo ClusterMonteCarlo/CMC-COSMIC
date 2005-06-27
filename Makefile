@@ -39,8 +39,14 @@ ifeq ($(UNAME),Darwin)
 CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm
 else
+ifeq ($(UNAME),AIX)
+CC = gcc
+CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib
+LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty -lm
+else
 CFLAGS = -Wall -O3
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
+endif
 endif
 endif
 
