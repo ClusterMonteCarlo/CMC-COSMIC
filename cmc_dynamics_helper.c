@@ -418,9 +418,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 		jbin = star[k].binind;
 		jbinp = star[kp].binind;
 
-		BEi = binary[jbin].m1 * binary[jbin].m2 * sqr(madhoc) / (2.0 * binary[jbin].a) + 
-			binary[jbinp].m1 * binary[jbinp].m2 * sqr(madhoc) / (2.0 * binary[jbinp].a);
-
+		BEi = binary[jbin].m1 * binary[jbin].m2 * sqr(madhoc) / (2.0 * binary[jbin].a)
+			+ binary[jbinp].m1 * binary[jbinp].m2 * sqr(madhoc) / (2.0 * binary[jbinp].a)
+			- binary[jbin].Eint1 - binary[jbin].Eint2
+			- binary[jbinp].Eint1 - binary[jbinp].Eint2;
+		
 		cmc_units.v = sqrt((star[k].m+star[kp].m)/(star[k].m*star[kp].m) * 
 				   (binary[jbin].m1*binary[jbin].m2/binary[jbin].a + 
 				    binary[jbinp].m1*binary[jbinp].m2/binary[jbinp].a) * madhoc);
@@ -445,7 +447,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			jbin = star[k].binind;
 		}
 
-		BEi = binary[jbin].m1 * binary[jbin].m2 * sqr(madhoc) / (2.0 * binary[jbin].a);
+		BEi = binary[jbin].m1 * binary[jbin].m2 * sqr(madhoc) / (2.0 * binary[jbin].a)
+			- binary[jbin].Eint1 - binary[jbin].Eint2 - star[ksin].Eint;
 
 		cmc_units.v = sqrt((star[ksin].m+star[kbin].m)/(star[ksin].m*star[kbin].m) * 
 				   (binary[jbin].m1 * binary[jbin].m2 / binary[jbin].a) * madhoc);
@@ -635,6 +638,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				
 				/* radius */
 				star[knew].rad = r_of_m(star[knew].m);
+
+				/* track binding energy */
+				BEf += -star[knew].Eint;
 			} else if (hier.obj[i]->n == 2) {
 				/* binary star */
 				/* semimajor axis and eccentricity */
@@ -680,8 +686,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				binary[star[knew].binind].rad2 = r_of_m(binary[star[knew].binind].m2);
 				
 				/* track binding energy */
-				BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc) / 
-					(2.0 * binary[star[knew].binind].a);
+				BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc) 
+					/ (2.0 * binary[star[knew].binind].a) 
+					- binary[star[knew].binind].Eint1 - binary[star[knew].binind].Eint2;
 			} else if (hier.obj[i]->n == 3) {
 				/******************************************/
 				/* break triple by shrinking inner binary */
@@ -780,7 +787,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				
 				/* track binding energy */
 				BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc) / 
-					(2.0 * binary[star[knew].binind].a);
+					(2.0 * binary[star[knew].binind].a) 
+					- binary[star[knew].binind].Eint1 - binary[star[knew].binind].Eint2
+					- star[knewp].Eint;
 			}
 		}
 		
