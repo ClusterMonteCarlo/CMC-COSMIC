@@ -39,7 +39,7 @@ void print_results(void){
 /*********** Output 2D/3D snapshots **************/
 void print_2Dsnapshot(void)
 {
-	long i;
+	long i, j;
 	char outfile[100];
 
 	/* open file for 2D snapshot */
@@ -51,12 +51,22 @@ void print_2Dsnapshot(void)
 
 	/* print useful header */
 	gzprintf(snapfile, "# t=%.8g [code units]\n", TotalTime);
-	gzprintf(snapfile, "# id  m [MSUN]  r [code units]  vr [code units]  vt [code units]  E [code units]  J [code units]\n");
+	gzprintf(snapfile, "# id  m [MSUN]  r [code units]  vr [code units]  vt [code units]  E [code units]  J [code units]  binflag  m0 [MSUN]  m1 [MSUN]  id0  id1  a [AU]  e\n");
 
 	/* then print data */
 	for (i=1; i<=clus.N_MAX; i++) {
-		gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g\n", 
+		gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
 			 star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, star[i].r, star[i].vr, star[i].vt, star[i].E, star[i].J);
+		if (star[i].binind) {
+			j = star[i].binind;
+			gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g\n", 
+				 binary[j].m1 * (units.m / clus.N_STAR) / MSUN, binary[j].m2 * (units.m / clus.N_STAR) / MSUN, 
+				 binary[j].id1, binary[j].id2,
+				 binary[j].a * units.l / AU,
+				 binary[j].e);
+		} else {
+			gzprintf(snapfile, "0 0 0 0 0 0 0\n");	
+		}
 	}
 
 	gzclose(snapfile);
