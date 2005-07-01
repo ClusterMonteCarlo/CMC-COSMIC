@@ -3,7 +3,7 @@
 use strict;
 
 # declare variables and subroutines
-my ($usage, $logfile, $tmpfile, $epsfile, $smfile, $line, @chars, $randstring);
+my ($usage, $logfile, $tmpfile, $epsfile, $smfile, $megayear, $line, @chars, $randstring);
 my (%event, $ncoll, $t, $m, @idi, @mi, $i, $mmax, $idmax, $type);
 my ($xmin, $xmax, $ymin, $ymax);
 
@@ -111,10 +111,10 @@ sub draw_event {
 }
 
 # the usage
-$usage = "Usage: $0 <collision log file> <eps file>\nExtracts merger tree from the collision log file.\n";
+$usage = "Usage: $0 <collision log file> <eps file> <Myr in code time units>\nExtracts merger tree from the collision log file.\n";
 
 # wrong number of arguments?
-if ($#ARGV != 1) {
+if ($#ARGV != 2) {
     die("$usage");
 }
 
@@ -123,6 +123,7 @@ $logfile = $ARGV[0];
 $epsfile = $ARGV[1];
 $smfile = $epsfile;
 $smfile =~ s/\.[a-zA-Z]*$/\.sm/;
+$megayear = $ARGV[2];
 
 # generate random string, used as part of job directory
 @chars=(0..9, 'A'..'Z', 'a'..'z');
@@ -153,17 +154,17 @@ while ($line = <FP>) {
 	    die("Can't determine number of stars merging!\n");
 	}
 	
-	$t = grabval("t", $line);
+	$t = grabval("t", $line) / $megayear;
 	$idi[0] = grabval("idm", $line);
 	$idi[1] = grabval("id1", $line);
 	$idi[2] = grabval("id2", $line);
-	$idi[3] = grabval("id1", $line);
-	$idi[4] = grabval("id2", $line);
+	$idi[3] = grabval("id3", $line);
+	$idi[4] = grabval("id4", $line);
 	$mi[0] = grabval("mm", $line);
 	$mi[1] = grabval("m1", $line);
 	$mi[2] = grabval("m2", $line);
-	$mi[3] = grabval("m1", $line);
-	$mi[4] = grabval("m2", $line);
+	$mi[3] = grabval("m3", $line);
+	$mi[4] = grabval("m4", $line);
 	
 	$event{$idi[0]}{'t'} = $t;
 	$event{$idi[0]}{'m'} = $mi[0];
@@ -214,7 +215,7 @@ printf(SMFP "ticksize 0 0 -1 10\n");
 printf(SMFP "limits %g %g %g %g\n", 
        $xmin-($xmax-$xmin)*0.05, $xmax+($xmax-$xmin)*0.05, 
        $ymin-($ymax-$ymin)*0.05, $ymax+($ymax-$ymin)*0.05);
-printf(SMFP "xlabel t [FP units]\n");
+printf(SMFP "xlabel t [Myr]\n");
 printf(SMFP "ylabel M [M_{sun}]\n");
 printf(SMFP "box\n");
 printf(SMFP "ltype 0\n");
