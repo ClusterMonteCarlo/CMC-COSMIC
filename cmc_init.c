@@ -143,7 +143,7 @@ void assign_binaries(void)
 				
 				/* get eccentricity from thermal distribution, truncated near contact */
 				emax = 1.0 - amin/binary[j].a;
-				binary[j].e = emax * sqrt(rng_t113_dbl()/2.0);
+				binary[j].e = emax * sqrt(rng_t113_dbl());
 			}
 		}
 	} else {
