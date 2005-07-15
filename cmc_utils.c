@@ -999,7 +999,7 @@ void units_set(void)
 	units.t = log(GAMMA * clus.N_STAR)/(clus.N_STAR * MEGA_YEAR) * 1.0e6 * YEAR;
 	units.m = clus.N_STAR * initial_total_mass / SOLAR_MASS_DYN * MSUN;
 	units.l = pow(units.t, 2.0/3.0) * pow(G, 1.0/3.0) * pow(units.m, 1.0/3.0);
-	units.E = -0.25 * G * sqr(units.m) / units.l;
+	units.E = G * sqr(units.m) / units.l;
 	/* stars' masses are kept in different units */
 	units.mstar = initial_total_mass / SOLAR_MASS_DYN * MSUN;
 
