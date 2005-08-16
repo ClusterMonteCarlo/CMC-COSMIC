@@ -56,6 +56,7 @@ double M_b, E_b;
 binary_t *binary;
 /* file pointers */
 FILE *lagradfile, *dynfile, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
+FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
 FILE *binaryfile, *binintfile, *collisionfile, *relaxationfile;
 /* everything else except arrays */
 char outprefix[100];
@@ -71,6 +72,7 @@ int ReadSnapshot;
 /* arrays */
 star_t *star;
 double *mass_pc, *mass_r, *ave_mass_r, *densities_r, *no_star_r;
+double *ke_rad_r, *ke_tan_r, *v2_rad_r, *v2_tan_r;
 double *mass_bins, **multi_mass_r;
 /* debugging */
 int debug;

@@ -169,14 +169,22 @@ void PrintFileOutput(void) {
 		fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
 		fprintf(no_star_file, "# Number of stars within Lagrange radii [dimensionless]\n");
 		fprintf(densities_file, "# Density within Lagrange radii [code units]\n");
+		fprintf(ke_rad_file, "# Total radial kinetic energy within Lagrange radii [code units]\n");
+		fprintf(ke_tan_file, "# Total tangential kinetic energy within Lagrange radii [code units]\n");
+		fprintf(v2_rad_file, "# Sum of v_r within Lagrange radii [code units]\n");
+		fprintf(v2_tan_file, "# Sum of v_t within Lagrange radii [code units]\n");
 		for(i=0; i<NO_MASS_BINS-1; i++){
 			fprintf(mlagradfile[i], "# Lagrange radii for %g < m < %g range [code units]\n", mass_bins[i], mass_bins[i+1]);
 		}
-
+		
 		fprintf(lagradfile, "# 1:t");
 		fprintf(ave_mass_file, "# 1:t");
 		fprintf(no_star_file, "# 1:t");
 		fprintf(densities_file, "# 1:t");
+		fprintf(ke_rad_file, "# 1:t");
+		fprintf(ke_tan_file, "# 1:t");
+		fprintf(v2_rad_file, "# 1:t");
+		fprintf(v2_tan_file, "# 1:t");
 		for(i=0; i<NO_MASS_BINS-1; i++){
 			fprintf(mlagradfile[i], "# 1:t");
 		}
@@ -186,6 +194,10 @@ void PrintFileOutput(void) {
 			fprintf(ave_mass_file, " %ld:<m>(%g)", i+2, mass_pc[i]);
 			fprintf(no_star_file, " %ld:N(%g)", i+2, mass_pc[i]);
 			fprintf(densities_file, " %ld:rho(%g)", i+2, mass_pc[i]);
+			fprintf(ke_rad_file, " %ld:T_r(%g)", i+2, mass_pc[i]);
+			fprintf(ke_tan_file, " %ld:T_t(%g)", i+2, mass_pc[i]);
+			fprintf(v2_rad_file, " %ld:V2_r(%g)", i+2, mass_pc[i]);
+			fprintf(v2_tan_file, " %ld:V2_t(%g)", i+2, mass_pc[i]);
 			for(j=0; j<NO_MASS_BINS-1; j++){
 				fprintf(mlagradfile[j], " %ld:r(%g)", i+2, mass_pc[i]);
 			}
@@ -195,6 +207,10 @@ void PrintFileOutput(void) {
 		fprintf(ave_mass_file, "\n");
 		fprintf(no_star_file, "\n");
 		fprintf(densities_file, "\n");
+		fprintf(ke_rad_file, "\n");
+		fprintf(ke_tan_file, "\n");
+		fprintf(v2_rad_file, "\n");
+		fprintf(v2_tan_file, "\n");
 		for(i=0; i<NO_MASS_BINS-1; i++){
 			fprintf(mlagradfile[i], "\n");
 		}
@@ -205,6 +221,10 @@ void PrintFileOutput(void) {
 	fprintf(ave_mass_file, "%.9e ",TotalTime);
 	fprintf(no_star_file, "%.9e ",TotalTime);
 	fprintf(densities_file, "%.9e ",TotalTime);
+	fprintf(ke_rad_file, "%.9e ",TotalTime);
+	fprintf(ke_tan_file, "%.9e ",TotalTime);
+	fprintf(v2_rad_file, "%.9e ",TotalTime);
+	fprintf(v2_tan_file, "%.9e ",TotalTime);
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		multimassr_empty[i] = 1;
 		for(j=0; j<NO_MASS_BINS-1; j++){
@@ -222,6 +242,10 @@ void PrintFileOutput(void) {
 		fprintf(ave_mass_file,"%e ", ave_mass_r[i] * units.m / MSUN);
 		fprintf(no_star_file,"%g ", no_star_r[i]);
 		fprintf(densities_file,"%e ", densities_r[i]);
+		fprintf(ke_rad_file,"%e ", ke_rad_r[i]);
+		fprintf(ke_tan_file,"%e ", ke_tan_r[i]);
+		fprintf(v2_rad_file,"%e ", v2_rad_r[i]);
+		fprintf(v2_tan_file,"%e ", v2_tan_r[i]);
 		for(j=0; j<NO_MASS_BINS-1; j++){
 			if ( !multimassr_empty[j] ){
 				fprintf(mlagradfile[j], "%e ", multi_mass_r[j][i]);
@@ -232,6 +256,10 @@ void PrintFileOutput(void) {
 	fprintf(ave_mass_file,"\n");
 	fprintf(no_star_file,"\n");
 	fprintf(densities_file,"\n");
+	fprintf(ke_rad_file,"\n");
+	fprintf(ke_tan_file,"\n");
+	fprintf(v2_rad_file,"\n");
+	fprintf(v2_tan_file,"\n");
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		if ( !multimassr_empty[i] ){
 			fprintf(mlagradfile[i], "\n");
@@ -626,6 +654,10 @@ int parser(int argc, char *argv[], gsl_rng *r)
 		ave_mass_r = malloc(MASS_PC_COUNT * sizeof(double));
 		no_star_r = malloc(MASS_PC_COUNT * sizeof(double));
 		densities_r = malloc(MASS_PC_COUNT * sizeof(double));
+		ke_rad_r = malloc(MASS_PC_COUNT * sizeof(double));
+		ke_tan_r = malloc(MASS_PC_COUNT * sizeof(double));
+		v2_rad_r = malloc(MASS_PC_COUNT * sizeof(double));
+		v2_tan_r = malloc(MASS_PC_COUNT * sizeof(double));
 		mass_pc = calloc(MASS_PC_COUNT, sizeof(double));
 		mass_bins = calloc(NO_MASS_BINS, sizeof(double));
 		multi_mass_r = malloc(NO_MASS_BINS * sizeof(double *));
@@ -675,6 +707,26 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	}
 	sprintf(outfile, "%s.rho_lagrad.dat", outprefix);
 	if ((densities_file = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create output file \"%s\".\n", outfile);
+		exit(1);
+	}
+	sprintf(outfile, "%s.ke_rad_lagrad.dat", outprefix);
+	if ((ke_rad_file = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create output file \"%s\".\n", outfile);
+		exit(1);
+	}
+	sprintf(outfile, "%s.ke_tan_lagrad.dat", outprefix);
+	if ((ke_tan_file = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create output file \"%s\".\n", outfile);
+		exit(1);
+	}
+	sprintf(outfile, "%s.v2_rad_lagrad.dat", outprefix);
+	if ((v2_rad_file = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create output file \"%s\".\n", outfile);
+		exit(1);
+	}
+	sprintf(outfile, "%s.v2_tan_lagrad.dat", outprefix);
+	if ((v2_tan_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
@@ -755,6 +807,10 @@ void close_buffers(void)
 	fclose(ave_mass_file);
 	fclose(no_star_file);
 	fclose(densities_file);
+	fclose(ke_rad_file);
+	fclose(ke_tan_file);
+	fclose(v2_rad_file);
+	fclose(v2_tan_file);
 	fclose(centmass_file);
 	fclose(escfile);
 	fclose(collisionfile);

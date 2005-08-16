@@ -47,6 +47,7 @@ void exit_cleanly(int signal)
 
 void free_arrays(void){
 	free(mass_pc); free(densities_r); free(no_star_r); 
+	free(ke_rad_r); free(ke_tan_r); free(v2_rad_r); free(v2_tan_r);
 	free(ave_mass_r); free(mass_r);
 	free(star); free(binary);
 }
@@ -834,7 +835,7 @@ void comp_multi_mass_percent(){
 }
 		
 void comp_mass_percent(){
-	double mprev;
+	double mprev, ke_rad_prev=0.0, ke_tan_prev=0.0, v2_rad_prev=0.0, v2_tan_prev=0.0;
 	long int k, mcount;
 
 	/* Computing radii containing mass_pc[i] % of the mass */
@@ -845,18 +846,30 @@ void comp_mass_percent(){
 			ave_mass_r[mcount] = 0.0;
 			no_star_r[mcount] = 0;
 			densities_r[mcount] = 0.0;
+			ke_rad_r[mcount] = 0.0;
+			ke_tan_r[mcount] = 0.0;
+			v2_rad_r[mcount] = 0.0;
+			v2_tan_r[mcount] = 0.0;
 		} else {
 			break;
 		}
 	}
 	for (k = 1; k <= clus.N_MAX; k++) {	/* Only need to count up to N_MAX */
 		mprev += star[k].m / clus.N_STAR;
+		ke_rad_prev += 0.5 * star[k].m * madhoc * star[k].vr * star[k].vr;
+		ke_tan_prev += 0.5 * star[k].m * madhoc * star[k].vt * star[k].vt;
+		v2_rad_prev += star[k].vr * star[k].vr;
+		v2_tan_prev += star[k].vt * star[k].vt;
 		if (mprev / Mtotal > mass_pc[mcount]) {
 			mass_r[mcount] = star[k].r;
 			ave_mass_r[mcount] = mprev/Mtotal/k*initial_total_mass;
 			no_star_r[mcount] = k;
 			densities_r[mcount] = mprev*clus.N_STAR/
 				(4/3*3.1416*pow(star[k].r,3));
+			ke_rad_r[mcount] = ke_rad_prev;
+			ke_tan_r[mcount] = ke_tan_prev;
+			v2_rad_r[mcount] = v2_rad_prev;
+			v2_tan_r[mcount] = v2_tan_prev;
 			mcount++;
 			if (mcount == MASS_PC_COUNT)
 				break;

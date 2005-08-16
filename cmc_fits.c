@@ -595,6 +595,10 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	ave_mass_r = malloc(MASS_PC_COUNT * sizeof(double));
 	no_star_r = malloc(MASS_PC_COUNT * sizeof(double));
 	densities_r = malloc(MASS_PC_COUNT * sizeof(double));
+	ke_rad_r = malloc(MASS_PC_COUNT * sizeof(double));
+	ke_tan_r = malloc(MASS_PC_COUNT * sizeof(double));
+	v2_rad_r = malloc(MASS_PC_COUNT * sizeof(double));
+	v2_tan_r = malloc(MASS_PC_COUNT * sizeof(double));
 	mass_pc = malloc(MASS_PC_COUNT * sizeof(double));
 	mass_bins = calloc(NO_MASS_BINS, sizeof(double));
 	multi_mass_r = malloc(NO_MASS_BINS * sizeof(double *));
