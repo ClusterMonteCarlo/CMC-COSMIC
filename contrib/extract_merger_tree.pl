@@ -4,8 +4,8 @@ use strict;
 
 # declare variables and subroutines
 my ($usage, $logfile, $tmpfile, $epsfile, $smfile, $megayear, $line, @chars, $randstring);
-my (%event, $ncoll, $t, $m, @idi, @mi, $i, $mmax, $idmax, $type);
-my ($xmin, $xmax, $ymin, $ymax);
+my (%event, $ncoll, $t, $m, @idi, @mi, $i, $j, $type);
+my ($xmin, $xmax, $ymin, $ymax, @sortedkeys, @colors);
 
 # a subroutine for extracting keyword-value pairs from text
 sub grabval {
@@ -23,12 +23,13 @@ sub log10 {
 
 # draws a point of a given type
 sub draw_point {
-    my ($x, $y, $size, $type);
+    my ($x, $y, $size, $type, $color);
     $x = shift(@_);
     $y = shift(@_);
-    $size = 1.0 * log10(shift(@_));
+    $size = 2.0 * log10(shift(@_));
     $type = shift(@_);
-    
+    $color = shift(@_);
+
     # keep track of min and max for bounds
     if ($x <= $xmin) {
 	$xmin = $x;
@@ -44,37 +45,50 @@ sub draw_point {
     }
     
     # clamp size if too small
-    if ($size <= 0.6) {
-	$size = 0.6;
+    if ($size <= 0.8) {
+	$size = 0.8;
     }
 
     printf(TMPFP "expand %g\n", $size);
-    printf(TMPFP "ptype 30 3\n");
     if ($type eq "s") {
-	printf(TMPFP "ctype yellow\n");
+	printf(TMPFP "ptype 12 3\n");
     } elsif ($type eq "ss") {
-	printf(TMPFP "ctype red\n");
+	printf(TMPFP "ptype 3 3\n");
     } elsif ($type eq "bs") {
-	printf(TMPFP "ctype green\n");
+	printf(TMPFP "ptype 4 3\n");
     } elsif ($type eq "bb") {
-	printf(TMPFP "ctype blue\n");
+	printf(TMPFP "ptype 5 3\n");
     }
+    printf(TMPFP "ctype $color\n");
     printf(TMPFP "points (%g) (%g)\n", $x, $y);
-    printf(TMPFP "ptype 30 0\n");
+    if ($type eq "s") {
+	printf(TMPFP "ptype 12 0\n");
+    } elsif ($type eq "ss") {
+	printf(TMPFP "ptype 3 0\n");
+    } elsif ($type eq "bs") {
+	printf(TMPFP "ptype 4 0\n");
+    } elsif ($type eq "bb") {
+	printf(TMPFP "ptype 5 0\n");
+    }
     printf(TMPFP "ctype black\n");
     printf(TMPFP "points (%g) (%g)\n", $x, $y);
-    printf(TMPFP "expand 1.0\n");
+    printf(TMPFP "expand 1.2\n");
 }
 
 # draws points and lines for a given event
 sub draw_event {
-    my ($id, $t, $m, $type, $ncoll, @idi, @mi, $i);
+    my ($id, $color, $t, $m, $type, $ncoll, @idi, @mi, $i);
     $id = shift(@_);
+    $color = shift(@_);
     
     if (!exists($event{$id})) {
 	die("Event $id does not exist!\n");
     }
 
+    # mark as being used
+    $event{$id}{'usedflag'} = 1;
+
+    # extract values
     $t = $event{$id}{'t'};
     $m = $event{$id}{'m'};
     $type = $event{$id}{'type'};
@@ -95,19 +109,19 @@ sub draw_event {
 	    printf(TMPFP "draw %g %g\n", $event{$idi[$i]}{'t'}, log10($mi[$i]));
 	} else {
 	    printf(TMPFP "draw %g %g\n", $t, log10($mi[$i]));
-	    draw_point($t, log10($mi[$i]), $mi[$i], "s");
+	    draw_point($t, log10($mi[$i]), $mi[$i], "s", $color);
 	}
     }
     
     # here comes the recursion
     for ($i=1; $i<=$ncoll; $i++) {
 	if (exists($event{$idi[$i]})) {
-	    draw_event($idi[$i]);
+	    draw_event($idi[$i], $color);
 	}
     }
 
     # draw this point last so it is on top
-    draw_point($t, log10($m), $m, $type);
+    draw_point($t, log10($m), $m, $type, $color);
 }
 
 # the usage
@@ -178,18 +192,13 @@ while ($line = <FP>) {
 	$event{$idi[0]}{'m2'} = $mi[2];
 	$event{$idi[0]}{'m3'} = $mi[3];
 	$event{$idi[0]}{'m4'} = $mi[4];
+	$event{$idi[0]}{'usedflag'} = 0;
     }
 }
 close(FP);
 
-# find likely runaway (largest mass merger)
-$mmax = -1.0e300;
-for my $key ( keys %event ) {
-    if ($event{$key}{'m'} >= $mmax) {
-	$idmax = $key;
-	$mmax = $event{$key}{'m'};
-    }
-}
+# sort keys according to mass of object
+@sortedkeys = sort { $event{$a}{'m'} <=> $event{$b}{'m'} } keys %event;
 
 # sm file
 open(TMPFP, ">$tmpfile");
@@ -199,7 +208,16 @@ $xmin = 1.0e300;
 $xmax = -1.0e300;
 $ymin = 1.0e300;
 $ymax = -1.0e300;
-draw_event($idmax);
+
+#draw largest few events
+@colors = ("red", "yellow", "green", "blue", "cyan", "magenta");
+for ($i=0; $i<6; $i++) {
+    $j = 0;
+    while ($event{$sortedkeys[$#sortedkeys-$j]}{'usedflag'} != 0) {
+	$j++;
+    }
+    draw_event($sortedkeys[$#sortedkeys-$j], $colors[$i]);
+}
 
 printf(TMPFP "hardcopy\n");
 close(TMPFP);
@@ -209,8 +227,8 @@ open(SMFP, ">$smfile");
 
 printf(SMFP "device postfile \"%s\"\n", $epsfile);
 printf(SMFP "erase\n");
-printf(SMFP "expand 1.0\n");
-printf(SMFP "lweight 1\n");
+printf(SMFP "expand 1.2\n");
+printf(SMFP "lweight 1.5\n");
 printf(SMFP "ticksize 0 0 -1 10\n");
 printf(SMFP "limits %g %g %g %g\n", 
        $xmin-($xmax-$xmin)*0.05, $xmax+($xmax-$xmin)*0.05, 
