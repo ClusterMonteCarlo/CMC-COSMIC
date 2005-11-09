@@ -105,7 +105,7 @@ PERTURB 1
 # Normalize energy?
 E_NORMALIZE 0
 
-# Try to conserve energy?
+# Conserve energy using: no scheme (0), Joshi scheme (1), Stodolkiewicz (2), or Fregeau (3)
 E_CONS 1
 
 # Mode for calculating Dt.
