@@ -4,7 +4,7 @@ use strict;
 
 # declare variables and subroutines
 my ($usage, $logfile, $tmpfile, $epsfile, $smfile, $megayear, $line, @chars, $randstring);
-my (%event, $ncoll, $t, $m, @idi, @mi, $i, $j, $type);
+my (%event, $ncoll, $t, $m, @idi, @mi, $i, $j, $type, $ntrees);
 my ($xmin, $xmax, $ymin, $ymax, @sortedkeys, @colors);
 
 # a subroutine for extracting keyword-value pairs from text
@@ -27,6 +27,8 @@ sub draw_point {
     $x = shift(@_);
     $y = shift(@_);
     $size = 2.0 * log10(shift(@_));
+    # maybe all the same size is better
+    $size = 3.5;
     $type = shift(@_);
     $color = shift(@_);
 
@@ -125,10 +127,10 @@ sub draw_event {
 }
 
 # the usage
-$usage = "Usage: $0 <collision log file> <eps file> <Myr in code time units>\nExtracts merger tree from the collision log file.\n";
+$usage = "Usage: $0 <collision log file> <eps file> <Myr in code time units> <N_trees>\nExtracts merger tree from the collision log file.\n";
 
 # wrong number of arguments?
-if ($#ARGV != 2) {
+if ($#ARGV != 3) {
     die("$usage");
 }
 
@@ -138,6 +140,11 @@ $epsfile = $ARGV[1];
 $smfile = $epsfile;
 $smfile =~ s/\.[a-zA-Z]*$/\.sm/;
 $megayear = $ARGV[2];
+$ntrees = $ARGV[3];
+
+if ($ntrees < 1 || $ntrees > 6) {
+    die("N_trees must be in the range 1 to 6.\n");
+}
 
 # generate random string, used as part of job directory
 @chars=(0..9, 'A'..'Z', 'a'..'z');
@@ -210,8 +217,8 @@ $ymin = 1.0e300;
 $ymax = -1.0e300;
 
 #draw largest few events
-@colors = ("red", "yellow", "green", "blue", "cyan", "magenta");
-for ($i=0; $i<6; $i++) {
+@colors = ("red", "green", "blue", "yellow", "cyan", "magenta");
+for ($i=0; $i<$ntrees; $i++) {
     $j = 0;
     while ($event{$sortedkeys[$#sortedkeys-$j]}{'usedflag'} != 0) {
 	$j++;
