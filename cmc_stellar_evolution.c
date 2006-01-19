@@ -5,7 +5,7 @@
 
 #include "cmc.h"
 #include "cmc_vars.h"
-#include "sinbin.h"
+#include "startrack/sinbin.h"
 
 #ifdef SE
 

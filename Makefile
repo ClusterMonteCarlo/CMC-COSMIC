@@ -103,8 +103,9 @@ EXE = $(NAME)
 OBJS = $(NAME)_binbin.o $(NAME)_binsingle.o $(NAME)_dynamics.o \
 	$(NAME)_dynamics_helper.o $(NAME)_evolution_thr.o $(NAME)_funcs.o \
 	$(NAME)_init.o $(NAME)_io.o $(NAME).o $(NAME)_nr.o \
-	$(NAME)_utils.o taus113-v2.o $(NAME)_fits.o singl.o belgy.o \
-	$(NAME)_fits_sshot.o $(NAME)_sort.o $(NAME)_sscollision.o
+	$(NAME)_utils.o taus113-v2.o $(NAME)_fits.o startrack/singl.o \
+	$(NAME)_stellar_evolution.o $(NAME)_fits_sshot.o \
+	$(NAME)_sort.o $(NAME)_sscollision.o
 FEWBODYDIR = fewbody
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
@@ -125,7 +126,7 @@ all: $(EXE) $(EXTRAS)
 $(EXE): $(OBJS) $(FEWBODYOBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
 
-singl.o: singl.c Makefile
+startrack/singl.o: startrack/singl.c Makefile
 	$(CC) $(CFLAGS) $(CHRISCFLAGS) -c $< -o $@
 
 $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile

@@ -14,7 +14,7 @@
 #define PRETTYNAME "ClusterMonteCarlo"
 
 /* toggle stellar evolution */
-/* #define SE */
+#define SE
 
 /*************************** Parameters ******************************/
 /* Large number, but still SF_INFINITY - 1 <> SF_INFINITY */
