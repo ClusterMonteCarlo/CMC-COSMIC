@@ -12,10 +12,15 @@ NAME = cmc
 ### C compiler
 ##############################################################################
 CC = gcc
-# Intel compiler
-#CC = icc
-# Portland Group compiler
-#CC = pgcc
+
+##############################################################################
+### test for condor
+##############################################################################
+CONDOR = $(shell which condor_compile 2>/dev/null)
+
+ifneq ($(CONDOR),)
+CONDORCC := condor_compile $(CC)
+endif
 
 ##############################################################################
 ### test for ccache
@@ -27,7 +32,7 @@ CC := ccache $(CC)
 endif
 
 ##############################################################################
-### test for architecture
+### test for architecture to set CFLAGS and LIBFLAGS
 ##############################################################################
 UNAME = $(shell uname)
 
@@ -40,7 +45,6 @@ CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm
 else
 ifeq ($(UNAME),AIX)
-CC = gcc
 CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty -lm
 else
@@ -73,13 +77,7 @@ CHRISCFLAGS = -Wno-uninitialized -Wno-unused
 ##############################################################################
 ### special hosts
 ##############################################################################
-ifeq ($(HOSTNAME),chinook.astro.northwestern.edu)
-CC = gcc3.3.2
-#CFLAGS := $(CFLAGS) -mcpu=pentium4 -mmmx -msse -msse2
-endif
-
 ifeq ($(HOSTNAME),master.cluster)
-#CC = gcc
 CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow
 LIBFLAGS := $(LIBFLAGS) -static
 endif
@@ -99,6 +97,9 @@ endif
 ##############################################################################
 ### the dependencies
 ##############################################################################
+FEWBODYDIR = fewbody
+
+# standard executable
 EXE = $(NAME)
 OBJS = $(NAME)_binbin.o $(NAME)_binsingle.o $(NAME)_dynamics.o \
 	$(NAME)_dynamics_helper.o $(NAME)_evolution_thr.o $(NAME)_funcs.o \
@@ -106,13 +107,29 @@ OBJS = $(NAME)_binbin.o $(NAME)_binsingle.o $(NAME)_dynamics.o \
 	$(NAME)_utils.o taus113-v2.o $(NAME)_fits.o startrack/singl.o \
 	$(NAME)_stellar_evolution.o $(NAME)_fits_sshot.o \
 	$(NAME)_sort.o $(NAME)_sscollision.o
-FEWBODYDIR = fewbody
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
 	$(FEWBODYDIR)/fewbody_int.o $(FEWBODYDIR)/fewbody_io.o \
 	$(FEWBODYDIR)/fewbody_isolate.o $(FEWBODYDIR)/fewbody_ks.o \
         $(FEWBODYDIR)/fewbody_nonks.o $(FEWBODYDIR)/fewbody_scat.o \
 	$(FEWBODYDIR)/fewbody_utils.o
+
+# condor executable
+CONDOREXE := $(NAME).condor
+COBJS = $(NAME)_binbin.co $(NAME)_binsingle.co $(NAME)_dynamics.co \
+	$(NAME)_dynamics_helper.co $(NAME)_evolution_thr.co $(NAME)_funcs.co \
+	$(NAME)_init.co $(NAME)_io.co $(NAME).co $(NAME)_nr.co \
+	$(NAME)_utils.co taus113-v2.co $(NAME)_fits.co startrack/singl.co \
+	$(NAME)_stellar_evolution.co $(NAME)_fits_sshot.co \
+	$(NAME)_sort.co $(NAME)_sscollision.co
+FEWBODYCOBJS = $(FEWBODYDIR)/fewbody.co $(FEWBODYDIR)/fewbody_classify.co \
+	$(FEWBODYDIR)/fewbody_coll.co $(FEWBODYDIR)/fewbody_hier.co \
+	$(FEWBODYDIR)/fewbody_int.co $(FEWBODYDIR)/fewbody_io.co \
+	$(FEWBODYDIR)/fewbody_isolate.co $(FEWBODYDIR)/fewbody_ks.co \
+        $(FEWBODYDIR)/fewbody_nonks.co $(FEWBODYDIR)/fewbody_scat.co \
+	$(FEWBODYDIR)/fewbody_utils.co
+
+# extra stuff
 CONTRIBS = contrib/calc_2ddensity.pl contrib/calc_3ddensity.pl \
 	contrib/calc_distfunc.pl contrib/pluck0.pl contrib/pluckbindata.pl \
 	contrib/prunedata.pl contrib/beo-genpbs.pl \
@@ -121,8 +138,16 @@ CONTRIBS = contrib/calc_2ddensity.pl contrib/calc_3ddensity.pl \
 	contrib/extract_bins.sh
 EXTRAS = FITS
 
-all: $(EXE) $(EXTRAS)
+# everything available
+ifneq ($(CONDOR),)
+ALLEXES = $(EXE) $(CONDOREXE)
+else
+ALLEXES = $(EXE)
+endif
 
+all: $(ALLEXES) $(EXTRAS)
+
+# the standard executable
 $(EXE): $(OBJS) $(FEWBODYOBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
 
@@ -135,25 +160,34 @@ $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 %.o: %.c $(NAME).h $(NAME)_vars.h Makefile
 	$(CC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
 
+# the condor executable
+$(CONDOREXE): $(COBJS) $(FEWBODYCOBJS)
+	$(CONDORCC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
+
+startrack/singl.co: startrack/singl.c Makefile
+	$(CONDORCC) $(CFLAGS) $(CHRISCFLAGS) -c $< -o $@
+
+$(FEWBODYDIR)/%.co: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
+	$(CONDORCC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
+
+%.co: %.c $(NAME).h $(NAME)_vars.h Makefile
+	$(CONDORCC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
+
+# fake dependency
 .PHONY: FITS install clean fewbodyclean mrproper
 
+# Ato's FITS stuff
 FITS:
 	cd ato-fits && $(MAKE)
 
-install: $(EXE) $(CONTRIBS)
+install: $(ALLEXES) $(CONTRIBS)
 	mkdir -p $(PREFIX)/bin/
 	install -m 0755 $^ $(PREFIX)/bin/
 	cd ato-fits && $(MAKE) install
 
 clean:
-	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE)
+	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE) $(COBJS) $(FEWBODYCOBJS) $(CONDOREXE)
 	cd ato-fits && $(MAKE) clean
-
-$(NAME)clean:
-	rm -f $(OBJS) $(EXE)
-
-fewbodyclean:
-	rm -f $(FEWBODYOBJS) $(EXE)
 
 mrproper: clean
 	rm -f   *~   .smhist   *.dat   *.dat.gz    *out_*   *.stdout   *.stderr   *.log
