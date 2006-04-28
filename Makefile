@@ -43,7 +43,7 @@ else
 ifeq ($(UNAME),Darwin)
 CC = gcc
 #CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib
-CFLAGS = -Wall -O3 -fast -I/opt/local/include -L/opt/local/lib
+CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm
 else
 ifeq ($(UNAME),AIX)
