@@ -12,7 +12,7 @@
 #RESTART 0
 
 # Random number generator seed.
-IDUM -116
+IDUM 16
 
 # Should we write ouput snapshot files to disk?
 DUMPS 1
