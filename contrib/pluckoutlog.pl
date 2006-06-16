@@ -15,8 +15,10 @@ my ($nb, $mb, $eb);
 sub grabval {
     my $key = shift(@_);
     my $line = shift(@_);
-    $line =~ /$key[\s]*=[\s]*([0-9.\-+eE]+)/;
-    return($1);
+    # The bit at the beginning is to make sure we don't mistake things like
+    # trh for rh.
+    $line =~ /(^|[\s]+)$key[\s]*=[\s]*([0-9.\-+eE]+)/;
+    return($2);
 }
 
 # define the usage
