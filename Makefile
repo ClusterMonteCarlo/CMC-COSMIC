@@ -133,7 +133,7 @@ FEWBODYCOBJS = $(FEWBODYDIR)/fewbody.co $(FEWBODYDIR)/fewbody_classify.co \
 
 # extra stuff
 CONTRIBS = contrib/calc_2ddensity.pl contrib/calc_3ddensity.pl \
-	contrib/calc_distfunc.pl contrib/pluck0.pl contrib/pluckbindata.pl \
+	contrib/calc_distfunc.pl contrib/pluckoutlog.pl contrib/pluckbindata.pl \
 	contrib/prunedata.pl contrib/beo-genpbs.pl \
 	contrib/quick_cluster_plot.sh contrib/quick_rel_plot.sh \
 	contrib/extract_merger_tree.pl contrib/quick_binary_plot.sh \
