@@ -9,7 +9,6 @@ my ($e, $max_r, $nbound, $rtidal);
 my ($m, $pe, $ke, $vratio);
 my ($tidalmassloss);
 my ($rc, $rhoc, $v_core, $trc, $conc, $Ncore);
-my ($sin2beta);
 my ($trh, $trh0, $rh, $rh_single, $rh_binary);
 my ($nb, $mb, $eb);
 
@@ -21,7 +20,7 @@ sub grabval {
 }
 
 # define the usage
-$usage = "Usage: $0\nPlucks data from the out_0 file on stdin and sends it to stdout.\n";
+$usage = "Usage: $0\nPlucks data from the out.log file on stdin and sends it to stdout.\n";
 
 # give usage for wrong number of arguments
 if ($#ARGV != -1) {
@@ -50,7 +49,7 @@ while ($line = <STDIN>) {
     } elsif ($line =~ /^[\s]*Etotal/) {
 	$e = grabval("Etotal", $line);
 	$max_r = grabval("max_r", $line);
-	$nbound = grabval("N\\(bound\\)", $line);
+	$nbound = grabval("N_bound", $line);
 	$rtidal = grabval("Rtidal", $line);
     } elsif ($line =~ /^[\s]*Mtotal/) {
 	$m = grabval("Mtotal", $line);
@@ -66,8 +65,6 @@ while ($line = <STDIN>) {
 	$trc = grabval("Trc", $line);
 	$conc = grabval("conc_param", $line);
 	$Ncore = grabval("N_core", $line);
-    } elsif ($line =~ /^[\s]*Sin2Beta/) {
-	$sin2beta = grabval("Sin2Beta", $line);
     } elsif ($line =~ /^[\s]*trh/) {
 	$trh = grabval("trh", $line);
 	if ($trh0set == 0) {
@@ -85,7 +82,7 @@ while ($line = <STDIN>) {
 	if ($rc != 0) {
 	    # this is the last line output per timestep, so print now
 	    if ($firstline == 0) { # print header
-		print("#t/trh0 M nbound E PE KE VRatio rhoc v_core trc trh conc ncore rc rh rh_single rh_binary nb mb eb\n");
+		print("#1:t/trh0 2:M 3:nbound 4:E 5:PE 6:KE 7:VRatio 8:rhoc 9:v_core 10:trc 11:trh 12:conc 13:ncore 14:rc 15:rh 16:rh_single 17:rh_binary 18:nb 19:mb 20:eb\n");
 		$firstline = 1;
 	    }
 	    printf("%e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e\n",
@@ -120,6 +117,8 @@ while ($line = <STDIN>) {
     } elsif ($line =~ /^[\s]*sniff_stars/) {
 	# do nothing for these lines
     } elsif ($line =~ /^[\s]*get_positions/) {
+	# do nothing for these lines
+    } elsif ($line =~ /^[\s]*dynamics_apply/) {
 	# do nothing for these lines
     } else {
 	warn("warning: unmatched line: $line");
