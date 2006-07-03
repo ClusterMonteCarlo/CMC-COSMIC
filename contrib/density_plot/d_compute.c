@@ -57,7 +57,9 @@ static VALUE c_do(VALUE self, VALUE j, VALUE p)
     }
     sigma = sigma * 2.0;
     sigmaL = sigmaL * 2.0;
+    if ((sigma > 0) && (sigmaL > 0)){
     fprintf(write, "%lf %lf %lf\n", rr, sigma, sigmaL);
+    }
   }
    return 0;
 }
