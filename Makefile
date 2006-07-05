@@ -137,7 +137,8 @@ CONTRIBS = contrib/calc_2ddensity.pl contrib/calc_3ddensity.pl \
 	contrib/prunedata.pl contrib/beo-genpbs.pl \
 	contrib/quick_cluster_plot.sh contrib/quick_rel_plot.sh \
 	contrib/extract_merger_tree.pl contrib/quick_binary_plot.sh \
-	contrib/extract_bins.sh contrib/cluster_truncate.pl
+	contrib/extract_bins.sh contrib/cluster_truncate.pl \
+	contrib/quick_energy_plot.sh
 EXTRAS = FITS
 
 # everything available
