@@ -12,6 +12,7 @@ struct imf_param {
 	int imf;
 	int Ntrace;
 	int oflag;
+        int n_neutron;
 	double mmin;
 	double mmax;
 	double pl_index;
@@ -62,10 +63,12 @@ void write_usage(void){
 	printf("            5: Scalo (from Kroupa etal 1993 eq.15)\n");
 	printf("            6: Kroupa (old form, for comparison reasons)\n");
 	printf("            7: Tracers (1 species, the rest are 1 Msun)\n");
+	printf("            8: Power-law with neutron stars (objects at 1.4 Msun)\n");
 	printf("-w        : overwrite flag\n");
 	printf("-m <dbl>  : minimum mass, or tracer mass\n");
 	printf("-M <dbl>  : maximum mass\n");
 	printf("-p <dbl>  : power-law index (-2.35 is Salpeter)\n");
+	printf("-u <int>  : number of neutron stars\n");
 	printf("-N <int>  : number of tracers\n");
 	printf("-r <dbl>  : rcr, the value of r within which average mass");
 	printf(" is different\n");
@@ -83,13 +86,14 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 	param->mmin = 0.2;
 	param->mmax = 120.0;
 	param->pl_index = -2.35;
+	param->n_neutron = 0;
 	param->Ntrace = 0;
 	param->rcr = 1.00;
 	param->Cms = 1.00;
 	(param->infile)[0] = '\0';
 	(param->outfile)[0] = '\0';
 
-	while((c = getopt(argc, argv, "i:o:I:wm:M:p:N:r:C:h")) != -1)
+	while((c = getopt(argc, argv, "i:o:I:wm:M:p:u:N:r:C:h")) != -1)
 		switch(c) {
 		case 'i':
 			strncpy(param->infile, optarg, 1024);
@@ -114,6 +118,9 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 			break;
 		case 'p':
 			param->pl_index = strtod(optarg, NULL);
+			break;
+		case 'u':
+		        param->n_neutron = strtod(optarg, NULL);
 			break;
 		case 'r':
 			param->rcr = strtod(optarg, NULL);
@@ -157,7 +164,7 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
-	if (param->imf<1 || param->imf>7){
+	if (param->imf<1 || param->imf>8){
 		printf("Invalid IMF model value\n");
 		write_usage();
 		exit(EXIT_FAILURE);
@@ -174,6 +181,11 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 	}
 	if (param->Cms > 1.00){
 		printf("parameter Cms has to be less than 1.0\n");
+		write_usage();
+		exit(EXIT_FAILURE);
+	}
+	if (param->imf==8 && param->n_neutron < 0){
+	        printf("Number of neutron stars must be positive");
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
@@ -300,7 +312,7 @@ double find_mminp(double cms, double m_abs_min, double m_abs_max,
 void set_masses(struct imf_param param, struct star *s[],
 			struct cluster c, struct code_par cp){
 	unsigned long int i;
-	double m, X, X2, norm, tmp;
+	double m, X, X2, norm, tmp, n_rat, ncheck;
 	double total_mass, mmin, mmin_ms;
 	double Xcrit, C1, C2, C3, C4;
 
@@ -311,8 +323,10 @@ void set_masses(struct imf_param param, struct star *s[],
 	X = rng_t113_dbl();
 	X = rng_t113_dbl();
 	total_mass = 0.0;
+	n_rat = ((double) param.n_neutron / (double) c.NSTAR);
 	if(param.imf==1 && param.Cms==1.0){  /* Power-law w/o ms     */
 		for(i=1; i<=c.NSTAR; i++){
+		        
 			tmp = param.pl_index+1.0;
 			X = rng_t113_dbl();
 			if(param.pl_index==-1.0){
@@ -426,7 +440,31 @@ void set_masses(struct imf_param param, struct star *s[],
 				+ i*c.NSTAR/param.Ntrace + 1].m = m;
 			total_mass += m - 1.0;
 		}
-	} else {
+	  } else if(param.imf==8 && param.Cms==1.0){  /* Power-law w neutron stars */
+	    for(i=1; i<=c.NSTAR; i++){
+	    ncheck = rng_t113_dbl();
+	    tmp = param.pl_index+1.0;
+	    X = rng_t113_dbl();
+	    /* Is this a regular star? */
+	    if (ncheck > n_rat){
+	    if(param.pl_index==-1.0){
+	      norm = log(param.mmax/param.mmin);
+	      m = param.mmin*exp(norm*X);
+	    } else {
+	      norm = pow(param.mmax/param.mmin, tmp) - 1.0;
+	      m = param.mmin*pow(norm*X+1, 1.0/tmp);
+	    }
+	    /* If neutron star, assign to 1.4 solar masses */
+	      } else
+		{
+		  m = 1.4;
+		} 
+	    (*s)[i].m = m;
+	    total_mass += m;
+	    }
+	  }
+
+	else {
 		printf("This can't happen!\n");
 		exit(EXIT_FAILURE);
 	}
