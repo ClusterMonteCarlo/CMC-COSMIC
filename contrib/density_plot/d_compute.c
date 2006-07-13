@@ -7,20 +7,25 @@ VALUE compute_class;
 
 static VALUE c_do(VALUE self, VALUE j, VALUE p)
 {
+  // Allocate memory for pointers, ruby arrays
   double *rad;
   double *rho;
   double *rhoL;
+  // Get internal variables and malloc
   int kount = NUM2INT(j);
   double rad_m = NUM2DBL(rb_iv_get(self, "@rRad_m"));
   double rratio = NUM2DBL(rb_iv_get(self, "@rRad_ratio"));
+  double unit_l = NUM2DBL(rb_iv_get(self, "@unit_l"));
   rad = malloc(j*sizeof(double));
   rho = malloc(j*sizeof(double));
   rhoL = malloc(j*sizeof(double));
   double  zminus, z;
   double  sigma, sigmaL;
+  // File for writing (temp.dat, to be renamed later)
   FILE* write;
   write = fopen("temp.dat", "w");
   int k;
+  // Assign variables with loop
   VALUE local;
   local = rb_iv_get(self, "@rad");
   for(k=0;k<=kount;k++){
@@ -37,6 +42,7 @@ static VALUE c_do(VALUE self, VALUE j, VALUE p)
   int i;
   double rr;
   double reset = kount;
+  // Perform integration
   int pkount = NUM2INT(p);
   for(i=0;i<=pkount;i++){
     kount = reset;
@@ -57,9 +63,23 @@ static VALUE c_do(VALUE self, VALUE j, VALUE p)
     }
     sigma = sigma * 2.0;
     sigmaL = sigmaL * 2.0;
-    if ((sigma > 0) && (sigmaL > 0)){
-    fprintf(write, "%lf %lf %lf\n", rr, sigma, sigmaL);
-    }
+    double pi = 3.14159265;
+    // Convert to flux?
+    sigmaL = sigmaL / (4*pi);
+    // Convert to parsecs^2 using unit_l
+    sigmaL = sigmaL / (unit_l * unit_l);
+    // How many parsecs are in an arcsecond^2?
+    double sightarea = (pi*10./648000.)*(pi*10./648000.);
+    // Convert to flux per arcsecond^2
+    sigmaL = sigmaL * sightarea;
+    // Find magnitude
+    double sunmag = 4.83;
+    double magnitude = -2.5*log10(sigmaL) + sunmag;
+    if (sigma > 0.0){
+    fprintf(write, "%24.16e %24.16e %24.16e\n", rr, sigma, magnitude);
+    } else
+      {
+      }
   }
    return 0;
 }
