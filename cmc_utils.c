@@ -1136,3 +1136,16 @@ void central_calculate(void)
 	/* core relaxation time, Spitzer (1987) eq. (2-62) */
 	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.M);
 }
+
+/* calculate cluster dynamical quantities */
+void clusdyn_calculate(void)
+{
+	double m=0.0;
+	long k=1;
+	
+	while (m < 0.5 * Mtotal) {
+		m += star[k].m / clus.N_STAR;
+		k++;
+	}
+	clusdyn.rh = star[k].r;
+}

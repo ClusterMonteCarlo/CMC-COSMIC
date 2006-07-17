@@ -120,6 +120,9 @@ int main(int argc, char *argv[])
 	/* calculate central quantities */
 	central_calculate();
 
+	/* calculate dynamical quantities */
+	clusdyn_calculate();
+
 	/* Printing Results for initial model */
 	print_results();
 	

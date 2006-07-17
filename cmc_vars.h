@@ -24,6 +24,10 @@ struct {
 	double Eb; /* total binary binding energy */
 } Etotal;
 
+struct {
+	double rh; /* half-mass radius */
+} clusdyn;
+
 /* tidal truncation stuff */
 double max_r, Rtidal, TidalMassLoss, orbit_r;
 double OldTidalMassLoss, DTidalMassLoss, Prev_Dt, Etidal; 

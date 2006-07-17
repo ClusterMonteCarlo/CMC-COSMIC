@@ -309,6 +309,7 @@ int move_to_hdu(fitsfile *fptr, char *sea_extname);
 void mini_sshot(void);
 void units_set(void);
 void central_calculate(void);
+void clusdyn_calculate(void);
 void print_interaction_status(char status_text[]);
 void print_interaction_error(void);
 long star_get_id_new(void);
