@@ -1,0 +1,17 @@
+xmgrace -pexec "arrange(2,1,0.15,0,0)" \
+    -graph 0 -block $1.bin.dat -settype xy -bxy 1:3 \
+    -pexec "s0.y = s0.y / s0.y[0]" \
+    -pexec "s0.x = s0.x / $2" \
+    -graph 0 -block $1.dyn.dat -settype xy -bxy 1:5 \
+    -pexec "s1.y = s1.y / s1.y[0]" \
+    -pexec "s1.x = s1.x / $2" \
+    -pexec "yaxis label \"M\sb\N/M\sb\N(0), M/M(0)\"" \
+    -pexec "xaxis ticklabel off" \
+    -graph 1 -log y -block $1.dyn.dat -settype xy -bxy 1:8 \
+    -graph 1 -log y -block $1.bin.dat -settype xy -bxy 1:5 \
+    -graph 1 -log y -block $1.bin.dat -settype xy -bxy 1:6 \
+    -pexec "s0.x = s0.x / $2" \
+    -pexec "s1.x = s1.x / $2" \
+    -pexec "s2.x = s2.x / $2" \
+    -pexec "yaxis label \"r\sc\N, r\sh,b\N, r\sh,s\N [r\sNB\N]\"" \
+    -pexec "xaxis label \"t [t\srh\N]\""
