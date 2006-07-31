@@ -275,6 +275,9 @@ int main(int argc, char *argv[])
 		update_vars();
 		tcount++;
 		
+		/* calculate dynamical quantities */
+		clusdyn_calculate();
+
 		print_results();
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
