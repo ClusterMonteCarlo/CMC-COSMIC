@@ -24,7 +24,7 @@ endif
 ##############################################################################
 ### test for ccache
 ##############################################################################
-CCACHE = $(shell which ccache 2>/dev/null)
+CCACHE = $(shell type ccache 2>/dev/null)
 
 ifneq ($(CCACHE),)
 CC := ccache $(CC)
