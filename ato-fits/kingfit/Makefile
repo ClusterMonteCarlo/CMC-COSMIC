@@ -1,8 +1,25 @@
 PREFIX = $(HOME)
 
 CC = gcc
-CFLAGS = -O3 -I../gensort -I../taus113-v2
+
+##############################################################################
+### test for architecture to set CFLAGS and LIBFLAGS
+##############################################################################
+UNAME = $(shell uname)
+
+ifeq ($(UNAME),Linux)
+CFLAGS = -Wall -O3 -I../gensort -I../taus113-v2
 LIBFLAGS = -lcfitsio -lgsl -lgslcblas -lm
+else
+ifeq ($(UNAME),Darwin)
+CC = gcc
+CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -I../gensort -I../taus113-v2
+LIBFLAGS = -lcfitsio -lgsl -lgslcblas -lm
+else
+CFLAGS = -Wall -O3 -I../gensort -I../taus113-v2
+LIBFLAGS = -lcfitsio -lgsl -lgslcblas -lm
+endif
+endif
 
 ##############################################################################
 ### test for ccache
@@ -13,7 +30,7 @@ ifneq ($(CCACHE),)
 CC := ccache $(CC)
 endif
 
-DOMNAME = $(shell dnsdomainname)
+DOMNAME = $(shell hostname | cut -d . -f 2-)
 ifeq ($(DOMNAME),ncsa.uiuc.edu)
 CC = icc
 CFLAGS := $(CFLAGS) -I $(HOME)/libs_et_al/include

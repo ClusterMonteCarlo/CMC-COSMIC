@@ -16,7 +16,7 @@ CC = gcc
 ##############################################################################
 ### test for condor
 ##############################################################################
-CONDOR = $(shell which condor_compile 2>/dev/null)
+CONDOR = $(shell type condor_compile 2>/dev/null)
 
 ifneq ($(CONDOR),)
 CONDORCC := condor_compile $(CC)
@@ -84,7 +84,7 @@ CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow
 LIBFLAGS := $(LIBFLAGS) -static
 endif
 
-DOMNAME = $(shell dnsdomainname)
+DOMNAME = $(shell hostname | cut -d . -f 2-)
 ifeq ($(DOMNAME),ncsa.uiuc.edu)
 CC = icc
 CFLAGS := -wd864,1188 -I $(HOME)/libs_et_al/include
