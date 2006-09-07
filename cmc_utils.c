@@ -1039,44 +1039,106 @@ void units_set(void)
 /* calculate central quantities */
 void central_calculate(void)
 {
-	long i;
+	double m=0.0, *rhoj, mrho, Vrj, rhojsum, Msincentral, Mbincentral, Vcentral, rcentral;
+	long J=6, i, j, jmin, jmax, nave, Ncentral;
 
-	central.N = 0;
+	/* average over all stars out to half-mass radius */
+	nave = 1;
+	while (m < 0.5 * Mtotal) {
+		m += star[nave].m / clus.N_STAR;
+		nave++;
+	}
+	
+	/* DEBUG */
+	fprintf(stderr, "nave=%ld\n", nave);
+	/* DEBUG */
+
+	/* exit if not enough stars */
+	if (clus.N_STAR <= 2*J || nave >= clus.N_STAR-6) {
+		eprintf("clus.N_STAR <= 2*J || nave >= clus.N_STAR-6\n");
+		exit_cleanly(-1);
+	}
+
+	/* allocate array for local density calculations */
+	rhoj = malloc((nave+1) * sizeof(double));
+
+	/* calculate rhoj's (Casertano & Hut 1985) */
+	for (i=1; i<=nave; i++) {
+		jmin = MAX(i-J/2, 1);
+		jmax = jmin + J;
+		mrho = 0.0;
+		/* this is equivalent to their J-1 factor for the case of equal masses,
+		   and seems like a good generalization for unequal masses */
+		for (j=jmin+1; j<=jmax-1; j++) {
+			mrho += star[j].m * madhoc;
+		}
+		Vrj = 4.0/3.0 * PI * (fb_cub(star[jmax].r) - fb_cub(star[jmin].r));
+		rhoj[i] = mrho / Vrj;
+	}
+
+	/* calculate core quantities using density weighted averages (note that in 
+	   Casertano & Hut (1985) only rho and rc are analyzed and tested) */
+	rhojsum = 0.0;
+	central.rho = 0.0;
+	central.v_rms = 0.0;
+	central.rc = 0.0;
+	central.m_ave = 0.0;
+	for (i=1; i<=nave; i++) {
+		rhojsum += rhoj[i];
+		central.rho += sqr(rhoj[i]);
+		central.v_rms += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
+		central.rc += rhoj[i] * star[i].r;
+		central.m_ave += rhoj[i] * star[i].m * madhoc;
+	}
+	central.rho /= rhojsum;
+	/* correction for inherent bias in estimator */
+	central.rho *= 4.0/5.0;
+	central.v_rms /= rhojsum;
+	central.v_rms = sqrt(central.v_rms);
+	central.rc /= rhojsum;
+	central.m_ave /= rhojsum;
+	
+	/* quantities derived from averages */
+	central.n = central.rho / central.m_ave;
+	central.rc_spitzer = sqrt(3.0 * sqr(central.v_rms) / (4.0 * PI * central.rho));
+
+	/* set global code variables */
+	v_core = central.v_rms;
+	rho_core = central.rho;
+	core_radius = central.rc;
+	N_core = 4.0 / 3.0 * PI * cub(core_radius) * central.n;
+	/* core relaxation time, Spitzer (1987) eq. (2-62) */
+	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.m_ave);
+
+	/* calculate other quantities using old method */
+	Ncentral = 0;
+	Msincentral = 0.0;
+	Mbincentral = 0.0;
 	central.N_sin = 0;
 	central.N_bin = 0;
-
-	central.M = 0.0;
-	central.M_sin = 0.0;
-	central.M_bin = 0.0;
-
-	central.v_rms = 0.0;
 	central.v_sin_rms = 0.0;
 	central.v_bin_rms = 0.0;
-
 	central.w2_ave = 0.0;
 	central.R2_ave = 0.0;
 	central.mR_ave = 0.0;
-
 	central.a_ave = 0.0;
 	central.a2_ave = 0.0;
 	central.ma_ave = 0.0;
-
-	for (i=1; i<=MIN(NUM_CENTRAL_STARS,clus.N_STAR); i++) {
-		central.N++;
+	for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
+	/* for (i=1; i<=MIN((long) N_core, clus.N_STAR); i++) { */
+		Ncentral++;
 		/* use only code units here, so always divide star[].m by clus.N_STAR */
-		central.M += star[i].m / ((double) clus.N_STAR);
-		central.v_rms += sqr(star[i].vr) + sqr(star[i].vt);
 		central.w2_ave += 2.0 * star[i].m / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
 
 		if (star[i].binind == 0) {
 			central.N_sin++;
-			central.M_sin += star[i].m / ((double) clus.N_STAR);
+			Msincentral += star[i].m / ((double) clus.N_STAR);
 			central.v_sin_rms += sqr(star[i].vr) + sqr(star[i].vt);
 			central.R2_ave += sqr(star[i].rad);
 			central.mR_ave += star[i].m / ((double) clus.N_STAR) * star[i].rad;
 		} else {
 			central.N_bin++;
-			central.M_bin += star[i].m / ((double) clus.N_STAR);
+			Mbincentral += star[i].m / ((double) clus.N_STAR);
 			central.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
 			central.a_ave += binary[star[i].binind].a;
 			central.a2_ave += sqr(binary[star[i].binind].a);
@@ -1084,19 +1146,15 @@ void central_calculate(void)
 		}
 	}
 	/* object quantities */
-	central.r = star[central.N + 1].r;
-	central.V = 4.0/3.0 * PI * cub(central.r);
-	central.n = ((double) central.N) / central.V;
-	central.rho = central.M / central.V;
-	central.m_ave = central.M / ((double) central.N);
-	central.v_rms = sqrt(central.v_rms / ((double) central.N));
-	central.w2_ave /= central.m_ave * ((double) central.N);
+	rcentral = star[Ncentral + 1].r;
+	Vcentral = 4.0/3.0 * PI * cub(rcentral);
+	central.w2_ave /= central.m_ave * ((double) Ncentral);
 	
 	/* single star quantities */
-	central.n_sin = ((double) central.N_sin) / central.V;
-	central.rho_sin = central.M_sin / central.V;
+	central.n_sin = ((double) central.N_sin) / Vcentral;
+	central.rho_sin = Msincentral / Vcentral;
 	if (central.N_sin != 0) {
-		central.m_sin_ave = central.M_sin / ((double) central.N_sin);
+		central.m_sin_ave = Msincentral / ((double) central.N_sin);
 		central.v_sin_rms = sqrt(central.v_sin_rms / ((double) central.N_sin));
 		central.R2_ave /= ((double) central.N_sin);
 		central.mR_ave /= ((double) central.N_sin);
@@ -1108,10 +1166,10 @@ void central_calculate(void)
 	}
 	
 	/* binary star quantities */
-	central.n_bin = ((double) central.N_bin) / central.V;
-	central.rho_bin = central.M_bin / central.V;
+	central.n_bin = ((double) central.N_bin) / Vcentral;
+	central.rho_bin = Mbincentral / Vcentral;
 	if (central.N_bin != 0) {
-		central.m_bin_ave = central.M_bin / ((double) central.N_bin);
+		central.m_bin_ave = Mbincentral / ((double) central.N_bin);
 		central.v_bin_rms = sqrt(central.v_bin_rms / ((double) central.N_bin));
 		central.a_ave /= ((double) central.N_bin);
 		central.a2_ave /= ((double) central.N_bin);
@@ -1125,16 +1183,10 @@ void central_calculate(void)
 	}
 
 	/* set global variables that are used throughout the code */
-	v_core = central.v_rms;
-	rho_core = central.rho;
 	rho_core_single = central.rho_sin;
 	rho_core_bin = central.rho_bin;
-	core_radius = sqrt(3.0 * sqr(central.v_rms) / (4.0 * PI * central.rho));
-	/* Kris Joshi's original expression was 
-	   N_core = 2.0 / 3.0 * PI * cub(core_radius) * (1.0 * clus.N_STAR) * central.rho; */
-	N_core = 4.0 / 3.0 * PI * cub(core_radius) * central.n;
-	/* core relaxation time, Spitzer (1987) eq. (2-62) */
-	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.M);
+
+	free(rhoj);
 }
 
 /* calculate cluster dynamical quantities */

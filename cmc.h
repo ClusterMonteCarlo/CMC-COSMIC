@@ -187,24 +187,20 @@ typedef struct{
 
 /* useful structure for central quantities */
 typedef struct{
-	long N; /* number of objects used to calculate central quantities */
+	double rho; /* central mass density */
+	double v_rms; /* rms object velocity */
+	double rc; /* core radius */
+	double m_ave; /* average object mass */
+	double n; /* number density of objects */
+	double rc_spitzer; /* Spitzer definition of core radius */
 	long N_sin; /* number of objects that are single */
 	long N_bin; /* number of objects that are binary */
-	double r; /* radius of central region */
-	double V; /* volume of central region */
-	double n; /* number density of objects */
 	double n_sin; /* single star number density */
 	double n_bin; /* binary star number density */
-	double M; /* total mass of central region */
-	double M_sin; /* mass in single stars */
-	double M_bin; /* mass in binaries */
-	double rho; /* central mass density */
 	double rho_sin; /* central single star mass density */
 	double rho_bin; /* central binary star mass density */
-	double m_ave; /* average object mass */
 	double m_sin_ave; /*average single star mass */
 	double m_bin_ave; /* average binary star mass */
-	double v_rms; /* rms object velocity */
 	double v_sin_rms; /* rms single star velocity */
 	double v_bin_rms; /* rms binary star velocity */
 	double w2_ave; /* average of 2*m*v^2 per average mass for all objects */
