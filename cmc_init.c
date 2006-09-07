@@ -120,6 +120,16 @@ void assign_binaries(void)
 	   the upper limit on binary semimajor axis */
 	calc_sigma_r();
 
+	/* calculate kT in cluster core */
+	/* calculate core temperature to get scale for binary semimajor axis distribution */
+	central_calculate();
+	kTcore = (1.0/3.0) * central.m_ave * sqr(central.v_rms);
+	/* kTcore = 0.0; */
+	/* for (i=1; i<=NUM_CENTRAL_STARS; i++) { */
+/* 		kTcore += (1.0/3.0) * (star[i].m/clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt)); */
+/* 	} */
+/* 	kTcore = kTcore/NUM_CENTRAL_STARS; */
+
 	/* assign binary parameters */
 	if (1) {
 		/* assign binaries physically */
@@ -136,7 +146,9 @@ void assign_binaries(void)
 				
 				/* choose a from a distribution uniform in 1/a from near contact to hard/soft boundary */
 				amin = 5.0 * (binary[j].rad1 + binary[j].rad2);
-				W = 4.0 * sigma_r(star[i].r) / sqrt(3.0 * PI);
+				/* W = 4.0 * sigma_r(star[i].r) / sqrt(3.0 * PI); */
+				/* use core velocity dispersion instead */
+				W = 4.0 * central.v_rms / sqrt(3.0 * PI);
 				vorb = XHS * W;
 				amax = star[i].m * madhoc / sqr(vorb);
 				binary[j].a = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
@@ -148,17 +160,9 @@ void assign_binaries(void)
 		}
 	} else {
 		/* assign binaries via kT description */
-		/* calculate core temperature to get scale for binary semimajor axis distribution */
-		/* FIXME: should update this to use central_calculate() */
-		kTcore = 0.0;
-		for (i=1; i<=NUM_CENTRAL_STARS; i++) {
-			kTcore += (1.0/3.0) * (star[i].m/clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
-		}
-		kTcore = kTcore/NUM_CENTRAL_STARS;
-		
 		/* set max and min binding energies */
-		Ebmin = 1.0 * kTcore;
-		Ebmax = 133.0 * kTcore;
+		Ebmin = 10.0 * kTcore;
+		Ebmax = 100.0 * kTcore;
 
 		for (i=1; i<=clus.N_STAR; i++) {
 			j = star[i].binind;
