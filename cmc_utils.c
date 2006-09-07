@@ -1050,7 +1050,7 @@ void central_calculate(void)
 	}
 	
 	/* DEBUG */
-	fprintf(stderr, "nave=%ld\n", nave);
+	/* fprintf(stderr, "nave=%ld\n", nave); */
 	/* DEBUG */
 
 	/* exit if not enough stars */
