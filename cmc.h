@@ -160,6 +160,9 @@ typedef struct{
 	int WIND_FACTOR;
 	int GAMMA;
 	int SUBZONING;
+	int BININITKT;
+	int BININITEBMIN;
+	int BININITEBMAX;
 } parsed_t;
 
 /* a struct containing the units used */

@@ -549,6 +549,15 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "GAMMA") == 0) {
 				sscanf(values, "%lf", &GAMMA);
 				parsed.GAMMA = 1;
+			} else if (strcmp(parameter_name, "BININITKT") == 0) {
+				sscanf(values, "%d", &BININITKT);
+				parsed.BININITKT = 1;
+			} else if (strcmp(parameter_name, "BININITEBMIN") == 0) {
+				sscanf(values, "%lf", &BININITEBMIN);
+				parsed.BININITEBMIN = 1;
+			} else if (strcmp(parameter_name, "BININITEBMAX") == 0) {
+				sscanf(values, "%lf", &BININITEBMAX);
+				parsed.BININITEBMAX = 1;
 			} else if (strcmp(parameter_name, "SUBZONING") == 0) {
 				sscanf(values, "%d", &SUBZONING);
 				if (SUBZONING != 0) {
@@ -603,6 +612,9 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(T_PRINT_STEP);
 	CHECK_PARSED(WIND_FACTOR);
 	CHECK_PARSED(GAMMA);
+	CHECK_PARSED(BININITKT);
+	CHECK_PARSED(BININITEBMIN);
+	CHECK_PARSED(BININITEBMAX);
 	
 #undef CHECK_PARSED
 

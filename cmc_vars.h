@@ -49,11 +49,11 @@ double MIN_LAGRANGIAN_RADIUS, DT_FACTOR;
 double MEGA_YEAR, SOLAR_MASS_DYN, METALLICITY, WIND_FACTOR;
 double MMIN;
 double MINIMUM_R;
-double GAMMA;
+double GAMMA, BININITEBMIN, BININITEBMAX;
 struct CenMa cenma;
 char MASS_PC[1000], MASS_BINS[1000], INPUT_FILE[1000];
 int BINSINGLE, BINBIN;
-int SUBZONING;
+int SUBZONING, BININITKT;
 /* binary stuff */
 long N_b, N_bb, N_bs;
 double M_b, E_b;

@@ -131,7 +131,7 @@ void assign_binaries(void)
 /* 	kTcore = kTcore/NUM_CENTRAL_STARS; */
 
 	/* assign binary parameters */
-	if (1) {
+	if (!BININITKT) {
 		/* assign binaries physically */
 		for (i=1; i<=clus.N_STAR; i++) {
 			j = star[i].binind;
@@ -161,8 +161,8 @@ void assign_binaries(void)
 	} else {
 		/* assign binaries via kT description */
 		/* set max and min binding energies */
-		Ebmin = 10.0 * kTcore;
-		Ebmax = 100.0 * kTcore;
+		Ebmin = BININITEBMIN * kTcore;
+		Ebmax = BININITEBMAX * kTcore;
 
 		for (i=1; i<=clus.N_STAR; i++) {
 			j = star[i].binind;
