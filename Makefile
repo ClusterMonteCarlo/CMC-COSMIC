@@ -169,12 +169,6 @@ $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 %.o: %.c $(NAME).h $(NAME)_vars.h Makefile
 	$(CC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
 
-#$(NAME).h: .version
-#
-#.version: 
-#	scripts/setver.sh `grep revision .svn/entries | cut -d \" -f 2` SVN
-#	touch .version
-
 # the condor executable
 $(CONDOREXE): $(COBJS) $(FEWBODYCOBJS)
 	$(CONDORCC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
@@ -201,7 +195,7 @@ install: $(ALLEXES) $(CONTRIBS)
 	cd ato-fits && $(MAKE) install
 
 clean:
-	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE) $(COBJS) $(FEWBODYCOBJS) $(CONDOREXE) .version
+	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE) $(COBJS) $(FEWBODYCOBJS) $(CONDOREXE)
 	cd ato-fits && $(MAKE) clean
 
 mrproper: clean
