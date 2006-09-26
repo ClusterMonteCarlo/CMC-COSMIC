@@ -15,7 +15,7 @@
 /* print the version */
 void print_version(FILE *stream)
 {
-	fprintf(stream, "** %s %s (%s) [%s] **\n", PRETTYNAME, VERSION, NICK, DATE);
+	fprintf(stream, "** %s %s (%s) [%s] **\n", CMCPRETTYNAME, CMCVERSION, CMCNICK, CMCDATE);
 }
 
 /* print the usage */

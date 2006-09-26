@@ -32,25 +32,31 @@ CC := ccache $(CC)
 endif
 
 ##############################################################################
+### set versioning
+##############################################################################
+VERSION = $(shell grep revision .svn/entries | cut -d \" -f 2)
+DATE = $(shell date)
+
+##############################################################################
 ### test for architecture to set CFLAGS and LIBFLAGS
 ##############################################################################
 UNAME = $(shell uname)
 
 ifeq ($(UNAME),Linux)
-CFLAGS = -Wall -O3
+CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
 else
 ifeq ($(UNAME),Darwin)
 CC = gcc
-#CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib
-CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib
+#CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm
 else
 ifeq ($(UNAME),AIX)
-CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib
+CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty -lm
 else
-CFLAGS = -Wall -O3
+CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
 endif
 endif
@@ -80,14 +86,14 @@ CHRISCFLAGS = -Wno-uninitialized -Wno-unused
 ### special hosts
 ##############################################################################
 ifeq ($(HOSTNAME),master.cluster)
-CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow
+CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS := $(LIBFLAGS) -static
 endif
 
 DOMNAME = $(shell hostname | cut -d . -f 2-)
 ifeq ($(DOMNAME),ncsa.uiuc.edu)
 CC = icc
-CFLAGS := -wd864,1188 -I $(HOME)/libs_et_al/include
+CFLAGS := -wd864,1188 -I $(HOME)/libs_et_al/include -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 # redefine libflags, leave out -lm to link with intel math library
 # turn of diagn. 864: extern inline function ... was referenced but not defined
 #           and 1188: floating-point value cannot be represented exactly

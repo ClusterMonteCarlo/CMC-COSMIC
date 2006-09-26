@@ -8,10 +8,10 @@
 #include "taus113-v2.h"
 #include "fewbody.h"
 
-#define VERSION "$Revision$"
-#define NICK "SVN"
-#define DATE "$Date$"
-#define PRETTYNAME "ClusterMonteCarlo"
+/* #define CMCVERSION "$Revision$" */
+/* #define CMCDATE "$Date$" */
+#define CMCNICK "SVN"
+#define CMCPRETTYNAME "ClusterMonteCarlo"
 
 /* toggle stellar evolution */
 /* #define SE */
