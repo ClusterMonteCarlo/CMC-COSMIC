@@ -8,9 +8,9 @@
 #include "taus113-v2.h"
 #include "fewbody.h"
 
-#define VERSION "299"
+#define VERSION "$Revision$"
 #define NICK "SVN"
-#define DATE "Tue Sep 26 14:07:19 CDT 2006"
+#define DATE "$Date$"
 #define PRETTYNAME "ClusterMonteCarlo"
 
 /* toggle stellar evolution */
