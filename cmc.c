@@ -1,5 +1,5 @@
 /* -*- linux-c -*- */
-
+/* trivial */
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
 
 		TotalTime = TotalTime + Dt;
 
-		setup_sub_time_step();
+		setup_sub_time_step(); //does not work
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
 
 #ifdef SE
 		if (STELLAR_EVOLUTION > 0) {
-			do_stellar_evolution();
+		  do_stellar_evolution(); /* may not work... */
 		}
 #endif
 
