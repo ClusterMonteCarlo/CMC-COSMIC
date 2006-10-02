@@ -338,9 +338,7 @@ void PrintFileOutput(void) {
 	/* also saves INITIAL snapshot (StepCount=0) */
 	if (TotalTime >= T_PRINT_STEP * StepCount) {
 		StepCount++;
-		if (SNAPSHOT_PERIOD) {
-			print_2Dsnapshot();
-		}
+		print_2Dsnapshot();
 	}
 }
 
