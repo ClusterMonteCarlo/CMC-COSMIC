@@ -86,7 +86,7 @@ CHRISCFLAGS = -Wno-uninitialized -Wno-unused
 ### special hosts
 ##############################################################################
 ifeq ($(HOSTNAME),master.cluster)
-CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow
 LIBFLAGS := $(LIBFLAGS) -static
 endif
 
