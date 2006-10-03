@@ -71,8 +71,8 @@ BININITEBMIN = 3.0
 BININITEBMAX = 100.0
 
 ### single--single collisions ###
-# physical collisions between stars
-# (does not seem to work)
+# Toggles single--single star collisions (0=off, 1=on).  Note that this also
+# controls collisions during binary interactions.
 SS_COLLISION = 0
 
 ### central black hole ###
