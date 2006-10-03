@@ -487,11 +487,11 @@ long CheckStop(struct tms tmsbufref) {
 	   Problem").  The number can get arbitrarily small if there is no three-body
 	   binary formation. */
 	if (STOPATCORECOLLAPSE) {
-		if (N_core <= 30.0) {
+		if (N_core <= 100.0) {
 			if (SNAPSHOT_PERIOD) {
 				print_2Dsnapshot();
 			}
-			diaprintf("N_core < 30.0; terminating.\n");
+			diaprintf("N_core < 100.0; terminating.\n");
 			return (1);
 		}
 	}
