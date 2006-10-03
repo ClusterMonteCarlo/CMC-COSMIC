@@ -35,7 +35,7 @@ endif
 ### set versioning
 ##############################################################################
 VERSION = $(shell grep revision .svn/entries | cut -d \" -f 2)
-DATE = $(shell date)
+DATE = $(shell date | sed -e 's|[[:space:]]|_|g')
 
 ##############################################################################
 ### test for architecture to set CFLAGS and LIBFLAGS
