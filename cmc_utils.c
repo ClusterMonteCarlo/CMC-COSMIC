@@ -481,13 +481,19 @@ long CheckStop(struct tms tmsbufref) {
 		return (1);
 	}
 
-
-	/* If inner-most Lagrangian radius is too small, then stop: */
-	if (mass_r[0] < MIN_LAGRANGIAN_RADIUS) {
-		if (SNAPSHOT_PERIOD)
-			print_2Dsnapshot();
-		diaprintf("Min Lagrange radius < %.6G ... Terminating.\n", MIN_LAGRANGIAN_RADIUS);
-		return (1);
+	/* Stop at core collapse, if requested.  Core collapsed is detected by looking at the
+	   number of core stars.  Anything less than ~100 represents core collapse, independent of 
+	   the number of initial cluster stars (see Heggie & Hut's "Gravitational Million Body
+	   Problem").  The number can get arbitrarily small if there is no three-body
+	   binary formation. */
+	if (STOPATCORECOLLAPSE) {
+		if (N_core <= 30.0) {
+			if (SNAPSHOT_PERIOD) {
+				print_2Dsnapshot();
+			}
+			diaprintf("N_core < 30.0; terminating.\n");
+			return (1);
+		}
 	}
 
 	/* Output some snapshots near core collapse 

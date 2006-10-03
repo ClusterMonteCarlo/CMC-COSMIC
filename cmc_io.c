@@ -490,9 +490,9 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "MINIMUM_R") == 0) {
 				sscanf(values, "%lf", &MINIMUM_R);
 				parsed.MINIMUM_R = 1;
-			} else if (strcmp(parameter_name, "MIN_LAGRANGIAN_RADIUS") == 0) {
-				sscanf(values, "%lf", &MIN_LAGRANGIAN_RADIUS);
-				parsed.MIN_LAGRANGIAN_RADIUS = 1;
+			} else if (strcmp(parameter_name, "STOPATCORECOLLAPSE") == 0) {
+				sscanf(values, "%d", &STOPATCORECOLLAPSE);
+				parsed.STOPATCORECOLLAPSE = 1;
 			} else if (strcmp(parameter_name, "N_BINARY") == 0) {
 				sscanf(values, "%ld", &clus.N_BINARY);
 				parsed.N_BINARY = 1;
@@ -593,7 +593,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(MEGA_YEAR);
 	CHECK_PARSED(METALLICITY);
 	CHECK_PARSED(MINIMUM_R);
-	CHECK_PARSED(MIN_LAGRANGIAN_RADIUS);
+	CHECK_PARSED(STOPATCORECOLLAPSE);
 	CHECK_PARSED(N_BINARY);
 	CHECK_PARSED(NUM_CENTRAL_STARS);
 	CHECK_PARSED(PERTURB);

@@ -199,8 +199,8 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"TERMINAL_ENERGY_DISPLACEMENT", &status);
 	fits_write_key(fptr, TDOUBLE, "RMAX", &(R_MAX), 
 			"R_MAX", &status);
-	fits_write_key(fptr, TDOUBLE, "MINLR", &(MIN_LAGRANGIAN_RADIUS), 
-			"MIN_LAGRANGIAN_RADIUS", &status);
+	/* fits_write_key(fptr, TDOUBLE, "MINLR", &(MIN_LAGRANGIAN_RADIUS), 
+	   "MIN_LAGRANGIAN_RADIUS", &status); */
 	fits_write_key(fptr, TDOUBLE, "DTFACT", &(DT_FACTOR), 
 	   "DT_FACTOR", &status); 
 	fits_write_key(fptr, TDOUBLE, "MEGAYR", &(MEGA_YEAR), 
@@ -367,7 +367,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	dvar[i++] = THETASEMAX;
 	dvar[i++] = TERMINAL_ENERGY_DISPLACEMENT;
 	dvar[i++] = R_MAX;
-	dvar[i++] = MIN_LAGRANGIAN_RADIUS;
+	/* dvar[i++] = MIN_LAGRANGIAN_RADIUS; */
 	dvar[i++] = DT_FACTOR;
 	dvar[i++] = MEGA_YEAR;
 	dvar[i++] = SOLAR_MASS_DYN;

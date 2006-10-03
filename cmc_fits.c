@@ -500,7 +500,6 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 		     								NULL, &status);
 	fits_read_key(fptr, TDOUBLE, "RMAX", &(R_MAX), NULL, &status);
 	printerror(status);
-	//fits_read_key(fptr, TDOUBLE, "MINLR", &(MIN_LAGRANGIAN_RADIUS), NULL, &status);
 	fits_read_key(fptr, TDOUBLE, "DTFACT", &(DT_FACTOR), NULL, &status);
 	fits_read_key(fptr, TDOUBLE, "MEGAYR", &(MEGA_YEAR), NULL, &status);
 	fits_read_key(fptr, TDOUBLE, "SMDYN", &(SOLAR_MASS_DYN), NULL, &status);
@@ -652,7 +651,6 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	THETASEMAX 	= dvar[i++];
 	TERMINAL_ENERGY_DISPLACEMENT = dvar[i++];
 	R_MAX 		= dvar[i++];
-	//MIN_LAGRANGIAN_RADIUS = dvar[i++];
 	i++;
 	DT_FACTOR 		= dvar[i++];
 	MEGA_YEAR 		= dvar[i++];
