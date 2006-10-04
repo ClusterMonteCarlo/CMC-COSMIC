@@ -127,9 +127,8 @@ MASS_PC 0.00001,0.00003,0.0001,0.0002,0.0003,0.0004,0.0005,0.0008,0.001,0.0012,0
 MASS_BINS = 0.1,1.0,10.0
 # Stop at core collapse (0=no, 1=yes)?
 STOPATCORECOLLAPSE = 1
-# Criterion used to determine core collapse, (i.e. the simulation is terminated
-# once the total energy has changed by TERMINAL_ENERGY_DISPLACEMENT. Btw. the
-# energy is in N-body units)
+# The simulation is terminated once the total energy has changed by 
+# TERMINAL_ENERGY_DISPLACEMENT. Btw. the energy is in N-body units.
 TERMINAL_ENERGY_DISPLACEMENT 0.5
 
 # Total number of stars + binaries.
