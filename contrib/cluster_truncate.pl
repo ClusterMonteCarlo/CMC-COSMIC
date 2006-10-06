@@ -13,11 +13,11 @@ $stoptime = $ARGV[1];
 
 # Store all suffixes in an array  
 
-@file_suffixes = (".avemass_lagrad.dat",".centmass.dat", ".dyn.dat", ".ke_rad_lagrad.dat", ".ke_tan_lagrad.dat", ".lagrad0-0.1-1.dat", ".lagrad1-1-10.dat", ".lagrad2-10-100.dat", ".lagrad3-100-1000.dat", ".lagrad.dat", ".nostar_lagrad.dat", ".relaxation.dat", ".rho_lagrad.dat", ".v2_rad_lagrad.dat", ".v2_tan_lagrad.dat");  
+@file_suffixes = (".avemass_lagrad.dat",".centmass.dat", ".dyn.dat", ".ke_rad_lagrad.dat", ".ke_tan_lagrad.dat", ".lagrad0-0.1-1.dat", ".lagrad1-1-10.dat", ".lagrad2-10-100.dat", ".lagrad3-100-1000.dat", ".lagrad.dat", ".nostar_lagrad.dat", ".relaxation.dat", ".rho_lagrad.dat", ".v2_rad_lagrad.dat", ".v2_tan_lagrad.dat", ".bin.dat");  
 
 # Shift loop - process each array element in turn
 
-for($i=1;$i<=15;$i++){
+for($i=1;$i<=16;$i++){
 $file_suffix = shift(@file_suffixes); 
 &truncate;
 }
@@ -56,13 +56,13 @@ if (!open(FP, $file_prefix.$file_suffix)){
 
 # Check if first entry is a number (with or without  exponent) If so, set to time
    
-    if (/^([0-9]*\.*[0-9]+([eE][-+][0-9]+)*)/ == 1){
+    if (/^([0-9]*\.*[0-9]+([eE][-+][0-9]+)*)/ == 1) {
         $time = $1;
-}
+    }
 
 # Check if time is within inputted time constraint. If so, print to file; otherwise do nothing
   
-	if($time <= $stoptime){
+	if(/^\#/ || $time <= $stoptime) {
             print OUT "$lines";
 	    $kept++; 
 	}
