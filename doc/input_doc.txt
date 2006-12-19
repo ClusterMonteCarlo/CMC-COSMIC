@@ -108,13 +108,14 @@ MODEL 1
 INPUT_SNAPSHOT_FILE kingw7100k.dat
 
 ### output settings ###
-#After how many time steps shall we write out diagnostic variables?
+# The period in the number of timesteps on which checkpoint (restart) files are written to disk.
 CHECKPOINT_PERIOD = 60
-#The maximum real (wall clock) time the simulation shall take.
+# The maximum real (wall clock) time the simulation can take, in seconds.
 MAX_WCLOCK_TIME = 10080
-# After how many time steps shall we dump the particle positions?
-SNAPSHOT_PERIOD = 0.0
-# Approximate snapshot timesteps ini absolute time.
+# The period in the number of timesteps on which snapshot files are written to disk.  This has to be non-zero
+# for snapshots to be written to disk.
+SNAPSHOT_PERIOD = 0
+# The approximate period in time (in code units) on which snapshot files are written to disk.
 T_PRINT_STEP 0.0
 # Max number of timesteps.
 T_MAX_COUNT 10000
