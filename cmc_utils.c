@@ -406,7 +406,7 @@ void RecomputeEnergy(void) {
 	}
 
 	Etotal.P *= 0.5;
-	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E/clus.N_STAR + Eescaped + Ebescaped + Eintescaped;
+	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
 }
 
 /* computes intermediate energies, and transfers "new" dynamical params to the standard variables */
@@ -631,7 +631,7 @@ void ComputeEnergy(void)
 	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
 	
 	Etotal.P *= 0.5;
-	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E/clus.N_STAR + Eescaped + Ebescaped + Eintescaped;
+	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
 
 	fprintf(stdout, "Time = %.8G   Tcount = %ld\n", TotalTime, tcount);
 	fprintf(stdout, "N = %ld, Total E = %.8G, Total Mass = %.8G, Virial ratio = %.8G\n",
@@ -686,7 +686,7 @@ long potential_calculate(void) {
 	clus.N_MAX = k - 1;
 
 	/* New total Mass; This IS correct for multiple components */
-	Mtotal = mprev/clus.N_STAR + cenma.m/clus.N_STAR;	
+	Mtotal = mprev * madhoc + cenma.m * madhoc;	
 
 	/* Compute new tidal radius using new Mtotal */
 
@@ -707,7 +707,7 @@ long potential_calculate(void) {
 	}
 
 	for (k = 1; k <= clus.N_MAX; k++){
-		star[k].phi -= cenma.m / clus.N_STAR / star[k].r;
+		star[k].phi -= cenma.m * madhoc / star[k].r;
 		if(isnan(star[k].phi)){
 			eprintf("NaN detected\n");
 			exit_cleanly(-1);
@@ -845,7 +845,7 @@ void comp_mass_percent(){
 	long int k, mcount;
 
 	/* Computing radii containing mass_pc[i] % of the mass */
-	mprev = cenma.m/clus.N_STAR;
+	mprev = cenma.m * madhoc;
 	for(mcount=0; mcount<MASS_PC_COUNT; mcount++){
 		if ( mprev/Mtotal > mass_pc[mcount] ) {
 			mass_r[mcount] = MINIMUM_R;

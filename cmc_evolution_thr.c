@@ -418,18 +418,20 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		 * ie. r < MINIMUM_R.
 		 * Add their mass to CentralMass */
 		//if (rmax < MINIMUM_R){
-		if (r<MINIMUM_R && rmin>0.3*rmax){
+		/* (r<MINIMUM_R && rmin>0.3*rmax){ */
+		MINIMUM_R = 2.0 * FB_CONST_G * cenma.m * units.mstar / fb_sqr(FB_CONST_C) / units.l;
+		if (r < MINIMUM_R) {
 #ifdef USE_THREADS
 			get_pos_dat->CMincr.m += star[j].m;
-			get_pos_dat->CMincr.E += (star[j].phi 
-				+ star[j].vr*star[j].vr	+ star[j].vt*star[j].vt ) 
-					/2.0 *star[j].m/clus.N_STAR;
+			get_pos_dat->CMincr.E += (2.0*star[j].phi + star[j].vr * star[j].vr + star[j].vt * star[j].vt) /
+				2.0 * star[j].m * madhoc;
 #else
 			cenma.m += star[j].m;
-			cenma.E += (star[j].phi + star[j].vr*star[j].vr
-				+ star[j].vt*star[j].vt ) / 2.0 *star[j].m/clus.N_STAR;
+			cenma.E += (2.0*star[j].phi + star[j].vr * star[j].vr + star[j].vt * star[j].vt) / 
+				2.0 * star[j].m * madhoc;
 #endif
 			destroy_obj(j);
+			MINIMUM_R = 2.0 * FB_CONST_G * cenma.m * units.mstar / fb_sqr(FB_CONST_C) / units.l;
 			continue;
 		}
 

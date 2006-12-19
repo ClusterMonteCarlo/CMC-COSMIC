@@ -267,11 +267,13 @@ void PrintFileOutput(void) {
 	}
 
 	/* information on the central BH */
+	/* print useful header */
+	if (tcount == 1) {
+		fprintf(centmass_file, "# Information on central black hole [code units unless otherwise noted]\n");
+		fprintf(centmass_file, "#1:t #2:cenma.m #3:Dt #4:rho_core #5:Etotal.tot #6:Etotal.K #7:Etotal.P\n");
+	}
 	fprintf(centmass_file, "%.9e %.9e %.9e %.9e %.9e %.9e %.9e\n",
-		TotalTime,
-		cenma.m/clus.N_STAR/Mtotal, 
-		Dt, rho_core,
-		Etotal.tot, Etotal.K, Etotal.P);
+		TotalTime, cenma.m * madhoc, Dt, rho_core, Etotal.tot, Etotal.K, Etotal.P);
 	
 	/* output Time,N_MAX,TotalE,TotalKE,TotalPE,Mtotal */
 	/* print useful header */
@@ -281,7 +283,7 @@ void PrintFileOutput(void) {
 	}
 	fprintf(dynfile, "%.8g %.8g %ld %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
 		TotalTime, Dt, tcount, clus.N_MAX, Mtotal, -2.0*Etotal.K/Etotal.P, N_core, core_radius, max_r, 
-		Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E/clus.N_STAR, Eescaped, Ebescaped, Eintescaped, 
+		Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped, 
 		Eoops, Etotal.tot+Eoops, clusdyn.rh, central.rho, central.rc_spitzer, central.v_rms);
 	
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
