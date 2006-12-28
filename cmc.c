@@ -141,24 +141,6 @@ int main(int argc, char *argv[])
 			ch2 = 1;
 		}
 #endif
-		/* DEBUG
-		for (i=0; i<N_STAR_DIM; i++) {
-			fprintf(stdout, "i=%ld m=%g rad=%g binind=%ld",
-				i, star[i].m * units.mstar / MSUN, star[i].rad * units.l / RSUN, star[i].binind);
-			if (star[i].binind) {
-				fprintf(stdout, " m1=%g m2=%g rad1=%g rad2=%g",
-					binary[star[i].binind].m1 * units.mstar / MSUN, binary[star[i].binind].m2 * units.mstar / MSUN,
-					binary[star[i].binind].rad1 * units.l / RSUN, binary[star[i].binind].rad2 * units.l / RSUN);
-			}
-			fprintf(stdout, "\n");
-		}
-		exit_cleanly(1);
-		DEBUG */
-
-		/*write stellar data from time to time */
-		/*if (((tcount-1) % 20 == 0) && (STELLAR_EVOLUTION > 0)){
-			write_stellar_data();
-		}*/
 
 		/* Check for END of simulation */
 		if (CheckStop(tmsbufref) != 0)

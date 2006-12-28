@@ -50,8 +50,8 @@ void print_2Dsnapshot(void)
 	}
 
 	/* print useful header */
-	gzprintf(snapfile, "# t=%.8g [code units]\n", TotalTime);
-	gzprintf(snapfile, "# id  m [MSUN]  r [code units]  vr [code units]  vt [code units]  E [code units]  J [code units]  binflag  m0 [MSUN]  m1 [MSUN]  id0  id1  a [AU]  e\n");
+	gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
+	gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN]\n");
 
 	/* then print data */
 	for (i=1; i<=clus.N_MAX; i++) {
@@ -59,14 +59,23 @@ void print_2Dsnapshot(void)
 			 star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, star[i].r, star[i].vr, star[i].vt, star[i].E, star[i].J);
 		if (star[i].binind) {
 			j = star[i].binind;
-			gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g\n", 
+			gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
 				 binary[j].m1 * (units.m / clus.N_STAR) / MSUN, binary[j].m2 * (units.m / clus.N_STAR) / MSUN, 
 				 binary[j].id1, binary[j].id2,
 				 binary[j].a * units.l / AU,
 				 binary[j].e);
 		} else {
-			gzprintf(snapfile, "0 0 0 0 0 0 0\n");	
+			gzprintf(snapfile, "0 0 0 0 0 0 0 ");	
 		}
+		
+#ifdef SE
+		if (star[i].binind == 0) {
+			gzprintf(snapfile, "%d %.8g ", star[i].k, star[i].lum);
+		} else {
+			gzprintf(snapfile, "0 0 ");
+		}
+#endif
+		gzprintf(snapfile, "\n");
 	}
 
 	gzclose(snapfile);
