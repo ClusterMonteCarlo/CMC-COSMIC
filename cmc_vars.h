@@ -78,6 +78,7 @@ star_t *star;
 double *mass_pc, *mass_r, *ave_mass_r, *densities_r, *no_star_r;
 double *ke_rad_r, *ke_tan_r, *v2_rad_r, *v2_tan_r;
 double *mass_bins, **multi_mass_r;
+int quiet;
 /* debugging */
 int debug;
 /* units */

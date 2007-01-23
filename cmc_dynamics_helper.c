@@ -74,15 +74,19 @@ void zero_binary(long j)
 
 void print_interaction_status(char status_text[])
 {
-	fprintf(stdout, " %s", status_text);
-	fflush(stdout);
+	gprintf(" %s", status_text);
+	if (!quiet) {
+		fflush(stdout);
+	}
 	fprintf(logfile, " %s", status_text);
 }
 
 void print_interaction_error(void)
 {
-	fprintf(stdout, "!");
-	fflush(stdout);
+	gprintf("!");
+	if (!quiet) {
+		fflush(stdout);
+	}
 	fprintf(logfile, "!");
 }
 

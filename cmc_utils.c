@@ -204,14 +204,14 @@ void set_velocities(void){
 				- star[i].Uoldrnew - Unewrnew;
 			vt = star[i].vtold * star[i].rOld / star[i].rnew;
 			if( vnew2 < vt*vt ) {
-//			printf("*** OOOPSSS, trouble...\n");
+//			wprintf("*** OOOPSSS, trouble...\n");
 				k++;
 				vr = 0.0;
-//			printf("% 7ld %11.4e %11.4e %11.4e\n" , 
+//			wprintf("% 7ld %11.4e %11.4e %11.4e\n" , 
 //					i, star[i].vtold, star[i].vrold, vold2);
-//			printf("        %11.4e %11.4e\n", 
+//			wprintf("        %11.4e %11.4e\n", 
 //					star[i].Uoldrold, Unewrold);
-//			printf("        %11.4e %11.4e %11.4e\n", 
+//			wprintf("        %11.4e %11.4e %11.4e\n", 
 //					star[i].Uoldrnew, Unewrnew, vnew2);
 				/* by setting vr to 0, we add this much energy 
 				   to the system */
@@ -247,7 +247,7 @@ void set_velocities(void){
 	Eoops += -Eexcess * madhoc;
 
 //	if(k>0){
-//		printf("** DAMN ! %ld out of %ld cases of TROUBLE!! **\n",
+//		wprintf("** DAMN ! %ld out of %ld cases of TROUBLE!! **\n",
 //				k, clus.N_MAX);
 //	}
 }
@@ -593,10 +593,10 @@ void ComputeEnergy2(void)
 		star[k].J = star[k].r * star[k].vt;
 	}
 	
-	fprintf(stdout, "Time = %.8G   Tcount = %ld\n", TotalTime, tcount);
-	fprintf(stdout, "N = %ld, Total E = %.8G, Total Mass = %.8G, Virial ratio = %.8G\n",
+	gprintf("Time = %.8G   Tcount = %ld\n", TotalTime, tcount);
+	gprintf("N = %ld, Total E = %.8G, Total Mass = %.8G, Virial ratio = %.8G\n",
 		clus.N_MAX, Etotal.tot, Mtotal, -2.0 * Etotal.K / Etotal.P);
-	fprintf(stdout, "Total KE = %.8G, Total PE = %.8G\n", Etotal.K, Etotal.P);
+	gprintf("Total KE = %.8G, Total PE = %.8G\n", Etotal.K, Etotal.P);
 }
 
 void ComputeEnergy(void)
@@ -633,10 +633,10 @@ void ComputeEnergy(void)
 	Etotal.P *= 0.5;
 	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
 
-	fprintf(stdout, "Time = %.8G   Tcount = %ld\n", TotalTime, tcount);
-	fprintf(stdout, "N = %ld, Total E = %.8G, Total Mass = %.8G, Virial ratio = %.8G\n",
+	gprintf("Time = %.8G   Tcount = %ld\n", TotalTime, tcount);
+	gprintf("N = %ld, Total E = %.8G, Total Mass = %.8G, Virial ratio = %.8G\n",
 		clus.N_MAX, Etotal.tot, Mtotal, -2.0 * Etotal.K / Etotal.P);
-	fprintf(stdout, "Total KE = %.8G, Total PE = %.8G\n", Etotal.K, Etotal.P);
+	gprintf("Total KE = %.8G, Total PE = %.8G\n", Etotal.K, Etotal.P);
 }
 
 /* Computing the potential at each star sorted by increasing 

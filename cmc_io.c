@@ -25,6 +25,7 @@ void print_usage(FILE *stream, char *argv[])
 	fprintf(stream, "  %s [options...] <input_file> <output_file_prefix>\n", argv[0]);
 	fprintf(stream, "\n");
 	fprintf(stream, "OPTIONS:\n");
+	fprintf(stream, "  -q --quiet   : do not print diagnostic info to stdout\n");
 	fprintf(stream, "  -d --debug   : turn on debugging\n");
 	fprintf(stream, "  -V --version : print version info\n");
 	fprintf(stream, "  -h --help    : display this help text\n");
@@ -134,36 +135,36 @@ void PrintLogOutput(void)
 		conc_param = (max_r / core_radius);
 	}
 
-	fprintf(stdout, "******************************************************************************\n");
+	gprintf("******************************************************************************\n");
 	fprintf(logfile, "******************************************************************************\n");
 
-	fprintf(stdout, "tcount=%ld TotalTime=%.16e Dt=%.16e\n", tcount, TotalTime, Dt);
+	gprintf("tcount=%ld TotalTime=%.16e Dt=%.16e\n", tcount, TotalTime, Dt);
 	fprintf(logfile, "tcount=%ld TotalTime=%.16e Dt=%.16e\n", tcount, TotalTime, Dt);
 
-	fprintf(stdout, "sub.count=%ld sub.FACTOR=%ld sub.N_MAX=%ld sub.rmax=%g\n", sub.count, sub.FACTOR, sub.N_MAX, sub.rmax);
+	gprintf("sub.count=%ld sub.FACTOR=%ld sub.N_MAX=%ld sub.rmax=%g\n", sub.count, sub.FACTOR, sub.N_MAX, sub.rmax);
 	fprintf(logfile, "sub.count=%ld sub.FACTOR=%ld sub.N_MAX=%ld sub.rmax=%g\n", sub.count, sub.FACTOR, sub.N_MAX, sub.rmax);
 	
-	fprintf(stdout, "Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
+	gprintf("Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
 	fprintf(logfile, "Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
 	
-	fprintf(stdout, "Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
+	gprintf("Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
 	fprintf(logfile, "Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
 	
-	fprintf(stdout, "TidalMassLoss=%g\n", TidalMassLoss);
+	gprintf("TidalMassLoss=%g\n", TidalMassLoss);
 	fprintf(logfile, "TidalMassLoss=%g\n", TidalMassLoss);
 	
-	fprintf(stdout, "core_radius=%g rho_core=%g v_core=%g Trc=%g conc_param=%g N_core=%g\n",
+	gprintf("core_radius=%g rho_core=%g v_core=%g Trc=%g conc_param=%g N_core=%g\n",
 		core_radius, rho_core, v_core, Trc, conc_param, N_core);
 	fprintf(logfile, "core_radius=%g rho_core=%g v_core=%g Trc=%g conc_param=%g N_core=%g\n",
 		core_radius, rho_core, v_core, Trc, conc_param, N_core);
 	
-	fprintf(stdout, "trh=%g rh=%g rh_single=%g rh_binary=%g\n", trh, rh, rh_single, rh_binary);
+	gprintf("trh=%g rh=%g rh_single=%g rh_binary=%g\n", trh, rh, rh_single, rh_binary);
 	fprintf(logfile, "trh=%g rh=%g rh_single=%g rh_binary=%g\n", trh, rh, rh_single, rh_binary);
 	
-	fprintf(stdout, "N_b=%ld M_b=%g E_b=%g\n", N_b, M_b/clus.N_STAR, E_b);
+	gprintf("N_b=%ld M_b=%g E_b=%g\n", N_b, M_b/clus.N_STAR, E_b);
 	fprintf(logfile, "N_b=%ld M_b=%g E_b=%g\n", N_b, M_b/clus.N_STAR, E_b);
 
-	fprintf(stdout, "******************************************************************************\n");
+	gprintf("******************************************************************************\n");
 	fprintf(logfile, "******************************************************************************\n");
 }
 
@@ -367,8 +368,9 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	int allparsed=1;
 	/* int *ip; */
 	FILE *in;
-	const char *short_opts = "dVh";
+	const char *short_opts = "qdVh";
 	const struct option long_opts[] = {
+		{"quiet", no_argument, NULL, 'q'},
 		{"debug", no_argument, NULL, 'd'},
 		{"version", no_argument, NULL, 'V'},
 		{"help", no_argument, NULL, 'h'},
@@ -376,6 +378,7 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	};
 	
 	/* DEFAULT PARAMETER VALUES */
+	quiet = 0;
 	debug = 0;
 	SUBZONING = 0;
 	NO_MASS_BINS = 0;
@@ -383,6 +386,9 @@ int parser(int argc, char *argv[], gsl_rng *r)
 	
 	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
 		switch (i) {
+		case 'q':
+			quiet = 1;
+			break;
 		case 'd':
 			debug = 1;
 			break;

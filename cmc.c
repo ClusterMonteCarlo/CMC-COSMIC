@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
 	/* set debugging before toggle_debugging can ever be called */
+	quiet = 0;
 	debug = 0;
 
 	/* Catch some signals */

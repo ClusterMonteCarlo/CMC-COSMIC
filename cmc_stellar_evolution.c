@@ -80,7 +80,7 @@ void stellar_evolution_init(void){
 	/* --  end  black_magic -- */
 	
 	if((fp0=fopen("error.dat","w"))==NULL) {    /* errors and warnings */
-		printf("error: can't open file fp0\n");
+		eprintf("can't open file fp0\n");
 		exit_cleanly(-2);
 	}
 
@@ -133,14 +133,14 @@ void do_stellar_evolution(void){
 	
 	tdesired = dynamic2stellar_time(TotalTime);
 //	if(star[1].tend > tdesired){
-//		printf(" PROBABLY NO  STELLAR EVOLUTION\n");
+//		wprintf(" PROBABLY NO  STELLAR EVOLUTION\n");
 //	} else {
-//		printf(" YES STELLAR EVOLUTION\n");
+//		wprintf(" YES STELLAR EVOLUTION\n");
 //	}
 	for(k=1; k<=clus.N_MAX; k++){
 		i = k;
 		if ((tdesired-star[i].tend) < 0.5*star[i].dt) continue;
-//		printf("Evolving star no:%8ld, mass = %e \r", 
+//		dprintf("Evolving star no:%8ld, mass = %e \r", 
 //				i, star[i].mass);
 		while (star[i].tend<tdesired) {
 			star[i].tbeg = star[i].tend;
@@ -155,7 +155,7 @@ void do_stellar_evolution(void){
 		}
 		star[i].m = stellar2dynamic_mass(star[i].mass);
 	}
-	printf("\n");
+	gprintf("\n");
 }
 
 void write_stellar_data(void){

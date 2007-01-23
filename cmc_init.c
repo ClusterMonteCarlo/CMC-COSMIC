@@ -80,9 +80,9 @@ void assign_binaries(void)
 		}
 	}
 	
-	fprintf(stdout, "Rescaling SOLAR_MASS_DYN from %g to", SOLAR_MASS_DYN);
+	gprintf("Rescaling SOLAR_MASS_DYN from %g to", SOLAR_MASS_DYN);
 	SOLAR_MASS_DYN /= Mtotnew;
-	fprintf(stdout, " %g since creating binaries increases total cluster mass.\n", SOLAR_MASS_DYN);
+	gprintf(" %g since creating binaries increases total cluster mass.\n", SOLAR_MASS_DYN);
 
 	/* reset units */
 	units_set();

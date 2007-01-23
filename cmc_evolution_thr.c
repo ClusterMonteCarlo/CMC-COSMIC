@@ -71,11 +71,6 @@ double GetTimeStep(gsl_rng *rng) {
 	/* debugging */
 	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs);
 
-	/* XXX very dangerous, should be removed! limitin Dt by hand!! XXX */
-//	if (Dt<5e-7){
-//	    printf("Dt limit hit! adjusting\n");
-//	    Dt = 5e-7;
-//	}
 	return (Dt);
 }
 
@@ -91,13 +86,11 @@ void sniff_stars(void) {
 	max_r = get_positions();
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 		
-	fprintf(stdout, 
-	   "sniff_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+	gprintf("sniff_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 		j, OldTidalMassLoss, DTidalMassLoss);
-	fprintf(logfile, 
-	   "sniff_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+	fprintf(logfile, "sniff_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 		j, OldTidalMassLoss, DTidalMassLoss);
-
+	
 	/* Iterate the removal of tidally stripped stars 
 	 * by reducing Rtidal */
 	do {
@@ -142,7 +135,7 @@ void sniff_stars(void) {
 		}
 		j++;
 		TidalMassLoss = TidalMassLoss + DTidalMassLoss;
-		fprintf(stdout, "sniff_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+		gprintf("sniff_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 			j, TidalMassLoss, DTidalMassLoss);
 		fprintf(logfile, "sniff_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 			j, TidalMassLoss, DTidalMassLoss);

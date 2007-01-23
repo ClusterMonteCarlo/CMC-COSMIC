@@ -376,7 +376,7 @@ void read_fits_file_data_new(fitsfile *fptr) {
 				}
 			}
 		}
-		printf(">>> newstarid is set to %ld\n", newstarid);
+		dprintf(">>> newstarid is set to %ld\n", newstarid);
 	}
 
 	

@@ -69,8 +69,10 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		N_LIMIT = sub.N_MAX;
 	}
 	
-	fprintf(stdout, "%s(): performing interactions:", __FUNCTION__);
-	fflush(stdout);
+	gprintf("%s(): performing interactions:", __FUNCTION__);
+	if (!quiet) {
+		fflush(stdout);
+	}
 	fprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
 	
 	/* the big loop, with limits chosen so that we omit the last star if it is not paired */
@@ -231,7 +233,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	fprintf(relaxationfile, "\n");
 
 	/* put newline on "...performing interactions..." line */
-	fprintf(stdout, "\n");
+	gprintf("\n");
 	fprintf(logfile, "\n");
 
 	/* break pathologically wide binaries */
