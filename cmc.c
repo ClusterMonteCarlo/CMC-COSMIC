@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
 
 #ifdef SE
 		if (STELLAR_EVOLUTION > 0) {
-		  do_stellar_evolution(); /* may not work... */
+			do_stellar_evolution(); /* may not work... */
 		}
 #endif
 
@@ -274,15 +274,15 @@ int main(int argc, char *argv[])
 	} /* End FOR (time step iteration loop) */
 
 	times(&tmsbuf);
-	fprintf(stderr, "Usr time = %.6e ", (double)
-	(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
-	fprintf(stderr, "Sys time = %.6e\n", (double)
-	(tmsbuf.tms_stime-tmsbufref.tms_stime)/sysconf(_SC_CLK_TCK));
-	fprintf(stderr, "Usr time (ch) = %.6e ", (double)
-	(tmsbuf.tms_cutime-tmsbufref.tms_cutime)/sysconf(_SC_CLK_TCK));
-	fprintf(stderr, "Sys time (ch)= %.6e seconds\n", (double)
-	(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
-
+	dprintf("Usr time = %.6e ", (double)
+		(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
+	dprintf("Sys time = %.6e\n", (double)
+		(tmsbuf.tms_stime-tmsbufref.tms_stime)/sysconf(_SC_CLK_TCK));
+	dprintf("Usr time (ch) = %.6e ", (double)
+		(tmsbuf.tms_cutime-tmsbufref.tms_cutime)/sysconf(_SC_CLK_TCK));
+	dprintf("Sys time (ch)= %.6e seconds\n", (double)
+		(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
+	
 	/* free RNG */
 	gsl_rng_free(rng);
 	
