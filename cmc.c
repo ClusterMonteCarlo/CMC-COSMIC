@@ -19,40 +19,27 @@ int main(int argc, char *argv[])
 	gsl_rng *rng;
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
-	/* set debugging before toggle_debugging can ever be called */
+	/* set some important global variables */
 	quiet = 0;
 	debug = 0;
+	ReadSnapshot = 0; /* this becomes 1 if a snapshot is used for restart */
+	newstarid = 0;
 
-	/* Catch some signals */
-	signal(SIGINT, exit_cleanly);
-	signal(SIGTERM, exit_cleanly);
-	signal(SIGQUIT, exit_cleanly);
-	signal(SIGUSR1, toggle_debugging);
-	
-	/* override GSL error handler */
-	gsl_set_error_handler(&sf_gsl_errhandler);
+	/* trap signals */
+	trap_sigs();
+
 	/* initialize GSL RNG */
 	gsl_rng_env_setup();
 	rng = gsl_rng_alloc(rng_type);
 	
-	ReadSnapshot = 0;	/* this becomes 1 if a snapshot is used for restart */
-
-	/* set other variables */
-	newstarid = 0;
-
-	/* parses input file, allocates memory, initializes some variables, 
-	 * and readies file I/O */
-	if (parser(argc, argv, rng) == 0) {
-		return 0;
-	}
+	/* parse input */
+	parser(argc, argv, rng);
 
 	/* Set up initial conditions, possibly from a previous snapshot */
 	/* ReadSnapshot is supposed to be set here if necessary         */
 	read_fits_file_data(INPUT_FILE);
 
-	if(!ReadSnapshot){
-		/* if the file read is snapshot the following is skipped 
-		 * since reading a snapshots sets appropiate values already */
+	if (!ReadSnapshot) {
 		TidalMassLoss = 0.0;
 		Etidal = 0.0;
 		N_bb = 0;			/* number of bin-bin interactions */
@@ -87,10 +74,13 @@ int main(int argc, char *argv[])
 
 		orbit_r = R_MAX;
 		potential_calculate();
+	}
+	
+	ComputeEnergy();
 
-		ComputeEnergy();
+	if (!ReadSnapshot) {
 		Etotal.ini = Etotal.tot;   /* Noting the total initial energy, in order to set termination energy. */
-
+		
 		Etotal.New = 0.0;
 		Eescaped = 0.0;
 		Jescaped = 0.0;
@@ -104,16 +94,12 @@ int main(int argc, char *argv[])
 		/* initialize stellar evolution things */
 #ifdef SE
 		if (STELLAR_EVOLUTION > 0) {
-			dprintf("Initialization for stellar evolution...\n");
 			stellar_evolution_init();
-			dprintf("\tDone.\n");
 		}
 #endif
 		
 		sub.count = 0;
 		update_vars();
-	} else {
-		ComputeEnergy2();
 	}
 	
 	times(&tmsbufref);
@@ -127,38 +113,16 @@ int main(int argc, char *argv[])
 	/* Printing Results for initial model */
 	print_results();
 	
-	/* take an initial snapshot, just for fun */
-//	if (CHECKPOINT_PERIOD) {
-//		chkpnt_fits(rng);
-//	}
-	
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
-	while (tcount<=500000) {
-#ifdef TRY1
-		static ch1=0, ch2=0;
-
-		if(ch2==0 && cenma.m>0){
-			ch2 = 1;
-		}
-#endif
-
-		/* Check for END of simulation */
-		if (CheckStop(tmsbufref) != 0)
-			break;
-
+	while (CheckStop(tmsbufref) == 0) {
 		/* calculate central quantities */
 		central_calculate();
 		
 		/* Get new time step */
 		Dt = GetTimeStep(rng);
-
-		/* Make sure stellar mass loss is not greater than 
-		 * 1% in the timestep */
-		/* FIXME add stuff here FIXME */
-
-		/* if tidal mass loss in previous time step is > 5% reduce 
-		   PREVIOUS timestep by 20% */
+		
+		/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
 		if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
 			diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
 			Dt = Prev_Dt * 0.8;
@@ -166,8 +130,8 @@ int main(int argc, char *argv[])
 			diaprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
 			Dt = Prev_Dt * 1.1;
 		}
-
-		TotalTime = TotalTime + Dt;
+		
+		TotalTime += Dt;
 
 		setup_sub_time_step(); //does not work
 
@@ -232,7 +196,6 @@ int main(int argc, char *argv[])
 		/* Sorting stars by radius. The 0th star at radius 0 
 		   and (N_STAR+1)th star at SF_INFINITY are already set earlier.
 		 */
-		//mqsort(star, 1, clus.N_MAX_NEW);
 		qsorts(star+1,clus.N_MAX_NEW);
 
 		potential_calculate();

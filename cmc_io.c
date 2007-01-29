@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <signal.h>
 #include <ctype.h>
 #include <string.h>
 #include <getopt.h>
@@ -357,7 +358,7 @@ void PrintFileOutput(void) {
 }
 
 /*** Parsing of Input Parameters / Memory allocation / File I/O ***/
-int parser(int argc, char *argv[], gsl_rng *r)
+void parser(int argc, char *argv[], gsl_rng *r)
 {
 	char inputfile[1024], outfile[1024], outfilemode[5];
 	char parameter_name[1024], values[1024], dummy[1024], line[2048];
@@ -821,8 +822,6 @@ int parser(int argc, char *argv[], gsl_rng *r)
 			exit(1);
 		}
 	}
-
-	return(1);
 }
 
 /* close buffers */
@@ -853,4 +852,17 @@ void close_buffers(void)
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		fclose(mlagradfile[i]);
 	}
+}
+
+/* trap signals */
+void trap_sigs(void)
+{
+	/* Catch some signals */
+	signal(SIGINT, exit_cleanly);
+	signal(SIGTERM, exit_cleanly);
+	signal(SIGQUIT, exit_cleanly);
+	signal(SIGUSR1, toggle_debugging);
+	
+	/* override GSL error handler */
+	gsl_set_error_handler(&sf_gsl_errhandler);
 }

@@ -243,7 +243,6 @@ void perturb_stars(double Dt);	/* take a time step (perturb E,J) */
 long FindZero_r(long x1, long x2, double r);
 long FindZero_Q(long j, long x1, long x2, double E, double J);
 void ComputeEnergy(void);
-void ComputeEnergy2(void);
 void PrintLogOutput(void);
 double GetTimeStep(gsl_rng *rng);
 long CheckStop(struct tms tmsbuf);
@@ -269,7 +268,7 @@ double bin_single_sigma(double y);
 
 void print_version(FILE *stream);
 void print_usage(FILE *stream, char *argv[]);
-int parser(int argc, char *argv[], gsl_rng *r);
+void parser(int argc, char *argv[], gsl_rng *r);
 void PrintFileOutput(void);
 
 /* Unmodified Numerical Recipes Routines */
@@ -345,6 +344,7 @@ void toggle_debugging(int signal);
 void exit_cleanly(int signal);
 void sf_gsl_errhandler(const char *reason, const char *file, int line, int gsl_errno);
 void close_buffers(void);
+void trap_sigs(void);
 void free_arrays(void);
 
 /* if we are using gcc, we can remove the annoying warning */
