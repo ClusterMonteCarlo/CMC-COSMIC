@@ -999,3 +999,31 @@ void calc_sigma_r(void)
 		sigma_array.sigma[si] = sigma;
 	}
 }
+
+/* void bh_rand_walk() */
+/* { */
+/* 	/\* simulate loss cone physics for central mass *\/ */
+/* 	for (ijk=1; ijk=2; ijk++) { */
+/* 		if (ijk == 1) { */
+/* 			ijk = k; */
+/* 		} else { */
+/* 			ijk = kp; */
+/* 		} */
+/* 		P_orb = calc_P_orb(); */
+/* 		n_orb = dt/P_orb; */
+/* 		deltabeta_orb = 1.0/sqrt(n_orb) * beta; */
+/* 		L2 = fb_sqr(beta); */
+/* 		while (L2 > 0.0) { */
+/* 			if (sqrt(fb_sqr(vcmx+wx)+fb_sqr(vcmy+wy)) <= vlc) { */
+/* 				cenma.M += star[ijk].m; */
+/* 				destroy_obj(ijk); */
+/* 				L2 = 0.0; */
+/* 			} else { */
+/* 				delta = MAX(deltabeta_orb, MIN(deltamax, deltasafe, sqrt(L2))); */
+/* 				dbeta = 2.0 * PI * rng_t113_dbl(); */
+/* 				get_new_w(); */
+/* 				L2 -= fb_sqrt(delta); */
+/* 			} */
+/* 		} */
+/* 	} */
+/* } */
