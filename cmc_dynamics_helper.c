@@ -1002,6 +1002,7 @@ void calc_sigma_r(void)
 
 /* void bh_rand_walk() */
 /* { */
+//    double w[3]
 /* 	/\* simulate loss cone physics for central mass *\/ */
 /* 	for (ijk=1; ijk=2; ijk++) { */
 /* 		if (ijk == 1) { */
@@ -1013,8 +1014,12 @@ void calc_sigma_r(void)
 /* 		n_orb = dt/P_orb; */
 /* 		deltabeta_orb = 1.0/sqrt(n_orb) * beta; */
 /* 		L2 = fb_sqr(beta); */
+//       Rdisr= pow(2.*cenma.m/star[ijk].m, 1./3.)*star[ijk].r;
+//       Jlc= 2.*FB_GRAV_CONST*cenma.m*Rdisr;
+//       vlc= Jlc/Rdisr;
+//       get_3d_velocities(w, star[ijk].vr, star[ijk].vt)
 /* 		while (L2 > 0.0) { */
-/* 			if (sqrt(fb_sqr(vcmx+wx)+fb_sqr(vcmy+wy)) <= vlc) { */
+/* 			if (sqrt(fb_sqr(wx)+fb_sqr(wy)) <= vlc) { */
 /* 				cenma.M += star[ijk].m; */
 /* 				destroy_obj(ijk); */
 /* 				L2 = 0.0; */
@@ -1027,3 +1032,13 @@ void calc_sigma_r(void)
 /* 		} */
 /* 	} */
 /* } */
+
+void get_3d_velocities(double *w, double vr) {
+   double phi
+
+   phi= rng_t113_dbl()*2.*FB_CONST_PI;
+   w[0]= vt* cos(phi);
+   w[1]= vt* sin(phi);
+   w[2]= vr;
+};
+
