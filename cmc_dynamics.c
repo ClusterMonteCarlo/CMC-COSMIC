@@ -218,6 +218,10 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
 			set_star_EJ(kp);
+
+			/* check to see whether stars should be eaten by central BH */
+			/* bh_loss_cone(k, beta, dt, ...); */
+                        /* bh_loss_cone(kp, beta, dt, ...); */
 		}
 	}
 	

@@ -6,6 +6,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <gsl/gsl_integration.h>
 #include "cmc.h"
 #include "cmc_vars.h"
 
@@ -1076,3 +1077,39 @@ double check_angle_w_w_new(double *w, double *w_new, double delta) {
    return(angle-delta);
 };
 
+/* calculate star's radial orbital period */
+double calc_P_orb(long index)
+{
+	double E, J, Porb, error;
+	orbit_rs_t orbit_rs;
+	calc_p_orb_params_t params;
+	gsl_integration_workspace * w = gsl_integration_workspace_alloc(1000);
+	gsl_function F;
+
+	E = star[index].E + PHI_S(star[index].r, index);
+	J = star[index].J;
+	
+	orbit_rs = calc_orbit_rs(index, E, J);
+	
+	if (orbit_rs.circular_flag == 1) {
+		return(2.0 * PI * star[index].r / star[index].vt);
+	} else {
+		params.E = E;
+		params.J = J;
+		params.index = index;
+
+		F.function = &calc_p_orb_f;
+		F.params = &params;
+		
+		gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1e-6, 1000,
+				     w, &Porb, &error);
+		return(Porb);
+	}
+}
+
+/* integrand for calc_P_orb */
+double calc_p_orb_f(double x, void *params) {
+	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
+	return(2.0 / sqrt(2.0 * myparams.E - myparams.J * myparams.J / (x*x) - 
+			  2.0 * (potential(x) + PHI_S(x, myparams.index))));
+}

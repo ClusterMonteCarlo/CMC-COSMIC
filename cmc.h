@@ -236,6 +236,13 @@ typedef struct{
 	int circular_flag;
 } orbit_rs_t;
 
+/* parameters for calc_p_orb function */
+typedef struct{
+	double E;
+	double J;
+	long index;
+} calc_p_orb_params_t;
+
 /********************** Function Declarations ************************/
 inline double sqr(double x);
 inline double cub(double x);
@@ -347,6 +354,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 double simul_relax(gsl_rng *rng);
 void break_wide_binaries(void);
 void calc_sigma_r(void);
+double calc_P_orb(long index);
+double calc_p_orb_f(double x, void *params);
 double sigma_r(double r);
 
 /* signal/GSL error handling stuff */
