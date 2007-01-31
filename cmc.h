@@ -227,6 +227,15 @@ typedef struct{
 	double *sigma;
 } sigma_t;
 
+/* parameters for orbit */
+typedef struct{
+	double rp;
+	double ra;
+	double dQdrp;
+	double dQdra;
+	int circular_flag;
+} orbit_rs_t;
+
 /********************** Function Declarations ************************/
 inline double sqr(double x);
 inline double cub(double x);
@@ -238,6 +247,7 @@ double potential(double r);	       /* get potential using star.phi */
 long potential_calculate(void);	/* calculate potential at star locations in star.phi */
 void comp_mass_percent(void);
 void comp_multi_mass_percent(void);
+orbit_rs_t calc_orbit_rs(long si, double E, double J);
 double get_positions(void);	/* get positions and velocities */
 void perturb_stars(double Dt);	/* take a time step (perturb E,J) */
 long FindZero_r(long x1, long x2, double r);

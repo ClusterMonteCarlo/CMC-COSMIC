@@ -15,6 +15,129 @@
 #include <time.h>
 #include "cmc.h"
 #include "cmc_vars.h"
+ 
+/* function to calculate r_p, r_a, dQ/dr|_r_p, and dQ/dr|_r_a for an orbit */
+orbit_rs_t calc_orbit_rs(long si, double E, double J)
+{
+	orbit_rs_t orbit_rs;
+	long ktemp=si, kmin, kmax, i, i1;
+	double Qtemp, rk, rk1, Uk, Uk1, a, b, rmin, dQdr_min, rmax, dQdr_max;
+
+	/* for newly created stars, position si is not ordered, so do simple linear search */
+	if (si > clus.N_MAX) {
+		ktemp = 0;
+		while (ktemp < clus.N_MAX && star[ktemp].r < star[si].rnew) {
+			ktemp++;
+		}
+	}
+	
+	/* Q(si) is positive for a standard object that has undergone relaxation 
+	   (see Joshi, Rasio, & Portegies Zwart 2000).  However, it can be negative
+	   for newly created stars.  We ignore this for now and hope for the best. */
+	Qtemp = function_Q(si, ktemp, E, J);
+	
+	/* check for nearly circular orbit and do linear search */
+	if (Qtemp < 0.0) {
+		ktemp = -1;
+		do {
+			ktemp++;
+			Qtemp = function_Q(si, ktemp, E, J);
+		} while (Qtemp < 0.0 && ktemp <= clus.N_MAX);		
+		if (ktemp >= clus.N_MAX) {
+			dprintf("linear search failed\n");
+			ktemp = si;
+		}
+	}
+	
+	if (Qtemp <= 0) { /* possibly a circular orbit */
+		while (function_Q(si, ktemp + 1, E, J) > function_Q(si, ktemp, E, J) 
+		       && function_Q(si, ktemp, E, J) < 0 && ktemp <= clus.N_MAX) {
+			ktemp++;
+		}
+		while (function_Q(si, ktemp - 1, E, J) > function_Q(si, ktemp, E, J) 
+		       && function_Q(si, ktemp, E, J) < 0 && ktemp >= 1) {
+			ktemp--;
+		}
+		
+		/* check to see if star is on almost circular orbit */
+		if (function_Q(si, ktemp, E, J) < 0) {
+			dprintf("circular orbit found: si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
+				si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E);
+		}
+		
+		orbit_rs.rp = star[si].r;
+		orbit_rs.ra = star[si].r;
+		orbit_rs.dQdrp = 0.0;
+		orbit_rs.dQdra = 0.0;
+		orbit_rs.circular_flag = 1;
+	} else {
+		kmin = FindZero_Q(si, 0, ktemp, E, J);
+		
+		while (function_Q(si, kmin, E, J) > 0 && kmin > 0)
+			kmin--;
+		while (function_Q(si, kmin + 1, E, J) < 0 
+		       && kmin + 1 < ktemp)
+			kmin++;
+		
+		i = kmin;
+		i1 = kmin + 1;
+		rk = star[i].r;
+		rk1 = star[i1].r;
+		Uk = star[i].phi + PHI_S(rk, si);
+		Uk1 = star[i1].phi + PHI_S(rk1, si);
+		
+		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
+		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
+		
+		rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
+		dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
+		
+		/*  For rmax- Look for rk, rk1 such that 
+		 *  Q(rk) > 0 > Q(rk1) */
+		
+		kmax = FindZero_Q(si, ktemp, clus.N_MAX + 1, E, J);
+		
+		while (function_Q(si, kmax, E, J) < 0 && kmax > ktemp)
+			kmax--;
+		while (kmax + 1 < clus.N_MAX
+		       && function_Q(si, kmax + 1, E, J) > 0 )
+			kmax++;
+		
+		i = kmax;
+		i1 = kmax + 1;
+		rk = star[i].r;
+		rk1 = star[i1].r;
+		Uk = star[i].phi + PHI_S(rk, si);
+		Uk1 = star[i1].phi  + PHI_S(rk1, si);
+		
+		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
+		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
+		
+		rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
+		dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
+		
+		/* another case of a circular orbit */
+		if (rmin > rmax) {
+			eprintf("error: rmin>rmax:  si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
+				si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E);
+			eprintf("\trmin=%g rmax=%g kmin=%ld kmax=%ld\n", rmin, rmax, kmin, kmax);
+
+			orbit_rs.rp = star[si].r;
+			orbit_rs.ra = star[si].r;
+			orbit_rs.dQdrp = 0.0;
+			orbit_rs.dQdra = 0.0;
+			orbit_rs.circular_flag = 1;
+		} else {
+			orbit_rs.rp = rmin;
+			orbit_rs.ra = rmax;
+			orbit_rs.dQdrp = dQdr_min;
+			orbit_rs.dQdra = dQdr_max;
+			orbit_rs.circular_flag = 0;	
+		}
+	}
+	
+	return(orbit_rs);
+}
 
 double GetTimeStep(gsl_rng *rng) {
 	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs;
@@ -198,12 +321,13 @@ void *get_positions_loop(void *get_pos_dat_arg){
 #else
 void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
-	long i, j, k, kmin, kmax, kk, ktemp, i1, si;
-	double r=0.0, vr=0.0, vt, rk, rk1, a, b, rmin, rmax, E, J, Uk, Uk1;
+	long j, k, si;
+	double r=0.0, vr=0.0, vt, rmin, rmax, E, J;
 	double g1, g2, F, s0, g0, dQdr_min, dQdr_max, drds, max_rad, pot;
-	double Qtemp, X=0.0, Q;	/* Max value of Q found. Should be > 0 */
+	double X=0.0, Q;	/* Max value of Q found. Should be > 0 */
 	long N_LIMIT;
 	double phi_rtidal, phi_zero;
+	orbit_rs_t orbit_rs;
 
 	N_LIMIT = get_pos_dat->N_LIMIT;
 	phi_rtidal = get_pos_dat->phi_rtidal;
@@ -238,116 +362,21 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
 		}
+
+		/* calculate peri- and apocenter of orbit */
+		orbit_rs = calc_orbit_rs(j, E, J);
 		
-		/* Q(si) must be positive (selected that way in last time step!) */
-		ktemp = si;
-
-		/* for newly created stars, position si is not ordered, so search */
-		if (si > clus.N_MAX) {
-			/* dprintf("doing stupid linear search due to newly created star: si=%ld id=%ld m=%g E=%g\n", 
-			   si, star[si].id, star[si].m, star[si].E); */
-			ktemp = 0;
-			while (ktemp < clus.N_MAX && star[ktemp].r < star[j].rnew) {
-				ktemp++;
-			}
-		}
-
-		/* this is not right for newly created stars; can be negative since it just uses
-		   the position at ktemp */
-		Qtemp = function_Q(j, ktemp, E, J);
-
-		if (Qtemp < 0.0) {
-			/* dprintf("doing linear search for nearly circular orbit.\n"); */
-			ktemp = -1;
-			do {
-				ktemp++;
-				Qtemp = function_Q(j, ktemp, E, J);
-			} while (Qtemp < 0.0 && ktemp <= clus.N_MAX);		
-			/* dprintf("ktemp=%ld\n", ktemp); */
-			if (ktemp >= clus.N_MAX) {
-				dprintf("linear search failed\n");
-				ktemp = si;
-			}
-		}
-
-		kk = ktemp;
-		if (Qtemp <= 0) { /* possibly a circular orbit */
-			while (function_Q(j, kk + 1, E, J) > function_Q(j, kk, E, J) 
-			    && function_Q(j, kk, E, J) < 0 && kk <= clus.N_MAX) {
-				kk++;
-			}
-			while (function_Q(j, kk - 1, E, J) > function_Q(j, kk, E, J) 
-			    && function_Q(j, kk, E, J) < 0 && kk >= 1) {
-				kk--;
-			}
-
-			ktemp = kk;
-
-			if (function_Q(j, ktemp, E, J) < 0) {
-				/* star is on an almost circular orbit... 
-				 * so rmin = rmax (approx) */
-				star[j].rnew = star[j].r;
-				star[j].vrnew = star[j].vr;
-				star[j].vtnew = star[j].vt;
-				dprintf("circular orbit found: si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
-					si, star[j].r, star[j].vr, star[j].vt, star[j].J, star[j].E);
-			}
+		/* skip the rest if the star is on a nearly circular orbit */
+		if (orbit_rs.circular_flag == 1) {
+			star[si].rnew = star[si].r;
+			star[si].vrnew = star[si].vr;
+			star[si].vtnew = star[si].vt;
 			continue;
-		}
-
-		kmin = FindZero_Q(j, 0, ktemp, E, J);
-		
-		while (function_Q(j, kmin, E, J) > 0 && kmin > 0)
-			kmin--;
-		while (function_Q(j, kmin + 1, E, J) < 0 
-				&& kmin + 1 < ktemp)
-			kmin++;
-		
-		i = kmin;
-		i1 = kmin + 1;
-		rk = star[i].r;
-		rk1 = star[i1].r;
-		Uk = star[i].phi + PHI_S(rk, j);
-		Uk1 = star[i1].phi + PHI_S(rk1, j);
-
-		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
-		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
-
-		rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
-		dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
-
-		/*  For rmax- Look for rk, rk1 such that 
-		 *  Q(rk) > 0 > Q(rk1) */
-
-		kmax = FindZero_Q(j, ktemp, clus.N_MAX + 1, E, J);
-
-		while (function_Q(j, kmax, E, J) < 0 && kmax > ktemp)
-			kmax--;
-		while (kmax + 1 < clus.N_MAX
-				&& function_Q(j, kmax + 1, E, J) > 0 )
-			kmax++;
-
-		i = kmax;
-		i1 = kmax + 1;
-		rk = star[i].r;
-		rk1 = star[i1].r;
-		Uk = star[i].phi + PHI_S(rk, j);
-		Uk1 = star[i1].phi  + PHI_S(rk1, j);
-
-		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
-		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
-
-		rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
-		dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
-
-		if (rmin > rmax) {
-			star[j].rnew = star[j].r;
-			star[j].vrnew = star[j].vr;
-			star[j].vtnew = star[j].vt;
-			eprintf("error: rmin>rmax:  si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
-				si, star[j].r, star[j].vr, star[j].vt, star[j].J, star[j].E);
-			eprintf("\trmin=%g rmax=%g kmin=%ld kmax=%ld\n", rmin, rmax, kmin, kmax);
-			continue;
+		} else {
+			rmin = orbit_rs.rp;
+			rmax = orbit_rs.ra;
+			dQdr_min = orbit_rs.dQdrp;
+			dQdr_max = orbit_rs.dQdra;
 		}
 
 		/* Check for rmax > R_MAX (tidal radius) */
@@ -367,14 +396,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #else
 			X = rng_t113_dbl();
 #endif
-			/* Stodolkiewicz's method to prevent very circular orbits. 
-			   Note that, 1.2 in F = 1.2 * ...  may still be
-			   inadequate, and Marc has a better but more complicated
-			   method for that problem. What's below helps with energy
-			   conservation more than anything else. */
-			/* if(X>0.95) X=0.97; */
-			/* if(X<0.05) X=0.03; */
-
 			s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
 #ifdef USE_THREADS
 			g0 = F * gsl_rng_uniform(thr_rng); /* random  0 < g0 < F */
@@ -448,7 +469,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		if (r > max_rad)
 			max_rad = r;
-	}/* Next si */
+	} /* Next si */
 	get_pos_dat->max_rad = max_rad;
 #ifdef USE_THREADS
 	if(get_pos_dat->taskid>0) 
@@ -460,7 +481,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 double get_positions(){
 #ifdef USE_THREADS
 	pthread_t threads[NUM_THREADS];
-      pthread_attr_t attr;
+	pthread_attr_t attr;
 	int rc, t;
 	struct get_pos_str *get_positions_data_array;
 #endif
@@ -470,7 +491,7 @@ double get_positions(){
 
 #ifdef USE_THREADS
 	/* Initialize and set thread detached attribute */
-      pthread_attr_init(&attr);
+	pthread_attr_init(&attr);
 	get_positions_data_array = malloc(NUM_THREADS*sizeof(struct get_pos_str));
 #endif
 
