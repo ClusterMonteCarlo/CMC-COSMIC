@@ -1000,17 +1000,19 @@ void calc_sigma_r(void)
 	}
 }
 
-/* void bh_rand_walk() */
+/* void bh_rand_walk(double beta, int k, int kp) */
 /* { */
+/*    This is the random walk procedure as outlined by Freitag&Benz (2002).
+ *    Change of notation: beta here is theta in the paper.
 //    double w[3]
 /* 	/\* simulate loss cone physics for central mass *\/ */
-/* 	for (ijk=1; ijk=2; ijk++) { */
+/* 	for (ijk=1; ijk<=2; ijk++) { */
 /* 		if (ijk == 1) { */
 /* 			ijk = k; */
 /* 		} else { */
 /* 			ijk = kp; */
 /* 		} */
-/* 		P_orb = calc_P_orb(); */
+/* 		P_orb = calc_P_orb(ijk); */
 /* 		n_orb = dt/P_orb; */
 /* 		deltabeta_orb = 1.0/sqrt(n_orb) * beta; */
 /* 		L2 = fb_sqr(beta); */
@@ -1019,26 +1021,58 @@ void calc_sigma_r(void)
 //       vlc= Jlc/Rdisr;
 //       get_3d_velocities(w, star[ijk].vr, star[ijk].vt)
 /* 		while (L2 > 0.0) { */
-/* 			if (sqrt(fb_sqr(wx)+fb_sqr(wy)) <= vlc) { */
+/* 			if (sqrt(fb_sqr(w[0])+fb_sqr(w[1])) <= vlc) { */
 /* 				cenma.M += star[ijk].m; */
 /* 				destroy_obj(ijk); */
 /* 				L2 = 0.0; */
 /* 			} else { */
+//             deltamax= 0.1*FB_CONST_PI;
+//             deltasafe= CSAFE*(star[ijk].vt-vlc)/sqrt(vt*vt+vr*vr);
 /* 				delta = MAX(deltabeta_orb, MIN(deltamax, deltasafe, sqrt(L2))); */
 /* 				dbeta = 2.0 * PI * rng_t113_dbl(); */
-/* 				get_new_w(); */
-/* 				L2 -= fb_sqrt(delta); */
+/* 				do_random_step(w, dbeta, delta); */
+/* 				L2 -= fb_sqr(delta); */
 /* 			} */
 /* 		} */
 /* 	} */
 /* } */
 
-void get_3d_velocities(double *w, double vr) {
-   double phi
+void get_3d_velocities(double *w, double vr, double vt) {
+   double phi;
 
    phi= rng_t113_dbl()*2.*FB_CONST_PI;
    w[0]= vt* cos(phi);
    w[1]= vt* sin(phi);
    w[2]= vr;
+};
+
+/* here the notation of Freitag & Benz (2002) is used */
+void do_random_step(double *w, double beta, double delta) {
+   double theta, phi, w_mag, new_w_dir[3];
+   double a; /* this is a variable to store an intermediate result*/ 
+
+   /* calculate direction of w*/
+   w_mag= sqrt(fb_sqr(w[0])+ fb_sqr(w[1])+ fb_sqr(w[2]));
+   theta= acos(w[2]/w_mag);
+   phi= atan2(w[1], w[0]);
+   
+   /* rotate new vector (w_mag, beta, delta) into the direction of w */
+   a= cos(theta)* sin(beta)* sin(delta)+ sin(theta)* cos(delta);
+   new_w_dir[0]= sin(phi)* cos(beta) * sin(delta) + cos(phi)* a;
+   new_w_dir[1]= -cos(phi)* cos(beta)* sin(delta) + sin(phi)* a;
+   new_w_dir[2]= -sin(theta)* sin(beta)* sin(delta) + cos(theta)* cos(delta);
+
+   w[0]= w_mag* new_w_dir[0];
+   w[1]= w_mag* new_w_dir[1];
+   w[2]= w_mag* new_w_dir[2];
+};
+
+double check_angle_w_w_new(double *w, double *w_new, double delta) {
+   /* calculate the angle between w and w_new and compare to deltat */
+   double angle;
+
+   angle=acos(w[0]*w_new[0]+w[1]*w_new[1]+w[2]*w_new[2]);
+
+   return(angle-delta);
 };
 
