@@ -1001,39 +1001,42 @@ void calc_sigma_r(void)
 	}
 }
 
- void bh_rand_walk(double beta, double dt, int k) 
+ void bh_rand_walk(double beta, double dt, long k)
  { 
     /*This is the random walk procedure as outlined by Freitag&Benz (2002).
     Change of notation: beta here is theta in the paper. */
-    double w[3], n_orb, P_orb, deltabeta_orb, L2, Rdisr, Jlc, vlc
-    double daltamax, deltasafe, delta, dbeta, dt
+    double w[3], n_orb, P_orb, deltabeta_orb, L2, Rdisr, Jlc, vlc;
+    double deltamax, deltasafe, delta, dbeta;
+    double vt, vr;
+    long ijk;
 
  	/* simulate loss cone physics for central mass */
       ijk = k; 
+      vt= star[ijk].vt; vr= star[ijk].vr;
  		P_orb = calc_P_orb(ijk); 
  		n_orb = dt/P_orb; 
  		deltabeta_orb = 1.0/sqrt(n_orb) * beta; 
  		L2 = fb_sqr(beta); 
       Rdisr= pow(2.*cenma.m/star[ijk].m, 1./3.)*star[ijk].rad;
-      Jlc= sqrt(2.*cenma.m*Rdisr);
+      Jlc= sqrt(2.*cenma.m*madhoc*Rdisr);
       vlc= Jlc/Rdisr;
-      get_3d_velocities(w, star[ijk].vr, star[ijk].vt)
+      get_3d_velocities(w, vr, vt);
  		while (L2 > 0.0) { 
  			if (sqrt(fb_sqr(w[0])+fb_sqr(w[1])) <= vlc) { 
- 				cenma.M += star[ijk].m; 
+ 				cenma.m += star[ijk].m; 
  				destroy_obj(ijk);
  				L2 = 0.0; 
  			} else { 
             deltamax= 0.1*FB_CONST_PI;
-            deltasafe= CSAFE*(star[ijk].vt-vlc)/sqrt(vt*vt+vr*vr);
- 				delta = MAX(deltabeta_orb, MIN(deltamax, deltasafe, sqrt(L2))); 
+            deltasafe= CSAFE*(vt-vlc)/sqrt(vt*vt+vr*vr);
+ 				delta = MAX(deltabeta_orb, MIN(deltamax, MIN(deltasafe, sqrt(L2)))); 
  				dbeta = 2.0 * PI * rng_t113_dbl(); 
  				do_random_step(w, dbeta, delta); 
  				L2 -= fb_sqr(delta); 
  			} 
- 		} 
- 	} 
- } 
+ 		}; 
+  }; 
+ 
 
 void get_3d_velocities(double *w, double vr, double vt) {
    double phi;

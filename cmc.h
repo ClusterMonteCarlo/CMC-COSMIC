@@ -46,6 +46,9 @@
 #define XBB 2.0
 /* hard soft boundary XHS=vorb/W */
 #define XHS 0.7
+/* safety factor used in the black hole accretion routine */
+/* by Freitag & Benz (2002) */
+#define CSAFE 0.2
 
 /* binaries */
 typedef struct{
@@ -146,6 +149,7 @@ typedef struct{
 	int N_BINARY;
 	int NUM_CENTRAL_STARS;
 	int PERTURB;
+	int MONITOR_COLL;
 	int RELAXATION;
 	int THETASEMAX;
 	int R_MAX;
@@ -259,6 +263,7 @@ double get_positions(void);	/* get positions and velocities */
 void perturb_stars(double Dt);	/* take a time step (perturb E,J) */
 long FindZero_r(long x1, long x2, double r);
 long FindZero_Q(long j, long x1, long x2, double E, double J);
+double potentialDifference(int particleIndex);
 void ComputeEnergy(void);
 void PrintLogOutput(void);
 double GetTimeStep(gsl_rng *rng);
@@ -374,6 +379,14 @@ static inline double SQR(double a){return a*a;}
 static double sqrarg;
 #define SQR(a) ((sqrarg=(a)) == 0.0 ? 0.0 : sqrarg*sqrarg)
 #endif
+
+/* black hole accretion stuff */
+void get_3d_velocities(double *w, double vr, double vt);
+void do_random_step(double *w, double beta, double delta);
+double check_angle_w_w_new(double *w, double *w_new, double delta);
+double calc_P_orb(long index);
+double calc_p_orb_f(double x, void *params);
+void bh_rand_walk(double beta, double dt, long k);
 
 /* macros */
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
