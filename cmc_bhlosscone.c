@@ -22,7 +22,7 @@ void bh_rand_walk(long index, double beta, double dt)
 	vt = star[index].vt;
 	vr = star[index].vr;
 	P_orb = calc_P_orb(index); 
-	n_orb = dt/P_orb; 
+	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR))/P_orb; 
 	deltabeta_orb = 1.0/sqrt(n_orb) * beta; 
 	L2 = fb_sqr(beta); 
 	Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad;
