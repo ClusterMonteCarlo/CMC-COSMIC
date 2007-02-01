@@ -22,7 +22,7 @@ void bh_rand_walk(long index, double beta, double dt)
 	vt = star[index].vt;
 	vr = star[index].vr;
 	P_orb = calc_P_orb(index); 
-	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR))/P_orb; 
+	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
 	deltabeta_orb = 1.0/sqrt(n_orb) * beta; 
 	L2 = fb_sqr(beta); 
 	Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad;
@@ -36,7 +36,7 @@ void bh_rand_walk(long index, double beta, double dt)
 			L2 = 0.0; 
 		} else { 
 			deltamax= 0.1*FB_CONST_PI;
-			deltasafe= CSAFE*(vt-vlc)/sqrt(vt*vt+vr*vr);
+			deltasafe= CSAFE*(sqrt(fb_sqr(w[0])+fb_sqr(w[1]))-vlc)/sqrt(vt*vt+vr*vr);
 			delta = MAX(deltabeta_orb, MIN(deltamax, MIN(deltasafe, sqrt(L2)))); 
 			dbeta = 2.0 * PI * rng_t113_dbl(); 
 			do_random_step(w, dbeta, delta); 

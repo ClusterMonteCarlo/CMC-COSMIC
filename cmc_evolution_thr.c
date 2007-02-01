@@ -434,7 +434,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		//if (rmax < MINIMUM_R){
 		/* (r<MINIMUM_R && rmin>0.3*rmax){ */
 		MINIMUM_R = 2.0 * FB_CONST_G * cenma.m * units.mstar / fb_sqr(FB_CONST_C) / units.l;
-		if (r < MINIMUM_R) {
+		if (0) {
+		/* if (r < MINIMUM_R) { */
 #ifdef USE_THREADS
 			get_pos_dat->CMincr.m += star[j].m;
 			get_pos_dat->CMincr.E += (2.0*star[j].phi + star[j].vr * star[j].vr + star[j].vt * star[j].vt) /
