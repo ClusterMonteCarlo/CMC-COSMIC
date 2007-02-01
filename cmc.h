@@ -359,8 +359,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 double simul_relax(gsl_rng *rng);
 void break_wide_binaries(void);
 void calc_sigma_r(void);
-double calc_P_orb(long index);
-double calc_p_orb_f(double x, void *params);
 double sigma_r(double r);
 
 /* signal/GSL error handling stuff */
@@ -380,13 +378,13 @@ static double sqrarg;
 #define SQR(a) ((sqrarg=(a)) == 0.0 ? 0.0 : sqrarg*sqrarg)
 #endif
 
-/* black hole accretion stuff */
+/* black hole accretion stuff (loss cone) */
 void get_3d_velocities(double *w, double vr, double vt);
 void do_random_step(double *w, double beta, double delta);
 double check_angle_w_w_new(double *w, double *w_new, double delta);
 double calc_P_orb(long index);
 double calc_p_orb_f(double x, void *params);
-void bh_rand_walk(double beta, double dt, long k);
+void bh_rand_walk(long index, double beta, double dt);
 
 /* macros */
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
