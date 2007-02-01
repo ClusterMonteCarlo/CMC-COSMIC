@@ -76,7 +76,7 @@ BININITEBMAX = 100.0
 SS_COLLISION = 0
 
 ### central black hole ###
-# The mass of the central black hole.
+# The mass of the central black hole, in units of the mstar (the average stellar mass) */
 CENTRAL_MASS 0.0
 # This is the accretion radius, i.e. if a particle has a radius less than
 # that, its mass is added to the central black hole. (The radius is in units
