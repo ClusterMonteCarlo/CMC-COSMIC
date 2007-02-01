@@ -43,7 +43,7 @@ DATE = $(shell date | sed -e 's|[[:space:]]|_|g')
 UNAME = $(shell uname)
 
 ifeq ($(UNAME),Linux)
-CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS = -Wall -pg -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
 else
 ifeq ($(UNAME),Darwin)
