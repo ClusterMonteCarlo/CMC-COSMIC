@@ -41,7 +41,7 @@ double initial_total_mass, Mtotal;
 /******************* Input file parameters *************************/
 long N_STAR_DIM, N_BIN_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, SS_COLLISION, NO_MASS_BINS;
 long SNAPSHOT_PERIOD, CHECKPOINT_PERIOD, MAX_WCLOCK_TIME, E_CONS;
-long IDUM, PERTURB, RELAXATION;
+long IDUM, PERTURB, RELAXATION, MONITOR_COLL;
 long NUM_CENTRAL_STARS;
 double T_PRINT_STEP, T_MAX, THETASEMAX;
 double TERMINAL_ENERGY_DISPLACEMENT, R_MAX;
@@ -89,3 +89,7 @@ central_t central;
 sigma_t sigma_array;
 double Eoops; /* energy that has vanished from the system for various and sundry reasons */
 double E_bb, E_bs, DE_bb, DE_bs;
+
+/* variables for potential calculation (they are not the only ones, just the ones I added!) */
+long last_index;
+

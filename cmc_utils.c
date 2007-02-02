@@ -878,7 +878,12 @@ double potential(double r) {
 	if (r < star[1].r)
 		return (star[1].phi);
 
-	i =  FindZero_r(1, clus.N_MAX + 1, r);
+   i = check_if_r_around_last_index(last_index, r);
+   //i=-1;
+   if (i== -1) {
+	   i =  FindZero_r(1, clus.N_MAX + 1, r);
+	   last_index= i;
+   };
 
 	if(star[i].r > r || star[i+1].r < r){
 		eprintf("binary search (FindZero_r) failed!!\n");
@@ -901,6 +906,25 @@ double potential(double r) {
 	
 	return (henon);
 }
+
+
+long check_if_r_around_last_index(long last_index, double r) {
+   long index_found, i;
+
+   //printf("Entering the routine. Last index is %li", last_index);
+   index_found= -1;
+   for (i=-1; i<2; i++) {
+      if (((last_index+i) >= 0) && ((last_index+i+1) <= clus.N_STAR)) {
+         if ((star[last_index+i].r < r) && (star[last_index+i+1].r > r)) {
+	 	//printf("found it!");
+            index_found= last_index+ i;
+            break;
+         };
+      };
+    };
+
+   return (index_found);
+};
 
 /*****************************************/
 /* Unmodified Numerical Recipes Routines */

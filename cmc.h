@@ -386,6 +386,9 @@ double calc_P_orb(long index);
 double calc_p_orb_f(double x, void *params);
 void bh_rand_walk(long index, double beta, double dt);
 
+/* potential calculation speed-up*/
+long check_if_r_around_last_index(long last_index, double r);
+
 /* macros */
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
 /* #define PHI_S(rad, j) ( ((rad)>=star[(j)].r ? star[(j)].m/(rad) : star[(j)].m/star[(j)].r) * (1.0/clus.N_STAR) - 0.5*star[(j)].m/clus.N_STAR/(rad) ) */
