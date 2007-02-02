@@ -118,10 +118,10 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		
 		/* another case of a circular orbit */
 		if (rmin > rmax) {
-			eprintf("error: rmin>rmax:  si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
-				si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E);
-			eprintf("\trmin=%g rmax=%g kmin=%ld kmax=%ld\n", rmin, rmax, kmin, kmax);
-
+			eprintf("rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g\n",
+				rmin, rmax, kmin, kmax, si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E,
+				function_Q(si, kmin, star[si].E, star[si].J), function_Q(si, kmax, star[si].E, star[si].J));
+			
 			orbit_rs.rp = star[si].r;
 			orbit_rs.ra = star[si].r;
 			orbit_rs.dQdrp = 0.0;

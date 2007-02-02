@@ -110,7 +110,7 @@ double calc_P_orb(long index)
 
 	/* Return the approximate value of the radial period.  If this is commented out
 	   the radial period will be calculated properly. */
-	//return(Porbapprox);
+	return(Porbapprox);
 
 	if (orbit_rs.circular_flag == 1) {
 		/* We're returning the azimuthal period here, which is not the same as the
