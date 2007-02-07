@@ -388,16 +388,20 @@ void bh_rand_walk(long index, double beta, double dt);
 
 /* potential calculation speed-up*/
 long check_if_r_around_last_index(long last_index, double r);
-struct Search_Grid {
-   int star_index[1000];
-   double power_law_exponent
-};
-void search_grid_initialize(struct Search_Grid r_search_grid, double power_law_exponent);
-void search_grid_update(struct Search_Grid r_search_grid);
-int get_search_interval(struct Search_Grid r_search_grid, double r);
-double get_search_grid_r(double r);
 
-/* macros */
+struct Search_Grid {
+   int radius[1000];
+   double power_law_exponent;
+   double interpol_coeff;
+};
+
+struct Search_Grid search_grid_initialize(double power_law_exponent);
+void search_grid_update(struct Search_Grid *grid);
+int search_grid_get_interval(struct Search_Grid *grid, double r);
+double search_grid_get_r(struct Search_Grid *grid, double r);
+double search_grid_get_r_at_index(struct Search_Grid *grid, int index);
+
+/* macros */ 
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
 /* #define PHI_S(rad, j) ( ((rad)>=star[(j)].r ? star[(j)].m/(rad) : star[(j)].m/star[(j)].r) * (1.0/clus.N_STAR) - 0.5*star[(j)].m/clus.N_STAR/(rad) ) */
 /* correction to potential due to subtracting star's contribution (this is what Marc uses) */
