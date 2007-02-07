@@ -388,6 +388,14 @@ void bh_rand_walk(long index, double beta, double dt);
 
 /* potential calculation speed-up*/
 long check_if_r_around_last_index(long last_index, double r);
+struct Search_Grid {
+   int star_index[1000];
+   double power_law_exponent
+};
+void search_grid_initialize(struct Search_Grid r_search_grid, double power_law_exponent);
+void search_grid_update(struct Search_Grid r_search_grid);
+int get_search_interval(struct Search_Grid r_search_grid, double r);
+double get_search_grid_r(double r);
 
 /* macros */
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
