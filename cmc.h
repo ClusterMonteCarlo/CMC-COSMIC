@@ -398,8 +398,7 @@ struct Search_Grid {
 struct Search_Grid search_grid_initialize(double power_law_exponent);
 void search_grid_update(struct Search_Grid *grid);
 int search_grid_get_interval(struct Search_Grid *grid, double r);
-double search_grid_get_r(struct Search_Grid *grid, double r);
-double search_grid_get_r_at_index(struct Search_Grid *grid, int index);
+double search_grid_get_r(struct Search_Grid *grid, int index);
 
 /* macros */ 
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
