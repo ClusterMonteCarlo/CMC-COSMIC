@@ -142,9 +142,6 @@ void PrintLogOutput(void)
 	gprintf("tcount=%ld TotalTime=%.16e Dt=%.16e\n", tcount, TotalTime, Dt);
 	fprintf(logfile, "tcount=%ld TotalTime=%.16e Dt=%.16e\n", tcount, TotalTime, Dt);
 
-	gprintf("sub.count=%ld sub.FACTOR=%ld sub.N_MAX=%ld sub.rmax=%g\n", sub.count, sub.FACTOR, sub.N_MAX, sub.rmax);
-	fprintf(logfile, "sub.count=%ld sub.FACTOR=%ld sub.N_MAX=%ld sub.rmax=%g\n", sub.count, sub.FACTOR, sub.N_MAX, sub.rmax);
-	
 	gprintf("Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
 	fprintf(logfile, "Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
 	
@@ -381,7 +378,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	/* DEFAULT PARAMETER VALUES */
 	quiet = 0;
 	debug = 0;
-	SUBZONING = 0;
 	NO_MASS_BINS = 0;
 	/* DEFAULT PARAMETER VALUES */
 	
@@ -576,13 +572,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "BININITEBMAX") == 0) {
 				sscanf(values, "%lf", &BININITEBMAX);
 				parsed.BININITEBMAX = 1;
-			} else if (strcmp(parameter_name, "SUBZONING") == 0) {
-				sscanf(values, "%d", &SUBZONING);
-				if (SUBZONING != 0) {
-					eprintf("SUBZONING does not work with the new implementation of relaxation!\n");
-					exit(1);
-				}
-				parsed.SUBZONING = 1;
 			} else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -642,7 +631,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		wprintf("parameter \"%s\" unset: using default value (see function \"%s()\" in file \"%s\").\n", #A, __FUNCTION__, __FILE__); \
 	}
 	
-	CHECK_PARSED(SUBZONING);
+	//CHECK_PARSED(SOMETHING);
 	
 #undef CHECK_PARSED
 

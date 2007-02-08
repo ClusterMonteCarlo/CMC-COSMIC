@@ -60,14 +60,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	DE_bb = 0.0;
 	DE_bs = 0.0;
 
-	/* set up the subcount timestep business */
-	if (sub.count == 0) {
-		/* do FULL time step */
-		N_LIMIT = clus.N_MAX;
-	} else {
-		/* do sub step only */
-		N_LIMIT = sub.N_MAX;
-	}
+	N_LIMIT = clus.N_MAX;
 	
 	gprintf("%s(): performing interactions:", __FUNCTION__);
 	if (!quiet) {
@@ -77,11 +70,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	
 	/* the big loop, with limits chosen so that we omit the last star if it is not paired */
 	for (si=1; si<=N_LIMIT-N_LIMIT%2-1; si+=2) {
-		if (si > sub.N_MAX) {	/* part of outer halo in a FULL time step */
-			dt = sub.totaltime;
-		} else {
-			dt = SaveDt;
-		}
+		dt = SaveDt;
 		
 		k = si;
 		kp = si + 1;

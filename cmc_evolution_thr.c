@@ -344,11 +344,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		E = star[j].E + PHI_S(star[j].r, j);
 		J = star[j].J;
 		
-		/* ignore halo stars during sub timesteps */
-		if (si > N_LIMIT && si <= clus.N_MAX && star[j].r_peri > sub.rmax) {
-			continue;
-		}
-
 		/* remove massless stars (boundary stars or stellar evolution victims) */
 		/* note that energy lost due to stellar evolution is subtracted
 		   at the time of mass loss in DoStellarEvolution */
@@ -501,11 +496,7 @@ double get_positions(){
 	phi_rtidal = potential(Rtidal);
 	phi_zero = potential(0.0);
 
-	if (sub.count == 0) {
-		N_LIMIT = clus.N_MAX; /* do FULL time step */
-	} else {
-		N_LIMIT = sub.N_MAX; /* do sub step only */
-	}
+	N_LIMIT = clus.N_MAX;
 
 	get_positions_data.max_rad = max_rad;
 	get_positions_data.phi_rtidal = phi_rtidal;

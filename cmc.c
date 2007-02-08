@@ -53,9 +53,10 @@ int main(int argc, char *argv[])
 		tcount = 1;
 		TotalTime = 0.0;
 		reset_rng_t113(IDUM);
-		/* for the sub zone business, pericenter of stars are used to 
-		 * determine if they will be relaxed, initially all pericenters 
-		 * are set to 0, so all stars will be relaxed */
+		/* For the sub zone business, pericenter of stars are used to 
+		 * determine if they will be relaxed; initially all pericenters 
+		 * are set to 0, so all stars will be relaxed.  Now that sub zones
+		 * have been removed, this code may no longer be necessary. */
 		for(i=0; i<=clus.N_STAR+1; i++){
 			star[i].r_peri = 0.0;
 		}
@@ -98,7 +99,6 @@ int main(int argc, char *argv[])
 		}
 #endif
 		
-		sub.count = 0;
 		update_vars();
 	}
 	
@@ -132,8 +132,6 @@ int main(int argc, char *argv[])
 		}
 		
 		TotalTime += Dt;
-
-		setup_sub_time_step(); //does not work
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;

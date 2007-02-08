@@ -8,12 +8,6 @@ struct {
 	long N_BINARY;
 } clus;
 
-/* sub timestep stuff */
-struct {
-	long N_MAX, count, FACTOR;
-	double totaltime, rmax;
-} sub;
-
 struct {
 	double tot; /* total = kinetic + potential + internal + binary binding + central mass energy */
 	double New; /* ??? */
@@ -53,7 +47,7 @@ double GAMMA, BININITEBMIN, BININITEBMAX;
 struct CenMa cenma;
 char MASS_PC[1000], MASS_BINS[1000], INPUT_FILE[1000];
 int BINSINGLE, BINBIN;
-int SUBZONING, BININITKT, STOPATCORECOLLAPSE;
+int BININITKT, STOPATCORECOLLAPSE;
 /* binary stuff */
 long N_b, N_bb, N_bs;
 double M_b, E_b;

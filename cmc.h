@@ -163,7 +163,6 @@ typedef struct{
 	int T_PRINT_STEP;
 	int WIND_FACTOR;
 	int GAMMA;
-	int SUBZONING;
 	int BININITKT;
 	int BININITEBMIN;
 	int BININITEBMAX;
@@ -250,7 +249,6 @@ typedef struct{
 /********************** Function Declarations ************************/
 inline double sqr(double x);
 inline double cub(double x);
-void setup_sub_time_step(void);
 void sniff_stars(void);
 void remove_star_center(long j);
 void print_results(void);

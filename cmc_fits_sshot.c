@@ -136,20 +136,6 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	fits_write_key(fptr, TDOUBLE, "Ebtotal", &(Etotal.Eb), 
 			"Total binary Energy", &status);
 	printerror(status);
-	/* Sub timestep stuff */
-	fits_write_comment(fptr,
-		"Sub timestep stuff", &status);
-	fits_write_key(fptr, TLONG, "S_NMAX", &(sub.N_MAX), 
-			"Substep NMAX", &status);
-	fits_write_key(fptr, TLONG, "S_CNT", &(sub.count), 
-			"Substep count", &status);
-	fits_write_key(fptr, TLONG, "S_FACT", &(sub.FACTOR), 
-			"Substep FACTOR", &status);
-	fits_write_key(fptr, TDOUBLE, "S_Ttime", &(sub.totaltime), 
-			"Substep Total time", &status);
-	fits_write_key(fptr, TDOUBLE, "S_rmax", &(sub.rmax), 
-			"Substep rmax", &status);
-	printerror(status);
 	/* various N's of cluster */
 	fits_write_comment(fptr,
 		"It is not clear what the following different N's do", &status);
@@ -225,8 +211,6 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"BINSINGLE", &status);
 	fits_write_key(fptr, TINT, "BINBIN", &(BINBIN), 
 			"BINBIN", &status);
-	fits_write_key(fptr, TINT, "SUBZON", &(SUBZONING), 
-			"SUBZONING", &status);
 	printerror(status);
 	/* variables related to tidal truncation */
 	fits_write_comment(fptr,
@@ -358,9 +342,6 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	dvar[i++]  = Etotal.P;
 	dvar[i++]  = Etotal.Eint;
 	dvar[i++]  = Etotal.Eb;
-	/* Sub timestep stuff */
-	dvar[i++]  = sub.totaltime;
-	dvar[i++]  = sub.rmax;
 	/* Input file parameters */
 	dvar[i++]  = T_PRINT_STEP;
 	dvar[i++]  = T_MAX;
@@ -853,12 +834,6 @@ void chkpnt_fits(gsl_rng *rng){
 				 * these variables aren't kept in snapshot file,
 				 * despite being static. this is intentional!
 				 *   -- ato 19:25,  5 Apr 2005 (UTC) */
-
-	/* this is now commented out as subzoning is never used and
-	   will not break snapshotting */
-//	if (sub.count != sub.FACTOR-1){ 
-//		return;
-//	}
 
 	if(fileno==3){
 		/* try removing filename[0] */

@@ -466,13 +466,6 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	fits_read_key(fptr, TDOUBLE, "Eintot", &(Etotal.Eint), NULL, &status);
 	fits_read_key(fptr, TDOUBLE, "Ebtotal", &(Etotal.Eb), NULL, &status);
 	printerror(status);
-	/* Sub timestep stuff */
-	fits_read_key(fptr, TLONG, "S_NMAX", &(sub.N_MAX), NULL, &status);
-	fits_read_key(fptr, TLONG, "S_CNT", &(sub.count), NULL, &status);
-	fits_read_key(fptr, TLONG, "S_FACT", &(sub.FACTOR), NULL, &status);
-	fits_read_key(fptr, TDOUBLE, "S_Ttime", &(sub.totaltime), NULL, &status);
-	fits_read_key(fptr, TDOUBLE, "S_rmax", &(sub.rmax), NULL, &status);
-	printerror(status);
 	/* various N's of cluster */
 	fits_read_key(fptr, TLONG, "NSTAR", &(clus.N_STAR), NULL, &status);
 	fits_read_key(fptr, TLONG, "NSTARN", &(clus.N_STAR_NEW), NULL, &status);
@@ -512,7 +505,6 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	fits_read_key(fptr, TDOUBLE, "CENMAE", &(cenma.E), NULL, &status);
 	fits_read_key(fptr, TINT, "BINSIN", &(BINSINGLE), NULL, &status);
 	fits_read_key(fptr, TINT, "BINBIN", &(BINBIN), NULL, &status);
-	fits_read_key(fptr, TINT, "SUBZON", &(SUBZONING), NULL, &status);
 	printerror(status);
 	/* variables related to tidal truncation */
 	fits_read_key(fptr, TDOUBLE, "MAXR", &(max_r), NULL, &status);
@@ -642,9 +634,6 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	Etotal.P    = dvar[i++];
 	Etotal.Eint = dvar[i++];
 	Etotal.Eb   = dvar[i++];
-	/* Sub timestep stuff */
-	sub.totaltime 	= dvar[i++];
-	sub.rmax      	= dvar[i++];
 	/* Input file parameters */
 	T_PRINT_STEP	= dvar[i++];
 	T_MAX 		= dvar[i++];
