@@ -120,16 +120,33 @@ double calc_P_orb(long index)
 	} else {
 		w = gsl_integration_workspace_alloc(1000);
 
-		params.E = E;
-		params.J = J;
-		params.index = index;
+		if (0) { /* use standard potential function with Stefan's speedup trick here */
+			params.E = E;
+			params.J = J;
+			params.index = index;
+			
+			F.function = &calc_p_orb_f;
+			F.params = &params;
+			
+			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1e-3, 1000, w, &Porb, &error);
+			
+			//dprintf("Porb=%g Porb/Porbapprox=%g\n", Porb, Porb/Porbapprox);
+		}
 
-		F.function = &calc_p_orb_f;
-		F.params = &params;
+		if (1) { /* use fast potential function here (not much of a speedup in practice) */
+			params.E = E;
+			params.J = J;
+			params.index = index;
+			params.kmin = FindZero_r(1, clus.N_MAX+1, orbit_rs.rp);
+			params.kmax = FindZero_r(1, clus.N_MAX+1, orbit_rs.ra) + 1;
+			
+			F.function = &calc_p_orb_f2;
+			F.params = &params;
 
-		gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1e-3, 1000, w, &Porb, &error);
-
-		//dprintf("Porb=%g Porb/Porbapprox=%g\n", Porb, Porb/Porbapprox);
+			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1e-3, 1000, w, &Porb, &error);
+			
+			//dprintf("\tFast: Porb=%g Porb/Porbapprox=%g\n", Porb, Porb/Porbapprox);
+		}
 
 		gsl_integration_workspace_free(w);
 		return(Porb);
@@ -142,6 +159,21 @@ double calc_p_orb_f(double x, void *params) {
 	double radicand;
 
 	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (potential(x) + PHI_S(x, myparams.index));
+	
+	if (radicand < 0.0) {
+		dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, myparams.index);
+		radicand = 0.0;
+	}
+	
+	return(2.0 / sqrt(radicand));
+}
+
+/* integrand for calc_P_orb */
+double calc_p_orb_f2(double x, void *params) {
+	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
+	double radicand;
+
+	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (fastpotential(x, myparams.kmin, myparams.kmax) + PHI_S(x, myparams.index));
 	
 	if (radicand < 0.0) {
 		dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, myparams.index);

@@ -244,6 +244,8 @@ typedef struct{
 	double E;
 	double J;
 	long index;
+	long kmin;
+	long kmax;
 } calc_p_orb_params_t;
 
 /********************** Function Declarations ************************/
@@ -253,6 +255,7 @@ void sniff_stars(void);
 void remove_star_center(long j);
 void print_results(void);
 double potential(double r);	       /* get potential using star.phi */
+double fastpotential(double r, long kmin, long kmax);
 long potential_calculate(void);	/* calculate potential at star locations in star.phi */
 void comp_mass_percent(void);
 void comp_multi_mass_percent(void);
@@ -382,6 +385,7 @@ void do_random_step(double *w, double beta, double delta);
 double check_angle_w_w_new(double *w, double *w_new, double delta);
 double calc_P_orb(long index);
 double calc_p_orb_f(double x, void *params);
+double calc_p_orb_f2(double x, void *params);
 void bh_rand_walk(long index, double beta, double dt);
 
 /* potential calculation speed-up*/
