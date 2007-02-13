@@ -110,7 +110,7 @@ double calc_P_orb(long index)
 
 	/* Return the approximate value of the radial period.  If this is commented out
 	   the radial period will be calculated properly. */
-	return(Porbapprox);
+	//return(Porbapprox);
 
 	if (orbit_rs.circular_flag == 1) {
 		/* We're returning the azimuthal period here, which is not the same as the
@@ -120,7 +120,7 @@ double calc_P_orb(long index)
 	} else {
 		w = gsl_integration_workspace_alloc(1000);
 
-		if (0) { /* use standard potential function with Stefan's speedup trick here */
+		if (1) { /* use standard potential function with Stefan's speedup trick here */
 			params.E = E;
 			params.J = J;
 			params.index = index;
@@ -133,7 +133,7 @@ double calc_P_orb(long index)
 			//dprintf("Porb=%g Porb/Porbapprox=%g\n", Porb, Porb/Porbapprox);
 		}
 
-		if (1) { /* use fast potential function here (not much of a speedup in practice) */
+		if (0) { /* use fast potential function here (not much of a speedup over Stefan's technique in practice) */
 			params.E = E;
 			params.J = J;
 			params.index = index;
