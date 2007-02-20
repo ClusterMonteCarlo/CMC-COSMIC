@@ -44,3 +44,38 @@ Each sample counts as 0.01 seconds.
   2.23    147.56     3.46  1599976     0.00     0.00  FindZero_Q
   0.76    148.74     1.18 191028446     0.00     0.00  fb_sqr
   0.71    149.84     1.10   399994     0.00     0.00  bh_rand_walk
+
+standard method after Gauss-Chebyshev implemented: 2.269400e+02s
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 54.97     81.64    81.64 162538152     0.00     0.00  FindZero_r
+ 24.64    118.24    36.60 161818997     0.00     0.00  potential
+ 13.51    138.30    20.06                             calc_p_orb_f
+  1.98    141.24     2.94  1599976     0.00     0.00  FindZero_Q
+  0.73    142.33     1.09 191028446     0.00     0.00  fb_sqr
+  0.69    143.35     1.02  3797183     0.00     0.00  do_random_step
+  0.65    144.31     0.96   399994     0.00     0.00  bh_rand_walk
+
+Gauss-Chebyshev method: 5.955000e+01s
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 41.82     12.38    12.38 21957723     0.00     0.00  FindZero_r
+ 15.44     16.95     4.57 21160503     0.00     0.00  potential
+ 10.64     20.10     3.15                             calc_p_orb_gc
+ 10.61     23.24     3.14  1599950     0.00     0.00  FindZero_Q
+  3.34     24.23     0.99   399987     0.00     0.00  bh_rand_walk
+
+no central BH (just as a test): 1.296000e+01s
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 25.00      1.72     1.72   799972     0.00     0.00  FindZero_Q
+ 17.01      2.89     1.17  1963356     0.00     0.00  FindZero_r
+  7.56      3.41     0.52  1963837     0.00     0.00  potential
+  6.98      3.89     0.48 91198323     0.00     0.00  sqr
+  6.69      4.35     0.46   399986     0.00     0.01  calc_orbit_rs

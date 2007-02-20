@@ -246,6 +246,8 @@ typedef struct{
 	long index;
 	long kmin;
 	long kmax;
+	double rp;
+	double ra;
 } calc_p_orb_params_t;
 
 /********************** Function Declarations ************************/
@@ -386,6 +388,7 @@ double check_angle_w_w_new(double *w, double *w_new, double delta);
 double calc_P_orb(long index);
 double calc_p_orb_f(double x, void *params);
 double calc_p_orb_f2(double x, void *params);
+double calc_p_orb_gc(double x, void *params);
 void bh_rand_walk(long index, double beta, double dt);
 
 /* potential calculation speed-up*/

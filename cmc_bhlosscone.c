@@ -90,9 +90,11 @@ double check_angle_w_w_new(double *w, double *w_new, double delta) {
 double calc_P_orb(long index)
 {
 	double E, J, Porb, error, Porbapproxmin, Porbapproxmax, Porbapprox;
+	//double Porbtmp;
 	orbit_rs_t orbit_rs;
 	calc_p_orb_params_t params;
 	gsl_integration_workspace *w;
+	gsl_integration_qaws_table *tab;
 	gsl_function F;
 	
 	E = star[index].E + PHI_S(star[index].r, index);
@@ -119,35 +121,38 @@ double calc_P_orb(long index)
 		return(2.0 * PI * star[index].r / star[index].vt);		
 	} else {
 		w = gsl_integration_workspace_alloc(1000);
+		tab = gsl_integration_qaws_table_alloc(-0.5, -0.5, 0.0, 0.0);
 
-		if (1) { /* use standard potential function with Stefan's speedup trick here */
-			params.E = E;
-			params.J = J;
-			params.index = index;
-			
+		params.E = E;
+		params.J = J;
+		params.index = index;
+		params.kmin = FindZero_r(1, clus.N_MAX+1, orbit_rs.rp);
+		params.kmax = FindZero_r(1, clus.N_MAX+1, orbit_rs.ra) + 1;
+		params.rp = orbit_rs.rp;
+		params.ra = orbit_rs.ra;
+		F.params = &params;
+
+		if (0) { /* use standard potential function with Stefan's speedup trick here */
 			F.function = &calc_p_orb_f;
-			F.params = &params;
-			
-			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1e-3, 1000, w, &Porb, &error);
-			
-			//dprintf("Porb=%g Porb/Porbapprox=%g\n", Porb, Porb/Porbapprox);
+			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
+			//dprintf("Porb=%g Porb/Porbapprox=%g intervals=%d\n", Porb, Porb/Porbapprox, w->size);
 		}
 
 		if (0) { /* use fast potential function here (not much of a speedup over Stefan's technique in practice) */
-			params.E = E;
-			params.J = J;
-			params.index = index;
-			params.kmin = FindZero_r(1, clus.N_MAX+1, orbit_rs.rp);
-			params.kmax = FindZero_r(1, clus.N_MAX+1, orbit_rs.ra) + 1;
-			
 			F.function = &calc_p_orb_f2;
-			F.params = &params;
-
-			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1e-3, 1000, w, &Porb, &error);
-			
-			//dprintf("\tFast: Porb=%g Porb/Porbapprox=%g\n", Porb, Porb/Porbapprox);
+			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
+			//dprintf("\tFast: Porb=%g Porb/Porbapprox=%g intervals=%d\n", Porb, Porb/Porbapprox, w->size);
 		}
 
+		if (1) { /* use Gauss-Chebyshev for factor of ~few speedup over standard method */
+			//Porbtmp = Porb;
+			F.function = &calc_p_orb_gc;
+			gsl_integration_qaws(&F, orbit_rs.rp, orbit_rs.ra, tab, 1.0e-3, 1.0e-3, 1000, w, &Porb, &error);
+			//dprintf("Porb=%g Porb/Porbtmp=%g Porb/Porbapprox=%g intervals=%d\n", 
+			//	Porb, Porb/Porbtmp, Porb/Porbapprox, w->size);
+		}
+		
+		gsl_integration_qaws_table_free(tab);
 		gsl_integration_workspace_free(w);
 		return(Porb);
 	}
@@ -181,4 +186,56 @@ double calc_p_orb_f2(double x, void *params) {
 	}
 	
 	return(2.0 / sqrt(radicand));
+}
+
+/* integrand for calc_P_orb, using Gauss-Chebyshev for regularizing the integrand near the endpoints */
+double calc_p_orb_gc(double x, void *params) {
+	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
+	double radicand;
+	double phik, phik1, phi0, phi1, rk, rk1, rminus, rplus;
+	double E, J, rp, ra;
+	long index, kmin, kmax;
+	
+	E = myparams.E;
+	J = myparams.J;
+	index = myparams.index;
+	kmin = myparams.kmin;
+	kmax = myparams.kmax;
+	rp = myparams.rp;
+	ra = myparams.ra;
+
+	if (x < star[kmin+1].r) { /* return integrand regularized at r=rp */
+		//dprintf("regularizing near rp...\n");
+		phik = star[kmin].phi + PHI_S(star[kmin].r, index);
+		phik1 = star[kmin+1].phi + PHI_S(star[kmin+1].r, index);
+		rk = star[kmin].r;
+		rk1 = star[kmin+1].r;
+		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1);
+		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1);
+		/* rplus = rperi, rminus = rapo-primed */
+		rminus = (phi1 - sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
+		//rplus = (phi1 + sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
+		//dprintf("rplus/rp=%g rminus/ra=%g\n", rplus/rp, rminus/ra);
+		return(2.0*x*sqrt((ra-x)/((2.0*phi0-2.0*E)*(rminus-x))));
+	} else if (x > star[kmax-1].r) { /* return integrand regularized at r=ra*/
+		//dprintf("regularizing near ra...\n");
+		phik = star[kmax-1].phi + PHI_S(star[kmax-1].r, index);
+		phik1 = star[kmax].phi + PHI_S(star[kmax].r, index);
+		rk = star[kmax-1].r;
+		rk1 = star[kmax].r;
+		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1);
+		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1);
+		/* rplus = rperi-primed, rminus = rapo */
+		//rminus = (phi1 - sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
+		rplus = (phi1 + sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
+		//dprintf("rplus/rp=%g rminus/ra=%g\n", rplus/rp, rminus/ra);
+		return(2.0*x*sqrt((x-rp)/((2.0*phi0-2.0*E)*(x-rplus))));
+	} else {
+		radicand = 2.0 * E - fb_sqr(J/x) - 2.0 * (potential(x) + PHI_S(x, index));
+		if (radicand < 0.0) {
+			dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, index);
+			radicand = 0.0;
+		}
+		return(2.0 * sqrt((x-rp)*(ra-x)/radicand));
+	}
 }
