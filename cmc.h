@@ -395,15 +395,50 @@ void bh_rand_walk(long index, double beta, double dt);
 long check_if_r_around_last_index(long last_index, double r);
 
 struct Search_Grid {
-   int radius[1000];
+   /* user modifiable parameters */
+   /* starsPerBin is the estimated (anticipated) number of stars per search
+    * bin. It is only used to calculate interpol_coeff and grid length.
+    */
+   long starsPerBin;
+   long max_length;
+   long min_length;
+   /* fraction determines the interpol_coeff such that 
+    * grid.radius[fraction*grid->length] is approx. 
+    * star[clus.N_MAX*fraction].r. Depending how well the power_law_exponent 
+    * fits the distribution of star[i::starsPerBin].r the better this is 
+    * fulfilled*/
+   double fraction;
+   /* Only particle_fraction * clus.N_MAX stars should be used to construct the
+    * grid.*/
+   double particle_fraction;
    double power_law_exponent;
+   /* You should not change any of the following variables yourself 
+    * unless, of course, you know what you are doing.
+    */
+   long *radius;
+   long length;
    double interpol_coeff;
 };
 
-struct Search_Grid search_grid_initialize(double power_law_exponent);
+struct Interval {
+  long min;
+  long max;
+};
+
+struct Search_Grid 
+search_grid_initialize(double power_law_exponent, double fraction, long starsPerBin, double part_frac);
+
+double search_grid_estimate_prop_const(struct Search_Grid *grid);
+/* This function does not belong to the public API! */
+void search_grid_allocate(struct Search_Grid *grid);
 void search_grid_update(struct Search_Grid *grid);
-int search_grid_get_interval(struct Search_Grid *grid, double r);
-double search_grid_get_r(struct Search_Grid *grid, int index);
+
+struct Interval
+search_grid_get_interval(struct Search_Grid *grid, double r);
+
+long search_grid_get_grid_index(struct Search_Grid *grid, double r);
+double search_grid_get_r(struct Search_Grid *grid, long index);
+double search_grid_get_grid_indexf(struct Search_Grid *grid, double r);
 
 /* macros */ 
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */

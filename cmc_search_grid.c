@@ -11,57 +11,159 @@
 #include "cmc_vars.h"
 
 
-struct Search_Grid search_grid_initialize(double power_law_exponent);
+struct Search_Grid 
+search_grid_initialize(double power_law_exponent, double fraction, long starsPerBin, double part_frac) {
   /* This is somewhat trivial at the moment but makes the usage of the 
    * Search_Grid structure clearer. */
   struct Search_Grid grid;
-  int i;
 
-  for (i=0; i<1000; i++) {
-    grid.star_index[i]= 0;
-  };
+  grid.radius=NULL;
+  grid.length=0;
+  grid.max_length= 1000000;
   grid.power_law_exponent= power_law_exponent;
+  grid.starsPerBin= starsPerBin;
+  grid.fraction= fraction;
+  grid.particle_fraction= part_frac;
 
   return(grid);
 };
 
-void search_grid_update(struct Search_Grid *grid) {
-  int i, r_index;
-  double coeff, r_max, r_min;
+/* This function is mainly used internally, but may be useful for the user */
+double search_grid_estimate_prop_const(struct Search_Grid *grid) {
+  long i, r_index;
+  double coeff, r_1, r_min;
   
-  r_max= star[clus.N_MAX+1].r;
+  /* determine interpol_coeff using the radius of the particle 
+   * with index clus.N_MAX* fraction */
+  i= clus.N_MAX*grid->fraction;
+  r_1= star[i].r;
   r_min= star[1].r;
+  r_index= clus.N_MAX/grid->starsPerBin*grid->fraction;
+  coeff= (r_1-r_min)/pow(r_index, grid->power_law_exponent);
 
-  grid->interpol_coeff= (r_max-r_min)/pow(1000., grid->power_law_exponent);
+  return(coeff);
+};
+
+/* This function is only used internally (i.e. private) and does not 
+ * belong to the public API */
+void search_grid_allocate(struct Search_Grid *grid) {
+  long prev_grid_length, max_part_index;
+
+  /* save the previous grid length to determine if we later need to allocate 
+   * more space */
+  prev_grid_length= grid->length;
+
+  /* calculate the required length of the search grid so that almost all star radii are within it*/
+  max_part_index= (long) (clus.N_STAR* grid->particle_fraction);
+  grid->length= search_grid_get_grid_index(grid, star[max_part_index].r);
+  if (grid->length< grid->min_length) 
+    grid->length= grid->min_length;
+
+  if (grid->length> grid->max_length) {
+    printf("Warning: For the given parameters we cannot construct a search grid that contains all\n");
+    printf("Warning: stars, so the last search bin contains significantly more particles than\n");
+    printf("Warning: anticipated in the variable starsPerBin (%li).\n",
+        grid->starsPerBin);
+    grid->length= grid->max_length;
+  }
+
+  /* allocate the search grid */
+  if (prev_grid_length< grid->length) {
+    if (grid->radius) {
+      free(grid->radius);
+      grid->radius= NULL;
+    };
+
+    grid->radius= (long *) calloc((size_t)(grid->length), sizeof(long));
+  };
+};
+  
+void search_grid_update(struct Search_Grid *grid) {
+  long i, r_index, star_index;
+  double r_1, r_min, r_at_index;
+  
+  grid->interpol_coeff= search_grid_estimate_prop_const(grid);
+  search_grid_allocate(grid);
+
+  printf("# grid length is %li\n", grid->length);
+
   r_index=0;
-  r_at_index= search_grid_get_r(grid, r_index);
-  for (i=1; i<clus.N_MAX+1; i++) {
-    if (star[i].r <= r_at_index) {
-      grid->radius[r_index]= i;
+  for (i=2; i<=clus.N_STAR; i++) {
+    star_index= search_grid_get_grid_index(grid, star[i].r);
+    if (star_index<grid->length) {
+      grid->radius[star_index]= i;
+      for (;r_index<star_index; r_index++) {
+        grid->radius[r_index+1]= i;
+      }
     } else {
-      do {
-        r_index++;
-        r_at_index= search_grid_get_r(grid, r_index);
-        grid->radius[r_index]= i;
-      } while (star[i].r> r_at_index);
+      for (;r_index<grid->length-1; r_index++)
+        grid->radius[r_index+1]= i;
     };
   };
 };
 
-double search_grid_get_r(struct Search_Grid *grid, int index) {
-  if (index> 999) {
-    printf("Index is too large! It must not be larger than 999, but got %i", index);
-    exit(1);
+/* This function gives only the approximate radius of the search grid
+ * at index "index" and cannot be used to infer the right search interval,
+ * due to round-off errors.*/
+double search_grid_get_r(struct Search_Grid *grid, long index) {
+  if (index> grid->length-1) {
+    index=grid->length-1;
   };
   return(star[1].r+ grid->interpol_coeff*pow(index+1., grid->power_law_exponent));
 };
 
-int search_grid_get_interval(struct Search_Grid *grid, double r) {
-  double r_to_n, n;
+/* Returns the interval of particle indices such that star[min].r>r>star[max].r*/
+struct Interval
+search_grid_get_interval(struct Search_Grid *grid, double r) {
+  long grid_index;
+  struct Interval sindex;
+
+  grid_index= search_grid_get_grid_index(grid, r);
+  if (grid_index>= grid->length) {
+    sindex.min= grid->radius[grid->length-1];
+    if (r> star[clus.N_STAR].r) {
+      sindex.max= clus.N_STAR;
+    } else {
+      sindex.max= clus.N_STAR-1;
+    };
+  } else if (grid_index==0) {
+    sindex.min= 2;
+    sindex.max= grid->radius[0];
+  } else {
+    sindex.min= grid->radius[grid_index-1];
+    sindex.max= grid->radius[grid_index];
+  };
+
+  /* Sometimes r can be in between the grid boundary and the radius of the 
+   * largest or smallest particle radius*/ 
+  sindex.max++;
+  sindex.min--;
+
+  return(sindex);
+};
+
+long search_grid_get_grid_index(struct Search_Grid *grid, double r) {
+  double r_to_n, n, ind_double;
+  const double long_max= LONG_MAX;
+  long ind;
 
   n= grid->power_law_exponent;
   r_to_n= (r-star[1].r)/grid->interpol_coeff;
-  
-  return(floor(pow(r_to_n, 1./n)));
+  ind_double= floor(pow(r_to_n, 1./n));
+  if (ind_double> long_max) {
+    ind= LONG_MAX;
+  } else {
+    ind= (long) ind_double;
+  };
+  return (ind);
 };
+
+double search_grid_get_grid_indexf(struct Search_Grid *grid, double r) {
+  double r_to_n, n, ind;
+
+  n= grid->power_law_exponent;
+  r_to_n= (r-star[1].r)/grid->interpol_coeff;
+  ind= (pow(r_to_n, 1./n));
+  return (ind);
+}
 
