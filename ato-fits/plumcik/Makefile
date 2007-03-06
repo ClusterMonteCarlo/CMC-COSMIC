@@ -30,6 +30,14 @@ ifneq ($(CCACHE),)
 CC := ccache $(CC)
 endif
 
+##############################################################################
+### special hosts
+##############################################################################
+ifeq ($(HOSTNAME),master.cluster)
+CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow -I/opt/gsl/include -L/opt/gsl/lib
+LIBFLAGS := $(LIBFLAGS) -static
+endif
+
 DOMNAME = $(shell hostname | cut -d . -f 2-)
 ifeq ($(DOMNAME),ncsa.uiuc.edu)
 CC = icc

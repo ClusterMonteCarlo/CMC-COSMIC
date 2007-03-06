@@ -86,7 +86,7 @@ CHRISCFLAGS = -Wno-uninitialized -Wno-unused
 ### special hosts
 ##############################################################################
 ifeq ($(HOSTNAME),master.cluster)
-CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow
+CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow -I/opt/gsl/include -L/opt/gsl/lib
 LIBFLAGS := $(LIBFLAGS) -static
 endif
 
