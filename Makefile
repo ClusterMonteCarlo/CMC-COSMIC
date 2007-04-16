@@ -90,6 +90,13 @@ CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow -I/opt/gsl/include -L/op
 LIBFLAGS := $(LIBFLAGS) -static
 endif
 
+ifeq ($(HOSTNAME),fugu.phys.northwestern.edu)
+CC = pathcc
+#CFLAGS := $(CFLAGS) -mcpu=athlon-mp -mmmx -msse -m3dnow -I/opt/gsl/include -L/opt/gsl/lib
+CFLAGS := $(CFLAGS) -mcpu=opteron -mmmx -msse -m3dnow -I/usr/include/cfitsio
+LIBFLAGS := $(LIBFLAGS) -static
+endif
+
 DOMNAME = $(shell hostname | cut -d . -f 2-)
 ifeq ($(DOMNAME),ncsa.uiuc.edu)
 CC = icc
