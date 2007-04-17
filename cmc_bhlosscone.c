@@ -216,7 +216,12 @@ double calc_p_orb_gc(double x, void *params) {
 		rminus = (phi1 - sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
 		//rplus = (phi1 + sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
 		//dprintf("rplus/rp=%g rminus/ra=%g\n", rplus/rp, rminus/ra);
-		return(2.0*x*sqrt((ra-x)/((2.0*phi0-2.0*E)*(rminus-x))));
+		if (kmax == kmin + 1) {
+			/* then rminus = ra, so must cancel (ra-x)/(rminus-x) term analytically */
+			return(2.0*x*sqrt(1.0/((2.0*phi0-2.0*E))));
+		} else {
+			return(2.0*x*sqrt((ra-x)/((2.0*phi0-2.0*E)*(rminus-x))));
+		}
 	} else if (x > star[kmax-1].r) { /* return integrand regularized at r=ra*/
 		//dprintf("regularizing near ra...\n");
 		phik = star[kmax-1].phi + PHI_S(star[kmax-1].r, index);
@@ -229,7 +234,12 @@ double calc_p_orb_gc(double x, void *params) {
 		//rminus = (phi1 - sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
 		rplus = (phi1 + sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
 		//dprintf("rplus/rp=%g rminus/ra=%g\n", rplus/rp, rminus/ra);
-		return(2.0*x*sqrt((x-rp)/((2.0*phi0-2.0*E)*(x-rplus))));
+		if (kmax == kmin + 1) {
+			/* then rplus = rp, so must cancel (x-rp)/(x-rplus) term analytically */
+			return(2.0*x*sqrt(1.0/((2.0*phi0-2.0*E))));
+		} else {
+			return(2.0*x*sqrt((x-rp)/((2.0*phi0-2.0*E)*(x-rplus))));
+		}
 	} else {
 		radicand = 2.0 * E - fb_sqr(J/x) - 2.0 * (potential(x) + PHI_S(x, index));
 		if (radicand < 0.0) {
