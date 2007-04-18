@@ -86,4 +86,11 @@ double E_bb, E_bs, DE_bb, DE_bs;
 
 /* variables for potential calculation (they are not the only ones, just the ones I added!) */
 long last_index;
-
+/* parameters for the Search_Grid */
+long SEARCH_GRID;
+long SG_STARSPERBIN, SG_MAXLENGTH, SG_MINLENGTH;
+double SG_POWER_LAW_EXPONENT, SG_MATCH_AT_FRACTION, SG_PARTICLE_FRACTION;
+/* The variable */
+struct Search_Grid *r_grid;
+/* for testing the effect */
+long total_bisections;

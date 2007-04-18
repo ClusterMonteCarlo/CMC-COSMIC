@@ -123,7 +123,8 @@ OBJS = $(NAME)_binbin.o $(NAME)_binsingle.o $(NAME)_dynamics.o \
 	$(NAME)_init.o $(NAME)_io.o $(NAME).o $(NAME)_nr.o \
 	$(NAME)_utils.o taus113-v2.o $(NAME)_fits.o startrack/singl.o \
 	$(NAME)_stellar_evolution.o $(NAME)_fits_sshot.o \
-	$(NAME)_sort.o $(NAME)_sscollision.o $(NAME)_bhlosscone.o
+	$(NAME)_sort.o $(NAME)_sscollision.o $(NAME)_bhlosscone.o \
+	$(NAME)_search_grid.o
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
 	$(FEWBODYDIR)/fewbody_int.o $(FEWBODYDIR)/fewbody_io.o \
@@ -138,7 +139,8 @@ COBJS = $(NAME)_binbin.co $(NAME)_binsingle.co $(NAME)_dynamics.co \
 	$(NAME)_init.co $(NAME)_io.co $(NAME).co $(NAME)_nr.co \
 	$(NAME)_utils.co taus113-v2.co $(NAME)_fits.co startrack/singl.co \
 	$(NAME)_stellar_evolution.co $(NAME)_fits_sshot.co \
-	$(NAME)_sort.co $(NAME)_sscollision.co $(NAME)_bhlosscone.co
+	$(NAME)_sort.co $(NAME)_sscollision.co $(NAME)_bhlosscone.co \
+	$(NAME)_search_grid.co
 FEWBODYCOBJS = $(FEWBODYDIR)/fewbody.co $(FEWBODYDIR)/fewbody_classify.co \
 	$(FEWBODYDIR)/fewbody_coll.co $(FEWBODYDIR)/fewbody_hier.co \
 	$(FEWBODYDIR)/fewbody_int.co $(FEWBODYDIR)/fewbody_io.co \

@@ -572,6 +572,27 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "BININITEBMAX") == 0) {
 				sscanf(values, "%lf", &BININITEBMAX);
 				parsed.BININITEBMAX = 1;
+                        } else if (strcmp(parameter_name, "SEARCH_GRID")== 0) {
+				sscanf(values, "%ld", &SEARCH_GRID);
+				parsed.SEARCH_GRID = 1;
+                        } else if (strcmp(parameter_name, "SG_STARSPERBIN")== 0) {
+				sscanf(values, "%ld", &SG_STARSPERBIN);
+				parsed.SG_STARSPERBIN = 1;
+                        } else if (strcmp(parameter_name, "SG_MAXLENGTH")== 0) {
+				sscanf(values, "%ld", &SG_MAXLENGTH);
+				parsed.SG_MAXLENGTH = 1;
+                        } else if (strcmp(parameter_name, "SG_MINLENGTH")== 0) {
+				sscanf(values, "%ld", &SG_MINLENGTH);
+				parsed.SG_MINLENGTH = 1;
+                        } else if (strcmp(parameter_name, "SG_POWER_LAW_EXPONENT")== 0) {
+				sscanf(values, "%lf", &SG_POWER_LAW_EXPONENT);
+				parsed.SG_POWER_LAW_EXPONENT = 1;
+                        } else if (strcmp(parameter_name, "SG_MATCH_AT_FRACTION")== 0) {
+				sscanf(values, "%lf", &SG_MATCH_AT_FRACTION);
+				parsed.SG_MATCH_AT_FRACTION = 1;
+                        } else if (strcmp(parameter_name, "SG_PARTICLE_FRACTION")== 0) {
+				sscanf(values, "%lf", &SG_PARTICLE_FRACTION);
+				parsed.SG_PARTICLE_FRACTION = 1;
 			} else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -626,12 +647,19 @@ void parser(int argc, char *argv[], gsl_rng *r)
 #undef CHECK_PARSED
 
 /* but only warn if some other parameters are unset and default values are used */
-#define CHECK_PARSED(A) \
+#define CHECK_PARSED(A,DEFAULT) \
 	if (parsed.A == 0) { \
-		wprintf("parameter \"%s\" unset: using default value (see function \"%s()\" in file \"%s\").\n", #A, __FUNCTION__, __FILE__); \
+		wprintf("parameter \"%s\" unset: using default value \"%s\").\n", #A, #DEFAULT); \
+                A=DEFAULT; \
 	}
 	
-	//CHECK_PARSED(SOMETHING);
+	CHECK_PARSED(SEARCH_GRID, 0);
+        CHECK_PARSED(SG_STARSPERBIN, 100);
+        CHECK_PARSED(SG_MAXLENGTH, 1000000);
+        CHECK_PARSED(SG_MINLENGTH, 1000);
+        CHECK_PARSED(SG_POWER_LAW_EXPONENT, 0.5);
+        CHECK_PARSED(SG_MATCH_AT_FRACTION, 0.5);
+        CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95);
 	
 #undef CHECK_PARSED
 
@@ -853,5 +881,5 @@ void trap_sigs(void)
 	signal(SIGUSR1, toggle_debugging);
 	
 	/* override GSL error handler */
-	gsl_set_error_handler(&sf_gsl_errhandler);
+	//gsl_set_error_handler(&sf_gsl_errhandler);
 }

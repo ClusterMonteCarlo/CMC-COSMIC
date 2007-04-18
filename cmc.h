@@ -166,6 +166,13 @@ typedef struct{
 	int BININITKT;
 	int BININITEBMIN;
 	int BININITEBMAX;
+        int SEARCH_GRID;
+        int SG_STARSPERBIN;
+        int SG_MAXLENGTH;
+        int SG_MINLENGTH;
+        int SG_POWER_LAW_EXPONENT;
+        int SG_MATCH_AT_FRACTION;
+        int SG_PARTICLE_FRACTION;
 } parsed_t;
 
 /* a struct containing the units used */
@@ -409,7 +416,7 @@ struct Search_Grid {
     * fulfilled*/
    double fraction;
    /* Only particle_fraction * clus.N_MAX stars should be used to construct the
-    * grid.*/
+    * grid (i.e. we ignore a possible outer halo).*/
    double particle_fraction;
    double power_law_exponent;
    /* You should not change any of the following variables yourself 
@@ -425,7 +432,7 @@ struct Interval {
   long max;
 };
 
-struct Search_Grid 
+struct Search_Grid *
 search_grid_initialize(double power_law_exponent, double fraction, long starsPerBin, double part_frac);
 
 double search_grid_estimate_prop_const(struct Search_Grid *grid);
@@ -439,6 +446,7 @@ search_grid_get_interval(struct Search_Grid *grid, double r);
 long search_grid_get_grid_index(struct Search_Grid *grid, double r);
 double search_grid_get_r(struct Search_Grid *grid, long index);
 double search_grid_get_grid_indexf(struct Search_Grid *grid, double r);
+void search_grid_free(struct Search_Grid *grid);
 
 /* macros */ 
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */

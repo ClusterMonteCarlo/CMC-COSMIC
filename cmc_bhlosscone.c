@@ -96,7 +96,12 @@ double calc_P_orb(long index)
 	gsl_integration_workspace *w;
 	gsl_integration_qaws_table *tab;
 	gsl_function F;
-	
+        struct Interval star_interval;
+        
+        /* default values for star_interval */
+	star_interval.min= 1;
+        star_interval.max= clus.N_MAX+1;
+
 	E = star[index].E + PHI_S(star[index].r, index);
 	J = star[index].J;
 	
@@ -126,8 +131,12 @@ double calc_P_orb(long index)
 		params.E = E;
 		params.J = J;
 		params.index = index;
-		params.kmin = FindZero_r(1, clus.N_MAX+1, orbit_rs.rp);
-		params.kmax = FindZero_r(1, clus.N_MAX+1, orbit_rs.ra) + 1;
+                if (SEARCH_GRID)
+                  star_interval= search_grid_get_interval(r_grid, orbit_rs.rp);
+		params.kmin = FindZero_r(star_interval.min, star_interval.max, orbit_rs.rp);
+                if (SEARCH_GRID)
+                  star_interval= search_grid_get_interval(r_grid, orbit_rs.ra);
+		params.kmax = FindZero_r(star_interval.min, star_interval.max, orbit_rs.ra) + 1;
 		params.rp = orbit_rs.rp;
 		params.ra = orbit_rs.ra;
 		F.params = &params;

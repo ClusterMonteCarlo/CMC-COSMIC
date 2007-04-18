@@ -24,6 +24,59 @@ inline double cub(double x)
         return(x*x*x);
 }
 
+/* The potential computed using the star[].phi computed at the star 
+   locations in star[].r sorted by increasing r. */
+inline double potential(double r) {
+	long i, kmax, kmin;
+	double henon;
+        struct Interval star_interval;
+
+	/* root finding using indexed values of sr[] & bisection */
+	if (r < star[1].r)
+		return (star[1].phi);
+
+   //i = check_if_r_around_last_index(last_index, r);
+   i=-1;
+   if (i== -1) {
+           if (SEARCH_GRID) {
+             star_interval= search_grid_get_interval(r_grid, r);
+             kmax= star_interval.max;
+             kmin= star_interval.min;
+           } else {
+             kmax= clus.N_MAX+1;
+             kmin= 1;
+           };
+           if (kmin==kmax-1) {
+             i= kmin;
+           } else {
+             i =  FindZero_r(kmin, kmax, r);
+           };
+	   last_index= i;
+   };
+
+	if(star[i].r > r || star[i+1].r < r){
+		eprintf("binary search (FindZero_r) failed!!\n");
+		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
+				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
+		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
+			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
+		exit_cleanly(-2);
+	}
+
+	/* Henon's method of computing the potential using star[].phi */ 
+	if (i == 0){ /* I think this is impossible, due to early return earlier,
+			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
+		henon = (star[1].phi);
+	} else {
+		henon = (star[i].phi + (star[i + 1].phi - star[i].phi) 
+			 * (1.0/star[i].r - 1.0/r) /
+			 (1.0/star[i].r - 1.0/star[i + 1].r));
+	}
+	
+	return (henon);
+}
+
+
 /* toggle debugging */
 void toggle_debugging(int signal)
 {
@@ -745,46 +798,6 @@ void comp_mass_percent(){
 
 /* The potential computed using the star[].phi computed at the star 
    locations in star[].r sorted by increasing r. */
-double potential(double r) {
-	long i;
-	double henon;
-
-	/* root finding using indexed values of sr[] & bisection */
-	if (r < star[1].r)
-		return (star[1].phi);
-
-   i = check_if_r_around_last_index(last_index, r);
-   //i=-1;
-   if (i== -1) {
-	   i =  FindZero_r(1, clus.N_MAX + 1, r);
-	   last_index= i;
-   };
-
-	if(star[i].r > r || star[i+1].r < r){
-		eprintf("binary search (FindZero_r) failed!!\n");
-		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
-				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
-		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
-			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
-		exit_cleanly(-2);
-	}
-
-	/* Henon's method of computing the potential using star[].phi */ 
-	if (i == 0){ /* I think this is impossible, due to early return earlier,
-			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
-		henon = (star[1].phi);
-	} else {
-		henon = (star[i].phi + (star[i + 1].phi - star[i].phi) 
-			 * (1.0/star[i].r - 1.0/r) /
-			 (1.0/star[i].r - 1.0/star[i + 1].r));
-	}
-	
-	return (henon);
-}
-
-
-/* The potential computed using the star[].phi computed at the star 
-   locations in star[].r sorted by increasing r. */
 double fastpotential(double r, long kmin, long kmax) {
 	long i;
 	double henon;
@@ -1125,3 +1138,5 @@ void clusdyn_calculate(void)
 	}
 	clusdyn.rh = star[k].r;
 }
+
+

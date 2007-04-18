@@ -35,6 +35,12 @@ int main(int argc, char *argv[])
 	/* parse input */
 	parser(argc, argv, rng);
 
+        /* initialize the Search_Grid r_grid */
+        if (SEARCH_GRID) {
+          r_grid= search_grid_initialize(SG_POWER_LAW_EXPONENT, \
+              SG_MATCH_AT_FRACTION, SG_STARSPERBIN, SG_PARTICLE_FRACTION);
+        };
+
 	/* Set up initial conditions, possibly from a previous snapshot */
 	/* ReadSnapshot is supposed to be set here if necessary         */
 	read_fits_file_data(INPUT_FILE);
@@ -75,6 +81,9 @@ int main(int argc, char *argv[])
 
 		orbit_r = R_MAX;
 		potential_calculate();
+                total_bisections= 0;
+                if (SEARCH_GRID) 
+                  search_grid_update(r_grid);
 	}
 	
 	ComputeEnergy();
@@ -197,6 +206,8 @@ int main(int argc, char *argv[])
 		qsorts(star+1,clus.N_MAX_NEW);
 
 		potential_calculate();
+                if (SEARCH_GRID)
+                  search_grid_update(r_grid);
 
 		if(E_CONS==2){
 			set_velocities();
@@ -244,11 +255,14 @@ int main(int argc, char *argv[])
 	dprintf("Sys time (ch)= %.6e seconds\n", (double)
 		(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
 	
+        printf("The total number of bisections is %li\n", total_bisections);
 	/* free RNG */
 	gsl_rng_free(rng);
 	
 	/* flush buffers before returning */
 	close_buffers();
 	free_arrays();
+        if (SEARCH_GRID)
+          search_grid_free(r_grid);
 	return(0);
 }
