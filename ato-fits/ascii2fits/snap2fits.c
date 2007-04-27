@@ -159,7 +159,7 @@ void scale_pos_and_vel(double *m, double *r, double *vr,
 		double *vt, long int N, double rcr){
 	long int i, *ind;
 	double PEtot, KEtot, U, T;
-	double MM, rfac, vfac, Mtot;
+	double MM, rfac, vfac, Mtot=0.;
 
         for (i=1; i<N+1; i++) {
           Mtot+= m[i];
@@ -167,7 +167,7 @@ void scale_pos_and_vel(double *m, double *r, double *vr,
         dprintf("The total mass is %lf\n", Mtot);
 
         ind= (long int *) calloc(N+2, sizeof(long));
-        for (i=0; i<N+2; i++) {
+        for (i=0; i<N+1; i++) {
           ind[i]= i;
         };
 
