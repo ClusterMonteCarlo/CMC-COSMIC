@@ -23,9 +23,9 @@
 #define NICK "Bad Horsie"
 #define DATE "Thu Feb 10 16:58:35 CST 2005"
 
-int debug=0;
+int debug=0, mtot_given=0, scale_units=1;
 
-double Mrtotal;
+double Mrtotal, Mtot;
 
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 
@@ -41,7 +41,8 @@ void print_usage(FILE *stream)
 	fprintf(stream, "\n");
 	fprintf(stream, "OPTIONS:\n");
 	fprintf(stream, "  -o --outfile <outfile> : set name of outfile [<snapshot file>.fits]\n");
-	fprintf(stream, "                           where <N> is replaced by its value\n");
+        fprintf(stream, "  -m --total-mass        : the total mass of the cluster [calculated from snapshot]\n");
+        fprintf(stream, "  -s --no-scaling        : turn off scaling of positions and velocities\n");
 	fprintf(stream, "  -d --debug             : turn on debugging\n");
 	fprintf(stream, "  -V --version           : print version info\n");
 	fprintf(stream, "  -h --help              : display this help text\n");
@@ -159,15 +160,10 @@ void scale_pos_and_vel(double *m, double *r, double *vr,
 		double *vt, long int N, double rcr){
 	long int i, *ind;
 	double PEtot, KEtot, U, T;
-	double MM, rfac, vfac, Mtot=0.;
-
-        for (i=1; i<N+1; i++) {
-          Mtot+= m[i];
-        };
-        dprintf("The total mass is %lf\n", Mtot);
+	double MM, rfac, vfac;
 
         ind= (long int *) calloc(N+2, sizeof(long));
-        for (i=0; i<N+1; i++) {
+        for (i=0; i<N+2; i++) {
           ind[i]= i;
         };
 
@@ -266,12 +262,11 @@ int main(int argc, char *argv[]){
 	char filename[1024]; 
         char *input;
 	int i;
-	const char *short_opts = "o:dVh";
+	const char *short_opts = "so:m:dVh";
 	const struct option long_opts[] = {
-		{"rmax", required_argument, NULL, 'r'},
-		{"N", required_argument, NULL, 'N'},
 		{"outfile", required_argument, NULL, 'o'},
-		{"seed", required_argument, NULL, 's'},
+                {"total-mass", required_argument, NULL, 'm'},
+                {"no-scaling", required_argument, NULL, 's'},
 		{"debug", no_argument, NULL, 'd'},
 		{"version", no_argument, NULL, 'V'},
 		{"help", no_argument, NULL, 'h'},
@@ -287,6 +282,13 @@ int main(int argc, char *argv[]){
 		case 'o':
 			sprintf(filename, "%s", optarg);
 			break;
+                case 'm':
+                        mtot_given=1;
+                        Mtot= strtod(optarg, NULL);
+                        break;
+                case 's':
+                        scale_units=0;
+                        break;
 		case 'd':
 			debug = 1;
 			break;
@@ -317,10 +319,25 @@ int main(int argc, char *argv[]){
 
 	dprintf("rmax=%g N=%ld filename=%s seed=%ld\n", rmax, N, filename, seed);
 
+        if (!mtot_given) {
+          for (i=1; i<N+1; i++) {
+            Mtot+= m[i];
+          };
+        };
+        dprintf("The total mass is %lf\n", Mtot);
+
 	check_for_file(filename);
         readSnapshot(input, &r, &vr, &vt, &m, &N);
-	scale_pos_and_vel(m, r, vr, vt, N, rcr);
-	write_output_file(m, r, vr, vt, N, filename);
+        if (scale_units) {
+          scale_pos_and_vel(m, r, vr, vt, N, rcr);
+        };
+
+        /* scale the masses such that Mtot= 1 (N-body unit)*/
+        for (i=1; i<N+1; i++) {
+          m[i]/= Mtot;
+        };
+
+        write_output_file(m, r, vr, vt, N, filename);
 
 	/*for(i=1; i<=N; i++){
 		printf("%.30e %.30e %.30e\n", 
