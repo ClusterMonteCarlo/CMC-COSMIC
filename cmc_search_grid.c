@@ -89,6 +89,7 @@ void search_grid_update(struct Search_Grid *grid) {
   printf("# grid length is %li\n", grid->length);
 
   r_index=0;
+  grid->radius[0]= 2;
   for (i=2; i<=clus.N_MAX; i++) {
     star_index= search_grid_get_grid_index(grid, star[i].r);
     if (star_index<grid->length) {
@@ -120,6 +121,7 @@ search_grid_get_interval(struct Search_Grid *grid, double r) {
   struct Interval sindex;
 
   grid_index= search_grid_get_grid_index(grid, r);
+
   if (grid_index>= grid->length) {
     sindex.min= grid->radius[grid->length-1];
     if (r> star[clus.N_MAX].r) {
