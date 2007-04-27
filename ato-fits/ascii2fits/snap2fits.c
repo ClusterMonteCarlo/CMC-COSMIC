@@ -319,6 +319,9 @@ int main(int argc, char *argv[]){
 
 	dprintf("rmax=%g N=%ld filename=%s seed=%ld\n", rmax, N, filename, seed);
 
+	check_for_file(filename);
+        readSnapshot(input, &r, &vr, &vt, &m, &N);
+        
         if (!mtot_given) {
           for (i=1; i<N+1; i++) {
             Mtot+= m[i];
@@ -326,8 +329,6 @@ int main(int argc, char *argv[]){
         };
         dprintf("The total mass is %lf\n", Mtot);
 
-	check_for_file(filename);
-        readSnapshot(input, &r, &vr, &vt, &m, &N);
         if (scale_units) {
           scale_pos_and_vel(m, r, vr, vt, N, rcr);
         };
