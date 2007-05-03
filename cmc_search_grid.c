@@ -141,6 +141,9 @@ search_grid_get_interval(struct Search_Grid *grid, double r) {
    * largest or smallest particle radius*/ 
   sindex.max++;
   sindex.min--;
+  
+  /* This prevents that min becomes larger than 1 if r<star[1].r (weird!!)*/
+  if (r<star[1].r) sindex.min= 1
 
   return(sindex);
 };
