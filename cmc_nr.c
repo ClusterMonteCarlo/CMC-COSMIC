@@ -16,6 +16,13 @@ long FindZero_r(long kmin, long kmax, double r){
 	 * 2) kmin<kmax,
 	 * find and return the index k, such that star[k].r<r<star[k+1].r */
 	long ktry;
+
+        if (star[kmin].r>r || star[kmax].r<r) {
+          dprintf("r is outside kmin kmax!!\n");
+          dprintf("star[kmin].r= %lf, star[kmax].r= %lf, kmin= %li, kmax= %li, r=%lf\n", 
+                star[kmin].r, star[kmax].r, kmin, kmax, r);
+        };
+
 	do {
 		ktry = (kmin+kmax+1)/2;
 		if (star[ktry].r<r){
@@ -109,7 +116,7 @@ long FindZero_r(long x1, long x2, double r)
 */
 /* #define FUNC(j, k, E, J) (2.0 * (E - (star[k].phi)) - SQR(J / star[k].r)) */
 #define FUNC(j, k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J))
-
+//#define FUNC(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J/star[(k)].r))
 long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 	/* another binary search:
 	 * anologous to above, except FUNC(k) may be decreasing 
