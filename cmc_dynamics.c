@@ -209,7 +209,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			set_star_EJ(kp);
 
 			/* check to see whether stars should be eaten by central BH */
-			if (cenma.m > 0.0) {
+			if (cenma.m > 0.0 && BH_LOSS_CONE) {
 				if (star[k].E < 0.0) {
 					bh_rand_walk(k, beta, dt);
 				}

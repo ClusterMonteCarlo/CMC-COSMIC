@@ -173,6 +173,7 @@ typedef struct{
         int SG_POWER_LAW_EXPONENT;
         int SG_MATCH_AT_FRACTION;
         int SG_PARTICLE_FRACTION;
+        int BH_LOSS_CONE;
 } parsed_t;
 
 /* a struct containing the units used */

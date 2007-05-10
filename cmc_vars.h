@@ -94,3 +94,7 @@ double SG_POWER_LAW_EXPONENT, SG_MATCH_AT_FRACTION, SG_PARTICLE_FRACTION;
 struct Search_Grid *r_grid;
 /* for testing the effect */
 long total_bisections;
+
+/* an optional switch to turn off black hole accretion but having a non-zero central mass */
+long BH_LOSS_CONE;
+

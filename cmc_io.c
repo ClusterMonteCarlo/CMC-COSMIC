@@ -593,7 +593,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
                         } else if (strcmp(parameter_name, "SG_PARTICLE_FRACTION")== 0) {
 				sscanf(values, "%lf", &SG_PARTICLE_FRACTION);
 				parsed.SG_PARTICLE_FRACTION = 1;
-			} else {
+			} else if (strcmp(parameter_name, "BH_LOSS_CONE")== 0) {
+				sscanf(values, "%lf", &BH_LOSS_CONE);
+				parsed.BH_LOSS_CONE = 1;
+                        } else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
 		} else if (sscanf(line, "%s", parameter_name) == 1) {
@@ -660,6 +663,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(SG_POWER_LAW_EXPONENT, 0.5);
         CHECK_PARSED(SG_MATCH_AT_FRACTION, 0.5);
         CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95);
+        CHECK_PARSED(BH_LOSS_CONE, 1);
 	
 #undef CHECK_PARSED
 
