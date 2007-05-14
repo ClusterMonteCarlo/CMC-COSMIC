@@ -95,8 +95,10 @@ ifeq ($(HOSTNAME),fugu.phys.northwestern.edu)
 #CFLAGS := -Wall -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" -Ofast -OPT:fast_math=on -LNO:fu=9:full_unroll_size=7000 -static-data -I/usr/include/cfitsio
 #CFLAGS := $(CFLAGS) -march=opteron -I/usr/include/cfitsio
 #CC = gcc
-CFLAGS := $(CFLAGS) -march=k8 -I/usr/include/cfitsio
+#CFLAGS := $(CFLAGS) -march=k8 -I/usr/include/cfitsio
+CFLAGS := $(CFLAGS) -m32 -march=k8 -I/share/apps/gsl/include -L/share/apps/gsl/lib -I/share/apps/cfitsio/include -L/share/apps/cfitsio/lib
 LIBFLAGS := $(LIBFLAGS) -static
+CONDOR =
 endif
 
 DOMNAME = $(shell hostname | cut -d . -f 2-)
