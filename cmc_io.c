@@ -594,7 +594,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(values, "%lf", &SG_PARTICLE_FRACTION);
 				parsed.SG_PARTICLE_FRACTION = 1;
 			} else if (strcmp(parameter_name, "BH_LOSS_CONE")== 0) {
-				sscanf(values, "%lf", &BH_LOSS_CONE);
+				sscanf(values, "%li", &BH_LOSS_CONE);
 				parsed.BH_LOSS_CONE = 1;
                         } else {
 				wprintf("unknown parameter: \"%s\".\n", line);
