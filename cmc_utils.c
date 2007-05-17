@@ -32,8 +32,14 @@ inline double potential(double r) {
         struct Interval star_interval;
 
 	/* root finding using indexed values of sr[] & bisection */
-	if (r < star[1].r)
-		return (star[1].phi);
+	if (r== 0.0) {
+		return (star[0].phi);
+	};
+	if (r < star[1].r) {
+	     dprintf("r in the last bin. r= %lg, r[1]= %lf, phi[0]=  %lg, Mbh/r= %lg\n", 
+		r, star[1].r, star[0].phi, cenma.m*madhoc/r);
+	     return (star[0].phi-cenma.m*madhoc/r);
+	};
 
    //i = check_if_r_around_last_index(last_index, r);
    i=-1;
@@ -321,6 +327,7 @@ void RecomputeEnergy(void) {
 		
 		/* Compute PE using Henon method using star[].phi */
 		Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
+		Etotal.P += star[0].phi * cenma.m*madhoc/ clus.N_STAR;
 
 		if (star[i].binind == 0) {
 			Etotal.Eint += star[i].Eint;
@@ -529,6 +536,7 @@ void ComputeEnergy(void)
 		if (!ReadSnapshot) {
 			Etotal.K += 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt) * star[k].m / clus.N_STAR;
 			Etotal.P += star[k].phi * star[k].m / clus.N_STAR;
+			Etotal.P += star[0].phi * cenma.m*madhoc/ clus.N_STAR;
 			
 			if (star[k].binind == 0) {
 				Etotal.Eint += star[k].Eint;
@@ -619,15 +627,19 @@ long potential_calculate(void) {
 		/* star[k].phi = -(M/a) / sqrt(1.0 + sqr(star[k].r/a)); */
 	}
 
-	for (k = 1; k <= clus.N_MAX; k++){
+	/*for (k = 1; k <= clus.N_MAX; k++){
 		star[k].phi -= cenma.m * madhoc / star[k].r;
 		if(isnan(star[k].phi)){
 			eprintf("NaN detected\n");
 			exit_cleanly(-1);
 		}
-	}
+	}*/
 	
-	star[0].phi = star[1].phi; /* U(r=0) is U_1 */
+	star[0].phi = star[1].phi+ cenma.m*madhoc/star[1].r; /* U(r=0) is U_1 */
+	if (isnan(star[0].phi)) {
+		eprintf("NaN in phi[0] detected\n");
+		exit_cleanly(-1);
+	}
 
 	return (clus.N_MAX);
 }
