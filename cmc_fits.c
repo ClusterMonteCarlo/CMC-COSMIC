@@ -127,7 +127,14 @@ void read_fits_file_data_old(fitsfile *fptr) {
 	for(i=1; i<=NSTAR; i++){
 		star[i].m /= avemass;
 	}
-	initial_total_mass = totmass;
+        /* check if there is a black hole in the file */
+        if (star[0].m>0. && CENTRAL_MASS_FROM_FILE) {
+          cenma.m= star[0].m /avemass;
+        } else {
+          /* some safety precautions */
+          star[0].m= 0.;
+        }
+	initial_total_mass = totmass + star[0].m;
 	
 	/* set the units */
 	units_set();

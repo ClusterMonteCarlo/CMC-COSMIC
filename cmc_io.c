@@ -471,6 +471,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(values, "%lf", &cenma.m);
 				cenma.E = 0.0;
 				parsed.CENTRAL_MASS = 1;
+			} else if (strcmp(parameter_name, "CENTRAL_MASS_FROM_FILE") == 0) {
+				sscanf(values, "%i", &CENTRAL_MASS_FROM_FILE); 
+				parsed.CENTRAL_MASS_FROM_FILE = 1;
 			} else if (strcmp(parameter_name, "CHECKPOINT_PERIOD") == 0) {
 				sscanf(values, "%ld", &CHECKPOINT_PERIOD);
 				parsed.CHECKPOINT_PERIOD = 1;
@@ -664,6 +667,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(SG_MATCH_AT_FRACTION, 0.5);
         CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95);
         CHECK_PARSED(BH_LOSS_CONE, 1);
+        CHECK_PARSED(CENTRAL_MASS_FROM_FILE, 0);
 	
 #undef CHECK_PARSED
 

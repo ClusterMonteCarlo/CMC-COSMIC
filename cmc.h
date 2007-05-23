@@ -133,6 +133,7 @@ typedef struct{
 	int BINBIN;
 	int BINSINGLE;
 	int CENTRAL_MASS;
+        int CENTRAL_MASS_FROM_FILE;
 	int SNAPSHOT_PERIOD;
 	int CHECKPOINT_PERIOD;
 	int E_CONS;

@@ -67,12 +67,18 @@ void assign_binaries(void)
 	
 	/* rescale to new unit of mass (this keeps the units N-body, and also preserves the virial ratio
 	   at 2T/|W|=1) */
+        /* FIXME: I added the mass of a possible central object given in the fits file to Mtotnew 
+         * by changing the start of the following two loops from i=1 to i=0. This is not entirely
+         * consistent with how the central mass is treated in the other parts of the code, but preserves 
+         * the mass units in the code if there are no binaries. When we include BH-stellar-binary 
+         * interactions we need to rethink this. --- stefan: 05/23/07 */
 	Mtotnew = 0.0;
-	for (i=1; i<=clus.N_STAR; i++) {
+	for (i=0; i<=clus.N_STAR; i++) {
 		Mtotnew += star[i].m * madhoc;
 	}
 	
-	for (i=1; i<=clus.N_STAR; i++) {
+        dprintf("m[0]= %lg, Mtotnew= %lf\n", star[0].m* madhoc, Mtotnew);
+	for (i=0; i<=clus.N_STAR; i++) {
 		star[i].m /= Mtotnew;
 		if (star[i].binind) {
 			binary[star[i].binind].m1 /= Mtotnew;
