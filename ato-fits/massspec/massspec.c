@@ -33,6 +33,7 @@ struct star {
 
 struct cluster {
 	unsigned long int	NSTAR; 	/* number of stars		*/
+        double          total_mass;      /* the total mass in stars      */
 };
 
 struct code_par {
@@ -336,12 +337,13 @@ double find_mminp(double cms, double m_abs_min, double m_abs_max,
 }
 
 void set_masses(struct imf_param param, struct star *s[],
-			struct cluster c, struct code_par cp){
+			struct cluster *c, struct code_par cp){
 	unsigned long int i;
 	double m, X, X2, norm, tmp, n_rat, ncheck;
 	double total_mass, mmin, mmin_ms;
 	double Xcrit, C1, C2, C3, C4;
 
+        
 	set_rng_t113(cp.rng_st);
 	/* to change the RND seed we make call(s) to RNG */
 	X = rng_t113_dbl();
@@ -349,9 +351,9 @@ void set_masses(struct imf_param param, struct star *s[],
 	X = rng_t113_dbl();
 	X = rng_t113_dbl();
 	total_mass = 0.0;
-	n_rat = ((double) param.n_neutron / (double) c.NSTAR);
+	n_rat = ((double) param.n_neutron / (double) c->NSTAR);
 	if(param.imf==1 && param.Cms==1.0){  /* Power-law w/o ms     */
-		for(i=1; i<=c.NSTAR; i++){
+		for(i=1; i<=c->NSTAR; i++){
 		        
 			tmp = param.pl_index+1.0;
 			X = rng_t113_dbl();
@@ -369,7 +371,7 @@ void set_masses(struct imf_param param, struct star *s[],
 		/* XXX maybe there should be a warning for Cms~=1.0 XXX */
 		mmin_ms = find_mminp(param.Cms, param.mmin, param.mmax,
 						param.pl_index);
-		for(i=1; i<=c.NSTAR; i++){
+		for(i=1; i<=c->NSTAR; i++){
 			tmp = param.pl_index+1.0;
 			X = rng_t113_dbl();
 			X2 = rng_t113_dbl();
@@ -389,7 +391,7 @@ void set_masses(struct imf_param param, struct star *s[],
 			total_mass += m;
 		}
 	} else if (param.imf==2){ /* Miller & Scalo */
-		for(i=1; i<=c.NSTAR; i++){
+		for(i=1; i<=c->NSTAR; i++){
 			do {
 				X = rng_t113_dbl();
 				m = 0.19*X
@@ -399,7 +401,7 @@ void set_masses(struct imf_param param, struct star *s[],
 			total_mass += m;
 		}
 	} else if (param.imf==3){ /* Scalo          */
-		for(i=1; i<=c.NSTAR; i++){
+		for(i=1; i<=c->NSTAR; i++){
 			do {
 				X = rng_t113_dbl();
 				m = 0.3*X / pow(1-X, 0.55);
@@ -408,7 +410,7 @@ void set_masses(struct imf_param param, struct star *s[],
 			total_mass += m;
 		}
 	} else if (param.imf==4){ /* Kroupa         */
-		for(i=1; i<=c.NSTAR; i++){
+		for(i=1; i<=c->NSTAR; i++){
 			do {
 				X = rng_t113_dbl();
 				m = 0.08 + (0.19*pow(X,1.55) + 0.05*pow(X,0.6))
@@ -418,7 +420,7 @@ void set_masses(struct imf_param param, struct star *s[],
 			total_mass += m;
 		}
 	} else if (param.imf==5){ /* Scalo (from Kroupa etal 1993 eq.15) */
-		for(i=1; i<=c.NSTAR; i++){
+		for(i=1; i<=c->NSTAR; i++){
 			do {
 				X = rng_t113_dbl();
 				m = 0.284*pow(X,0.337)
@@ -433,7 +435,7 @@ void set_masses(struct imf_param param, struct star *s[],
 		C3 = 1.000276574531978107760263208804720707748;
 		C4 = 0.1101063043729622254763763886604926439063;
 		Xcrit = 0.7291630515263233686411262877173302148501;
-		for(i=1; i<=c.NSTAR; i++){
+		for(i=1; i<=c->NSTAR; i++){
 			do {
 				X = rng_t113_dbl();
 				if (X<Xcrit){
@@ -446,13 +448,13 @@ void set_masses(struct imf_param param, struct star *s[],
 			total_mass += m;
 		}
 	} else if (param.imf==7){ /* Tracers */
-		if(c.NSTAR <= param.Ntrace){
+		if(c->NSTAR <= param.Ntrace){
 			printf("Number of tracers = %d\n", param.Ntrace);
-			printf("Number of stars = %ld\n", c.NSTAR);
+			printf("Number of stars = %ld\n", c->NSTAR);
 			printf("something wrong\n");
 			exit(EXIT_FAILURE);
 		}
-		for(i=1; i<=c.NSTAR; i++){
+		for(i=1; i<=c->NSTAR; i++){
 			m = 1.0;
 			(*s)[i].m = m;
 			total_mass += m;
@@ -462,12 +464,12 @@ void set_masses(struct imf_param param, struct star *s[],
 		 *  Knuth, vol2, section 3.4.3, Algorithm S */
 		for(i=0; i<param.Ntrace; i++){
 			m = param.mmin;
-			(*s)[c.NSTAR / (2*param.Ntrace) 
-				+ i*c.NSTAR/param.Ntrace + 1].m = m;
+			(*s)[c->NSTAR / (2*param.Ntrace) 
+				+ i*c->NSTAR/param.Ntrace + 1].m = m;
 			total_mass += m - 1.0;
 		}
 	  } else if(param.imf==8 && param.Cms==1.0){  /* Power-law w neutron stars */
-	    for(i=1; i<=c.NSTAR; i++){
+	    for(i=1; i<=c->NSTAR; i++){
 	    ncheck = rng_t113_dbl();
 	    tmp = param.pl_index+1.0;
 	    X = rng_t113_dbl();
@@ -490,7 +492,7 @@ void set_masses(struct imf_param param, struct star *s[],
 	    }
 	  }
           else if (param.imf==9){ 
-		for(i=1; i<=c.NSTAR; i++){
+		for(i=1; i<=c->NSTAR; i++){
 			m = param.mmin;
 			(*s)[i].m = m;
 			total_mass += m;
@@ -500,10 +502,11 @@ void set_masses(struct imf_param param, struct star *s[],
 		printf("This can't happen!\n");
 		exit(EXIT_FAILURE);
 	}
-        total_mass+= param.bhmass;
-	for(i=0; i<=c.NSTAR; i++){
+        //total_mass+= param.bhmass;
+	for(i=0; i<=c->NSTAR; i++){
 		(*s)[i].m /= total_mass;
 	}
+        c->total_mass= total_mass;
 }
 
 void write_output(struct star *s, struct cluster c, 
@@ -589,7 +592,7 @@ void scale_pos_and_vel(struct imf_param param, struct star *s[], struct cluster 
 	PEtot = KEtot = 0.0;
         N= c.NSTAR;
 	U = 0.0;
-	MM = 1.0; /* because of units, the total mass has to be 1 initially */
+	MM = 1.0+ param.bhmass/c.total_mass; /* because of units, the total mass has to be 1 initially */
 	for(i=N; i>=1; i--){
 		U -= MM*(1.0/(*s)[i].r - 1.0/(*s)[i+1].r);
 		T = 0.5 * ((*s)[i].vr * (*s)[i].vr + (*s)[i].vt * (*s)[i].vt);
@@ -598,7 +601,7 @@ void scale_pos_and_vel(struct imf_param param, struct star *s[], struct cluster 
 		KEtot += T* (*s)[i].m;
 	}
         if (param.bhmass>0.) {
-          U-= MM/(*s)[1].r;
+          U-= -MM/(*s)[1].r;
           PEtot+= 0.5*U*(*s)[0].m;
         };
 
@@ -607,7 +610,7 @@ void scale_pos_and_vel(struct imf_param param, struct star *s[], struct cluster 
 	/* scaling position and velocity */
 	rfac = -PEtot*2.0;
 	vfac = 1.0/sqrt(4.0*KEtot);
-  printf("rfac= %lf, vfac= %lf\n", rfac, vfac);
+        printf("rfac= %lf, vfac= %lf\n", rfac, vfac);
 	for(i=1; i<=N; i++){
 		(*s)[i].r *= rfac;
 		(*s)[i].vr *= vfac;
@@ -616,7 +619,7 @@ void scale_pos_and_vel(struct imf_param param, struct star *s[], struct cluster 
 
 	PEtot = KEtot = 0.0;
 	U = 0.0;
-	MM = 1.0; /* because of units, the total mass has to be 1 initially */
+	MM = 1.0+ param.bhmass/c.total_mass; /* because of units, the total mass has to be 1 initially */
 	for(i=N; i>=1; i--){
 		U -= MM*(1.0/(*s)[i].r - 1.0/(*s)[i+1].r);
 		T = 0.5 * ((*s)[i].vr * (*s)[i].vr + (*s)[i].vt * (*s)[i].vt);
@@ -625,7 +628,7 @@ void scale_pos_and_vel(struct imf_param param, struct star *s[], struct cluster 
 		KEtot += T* (*s)[i].m;
 	}
         if (param.bhmass>0.) {
-          U-= MM/(*s)[1].r;
+          U-= -MM/(*s)[1].r;
           PEtot+= 0.5*U*(*s)[0].m;
         };
 
@@ -641,7 +644,7 @@ int main(int argc, char *argv[]){
 	
 	parse_options(&param, argc, argv);
 	read_input(param, &s, &clus, &cp);
-	set_masses(param, &s, clus, cp);
+	set_masses(param, &s, &clus, cp);
 	/* I might add scaling to E0 = -1/4 here */
         if (param.scale) {
           scale_pos_and_vel(param, &s, clus);
