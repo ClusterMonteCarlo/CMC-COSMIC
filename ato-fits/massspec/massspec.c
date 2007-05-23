@@ -18,6 +18,8 @@ struct imf_param {
 	double pl_index;
 	double rcr;
 	double Cms;
+        double bhmass;
+        int scale;
 	char infile[1024];
 	char outfile[1024];
 };
@@ -64,12 +66,16 @@ void write_usage(void){
 	printf("            6: Kroupa (old form, for comparison reasons)\n");
 	printf("            7: Tracers (1 species, the rest are 1 Msun)\n");
 	printf("            8: Power-law with neutron stars (objects at 1.4 Msun)\n");
+        printf("            9: single mass (set by -m)\n");
 	printf("-w        : overwrite flag\n");
 	printf("-m <dbl>  : minimum mass, or tracer mass\n");
 	printf("-M <dbl>  : maximum mass\n");
 	printf("-p <dbl>  : power-law index (-2.35 is Salpeter)\n");
 	printf("-u <int>  : number of neutron stars\n");
 	printf("-N <int>  : number of tracers\n");
+        printf("-b <dbl>  : add a central black hole with mass <dbl>\n");
+        printf("-s        : scale positions and velocities such that the cluster is in exact ");
+        printf("virial equilibrium (T/2W = 1)\n");
 	printf("-r <dbl>  : rcr, the value of r within which average mass");
 	printf(" is different\n");
 	printf("-C <dbl>  : Cms, how much will the masses be different\n");
@@ -90,10 +96,12 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 	param->Ntrace = 0;
 	param->rcr = 1.00;
 	param->Cms = 1.00;
+        param->bhmass = 0.0;
+        param->scale = 0;
 	(param->infile)[0] = '\0';
 	(param->outfile)[0] = '\0';
 
-	while((c = getopt(argc, argv, "i:o:I:wm:M:p:u:N:r:C:h")) != -1)
+	while((c = getopt(argc, argv, "i:o:I:wm:M:p:u:N:r:C:hsb:")) != -1)
 		switch(c) {
 		case 'i':
 			strncpy(param->infile, optarg, 1024);
@@ -128,6 +136,12 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		case 'C':
 			param->Cms = strtod(optarg, NULL);
 			break;
+		case 'b':
+			param->bhmass = strtod(optarg, NULL);
+			break;
+                case 's':
+                        param->scale = 1;
+                        break;
 		case 'h':
 			write_usage();
 			exit(EXIT_SUCCESS);
@@ -164,7 +178,7 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
-	if (param->imf<1 || param->imf>8){
+	if (param->imf<1 || param->imf>9){
 		printf("Invalid IMF model value\n");
 		write_usage();
 		exit(EXIT_FAILURE);
@@ -186,6 +200,11 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 	}
 	if (param->imf==8 && param->n_neutron < 0){
 	        printf("Number of neutron stars must be positive");
+		write_usage();
+		exit(EXIT_FAILURE);
+	}
+        if (param->bhmass<0){
+		printf("ANTIGRAVITY! Wooaa... cool! (black hole mass is negative *grin*)\n");
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
@@ -224,7 +243,8 @@ void read_input(struct imf_param param, struct star *s[],
 	fits_read_key(fptr, TULONG, "RNG_Z3", &(cp->rng_st.z3), NULL, &status);
 	fits_read_key(fptr, TULONG, "RNG_Z4", &(cp->rng_st.z4), NULL, &status);
 	printerror(status);
-	*s = malloc((NSTAR+2)*sizeof(struct star));
+        nelem= NSTAR+2;
+        *s = malloc((NSTAR+2)*sizeof(struct star));
 	mass = malloc((NSTAR+2)*sizeof(double));
 	vr = malloc((NSTAR+2)*sizeof(double));
 	vt = malloc((NSTAR+2)*sizeof(double));
@@ -233,7 +253,6 @@ void read_input(struct imf_param param, struct star *s[],
 	/* read the columns into variables and copy variables to
 	 * struct star s[]                                       */
 	frow = 1; felem = 1; floatnull = 0.;  
-	nelem = NSTAR+2;
 	fits_read_col(fptr, TDOUBLE, 1, frow, felem, nelem, &floatnull, mass, 
 			&anynull, &status);
 	fits_read_col(fptr, TDOUBLE, 2, frow, felem, nelem, &floatnull, r, 
@@ -248,6 +267,13 @@ void read_input(struct imf_param param, struct star *s[],
 		(*s)[i].vr = vr[i];
 		(*s)[i].vt = vt[i];
 	}
+        
+        if (param.bhmass>0.) {
+          (*s)[0].m= param.bhmass;
+          (*s)[0].r = 0;
+          (*s)[0].vr = 0;
+          (*s)[0].vt = 0;
+        };
 			
 	free(mass); free(vr); free(vt); free(r);
 	fits_close_file(fptr, &status);
@@ -463,12 +489,18 @@ void set_masses(struct imf_param param, struct star *s[],
 	    total_mass += m;
 	    }
 	  }
-
+          else if (param.imf==9){ 
+		for(i=1; i<=c.NSTAR; i++){
+			m = param.mmin;
+			(*s)[i].m = m;
+			total_mass += m;
+		}
+	  }
 	else {
 		printf("This can't happen!\n");
 		exit(EXIT_FAILURE);
 	}
-
+        total_mass+= param.bhmass;
 	for(i=0; i<=c.NSTAR; i++){
 		(*s)[i].m /= total_mass;
 	}
@@ -549,7 +581,57 @@ void write_output(struct star *s, struct cluster c,
 	printerror(status);
 }
 
+void scale_pos_and_vel(struct imf_param param, struct star *s[], struct cluster c){
+	long int i, N;
+	double PEtot, KEtot, U, T;
+	double MM, rfac, vfac;
+	
+	PEtot = KEtot = 0.0;
+        N= c.NSTAR;
+	U = 0.0;
+	MM = 1.0; /* because of units, the total mass has to be 1 initially */
+	for(i=N; i>=1; i--){
+		U -= MM*(1.0/(*s)[i].r - 1.0/(*s)[i+1].r);
+		T = 0.5 * ((*s)[i].vr * (*s)[i].vr + (*s)[i].vt * (*s)[i].vt);
+		MM -= (*s)[i].m;
+		PEtot += 0.5*U* (*s)[i].m;
+		KEtot += T* (*s)[i].m;
+	}
+        if (param.bhmass>0.) {
+          U-= MM/(*s)[1].r;
+          PEtot+= 0.5*U*(*s)[0].m;
+        };
 
+	printf("Before scaling: PEtot = %f, KEtot = %f, vir rat = %f\n", 
+			PEtot, KEtot, KEtot/PEtot);
+	/* scaling position and velocity */
+	rfac = -PEtot*2.0;
+	vfac = 1.0/sqrt(4.0*KEtot);
+  printf("rfac= %lf, vfac= %lf\n", rfac, vfac);
+	for(i=1; i<=N; i++){
+		(*s)[i].r *= rfac;
+		(*s)[i].vr *= vfac;
+		(*s)[i].vt *= vfac;
+	}
+
+	PEtot = KEtot = 0.0;
+	U = 0.0;
+	MM = 1.0; /* because of units, the total mass has to be 1 initially */
+	for(i=N; i>=1; i--){
+		U -= MM*(1.0/(*s)[i].r - 1.0/(*s)[i+1].r);
+		T = 0.5 * ((*s)[i].vr * (*s)[i].vr + (*s)[i].vt * (*s)[i].vt);
+		MM -= (*s)[i].m;
+		PEtot += 0.5*U* (*s)[i].m;
+		KEtot += T* (*s)[i].m;
+	}
+        if (param.bhmass>0.) {
+          U-= MM/(*s)[1].r;
+          PEtot+= 0.5*U*(*s)[0].m;
+        };
+
+	printf("After  scaling: PEtot = %f, KEtot = %f, vir rat = %f\n", 
+			PEtot, KEtot, KEtot/PEtot);
+}
 int main(int argc, char *argv[]){
 	struct imf_param param;
 	struct star *s;
@@ -561,6 +643,9 @@ int main(int argc, char *argv[]){
 	read_input(param, &s, &clus, &cp);
 	set_masses(param, &s, clus, cp);
 	/* I might add scaling to E0 = -1/4 here */
+        if (param.scale) {
+          scale_pos_and_vel(param, &s, clus);
+        };
 	write_output(s, clus, cp, param);
 
 	/*for(i=1; i<=clus.NSTAR; i++){
