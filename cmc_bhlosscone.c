@@ -25,7 +25,11 @@ void bh_rand_walk(long index, double beta, double dt)
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
 	deltabeta_orb = 1.0/sqrt(n_orb) * beta; 
 	L2 = fb_sqr(beta); 
-	Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad;
+        if (BH_R_DISRUPT_NB>0.) {
+          Rdisr= BH_R_DISRUPT_NB;
+	} else {
+          Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad;
+        };
 	Jlc= sqrt(2.*cenma.m*madhoc*Rdisr);
 	vlc= Jlc/star[index].r;
 	get_3d_velocities(w, vr, vt);
