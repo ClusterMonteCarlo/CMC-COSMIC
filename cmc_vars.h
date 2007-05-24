@@ -98,4 +98,4 @@ long total_bisections;
 /* an optional switch to turn off black hole accretion but having a non-zero central mass */
 long BH_LOSS_CONE;
 int CENTRAL_MASS_FROM_FILE;
-
+double BH_R_DISRUPT_NB;

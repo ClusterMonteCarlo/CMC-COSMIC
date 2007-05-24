@@ -175,6 +175,7 @@ typedef struct{
         int SG_MATCH_AT_FRACTION;
         int SG_PARTICLE_FRACTION;
         int BH_LOSS_CONE;
+        int BH_R_DISRUPT_NB;
 } parsed_t;
 
 /* a struct containing the units used */
