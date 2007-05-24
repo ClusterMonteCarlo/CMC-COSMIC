@@ -134,7 +134,7 @@ void read_fits_file_data_old(fitsfile *fptr) {
           /* some safety precautions */
           star[0].m= 0.;
         }
-	initial_total_mass = totmass + star[0].m;
+	initial_total_mass = totmass; //+ star[0].m;
 	
 	/* set the units */
 	units_set();
