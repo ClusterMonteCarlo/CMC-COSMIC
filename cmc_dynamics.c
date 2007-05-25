@@ -198,7 +198,17 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				vp_new[j] = vp[j] + star[k].m / (star[k].m + star[kp].m) * (w_new[j] - w[j]);
 			}
 			
-			/* set new velocities for both stars */
+			/* check to see whether stars should be eaten by central BH */
+			if (cenma.m > 0.0 && BH_LOSS_CONE) {
+				if (star[k].E < 0.0) {
+					bh_rand_walk(k, v, vcm, beta, dt);
+				}
+				if (star[kp].E < 0.0) {
+					bh_rand_walk(kp, vp, vcm, beta, dt);
+				}
+			}
+      
+      /* set new velocities for both stars */
 			star[k].vr = v_new[3];
 			star[k].vt = sqrt(sqr(v_new[1]) + sqr(v_new[2]));
 			star[kp].vr = vp_new[3];
@@ -208,16 +218,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			set_star_EJ(k);
 			set_star_EJ(kp);
 
-			/* check to see whether stars should be eaten by central BH */
-			if (cenma.m > 0.0 && BH_LOSS_CONE) {
-				if (star[k].E < 0.0) {
-					bh_rand_walk(k, beta, dt);
-				}
-				if (star[kp].E < 0.0) {
-					bh_rand_walk(kp, beta, dt);
-				}
 			}
-		}
 	}
 	
 	/* print relaxation information */

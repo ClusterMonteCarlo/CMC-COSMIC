@@ -10,17 +10,16 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-void bh_rand_walk(long index, double beta, double dt)
+void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt)
 { 
 	/*This is the random walk procedure as outlined by Freitag & Benz (2002).
 	  Change of notation: beta here is theta in the paper. */
 	double w[3], n_orb, P_orb, deltabeta_orb, L2, Rdisr, Jlc, vlc;
 	double deltamax, deltasafe, delta, dbeta;
 	double vt, vr;
+	int i;
 	
  	/* simulate loss cone physics for central mass */
-	vt = star[index].vt;
-	vr = star[index].vr;
 	P_orb = calc_P_orb(index);
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
 	deltabeta_orb = 1.0/sqrt(n_orb) * beta; 
@@ -32,9 +31,11 @@ void bh_rand_walk(long index, double beta, double dt)
         };
 	Jlc= sqrt(2.*cenma.m*madhoc*Rdisr);
 	vlc= Jlc/star[index].r;
-	get_3d_velocities(w, vr, vt);
+  	for (i=0; i<3; i++) {
+    		w[i]= v[i+1]- vcm[i+1];
+  	}
 	while (L2 > 0.0) { 
-		if (sqrt(fb_sqr(w[0])+fb_sqr(w[1])) <= vlc) { 
+		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
 			dprintf("index=%ld: star eaten by BH\n", index);
 			cenma.m += star[index].m; 
 			destroy_obj(index);

@@ -399,7 +399,7 @@ double calc_P_orb(long index);
 double calc_p_orb_f(double x, void *params);
 double calc_p_orb_f2(double x, void *params);
 double calc_p_orb_gc(double x, void *params);
-void bh_rand_walk(long index, double beta, double dt);
+void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt);
 
 /* potential calculation speed-up*/
 long check_if_r_around_last_index(long last_index, double r);
