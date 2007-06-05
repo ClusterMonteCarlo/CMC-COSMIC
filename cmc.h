@@ -135,6 +135,8 @@ typedef struct{
 	int CENTRAL_MASS;
         int CENTRAL_MASS_FROM_FILE;
 	int SNAPSHOT_PERIOD;
+        int SNAPSHOT_CORE_COLLAPSE;
+        int SNAPSHOT_CORE_BOUNCE;
 	int CHECKPOINT_PERIOD;
 	int E_CONS;
 	int IDUM;

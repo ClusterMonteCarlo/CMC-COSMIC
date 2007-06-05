@@ -433,7 +433,8 @@ long CheckStop(struct tms tmsbufref) {
 
 	/* Output some snapshots near core collapse 
 	 * (if core density is high enough) */
-	if (SNAPSHOT_PERIOD){
+	if (SNAPSHOT_PERIOD) {
+          if (SNAPSHOT_CORE_COLLAPSE) { 
 		if (rho_core > 50.0 && Echeck == 0) {
 			print_2Dsnapshot();
 			Echeck++;
@@ -465,6 +466,7 @@ long CheckStop(struct tms tmsbufref) {
 			print_2Dsnapshot();
 			Echeck++;
 		}
+          }
 
 		/* added by ato 
 		 * to try to take snapshots for core bounce as well. 
@@ -472,6 +474,7 @@ long CheckStop(struct tms tmsbufref) {
 		 * last time we took snapshot, take another one and adjust
 		 * parameters to take further snapshots if further collapse
 		 * occurs */
+          if (SNAPSHOT_CORE_BOUNCE) {
 		if (rho_core < 0.9e6 && Echeck == 10){
 			print_2Dsnapshot();
 			Echeck--;
@@ -503,6 +506,7 @@ long CheckStop(struct tms tmsbufref) {
 			print_2Dsnapshot();
 			Echeck--;
 		} 
+          }
 	}
 
 	/* If total Energy has diminished by TERMINAL_ENERGY_DISPLACEMENT, then stop */

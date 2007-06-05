@@ -480,6 +480,12 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "SNAPSHOT_PERIOD") == 0) {
 				sscanf(values, "%ld", &SNAPSHOT_PERIOD);
 				parsed.SNAPSHOT_PERIOD = 1;
+                        } else if (strcmp(parameter_name, "SNAPSHOT_CORE_BOUNCE") == 0) {
+				sscanf(values, "%d", &SNAPSHOT_CORE_BOUNCE);
+				parsed.SNAPSHOT_CORE_BOUNCE = 1;
+			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_COLLAPSE") == 0) {
+				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
+				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
 			} else if (strcmp(parameter_name, "E_CONS") == 0) {
 				sscanf(values, "%ld", &E_CONS);
 				parsed.E_CONS = 1;
@@ -672,6 +678,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(BH_LOSS_CONE, 1);
         CHECK_PARSED(CENTRAL_MASS_FROM_FILE, 0);
         CHECK_PARSED(BH_R_DISRUPT_NB, 0.);
+        CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 1.);
+        CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 1.);
+
 	
 #undef CHECK_PARSED
 
