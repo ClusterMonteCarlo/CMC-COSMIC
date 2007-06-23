@@ -40,7 +40,12 @@ int main(int argc, char *argv[])
           r_grid= search_grid_initialize(SG_POWER_LAW_EXPONENT, \
               SG_MATCH_AT_FRACTION, SG_STARSPERBIN, SG_PARTICLE_FRACTION);
         };
-
+#ifdef DEBUGGING
+        /* create a new hash table for the star ids */
+        star_ids= g_hash_table_new(g_int_hash, g_int_equal);
+        /* load a trace list */
+        load_id_table(star_ids, "trace_list");
+#endif
 	/* Set up initial conditions, possibly from a previous snapshot */
 	/* ReadSnapshot is supposed to be set here if necessary         */
 	read_fits_file_data(INPUT_FILE);
@@ -264,5 +269,9 @@ int main(int argc, char *argv[])
 	free_arrays();
         if (SEARCH_GRID)
           search_grid_free(r_grid);
+#ifdef DEBUGGING
+        g_hash_table_destroy(star_ids);
+        g_array_free(id_array, TRUE);
+#endif
 	return(0);
 }

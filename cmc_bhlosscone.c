@@ -18,7 +18,19 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	double deltamax, deltasafe, delta, dbeta;
 	double vt, vr, w_mag;
 	int i;
-	
+#ifdef DEBUGGING
+        FILE *rwalk_file;
+        char fname[80];
+        long is_in_ids;
+        
+        is_in_ids= 0;
+        if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
+          sprintf(fname, "%s.rwalk_steps_%.4i", outprefix, star[index].id);
+          rwalk_file= fopen(fname, "a");
+          fprintf(rwalk_file, "# Time deltabeta_orb deltasafe sqrt(L2) delta\n");
+          is_in_ids=1;
+        };
+#endif
  	/* simulate loss cone physics for central mass */
 	P_orb = calc_P_orb(index);
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
@@ -37,7 +49,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
         w_mag= sqrt(w[0]*w[0]+w[1]*w[1]+w[2]*w[2]);
 	while (L2 > 0.0) { 
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
-			dprintf("index=%ld: star eaten by BH\n", index);
+			dprintf("index=%ld, id=%ld: star eaten by BH\n", index, star[index].id);
 			cenma.m += star[index].m; 
 			destroy_obj(index);
 			L2 = 0.0; 
@@ -48,8 +60,18 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 			dbeta = 2.0 * PI * rng_t113_dbl(); 
 			do_random_step(w, dbeta, delta); 
 			L2 -= fb_sqr(delta); 
+#ifdef DEBUGGING
+                        if (is_in_ids) {
+                          fprintf(rwalk_file, "%f %g %g %g %g\n", deltabeta_orb, deltasafe, sqrt(L2), delta);
+                        }
+#endif
 		} 
 	}; 
+#ifdef DEBUGGING
+        if (is_in_ids) {
+          fclose(rwalk_file);
+        }
+#endif
 }; 
 
 

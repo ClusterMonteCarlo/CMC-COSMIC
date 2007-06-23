@@ -453,6 +453,11 @@ double search_grid_get_r(struct Search_Grid *grid, long index);
 double search_grid_get_grid_indexf(struct Search_Grid *grid, double r);
 void search_grid_free(struct Search_Grid *grid);
 
+#ifdef DEBUGGING
+#include <glib.h>
+void load_id_table(GHashTable* ids, char *filename);
+#endif
+
 /* macros */ 
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
 /* #define PHI_S(rad, j) ( ((rad)>=star[(j)].r ? star[(j)].m/(rad) : star[(j)].m/star[(j)].r) * (1.0/clus.N_STAR) - 0.5*star[(j)].m/clus.N_STAR/(rad) ) */

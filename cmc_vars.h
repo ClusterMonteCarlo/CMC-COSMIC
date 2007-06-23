@@ -100,3 +100,8 @@ long total_bisections;
 long BH_LOSS_CONE;
 int CENTRAL_MASS_FROM_FILE;
 double BH_R_DISRUPT_NB;
+
+#ifdef DEBUGGING
+GHashTable *star_ids;
+GArray *id_array;
+#endif
