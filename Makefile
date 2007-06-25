@@ -38,13 +38,24 @@ VERSION = $(shell grep revision .svn/entries | cut -d \" -f 2)
 DATE = $(shell date | sed -e 's|[[:space:]]|_|g')
 
 ##############################################################################
+### set debugging symbols if we are in DEBUGGING mode
+##############################################################################
+ifdef DEBUGGING
+  DEBUG_LIBS = $(shell pkg-config --libs glib-2.0)
+  DEBUG_FLAGS = "-DDEBUGGING" $(shell pkg-config --cflags glib-2.0)
+else
+  DEBUG_LIBS = 
+  DEBUG_FLAGS = 
+endif
+
+##############################################################################
 ### test for architecture to set CFLAGS and LIBFLAGS
 ##############################################################################
 UNAME = $(shell uname)
 
 ifeq ($(UNAME),Linux)
-CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
+CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
+LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
 CC = gcc
@@ -96,8 +107,8 @@ ifeq ($(HOSTNAME),fugu.phys.northwestern.edu)
 #CFLAGS := $(CFLAGS) -march=opteron -I/usr/include/cfitsio
 #CC = gcc
 #CFLAGS := $(CFLAGS) -march=k8 -I/usr/include/cfitsio
-CFLAGS := $(CFLAGS) -m32 -march=k8 -I/share/apps/gsl/include -L/share/apps/gsl/lib -I/share/apps/cfitsio/include -L/share/apps/cfitsio/lib
-LIBFLAGS := $(LIBFLAGS) -static
+CFLAGS := $(CFLAGS) -m32 -march=k8 -I/share/apps/gsl/include -L/share/apps/gsl/lib -I/share/apps/cfitsio/include -L/share/apps/cfitsio/lib $(DEBUG_FLAGS)
+LIBFLAGS := $(LIBFLAGS) $(DEBUG_LIBS) -static 
 CONDOR =
 endif
 
@@ -126,7 +137,7 @@ OBJS = $(NAME)_binbin.o $(NAME)_binsingle.o $(NAME)_dynamics.o \
 	$(NAME)_utils.o taus113-v2.o $(NAME)_fits.o startrack/singl.o \
 	$(NAME)_stellar_evolution.o $(NAME)_fits_sshot.o \
 	$(NAME)_sort.o $(NAME)_sscollision.o $(NAME)_bhlosscone.o \
-	$(NAME)_search_grid.o
+	$(NAME)_search_grid.o $(NAME)_trace.o
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
 	$(FEWBODYDIR)/fewbody_int.o $(FEWBODYDIR)/fewbody_io.o \
@@ -142,7 +153,7 @@ COBJS = $(NAME)_binbin.co $(NAME)_binsingle.co $(NAME)_dynamics.co \
 	$(NAME)_utils.co taus113-v2.co $(NAME)_fits.co startrack/singl.co \
 	$(NAME)_stellar_evolution.co $(NAME)_fits_sshot.co \
 	$(NAME)_sort.co $(NAME)_sscollision.co $(NAME)_bhlosscone.co \
-	$(NAME)_search_grid.co
+	$(NAME)_search_grid.co $(NAME)_trace.co
 FEWBODYCOBJS = $(FEWBODYDIR)/fewbody.co $(FEWBODYDIR)/fewbody_classify.co \
 	$(FEWBODYDIR)/fewbody_coll.co $(FEWBODYDIR)/fewbody_hier.co \
 	$(FEWBODYDIR)/fewbody_int.co $(FEWBODYDIR)/fewbody_io.co \
