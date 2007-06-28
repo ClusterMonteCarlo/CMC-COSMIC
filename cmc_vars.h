@@ -100,6 +100,8 @@ long total_bisections;
 long BH_LOSS_CONE;
 int CENTRAL_MASS_FROM_FILE;
 double BH_R_DISRUPT_NB;
+/* force to use the relaxation step, even if relaxation is turned off */
+int FORCE_RLX_STEP;
 
 #ifdef DEBUGGING
 GHashTable *star_ids;

@@ -143,7 +143,7 @@ double GetTimeStep(gsl_rng *rng) {
 	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs;
 	
 	/* calculate the relaxation timestep */
-	if (RELAXATION) {
+	if (RELAXATION || FORCE_RLX_STEP) {
 		DTrel = simul_relax(rng);
 	} else {
 		DTrel = GSL_POSINF;

@@ -608,7 +608,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
                         } else if (strcmp(parameter_name, "BH_R_DISRUPT_NB")== 0) {
 				sscanf(values, "%lf", &BH_R_DISRUPT_NB);
 				parsed.BH_R_DISRUPT_NB = 1;
-                        } else {
+        		} else if (strcmp(parameter_name, "FORCE_RLX_STEP")== 0) {
+				sscanf(values, "%i", &FORCE_RLX_STEP);
+				parsed.FORCE_RLX_STEP = 1;
+                } else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
 		} else if (sscanf(line, "%s", parameter_name) == 1) {
@@ -680,7 +683,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(BH_R_DISRUPT_NB, 0.);
         CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 1.);
         CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 1.);
-
+        CHECK_PARSED(FORCE_RLX_STEP, 0);
 	
 #undef CHECK_PARSED
 
