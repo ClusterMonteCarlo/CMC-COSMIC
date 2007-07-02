@@ -22,12 +22,18 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
         FILE *rwalk_file;
         char fname[80];
         long is_in_ids;
+        double Trel, n_local, M2ave, W;
         
         is_in_ids= 0;
+        n_local= calc_n_local(index, AVEKERNEL, clus.N_MAX);
+        W = 4.0 * sigma_array.sigma[index] / sqrt(3.0*PI);
+        M2ave= calc_average_mass_sqr(index, clus.N_MAX);
+        Trel= (PI/32.)*cub(W)/ ( ((double) clus.N_STAR) * n_local * (4.0* M2ave) );
+
         if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
           sprintf(fname, "%s.rwalk_steps_%.4li", outprefix, star[index].id);
           rwalk_file= fopen(fname, "a");
-          fprintf(rwalk_file, "# Time deltabeta_orb deltasafe sqrt(L2) delta n_orb beta r\n");
+          fprintf(rwalk_file, "# Time deltabeta_orb deltasafe sqrt(L2) delta n_orb beta r fdt\n");
           is_in_ids=1;
         };
 #endif
@@ -62,7 +68,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 			do_random_step(w, dbeta, delta); 
 #ifdef DEBUGGING
                         if (is_in_ids) {
-                          fprintf(rwalk_file, "%f %g %g %g %g %g %g %g\n", TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r);
+                          fprintf(rwalk_file, "%f %g %g %g %g %g %g %g %g\n", TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel);
                         };
 #endif
 			L2 -= fb_sqr(delta); 

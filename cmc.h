@@ -457,6 +457,7 @@ void search_grid_free(struct Search_Grid *grid);
 #ifdef DEBUGGING
 #include <glib.h>
 void load_id_table(GHashTable* ids, char *filename);
+double calc_average_mass_sqr(long index, long N_LIMIT);
 #endif
 
 /* macros */ 

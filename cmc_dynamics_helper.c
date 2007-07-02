@@ -999,3 +999,31 @@ void calc_sigma_r(void)
 		sigma_array.sigma[si] = sigma;
 	}
 }
+#ifdef DEBUGGING
+double calc_average_mass_sqr(long index, long N_LIMIT) {
+  long simin, simax, si, p, k;
+  double M2ave;
+
+  si= index;
+
+  /* calculate sliding average timesteps */
+  p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL);
+  simin = si - p;
+  simax = simin + (2 * p - 1);
+  if (simin < 1) {
+    simin = 1;
+    simax = simin + (2 * p - 1);
+  } else if (simax > N_LIMIT) {
+    simax = N_LIMIT;
+    simin = simax - (2 * p - 1);
+  }
+
+  M2ave = 0.0;
+  for (k=simin; k<=simax; k++) {
+    M2ave += sqr(star[k].m * madhoc);
+  }
+  M2ave /= (double) (2 * p);
+
+  return(M2ave);
+};
+#endif
