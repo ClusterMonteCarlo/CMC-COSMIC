@@ -178,7 +178,10 @@ typedef struct{
         int SG_PARTICLE_FRACTION;
         int BH_LOSS_CONE;
         int BH_R_DISRUPT_NB;
-        int FORCE_RLX_STEP;
+        int FORCE_RLX_STEP; 
+#ifdef DEBUGGING
+        int BH_LC_FDT;
+#endif
 } parsed_t;
 
 /* a struct containing the units used */

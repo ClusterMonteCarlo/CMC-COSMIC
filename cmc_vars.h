@@ -102,8 +102,11 @@ int CENTRAL_MASS_FROM_FILE;
 double BH_R_DISRUPT_NB;
 /* force to use the relaxation step, even if relaxation is turned off */
 int FORCE_RLX_STEP;
-
 #ifdef DEBUGGING
+/* scale the square of the deflection angle used for testing of entry into the loss 
+ * cone by Trel*BH_LC_FDT/dt 
+ */
+double BH_LC_FDT;
 GHashTable *star_ids;
 GArray *id_array;
 #endif

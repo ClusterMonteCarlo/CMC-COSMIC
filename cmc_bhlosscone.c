@@ -16,15 +16,17 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	  Change of notation: beta here is theta in the paper. */
 	double w[3], n_orb, P_orb, deltabeta_orb, L2, Rdisr, Jlc, vlc;
 	double deltamax, deltasafe, delta, dbeta;
-	double vt, vr, w_mag;
+	double w_mag;
 	int i;
 #ifdef DEBUGGING
         FILE *rwalk_file;
         char fname[80];
         long is_in_ids;
-        double Trel, n_local, M2ave, W;
+        double Trel, n_local, M2ave; 
+        double W, l2_scale, n_steps;
         
         is_in_ids= 0;
+        l2_scale= 1.;
         n_local= calc_n_local(index, AVEKERNEL, clus.N_MAX);
         W = 4.0 * sigma_array.sigma[index] / sqrt(3.0*PI);
         M2ave= calc_average_mass_sqr(index, clus.N_MAX);
@@ -33,15 +35,22 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
         if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
           sprintf(fname, "%s.rwalk_steps_%.4li", outprefix, star[index].id);
           rwalk_file= fopen(fname, "a");
-          fprintf(rwalk_file, "# Time deltabeta_orb deltasafe sqrt(L2) delta n_orb beta r fdt\n");
+          fprintf(rwalk_file, "# Time deltabeta_orb deltasafe sqrt(L2) delta n_orb beta r fdt l2_scale\n");
           is_in_ids=1;
         };
 #endif
  	/* simulate loss cone physics for central mass */
 	P_orb = calc_P_orb(index);
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
-	deltabeta_orb = 1.0/sqrt(n_orb) * beta; 
-	L2 = fb_sqr(beta); 
+	deltabeta_orb = 1.0/sqrt(n_orb) * beta;
+#ifdef DEBUGGING
+        /* scale down L2 if the time step is larger than BH_LC_FDT*Trel */
+        if (BH_LC_FDT>0. && dt> BH_LC_FDT*Trel) {
+          n_steps= dt/BH_LC_FDT/Trel;
+          l2_scale= 1./n_steps;
+        }
+#endif
+	L2 = l2_scale*fb_sqr(beta); 
         if (BH_R_DISRUPT_NB>0.) {
           Rdisr= BH_R_DISRUPT_NB;
 	} else {
@@ -68,7 +77,8 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 			do_random_step(w, dbeta, delta); 
 #ifdef DEBUGGING
                         if (is_in_ids) {
-                          fprintf(rwalk_file, "%f %g %g %g %g %g %g %g %g\n", TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel);
+                          fprintf(rwalk_file, "%f %g %g %g %g %g %g %g %g %g\n",
+                            TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel, l2_scale);
                         };
 #endif
 			L2 -= fb_sqr(delta); 
