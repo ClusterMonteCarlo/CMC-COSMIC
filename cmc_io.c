@@ -611,9 +611,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
         		} else if (strcmp(parameter_name, "FORCE_RLX_STEP")== 0) {
 				sscanf(values, "%i", &FORCE_RLX_STEP);
 				parsed.FORCE_RLX_STEP = 1;
+#ifdef DEBUGGING
                         } else if (strcmp(parameter_name, "BH_LC_FDT")== 0) {
 				sscanf(values, "%lf", &BH_LC_FDT);
 				parsed.BH_LC_FDT = 1;
+#endif
                         } else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -687,8 +689,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 1);
         CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 1);
         CHECK_PARSED(FORCE_RLX_STEP, 0);
+#ifdef DEBUGGING
         CHECK_PARSED(BH_LC_FDT, 0.0);
-	
+#endif
 #undef CHECK_PARSED
 
 	/* exit if something is not set */

@@ -16,17 +16,16 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	  Change of notation: beta here is theta in the paper. */
 	double w[3], n_orb, P_orb, deltabeta_orb, L2, Rdisr, Jlc, vlc;
 	double deltamax, deltasafe, delta, dbeta;
-	double w_mag;
+	double w_mag, l2_scale;
 	int i;
 #ifdef DEBUGGING
         FILE *rwalk_file;
         char fname[80];
         long is_in_ids;
         double Trel, n_local, M2ave; 
-        double W, l2_scale, n_steps;
+        double W, n_steps;
         
         is_in_ids= 0;
-        l2_scale= 1.;
         n_local= calc_n_local(index, AVEKERNEL, clus.N_MAX);
         W = 4.0 * sigma_array.sigma[index] / sqrt(3.0*PI);
         M2ave= calc_average_mass_sqr(index, clus.N_MAX);
@@ -43,6 +42,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	P_orb = calc_P_orb(index);
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
 	deltabeta_orb = 1.0/sqrt(n_orb) * beta;
+        l2_scale= 1.;
 #ifdef DEBUGGING
         /* scale down L2 if the time step is larger than BH_LC_FDT*Trel */
         if (BH_LC_FDT>0. && dt> BH_LC_FDT*Trel) {
