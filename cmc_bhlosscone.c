@@ -188,6 +188,15 @@ double calc_P_orb(long index)
 		params.ra = orbit_rs.ra;
 		F.params = &params;
 
+                /* test if the interval of rmax is the same as [kmax,kmax+1] */
+                if (function_Q(index, params.kmax, E, J)>0 || function_Q(index, params.kmax-1,E, J)<0) {
+                  dprintf("r and phi interval do not match: id= %li, r_kmin= %li\n",
+                    star[index].id, params.kmax);
+                  dprintf("star index is %li\n", index);
+                  dprintf("f_Q[r_kmin]= %g; f_Q[r_kmin+1]= %g\n", function_Q(index, params.kmax-1, E, J), 
+                    function_Q(index, params.kmax, E, J));
+                };
+
 		if (0) { /* use standard potential function with Stefan's speedup trick here */
 			F.function = &calc_p_orb_f;
 			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
@@ -251,7 +260,7 @@ double calc_p_orb_gc(double x, void *params) {
 	double phik, phik1, phi0, phi1, rk, rk1, rminus, rplus;
 	double E, J, rp, ra;
 	long index, kmin, kmax;
-	
+
 	E = myparams.E;
 	J = myparams.J;
 	index = myparams.index;
@@ -259,7 +268,7 @@ double calc_p_orb_gc(double x, void *params) {
 	kmax = myparams.kmax;
 	rp = myparams.rp;
 	ra = myparams.ra;
-
+        
 	if (x < star[kmin+1].r) { /* return integrand regularized at r=rp */
 		//dprintf("regularizing near rp...\n");
 		phik = star[kmin].phi + PHI_S(star[kmin].r, index);
@@ -304,4 +313,27 @@ double calc_p_orb_gc(double x, void *params) {
 		}
 		return(2.0 * sqrt((x-rp)*(ra-x)/radicand));
 	}
+}
+
+struct Interval get_r_interval(double r) {
+  long kmax, kmin, i;
+  struct Interval star_interval;
+
+  if (SEARCH_GRID) {
+   star_interval= search_grid_get_interval(r_grid, r);
+   kmax= star_interval.max;
+   kmin= star_interval.min;
+  } else {
+   kmax= clus.N_MAX+1;
+   kmin= 1;
+  };
+  if (kmin==kmax-1) {
+   i= kmin;
+  } else {
+   i =  FindZero_r(kmin, kmax, r);
+  };
+
+  star_interval.max= i+1;
+  star_interval.min= i;
+  return (star_interval);
 }
