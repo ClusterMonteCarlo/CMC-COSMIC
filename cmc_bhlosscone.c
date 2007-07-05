@@ -62,7 +62,9 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
     		w[i]= v[i+1]- vcm[i+1];
   	}
         w_mag= sqrt(w[0]*w[0]+w[1]*w[1]+w[2]*w[2]);
+        delta= 0.0;
 	while (L2 > 0.0) { 
+		L2 -= fb_sqr(delta); 
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
 			dprintf("index=%ld, id=%ld: star eaten by BH\n", index, star[index].id);
 			cenma.m += star[index].m; 
@@ -72,6 +74,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 			deltamax= 0.1*FB_CONST_PI;
 			deltasafe= CSAFE*(sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(vcm[2]+w[1]))-vlc)/w_mag;
 			delta = MAX(deltabeta_orb, MIN(deltamax, MIN(deltasafe, sqrt(L2)))); 
+			//if (delta>sqrt(L2)) delta=sqrt(L2);
 			//delta = MAX(deltabeta_orb, MIN(deltamax, sqrt(L2)));
            		dbeta = 2.0 * PI * rng_t113_dbl(); 
 			do_random_step(w, dbeta, delta); 
@@ -81,7 +84,6 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
                             TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel, l2_scale);
                         };
 #endif
-			L2 -= fb_sqr(delta); 
 		} 
 	}; 
 #ifdef DEBUGGING
