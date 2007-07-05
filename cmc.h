@@ -462,6 +462,7 @@ void search_grid_free(struct Search_Grid *grid);
 void load_id_table(GHashTable* ids, char *filename);
 double calc_average_mass_sqr(long index, long N_LIMIT);
 #endif
+struct Interval get_r_interval(double r);
 
 /* macros */ 
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
