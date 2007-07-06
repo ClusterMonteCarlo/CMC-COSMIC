@@ -189,13 +189,21 @@ double calc_P_orb(long index)
 		F.params = &params;
 
                 /* test if the interval of rmax is the same as [kmax,kmax+1] */
-                if (function_Q(index, params.kmax, E, J)>0 || function_Q(index, params.kmax-1,E, J)<0) {
-                  dprintf("r and phi interval do not match: id= %li, r_kmin= %li\n",
-                    star[index].id, params.kmax);
-                  dprintf("star index is %li\n", index);
-                  dprintf("f_Q[r_kmin]= %g; f_Q[r_kmin+1]= %g\n", function_Q(index, params.kmax-1, E, J), 
-                    function_Q(index, params.kmax, E, J));
-                };
+		if (!orbit_rs.circular_flag) {
+			if (function_Q(index, params.kmax, E, J)>0 || function_Q(index, params.kmax-1,E, J)<0) {
+			  dprintf("r and phi interval do not match: id= %li, r_kmax= %li\n",
+			    star[index].id, params.kmax-1);
+			  dprintf("star index is %li\n", index);
+			  dprintf("f_Q[r_kmax]= %g; f_Q[r_kmax+1]= %g\n", function_Q(index, params.kmax-1, E, J), 
+			    function_Q(index, params.kmax, E, J));
+			  dprintf("phi_kmax= %li, phi_kmax+1= %li\n", orbit_rs.kmax, orbit_rs.kmax+1);
+			  dprintf("f_Q[phi_kmax]= %g; f_Q[phi_kmax+1]= %g\n", 
+			    function_Q(index, orbit_rs.kmax, E, J), 
+			    function_Q(index, orbit_rs.kmax+1, E, J));
+			  dprintf("(1./r[kmax]-1./r[min])= %g\n", 
+			    -1./star[orbit_rs.kmax+1].r+1./star[orbit_rs.kmin].r);
+			};
+		};
 
 		if (0) { /* use standard potential function with Stefan's speedup trick here */
 			F.function = &calc_p_orb_f;
