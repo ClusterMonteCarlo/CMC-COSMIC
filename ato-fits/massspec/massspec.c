@@ -59,10 +59,11 @@ void write_usage(void){
 	printf("-i <file> : input file name\n");
 	printf("-o <file> : output file name\n");
 	printf("-I <int>  : IMF model\n");
+	printf("            0: Kroupa, 2001. MNRAS 322, 231-246 (Mmin=0.01)\n");
 	printf("            1: Power-law (default)\n");
 	printf("            2: Miller & Scalo (a la starlab)\n");
 	printf("            3: Scalo (a la starlab)\n");
-	printf("            4: Kroupa (a la starlab)\n");
+	printf("            4: Kroupa (a la starlab; Kroupa, Tout & Gilmore 1993, MNRAS 262, 545; Mmin=0.08)\n");
 	printf("            5: Scalo (from Kroupa etal 1993 eq.15)\n");
 	printf("            6: Kroupa (old form, for comparison reasons)\n");
 	printf("            7: Tracers (1 species, the rest are 1 Msun)\n");
@@ -179,7 +180,7 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
-	if (param->imf<1 || param->imf>9){
+	if (param->imf<0 || param->imf>9){
 		printf("Invalid IMF model value\n");
 		write_usage();
 		exit(EXIT_FAILURE);
@@ -338,11 +339,11 @@ double find_mminp(double cms, double m_abs_min, double m_abs_max,
 
 void set_masses(struct imf_param param, struct star *s[],
 			struct cluster *c, struct code_par cp){
-	unsigned long int i;
+	unsigned long int i, j;
+	double Mass[4], alpha[4], Cons[4], Xlim[5];
 	double m, X, X2, norm, tmp, n_rat, ncheck;
 	double total_mass, mmin, mmin_ms;
 	double Xcrit, C1, C2, C3, C4;
-
         
 	set_rng_t113(cp.rng_st);
 	/* to change the RND seed we make call(s) to RNG */
@@ -364,6 +365,39 @@ void set_masses(struct imf_param param, struct star *s[],
 				norm = pow(param.mmax/param.mmin, tmp) - 1.0;
 				m = param.mmin*pow(norm*X+1, 1.0/tmp);
 			}
+			(*s)[i].m = m;
+			total_mass += m;
+		}
+	} else if (param.imf==0){ /* Kroupa, 2001. MNRAS 322, 231-246 */
+	        Cons[0] = 1.98685;
+		Cons[1] = 0.158948;
+		Cons[2] = 0.0794738;
+		Cons[3] = 0.0794738;
+		alpha[0] = 0.3;
+		alpha[1] = 1.3;
+		alpha[2] = 2.3;
+		alpha[3] = 2.3;
+		Xlim[0] = 0.0;
+		Xlim[1] = 0.371431;
+		Xlim[2] = 0.849471;
+		Xlim[3] = 0.938866;
+		Xlim[4] = 1.0;
+		Mass[0] = 0.01;
+		Mass[1] = 0.08;
+		Mass[2] = 0.5;
+		Mass[3] = 1.0;
+		
+		/* implement broken power-law, and use rejection for new limits */
+		for(i=1; i<=c->NSTAR; i++){
+		        do {
+				X = rng_t113_dbl();
+				j = 0;
+				while (X > Xlim[j+1]) {
+				  j++;
+				}
+				m = pow((1.0-alpha[j])/Cons[j]*(X-Xlim[j])+pow(Mass[j],1.0-alpha[j]), 1.0/(1.0-alpha[j]));
+			} while (m<param.mmin || m>param.mmax) ;
+			/* fprintf(stderr, "X=%g Xlim[j]=%g j=%d m=%g\n", X, Xlim[j], j, m); */
 			(*s)[i].m = m;
 			total_mass += m;
 		}
