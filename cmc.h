@@ -252,6 +252,8 @@ typedef struct{
 	double ra;
 	double dQdrp;
 	double dQdra;
+	long kmax;
+	long kmin;
 	int circular_flag;
 } orbit_rs_t;
 
