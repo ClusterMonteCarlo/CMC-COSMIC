@@ -4,6 +4,7 @@
 #include <zlib.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_roots.h>
 #include <fitsio.h>
 #include "taus113-v2.h"
 #include "fewbody.h"
@@ -182,6 +183,8 @@ typedef struct{
 #ifdef DEBUGGING
         int BH_LC_FDT;
 #endif
+        int APSIDES_PRECISION;
+        int APSIDES_MAX_ITER;
 } parsed_t;
 
 /* a struct containing the units used */
@@ -465,6 +468,9 @@ void load_id_table(GHashTable* ids, char *filename);
 double calc_average_mass_sqr(long index, long N_LIMIT);
 #endif
 struct Interval get_r_interval(double r);
+double calc_vr_within_interval(double r, void *p);
+double calc_vr(double r, long index, double E, double J);
+double find_root_vr(long index, long k, double E, double J);
 
 /* macros */ 
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */

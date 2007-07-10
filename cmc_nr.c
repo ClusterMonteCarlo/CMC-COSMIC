@@ -17,7 +17,7 @@ long FindZero_r(long kmin, long kmax, double r){
 	 * find and return the index k, such that star[k].r<r<star[k+1].r */
 	long ktry;
 
-        if (star[kmin].r>r || star[kmax].r<r) {
+        if ((star[kmin].r>r && kmin>1) || star[kmax].r<r) {
           dprintf("r is outside kmin kmax!!\n");
           dprintf("star[kmin].r= %lf, star[kmax].r= %lf, kmin= %li, kmax= %li, r=%lf\n", 
                 star[kmin].r, star[kmax].r, kmin, kmax, r);
@@ -147,7 +147,128 @@ long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 	return kmin;
 }
 
-	
+/* calculates the radial velocity in the interval [star[k].r, star[k+1].r] */
+struct calc_vr_params {
+  long index, k;
+  double E, J;
+};
+
+double calc_vr_within_interval(double r, void *p) {
+  double pot;
+  struct calc_vr_params *params= (struct calc_vr_params *) p;
+  long index, k;
+  double E, J;
+
+  index= params->index; k= params->k;
+  E= params->E; J= params->J;
+  pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
+			 * (1.0/star[k].r - 1.0/r) /
+			 (1.0/star[k].r - 1.0/star[k + 1].r));
+
+  return(2.0 * E - fb_sqr(J/r) - 2.0 * (pot + PHI_S(r, index)));
+};
+
+double calc_vr(double r, long index, double E, double J) {
+  long k;
+  struct Interval inter;
+  struct calc_vr_params params;
+  double vr;
+
+  if (SEARCH_GRID) {
+    inter= search_grid_get_interval(r_grid, r);
+  } else {
+    inter.min= 1;
+    inter.max= clus.N_MAX+1;
+  };
+  if (inter.min== inter.max-1) {
+    k= inter.min;
+  } else {
+    k= FindZero_r(inter.min, inter.max, r);
+  };
+
+  params.k= k; params.index= index;
+  params.E= E; params.J= J;
+  dprintf("Interval in calc_vr for index %li is [%li,%li]\n", index, k, k+1);
+  vr= calc_vr_within_interval(r, (void *) &params);
+
+  return(vr);
+};
+
+/* Calculates the root of vr with the additional constraint that when 
+ * substituting it back into calc_vr_within_interval leads to vr>= 0.0 .
+ */
+double find_root_vr(long index, long k, double E, double J) {
+  struct calc_vr_params p;
+  int status, not_converged;
+  double r_low, r_high, apsis;
+  long iter;
+  gsl_function F;
+
+  not_converged= 1;
+  iter= APSIDES_MAX_ITER;
+  p.index= index; p.k= k;
+  p.E= E; p.J= J;
+  F.function= &calc_vr_within_interval;
+  F.params= &p;
+
+  status= gsl_root_fsolver_set(q_root, &F, star[k].r, star[k+1].r);
+  if (status) {
+    eprintf("Initialization of root solver failed! Error Code: %i\n", status);
+  exit(1);
+  };
+
+  while(not_converged && iter) {
+    status= gsl_root_fsolver_iterate(q_root);
+    if (!status) {
+      r_low= gsl_root_fsolver_x_lower(q_root);
+      r_high= gsl_root_fsolver_x_upper(q_root);
+      not_converged= (gsl_root_test_interval(r_low, r_high, APSIDES_PRECISION, 0.)==GSL_CONTINUE);
+    } else {
+      if (status== GSL_EBADFUNC) {
+        eprintf("Iteration encountered a singular point, i.e. vr= Inf or NaN!\n");
+        exit(1);
+      } else {
+        eprintf("Iteration stopped due to an unknown error! Error Code: %i\n", status);
+        exit(1);
+      };
+    };
+    iter++;
+  };
+
+  if (!not_converged) {
+    dprintf("Found zero in interval [%.12g,%.12g]\n", r_low, r_high);
+    dprintf("Interval width is %g\n", r_high-r_low);
+    dprintf("Star interval width is %g\n", star[k+1].r-star[k].r);
+    dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
+    dprintf("Interval in find_root_vr for index %li is [%li, %li]\n", index, k, k+1);
+  } else {
+    dprintf("Found NO zero in interval [%.12g,%.12g]\n", r_low, r_high);
+    dprintf("Interval width is %g\n", r_high-r_low);
+    dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
+    exit(1);
+  };
+
+
+  if (r_high-r_low>APSIDES_PRECISION) dprintf("Wrong assumption!!!\n");
+
+  apsis= gsl_root_fsolver_root(q_root);
+  if (GSL_FN_EVAL(&F,apsis)< 0.) {
+    if (GSL_FN_EVAL(&F, r_low)<0.) {
+      apsis= r_high;
+    };
+    if (GSL_FN_EVAL(&F, r_high)< 0.) {
+      apsis= r_low;
+    };
+  };
+
+  if (GSL_FN_EVAL(&F, apsis)< 0.) {
+    eprintf("Residual is negative! Apsis= %g, vr(apsis)= %g\n", apsis, GSL_FN_EVAL(&F, apsis));
+    exit(1);
+  }
+
+  return(apsis);
+};
+
 #if 0
 
 /* Find Zero OF Q */

@@ -91,7 +91,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		
 		rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
 		dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
-		
+               
 		/*  For rmax- Look for rk, rk1 such that 
 		 *  Q(rk) > 0 > Q(rk1) */
 		
@@ -110,8 +110,8 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		Uk = star[i].phi + PHI_S(rk, si);
 		Uk1 = star[i1].phi  + PHI_S(rk1, si);
 		
-		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
-		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
+		a = (Uk1 - Uk) / (1. / rk1 - 1. / rk);
+		b = (Uk / rk1 - Uk1 / rk) / (1. / rk1 - 1. / rk);
 		
 		rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
 		dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
@@ -130,10 +130,30 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		} else {
 			orbit_rs.rp = rmin;
 			orbit_rs.ra = rmax;
+                        orbit_rs.kmin= kmin;
+                        orbit_rs.kmax= kmax;
 			orbit_rs.dQdrp = dQdr_min;
 			orbit_rs.dQdra = dQdr_max;
 			orbit_rs.circular_flag = 0;	
 		}
+
+                /* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
+                if (!orbit_rs.circular_flag) {
+                  int rmax_in_interval, rmin_in_interval, vr_rmax_positive, vr_rmin_positive;
+
+                  rmin_in_interval= orbit_rs.rp< star[kmin+1].r && orbit_rs.rp> star[kmin].r;
+                  rmax_in_interval= orbit_rs.ra< star[kmax+1].r && orbit_rs.ra> star[kmax].r;
+                  vr_rmin_positive= calc_vr(orbit_rs.rp, si, E, J)>= 0.;
+                  vr_rmax_positive= calc_vr(orbit_rs.ra, si, E, J)>= 0.;
+
+                  if (!(rmax_in_interval && vr_rmax_positive)) {
+                    orbit_rs.ra= find_root_vr(si, kmax, E, J);
+                  };
+
+                  if (!(rmin_in_interval && vr_rmin_positive)) {
+                    orbit_rs.rp= find_root_vr(si, kmin, E, J);
+                  };
+                };
 	}
 	
 	return(orbit_rs);
@@ -555,3 +575,4 @@ double get_positions(){
 #endif
 	return (max_rad);
 }
+

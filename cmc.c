@@ -40,6 +40,10 @@ int main(int argc, char *argv[])
           r_grid= search_grid_initialize(SG_POWER_LAW_EXPONENT, \
               SG_MATCH_AT_FRACTION, SG_STARSPERBIN, SG_PARTICLE_FRACTION);
         };
+
+        /* initialize the root finder algorithm */
+        q_root = gsl_root_fsolver_alloc (gsl_root_fsolver_brent);
+
 #ifdef DEBUGGING
         /* create a new hash table for the star ids */
         star_ids= g_hash_table_new(g_int_hash, g_int_equal);

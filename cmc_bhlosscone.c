@@ -203,6 +203,14 @@ double calc_P_orb(long index)
 			  dprintf("(1./r[kmax]-1./r[min])= %g\n", 
 			    -1./star[orbit_rs.kmax+1].r+1./star[orbit_rs.kmin].r);
 			};
+                        if (calc_vr(params.rp, index, E, J)< 0.) {
+                          dprintf("Harrrg: vr(rmin)< 0.! Damn it! Index: %li, Id: %li\n", index, 
+                            star[index].id);
+                        };
+                        if (calc_vr(params.ra, index, E, J)< 0.) {
+                          dprintf("Harrrg: vr(rmax)< 0.! Damn it! Index: %li, Id: %li\n", index, 
+                            star[index].id);
+                        };
 		};
 
 		if (0) { /* use standard potential function with Stefan's speedup trick here */

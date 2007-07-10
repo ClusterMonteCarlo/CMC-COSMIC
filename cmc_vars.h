@@ -110,3 +110,8 @@ double BH_LC_FDT;
 GHashTable *star_ids;
 GArray *id_array;
 #endif
+/* The root solver to find the roots of Q */
+gsl_root_fsolver *q_root;
+double APSIDES_PRECISION;
+long APSIDES_MAX_ITER;
+

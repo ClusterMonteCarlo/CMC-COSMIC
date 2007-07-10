@@ -616,6 +616,12 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(values, "%lf", &BH_LC_FDT);
 				parsed.BH_LC_FDT = 1;
 #endif
+        		} else if (strcmp(parameter_name, "APSIDES_PRECISION")== 0) {
+				sscanf(values, "%lf", &APSIDES_PRECISION);
+				parsed.APSIDES_PRECISION = 1;
+        		} else if (strcmp(parameter_name, "APSIDES_MAX_ITER")== 0) {
+				sscanf(values, "%li", &APSIDES_MAX_ITER);
+				parsed.APSIDES_MAX_ITER = 1;
                         } else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -692,6 +698,8 @@ void parser(int argc, char *argv[], gsl_rng *r)
 #ifdef DEBUGGING
         CHECK_PARSED(BH_LC_FDT, 0.0);
 #endif
+        CHECK_PARSED(APSIDES_PRECISION, 1.0e-11);
+        CHECK_PARSED(APSIDES_MAX_ITER, 100);
 #undef CHECK_PARSED
 
 	/* exit if something is not set */
