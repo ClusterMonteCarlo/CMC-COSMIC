@@ -211,6 +211,12 @@ double calc_P_orb(long index)
                           dprintf("Harrrg: vr(rmax)< 0.! Damn it! Index: %li, Id: %li\n", index, 
                             star[index].id);
                         };
+                        if (params.kmax!=orbit_rs.kmax) 
+                          dprintf("kmax in orbit_rs and params differ! kmax_o= %li, kmax_p=%li, Index: %li, Id: %li\n", 
+                            orbit_rs.kmax, params.kmax, index, star[index].id);
+                        if (params.kmin!=orbit_rs.kmin) 
+                          dprintf("kmin in orbit_rs and params differ! kmin_o= %li, kmin_p=%li, Index: %li, Id: %li\n", 
+                            orbit_rs.kmin, params.kmin, index, star[index].id);
 		};
 
 		if (0) { /* use standard potential function with Stefan's speedup trick here */
