@@ -200,8 +200,8 @@ double calc_P_orb(long index)
 			  dprintf("f_Q[phi_kmax]= %g; f_Q[phi_kmax+1]= %g\n", 
 			    function_Q(index, orbit_rs.kmax, E, J), 
 			    function_Q(index, orbit_rs.kmax+1, E, J));
-			  dprintf("(1./r[kmax]-1./r[min])= %g\n", 
-			    -1./star[orbit_rs.kmax+1].r+1./star[orbit_rs.kmin].r);
+			  dprintf("(r[r_kmax]-rmax=%g, r[r_kmax+1]-rmax)= %g\n", 
+			    star[params.kmax-1].r-orbit_rs.ra,star[params.kmax].r-orbit_rs.ra);
 			};
                         if (calc_vr(params.rp, index, E, J)< 0.) {
                           dprintf("Harrrg: vr(rmin)< 0.! Damn it! Index: %li, Id: %li\n", index, 
@@ -211,10 +211,10 @@ double calc_P_orb(long index)
                           dprintf("Harrrg: vr(rmax)< 0.! Damn it! Index: %li, Id: %li\n", index, 
                             star[index].id);
                         };
-                        if (params.kmax!=orbit_rs.kmax) 
+                        if (params.kmax!=orbit_rs.kmax+1) 
                           dprintf("kmax in orbit_rs and params differ! kmax_o= %li, kmax_p=%li, Index: %li, Id: %li\n", 
                             orbit_rs.kmax, params.kmax, index, star[index].id);
-                        if (params.kmin!=orbit_rs.kmin) 
+                        if ((params.kmin!=orbit_rs.kmin)&& (params.kmin>1)) 
                           dprintf("kmin in orbit_rs and params differ! kmin_o= %li, kmin_p=%li, Index: %li, Id: %li\n", 
                             orbit_rs.kmin, params.kmin, index, star[index].id);
 		};
