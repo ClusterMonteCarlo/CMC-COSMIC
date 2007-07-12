@@ -53,7 +53,7 @@ void print_2Dsnapshot(void)
 
 	/* print useful header */
 	gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
-	gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN]\n");
+	gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]\n");
 
 	/* then print data */
 	for (i=1; i<=clus.N_MAX; i++) {
@@ -72,9 +72,9 @@ void print_2Dsnapshot(void)
 		
 #ifdef SE
 		if (star[i].binind == 0) {
-			gzprintf(snapfile, "%d %.8g ", star[i].k, star[i].lum);
+			gzprintf(snapfile, "%d %.8g %.8g ", star[i].k, star[i].lum, star[i].rad * units.l / RSUN);
 		} else {
-			gzprintf(snapfile, "0 0 ");
+			gzprintf(snapfile, "0 0 0 ");
 		}
 #endif
 		gzprintf(snapfile, "\n");
