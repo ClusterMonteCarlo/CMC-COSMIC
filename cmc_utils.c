@@ -13,20 +13,20 @@
 #include "cmc_vars.h"
 
 /* a fast square function */
-inline double sqr(double x)
+double sqr(double x)
 {
         return(x*x);
 }
 
 /* a fast cube function */
-inline double cub(double x)
+double cub(double x)
 {
         return(x*x*x);
 }
 
 /* The potential computed using the star[].phi computed at the star 
    locations in star[].r sorted by increasing r. */
-inline double potential(double r) {
+double potential(double r) {
 	long i, kmax, kmin;
 	double henon;
         struct Interval star_interval;

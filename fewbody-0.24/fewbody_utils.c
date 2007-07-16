@@ -27,13 +27,13 @@
 #include "fewbody.h"
 
 /* allocate a vector */
-inline double *fb_malloc_vector(int n)
+double *fb_malloc_vector(int n)
 {
 	return((double *) malloc(n * sizeof(double)));
 }
 
 /* allocate a matrix */
-inline double **fb_malloc_matrix(int nr, int nc)
+double **fb_malloc_matrix(int nr, int nc)
 {
 	int i;
 	double **m;
@@ -50,38 +50,38 @@ inline double **fb_malloc_matrix(int nr, int nc)
 }
 
 /* free a vector */
-inline void fb_free_vector(double *v)
+void fb_free_vector(double *v)
 {
 	free(v);
 }
 
 /* free a matrix */
-inline void fb_free_matrix(double **m)
+void fb_free_matrix(double **m)
 {
 	free(m[0]);
 	free(m);
 }
 
 /* a fast square function */
-inline double fb_sqr(double x)
+double fb_sqr(double x)
 {
 	return(x*x);
 }
 
 /* a fast cube function */
-inline double fb_cub(double x)
+double fb_cub(double x)
 {
 	return(x*x*x);
 }
 
 /* the dot product of two vectors */
-inline double fb_dot(double x[3], double y[3])
+double fb_dot(double x[3], double y[3])
 {
 	return(x[0] * y[0] + x[1] * y[1] + x[2] * y[2]);
 }
 
 /* the modulus of a vector */
-inline double fb_mod(double x[3])
+double fb_mod(double x[3])
 {
 	return(sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]));
 }
@@ -266,13 +266,17 @@ double fb_keplerfunc(double ecc_anom, void *params)
 	return(ecc_anom - e * sin(ecc_anom) - mean_anom);
 }
 
-/* calculate the relative tidal force */
+/* calculate the relative tidal acceleration */
 double fb_reltide(fb_obj_t *bin, fb_obj_t *single, double r)
 {
-	double frel, ftid;
+	double arel, atid;
 
-	frel = (bin->obj[0]->m)*(bin->obj[1]->m)/fb_sqr(bin->a * (1.0 + bin->e));
-	ftid = 2.0 * bin->m * single->m / fb_cub(r) * bin->a * (1.0 + bin->e);
+	arel = bin->m / fb_sqr(bin->a * (1.0 + bin->e));
+	/* Factor in numerator is (single->m + bin->m) instead of single->m for the case of 
+	   small single->m, for which we want to at some point resolve "bin" to get the 
+	   motion of "single".  This will eventually be fixed when we we use full collapsed 
+	   binary member positions in the integration, and not just the CM of the binary. */
+	atid = 2.0 * (single->m + bin->m) / fb_cub(r) * bin->a * (1.0 + bin->e);
 
-	return(ftid/frel);
+	return(atid/arel);
 }

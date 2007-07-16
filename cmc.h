@@ -272,8 +272,8 @@ typedef struct{
 } calc_p_orb_params_t;
 
 /********************** Function Declarations ************************/
-inline double sqr(double x);
-inline double cub(double x);
+double sqr(double x);
+double cub(double x);
 void sniff_stars(void);
 void remove_star_center(long j);
 void print_results(void);

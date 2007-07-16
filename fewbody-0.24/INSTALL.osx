@@ -1,0 +1,8 @@
+To build Fewbody on Mac OS X, you need to have GCC, GSL, and GNU getopt 
+installed.  GCC is included in the Apple development suite, which comes 
+with OS X, and is therefore easy to install if it isn't already.  GSL 
+and GNU getopt are easiest installed via Fink 
+(http://fink.sourceforge.net).  Once you have Fink installed, install 
+"gsl", "gsl-shlibs", and "libgnugetopt".  These will all be installed in 
+"/sw".  Next, run "make" and "make install" to build and install Fewbody 
+in the directory "bin" in your home directory.

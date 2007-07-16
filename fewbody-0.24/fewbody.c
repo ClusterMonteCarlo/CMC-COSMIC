@@ -38,6 +38,7 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 	long clk_tck;
 	double s, slast, sstop=FB_SSTOP, tout, h=FB_H, *y, texpand, tnew, R[3];
 	double Ei, E, Lint[3], Li[3], L[3], DeltaL[3];
+	double s2, s2prev=GSL_POSINF, s2prevprev=GSL_POSINF, s2minprev=GSL_POSINF, s2max=0.0, s2min;
 	struct tms firsttimebuf, currtimebuf;
 	clock_t firstclock, currclock;
 	fb_hier_t phier;
@@ -57,6 +58,7 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 	retval.Rmin = FB_RMIN;
 	retval.Rmin_i = -1;
 	retval.Rmin_j = -1;
+	retval.Nosc = 0;
 	strncpy(logentry, input.firstlogentry, FB_MAX_LOGENTRY_LENGTH);
 
 	/* set up the perturbation tree, initially flat */
@@ -221,6 +223,40 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 					restart = 1;
 				}
 			}
+			
+			/* check for oscillations in s^2 */
+			/* first calculate s^2 */
+			s2 = 0.0;
+			for (i=0; i<hier->nstar-1; i++) {
+				for (j=i+1; j<hier->nstar; j++) {
+					for (k=0; k<3; k++) {
+						s2 += fb_sqr(hier->hier[hier->hi[1]+i].x[k] - hier->hier[hier->hi[1]+j].x[k]);
+					}
+				}
+			}
+			/* local min */
+			if (s2 > s2prev && s2prev < s2prevprev) {
+				s2min = s2prev;
+				/* increment Nosc if there is a valid oscillation */
+				if (s2max >= 2.0*s2minprev && s2max >= 2.0*s2min) {
+					retval.Nosc++;
+					fb_dprintf("fewbody: oscillation in s^2 detected: s2max/s2minprev=%g s2max/s2min=%g: Nosc=%d\n", s2max/s2minprev, s2max/s2min, retval.Nosc);
+					s2minprev = s2min;
+				} else {
+					fb_dprintf("fewbody: oscillation in s^2 not big enough: s2max/s2minprev=%g s2max/s2min=%g\n", s2max/s2minprev, s2max/s2min);
+					/* that pesky first min... */
+					if (s2max == 0.0) {
+						s2minprev = s2min;
+					}
+				}
+			}
+			/* local max: just set value and wait for next min */
+			if (s2 < s2prev && s2prev > s2prevprev) {
+				s2max = s2prev;
+			}
+			/* set previous values */
+			s2prevprev = s2prev;
+			s2prev = s2;
 			
 			/* see if we're done */
 			if (retval.count % input.ncount == 0 || forceclassify) {

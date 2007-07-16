@@ -8,7 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-double METALLICITY, WIND_FACTOR;
+extern double METALLICITY, WIND_FACTOR;
+#define _MAIN_
 #include "sinbin.h"
 
 

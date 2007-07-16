@@ -1,5 +1,5 @@
 /* -*- linux-c -*- */
-/* triplebin.c
+/* binsingle.c
 
    Copyright (C) 2002-2004 John M. Fregeau
    
@@ -28,33 +28,25 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_rng.h>
 #include "fewbody.h"
-#include "triplebin.h"
+#include "binsingle.h"
 
 /* print the usage */
 void print_usage(FILE *stream)
 {
 	fprintf(stream, "USAGE:\n");
-	fprintf(stream, "  triplebin [options...]\n");
+	fprintf(stream, "  binsingle [options...]\n");
 	fprintf(stream, "\n");
 	fprintf(stream, "OPTIONS:\n");
-	fprintf(stream, "  -m --m000 <m000/MSUN>        : set mass of star 0 of inner binary of triple [%.6g]\n", FB_M000/FB_CONST_MSUN);
-	fprintf(stream, "  -n --m001 <m001/MSUN>        : set mass of star 1 of inner binary of triple [%.6g]\n", FB_M001/FB_CONST_MSUN);
-	fprintf(stream, "  -o --m01 <m01/MSUN>          : set mass of outer star of triple [%.6g]\n", FB_M01/FB_CONST_MSUN);
-	fprintf(stream, "  -p --m10 <m10/MSUN>          : set mass of star 0 of binary [%.6g]\n", FB_M10/FB_CONST_MSUN);
-	fprintf(stream, "  -l --m11 <m11/MSUN>          : set mass of star 1 of binary [%.6g]\n", FB_M11/FB_CONST_MSUN);
-	fprintf(stream, "  -r --r000 <r000/RSUN>        : set radius of star 0 of inner binary of triple [%.6g]\n", FB_R000/FB_CONST_RSUN);
-	fprintf(stream, "  -g --r001 <r001/RSUN>        : set radius of star 1 of inner binary of triple [%.6g]\n", FB_R001/FB_CONST_RSUN);
-	fprintf(stream, "  -i --r01 <r01/RSUN>          : set radius of outer star of triple [%.6g]\n", FB_R01/FB_CONST_RSUN);
-	fprintf(stream, "  -j --r10 <r10/RSUN>          : set radius of star 0 of binary [%.6g]\n", FB_R10/FB_CONST_RSUN);
-	fprintf(stream, "  -u --r11 <r11/RSUN>          : set radius of star 1 of binary [%.6g]\n", FB_R11/FB_CONST_RSUN);
-	fprintf(stream, "  -a --a00 <a00/AU>            : set inner semimajor axis of triple [%.6g]\n", FB_A00/FB_CONST_AU);
-	fprintf(stream, "  -Q --a0 <a0/AU>              : set outer semimajor axis of triple [%.6g]\n", FB_A0/FB_CONST_AU);
-	fprintf(stream, "  -q --a1 <a1/AU>              : set semimajor axis of binary [%.6g]\n", FB_A1/FB_CONST_AU);
-	fprintf(stream, "  -e --e00 <e00>               : set inner eccentricity of triple [%.6g]\n", FB_E00);
-	fprintf(stream, "  -F --e0 <e0>                 : set outer eccentricity of triple [%.6g]\n", FB_E0);
-	fprintf(stream, "  -f --e1 <e1>                 : set eccentricity of binary [%.6g]\n", FB_E1);
+	fprintf(stream, "  -m --m0 <m0/MSUN>            : set mass of single star [%.6g]\n", FB_M0/FB_CONST_MSUN);
+	fprintf(stream, "  -n --m10 <m10/MSUN>          : set mass of star 0 of binary [%.6g]\n", FB_M10/FB_CONST_MSUN);
+	fprintf(stream, "  -o --m11 <m11/MSUN>          : set mass of star 1 of binary [%.6g]\n", FB_M11/FB_CONST_MSUN);
+	fprintf(stream, "  -r --r0 <r0/RSUN>            : set radius of single star [%.6g]\n", FB_R0/FB_CONST_RSUN);
+	fprintf(stream, "  -g --r10 <r10/RSUN>          : set radius of star 0 of binary [%.6g]\n", FB_R10/FB_CONST_RSUN);
+	fprintf(stream, "  -i --r11 <r11/RSUN>          : set radius of star 1 of binary [%.6g]\n", FB_R11/FB_CONST_RSUN);
+	fprintf(stream, "  -a --a1 <a1/AU>              : set semimajor axis of binary [%.6g]\n", FB_A1/FB_CONST_AU);
+	fprintf(stream, "  -e --e1 <e1>                 : set eccentricity of binary 0 [%.6g]\n", FB_E1);
 	fprintf(stream, "  -v --vinf <vinf/v_crit>      : set velocity at infinity [%.6g]\n", FB_VINF);
-	fprintf(stream, "  -b --b <b/(a0+a1)>           : set impact parameter [%.6g]\n", FB_B);
+	fprintf(stream, "  -b --b <b/a1>                : set impact parameter [%.6g]\n", FB_B);
 	fprintf(stream, "  -t --tstop <tstop/t_dyn>     : set stopping time [%.6g]\n", FB_TSTOP);
 	fprintf(stream, "  -D --dt <dt/t_dyn>           : set approximate output dt [%.6g]\n", FB_DT);
 	fprintf(stream, "  -c --tcpustop <tcpustop/sec> : set cpu stopping time [%.6g]\n", FB_TCPUSTOP);
@@ -74,26 +66,9 @@ void print_usage(FILE *stream)
 /* calculate the units used */
 int calc_units(fb_obj_t *obj[2], fb_units_t *units)
 {
-	double mu, m0, m1, m00, m01, m10, m11, m000, m001, a00, a0, a1;
-
-	m0 = obj[0]->m;
-	m1 = obj[1]->m;
-	m00 = obj[0]->obj[0]->m;
-	m01 = obj[0]->obj[1]->m;
-	m10 = obj[1]->obj[0]->m;
-	m11 = obj[1]->obj[1]->m;
-	m000 = obj[0]->obj[0]->obj[0]->m;
-	m001 = obj[0]->obj[0]->obj[1]->m;
-	
-	mu = m0*m1/(m0+m1);
-
-	a0 = obj[0]->a;
-	a1 = obj[1]->a;
-	a00 = obj[0]->obj[0]->a;
-	
-	/* note that the unit of velocity here is set to an *approximate* value of v_c */
-	units->v = sqrt(FB_CONST_G/mu*(m10*m11/a1 + m00*m01/a0 + m000*m001/a00));
-	units->l = a0 + a1;
+	units->v = sqrt(FB_CONST_G*(obj[0]->m + obj[1]->m)/(obj[0]->m * obj[1]->m) * \
+			(obj[1]->obj[0]->m * obj[1]->obj[1]->m / obj[1]->a));
+	units->l = obj[1]->a;
 	units->t = units->l / units->v;
 	units->m = units->l * fb_sqr(units->v) / FB_CONST_G;
 	units->E = units->m * fb_sqr(units->v);
@@ -106,8 +81,8 @@ int main(int argc, char *argv[])
 {
 	int i, j;
 	unsigned long int seed;
-	double rtid, m000, m001, m00, m01, m10, m11, r000, r001, r01, r10, r11, a00, a0, a1, e00, e0, e1;
-	double vcrit, vinf, b, m0, m1, M, mu, Ei, E, Lint[3], Li[3], l0[3], l1[3], L[3], r[3], t;
+	double m0, m10, m11, r0, r10, r11, a1, e1;
+	double rtid, vinf, b, m1, M, mu, Ei, E, Lint[3], Li[3], l0[3], l1[3], L[3], r[3], t;
 	fb_hier_t hier;
 	fb_input_t input;
 	fb_ret_t retval;
@@ -115,24 +90,16 @@ int main(int argc, char *argv[])
 	char string1[FB_MAX_STRING_LENGTH], string2[FB_MAX_STRING_LENGTH];
 	gsl_rng *rng;
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
-	const char *short_opts = "m:n:o:p:l:r:g:i:j:u:a:Q:q:e:F:f:v:b:t:D:c:A:R:N:z:x:k:s:dVh";
+	const char *short_opts = "m:n:o:r:g:i:a:e:v:b:t:D:c:A:R:N:z:x:k:s:dVh";
 	const struct option long_opts[] = {
-		{"m000", required_argument, NULL, 'm'},
-		{"m001", required_argument, NULL, 'n'},
-		{"m01", required_argument, NULL, 'o'},
-		{"m10", required_argument, NULL, 'p'},
-		{"m11", required_argument, NULL, 'l'},
-		{"r000", required_argument, NULL, 'r'},
-		{"r001", required_argument, NULL, 'g'},
-		{"r01", required_argument, NULL, 'i'},
-		{"r10", required_argument, NULL, 'j'},
-		{"r11", required_argument, NULL, 'u'},
-		{"a00", required_argument, NULL, 'a'},
-		{"a0", required_argument, NULL, 'Q'},
-		{"a1", required_argument, NULL, 'q'},
-		{"e00", required_argument, NULL, 'e'},
-		{"e0", required_argument, NULL, 'F'},
-		{"e1", required_argument, NULL, 'f'},
+		{"m0", required_argument, NULL, 'm'},
+		{"m10", required_argument, NULL, 'n'},
+		{"m11", required_argument, NULL, 'o'},
+		{"r0", required_argument, NULL, 'r'},
+		{"r10", required_argument, NULL, 'g'},
+		{"r11", required_argument, NULL, 'i'},
+		{"a1", required_argument, NULL, 'a'},
+		{"e1", required_argument, NULL, 'e'},
 		{"vinf", required_argument, NULL, 'v'},
 		{"b", required_argument, NULL, 'b'},
 		{"tstop", required_argument, NULL, 't'},
@@ -152,21 +119,13 @@ int main(int argc, char *argv[])
 	};
 
 	/* set parameters to default values */
-	m000 = FB_M000;
-	m001 = FB_M001;
-	m01 = FB_M01;
+	m0 = FB_M0;
 	m10 = FB_M10;
 	m11 = FB_M11;
-	r000 = FB_R000;
-	r001 = FB_R001;
-	r01 = FB_R01;
+	r0 = FB_R0;
 	r10 = FB_R10;
 	r11 = FB_R11;
-	a00 = FB_A00;
-	a0 = FB_A0;
 	a1 = FB_A1;
-	e00 = FB_E00;
-	e0 = FB_E0;
 	e1 = FB_E1;
 	vinf = FB_VINF;
 	b = FB_B;
@@ -186,62 +145,30 @@ int main(int argc, char *argv[])
 	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
 		switch (i) {
 		case 'm':
-			m000 = atof(optarg) * FB_CONST_MSUN;
+			m0 = atof(optarg) * FB_CONST_MSUN;
 			break;
 		case 'n':
-			m001 = atof(optarg) * FB_CONST_MSUN;
-			break;
-		case 'o':
-			m01 = atof(optarg) * FB_CONST_MSUN;
-			break;
-		case 'p':
 			m10 = atof(optarg) * FB_CONST_MSUN;
 			break;
-		case 'l':
+		case 'o':
 			m11 = atof(optarg) * FB_CONST_MSUN;
 			break;
 		case 'r':
-			r000 = atof(optarg) * FB_CONST_RSUN;
+			r0 = atof(optarg) * FB_CONST_RSUN;
 			break;
 		case 'g':
-			r001 = atof(optarg) * FB_CONST_RSUN;
-			break;
-		case 'i':
-			r01 = atof(optarg) * FB_CONST_RSUN;
-			break;
-		case 'j':
 			r10 = atof(optarg) * FB_CONST_RSUN;
 			break;
-		case 'u':
+		case 'i':
 			r11 = atof(optarg) * FB_CONST_RSUN;
 			break;
 		case 'a':
-			a00 = atof(optarg) * FB_CONST_AU;
-			break;
-		case 'Q':
-			a0 = atof(optarg) * FB_CONST_AU;
-			break;
-		case 'q':
 			a1 = atof(optarg) * FB_CONST_AU;
 			break;
 		case 'e':
-			e00 = atof(optarg);
-			if (e00 >= 1.0) {
-				fprintf(stderr, "e00 must be less than 1\n");
-				return(1);
-			}
-			break;
-		case 'F':
-			e0 = atof(optarg);
-			if (e0 >= 1.0) {
-				fprintf(stderr, "e0 must be less than 1\n");
-				return(1);
-			}
-			break;
-		case 'f':
 			e1 = atof(optarg);
 			if (e1 >= 1.0) {
-				fprintf(stderr, "e1 must be less than 1\n");
+				fprintf(stderr, "e0 must be less than 1\n");
 				return(1);
 			}
 			break;
@@ -314,8 +241,8 @@ int main(int argc, char *argv[])
 
 	/* initialize a few things for integrator */
 	t = 0.0;
-	hier.nstarinit = 5;
-	hier.nstar = 5;
+	hier.nstarinit = 3;
+	hier.nstar = 3;
 	fb_malloc_hier(&hier);
 	fb_init_hier(&hier);
 
@@ -325,16 +252,13 @@ int main(int argc, char *argv[])
 		snprintf(&(input.firstlogentry[strlen(input.firstlogentry)]), 
 			 FB_MAX_LOGENTRY_LENGTH-strlen(input.firstlogentry), " %s", argv[i]);
 	}
-	snprintf(&(input.firstlogentry[strlen(input.firstlogentry)]),
+	snprintf(&(input.firstlogentry[strlen(input.firstlogentry)]), 
 		 FB_MAX_LOGENTRY_LENGTH-strlen(input.firstlogentry), "\n");
 	
 	/* print out values of paramaters */
 	fprintf(stderr, "PARAMETERS:\n");
 	fprintf(stderr, "  ks=%d  seed=%ld\n", input.ks, seed);
-	fprintf(stderr, "  a00=%.6g AU  e00=%.6g  m000=%.6g MSUN  m001=%.6g MSUN  r000=%.6g RSUN  r001=%.6g RSUN\n", \
-		a00/FB_CONST_AU, e00, m000/FB_CONST_MSUN, m001/FB_CONST_MSUN, r000/FB_CONST_RSUN, r001/FB_CONST_RSUN);
-	fprintf(stderr, "  a0=%.6g AU  e0=%.6g  m01=%.6g MSUN  r01=%.6g RSUN\n", \
-		a0/FB_CONST_AU, e0, m01/FB_CONST_MSUN, r01/FB_CONST_RSUN);
+	fprintf(stderr, "  m0=%.6g MSUN  r0=%.6g RSUN\n", m0/FB_CONST_MSUN, r0/FB_CONST_RSUN);
 	fprintf(stderr, "  a1=%.6g AU  e1=%.6g  m10=%.6g MSUN  m11=%.6g MSUN  r10=%.6g RSUN  r11=%.6g RSUN\n", \
 		a1/FB_CONST_AU, e1, m10/FB_CONST_MSUN, m11/FB_CONST_MSUN, r10/FB_CONST_RSUN, r11/FB_CONST_RSUN);
 	fprintf(stderr, "  vinf=%.6g  b=%.6g  tstop=%.6g  tcpustop=%.6g\n", \
@@ -347,21 +271,10 @@ int main(int argc, char *argv[])
 	rng = gsl_rng_alloc(rng_type);
 	gsl_rng_set(rng, seed);
 
-	/* create hierarchies */
-	hier.narr[2] = 2;
-	hier.narr[3] = 1;
-	/* inner binary of triple */
-	hier.hier[hier.hi[2]+0].obj[0] = &(hier.hier[hier.hi[1]+0]);
-	hier.hier[hier.hi[2]+0].obj[1] = &(hier.hier[hier.hi[1]+1]);
+	/* create binary */
+	hier.hier[hier.hi[2]+0].obj[0] = &(hier.hier[hier.hi[1]+1]);
+	hier.hier[hier.hi[2]+0].obj[1] = &(hier.hier[hier.hi[1]+2]);
 	hier.hier[hier.hi[2]+0].t = t;
-	/* outer binary of triple */
-	hier.hier[hier.hi[3]+0].obj[0] = &(hier.hier[hier.hi[2]+0]);
-	hier.hier[hier.hi[3]+0].obj[1] = &(hier.hier[hier.hi[1]+2]);
-	hier.hier[hier.hi[3]+0].t = t;
-	/* the other binary */
-	hier.hier[hier.hi[2]+1].obj[0] = &(hier.hier[hier.hi[1]+3]);
-	hier.hier[hier.hi[2]+1].obj[1] = &(hier.hier[hier.hi[1]+4]);
-	hier.hier[hier.hi[2]+1].t = t;
 
 	/* give the objects some properties */
 	for (j=0; j<hier.nstar; j++) {
@@ -377,65 +290,30 @@ int main(int argc, char *argv[])
 		hier.hier[hier.hi[1]+j].Lint[2] = 0.0;
 	}
 
-	hier.hier[hier.hi[1]+0].R = r000;
-	hier.hier[hier.hi[1]+1].R = r001;
-	hier.hier[hier.hi[1]+2].R = r01;
-	hier.hier[hier.hi[1]+3].R = r10;
-	hier.hier[hier.hi[1]+4].R = r11;
+	hier.hier[hier.hi[1]+0].R = r0;
+	hier.hier[hier.hi[1]+1].R = r10;
+	hier.hier[hier.hi[1]+2].R = r11;
 
-	hier.hier[hier.hi[1]+0].m = m000;
-	hier.hier[hier.hi[1]+1].m = m001;
-	hier.hier[hier.hi[1]+2].m = m01;
-	hier.hier[hier.hi[1]+3].m = m10;
-	hier.hier[hier.hi[1]+4].m = m11;
+	hier.hier[hier.hi[1]+0].m = m0;
+	hier.hier[hier.hi[1]+1].m = m10;
+	hier.hier[hier.hi[1]+2].m = m11;
 
-	hier.hier[hier.hi[2]+0].m = m000 + m001;
-	hier.hier[hier.hi[3]+0].m = m000 + m001 + m01;
-	hier.hier[hier.hi[2]+1].m = m10 + m11;
+	hier.hier[hier.hi[2]+0].m = m10 + m11;
 
-	hier.hier[hier.hi[2]+0].a = a00;
-	hier.hier[hier.hi[3]+0].a = a0;
-	hier.hier[hier.hi[2]+1].a = a1;
-	
-	hier.hier[hier.hi[2]+0].e = e00;
-	hier.hier[hier.hi[3]+0].e = e0;
-	hier.hier[hier.hi[2]+1].e = e1;
+	hier.hier[hier.hi[2]+0].a = a1;
+	hier.hier[hier.hi[2]+0].e = e1;
 
-	hier.nobj = 2;
-	hier.obj[0] = &(hier.hier[hier.hi[3]+0]);
-	hier.obj[1] = &(hier.hier[hier.hi[2]+1]);
+	hier.obj[0] = &(hier.hier[hier.hi[1]+0]);
+	hier.obj[1] = &(hier.hier[hier.hi[2]+0]);
 	hier.obj[2] = NULL;
-	hier.obj[3] = NULL;
-	hier.obj[4] = NULL;
 
 	/* get the units and normalize */
 	calc_units(hier.obj, &units);
 	fb_normalize(&hier, units);
 	
-	/* temporarily place hierarchies at origin so we can calculate v_c */
-	for (i=0; i<2; i++) {
-		for (j=0; j<3; j++) {
-			hier.obj[i]->x[j] = 0.0;
-			hier.obj[i]->v[j] = 0.0;
-		}
-	}
-
-	/* randomize binary orientations and downsync */
-	fb_randorient(&(hier.hier[hier.hi[3]+0]), rng);
-	fb_downsync(&(hier.hier[hier.hi[3]+0]), t);
-	fb_randorient(&(hier.hier[hier.hi[2]+0]), rng);
-	fb_downsync(&(hier.hier[hier.hi[2]+0]), t);
-	fb_randorient(&(hier.hier[hier.hi[2]+1]), rng);
-	fb_downsync(&(hier.hier[hier.hi[2]+1]), t);
-
-	/* calculate v_c numerically, since it can't be calculated analytically since we have a triple */
-	vcrit = sqrt(-(hier.obj[0]->m + hier.obj[1]->m)/(hier.obj[0]->m * hier.obj[1]->m) * 2.0 * \
-		(fb_petot(&(hier.hier[hier.hi[1]+0]), 3) + fb_ketot(&(hier.hier[hier.hi[1]+0]), 3) + \
-		 fb_petot(&(hier.hier[hier.hi[1]+3]), 2) + fb_ketot(&(hier.hier[hier.hi[1]+3]), 2)));
-	
 	fprintf(stderr, "UNITS:\n");
-	fprintf(stderr, "  v_crit=%.6g km/s  v=%.6g km/s  l=%.6g AU  t=t_dyn=%.6g yr\n", \
-		vcrit*units.v/1.0e5, units.v/1.0e5, units.l/FB_CONST_AU, units.t/FB_CONST_YR);
+	fprintf(stderr, "  v=v_crit=%.6g km/s  l=%.6g AU  t=t_dyn=%.6g yr\n", \
+		units.v/1.0e5, units.l/FB_CONST_AU, units.t/FB_CONST_YR);
 	fprintf(stderr, "  M=%.6g M_sun  E=%.6g erg\n\n", units.m/FB_CONST_MSUN, units.E);
 	
 	/* move hierarchies analytically in from infinity along hyperbolic orbit */
@@ -446,22 +324,16 @@ int main(int argc, char *argv[])
 	M = m0 + m1;
 	mu = m0 * m1 / M;
 
-	Ei = 0.5 * mu * fb_sqr(vinf*vcrit);
+	Ei = 0.5 * mu * fb_sqr(vinf);
 
-	a0 = hier.obj[0]->a;
 	a1 = hier.obj[1]->a;
-
-	e0 = hier.obj[0]->e;
 	e1 = hier.obj[1]->e;
-	
-	m00 = hier.obj[0]->obj[0]->m;
-	m01 = hier.obj[0]->obj[1]->m;
 	m10 = hier.obj[1]->obj[0]->m;
 	m11 = hier.obj[1]->obj[1]->m;
 
-	rtid = pow(2.0*m0*m1/input.tidaltol, 1.0/3.0) * \
-		FB_MAX(pow(m00*m01, -1.0/3.0)*a0*(1.0+e0), pow(m10*m11, -1.0/3.0)*a1*(1.0+e1));
-	fb_init_scattering(hier.obj, vinf*vcrit, b, rtid);
+	rtid = pow(2.0*(m0+m1)/(m1*input.tidaltol), 1.0/3.0) * a1 * (1.0+e1);
+
+	fb_init_scattering(hier.obj, vinf, b, rtid);
 	
 	/* and check to see that we conserved energy and angular momentum */
 	fb_cross(hier.obj[0]->x, hier.obj[0]->v, l0);
@@ -475,12 +347,20 @@ int main(int argc, char *argv[])
 	E = - m0 * m1 / fb_mod(r) + 0.5 * (m0 * fb_dot(hier.obj[0]->v, hier.obj[0]->v) + \
 					m1 * fb_dot(hier.obj[1]->v, hier.obj[1]->v));
 
-	fb_dprintf("L0=%.6g DeltaL/L0=%.6g DeltaL=%.6g\n", mu*b*vinf*vcrit, fb_mod(L)/(mu*b*vinf*vcrit)-1.0, fb_mod(L)-mu*b*vinf*vcrit);
+	fb_dprintf("L0=%.6g DeltaL/L0=%.6g DeltaL=%.6g\n", mu*b*vinf, fb_mod(L)/(mu*b*vinf)-1.0, fb_mod(L)-mu*b*vinf);
 	fb_dprintf("E0=%.6g DeltaE/E0=%.6g DeltaE=%.6g\n\n", Ei, E/Ei-1.0, E-Ei);
 
-	/* trickle down properties */
-	fb_trickle(&hier, t);
-
+	/* trickle down the binary properties, then back up */
+	fb_dprintf("obj[%d]->a=%e\n", 1, hier.obj[1]->a);
+	fb_dprintf("obj[%d]->e=%e\n", 1, hier.obj[1]->e);
+	fb_dprintf("obj[%d]->m=%e\n", 1, hier.obj[1]->m);
+	fb_randorient(&(hier.hier[hier.hi[2]+0]), rng);
+	fb_downsync(&(hier.hier[hier.hi[2]+0]), t);
+	fb_upsync(&(hier.hier[hier.hi[2]+0]), t);
+	fb_dprintf("obj[%d]->a=%e\n", 1, hier.obj[1]->a);
+	fb_dprintf("obj[%d]->e=%e\n", 1, hier.obj[1]->e);
+	fb_dprintf("obj[%d]->m=%e\n", 1, hier.obj[1]->m);
+	
 	/* store the initial energy and angular momentum*/
 	Ei = fb_petot(&(hier.hier[hier.hi[1]]), hier.nstar) + fb_ketot(&(hier.hier[hier.hi[1]]), hier.nstar) +
 		fb_einttot(&(hier.hier[hier.hi[1]]), hier.nstar);
@@ -521,6 +401,7 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "  E0=%.6g  DeltaE/E0=%.6g  DeltaE=%.6g\n", Ei, retval.DeltaEfrac, retval.DeltaE);
 	fprintf(stderr, "  Rmin=%.6g (%.6g RSUN)  Rmin_i=%d  Rmin_j=%d\n", \
 		retval.Rmin, retval.Rmin*units.l/FB_CONST_RSUN, retval.Rmin_i, retval.Rmin_j);
+	fprintf(stderr, "  Nosc=%d (%s)\n", retval.Nosc, (retval.Nosc>=1?"resonance":"non-resonance"));
 	
 	/* free GSL stuff */
 	gsl_rng_free(rng);

@@ -27,13 +27,13 @@
 #include "fewbody.h"
 
 /* the dot product of two K-S vectors */
-inline double fb_ks_dot(double x[4], double y[4])
+double fb_ks_dot(double x[4], double y[4])
 {
 	return(x[0] * y[0] + x[1] * y[1] + x[2] * y[2] + x[3] * y[3]);
 }
 
 /* the modulus of a K-S vector */
-inline double fb_ks_mod(double x[4])
+double fb_ks_mod(double x[4])
 {
 	return(sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3]));
 }

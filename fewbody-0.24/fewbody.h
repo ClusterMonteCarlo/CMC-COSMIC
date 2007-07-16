@@ -26,9 +26,9 @@
 #include <gsl/gsl_rng.h>
 
 /* version information */
-#define FB_VERSION "0.21"
-#define FB_NICK "Bender"
-#define FB_DATE "Fri Mar  5 12:33:22 EST 2004"
+#define FB_VERSION "0.24"
+#define FB_NICK "Of The Earth"
+#define FB_DATE "Mon Jul 16 14:44:58 CDT 2007"
 
 /* dimensionless constants */
 #define FB_CONST_PI 3.141592653589793238462643
@@ -139,6 +139,7 @@ typedef struct{
 	double Rmin; /* minimum distance of close approach during interaction */
 	int Rmin_i; /* index of star i participating in minimum close approach */
 	int Rmin_j; /* index of star j participating in minimum close approach */
+	int Nosc; /* number of oscillations of the quantity s^2 (McMillan & Hut 1996) (Nosc=Nmin-1, so resonance if Nosc>=1) */
 } fb_ret_t;
 
 /* fewbody.c */
@@ -189,8 +190,8 @@ int fb_collapse(fb_hier_t *hier, double t, double tidaltol);
 int fb_expand(fb_hier_t *hier, double t, double tidaltol);
 
 /* fewbody_ks.c */
-inline double fb_ks_dot(double x[4], double y[4]);
-inline double fb_ks_mod(double x[4]);
+double fb_ks_dot(double x[4], double y[4]);
+double fb_ks_mod(double x[4]);
 void fb_calc_Q(double q[4], double Q[4]);
 void fb_calc_ksmat(double Q[4], double Qmat[4][4]);
 void fb_calc_amat(double **a, int nstar, int kstar);
@@ -211,14 +212,14 @@ void fb_init_scattering(fb_obj_t *obj[2], double vinf, double b, double rtid);
 void fb_normalize(fb_hier_t *hier, fb_units_t units);
 
 /* fewbody_utils.c */
-inline double *fb_malloc_vector(int n);
-inline double **fb_malloc_matrix(int nr, int nc);
-inline void fb_free_vector(double *v);
-inline void fb_free_matrix(double **m);
-inline double fb_sqr(double x);
-inline double fb_cub(double x);
-inline double fb_dot(double x[3], double y[3]);
-inline double fb_mod(double x[3]);
+double *fb_malloc_vector(int n);
+double **fb_malloc_matrix(int nr, int nc);
+void fb_free_vector(double *v);
+void fb_free_matrix(double **m);
+double fb_sqr(double x);
+double fb_cub(double x);
+double fb_dot(double x[3], double y[3]);
+double fb_mod(double x[3]);
 int fb_cross(double x[3], double y[3], double z[3]);
 int fb_angmom(fb_obj_t *star, int nstar, double L[3]);
 void fb_angmomint(fb_obj_t *star, int nstar, double L[3]);
@@ -238,6 +239,7 @@ double fb_reltide(fb_obj_t *bin, fb_obj_t *single, double r);
 /* The variadic macro syntax here is the old gcc standard, and compiles on
    Mac OSX with gcc. */
 #define fb_dprintf(args...) if (fb_debug) fprintf(stderr, args)
+#define FB_MIN(a, b) ((a)<=(b)?(a):(b))
 #define FB_MAX(a, b) ((a)>=(b)?(a):(b))
 #define FB_DELTA(i, j) ((i)==(j)?1:0)
 #define FB_KS_K(i, j, nstar) ((i)*(nstar)-((i)+1)*((i)+2)/2+(j))

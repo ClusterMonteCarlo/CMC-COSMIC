@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <gsl/gsl_rng.h>
 #include "cmc.h"
+#define _MAIN_
 #include "cmc_vars.h"
 
 int main(int argc, char *argv[])

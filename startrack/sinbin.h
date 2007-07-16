@@ -1,6 +1,12 @@
 /* software by kabel: last modified on Feb 18, 2002 */
 /* header for single.c and binary.c */
 
+#ifndef _MAIN_
+#define _EXTERN_ extern
+#else
+#define _EXTERN_
+#endif
+
 
 #define Vicky 1                     /* 0--evol continus, 1--evol stops in cases pointed out by Vicky */
 
@@ -87,7 +93,7 @@
                                                                                  /* Global variables */ 
 #define Hub 1                      /* Hub=0: outburst of star formation 10Gyrs ago, t_hubble=10000.0 */
                                  /* Hub=1: continous star form. through 10Gyrs, t_hubble=[0:10000.0] */
-double t_hubble;        /* Hubble time [10^6 yrs] - for SN and mergers counters, defined in binary.c */
+_EXTERN_ double t_hubble;        /* Hubble time [10^6 yrs] - for SN and mergers counters, defined in binary.c */
 #define hub_val 10000.0                               /* value of t_hubble -- Hubble time [10^6 yrs] */ 
                             /* value for out Galatic disk is hub_val=10000.0, and maximum is 15000.0 */
             /* the age of univerese, but artificially Hubble can be supplied here as large as needed */
@@ -98,74 +104,74 @@ double t_hubble;        /* Hubble time [10^6 yrs] - for SN and mergers counters,
 #define MM 1            /* 1 --singl.c fills in tend, and may return at diffrent time than requested */
                                           /* by external driver (binary.c), 0--always return at tend */
 
-int DNStype;               /* DNStype=1: non-recycled, DNStype=0: recycled, DNStype=-1: do not apply */
-int DWDtype;               /* DWDtype=1: new path(for DNS would be non-recycled), DWDtype=1 old path */  
+_EXTERN_ int DNStype;               /* DNStype=1: non-recycled, DNStype=0: recycled, DNStype=-1: do not apply */
+_EXTERN_ int DWDtype;               /* DWDtype=1: new path(for DNS would be non-recycled), DWDtype=1 old path */  
              /* initialized inside for{} loop, housekeeping of DNStype and DWDtype done in systype() */
 
-double xPacz[2000],yPacz[2000];                          /* for Paczynski kicks filled in get_Vkick5 */    
+_EXTERN_ double xPacz[2000],yPacz[2000];                          /* for Paczynski kicks filled in get_Vkick5 */    
 
-FILE *fp0;                         /* file with errors and warnings, common for singl.c and binary.c */
+_EXTERN_ FILE *fp0;                         /* file with errors and warnings, common for singl.c and binary.c */
 
-double M_hook,M_HeF,M_FGB;                                           /* critical evolutionary masses */
+_EXTERN_ double M_hook,M_HeF,M_FGB;                                           /* critical evolutionary masses */
 
-double aa1,aa2,aa3,aa4,aa5,aa6,aa7,aa8,aa9,aa10;                          /* ZZ dependent parameters */
-double aa11,aa12,aa13,aa14,aa15,aa16,aa17,aa18,aa19,aa20;
-double aa21,aa22,aa23,aa24,aa25,aa26,aa27,aa28,aa29,aa30;
-double aa31,aa32,aa33,aa34,aa35,aa36,aa37,aa38,aa39,aa40;
-double aa41,aa42,aa43,aa44,aa45,aa46,aa47,aa48,aa49,aa50;
-double aa51,aa52,aa53,aa54,aa55,aa56,aa57,aa58,aa59,aa60;
-double aa61,aa62,aa63,aa64,aa65,aa66,aa67,aa68,aa69,aa70;
-double aa71,aa72,aa73,aa74,aa75,aa76,aa77,aa78,aa79,aa80,aa81;
+_EXTERN_ double aa1,aa2,aa3,aa4,aa5,aa6,aa7,aa8,aa9,aa10;                          /* ZZ dependent parameters */
+_EXTERN_ double aa11,aa12,aa13,aa14,aa15,aa16,aa17,aa18,aa19,aa20;
+_EXTERN_ double aa21,aa22,aa23,aa24,aa25,aa26,aa27,aa28,aa29,aa30;
+_EXTERN_ double aa31,aa32,aa33,aa34,aa35,aa36,aa37,aa38,aa39,aa40;
+_EXTERN_ double aa41,aa42,aa43,aa44,aa45,aa46,aa47,aa48,aa49,aa50;
+_EXTERN_ double aa51,aa52,aa53,aa54,aa55,aa56,aa57,aa58,aa59,aa60;
+_EXTERN_ double aa61,aa62,aa63,aa64,aa65,aa66,aa67,aa68,aa69,aa70;
+_EXTERN_ double aa71,aa72,aa73,aa74,aa75,aa76,aa77,aa78,aa79,aa80,aa81;
 
-double bb1,bb2,bb3,bb4,bb5,bb6,bb7,bb9,bb10;
-double bb11,bb12,bb13,bb14,bb15,bb16,bb17,bb18,bb19,bb20;
-double bb21,bb22,bb23,bb24,bb25,bb26,bb27,bb28,bb29,bb30;
-double bb31,bb32,bb33,bb34,bb36,bb37,bb38,bb39,bb40;
-double bb41,bb42,bb43,bb44,bb45,bb46,bb47,bb48,bb49;
-double bb50,bb51,bb52,bb53,bb54,bb55,bb56,bb57;   
+_EXTERN_ double bb1,bb2,bb3,bb4,bb5,bb6,bb7,bb9,bb10;
+_EXTERN_ double bb11,bb12,bb13,bb14,bb15,bb16,bb17,bb18,bb19,bb20;
+_EXTERN_ double bb21,bb22,bb23,bb24,bb25,bb26,bb27,bb28,bb29,bb30;
+_EXTERN_ double bb31,bb32,bb33,bb34,bb36,bb37,bb38,bb39,bb40;
+_EXTERN_ double bb41,bb42,bb43,bb44,bb45,bb46,bb47,bb48,bb49;
+_EXTERN_ double bb50,bb51,bb52,bb53,bb54,bb55,bb56,bb57;   
 /* bb50 set in Ragbf() called by single() not in coeff_bb() */
 
 
 /* counters for different SN types and for fraction of NS formed in different SNs */
-long int ss0,ss1a,ss1b,ss1c,ss2a,ss2b,ss2c,ss3a,ss3b,ss3c,ss4a,ss4b,ss4c;
-long int ns1a,ns1b,ns1c,ns2a,ns2b,ns2c,ns3a,ns3b,ns3c,ns4a,ns4b,ns4c;
+_EXTERN_ long int ss0,ss1a,ss1b,ss1c,ss2a,ss2b,ss2c,ss3a,ss3b,ss3c,ss4a,ss4b,ss4c;
+_EXTERN_ long int ns1a,ns1b,ns1c,ns2a,ns2b,ns2c,ns3a,ns3b,ns3c,ns4a,ns4b,ns4c;
 
-long int st0,st1a,st1b,st1c,st2a,st2b,st2c,st3a,st3b,st3c,st4a,st4b,st4c;
-long int nt1a,nt1b,nt1c,nt2a,nt2b,nt2c,nt3a,nt3b,nt3c,nt4a,nt4b,nt4c;
+_EXTERN_ long int st0,st1a,st1b,st1c,st2a,st2b,st2c,st3a,st3b,st3c,st4a,st4b,st4c;
+_EXTERN_ long int nt1a,nt1b,nt1c,nt2a,nt2b,nt2c,nt3a,nt3b,nt3c,nt4a,nt4b,nt4c;
 
 
 
-long int dce1;                        /* number of Double Common Envelope events of H-rich stars */
-long int dce2;               /* number of Double CE events of H-rich stars that result in merger */
-long int dce3;                /* number of Double Common Envelope events of H-rich+He-rich stars */
-long int dce4;       /* number of Double CE events of H-rich+He-rich stars that result in merger */
-long int dce5;                       /* number of Double Common Envelope events of He-rich stars */
-long int dce6;              /* number of Double CE events of He-rich stars that result in merger */
-long int hce10;                                   /* number of hyper-crit Common Envelope events */
+_EXTERN_ long int dce1;                        /* number of Double Common Envelope events of H-rich stars */
+_EXTERN_ long int dce2;               /* number of Double CE events of H-rich stars that result in merger */
+_EXTERN_ long int dce3;                /* number of Double Common Envelope events of H-rich+He-rich stars */
+_EXTERN_ long int dce4;       /* number of Double CE events of H-rich+He-rich stars that result in merger */
+_EXTERN_ long int dce5;                       /* number of Double Common Envelope events of He-rich stars */
+_EXTERN_ long int dce6;              /* number of Double CE events of He-rich stars that result in merger */
+_EXTERN_ long int hce10;                                   /* number of hyper-crit Common Envelope events */
 
 
 /* count formation of different eccentric and circular compact object binaries through double CE */
-long int dce10,dce11,dce12,dce13,dce14,dce15,dce16,dce17,dce18,dce19,dce20,dce21;         
+_EXTERN_ long int dce10,dce11,dce12,dce13,dce14,dce15,dce16,dce17,dce18,dce19,dce20,dce21;         
 
-long int dce30,dce31,dce32,dce33,dce34,dce35,dce36,dce37;    /* mergeing and not merging compact */
-long int dce40,dce41,dce42,dce43,dce44,dce45,dce46,dce47;  /* object binaries which went through */
-long int dce50,dce51,dce52,dce53,dce54,dce55,dce56,dce57;        /* different types of double CE */
-long int dce60,dce61,dce62,dce63,dce64,dce65,dce66,dce67;
-long int dce70,dce71,dce72,dce73,dce74,dce75,dce76,dce77;
-long int dce80,dce81,dce82,dce83,dce84,dce85,dce86,dce87;
-
-
+_EXTERN_ long int dce30,dce31,dce32,dce33,dce34,dce35,dce36,dce37;    /* mergeing and not merging compact */
+_EXTERN_ long int dce40,dce41,dce42,dce43,dce44,dce45,dce46,dce47;  /* object binaries which went through */
+_EXTERN_ long int dce50,dce51,dce52,dce53,dce54,dce55,dce56,dce57;        /* different types of double CE */
+_EXTERN_ long int dce60,dce61,dce62,dce63,dce64,dce65,dce66,dce67;
+_EXTERN_ long int dce70,dce71,dce72,dce73,dce74,dce75,dce76,dce77;
+_EXTERN_ long int dce80,dce81,dce82,dce83,dce84,dce85,dce86,dce87;
 
 
-long int hce1,hce2,hce3,hce4;                           /* number of Hyper Common Envelope events */ 
-long int Hmxb1,Hmxb2,Hmxb3,Hmxb4;                              /* number of all (wind+RLOF) HMXBs */
-long int hmxb1,hmxb2,hmxb3,hmxb4;                                         /* number of RLOF HMXBs */
-long int lmxb1,lmxb2,lmxb3,lmxb4,lmxb5,lmxb6,lmxb7,lmxb8;                      /* number of LMXBs */
-long int msns,msbh;                                             /* number of MS-NS, MS-BH systems */
-long int hehe1;           /* number of MT of two He giants when both are more massive then Mhecon */
-long int hehe2;           /* number of MT of two He giants when both are less massive then Mhecon */     
-long int hehe3;   /* number of MT of two He giants when donor is not massive and acceptor massive */
-long int hehe4;   /* number of MT of two He giants when donor is massive and acceptor not massive */
+
+
+_EXTERN_ long int hce1,hce2,hce3,hce4;                           /* number of Hyper Common Envelope events */ 
+_EXTERN_ long int Hmxb1,Hmxb2,Hmxb3,Hmxb4;                              /* number of all (wind+RLOF) HMXBs */
+_EXTERN_ long int hmxb1,hmxb2,hmxb3,hmxb4;                                         /* number of RLOF HMXBs */
+_EXTERN_ long int lmxb1,lmxb2,lmxb3,lmxb4,lmxb5,lmxb6,lmxb7,lmxb8;                      /* number of LMXBs */
+_EXTERN_ long int msns,msbh;                                             /* number of MS-NS, MS-BH systems */
+_EXTERN_ long int hehe1;           /* number of MT of two He giants when both are more massive then Mhecon */
+_EXTERN_ long int hehe2;           /* number of MT of two He giants when both are less massive then Mhecon */     
+_EXTERN_ long int hehe3;   /* number of MT of two He giants when donor is not massive and acceptor massive */
+_EXTERN_ long int hehe4;   /* number of MT of two He giants when donor is massive and acceptor not massive */
 
 
 

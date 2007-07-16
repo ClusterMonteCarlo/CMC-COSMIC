@@ -1,0 +1,171 @@
+2006-04-12 14:32  fregeau
+
+	* fewbody.h: Updated version.  This is a bug fix release.  The only
+	  change relative to the previous version is a fix in
+	  sigma_binsingle.c for the calculation of the cross section for
+	  k=10 (all stars colliding and merging into one star).
+
+2006-02-07 12:32  fregeau
+
+	* INSTALL.osx: Updated.
+
+2005-09-07 14:32  fregeau
+
+	* sigma_binsingle.c: Fixed typo in sigma_binsingle.c that prevented
+	  the counting of triple collision events.
+
+2005-06-10 11:08  fregeau
+
+	* fewbody.h: Version bump to 0.22 (Oooo).  This version has a
+	  corrected technique for for calculating tides, which is used in
+	  collapsing/expanding binaries, and beginning numerical
+	  integration.	The results should be only minimally affected for
+	  comparable-mass systems, but may change dramatically for large
+	  mass ratio systems.  This version also now determines whether or
+	  not an interaction was resonant.  This information is return in
+	  the fb_ret_t structure in the member Nosc.  If Nosc >= 1 then the
+	  interaction was resonant.  If Nosc=0 it was not resonant.
+	  Finally, this version now includes a (currently experimental)
+	  function for automatically calculating binary-single cross
+	  sections.  It has been tested for a few simple cases and appears
+	  to yield sensible results.  I haven't yet carefully checked my
+	  handling of the statistics, which uses a novel technique that is
+	  really a generalization of Steve McMillan's technique for
+	  automatic cross section calculation.	Enjoy.
+
+2005-06-10 10:55  fregeau
+
+	* scripts/release.sh: Updated for new environment.
+
+2005-06-10 10:33  fregeau
+
+	* fewbody.h: Updated version.
+
+2004-11-30 15:39  fregeau
+
+	* sigma_binsingle.c: Made it quieter.  It still needs some cleaning
+	  up.
+
+2004-11-26 18:28  fregeau
+
+	* fewbody.h, sigma_binsingle.c, sigma_binsingle.h: The new
+	  automatic sigma calculator seems to be working...
+
+2004-11-24 16:10  fregeau
+
+	* sigma_binsingle.c: Progress...
+
+2004-11-22 23:29  fregeau
+
+	* sigma_binsingle.c: Still working on it...
+
+2004-11-22 20:16  fregeau
+
+	* sigma_binsingle.c, sigma_binsingle.h: Just need to sync so I can
+	  work from home...
+
+2004-11-21 12:06  fregeau
+
+	* Makefile, sigma_binsingle.c, sigma_binsingle.h: New routine for
+	  automatic calculation of cross sections.
+
+2004-11-19 14:30  fregeau
+
+	* Makefile, Makefile.osx: Makefile now checks for ccache and uses
+	  if available.  Also, the two main architectures (Linux and Mac OS
+	  X) have been merged into the same Makefile.
+
+2004-11-19 13:01  fregeau
+
+	* binbin.c, binsingle.c, fewbody_utils.c, triplebin.c: Fixed
+	  treatment of tides for disparate mass ratios.
+
+2004-11-15 15:55  fregeau
+
+	* fewbody.h: Version pre-bump.
+
+2004-11-15 15:43  fregeau
+
+	* binbin.c, binsingle.c, cluster.c, fewbody.c, fewbody.h,
+	  triplebin.c: Improved algorithm for detecting oscillations in s^2
+	  by updating s2minprev only if a valid oscillation has been found.
+	  This works because many invalid oscillations occur near the
+	  semi-local maxima (due to binary motion), but no invalid
+	  oscillations occur near the semi-local minima (since the close
+	  approach happens so quickly).
+
+2004-11-15 14:23  fregeau
+
+	* fewbody.c, fewbody.h: Added test for resonance.  If retval.Nosc
+	  >= 1, then it was a resonance.
+
+2004-11-12 15:16  fregeau
+
+	* Makefile, Makefile.osx, fewbody.h, scripts/post.sh: Minor changes
+	  to reflect my new environment.
+
+2004-03-05 11:53  fregeau
+
+	* fewbody.h: Starting 0.22...
+
+2004-03-05 11:36  fregeau
+
+	* fewbody.h: Version bump to 0.21 (Bender).  This is mainly a bug
+	  fix release, with no changes in the interface from the previous
+	  version (0.20).  The bugs fixed do not change the physics.
+	  However, the stability test for [[* *] [* *]] quadruples has
+	  changed and is now the Mardling & Aarseth (2001) test, from
+	  section 4.2 of their paper.
+
+2004-03-05 11:32  fregeau
+
+	* fewbody_hier.c: Changed from malloc() to calloc() in
+	  fb_malloc_hier() to get rid of harmless Valgrind errors due to
+	  normalizing uninitialized memory.
+
+2004-03-05 11:22  fregeau
+
+	* Makefile, scripts/post.sh, scripts/release.sh, scripts/setver.sh:
+	  Updated for use with CVS.
+
+2004-03-05 10:54  fregeau
+
+	* TODO: Updated.
+
+2004-03-05 10:51  fregeau
+
+	* fewbody_classify.c: Added ad-hoc correction factor for the
+	  stability of [[* *] [* *]] quadruples from section 4.2 of
+	  Mardling & Aarseth (2001).
+
+2004-03-05 08:40  fregeau
+
+	* ChangeLog, ChangeLog.old: Rename.
+
+2004-03-05 08:38  fregeau
+
+	* README: Updated to reflect the fact that the stellar collisions
+	  paper has been submitted to MNRAS and is on astro-ph.
+
+2004-02-18 21:10  fregeau
+
+	* AUTHORS, BUGS, COPYING, ChangeLog, INSTALL, INSTALL.osx,
+	  Makefile, Makefile.osx, NEWS, README, THANKS, TODO, binbin.c,
+	  binbin.h, binsingle.c, binsingle.h, cluster.c, cluster.h,
+	  fewbody.c, fewbody.h, fewbody_classify.c, fewbody_coll.c,
+	  fewbody_hier.c, fewbody_int.c, fewbody_io.c, fewbody_isolate.c,
+	  fewbody_ks.c, fewbody_nonks.c, fewbody_scat.c, fewbody_utils.c,
+	  triplebin.c, triplebin.h, scripts/post.sh, scripts/release.sh,
+	  scripts/setver.sh: Imported sources
+
+2004-02-18 21:10  fregeau
+
+	* AUTHORS, BUGS, COPYING, ChangeLog, INSTALL, INSTALL.osx,
+	  Makefile, Makefile.osx, NEWS, README, THANKS, TODO, binbin.c,
+	  binbin.h, binsingle.c, binsingle.h, cluster.c, cluster.h,
+	  fewbody.c, fewbody.h, fewbody_classify.c, fewbody_coll.c,
+	  fewbody_hier.c, fewbody_int.c, fewbody_io.c, fewbody_isolate.c,
+	  fewbody_ks.c, fewbody_nonks.c, fewbody_scat.c, fewbody_utils.c,
+	  triplebin.c, triplebin.h, scripts/post.sh, scripts/release.sh,
+	  scripts/setver.sh: Initial revision
+
