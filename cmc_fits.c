@@ -88,7 +88,7 @@ void read_fits_file_data_old(fitsfile *fptr) {
 	}
 	
 	/* read columns into arrays and copy array into structure */
-	dbl_arr = malloc((NSTAR+2)*sizeof(double));
+	dbl_arr = (double *) malloc((NSTAR+2)*sizeof(double));
 	frow = 1; felem = 1; 
 	nelem = NSTAR+2;
 	fits_read_col(fptr, TDOUBLE, 1, frow, felem, nelem, NULL, dbl_arr, 
@@ -201,8 +201,8 @@ void read_fits_file_data_new(fitsfile *fptr) {
 	
 	/* read columns into arrays and copy array into structure */
 	/* these columns are read from EXT: SS_DYN_PARAM */
-	dbl_arr = malloc((NSTARN+2)*sizeof(double));
-	lng_arr = malloc((NSTARN+2)*sizeof(long));
+	dbl_arr = (double *) malloc((NSTARN+2)*sizeof(double));
+	lng_arr = (long *) malloc((NSTARN+2)*sizeof(long));
 	frow = 1; felem = 1; 
 	N = NSTARN;
 	nelem = N+2;
@@ -264,9 +264,9 @@ void read_fits_file_data_new(fitsfile *fptr) {
 		printerror(status);
 
 		nelem = N = N_BIN_DIM;
-		lng_arr = malloc(N*sizeof(long));
-		dbl_arr = malloc(N*sizeof(double));
-		int_arr = malloc(N*sizeof(int));
+		lng_arr = (long *) malloc(N*sizeof(long));
+		dbl_arr = (double *) malloc(N*sizeof(double));
+		int_arr = (int *) malloc(N*sizeof(int));
 		
 		/** FIXME possibly more binary initialization here FIXME **/
 		if (binary == NULL) {
@@ -440,7 +440,7 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	anynull = 0;
 	rng_size = gsl_rng_size(rng);
 	no_of_doub = 61;
-	dvar = malloc(no_of_doub*sizeof(double));
+	dvar = (double *) malloc(no_of_doub*sizeof(double));
 	
 	/* move to META_INFO to read ... meta info :-) */
 	move_to_hdu(fptr, "META_INFO");
@@ -579,29 +579,29 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	if (no_of_doub>nelem){
 		nelem = no_of_doub;
 	}
-	int_arr = malloc(nelem*sizeof(int));
-	dbl_arr = malloc(nelem*sizeof(double));
-	lng_arr = malloc(nelem*sizeof(long));
+	int_arr = (int *) malloc(nelem*sizeof(int));
+	dbl_arr = (double *) malloc(nelem*sizeof(double));
+	lng_arr = (long *) malloc(nelem*sizeof(long));
 
 	/* allocate memory for velocity dispersion array */
 	sigma_array.n = 0;
-	sigma_array.r = calloc(N_STAR_DIM, sizeof(double));
-	sigma_array.sigma = calloc(N_STAR_DIM, sizeof(double));
+	sigma_array.r = (double *) calloc(N_STAR_DIM, sizeof(double));
+	sigma_array.sigma = (double *) calloc(N_STAR_DIM, sizeof(double));
 
 	/* reading and restoring mass_pc[] and related arrays*/
-	mass_r = malloc(MASS_PC_COUNT * sizeof(double));
-	ave_mass_r = malloc(MASS_PC_COUNT * sizeof(double));
-	no_star_r = malloc(MASS_PC_COUNT * sizeof(double));
-	densities_r = malloc(MASS_PC_COUNT * sizeof(double));
-	ke_rad_r = malloc(MASS_PC_COUNT * sizeof(double));
-	ke_tan_r = malloc(MASS_PC_COUNT * sizeof(double));
-	v2_rad_r = malloc(MASS_PC_COUNT * sizeof(double));
-	v2_tan_r = malloc(MASS_PC_COUNT * sizeof(double));
-	mass_pc = malloc(MASS_PC_COUNT * sizeof(double));
-	mass_bins = calloc(NO_MASS_BINS, sizeof(double));
-	multi_mass_r = malloc(NO_MASS_BINS * sizeof(double *));
+	mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	ave_mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	no_star_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	densities_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	ke_rad_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	ke_tan_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	v2_rad_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	v2_tan_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	mass_pc = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	mass_bins = (double *) calloc(NO_MASS_BINS, sizeof(double));
+	multi_mass_r = (double **) malloc(NO_MASS_BINS * sizeof(double *));
 	for(i=0; i<NO_MASS_BINS; i++){
-		multi_mass_r[i] = malloc(MASS_PC_COUNT * sizeof(double));
+		multi_mass_r[i] = (double *) malloc(MASS_PC_COUNT * sizeof(double));
 	}
 	frow = 1; felem = 1;  
 	fits_read_col(fptr, TDOUBLE, 1, frow, felem, nelem, NULL, dbl_arr, 
@@ -616,7 +616,7 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	fits_read_col(fptr, TINT, 2, frow, felem, nelem, NULL, int_arr, 
 			&anynull, &status);
 	printerror(status);
-	rng_st_ptr = rng->state;
+	rng_st_ptr = (char *) rng->state;
 	for(i=0; i<rng_size; i++){
 		rng_st_ptr[i] = int_arr[i];
 	}

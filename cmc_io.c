@@ -46,7 +46,7 @@ void print_2Dsnapshot(void)
 
 	/* open file for 2D snapshot */
 	sprintf(outfile, "%s.snap%04ld.dat.gz", outprefix, snap_num);
-	if ((snapfile = gzopen(outfile, "wb")) == NULL) {
+	if ((snapfile = (FILE *) gzopen(outfile, "wb")) == NULL) {
 		eprintf("cannot create 2D snapshot file %s\n", outfile);
 		exit_cleanly(1);
 	}
@@ -169,7 +169,7 @@ void PrintLogOutput(void)
 void PrintFileOutput(void) {
 	long i, j, n_single, n_binary;
 	double fb, fb_core;
-	int *multimassr_empty  = malloc((NO_MASS_BINS-1)*sizeof(int));
+	int *multimassr_empty  = (int *) malloc((NO_MASS_BINS-1)*sizeof(int));
 
 	/* print useful headers */
 	if (tcount == 1) {
@@ -428,7 +428,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	//}
 	/* faster and portable way to do this is using calloc, this does
 	 * not depend on the structure of the struct */
-	spp = calloc(1, sizeof(parsed_t));
+	spp = (parsed_t *) calloc(1, sizeof(parsed_t));
 	parsed = *spp;
 	free(spp);
 	
@@ -725,30 +725,30 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		/*********************************************/
 
 		/* the main star array containing all star parameters */
-		star = calloc(N_STAR_DIM, sizeof(star_t));
+		star = (star_t *) calloc(N_STAR_DIM, sizeof(star_t));
 		
 		/* allocate memory for velocity dispersion array */
 		sigma_array.n = 0;
-		sigma_array.r = calloc(N_STAR_DIM, sizeof(double));
-		sigma_array.sigma = calloc(N_STAR_DIM, sizeof(double));
+		sigma_array.r = (double *) calloc(N_STAR_DIM, sizeof(double));
+		sigma_array.sigma = (double *) calloc(N_STAR_DIM, sizeof(double));
 
 		/* the main binary array containing all binary parameters */
-		binary = calloc(N_BIN_DIM, sizeof(binary_t));
+		binary = (binary_t *) calloc(N_BIN_DIM, sizeof(binary_t));
 		
 		/* quantities calculated for various lagrange radii */
-		mass_r = malloc(MASS_PC_COUNT * sizeof(double));
-		ave_mass_r = malloc(MASS_PC_COUNT * sizeof(double));
-		no_star_r = malloc(MASS_PC_COUNT * sizeof(double));
-		densities_r = malloc(MASS_PC_COUNT * sizeof(double));
-		ke_rad_r = malloc(MASS_PC_COUNT * sizeof(double));
-		ke_tan_r = malloc(MASS_PC_COUNT * sizeof(double));
-		v2_rad_r = malloc(MASS_PC_COUNT * sizeof(double));
-		v2_tan_r = malloc(MASS_PC_COUNT * sizeof(double));
-		mass_pc = calloc(MASS_PC_COUNT, sizeof(double));
-		mass_bins = calloc(NO_MASS_BINS, sizeof(double));
-		multi_mass_r = malloc(NO_MASS_BINS * sizeof(double *));
+		mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+		ave_mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+		no_star_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+		densities_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+		ke_rad_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+		ke_tan_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+		v2_rad_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+		v2_tan_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+		mass_pc = (double *) calloc(MASS_PC_COUNT, sizeof(double));
+		mass_bins = (double *) calloc(NO_MASS_BINS, sizeof(double));
+		multi_mass_r = (double **) malloc(NO_MASS_BINS * sizeof(double *));
 		for(i=0; i<NO_MASS_BINS; i++){
-			multi_mass_r[i] = malloc(MASS_PC_COUNT * sizeof(double));
+			multi_mass_r[i] = (double *) malloc(MASS_PC_COUNT * sizeof(double));
 		}
 
 		/*======= Reading values for the Lagrange radii =======*/
@@ -868,7 +868,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	}
 
 	/* lagrange radii for multiple mass bins */
-	mlagradfile = malloc((NO_MASS_BINS-1)*sizeof(FILE *));
+	mlagradfile = (FILE **) malloc((NO_MASS_BINS-1)*sizeof(FILE *));
 	for(i=0; i<NO_MASS_BINS-1; i++){ /* NO_MASS_BINS need to be >=2 to be
 							meaningful */
 		sprintf(outfile, "%s.lagrad%ld-%g-%g.dat", outprefix, i,

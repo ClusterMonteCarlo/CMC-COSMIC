@@ -12,13 +12,13 @@
 #include "cmc_vars.h"
 
 #define ALLOC_TSTUFF \
-	ttype = saf_malloc(tfields*sizeof(char *)); \
-	tform = saf_malloc(tfields*sizeof(char *)); \
-	tunit = saf_malloc(tfields*sizeof(char *)); \
+	ttype = (char **) saf_malloc(tfields*sizeof(char *)); \
+	tform = (char **) saf_malloc(tfields*sizeof(char *)); \
+	tunit = (char **) saf_malloc(tfields*sizeof(char *)); \
 	for(i=0; i<tfields; i++){ \
-		ttype[i] = saf_malloc(1024*sizeof(char)); \
-		tform[i] = saf_malloc(1024*sizeof(char)); \
-		tunit[i] = saf_malloc(1024*sizeof(char)); \
+		ttype[i] = (char *) saf_malloc(1024*sizeof(char)); \
+		tform[i] = (char *) saf_malloc(1024*sizeof(char)); \
+		tunit[i] = (char *) saf_malloc(1024*sizeof(char)); \
 	} \
 
 #define FREE_TSTUFF \
@@ -71,7 +71,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	sprintf(extname,"SF_RESTART_PARAM");
 	tfields = 3; 
 	no_of_doub = 61;
-	dvar=malloc(no_of_doub*sizeof(double));
+	dvar=(double *) malloc(no_of_doub*sizeof(double));
 
 	nrows = MASS_PC_COUNT;
 	if (rng_size>nrows){
@@ -80,9 +80,9 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	if (no_of_doub>nrows){
 		nrows = no_of_doub;
 	}
-	dbl_arr = saf_malloc(nrows*sizeof(double));
-	lng_arr = saf_malloc(nrows*sizeof(long));
-	int_arr = saf_malloc(nrows*sizeof(int));
+	dbl_arr = (double *) saf_malloc(nrows*sizeof(double));
+	lng_arr = (long *) saf_malloc(nrows*sizeof(long));
+	int_arr = (int *) saf_malloc(nrows*sizeof(int));
 	firstrow  = 1;  /* first row in table to write   */
 	firstelem = 1;  /* first element in row          */
 
@@ -412,7 +412,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			dbl_arr, &status);
 	printerror(status);
 	
-	rng_st_ptr = rng->state;
+	rng_st_ptr = (char *) rng->state;
 	for(i=0; i<nrows; i++){
 		int_arr[i] = 0;
 	}
@@ -457,8 +457,8 @@ void write_ss_dyn_param(fitsfile *fptr){
 	tfields = 9; nrows = N+2;
 	firstrow  = 1;  /* first row in table to write   */
 	firstelem = 1;  /* first element in row          */
-	dbl_arr = saf_malloc((N+2)*sizeof(double));
-	lng_arr = saf_malloc((N+2)*sizeof(long));
+	dbl_arr = (double *) saf_malloc((N+2)*sizeof(double));
+	lng_arr = (long *) saf_malloc((N+2)*sizeof(long));
 
 	ALLOC_TSTUFF
 	sprintf(ttype[0],"Mass");
@@ -582,8 +582,8 @@ void write_ss_se_param(fitsfile *fptr){
 	tfields = 3; nrows = N;
 	firstrow  = 1;  /* first row in table to write   */
 	firstelem = 1;  /* first element in row          */
-	dbl_arr = saf_malloc((N+2)*sizeof(double));
-	int_arr = saf_malloc((N+2)*sizeof(int));
+	dbl_arr = (double *) saf_malloc((N+2)*sizeof(double));
+	int_arr = (int *) saf_malloc((N+2)*sizeof(int));
 
 	ALLOC_TSTUFF
 	sprintf(ttype[0],"Radius");
@@ -617,11 +617,11 @@ void write_ss_se_param(fitsfile *fptr){
 	fits_write_col(fptr, TDOUBLE, 2, firstrow, firstelem, nrows, dbl_arr,
                    &status);
 	/* type */
-	int_arr[0] = 0.0;
+	int_arr[0] = 0;
 	for(i=1;i<=N;i++){
 		int_arr[i] = star[i].k;
 	}
-	int_arr[N+1] = 0.0;
+	int_arr[N+1] = 0;
 	fits_write_col(fptr, TINT, 3, firstrow, firstelem, nrows, int_arr,
                    &status);
 #endif
@@ -672,9 +672,9 @@ void write_bs_dyn_param(fitsfile *fptr){
 	tfields = 11; nrows = N;
 	firstrow  = 1;  /* first row in table to write   */
 	firstelem = 1;  /* first element in row          */
-	lng_arr = saf_malloc(N*sizeof(long));
-	dbl_arr = saf_malloc(N*sizeof(double));
-	int_arr = saf_malloc(N*sizeof(int));
+	lng_arr = (long *) saf_malloc(N*sizeof(long));
+	dbl_arr = (double *) saf_malloc(N*sizeof(double));
+	int_arr = (int *) saf_malloc(N*sizeof(int));
 
 	ALLOC_TSTUFF
 	sprintf(ttype[0],"ID1");

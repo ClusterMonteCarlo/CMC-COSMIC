@@ -687,10 +687,10 @@ void comp_multi_mass_percent(){
 
 	if (NO_MASS_BINS <=1) return;
 
-	mtotal_inbin = calloc(NO_MASS_BINS, sizeof(double));
-	number_inbin = calloc(NO_MASS_BINS, sizeof(long));
-	r_inbin = calloc(NO_MASS_BINS, sizeof(double));
-	star_bins = malloc((clus.N_MAX+2)*sizeof(int));
+	mtotal_inbin = (double *) calloc(NO_MASS_BINS, sizeof(double));
+	number_inbin = (long *) calloc(NO_MASS_BINS, sizeof(long));
+	r_inbin = (double *) calloc(NO_MASS_BINS, sizeof(double));
+	star_bins = (int *) malloc((clus.N_MAX+2)*sizeof(int));
 	for (i = 1; i <= clus.N_MAX; i++) {
 		star_bins[i] = find_stars_mass_bin(star[i].m/SOLAR_MASS_DYN);
 		if (star_bins[i] == -1) continue; /* -1: star isn't in legal bin */
@@ -701,20 +701,20 @@ void comp_multi_mass_percent(){
 		r_inbin[star_bins[i]] = star[i].r;
 	}
 	/* populate arrays rs[NO_MASS_BINS][j] and percents[][] */
-	rs = malloc(NO_MASS_BINS*sizeof(double *));
-	percents = malloc(NO_MASS_BINS*sizeof(double *));
+	rs = (double **) malloc(NO_MASS_BINS*sizeof(double *));
+	percents = (double **) malloc(NO_MASS_BINS*sizeof(double *));
 	for(i=0; i<NO_MASS_BINS; i++){
 		/* +1 below is to accomodate rs=0 <-> percents=0 point */
-		rs[i] = malloc((number_inbin[i]+1)*sizeof(double));
-		percents[i] = malloc((number_inbin[i]+1)*sizeof(double));
+		rs[i] = (double *) malloc((number_inbin[i]+1)*sizeof(double));
+		percents[i] = (double *) malloc((number_inbin[i]+1)*sizeof(double));
 	}
 	for(i=0; i<NO_MASS_BINS; i++){
 		/* at r=0 there is 0% of mass */
 		rs[i][0] = percents[i][0] = 0.0;
 	}
 	
-	mcount_inbin = calloc(NO_MASS_BINS, sizeof(double));
-	ncount_inbin = calloc(NO_MASS_BINS, sizeof(long));
+	mcount_inbin = (double *) calloc(NO_MASS_BINS, sizeof(double));
+	ncount_inbin = (long *) calloc(NO_MASS_BINS, sizeof(long));
 	for (i = 1; i <= clus.N_MAX; i++) {
 		int sbin = star_bins[i];
 		if (sbin == -1) continue;
@@ -726,8 +726,8 @@ void comp_multi_mass_percent(){
 	}
 	free(mcount_inbin); free(ncount_inbin);
 	
-	acc = malloc(NO_MASS_BINS*sizeof(gsl_interp_accel));
-	spline = malloc(NO_MASS_BINS*sizeof(gsl_spline));
+	acc = (gsl_interp_accel **) malloc(NO_MASS_BINS*sizeof(gsl_interp_accel));
+	spline = (gsl_spline **) malloc(NO_MASS_BINS*sizeof(gsl_spline));
 	for(i=0; i<NO_MASS_BINS; i++){
 		if((number_inbin[i] == 1) || (number_inbin[i] == 0)) continue;
 		acc[i] = gsl_interp_accel_alloc();
@@ -946,7 +946,7 @@ void mini_sshot(){
 	fname_len = strlen(outprefix);
 	fname_len += strlen("miniss.");
 	fname_len += 10;
-	mss_fname = malloc(fname_len*sizeof(char));
+	mss_fname = (char *) malloc(fname_len*sizeof(char));
 	sprintf(mss_fname,"%s_miniss.%05ld", outprefix, tcount);
 	mss = fopen(mss_fname, "w+");
 	for(i=0; i<1000; i++){
@@ -1020,7 +1020,7 @@ void central_calculate(void)
 	}
 
 	/* allocate array for local density calculations */
-	rhoj = malloc((nave+1) * sizeof(double));
+	rhoj = (double *) malloc((nave+1) * sizeof(double));
 
 	/* calculate rhoj's (Casertano & Hut 1985) */
 	for (i=1; i<=nave; i++) {

@@ -50,7 +50,7 @@ void zero_star(long j)
 	star[j].dt = 0.0;
 	star[j].mpre = 0.0;
 	star[j].tstart = 0.0;
-	star[j].init_no = 0.0;
+	star[j].init_no = 0;
 	star[j].k = 0;
 	star[j].flag = 0;
 	star[j].kpre = 0;
@@ -382,7 +382,7 @@ void binint_log_status(fb_ret_t retval)
 		retval.DeltaEfrac, retval.DeltaE, retval.DeltaLfrac, retval.DeltaL, retval.tcpu);
 }
 
-void binint_log_collision(char interaction_type[], long id,
+void binint_log_collision(const char interaction_type[], long id,
 			  double mass, double r, fb_obj_t obj, long k, long kp)
 {
 	int j;
