@@ -103,7 +103,7 @@ int fb_nonks_jac(double t, const double *y, double *dfdy, double *dfdt, void *pa
 	matrix = &dfdy_mat.matrix;
 	
 	/* set dfdt to zero */
-	for (j=0; j<nstar*6; j++) {
+	for (j=0; j< (unsigned int) nstar*6; j++) {
 		dfdt[j] = 0.0;
 	}
 
@@ -111,14 +111,14 @@ int fb_nonks_jac(double t, const double *y, double *dfdy, double *dfdt, void *pa
 	gsl_matrix_set_zero(matrix);
 
 	/* then set the actual values */
-	for (i=0; i<nstar; i++) {
+	for (i=0; i< (unsigned int) nstar; i++) {
 		for (a=0; a<3; a++) {
 			gsl_matrix_set(matrix, i+a, i+a+3, 1.0);
 
-			for (k=0; k<nstar; k++) {
+			for (k=0; k< (unsigned int) nstar; k++) {
 				for (b=0; b<3; b++) {
 					val = 0.0;
-					for (j=0; j<nstar; j++) {
+					for (j=0; j< (unsigned int) nstar; j++) {
 						if (j != i) {
 							for (kk=0; kk<3; kk++) {
 								r[kk] = y[i*6+kk] - y[j*6+kk];

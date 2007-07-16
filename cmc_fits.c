@@ -82,7 +82,7 @@ void read_fits_file_data_old(fitsfile *fptr) {
 
 	fits_read_key(fptr, TULONG, "NSTAR", &NSTAR, NULL, &status);
 	printerror(status);
-	if (clus.N_STAR != NSTAR){
+	if (clus.N_STAR != (long) NSTAR){
 		eprintf("There is an inconsistency regarding NSTAR\n");
 		exit_cleanly(EXIT_FAILURE);
 	}
@@ -172,7 +172,7 @@ void read_fits_file_data_new(fitsfile *fptr) {
 	move_to_hdu(fptr, "SS_DYN_PARAM");
 	fits_read_key(fptr, TULONG, "NMAX", &NMAX, NULL, &status);
 	printerror(status);
-	if (clus.N_MAX != NMAX){
+	if (clus.N_MAX != (long) NMAX){
 		eprintf("There is an inconsistency regarding NMAX\n");
 		eprintf("NMAX(read) = %ld, NMAX(set) = %ld\n",
 				NMAX, clus.N_MAX);
@@ -180,7 +180,7 @@ void read_fits_file_data_new(fitsfile *fptr) {
 	}
 	fits_read_key(fptr, TULONG, "NMAXN", &NMAXN, NULL, &status);
 	printerror(status);
-	if (clus.N_MAX_NEW != NMAXN){
+	if (clus.N_MAX_NEW != (long) NMAXN){
 		eprintf("There is an inconsistency regarding NMAX_NEW\n");
 		eprintf("NMAXN(read) = %ld, NMAXN(set) = %ld\n",
 				NMAXN, clus.N_MAX_NEW);
@@ -188,13 +188,13 @@ void read_fits_file_data_new(fitsfile *fptr) {
 	}
 	fits_read_key(fptr, TULONG, "NSTAR", &NSTAR, NULL, &status);
 	printerror(status);
-	if (clus.N_STAR != NSTAR){
+	if (clus.N_STAR != (long) NSTAR){
 		eprintf("There is an inconsistency regarding NSTAR\n");
 		exit_cleanly(EXIT_FAILURE);
 	}
 	fits_read_key(fptr, TULONG, "NSTARN", &NSTARN, NULL, &status);
 	printerror(status);
-	if (clus.N_STAR_NEW != NSTARN){
+	if (clus.N_STAR_NEW != (long) NSTARN){
 		eprintf("There is an inconsistency regarding NSTARNEW\n");
 		exit_cleanly(EXIT_FAILURE);
 	}
@@ -573,7 +573,7 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 	fits_read_key(fptr, TDOUBLE, "UNITSM", &(units.mstar), NULL, &status);
 	
 	nelem = MASS_PC_COUNT;
-	if (rng_size>nelem){
+	if (rng_size>(unsigned long) nelem){
 		nelem = rng_size;
 	}
 	if (no_of_doub>nelem){
@@ -617,7 +617,7 @@ void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *rng) {
 			&anynull, &status);
 	printerror(status);
 	rng_st_ptr = (char *) rng->state;
-	for(i=0; i<rng_size; i++){
+	for(i=0; i<(long) rng_size; i++){
 		rng_st_ptr[i] = int_arr[i];
 	}
 

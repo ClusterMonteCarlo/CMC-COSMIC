@@ -58,7 +58,7 @@ CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
-CC = gcc
+CC = g++
 #CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm

@@ -74,7 +74,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	dvar=(double *) malloc(no_of_doub*sizeof(double));
 
 	nrows = MASS_PC_COUNT;
-	if (rng_size>nrows){
+	if (rng_size>(unsigned long) nrows){
 		nrows = rng_size;
 	}
 	if (no_of_doub>nrows){
@@ -416,7 +416,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	for(i=0; i<nrows; i++){
 		int_arr[i] = 0;
 	}
-	for(i=0; i<rng_size; i++){
+	for(i=0; i<(long) rng_size; i++){
 		/* XXX I am not sure the below casting works !!! (ato) */
 		int_arr[i] += (int) rng_st_ptr[i];
 	}

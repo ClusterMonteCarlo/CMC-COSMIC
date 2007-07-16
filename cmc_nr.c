@@ -200,7 +200,7 @@ double calc_vr(double r, long index, double E, double J) {
 double find_root_vr(long index, long k, double E, double J) {
   struct calc_vr_params p;
   int status, not_converged;
-  double r_low, r_high, apsis;
+  double r_low=-1.0, r_high=-1.0, apsis;
   long iter;
   gsl_function F;
 

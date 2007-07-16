@@ -37,10 +37,10 @@ double search_grid_estimate_prop_const(struct Search_Grid *grid) {
   
   /* determine interpol_coeff using the radius of the particle 
    * with index clus.N_MAX* fraction */
-  i= clus.N_MAX*grid->fraction;
+  i= (long) (clus.N_MAX*grid->fraction);
   r_1= star[i].r;
   r_min= star[1].r;
-  r_index= clus.N_MAX/grid->starsPerBin*grid->fraction;
+  r_index= (long) (clus.N_MAX/grid->starsPerBin*grid->fraction);
   coeff= (r_1-r_min)/pow(r_index, grid->power_law_exponent);
 
   return(coeff);
