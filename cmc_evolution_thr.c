@@ -67,6 +67,8 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		
 		orbit_rs.rp = star[si].r;
 		orbit_rs.ra = star[si].r;
+		orbit_rs.kmin = si;
+		orbit_rs.kmax = si;
 		orbit_rs.dQdrp = 0.0;
 		orbit_rs.dQdra = 0.0;
 		orbit_rs.circular_flag = 1;
@@ -124,6 +126,8 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			
 			orbit_rs.rp = star[si].r;
 			orbit_rs.ra = star[si].r;
+			orbit_rs.kmin = si;
+			orbit_rs.kmax = si;
 			orbit_rs.dQdrp = 0.0;
 			orbit_rs.dQdra = 0.0;
 			orbit_rs.circular_flag = 1;
@@ -137,6 +141,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			orbit_rs.circular_flag = 0;	
 		}
 
+#ifdef DEBUGGING
                 /* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
                 if (!orbit_rs.circular_flag) {
                   int rmax_in_interval, rmin_in_interval, vr_rmax_positive, vr_rmin_positive;
@@ -154,6 +159,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
                     orbit_rs.rp= find_root_vr(si, kmin, E, J);
                   };
                 };
+#endif
 	}
 	
 	return(orbit_rs);
