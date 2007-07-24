@@ -188,7 +188,7 @@ double calc_vr(double r, long index, double E, double J) {
 
   params.k= k; params.index= index;
   params.E= E; params.J= J;
-  dprintf("Interval in calc_vr for index %li is [%li,%li]\n", index, k, k+1);
+  /*dprintf("Interval in calc_vr for index %li is [%li,%li]\n", index, k, k+1);*/
   vr= calc_vr_within_interval(r, (void *) &params);
 
   return(vr);
@@ -236,11 +236,13 @@ double find_root_vr(long index, long k, double E, double J) {
   };
 
   if (!not_converged) {
-    dprintf("Found zero in interval [%.12g,%.12g]\n", r_low, r_high);
-    dprintf("Interval width is %g\n", r_high-r_low);
-    dprintf("Star interval width is %g\n", star[k+1].r-star[k].r);
-    dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
-    dprintf("Interval in find_root_vr for index %li is [%li, %li]\n", index, k, k+1);
+    /*
+     *dprintf("Found zero in interval [%.12g,%.12g]\n", r_low, r_high);
+     *dprintf("Interval width is %g\n", r_high-r_low);
+     *dprintf("Star interval width is %g\n", star[k+1].r-star[k].r);
+     *dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
+     *dprintf("Interval in find_root_vr for index %li is [%li, %li]\n", index, k, k+1);
+     */
   } else {
     dprintf("Found NO zero in interval [%.12g,%.12g]\n", r_low, r_high);
     dprintf("Interval width is %g\n", r_high-r_low);
