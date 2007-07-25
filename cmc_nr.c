@@ -115,8 +115,11 @@ long FindZero_r(long x1, long x2, double r)
        (2.0 * (E - star[k].phi) - SQR(J / star[k].r))
 */
 /* #define FUNC(j, k, E, J) (2.0 * (E - (star[k].phi)) - SQR(J / star[k].r)) */
+#ifndef DEBUGGING
 #define FUNC(j, k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J))
-//#define FUNC(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J/star[(k)].r))
+#else
+#define FUNC(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J/star[(k)].r))
+#endif
 long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 	/* another binary search:
 	 * anologous to above, except FUNC(k) may be decreasing 
@@ -153,6 +156,28 @@ struct calc_vr_params {
   double E, J;
 };
 
+double calc_pot_within_interval(double r, void *p) {
+  double pot;
+  struct calc_vr_params *params= (struct calc_vr_params *) p;
+  long index, k;
+  double E, J;
+
+  index= params->index; k= params->k;
+  E= params->E; J= params->J;
+  
+  if (r==star[k].r) {
+    pot= star[k].phi;
+  } else if (r== star[k+1].r) {
+    pot= star[k+1].phi;
+  } else {
+    pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
+			 * (1.0/star[k].r - 1.0/r) /
+			 (1.0/star[k].r - 1.0/star[k + 1].r));
+  };
+
+  return(pot);
+};
+
 double calc_vr_within_interval(double r, void *p) {
   double pot;
   struct calc_vr_params *params= (struct calc_vr_params *) p;
@@ -161,11 +186,21 @@ double calc_vr_within_interval(double r, void *p) {
 
   index= params->index; k= params->k;
   E= params->E; J= params->J;
-  pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
-			 * (1.0/star[k].r - 1.0/r) /
-			 (1.0/star[k].r - 1.0/star[k + 1].r));
+  pot= calc_pot_within_interval(r, p);
+  
+  return(2.0 * (E - (pot + PHI_S(r, index)))- fb_sqr(J/r));
+};
 
-  return(2.0 * E - fb_sqr(J/r) - 2.0 * (pot + PHI_S(r, index)));
+double calc_Q_within_interval(double r, void *p) {
+  struct calc_vr_params *params= (struct calc_vr_params *) p;
+  double pot, E, J;
+  long index;
+
+  index= params->index;
+  E= params->E; J= params->J;
+  pot= calc_pot_within_interval(r, p);
+  
+  return(2.0 * SQR(r) * (E - pot - PHI_S(r, index))- SQR(J));
 };
 
 double calc_vr(double r, long index, double E, double J) {
@@ -197,6 +232,7 @@ double calc_vr(double r, long index, double E, double J) {
 /* Calculates the root of vr with the additional constraint that when 
  * substituting it back into calc_vr_within_interval leads to vr>= 0.0 .
  */
+//#define FUNC(j, k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J))
 double find_root_vr(long index, long k, double E, double J) {
   struct calc_vr_params p;
   int status, not_converged;
@@ -211,10 +247,21 @@ double find_root_vr(long index, long k, double E, double J) {
   F.function= &calc_vr_within_interval;
   F.params= &p;
 
+  /* check if the values of F at the interval boundaries have different signs */
+  if (GSL_SIGN(GSL_FN_EVAL(&F, star[k].r))==GSL_SIGN(GSL_FN_EVAL(&F, star[k+1].r))) {
+    eprintf("The signs of F[k] and F[k+1] are the same!\n");
+    eprintf("k= %li, F[k]= %g, F[k+1]= %g, r[k]= %g, r[k+1]= %g\n", k, 
+        GSL_FN_EVAL(&F, star[k].r), GSL_FN_EVAL(&F, star[k+1].r), star[k].r, star[k+1].r);
+    eprintf("FUNC[k]= %g, FUNC[k+1]= %g\n", FUNC(index, k, E, J), FUNC(index, k+1, E, J));
+    exit(1);
+  }
+
   status= gsl_root_fsolver_set(q_root, &F, star[k].r, star[k+1].r);
   if (status) {
     eprintf("Initialization of root solver failed! Error Code: %i\n", status);
   exit(1);
+  } else {
+    //dprintf("Initialization successful!\n");
   };
 
   while(not_converged && iter) {
@@ -232,7 +279,7 @@ double find_root_vr(long index, long k, double E, double J) {
         exit(1);
       };
     };
-    iter++;
+    iter--;
   };
 
   if (!not_converged) {
