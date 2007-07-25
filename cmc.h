@@ -483,5 +483,9 @@ double find_root_vr(long index, long k, double E, double J);
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 #define wprintf(args...) {fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 #define eprintf(args...) {fprintf(stderr, "ERROR: %s:%d in %s(): ", __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}
+#ifdef DEBUGGING
+#undef MAX
+#undef MIN
+#endif
 #define MAX(a, b) ((a)>=(b)?(a):(b))
 #define MIN(a, b) ((a)<=(b)?(a):(b))
