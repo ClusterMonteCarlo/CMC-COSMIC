@@ -32,9 +32,9 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
         Trel= (PI/32.)*cub(W)/ ( ((double) clus.N_STAR) * n_local * (4.0* M2ave) );
 
         if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
-          sprintf(fname, "%s.rwalk_steps_%.4li", outprefix, star[index].id);
-          rwalk_file= fopen(fname, "a");
-          fprintf(rwalk_file, "# Time deltabeta_orb deltasafe sqrt(L2) delta n_orb beta r fdt l2_scale\n");
+          //sprintf(fname, "%s.rwalk_steps_%.4li", outprefix, star[index].id);
+          //rwalk_file= fopen(fname, "a");
+          //fprintf(rwalk_file, "# Time deltabeta_orb deltasafe sqrt(L2) delta n_orb beta r fdt l2_scale\n");
           is_in_ids=1;
         };
 #endif
@@ -80,15 +80,15 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 			do_random_step(w, dbeta, delta); 
 #ifdef DEBUGGING
                         if (is_in_ids) {
-                          fprintf(rwalk_file, "%f %g %g %g %g %g %g %g %g %g\n",
-                            TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel, l2_scale);
+                          //fprintf(rwalk_file, "%f %g %g %g %g %g %g %g %g %g\n",
+                            //TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel, l2_scale);
                         };
 #endif
 		} 
 	}; 
 #ifdef DEBUGGING
         if (is_in_ids) {
-          fclose(rwalk_file);
+          //fclose(rwalk_file);
         }
 #endif
 }; 
@@ -178,12 +178,14 @@ double calc_P_orb(long index)
 		params.E = E;
 		params.J = J;
 		params.index = index;
-                if (SEARCH_GRID)
-                  star_interval= search_grid_get_interval(r_grid, orbit_rs.rp);
-		params.kmin = FindZero_r(star_interval.min, star_interval.max, orbit_rs.rp);
-                if (SEARCH_GRID)
-                  star_interval= search_grid_get_interval(r_grid, orbit_rs.ra);
-		params.kmax = FindZero_r(star_interval.min, star_interval.max, orbit_rs.ra) + 1;
+                //if (SEARCH_GRID)
+                //  star_interval= search_grid_get_interval(r_grid, orbit_rs.rp);
+		//params.kmin = FindZero_r(star_interval.min, star_interval.max, orbit_rs.rp);
+                //if (SEARCH_GRID)
+                //  star_interval= search_grid_get_interval(r_grid, orbit_rs.ra);
+		//params.kmax = FindZero_r(star_interval.min, star_interval.max, orbit_rs.ra) + 1;
+                params.kmax= orbit_rs.kmax+1;
+                params.kmin= orbit_rs.kmin;
 		params.rp = orbit_rs.rp;
 		params.ra = orbit_rs.ra;
 		F.params = &params;
@@ -281,6 +283,7 @@ double calc_p_orb_gc(double x, void *params) {
 	double radicand;
 	double phik, phik1, phi0, phi1, rk, rk1, rminus, rplus;
 	double E, J, rp, ra;
+	double result;
 	long index, kmin, kmax;
 
 	E = myparams.E;
@@ -291,7 +294,7 @@ double calc_p_orb_gc(double x, void *params) {
 	rp = myparams.rp;
 	ra = myparams.ra;
         
-	if (x < star[kmin+1].r) { /* return integrand regularized at r=rp */
+	if (x <= star[kmin+1].r) { /* return integrand regularized at r=rp */
 		//dprintf("regularizing near rp...\n");
 		phik = star[kmin].phi + PHI_S(star[kmin].r, index);
 		phik1 = star[kmin+1].phi + PHI_S(star[kmin+1].r, index);
@@ -300,16 +303,45 @@ double calc_p_orb_gc(double x, void *params) {
 		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1);
 		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1);
 		/* rplus = rperi, rminus = rapo-primed */
+		if (E-phi0==0.) {
+		  dprintf("E is phi0 near rp! Damn it!");
+		};
 		rminus = (phi1 - sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
 		//rplus = (phi1 + sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
 		//dprintf("rplus/rp=%g rminus/ra=%g\n", rplus/rp, rminus/ra);
 		if (kmax == kmin + 1) {
 			/* then rminus = ra, so must cancel (ra-x)/(rminus-x) term analytically */
+			result= 2.0*x*sqrt(1.0/((2.0*phi0-2.0*E)));
+			if (gsl_isinf(result)) {
+			  dprintf("result is infinite near rp! Damn it! kmax==kmin+1\n");
+			  dprintf("kmax=%li, kmin=%li, index=%li, rk=%g, rk1=%g, phi0=%g, phi1=%g\n",
+			    kmax, kmin, index, rk, rk1, phi0, phi1);
+			  dprintf("phik= %g, phik1= %g, E= %g, J=%g, id=%li\n", phik, phik1, E, J, star[index].id);
+			};
+			if (gsl_isnan(result)) {
+			  dprintf("result is NaN near rp! Damn it! kmax==kmin+1\n");
+			  dprintf("kmax=%li, kmin=%li, index=%li, rk=%g, rk1=%g, phi0=%g, phi1=%g\n",
+			    kmax, kmin, index, rk, rk1, phi0, phi1);
+			  dprintf("phik= %g, phik1= %g, E= %g, J=%g, id=%li\n", phik, phik1, E, J, star[index].id);
+			};
 			return(2.0*x*sqrt(1.0/((2.0*phi0-2.0*E))));
 		} else {
+		        result= 2.0*x*sqrt((ra-x)/((2.0*phi0-2.0*E)*(rminus-x)));
+			if (gsl_isinf(result)) {
+			  dprintf("result is infinite near rp! Damn it! kmax!=kmin+1\n");
+			  dprintf("kmax=%li, kmin=%li, index=%li, rk=%g, rk1=%g, phi0=%g, phi1=%g\n",
+			    kmax, kmin, index, rk, rk1, phi0, phi1);
+			  dprintf("phik= %g, phik1= %g, E= %g, J=%g, id=%li\n", phik, phik1, E, J, star[index].id);
+			};
+			if (gsl_isnan(result)) {
+			  dprintf("result is NaN near rp! Damn it! kmax!=kmin+1\n");
+			  dprintf("kmax=%li, kmin=%li, index=%li, rk=%g, rk1=%g, phi0=%g, phi1=%g\n",
+			    kmax, kmin, index, rk, rk1, phi0, phi1);
+			  dprintf("phik= %g, phik1= %g, E= %g, J=%g, id=%li\n", phik, phik1, E, J, star[index].id);
+			};
 			return(2.0*x*sqrt((ra-x)/((2.0*phi0-2.0*E)*(rminus-x))));
 		}
-	} else if (x > star[kmax-1].r) { /* return integrand regularized at r=ra*/
+	} else if (x >= star[kmax-1].r) { /* return integrand regularized at r=ra*/
 		//dprintf("regularizing near ra...\n");
 		phik = star[kmax-1].phi + PHI_S(star[kmax-1].r, index);
 		phik1 = star[kmax].phi + PHI_S(star[kmax].r, index);
@@ -322,17 +354,68 @@ double calc_p_orb_gc(double x, void *params) {
 		rplus = (phi1 + sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
 		//dprintf("rplus/rp=%g rminus/ra=%g\n", rplus/rp, rminus/ra);
 		if (kmax == kmin + 1) {
+			result=2.0*x*sqrt(1.0/((2.0*phi0-2.0*E)));
 			/* then rplus = rp, so must cancel (x-rp)/(x-rplus) term analytically */
+			if (gsl_isinf(result)) {
+			  dprintf("result is infinite near ra! Damn it! kmax==kmin+1\n");
+			  dprintf("kmax=%li, kmin=%li, index=%li, rk=%g, rk1=%g, phi0=%g, phi1=%g\n",
+			    kmax, kmin, index, rk, rk1, phi0, phi1);
+			  dprintf("phik= %g, phik1= %g, E= %g, J=%g, id=%li\n", phik, phik1, E, J, star[index].id);
+			  dprintf("x=%g, ra= %g, rp= %g\n", x, ra, rp);
+			};
+			if (gsl_isnan(result)) {
+			  dprintf("result is NaN near ra! Damn it! kmax==kmin+1\n");
+			  dprintf("kmax=%li, kmin=%li, index=%li, rk=%g, rk1=%g, phi0=%g, phi1=%g\n",
+			    kmax, kmin, index, rk, rk1, phi0, phi1);
+			  dprintf("phik= %g, phik1= %g, E= %g, J=%g, id=%li\n", phik, phik1, E, J, star[index].id);
+			  dprintf("x=%g, ra= %g, rp= %g\n", x, ra, rp);
+			};
 			return(2.0*x*sqrt(1.0/((2.0*phi0-2.0*E))));
 		} else {
+			result= 2.0*x*sqrt((x-rp)/((2.0*phi0-2.0*E)*(x-rplus)));
+			if (gsl_isinf(result)) {
+			  dprintf("result is infinite near ra! Damn it! kmax!=kmin+1\n");
+			  dprintf("kmax=%li, kmin=%li, index=%li, rk=%g, rk1=%g, phi0=%g, phi1=%g\n",
+			    kmax, kmin, index, rk, rk1, phi0, phi1);
+			  dprintf("phik= %g, phik1= %g, E= %g, J=%g, id=%li\n", phik, phik1, E, J, star[index].id);
+			  dprintf("x=%g, ra= %g, rp= %g\n", x, ra, rp);
+			};
+			if (gsl_isnan(result)) {
+			  dprintf("result is NaN near ra! Damn it! kmax==kmin+1\n");
+			  dprintf("kmax=%li, kmin=%li, index=%li, rk=%g, rk1=%g, phi0=%g, phi1=%g\n",
+			    kmax, kmin, index, rk, rk1, phi0, phi1);
+			  dprintf("phik= %g, phik1= %g, E= %g, J=%g, id=%li\n", phik, phik1, E, J, star[index].id);
+			  dprintf("x=%g, ra= %g, rp= %g\n", x, ra, rp);
+			};
 			return(2.0*x*sqrt((x-rp)/((2.0*phi0-2.0*E)*(x-rplus))));
 		}
 	} else {
-		radicand = 2.0 * E - fb_sqr(J/x) - 2.0 * (potential(x) + PHI_S(x, index));
+		radicand = 2.0 * (E - (potential(x) + PHI_S(x, index)))- fb_sqr(J/x);
 		if (radicand < 0.0) {
 			dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, index);
+			dprintf("kmin= %li, kmax= %li, rp=%g, ra=%g, Id: %li\n",
+			  kmin, kmax, rp, ra, star[index].id);
 			radicand = 0.0;
-		}
+		};
+		result= 2.0 * sqrt((x-rp)*(ra-x)/radicand);
+		if (gsl_isinf(result)) {
+		  dprintf("result is infinite! Damn it!\n");
+		  dprintf("kmax=%li, kmin=%li, index=%li\n",
+		    kmax, kmin, index);
+		  dprintf("E= %g, J=%g, id=%li\n", E, J, star[index].id);
+  	          dprintf("x=%g, ra= %g, rp= %g\n", x, ra, rp);
+                  dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star[kmin+1].r);
+                  dprintf("ra-r[kmax-1]= %g\n", ra-star[kmax-1].r);
+		};
+		if (gsl_isnan(result)) {
+		  dprintf("result is NaN! Damn it!\n");
+		  dprintf("kmax=%li, kmin=%li, index=%li\n",
+		    kmax, kmin, index);
+		  dprintf("E= %g, J=%g, id=%li\n", E, J, star[index].id);
+  	          dprintf("x=%g, ra= %g, rp= %g, radicand= %g\n", x, ra, rp, radicand);
+                  dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star[kmin+1].r);
+                  dprintf("ra-r[kmax-1]= %g\n", ra-star[kmax-1].r);
+		};
 		return(2.0 * sqrt((x-rp)*(ra-x)/radicand));
 	}
 }
