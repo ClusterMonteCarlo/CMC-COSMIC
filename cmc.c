@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         /* create a new hash table for the star ids */
         star_ids= g_hash_table_new(g_int_hash, g_int_equal);
         /* load a trace list */
-        load_id_table(star_ids, "trace_list");
+        //load_id_table(star_ids, "trace_list");
 #endif
 	/* Set up initial conditions, possibly from a previous snapshot */
 	/* ReadSnapshot is supposed to be set here if necessary         */
