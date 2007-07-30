@@ -236,7 +236,7 @@ double calc_vr(double r, long index, double E, double J) {
 double find_root_vr(long index, long k, double E, double J) {
   struct calc_vr_params p;
   int status, not_converged;
-  double r_low=-1.0, r_high=-1.0, apsis;
+  double r_low=-1.0, r_high=-1.0, apsis, prev_apsis= -1.0;
   long iter;
   gsl_function F;
 
@@ -280,6 +280,21 @@ double find_root_vr(long index, long k, double E, double J) {
       };
     };
     iter--;
+    if (iter<10) {
+      dprintf("Iterated %li times and did not get apside error down to %g!\n", APSIDES_MAX_ITER-iter, APSIDES_PRECISION);
+      dprintf("The current interval is [%.16g,%.16g]\n", r_low, r_high);
+      dprintf("Interval width is %.14g\n", r_high-r_low);
+      dprintf("Distance between the stars is %g\n", star[k].r- star[k+1].r);
+      dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
+      if (prev_apsis< 0.) {
+	dprintf("Consider now APSIDES_CONVERGENCE= %g.\n", APSIDES_CONVERGENCE);
+	prev_apsis= gsl_root_fsolver_root(q_root);
+      } else {
+	apsis= gsl_root_fsolver_root(q_root);
+	not_converged= gsl_root_test_delta(apsis, prev_apsis, APSIDES_CONVERGENCE, 0.)==GSL_CONTINUE;
+	prev_apsis= apsis;
+      };
+    };
   };
 
   if (!not_converged) {
@@ -293,6 +308,7 @@ double find_root_vr(long index, long k, double E, double J) {
   } else {
     dprintf("Found NO zero in interval [%.12g,%.12g]\n", r_low, r_high);
     dprintf("Interval width is %g\n", r_high-r_low);
+    dprintf("Distance between the stars is %g\n", star[k].r- star[k+1].r);
     dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
     exit(1);
   };

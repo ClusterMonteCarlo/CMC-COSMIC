@@ -120,4 +120,5 @@ _EXTERN_ GArray *id_array;
 _EXTERN_ gsl_root_fsolver *q_root;
 _EXTERN_ double APSIDES_PRECISION;
 _EXTERN_ long APSIDES_MAX_ITER;
+_EXTERN_ double APSIDES_CONVERGENCE;
 

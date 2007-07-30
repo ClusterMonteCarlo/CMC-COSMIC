@@ -185,6 +185,7 @@ typedef struct{
 #endif
         int APSIDES_PRECISION;
         int APSIDES_MAX_ITER;
+        int APSIDES_CONVERGENCE;
 } parsed_t;
 
 /* a struct containing the units used */

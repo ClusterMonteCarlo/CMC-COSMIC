@@ -622,7 +622,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
         		} else if (strcmp(parameter_name, "APSIDES_MAX_ITER")== 0) {
 				sscanf(values, "%li", &APSIDES_MAX_ITER);
 				parsed.APSIDES_MAX_ITER = 1;
-                        } else {
+                        } else if (strcmp(parameter_name, "APSIDES_CONVERGENCE")== 0) {
+				sscanf(values, "%lf", &APSIDES_CONVERGENCE);
+				parsed.APSIDES_CONVERGENCE = 1;
+			} else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
 		} else if (sscanf(line, "%s", parameter_name) == 1) {
@@ -700,6 +703,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 #endif
         CHECK_PARSED(APSIDES_PRECISION, 1.0e-11);
         CHECK_PARSED(APSIDES_MAX_ITER, 100);
+        CHECK_PARSED(APSIDES_CONVERGENCE, 5.e-13);
 #undef CHECK_PARSED
 
 	/* exit if something is not set */
