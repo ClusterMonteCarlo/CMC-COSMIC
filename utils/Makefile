@@ -2,24 +2,24 @@
 ### A simple Makefile to execute make in subdirectories
 ##############################################################################
 
-all: kingfit/kingfit massspec/massspec plumcik/plumcik
+all: mkking/mkking setimf/setimf mkplummer/mkplummer
 
-.PHONY: clean kingfit massspec plumcik
-kingfit/kingfit: 
-	cd kingfit && $(MAKE) kingfit
+.PHONY: clean mkking setimf mkplummer
+mkking/mkking: 
+	cd mkking && $(MAKE) mkking
 
-massspec/massspec: 
-	cd massspec && $(MAKE) massspec
+setimf/setimf: 
+	cd setimf && $(MAKE) setimf
 
-plumcik/plumcik:
-	cd plumcik && $(MAKE) plumcik
+mkplummer/mkplummer:
+	cd mkplummer && $(MAKE) mkplummer
 
-install: kingfit/kingfit massspec/massspec plumcik/plumcik
-	cd kingfit && $(MAKE) install
-	cd massspec && $(MAKE) install
-	cd plumcik && $(MAKE) install
+install: mkking/mkking setimf/setimf mkplummer/mkplummer
+	cd mkking && $(MAKE) install
+	cd setimf && $(MAKE) install
+	cd mkplummer && $(MAKE) install
 
 clean:
-	cd kingfit && $(MAKE) clean
-	cd massspec && $(MAKE) clean
-	cd plumcik && $(MAKE) clean
+	cd mkking && $(MAKE) clean
+	cd setimf && $(MAKE) clean
+	cd mkplummer && $(MAKE) clean
