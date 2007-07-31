@@ -55,7 +55,7 @@ CFLAGS := $(CFLAGS) -I $(HOME)/libs_et_al/include
 LIBFLAGS := $(LIBFLAGS) -L $(HOME)/libs_et_al/lib -static
 endif
 
-EXE = massspec
+EXE = setimf
 OBJS = $(EXE).o ../taus113-v2/taus113-v2.o
 
 #pattern rule to compile object files from C files
@@ -67,7 +67,7 @@ $(EXE): $(OBJS) Makefile
 
 install: $(EXE)
 	mkdir -p $(PREFIX)/bin/
-	install -m 0755 $^ $(PREFIX)/bin/
+	install -m 0755 $^ $(PREFIX)/bin/cmc_$^
 
 clean:
 	rm -f $(OBJS) $(EXE)

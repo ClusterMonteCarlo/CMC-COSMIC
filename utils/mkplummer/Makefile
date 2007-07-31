@@ -59,7 +59,7 @@ EXE = plumcik
 OBJS = $(EXE).o ../taus113-v2/taus113-v2.o
 
 #pattern rule to compile object files from C files
-%.o : %.c Makefile
+%.o : %.c mkplummer
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(EXE): $(OBJS) Makefile
@@ -67,7 +67,7 @@ $(EXE): $(OBJS) Makefile
 
 install: $(EXE)
 	mkdir -p $(PREFIX)/bin/
-	install -m 0755 $^ $(PREFIX)/bin/
+	install -m 0755 $^ $(PREFIX)/bin/cmc_$^
 
 clean:
 	rm -f $(OBJS) $(EXE)
