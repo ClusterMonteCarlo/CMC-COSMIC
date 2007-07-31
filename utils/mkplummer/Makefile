@@ -55,11 +55,11 @@ CFLAGS := $(CFLAGS) -I $(HOME)/libs_et_al/include
 LIBFLAGS := $(LIBFLAGS) -L $(HOME)/libs_et_al/lib -static
 endif
 
-EXE = plumcik
+EXE = mkplummer
 OBJS = $(EXE).o ../taus113-v2/taus113-v2.o
 
 #pattern rule to compile object files from C files
-%.o : %.c mkplummer
+%.o : %.c Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(EXE): $(OBJS) Makefile
