@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		sniff_stars();
+		tidally_strip_stars();
 
 		/* more numbers necessary to implement Stodolkiewicz's
 	 	 * energy conservation scheme */

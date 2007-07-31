@@ -224,7 +224,7 @@ double GetTimeStep(gsl_rng *rng) {
 }
 
 /* removes tidally-stripped stars */
-void sniff_stars(void) {
+void tidally_strip_stars(void) {
 	double phi_rtidal, phi_zero;
 	long i, j;
 	
@@ -235,9 +235,9 @@ void sniff_stars(void) {
 	max_r = get_positions();
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 		
-	gprintf("sniff_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+	gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 		j, OldTidalMassLoss, DTidalMassLoss);
-	fprintf(logfile, "sniff_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+	fprintf(logfile, "tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 		j, OldTidalMassLoss, DTidalMassLoss);
 	
 	/* Iterate the removal of tidally stripped stars 
@@ -284,9 +284,9 @@ void sniff_stars(void) {
 		}
 		j++;
 		TidalMassLoss = TidalMassLoss + DTidalMassLoss;
-		gprintf("sniff_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+		gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 			j, TidalMassLoss, DTidalMassLoss);
-		fprintf(logfile, "sniff_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+		fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 			j, TidalMassLoss, DTidalMassLoss);
 	} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
 }

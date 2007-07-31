@@ -275,7 +275,7 @@ typedef struct{
 /********************** Function Declarations ************************/
 double sqr(double x);
 double cub(double x);
-void sniff_stars(void);
+void tidally_strip_stars(void);
 void remove_star_center(long j);
 void print_results(void);
 double potential(double r);	       /* get potential using star.phi */
