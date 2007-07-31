@@ -169,7 +169,7 @@ CONTRIBS = contrib/calc_2ddensity.pl contrib/calc_3ddensity.pl \
 	contrib/extract_merger_tree.pl contrib/quick_binary_plot.sh \
 	contrib/extract_bins.sh contrib/cluster_truncate.pl \
 	contrib/quick_energy_plot.sh contrib/quick_binary_plot_noe.sh
-EXTRAS = FITS
+EXTRAS = UTILS
 
 # everything available
 ifneq ($(CONDOR),)
@@ -207,20 +207,20 @@ $(FEWBODYDIR)/%.co: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 	$(CONDORCC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
 
 # fake dependency
-.PHONY: FITS install clean fewbodyclean mrproper
+.PHONY: UTILS install clean fewbodyclean mrproper
 
-# Ato's FITS stuff
-FITS:
-	cd ato-fits && $(MAKE)
+# Utilities
+UTILS:
+	cd utils && $(MAKE)
 
 install: $(ALLEXES) $(CONTRIBS)
 	mkdir -p $(PREFIX)/bin/
 	install -m 0755 $^ $(PREFIX)/bin/
-	cd ato-fits && $(MAKE) install
+	cd utils && $(MAKE) install
 
 clean:
 	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE) $(COBJS) $(FEWBODYCOBJS) $(CONDOREXE)
-	cd ato-fits && $(MAKE) clean
+	cd utils && $(MAKE) clean
 
 mrproper: clean
 	rm -f   *~   .smhist   *.dat   *.dat.gz    *out_*   *.stdout   *.stderr   *.log
