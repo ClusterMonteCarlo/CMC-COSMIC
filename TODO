@@ -2,10 +2,14 @@
 *** things that _have_ to be done, in order of priority ***
 ***********************************************************
 
+* Re-do FITS input format, and write utilities for modifying stellar
+  types, assigning binaries, setting units, etc.
+* Remove snapshot restarting, since it needs to be updated anyway.
 * Predictor-corrector for phi?
 * Fix FITS routines, which are severely out of date with recent changes. Make
   sure snapshotting works, in particular with binaries. This will form basis
   of FITS programs that will create binaries for initial conditions.
+* Make output snapshotting more sane.
 
 *************************************************************
 *** things that would be nice to do, in order of priority ***
