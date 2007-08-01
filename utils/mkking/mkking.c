@@ -39,7 +39,7 @@ void print_usage(FILE *stream)
 	sprintf(outfile, OUTFILE_FORMAT, W0, (double) NSTAR);
 	
 	fprintf(stream, "USAGE:\n");
-	fprintf(stream, "  kingfit [options...]\n");
+	fprintf(stream, "  mkking [options...]\n");
 	fprintf(stream, "\n");
 	fprintf(stream, "OPTIONS:\n");
 	fprintf(stream, "  -w --W0 <W_0 parameter> : set King model W_0 parameter [%.6g]\n", W0);
@@ -55,7 +55,7 @@ void print_usage(FILE *stream)
 /* print the version */
 void print_version(FILE *stream)
 {
-	fprintf(stream, "** kingfit %s (%s) [%s] **\n", VERSION, NICK, DATE);
+	fprintf(stream, "** mkking %s (%s) [%s] **\n", VERSION, NICK, DATE);
 }
 
 void printerror( int status)

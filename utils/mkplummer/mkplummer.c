@@ -36,7 +36,7 @@ void print_usage(FILE *stream)
 	sprintf(outfile, OUTFILE_FORMAT, (double) NSTAR);
 	
 	fprintf(stream, "USAGE:\n");
-	fprintf(stream, "  plumcik [options...]\n");
+	fprintf(stream, "  mkplummer [options...]\n");
 	fprintf(stream, "\n");
 	fprintf(stream, "OPTIONS:\n");
 	fprintf(stream, "  -r --rmax <r_max>      : set maximum radius [%.6g]\n", RMAX);
@@ -52,7 +52,7 @@ void print_usage(FILE *stream)
 /* print the version */
 void print_version(FILE *stream)
 {
-	fprintf(stream, "** plumcik %s (%s) [%s] **\n", VERSION, NICK, DATE);
+	fprintf(stream, "** mkplummer %s (%s) [%s] **\n", VERSION, NICK, DATE);
 }
 
 void printerror( int status)
