@@ -2,6 +2,7 @@
 *** things that _have_ to be done, in order of priority ***
 ***********************************************************
 
+* Common included makefile.
 * Re-do FITS input format, and write utilities for modifying stellar
   types, assigning binaries, setting units, etc.
 * Remove snapshot restarting, since it needs to be updated anyway.
