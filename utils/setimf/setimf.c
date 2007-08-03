@@ -440,7 +440,12 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
 		printf("This can't happen!\n");
 		exit(EXIT_FAILURE);
 	}
+
+	cfd->Mclus = total_mass;
+	
         //total_mass+= param.bhmass;
+
+	// rescale masses to N-body units
 	for(i=0; i<=cfd->NOBJ; i++){
 		cfd->obj_m[i] /= total_mass;
 	}
