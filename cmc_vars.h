@@ -6,27 +6,9 @@
 #define _EXTERN_
 #endif
 
-_EXTERN_ struct {
-	long N_MAX;
-	long N_MAX_NEW;
-	long N_STAR;
-	long N_STAR_NEW;
-	long N_BINARY;
-} clus;
-
-_EXTERN_ struct {
-	double tot; /* total = kinetic + potential + internal + binary binding + central mass energy */
-	double New; /* ??? */
-	double ini; /* initial total energy */
-	double K; /* total kinetic */
-	double P; /* total potential */
-	double Eint; /* total internal */
-	double Eb; /* total binary binding energy */
-} Etotal;
-
-_EXTERN_ struct {
-	double rh; /* half-mass radius */
-} clusdyn;
+_EXTERN_ clus_struct_t clus;
+_EXTERN_ Etotal_struct_t Etotal;
+_EXTERN_ clusdyn_struct_t clusdyn;
 
 /* tidal truncation stuff */
 _EXTERN_ double max_r, Rtidal, TidalMassLoss, orbit_r;

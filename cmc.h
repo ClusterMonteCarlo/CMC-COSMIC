@@ -272,6 +272,29 @@ typedef struct{
 	double ra;
 } calc_p_orb_params_t;
 
+/* other useful structs */
+typedef struct{
+	long N_MAX;
+	long N_MAX_NEW;
+	long N_STAR;
+	long N_STAR_NEW;
+	long N_BINARY;
+} clus_struct_t;
+
+typedef struct{
+	double tot; /* total = kinetic + potential + internal + binary binding + central mass energy */
+	double New; /* ??? */
+	double ini; /* initial total energy */
+	double K; /* total kinetic */
+	double P; /* total potential */
+	double Eint; /* total internal */
+	double Eb; /* total binary binding energy */
+} Etotal_struct_t;
+
+typedef struct{
+	double rh; /* half-mass radius */
+} clusdyn_struct_t;
+
 /********************** Function Declarations ************************/
 double sqr(double x);
 double cub(double x);
