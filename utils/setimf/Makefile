@@ -1,7 +1,7 @@
 include ../../common/common.mk
 
 EXE = setimf
-OBJS = $(EXE).o ../../libs/taus113-v2.o
+OBJS = $(EXE).o ../../libs/taus113-v2.o ../../libs/fitslib.o
 
 #pattern rule to compile object files from C files
 %.o : %.c Makefile

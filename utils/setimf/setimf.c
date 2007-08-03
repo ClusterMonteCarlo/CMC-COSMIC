@@ -5,8 +5,10 @@
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
-#include <fitsio.h>
+#include "../../common/fitslib.h"
 #include "../../common/taus113-v2.h"
+
+#define SEED 768364873UL
 
 struct imf_param {
 	int imf;
@@ -23,36 +25,6 @@ struct imf_param {
 	char infile[1024];
 	char outfile[1024];
 };
-
-struct star {
-	double		r;		/* position			*/
-	double		vr;		/* rad. comp. of velocity	*/
-	double		vt;		/* tang. comp. of velocity	*/
-	double		m;		/* mass				*/
-};
-
-struct cluster {
-	unsigned long int	NSTAR; 	/* number of stars		*/
-        double          total_mass;      /* the total mass in stars      */
-};
-
-struct code_par {
-	double		time;		/* cluster's age		*/
-	int		step;		/* time step we are in		*/
-	struct rng_t113_state rng_st;	/* RNG state			*/
-};
-
-void printerror( int status) {
-	/*****************************************************/
-	/* Print out cfitsio error messages and exit program */
-	/*****************************************************/
-	if (status) {
-		fits_report_error(stderr, status); /* print error report */
-		exit( status );    /* terminate the program,
-				      returning error status */
-	}
-	return;
-}
 
 void write_usage(void){
 	printf("Valid options are:\n");
@@ -216,72 +188,6 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		param->rcr, param->Cms);
 }
 
-void read_input(struct imf_param param, struct star *s[],
-		struct cluster *c, struct code_par *cp){
-	fitsfile *fptr;
-	int status, hdunum, hdutype, anynull;
-	long frow, felem, nelem;
-	float floatnull;
-	unsigned long int i, NSTAR;
-	double *mass, *r, *vr, *vt;
-
-	status = 0;
-	
-	/* open file */
-	fits_open_file(&fptr, param.infile, READONLY, &status);
-	/* move to proper part of file */
-	hdunum = 2; 		/* data table is in second HDU */
-	fits_movabs_hdu(fptr, hdunum, &hdutype, &status);
-
-	/* read headers
-	 * set cluster parameters and 
-	 * allocate memory */
-	fits_read_key(fptr, TULONG, "NSTAR", &NSTAR, NULL, &status);
-	c->NSTAR = NSTAR;
-	fits_read_key(fptr, TDOUBLE, "Time", &(cp->time), NULL, &status);
-	fits_read_key(fptr, TINT, "Step", &(cp->step), NULL, &status);
-	fits_read_key(fptr, TULONG, "RNG_Z1", &(cp->rng_st.z1), NULL, &status);
-	fits_read_key(fptr, TULONG, "RNG_Z2", &(cp->rng_st.z2), NULL, &status);
-	fits_read_key(fptr, TULONG, "RNG_Z3", &(cp->rng_st.z3), NULL, &status);
-	fits_read_key(fptr, TULONG, "RNG_Z4", &(cp->rng_st.z4), NULL, &status);
-	printerror(status);
-        nelem= NSTAR+2;
-        *s = (struct star *) malloc((NSTAR+2)*sizeof(struct star));
-	mass = (double *) malloc((NSTAR+2)*sizeof(double));
-	vr = (double *) malloc((NSTAR+2)*sizeof(double));
-	vt = (double *) malloc((NSTAR+2)*sizeof(double));
-	r = (double *) malloc((NSTAR+2)*sizeof(double));
-
-	/* read the columns into variables and copy variables to
-	 * struct star s[]                                       */
-	frow = 1; felem = 1; floatnull = 0.;  
-	fits_read_col(fptr, TDOUBLE, 1, frow, felem, nelem, &floatnull, mass, 
-			&anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 2, frow, felem, nelem, &floatnull, r, 
-			&anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 3, frow, felem, nelem, &floatnull, vr, 
-			&anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 4, frow, felem, nelem, &floatnull, vt, 
-			&anynull, &status);
-	for(i=0; i<=NSTAR+1; i++){
-		(*s)[i].m = mass[i];
-		(*s)[i].r = r[i];
-		(*s)[i].vr = vr[i];
-		(*s)[i].vt = vt[i];
-	}
-        
-        if (param.bhmass>0.) {
-          (*s)[0].m= param.bhmass;
-          (*s)[0].r = 0;
-          (*s)[0].vr = 0;
-          (*s)[0].vt = 0;
-        };
-			
-	free(mass); free(vr); free(vt); free(r);
-	fits_close_file(fptr, &status);
-	printerror(status);
-}
-
 double calc_f_mminp(double mminp,
 	       	double mmin, double mmax, double alpha, double cms){
 	/* XXX alpha<0 XXX */
@@ -337,24 +243,18 @@ double find_mminp(double cms, double m_abs_min, double m_abs_max,
 	return (mmax+mmin)/2.0;
 }
 
-void set_masses(struct imf_param param, struct star *s[],
-			struct cluster *c, struct code_par cp){
-	unsigned long int i, j;
+double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
+	long i, j;
 	double Mass[4], alpha[4], Cons[4], Xlim[5];
 	double m, X, X2, norm, tmp, n_rat, ncheck;
 	double total_mass, mmin, mmin_ms;
 	double Xcrit, C1, C2, C3, C4;
         
-	set_rng_t113(cp.rng_st);
-	/* to change the RND seed we make call(s) to RNG */
-	X = rng_t113_dbl();
-	X = rng_t113_dbl();
-	X = rng_t113_dbl();
-	X = rng_t113_dbl();
+	reset_rng_t113(SEED);
 	total_mass = 0.0;
-	n_rat = ((double) param.n_neutron / (double) c->NSTAR);
+	n_rat = ((double) param.n_neutron / (double) cfd->NOBJ);
 	if(param.imf==1 && param.Cms==1.0){  /* Power-law w/o ms     */
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 		        
 			tmp = param.pl_index+1.0;
 			X = rng_t113_dbl();
@@ -365,7 +265,7 @@ void set_masses(struct imf_param param, struct star *s[],
 				norm = pow(param.mmax/param.mmin, tmp) - 1.0;
 				m = param.mmin*pow(norm*X+1, 1.0/tmp);
 			}
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 	} else if (param.imf==0){ /* Kroupa, 2001. MNRAS 322, 231-246 */
@@ -388,7 +288,7 @@ void set_masses(struct imf_param param, struct star *s[],
 		Mass[3] = 1.0;
 		
 		/* implement broken power-law, and use rejection for new limits */
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 		        do {
 				X = rng_t113_dbl();
 				j = 0;
@@ -402,18 +302,18 @@ void set_masses(struct imf_param param, struct star *s[],
 				}
 			} while (m<param.mmin || m>param.mmax) ;
 			/* fprintf(stderr, "X=%g Xlim[j]=%g j=%d m=%g\n", X, Xlim[j], j, m); */
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 	} else if (param.imf==1){ /* Power-law w/ mass segregation    */
 		/* XXX maybe there should be a warning for Cms~=1.0 XXX */
 		mmin_ms = find_mminp(param.Cms, param.mmin, param.mmax,
 						param.pl_index);
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 			tmp = param.pl_index+1.0;
 			X = rng_t113_dbl();
 			X2 = rng_t113_dbl();
-			if (X2<0.5 && (*s)[i].r<param.rcr){
+			if (X2<0.5 && cfd->obj_r[i]<param.rcr){
 				mmin = mmin_ms;
 			} else {
 				mmin = param.mmin;
@@ -425,46 +325,46 @@ void set_masses(struct imf_param param, struct star *s[],
 				norm = pow(param.mmax/mmin, tmp) - 1.0;
 				m = mmin*pow(norm*X+1, 1.0/tmp);
 			}
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 	} else if (param.imf==2){ /* Miller & Scalo */
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 			do {
 				X = rng_t113_dbl();
 				m = 0.19*X
 	    			/ (pow(1-X, 0.75) + 0.032*pow(1-X, 0.25));
 			} while (m<param.mmin || m>param.mmax) ;
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 	} else if (param.imf==3){ /* Scalo          */
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 			do {
 				X = rng_t113_dbl();
 				m = 0.3*X / pow(1-X, 0.55);
 			} while (m<param.mmin || m>param.mmax) ;
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 	} else if (param.imf==4){ /* Kroupa         */
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 			do {
 				X = rng_t113_dbl();
 				m = 0.08 + (0.19*pow(X,1.55) + 0.05*pow(X,0.6))
 	    			/  pow(1-X,0.58);
 			} while (m<param.mmin || m>param.mmax) ;
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 	} else if (param.imf==5){ /* Scalo (from Kroupa etal 1993 eq.15) */
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 			do {
 				X = rng_t113_dbl();
 				m = 0.284*pow(X,0.337)
 				/(pow(1-X,0.5)-0.015*pow(1.0-X,0.085));
 			} while (m<param.mmin || m>param.mmax);
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 	} else if (param.imf==6){ /* Kroupa (old)         */
@@ -473,7 +373,7 @@ void set_masses(struct imf_param param, struct star *s[],
 		C3 = 1.000276574531978107760263208804720707748;
 		C4 = 0.1101063043729622254763763886604926439063;
 		Xcrit = 0.7291630515263233686411262877173302148501;
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 			do {
 				X = rng_t113_dbl();
 				if (X<Xcrit){
@@ -482,19 +382,19 @@ void set_masses(struct imf_param param, struct star *s[],
 					m = pow(C4/(C3-X), 1.3);
 				}
 			} while (m<param.mmin || m>param.mmax);
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 	} else if (param.imf==7){ /* Tracers */
-		if(c->NSTAR <= param.Ntrace){
+		if(cfd->NOBJ <= param.Ntrace){
 			printf("Number of tracers = %d\n", param.Ntrace);
-			printf("Number of stars = %ld\n", c->NSTAR);
+			printf("Number of stars = %ld\n", cfd->NOBJ);
 			printf("something wrong\n");
 			exit(EXIT_FAILURE);
 		}
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 			m = 1.0;
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 		/* note that the following algorithm puts trace stars 
@@ -502,12 +402,12 @@ void set_masses(struct imf_param param, struct star *s[],
 		 *  Knuth, vol2, section 3.4.3, Algorithm S */
 		for(i=0; i<param.Ntrace; i++){
 			m = param.mmin;
-			(*s)[c->NSTAR / (2*param.Ntrace) 
-				+ i*c->NSTAR/param.Ntrace + 1].m = m;
+			cfd->obj_m[cfd->NOBJ / (2*param.Ntrace) 
+				+ i*cfd->NOBJ/param.Ntrace + 1] = m;
 			total_mass += m - 1.0;
 		}
 	  } else if(param.imf==8 && param.Cms==1.0){  /* Power-law w neutron stars */
-	    for(i=1; i<=c->NSTAR; i++){
+	    for(i=1; i<=cfd->NOBJ; i++){
 	    ncheck = rng_t113_dbl();
 	    tmp = param.pl_index+1.0;
 	    X = rng_t113_dbl();
@@ -525,14 +425,14 @@ void set_masses(struct imf_param param, struct star *s[],
 		{
 		  m = 1.4;
 		} 
-	    (*s)[i].m = m;
+	    cfd->obj_m[i] = m;
 	    total_mass += m;
 	    }
 	  }
           else if (param.imf==9){ 
-		for(i=1; i<=c->NSTAR; i++){
+		for(i=1; i<=cfd->NOBJ; i++){
 			m = param.mmin;
-			(*s)[i].m = m;
+			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
 	  }
@@ -541,106 +441,32 @@ void set_masses(struct imf_param param, struct star *s[],
 		exit(EXIT_FAILURE);
 	}
         //total_mass+= param.bhmass;
-	for(i=0; i<=c->NSTAR; i++){
-		(*s)[i].m /= total_mass;
+	for(i=0; i<=cfd->NOBJ; i++){
+		cfd->obj_m[i] /= total_mass;
 	}
-        c->total_mass= total_mass;
+
+	return(total_mass);
 }
 
-void write_output(struct star *s, struct cluster c, 
-		struct code_par cp, struct imf_param param){
-	unsigned long int i;
-	
-	fitsfile *fptr;
-	int status;
-	long firstrow, firstelem;
-	int tfields;       /* table will have n columns */
-	long nrows;	
-
-	char extname[] = "CLUSTER_STARS";          /* extension name */
-	char *filename;
-	char *ttype[] = { "Mass",  "Position", "vr",    "vt" };
-	char *tform[] = { "1D",    "1D",       "1D",    "1D" };
-	char *tunit[] = { "Nbody", "Nbody",    "Nbody", "Nbody" };
-	
-	double *mass, *r, *vr, *vt;
-
-	/* these go to header */
-	int tstep = 0;
-	double time = 0.0;
-	
-	get_rng_t113(&(cp.rng_st));
-	mass = (double *) malloc((c.NSTAR+2)*sizeof(double));
-	r = (double *) malloc((c.NSTAR+2)*sizeof(double));
-	vr = (double *) malloc((c.NSTAR+2)*sizeof(double));
-	vt = (double *) malloc((c.NSTAR+2)*sizeof(double));
-	for(i=0; i<=c.NSTAR+1; i++){
-		mass[i] = s[i].m;
-		r[i] = s[i].r;
-		vr[i] = s[i].vr;
-		vt[i] = s[i].vt;
-	}
-	
-	status = 0;
-	tfields = 4;
-	filename = param.outfile;
-	nrows = c.NSTAR+2;
-	fits_create_file(&fptr, filename, &status);
-	fits_open_file(&fptr, filename, READWRITE, &status);
-
-	fits_create_tbl(fptr, BINARY_TBL, nrows, tfields, ttype, tform,
-                tunit, extname, &status);
-	fits_update_key(fptr, TLONG, "NSTAR", &(c.NSTAR), 
-			"No of Stars", &status);
-	fits_update_key(fptr, TDOUBLE, "Time", &time, 
-			"Age of cluster", &status);
-	fits_update_key(fptr, TLONG, "Step", &tstep, 
-			"Iteration Step", &status);
-	fits_update_key(fptr, TULONG, "RNG_Z1", &(cp.rng_st.z1), 
-			"RNG STATE Z1", &status);
-	fits_update_key(fptr, TULONG, "RNG_Z2", &(cp.rng_st.z2), 
-			"RNG STATE Z2", &status);
-	fits_update_key(fptr, TULONG, "RNG_Z3", &(cp.rng_st.z3), 
-			"RNG STATE Z3", &status);
-	fits_update_key(fptr, TULONG, "RNG_Z4", &(cp.rng_st.z4), 
-			"RNG STATE Z4", &status);
-
-	firstrow  = 1;  /* first row in table to write   */
-	firstelem = 1;  /* first element in row  (ignored in ASCII tables) */
-
-	fits_write_col(fptr, TDOUBLE, 1, firstrow, firstelem, nrows, mass,
-                   &status);
-	fits_write_col(fptr, TDOUBLE, 2, firstrow, firstelem, nrows, r,
-                   &status);
-	fits_write_col(fptr, TDOUBLE, 3, firstrow, firstelem, nrows, vr,
-                   &status);
-	fits_write_col(fptr, TDOUBLE, 4, firstrow, firstelem, nrows, vt,
-                   &status);
-
-	fits_close_file(fptr, &status);
-
-	printerror(status);
-}
-
-void scale_pos_and_vel(struct imf_param param, struct star *s[], struct cluster c){
+void scale_pos_and_vel(struct imf_param param, cmc_fits_data_t *cfd, double total_mass){
 	long int i, N;
 	double PEtot, KEtot, U, T;
 	double MM, rfac, vfac;
 	
 	PEtot = KEtot = 0.0;
-        N= c.NSTAR;
+        N= cfd->NOBJ;
 	U = 0.0;
-	MM = 1.0+ param.bhmass/c.total_mass; /* because of units, the total mass has to be 1 initially */
+	MM = 1.0+ param.bhmass/total_mass; /* because of units, the total mass has to be 1 initially */
 	for(i=N; i>=1; i--){
-		U -= MM*(1.0/(*s)[i].r - 1.0/(*s)[i+1].r);
-		T = 0.5 * ((*s)[i].vr * (*s)[i].vr + (*s)[i].vt * (*s)[i].vt);
-		MM -= (*s)[i].m;
-		PEtot += 0.5*U* (*s)[i].m;
-		KEtot += T* (*s)[i].m;
+		U -= MM*(1.0/cfd->obj_r[i] - 1.0/cfd->obj_r[i+1]);
+		T = 0.5 * (cfd->obj_vr[i] * cfd->obj_vr[i] + cfd->obj_vt[i] * cfd->obj_vt[i]);
+		MM -= cfd->obj_m[i];
+		PEtot += 0.5*U* cfd->obj_m[i];
+		KEtot += T* cfd->obj_m[i];
 	}
         if (param.bhmass>0.) {
-          U-= -MM/(*s)[1].r;
-          PEtot+= 0.5*U*(*s)[0].m;
+          U-= -MM/cfd->obj_r[1];
+          PEtot+= 0.5*U * cfd->obj_m[0];
         };
 
 	printf("Before scaling: PEtot = %f, KEtot = %f, vir rat = %f\n", 
@@ -650,48 +476,52 @@ void scale_pos_and_vel(struct imf_param param, struct star *s[], struct cluster 
 	vfac = 1.0/sqrt(4.0*KEtot);
         printf("rfac= %lf, vfac= %lf\n", rfac, vfac);
 	for(i=1; i<=N; i++){
-		(*s)[i].r *= rfac;
-		(*s)[i].vr *= vfac;
-		(*s)[i].vt *= vfac;
+		cfd->obj_r[i] *= rfac;
+		cfd->obj_vr[i] *= vfac;
+		cfd->obj_vt[i] *= vfac;
 	}
 
 	PEtot = KEtot = 0.0;
 	U = 0.0;
-	MM = 1.0+ param.bhmass/c.total_mass; /* because of units, the total mass has to be 1 initially */
+	MM = 1.0+ param.bhmass/total_mass; /* because of units, the total mass has to be 1 initially */
 	for(i=N; i>=1; i--){
-		U -= MM*(1.0/(*s)[i].r - 1.0/(*s)[i+1].r);
-		T = 0.5 * ((*s)[i].vr * (*s)[i].vr + (*s)[i].vt * (*s)[i].vt);
-		MM -= (*s)[i].m;
-		PEtot += 0.5*U* (*s)[i].m;
-		KEtot += T* (*s)[i].m;
+		U -= MM*(1.0/cfd->obj_r[i] - 1.0/cfd->obj_r[i+1]);
+		T = 0.5 * (cfd->obj_vr[i] * cfd->obj_vr[i] + cfd->obj_vt[i] * cfd->obj_vt[i]);
+		MM -= cfd->obj_m[i];
+		PEtot += 0.5*U* cfd->obj_m[i];
+		KEtot += T* cfd->obj_m[i];
 	}
         if (param.bhmass>0.) {
-          U-= -MM/(*s)[1].r;
-          PEtot+= 0.5*U*(*s)[0].m;
+          U-= -MM/cfd->obj_r[1];
+          PEtot+= 0.5*U*cfd->obj_m[0];
         };
 
 	printf("After  scaling: PEtot = %f, KEtot = %f, vir rat = %f\n", 
 			PEtot, KEtot, KEtot/PEtot);
 }
 int main(int argc, char *argv[]){
+	cmc_fits_data_t cfd;
 	struct imf_param param;
-	struct star *s;
-	struct cluster clus;
-	struct code_par cp;
-	/* int i; */
+	double total_mass;
 	
 	parse_options(&param, argc, argv);
-	read_input(param, &s, &clus, &cp);
-	set_masses(param, &s, &clus, cp);
+
+	cmc_read_fits_file(param.infile, &cfd);
+	
+        if (param.bhmass > 0.0) {
+		cfd.obj_m[0] = param.bhmass;
+        }
+
+	total_mass = set_masses(param, &cfd);
+
 	/* I might add scaling to E0 = -1/4 here */
         if (param.scale) {
-          scale_pos_and_vel(param, &s, clus);
+		scale_pos_and_vel(param, &cfd, total_mass);
         };
-	write_output(s, clus, cp, param);
 
-	/*for(i=1; i<=clus.NSTAR; i++){
-		printf("%e\n", s[i].m);
-	}*/
+	cmc_write_fits_file(&cfd, param.outfile);
+
+	cmc_free_fits_data_t(&cfd);
 
 	return 0;
 }

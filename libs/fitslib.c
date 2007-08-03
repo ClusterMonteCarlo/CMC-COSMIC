@@ -37,7 +37,26 @@ void cmc_malloc_fits_data_t(cmc_fits_data_t *cfd){
 	cfd->obj_vr = (double *) malloc(NSS * sizeof(double));
 	cfd->obj_vt = (double *) malloc(NSS * sizeof(double));
 	cfd->obj_binind = (long *) malloc(NSS * sizeof(long));
-		
+
+	/* zero out sentinel objects */
+	cfd->obj_id[0] = 0;
+	cfd->obj_k[0] = 0;
+	cfd->obj_m[0] = 0.0;
+	cfd->obj_Reff[0] = 0.0;
+	cfd->obj_r[0] = 0.0;
+	cfd->obj_vr[0] = 0.0;
+	cfd->obj_vt[0] = 0.0;
+	cfd->obj_binind[0] = 0;
+
+	cfd->obj_id[NSS-1] = 0;
+	cfd->obj_k[NSS-1] = 0;
+	cfd->obj_m[NSS-1] = 0.0;
+	cfd->obj_Reff[NSS-1] = 0.0;
+	cfd->obj_r[NSS-1] = 0.0;
+	cfd->obj_vr[NSS-1] = 0.0;
+	cfd->obj_vt[NSS-1] = 0.0;
+	cfd->obj_binind[NSS-1] = 0;
+
 	/* binary star stuff */
 	cfd->bs_index = (long *) malloc(NBS * sizeof(long));
 	cfd->bs_id1 = (long *) malloc(NBS * sizeof(long));
@@ -50,6 +69,19 @@ void cmc_malloc_fits_data_t(cmc_fits_data_t *cfd){
 	cfd->bs_Reff2 = (double *) malloc(NBS * sizeof(double));
 	cfd->bs_a = (double *) malloc(NBS * sizeof(double));
 	cfd->bs_e = (double *) malloc(NBS * sizeof(double));
+
+	/* zero out sentinel binary */
+	cfd->bs_index[0] = 0;
+	cfd->bs_id1[0] = 0;
+	cfd->bs_k1[0] = 0;
+	cfd->bs_m1[0] = 0.0;
+	cfd->bs_Reff1[0] = 0.0;
+	cfd->bs_id2[0] = 0;
+	cfd->bs_k2[0] = 0;
+	cfd->bs_m2[0] = 0.0;
+	cfd->bs_Reff2[0] = 0.0;
+	cfd->bs_a[0] = 0.0;
+	cfd->bs_e[0] = 0.0;
 }
 
 /* free big data structure */

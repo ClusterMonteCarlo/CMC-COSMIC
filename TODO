@@ -6,6 +6,8 @@
   FITS file.
 * Finalize new FITS format.
 * Remove snapshot restarting, since it needs to be updated anyway.
+* Rewrite CMC internals that depend on input FITS file.
+* Make sane defaults for all input file parameters.
 
 *************************************************************
 *** things that would be nice to do, in order of priority ***
