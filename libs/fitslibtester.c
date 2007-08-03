@@ -8,7 +8,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <fitsio.h>
-#include "fitslib.h"
+#include "../common/fitslib.h"
 
 int main(int argc, char *argv[]){
 	cmc_fits_data_t cfd;

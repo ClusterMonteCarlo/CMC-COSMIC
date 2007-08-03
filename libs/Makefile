@@ -2,7 +2,7 @@ include ../common/common.mk
 
 all: fitslib.o fitslibtester
 
-%.o : %.c fitslib.h Makefile
+%.o : %.c Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
 fitslibtester: fitslibtester.o fitslib.o

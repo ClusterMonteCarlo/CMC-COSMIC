@@ -8,7 +8,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <fitsio.h>
-#include "fitslib.h"
+#include "../common/fitslib.h"
 
 void cmc_fits_printerror(int status)
 {
