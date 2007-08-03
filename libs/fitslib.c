@@ -123,13 +123,16 @@ void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 	char *tunit2[] = { "none",  "none", "none", "NB", "NB",    "none", "none", "NB", "NB",    "NB", "NB" };
 
 	fits_create_file(&fptr, filename, &status);
+	cmc_fits_printerror(status);
 	fits_open_file(&fptr, filename, READWRITE, &status);
+	cmc_fits_printerror(status);
 
 	/* create first real HDU */
 	tfields = 8;
 	nrows = cfd->NOBJ+2;
 
 	fits_create_tbl(fptr, BINARY_TBL, nrows, tfields, ttype1, tform1, tunit1, extname1, &status);
+	cmc_fits_printerror(status);
 
 	fits_update_key(fptr, TLONG, "NOBJ", &(cfd->NOBJ), "number of objects", &status);
 	fits_update_key(fptr, TLONG, "NBINARY", &(cfd->NBINARY), "number of binaries", &status);
@@ -137,6 +140,7 @@ void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 	fits_update_key(fptr, TDOUBLE, "RVIR", &(cfd->Rvir), "virial radius in parsecs", &status);
 	fits_update_key(fptr, TDOUBLE, "RTID", &(cfd->Rtid), "tidal radius in NB units", &status);
 	fits_update_key(fptr, TDOUBLE, "Z", &(cfd->Z), "metallicity", &status);
+	cmc_fits_printerror(status);
 
 	fits_write_col(fptr, TLONG, 1, firstrow, firstelem, nrows, cfd->obj_id, &status);
 	fits_write_col(fptr, TINT, 2, firstrow, firstelem, nrows, cfd->obj_k,  &status);
@@ -146,12 +150,14 @@ void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 	fits_write_col(fptr, TDOUBLE, 6, firstrow, firstelem, nrows, cfd->obj_vr, &status);
 	fits_write_col(fptr, TDOUBLE, 7, firstrow, firstelem, nrows, cfd->obj_vt, &status);
 	fits_write_col(fptr, TLONG, 8, firstrow, firstelem, nrows, cfd->obj_binind, &status);
+	cmc_fits_printerror(status);
 	
 	/* create second real HDU */
 	tfields = 11;
 	nrows = cfd->NBINARY+1;
 
 	fits_create_tbl(fptr, BINARY_TBL, nrows, tfields, ttype2, tform2, tunit2, extname2, &status);
+	cmc_fits_printerror(status);
 
 	fits_write_col(fptr, TLONG, 1, firstrow, firstelem, nrows, cfd->bs_index, &status);
 	fits_write_col(fptr, TLONG, 2, firstrow, firstelem, nrows, cfd->bs_id1,  &status);
@@ -164,6 +170,7 @@ void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 	fits_write_col(fptr, TDOUBLE, 9, firstrow, firstelem, nrows, cfd->bs_Reff2, &status);
 	fits_write_col(fptr, TDOUBLE, 10, firstrow, firstelem, nrows, cfd->bs_a, &status);
 	fits_write_col(fptr, TDOUBLE, 11, firstrow, firstelem, nrows, cfd->bs_e, &status);
+	cmc_fits_printerror(status);
 
 	fits_close_file(fptr, &status);
 	cmc_fits_printerror(status);
@@ -177,8 +184,10 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd){
 
 	/* open file for reading */
 	fits_open_file(&fptr, filename, READONLY, &status);
+	cmc_fits_printerror(status);
 	hdunum = 2;
 	fits_movabs_hdu(fptr, hdunum, &hdutype, &status);
+	cmc_fits_printerror(status);
 
 	/* read keys and then malloc data structure */
 	fits_read_key(fptr, TLONG, "NOBJ", &(cfd->NOBJ), NULL, &status);
@@ -187,6 +196,7 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd){
 	fits_read_key(fptr, TDOUBLE, "RVIR", &(cfd->Rvir), NULL, &status);
 	fits_read_key(fptr, TDOUBLE, "RTID", &(cfd->Rtid), NULL, &status);
 	fits_read_key(fptr, TDOUBLE, "Z", &(cfd->Z), NULL, &status);
+	cmc_fits_printerror(status);
 
 	cmc_malloc_fits_data_t(cfd);
 
@@ -200,9 +210,11 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd){
 	fits_read_col(fptr, TDOUBLE, 6, frow, felem, nelem, &floatnull, cfd->obj_vr, &anynull, &status);
 	fits_read_col(fptr, TDOUBLE, 7, frow, felem, nelem, &floatnull, cfd->obj_vt, &anynull, &status);
 	fits_read_col(fptr, TLONG, 8, frow, felem, nelem, &floatnull, cfd->obj_binind, &anynull, &status);
+	cmc_fits_printerror(status);
 	
 	hdunum = 3;
 	fits_movabs_hdu(fptr, hdunum, &hdutype, &status);
+	cmc_fits_printerror(status);
 
 	/* read in data columns */
 	nelem = cfd->NBINARY+1;
@@ -217,6 +229,7 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd){
 	fits_read_col(fptr, TDOUBLE, 9, frow, felem, nelem, &floatnull, cfd->bs_Reff2, &anynull, &status);
 	fits_read_col(fptr, TDOUBLE, 10, frow, felem, nelem, &floatnull, cfd->bs_a, &anynull, &status);
 	fits_read_col(fptr, TDOUBLE, 11, frow, felem, nelem, &floatnull, cfd->bs_e, &anynull, &status);
+	cmc_fits_printerror(status);
 	
 	fits_close_file(fptr, &status);
 	cmc_fits_printerror(status);
