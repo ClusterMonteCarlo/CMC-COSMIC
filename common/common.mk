@@ -9,15 +9,6 @@ PREFIX = $(HOME)
 CC = g++
 
 ##############################################################################
-### test for condor
-##############################################################################
-CONDOR = $(shell type condor_compile 2>/dev/null)
-
-ifneq ($(CONDOR),)
-CONDORCC := condor_compile $(CC)
-endif
-
-##############################################################################
 ### test for ccache
 ##############################################################################
 CCACHE = $(shell type ccache 2>/dev/null)
@@ -104,7 +95,6 @@ ifeq ($(HOSTNAME),fugu.phys.northwestern.edu)
 #CFLAGS := $(CFLAGS) -march=k8 -I/usr/include/cfitsio
 CFLAGS := $(CFLAGS) -m32 -march=k8 -I/share/apps/gsl/include -L/share/apps/gsl/lib -I/share/apps/cfitsio/include -L/share/apps/cfitsio/lib $(DEBUG_FLAGS)
 LIBFLAGS := $(LIBFLAGS) $(DEBUG_LIBS) -static 
-CONDOR =
 endif
 
 DOMNAME = $(shell hostname | cut -d . -f 2-)
