@@ -190,7 +190,7 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd){
 	cmc_fits_printerror(status);
 }
 
-int main(int argc, char *argv[]){
+int main2(int argc, char *argv[]){
 	cmc_fits_data_t cfd;
 	int i;
 

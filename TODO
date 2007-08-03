@@ -3,6 +3,7 @@
 ***********************************************************
 
 * Common included makefile.
+* Remove condor stuff since one can just do "condor_compile make blah".
 * Re-do FITS input format, and write utilities for modifying stellar
   types, assigning binaries, setting units, etc.
 * Remove snapshot restarting, since it needs to be updated anyway.
