@@ -2,7 +2,6 @@
 *** things that _have_ to be done, in order of priority ***
 ***********************************************************
 
-* Common included makefile.
 * Remove condor stuff since one can just do "condor_compile make blah".
 * Re-do FITS input format, and write utilities for modifying stellar
   types, assigning binaries, setting units, etc.

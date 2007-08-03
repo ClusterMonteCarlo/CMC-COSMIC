@@ -5,10 +5,11 @@ EXE = cmc
 OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
 	cmc_dynamics_helper.o cmc_evolution_thr.o cmc_funcs.o \
 	cmc_init.o cmc_io.o cmc.o cmc_nr.o \
-	cmc_utils.o cmc_fits.o startrack/singl.o \
+	cmc_utils.o cmc_fits.o \
 	cmc_stellar_evolution.o cmc_fits_sshot.o \
 	cmc_sort.o cmc_sscollision.o cmc_bhlosscone.o \
 	cmc_search_grid.o cmc_trace.o \
+	startrack/singl.o \
 	libs/fitslib.o libs/taus113-v2.o
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
@@ -34,16 +35,6 @@ FEWBODYCOBJS = $(FEWBODYDIR)/fewbody.co $(FEWBODYDIR)/fewbody_classify.co \
         $(FEWBODYDIR)/fewbody_nonks.co $(FEWBODYDIR)/fewbody_scat.co \
 	$(FEWBODYDIR)/fewbody_utils.co
 
-# extra stuff
-CONTRIBS = contrib/calc_2ddensity.pl contrib/calc_3ddensity.pl \
-	contrib/calc_distfunc.pl contrib/pluckoutlog.pl contrib/pluckbindata.pl \
-	contrib/prunedata.pl contrib/beo-genpbs.pl \
-	contrib/quick_cluster_plot.sh contrib/quick_rel_plot.sh \
-	contrib/extract_merger_tree.pl contrib/quick_binary_plot.sh \
-	contrib/extract_bins.sh contrib/cluster_truncate.pl \
-	contrib/quick_energy_plot.sh contrib/quick_binary_plot_noe.sh
-EXTRAS = UTILS
-
 # everything available
 ifneq ($(CONDOR),)
 ALLEXES = $(EXE) $(CONDOREXE)
@@ -52,8 +43,9 @@ ALLEXES = $(EXE)
 endif
 
 # default super-target
-all: $(ALLEXES) $(EXTRAS)
+all: $(ALLEXES) UTILS CONTRIBS
 
+# peripheral stuff
 libs/fitslib.o: LIBS
 
 libs/taus113-v2.o: LIBS
@@ -63,6 +55,9 @@ LIBS:
 
 UTILS: LIBS
 	cd utils && $(MAKE)
+
+CONTRIBS: LIBS
+	cd contrib && $(MAKE)
 
 # the standard executable
 $(EXE): $(OBJS) $(FEWBODYOBJS)
@@ -93,10 +88,11 @@ $(FEWBODYDIR)/%.co: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 # fake dependency to tell make that these targets do not produce files
 .PHONY: install clean mrproper
 
-install: $(ALLEXES) $(CONTRIBS)
+install: $(ALLEXES)
 	mkdir -p $(PREFIX)/bin/
 	install -m 0755 $^ $(PREFIX)/bin/
 	cd utils && $(MAKE) install
+	cd contrib && $(MAKE) install
 
 clean:
 	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE) $(COBJS) $(FEWBODYCOBJS) $(CONDOREXE)
