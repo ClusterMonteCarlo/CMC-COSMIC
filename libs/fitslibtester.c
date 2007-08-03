@@ -11,7 +11,7 @@
 #include "../common/fitslib.h"
 
 int main(int argc, char *argv[]){
-	cmc_fits_data_t cfd;
+	cmc_fits_data_t cfd, cfd2;
 	int i;
 
 	cfd.NOBJ=100;
@@ -84,6 +84,12 @@ int main(int argc, char *argv[]){
 	cmc_write_fits_file(&cfd, "test.fits");
 
 	cmc_free_fits_data_t(&cfd);
+
+	cmc_read_fits_file("test.fits", &cfd2);
+
+	cmc_write_fits_file(&cfd2, "test2.fits");
+
+	cmc_free_fits_data_t(&cfd2);
 
 	return 0;
 }
