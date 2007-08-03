@@ -1,24 +1,29 @@
 include ../common/common.mk
 
-all: mkking/mkking setimf/setimf mkplummer/mkplummer
+all: mkking/mkking mkplummer/mkplummer setimf/setimf setunits/setunits
 
-.PHONY: clean mkking setimf mkplummer
+.PHONY: clean mkking mkplummer setunits
 
 mkking/mkking: 
 	cd mkking && $(MAKE) mkking
 
-setimf/setimf: 
-	cd setimf && $(MAKE) setimf
-
 mkplummer/mkplummer:
 	cd mkplummer && $(MAKE) mkplummer
 
-install: mkking/mkking setimf/setimf mkplummer/mkplummer
+setimf/setimf: 
+	cd setimf && $(MAKE) setimf
+
+setunits/setunits: 
+	cd setunits && $(MAKE) setunits
+
+install: mkking/mkking mkplummer/mkplummer setimf/setimf setunits/setunits
 	cd mkking && $(MAKE) install
-	cd setimf && $(MAKE) install
 	cd mkplummer && $(MAKE) install
+	cd setimf && $(MAKE) install
+	cd setunits && $(MAKE) install
 
 clean:
 	cd mkking && $(MAKE) clean
-	cd setimf && $(MAKE) clean
 	cd mkplummer && $(MAKE) clean
+	cd setimf && $(MAKE) clean
+	cd setunits && $(MAKE) clean
