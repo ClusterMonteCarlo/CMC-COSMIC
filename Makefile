@@ -46,17 +46,16 @@ endif
 all: $(ALLEXES) UTILS CONTRIBS
 
 # peripheral stuff
-libs/fitslib.o: LIBS
-
-libs/taus113-v2.o: LIBS
-
-LIBS:
+libs/fitslib.o: 
 	cd libs && $(MAKE)
 
-UTILS: LIBS
+libs/taus113-v2.o:
+	cd libs && $(MAKE)
+
+UTILS: libs/fitslib.o libs/taus113-v2.o
 	cd utils && $(MAKE)
 
-CONTRIBS: LIBS
+CONTRIBS:
 	cd contrib && $(MAKE)
 
 # the standard executable
