@@ -655,7 +655,7 @@ long potential_calculate(void) {
 #define GENSEARCH_GETKEY(a)			a
 #define GENSEARCH_COMPAREKEYS(k1, k2)	k1 < k2
 
-#include "gensearch.h"
+#include "common/gensearch.h"
 
 int find_stars_mass_bin(double smass){
 	/* find the star[i]'s mass bin */

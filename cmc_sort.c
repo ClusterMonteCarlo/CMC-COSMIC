@@ -12,7 +12,7 @@
 
 #define GENSORT_USEPOINTERS
 
-#include "gensort.h"
+#include "common/gensort.h"
 
 
 #include <math.h>
@@ -188,5 +188,5 @@ void qsorts(star_t *s, long N){
 
 #define GENSORT_USEPOINTERS
 
-#include "gensort.h"
+#include "common/gensort.h"
 #endif

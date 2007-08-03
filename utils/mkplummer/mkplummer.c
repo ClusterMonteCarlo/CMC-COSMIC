@@ -126,7 +126,7 @@ double find_r(double X, double rcr, double cms, double r_abs_max, double tol){
 #define GENSORT_GETKEY(a)            a
 #define GENSORT_COMPAREKEYS(k1,k2)   k1 < k2
 
-#include "../gensort/gensort.h"
+#include "../../common/gensort.h"
 
 void create_random_array(double *X, long int N){
 	long int i, j;
