@@ -6,7 +6,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <fitsio.h>
-#include "../taus113-v2/taus113-v2.h"
+#include "../../common/taus113-v2.h"
 
 #define LARGE_DISTANCE 1.0e40
 #define PI 3.14159265358979323

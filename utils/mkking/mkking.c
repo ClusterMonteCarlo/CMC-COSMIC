@@ -7,7 +7,7 @@
 #include <getopt.h>
 #include <gsl/gsl_sf_erf.h>
 #include <fitsio.h>
-#include "../taus113-v2/taus113-v2.h"
+#include "../../common/taus113-v2.h"
 
 #define LARGE_DISTANCE 1.0e40
 

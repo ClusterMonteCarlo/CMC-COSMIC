@@ -5,10 +5,11 @@ EXE = cmc
 OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
 	cmc_dynamics_helper.o cmc_evolution_thr.o cmc_funcs.o \
 	cmc_init.o cmc_io.o cmc.o cmc_nr.o \
-	cmc_utils.o taus113-v2.o cmc_fits.o startrack/singl.o \
+	cmc_utils.o cmc_fits.o startrack/singl.o \
 	cmc_stellar_evolution.o cmc_fits_sshot.o \
 	cmc_sort.o cmc_sscollision.o cmc_bhlosscone.o \
-	cmc_search_grid.o cmc_trace.o libs/fitslib.o
+	cmc_search_grid.o cmc_trace.o \
+	libs/fitslib.o libs/taus113-v2.o
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
 	$(FEWBODYDIR)/fewbody_int.o $(FEWBODYDIR)/fewbody_io.o \
@@ -21,10 +22,11 @@ CONDOREXE := cmc.condor
 COBJS = cmc_binbin.co cmc_binsingle.co cmc_dynamics.co \
 	cmc_dynamics_helper.co cmc_evolution_thr.co cmc_funcs.co \
 	cmc_init.co cmc_io.co cmc.co cmc_nr.co \
-	cmc_utils.co taus113-v2.co cmc_fits.co startrack/singl.co \
+	cmc_utils.co cmc_fits.co startrack/singl.co \
 	cmc_stellar_evolution.co cmc_fits_sshot.co \
 	cmc_sort.co cmc_sscollision.co cmc_bhlosscone.co \
-	cmc_search_grid.co cmc_trace.co libs/fitslib.co
+	cmc_search_grid.co cmc_trace.co \
+	libs/fitslib.co libs/taus113-v2.co
 FEWBODYCOBJS = $(FEWBODYDIR)/fewbody.co $(FEWBODYDIR)/fewbody_classify.co \
 	$(FEWBODYDIR)/fewbody_coll.co $(FEWBODYDIR)/fewbody_hier.co \
 	$(FEWBODYDIR)/fewbody_int.co $(FEWBODYDIR)/fewbody_io.co \
@@ -49,17 +51,17 @@ else
 ALLEXES = $(EXE)
 endif
 
+# default super-target
 all: $(ALLEXES) $(EXTRAS)
 
-# fake dependency
-.PHONY: UTILS LIBS install clean fewbodyclean mrproper
-
 libs/fitslib.o: LIBS
+
+libs/taus113-v2.o: LIBS
 
 LIBS:
 	cd libs && $(MAKE)
 
-UTILS:
+UTILS: LIBS
 	cd utils && $(MAKE)
 
 # the standard executable
@@ -87,6 +89,9 @@ $(FEWBODYDIR)/%.co: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 
 %.co: %.c cmc.h cmc_vars.h Makefile
 	$(CONDORCC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
+
+# fake dependency to tell make that these targets do not produce files
+.PHONY: install clean mrproper
 
 install: $(ALLEXES) $(CONTRIBS)
 	mkdir -p $(PREFIX)/bin/

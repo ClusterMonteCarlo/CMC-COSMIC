@@ -6,7 +6,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
 #include <fitsio.h>
-#include "taus113-v2.h"
+#include "common/taus113-v2.h"
 #include "fewbody.h"
 
 /* #define CMCVERSION "$Revision$" */

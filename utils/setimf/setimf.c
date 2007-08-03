@@ -6,7 +6,7 @@
 #include <float.h>
 #include <string.h>
 #include <fitsio.h>
-#include "../taus113-v2/taus113-v2.h"
+#include "../../common/taus113-v2.h"
 
 struct imf_param {
 	int imf;
