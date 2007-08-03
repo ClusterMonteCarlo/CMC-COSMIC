@@ -7,7 +7,7 @@
 #include <getopt.h>
 #include <gsl/gsl_sf_erf.h>
 #include <fitsio.h>
-#include "taus113-v2.h"
+#include "../taus113-v2/taus113-v2.h"
 
 #define LARGE_DISTANCE 1.0e40
 
@@ -234,7 +234,7 @@ void write_output_file(double *m, double *r, double *vr, double *vt,
 #define GENSORT_GETKEY(a)            a
 #define GENSORT_COMPAREKEYS(k1,k2)   k1 < k2
 
-#include "gensort.h"
+#include "../gensort/gensort.h"
 
 void create_random_array(double *X, long int N){
 	long int i, j;
@@ -369,9 +369,9 @@ int main(int argc, char *argv[]){
 	h = tol;
 	t = 0.0; 
 	x = w0; y = 0.0; 
-	pos = malloc(array_size*sizeof(double));
-	den = malloc(array_size*sizeof(double));
-	pot = malloc(array_size*sizeof(double));
+	pos = (double *) malloc(array_size*sizeof(double));
+	den = (double *) malloc(array_size*sizeof(double));
+	pot = (double *) malloc(array_size*sizeof(double));
 	i = 0;
 	while(x>0 && (rho_rho0=calc_rho_rho0(t,x,y,w0))>0){
 		pos[i] = t; 
@@ -380,9 +380,9 @@ int main(int argc, char *argv[]){
 		i++;
 		if(i>=array_size){
 			array_size += array_incr;
-			pos = realloc(pos, array_size*sizeof(double));
-			den = realloc(den, array_size*sizeof(double));
-			pot = realloc(pot, array_size*sizeof(double));
+			pos = (double *) realloc(pos, array_size*sizeof(double));
+			den = (double *) realloc(den, array_size*sizeof(double));
+			pot = (double *) realloc(pot, array_size*sizeof(double));
 		}
 
 		k1 = h*f0(t,x,y,w0);
@@ -446,7 +446,7 @@ int main(int argc, char *argv[]){
 	}
 	num_point = i;
 	struct_par.rt = pos[num_point-1];
-	mR = malloc(num_point*sizeof(double));
+	mR = (double *) malloc(num_point*sizeof(double));
 	mR[0] = 0.0;
 	for(i=1; i<num_point; i++){
 		mR[i] = mR[i-1] + (pos[i]-pos[i-1])
@@ -456,12 +456,12 @@ int main(int argc, char *argv[]){
 		mR[i] /= mR[num_point-1];
 	}
 
-	r = malloc((N+2)*sizeof(double));
-	m = malloc((N+2)*sizeof(double));
-	psi = malloc((N+2)*sizeof(double));
-	vr = malloc((N+2)*sizeof(double));
-	vt = malloc((N+2)*sizeof(double));
-	X = malloc((N+2)*sizeof(double));
+	r = (double *) malloc((N+2)*sizeof(double));
+	m = (double *) malloc((N+2)*sizeof(double));
+	psi = (double *) malloc((N+2)*sizeof(double));
+	vr = (double *) malloc((N+2)*sizeof(double));
+	vt = (double *) malloc((N+2)*sizeof(double));
+	X = (double *) malloc((N+2)*sizeof(double));
 	create_random_array(X, N);
 	r[0] = DBL_MIN;
 	for(i=1; i<=N; i++){

@@ -6,7 +6,7 @@
 #include <float.h>
 #include <string.h>
 #include <fitsio.h>
-#include "taus113-v2.h"
+#include "../taus113-v2/taus113-v2.h"
 
 struct imf_param {
 	int imf;
@@ -130,7 +130,7 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 			param->pl_index = strtod(optarg, NULL);
 			break;
 		case 'u':
-		        param->n_neutron = strtod(optarg, NULL);
+		        param->n_neutron = strtol(optarg, NULL, 10);
 			break;
 		case 'r':
 			param->rcr = strtod(optarg, NULL);
@@ -246,11 +246,11 @@ void read_input(struct imf_param param, struct star *s[],
 	fits_read_key(fptr, TULONG, "RNG_Z4", &(cp->rng_st.z4), NULL, &status);
 	printerror(status);
         nelem= NSTAR+2;
-        *s = malloc((NSTAR+2)*sizeof(struct star));
-	mass = malloc((NSTAR+2)*sizeof(double));
-	vr = malloc((NSTAR+2)*sizeof(double));
-	vt = malloc((NSTAR+2)*sizeof(double));
-	r = malloc((NSTAR+2)*sizeof(double));
+        *s = (struct star *) malloc((NSTAR+2)*sizeof(struct star));
+	mass = (double *) malloc((NSTAR+2)*sizeof(double));
+	vr = (double *) malloc((NSTAR+2)*sizeof(double));
+	vt = (double *) malloc((NSTAR+2)*sizeof(double));
+	r = (double *) malloc((NSTAR+2)*sizeof(double));
 
 	/* read the columns into variables and copy variables to
 	 * struct star s[]                                       */
@@ -570,10 +570,10 @@ void write_output(struct star *s, struct cluster c,
 	double time = 0.0;
 	
 	get_rng_t113(&(cp.rng_st));
-	mass = malloc((c.NSTAR+2)*sizeof(double));
-	r = malloc((c.NSTAR+2)*sizeof(double));
-	vr = malloc((c.NSTAR+2)*sizeof(double));
-	vt = malloc((c.NSTAR+2)*sizeof(double));
+	mass = (double *) malloc((c.NSTAR+2)*sizeof(double));
+	r = (double *) malloc((c.NSTAR+2)*sizeof(double));
+	vr = (double *) malloc((c.NSTAR+2)*sizeof(double));
+	vt = (double *) malloc((c.NSTAR+2)*sizeof(double));
 	for(i=0; i<=c.NSTAR+1; i++){
 		mass[i] = s[i].m;
 		r[i] = s[i].r;

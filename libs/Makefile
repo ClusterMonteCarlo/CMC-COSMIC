@@ -1,7 +1,12 @@
 include ../common/common.mk
 
-fitslib.o : fitslib.c fitslib.h Makefile
+all: fitslib.o fitslibtester
+
+%.o : %.c fitslib.h Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
+fitslibtester: fitslibtester.o fitslib.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
+
 clean:
-	rm -f fitslib.o
+	rm -f fitslib.o fitslibtester.o fitslibtester

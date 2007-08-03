@@ -96,6 +96,7 @@ install: $(ALLEXES) $(CONTRIBS)
 clean:
 	rm -f $(OBJS) $(FEWBODYOBJS) $(EXE) $(COBJS) $(FEWBODYCOBJS) $(CONDOREXE)
 	cd utils && $(MAKE) clean
+	cd libs && $(MAKE) clean
 
 mrproper: clean
 	rm -f   *~   .smhist   *.dat   *.dat.gz    *out_*   *.stdout   *.stderr   *.log

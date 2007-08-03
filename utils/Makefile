@@ -1,10 +1,9 @@
-##############################################################################
-### A simple Makefile to execute make in subdirectories
-##############################################################################
+include ../common/common.mk
 
 all: mkking/mkking setimf/setimf mkplummer/mkplummer
 
 .PHONY: clean mkking setimf mkplummer
+
 mkking/mkking: 
 	cd mkking && $(MAKE) mkking
 

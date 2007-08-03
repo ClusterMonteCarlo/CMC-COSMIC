@@ -6,7 +6,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <fitsio.h>
-#include "taus113-v2.h"
+#include "../taus113-v2/taus113-v2.h"
 
 #define LARGE_DISTANCE 1.0e40
 #define PI 3.14159265358979323
@@ -126,7 +126,7 @@ double find_r(double X, double rcr, double cms, double r_abs_max, double tol){
 #define GENSORT_GETKEY(a)            a
 #define GENSORT_COMPAREKEYS(k1,k2)   k1 < k2
 
-#include "gensort.h"
+#include "../gensort/gensort.h"
 
 void create_random_array(double *X, long int N){
 	long int i, j;
@@ -398,11 +398,11 @@ int main(int argc, char *argv[]){
 
 	dprintf("rmax=%g N=%ld filename=%s seed=%ld\n", rmax, N, filename, seed);
 
-	X = malloc((N+2)*sizeof(double));
-	r = malloc((N+2)*sizeof(double));
-	vr = malloc((N+2)*sizeof(double));
-	vt = malloc((N+2)*sizeof(double));
-	m = malloc((N+2)*sizeof(double));
+	X = (double *) malloc((N+2)*sizeof(double));
+	r = (double *) malloc((N+2)*sizeof(double));
+	vr = (double *) malloc((N+2)*sizeof(double));
+	vt = (double *) malloc((N+2)*sizeof(double));
+	m = (double *) malloc((N+2)*sizeof(double));
 	reset_rng_t113(seed);
 
 	Mrtotal = (cms-1.0)*rcr*rcr*rcr*pow(1.0+rcr*rcr,-3.0/2.0)
