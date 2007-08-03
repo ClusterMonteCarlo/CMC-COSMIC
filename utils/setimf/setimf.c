@@ -369,18 +369,18 @@ void set_masses(struct imf_param param, struct star *s[],
 			total_mass += m;
 		}
 	} else if (param.imf==0){ /* Kroupa, 2001. MNRAS 322, 231-246 */
-	        Cons[0] = 1.98685;
-		Cons[1] = 0.158948;
-		Cons[2] = 0.0794738;
-		Cons[3] = 0.0794738;
+	        Cons[0] = 1.986846095810826;
+		Cons[1] = 0.15894768766486606;
+		Cons[2] = 0.07947384383243306;
+		Cons[3] = 0.07947384383243306;
 		alpha[0] = 0.3;
 		alpha[1] = 1.3;
 		alpha[2] = 2.3;
 		alpha[3] = 2.3;
 		Xlim[0] = 0.0;
-		Xlim[1] = 0.371431;
-		Xlim[2] = 0.849471;
-		Xlim[3] = 0.938866;
+		Xlim[1] = 0.371431122772297;
+		Xlim[2] = 0.8494711094748518;
+		Xlim[3] = 0.9388662739750515;
 		Xlim[4] = 1.0;
 		Mass[0] = 0.01;
 		Mass[1] = 0.08;
@@ -396,6 +396,10 @@ void set_masses(struct imf_param param, struct star *s[],
 				  j++;
 				}
 				m = pow((1.0-alpha[j])/Cons[j]*(X-Xlim[j])+pow(Mass[j],1.0-alpha[j]), 1.0/(1.0-alpha[j]));
+				if (isnan(m)) {
+				  fprintf(stderr, "Oops!  m=NaN.  Please make coefficients more precise.\n");
+				  exit(-127);
+				}
 			} while (m<param.mmin || m>param.mmax) ;
 			/* fprintf(stderr, "X=%g Xlim[j]=%g j=%d m=%g\n", X, Xlim[j], j, m); */
 			(*s)[i].m = m;
