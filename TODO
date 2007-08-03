@@ -2,11 +2,9 @@
 *** things that _have_ to be done, in order of priority ***
 ***********************************************************
 
-* Write uber-utility for setting cluster initial conditions in
-  FITS file.
-* Finalize new FITS format.
-* Remove snapshot restarting, since it needs to be updated anyway.
+* Write new FITS routines: addbinaries, setstellar.
 * Rewrite CMC internals that depend on input FITS file.
+* Remove snapshot restarting, since it needs to be updated anyway.
 * Make sane defaults for all input file parameters.
 
 *************************************************************
@@ -25,13 +23,6 @@
   containing (radius, potential) pairs.
 * Set criterion for stopping calculation based on tstop in code and physical
   units.
-* Create much better system for setting physical units in the input file.
-  Perhaps it should be that the input FITS files are minimal representations
-  of N-body systems, in N-body units, and everything else is set in the input
-  file?  No, this fails when binaries are added to the input FITS file.
-  Physical units are a necessary part of this file once all scales are (over-)
-  specified.  Need utilities for modifying properties of input FITS files:
-  fits_add_binaries, fits_set_scales, etc.
 * Rewrite get_positions().  Can solve dQ/dr=0 to get r at v_r,max, which can be
   used to bisect the r interval into two portions, each containing a root of
   Q(r)=0.  This is what the force_t variable type is for.
