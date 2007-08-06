@@ -28,7 +28,7 @@ libs/fitslib.o:
 libs/taus113-v2.o:
 	cd libs && $(MAKE)
 
-UTILS: libs/fitslib.o libs/taus113-v2.o
+UTILS: libs/fitslib.o libs/taus113-v2.o startrack/singl.o
 	cd utils && $(MAKE)
 
 CONTRIBS:

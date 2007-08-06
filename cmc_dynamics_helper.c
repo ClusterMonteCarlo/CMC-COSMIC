@@ -36,7 +36,6 @@ void zero_star(long j)
 	star[j].Uoldrnew = 0.0;
 	star[j].vtold = 0.0;
 	star[j].vrold = 0.0;
-#ifdef SE
 	star[j].mzams = 0.0;
 	star[j].m0 = 0.0;
 	star[j].mass = 0.0;
@@ -54,7 +53,6 @@ void zero_star(long j)
 	star[j].k = 0;
 	star[j].flag = 0;
 	star[j].kpre = 0;
-#endif	
 }
 
 void zero_binary(long j)

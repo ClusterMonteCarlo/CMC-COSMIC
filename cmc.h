@@ -14,9 +14,6 @@
 #define CMCNICK "SVN"
 #define CMCPRETTYNAME "ClusterMonteCarlo"
 
-/* toggle stellar evolution */
-#define SE
-
 /*************************** Parameters ******************************/
 /* Large number, but still SF_INFINITY - 1 <> SF_INFINITY */
 #define SF_INFINITY 1.0e10
@@ -93,7 +90,6 @@ typedef struct{
 	double Uoldrold, Uoldrnew; /* variables for Stodolkiewicz */
 	double vtold, vrold;       /* energy conservation scheme  */
 	/* stellar evolution variables */
-#ifdef SE
 	double mzams;  /* ZAMS mass                                       */
 	double m0;     /* initial mass                                    */
 	double mass;   /* real mass, this is the one relevant to dynamics */
@@ -111,7 +107,6 @@ typedef struct{
 	int k;	       /* star type                                       */ 
 	int flag;      /* ???                                             */
 	int kpre;      /* pre SN type                                     */
-#endif
 } star_t;
 
 struct CenMa{
@@ -334,7 +329,6 @@ void update_vars(void);
 void assign_binaries(void);
 void print_initial_binaries(void);
 void assign_binaries_test(void);
-double bin_single_sigma(double y);
 
 void print_version(FILE *stream);
 void print_usage(FILE *stream, char *argv[]);

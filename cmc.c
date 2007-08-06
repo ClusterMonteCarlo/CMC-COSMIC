@@ -105,11 +105,9 @@ int main(int argc, char *argv[])
 		comp_multi_mass_percent();
 		
 		/* initialize stellar evolution things */
-#ifdef SE
 		if (STELLAR_EVOLUTION > 0) {
 			stellar_evolution_init();
 		}
-#endif
 		
 		update_vars();
 	}
@@ -158,11 +156,9 @@ int main(int argc, char *argv[])
 		   will disappear! */
 		clus.N_MAX_NEW++;
 
-#ifdef SE
 		if (STELLAR_EVOLUTION > 0) {
 			do_stellar_evolution(); /* may not work... */
 		}
-#endif
 
 		Prev_Dt = Dt;
 

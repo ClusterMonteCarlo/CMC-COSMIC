@@ -3,12 +3,6 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/* binary - single interaction cross section */
-double bin_single_sigma(double y)
-{
-	return(1.0 / (SQR(SQR(1.0 + y)) * sqrt(y)));
-}
-
 /* the mass--radius relationship, from Freitag, et al. (2004) */
 /* M is expected to be input in the same units as star[].m */
 /* radius is output in code (N-body) units */

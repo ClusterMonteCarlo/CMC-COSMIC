@@ -7,7 +7,6 @@
 #include "cmc_vars.h"
 #include "startrack/sinbin.h"
 
-#ifdef SE
 
 /* star types */
 #define S_MASS_MS_STAR                    (0)
@@ -189,5 +188,3 @@ void write_stellar_data(void){
 	}
 	fclose(stel_file);
 }
-
-#endif

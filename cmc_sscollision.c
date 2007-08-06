@@ -35,10 +35,6 @@ void sscollision_do(long k, long kp, double rcm, double vcm[4])
 	star[knew].id = star_get_id_new();
 	star[knew].rad = r_of_m(star[knew].m);
 
-#ifdef SE
-	
-#endif
-
 	/* log collision */
 	fprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
 		TotalTime, 

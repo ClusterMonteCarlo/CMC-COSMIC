@@ -607,7 +607,6 @@ void write_ss_se_param(fitsfile *fptr){
 	dbl_arr[N+1] = 0.0;
 	fits_write_col(fptr, TDOUBLE, 1, firstrow, firstelem, nrows, dbl_arr,
                    &status);
-#ifdef SE
 	/* mass */
 	dbl_arr[0] = 0.0;
 	for(i=1;i<=N;i++){
@@ -624,7 +623,6 @@ void write_ss_se_param(fitsfile *fptr){
 	int_arr[N+1] = 0;
 	fits_write_col(fptr, TINT, 3, firstrow, firstelem, nrows, int_arr,
                    &status);
-#endif
 
 	FREE_TSTUFF
 	free(dbl_arr); free(int_arr);
