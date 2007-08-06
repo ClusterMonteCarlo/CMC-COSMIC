@@ -1,8 +1,12 @@
 include ../common/common.mk
 
-all: mkking/mkking mkplummer/mkplummer setimf/setimf setstellar/setstellar setunits/setunits
+all: addbinaries/addbinaries mkking/mkking mkplummer/mkplummer \
+	setimf/setimf setstellar/setstellar setunits/setunits
 
-.PHONY: clean mkking mkplummer setimf setstellar setunits
+.PHONY: clean addbinaries mkking mkplummer setimf setstellar setunits
+
+addbinaries/addbinaries: 
+	cd addbinaries && $(MAKE) addbinaries
 
 mkking/mkking: 
 	cd mkking && $(MAKE) mkking
@@ -19,7 +23,9 @@ setstellar/setstellar:
 setunits/setunits: 
 	cd setunits && $(MAKE) setunits
 
-install: mkking/mkking mkplummer/mkplummer setimf/setimf setstellar/setstellar setunits/setunits
+install: addbinaries/addbinaries mkking/mkking mkplummer/mkplummer \
+	setimf/setimf setstellar/setstellar setunits/setunits
+	cd addbinaries && $(MAKE) install
 	cd mkking && $(MAKE) install
 	cd mkplummer && $(MAKE) install
 	cd setimf && $(MAKE) install
@@ -27,6 +33,7 @@ install: mkking/mkking mkplummer/mkplummer setimf/setimf setstellar/setstellar s
 	cd setunits && $(MAKE) install
 
 clean:
+	cd addbinaries && $(MAKE) clean
 	cd mkking && $(MAKE) clean
 	cd mkplummer && $(MAKE) clean
 	cd setimf && $(MAKE) clean
