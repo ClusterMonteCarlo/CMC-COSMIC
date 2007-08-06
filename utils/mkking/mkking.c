@@ -156,7 +156,7 @@ void write_output_file(double *m, double *r, double *vr, double *vt, long int N,
 	cfd.Mclus = N;
 	cfd.Rvir = 1.0;
 	cfd.Rtid = struct_par.rt;
-	cfd.Z = 0.01;
+	cfd.Z = 0.02;
 
 	cmc_malloc_fits_data_t(&cfd);
 
