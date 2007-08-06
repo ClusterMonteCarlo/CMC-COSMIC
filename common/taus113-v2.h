@@ -18,6 +18,9 @@
 
 /* Declarations useful for using taus113-v2.c */
 
+#ifndef _TAUS113_V2_H
+#define _TAUS113_V2_H 1
+
 struct rng_t113_state {
 	unsigned long z1, z2, z3, z4;
 };
@@ -27,3 +30,5 @@ void get_rng_t113(struct rng_t113_state *st);
 unsigned long rng_t113_int(void); 
 double rng_t113_dbl(void);
 void reset_rng_t113(unsigned long int s);
+
+#endif /* _TAUS113_V2_H */

@@ -7,26 +7,6 @@
 #include "cmc_vars.h"
 #include "startrack/sinbin.h"
 
-
-/* star types */
-#define S_MASS_MS_STAR                    (0)
-#define L_MASS_MS_STAR                    (1)
-#define HERTZ_GAP_STAR                    (2)
-#define FIRST_GIANT_BRANCH_STAR           (3)
-#define CORE_He_BURNING_STAR              (4)
-#define EARLY_ASYM_GIANT_BRANCH_STAR      (5)
-#define THERM_PULS_ASYM_GIANT_BRANCH_STAR (6)
-#define MS_NAKED_He_STAR                  (7)
-#define HERTZ_GAP_NAKED_He_STAR           (8)
-#define GIANT_BRANCH_NAKED_He_STAR        (9)
-#define He_WD                             (10)
-#define CO_WD                             (11)
-#define ONe_WD                            (12)
-#define NEUTRON_STAR                      (13)
-#define BLACK_HOLE                        (14)
-#define MASSLESS_REMNANT                  (15)
-#define NAKED_CO_CORE                     (-1)
-
 /* MEGA_YEAR is 10^6 years in dynamic units.
  * The time written in lagrange radii file, "Totaltime"
  * is in FP units, the exact conversion depends on,

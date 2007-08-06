@@ -109,7 +109,4 @@ LIBFLAGS := $(LIBFLAGS) -L $(HOME)/libs_et_al/lib -static
 CHRISCFLAGS = 
 endif
 
-##############################################################################
-### the dependencies
-##############################################################################
 FEWBODYDIR = fewbody-0.24

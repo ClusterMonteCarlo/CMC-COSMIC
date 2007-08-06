@@ -1,5 +1,8 @@
 /* -*- linux-c -*- */
 
+#ifndef _FITSLIB_H
+#define _FITSLIB_H 1
+
 typedef struct{
 	long NOBJ;
 	long NBINARY;
@@ -40,3 +43,5 @@ void cmc_free_fits_data_t(cmc_fits_data_t *cfd);
 void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd);
 /* write FITS file using data structure */
 void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename);
+
+#endif /* _FITSLIB_H */

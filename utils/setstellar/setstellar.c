@@ -6,12 +6,16 @@
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
+#include "../../cmc.h"
 #include "../../common/fitslib.h"
 #include "../../common/taus113-v2.h"
 #include "../../startrack/sinbin.h"
 
 #define INFILE "in.fits"
 #define OUTFILE "debug.fits"
+
+/* global variables needed by Star Track */
+double METALLICITY, WIND_FACTOR=1.0;
 
 /* print the usage */
 void print_usage(FILE *stream)
@@ -22,27 +26,72 @@ void print_usage(FILE *stream)
 	fprintf(stream, "OPTIONS:\n");
 	fprintf(stream, "  -i --infile <infile>   : input file [%s]\n", INFILE);
 	fprintf(stream, "  -o --outfile <outfile> : output file [%s]\n", OUTFILE);
-	fprintf(stream, "  -M --Mclus <M_clus>    : set cluster mass in M_sun [from infile]\n");
-	fprintf(stream, "  -R --Rvir <R_vir>      : set virial radius in parsecs [from infile]\n");
-	fprintf(stream, "  -T --Rtid <R_tid>      : set tidal radius in N-body units [from infile]\n");
-	fprintf(stream, "  -Z --Z <Z>             : set metallicity [from infile]\n");
 	fprintf(stream, "  -h --help              : display this help text\n");
 }
 
+/* set stellar type and radius */
+void stellar_evolve(cmc_fits_data_t *cfd)
+{
+	long int k;
+	double frac;
+	star_t star;
+
+	/* the following function calls need to be done for
+	 * Chris' stellar evolution code */
+	/* -- begin black_magic -- */
+	M_hook=M_hookf();    
+	M_HeF=M_HeFf();
+	M_FGB=M_FGBf();
+	coef_aa();
+	coef_bb(); 
+	/* --  end  black_magic -- */
+	
+	for(k=1; k<=cfd->NOBJ; k++){
+		if (cfd->obj_binind[k] != 0) {
+			cfd->obj_k[k] = NOT_A_STAR;
+			/* set binary member properties here... */
+		} else {
+			/* need mass in solar masses */
+			star.mass = cfd->obj_m[k] * cfd->Mclus;
+			if(star.mass <= 0.7){
+				star.k = S_MASS_MS_STAR;
+			} else {
+				star.k = L_MASS_MS_STAR;
+			}
+			/* setting the rest of the variables */
+			star.mzams = star.m0 = star.mass;
+			star.tbeg = star.tvir = 0.0;
+			star.tend = star.tbeg + 1e-11;
+			star.mc = star.mcHe = star.mcCO = 0.0;
+			star.dt = star.mpre = star.tstart = frac = 0.0;
+			star.kpre = star.k;
+			star.flag = 0;
+			star.lum = star.rad = 1.0;
+
+			/* evolving stars a little bit to set luminosity and radius */
+			singl(&(star.mzams), &(star.m0), &(star.mass), 
+			      &(star.k), &(star.tbeg), &(star.tvir),
+			      &(star.tend), &(star.lum), &(star.rad),
+			      &(star.mc), &(star.mcHe), &(star.mcCO),
+			      &(star.flag), &(star.dt), &(star.mpre),
+			      &(star.kpre), &(star.tstart), &frac);
+			
+			/* setting star properties in FITS file, being careful with units */
+			cfd->obj_k[k] = star.k;
+			cfd->obj_m[k] = star.mass / cfd->Mclus;
+			cfd->obj_Reff[k] = star.rad / (cfd->Rvir * PARSEC / RSUN);
+		}
+	}
+}
+
 int main(int argc, char *argv[]){
-	double Mclus=0.0, Rvir=0.0, Rtid=0.0, Z=0.0;
-	int setMclus=0, setRvir=0, setRtid=0, setZ=0;
 	cmc_fits_data_t cfd;
 	char infilename[1024], outfilename[1024];
 	int i;
-	const char *short_opts = "i:o:M:R:T:Z:h";
+	const char *short_opts = "i:o:h";
 	const struct option long_opts[] = {
 		{"infile", required_argument, NULL, 'i'},
 		{"outfile", required_argument, NULL, 'o'},
-		{"Mclus", required_argument, NULL, 'M'},
-		{"Rvir", required_argument, NULL, 'R'},
-		{"Rtid", required_argument, NULL, 'T'},
-		{"Z", required_argument, NULL, 'Z'},
 		{"help", no_argument, NULL, 'h'},
 		{NULL, 0, NULL, 0}
 	};
@@ -57,22 +106,6 @@ int main(int argc, char *argv[]){
 			break;
 		case 'o':
 			sprintf(outfilename, "%s", optarg);
-			break;
-		case 'M':
-			Mclus = strtod(optarg, NULL);
-			setMclus = 1;
-			break;
-		case 'R':
-			Rvir = strtod(optarg, NULL);
-			setRvir = 1;
-			break;
-		case 'T':
-			Rtid = strtod(optarg, NULL);
-			setRtid = 1;
-			break;
-		case 'Z':
-			Z = strtod(optarg, NULL);
-			setZ = 1;
 			break;
 		case 'h':
 			print_usage(stdout);
@@ -90,10 +123,9 @@ int main(int argc, char *argv[]){
 
 	cmc_read_fits_file(infilename, &cfd);
 
-	if (setMclus) cfd.Mclus = Mclus;
-	if (setRvir) cfd.Rvir = Rvir;
-	if (setRtid) cfd.Rtid = Rtid;
-	if (setZ) cfd.Z = Z;
+	METALLICITY = cfd.Z;
+
+	stellar_evolve(&cfd);
 
 	cmc_write_fits_file(&cfd, outfilename);
 
