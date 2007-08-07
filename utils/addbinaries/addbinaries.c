@@ -20,6 +20,8 @@
 
 /* global variables needed by Star Track */
 double METALLICITY, WIND_FACTOR=1.0;
+/* global variable for new star id */
+long newstarid;
 
 /* print the usage */
 void print_usage(FILE *stream)
@@ -37,24 +39,37 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  -h --help              : display this help text\n");
 }
 
+long star_get_id_new(void)
+{
+	newstarid++;
+	return(newstarid);
+}
+
 void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double Ebmin, double Ebmax)
 {
 	long i, j;
 	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew;
 	double kTcore, Eb, Ebmin, Ebmax;
 
-	/* pass through some header values */
-	cfd2->NOBJ = cfd->NOBJ;
+	newstarid = cfd->NOBJ;
+
 	if (cfd->NBINARY != 0) {
 		fprintf(stderr, "Warning: NBINARY!=0 in input FITS file.  Be sure you know what you're doing!\n");
 	}
 	cfd2->NBINARY = Nbin;
-	cfd2->Mclus = cfd->Mclus;
-	cfd2->Rvir = cfd->Rvir;
-	cfd2->Rtid = cfd->Rtid;
-	cfd2->Z = cfd->Z;
-
-	cmc_malloc_fits_data_t(cfd2);
+	
+	/* reallocate memory for binaries */
+	cfd->bs_index = (long *) realloc(cfd->bs_index, (Nbin+1)*sizeof(long));
+	cfd->bs_id1 = (long *) realloc(cfd->bs_id1, (Nbin+1)*sizeof(long));
+	cfd->bs_k1 = (int *) realloc(cfd->bs_k1, (Nbin+1)*sizeof(int));
+	cfd->bs_m1 = (double *) realloc(cfd->bs_m1, (Nbin+1)*sizeof(double));
+	cfd->bs_Reff1 = (double *) realloc(cfd->bs_Reff1, (Nbin+1)*sizeof(double));
+	cfd->bs_id2 = (long *) realloc(cfd->bs_id2, (Nbin+1)*sizeof(long));
+	cfd->bs_k2 = (int *) realloc(cfd->bs_k2, (Nbin+1)*sizeof(int));
+	cfd->bs_m2 = (double *) realloc(cfd->bs_m2, (Nbin+1)*sizeof(double));
+	cfd->bs_Reff2 = (double *) realloc(cfd->bs_Reff2, (Nbin+1)*sizeof(double));
+	cfd->bs_a = (double *) realloc(cfd->bs_a, (Nbin+1)*sizeof(double));
+	cfd->bs_e = (double *) realloc(cfd->bs_e, (Nbin+1)*sizeof(double));
 
 	/* calculate minimum mass of mass function, plus other statistics */
 	Mmin = GSL_POSINF;
@@ -77,13 +92,19 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double Ebmin, 
 		/* make it a binary if it's not already */
 		if (i <= cfd->NOBJ && cfd->obj_binind[i] == 0) {
 			j++;
-			
+
 			/* make this star a binary */
-			star[i].binind = j;
-			binary[j].inuse = 1;
+			cfd->obj_binind[i] = j;
+			//binary[j].inuse = 1;
+			cfd->bs_index[j] = j;
+			cfd->bs_id1[j] = cfd->obj_id[i];
+			cfd->bs_id1[j] = cfd->obj_id[i];
 			binary[j].id1 = star[i].id;
 			binary[j].id2 = star_get_id_new();
 			
+			
+			
+
 			/* set secondary mass from dP/dq=1 distribution */
 			binary[j].m1 = star[i].m;
 			binary[j].m2 = Mmin + rng_t113_dbl() * (binary[j].m1 - Mmin);
@@ -227,7 +248,7 @@ int main(int argc, char *argv[]){
 	int limits;
 	long Nbin;
 	double Ebmin, Ebmax;
-	cmc_fits_data_t cfd, cfd2;
+	cmc_fits_data_t cfd;
 	char infilename[1024], outfilename[1024];
 	int i;
 	const char *short_opts = "i:o:N:l:m:M:h";
@@ -302,9 +323,9 @@ int main(int argc, char *argv[]){
 
 	cmc_read_fits_file(infilename, &cfd);
 
-	assign_binaries(&cfd, &cfd2, Nbin, limits, Ebmin, Ebmax)
+	assign_binaries(&cfd, Nbin, limits, Ebmin, Ebmax)
 
-	cmc_write_fits_file(&cfd2, outfilename);
+	cmc_write_fits_file(&cfd, outfilename);
 
 	cmc_free_fits_data_t(&cfd);
 	cmc_free_fits_data_t(&cfd2);
