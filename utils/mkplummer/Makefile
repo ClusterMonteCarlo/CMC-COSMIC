@@ -15,4 +15,4 @@ install: $(EXE)
 	install -m 0755 $^ $(PREFIX)/bin/cmc_$^
 
 clean:
-	rm -f $(OBJS) $(EXE)
+	rm -f $(EXE).o $(EXE)
