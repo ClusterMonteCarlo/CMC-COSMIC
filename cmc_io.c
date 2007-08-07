@@ -457,21 +457,19 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			eprintf("too many values for parameter: \"%s\".\n", line);
 			exit(1);
 		} else if (sscanf(line, "%s %s", parameter_name, values) == 2) {
-			if (strcmp(parameter_name, "MMIN") == 0) {
-				wprintf("MMIN is now set automatically by sampling from the input file.\n");
-			} else if (strcmp(parameter_name, "BINBIN") == 0) {
+			if (strcmp(parameter_name, "BINBIN") == 0) {
 				sscanf(values, "%d", &BINBIN);
 				parsed.BINBIN = 1;
 			} else if (strcmp(parameter_name, "BINSINGLE") == 0) {
 				sscanf(values, "%d", &BINSINGLE);
 				parsed.BINSINGLE = 1;
+			} else if (strcmp(parameter_name, "OVERRIDE_CENTRAL_MASS") == 0) {
+				sscanf(values, "%d", &OVERRIDE_CENTRAL_MASS);
+				parsed.OVERRIDE_CENTRAL_MASS = 1;
 			} else if (strcmp(parameter_name, "CENTRAL_MASS") == 0) {
 				sscanf(values, "%lf", &cenma.m);
 				cenma.E = 0.0;
 				parsed.CENTRAL_MASS = 1;
-			} else if (strcmp(parameter_name, "CENTRAL_MASS_FROM_FILE") == 0) {
-				sscanf(values, "%i", &CENTRAL_MASS_FROM_FILE); 
-				parsed.CENTRAL_MASS_FROM_FILE = 1;
 			} else if (strcmp(parameter_name, "CHECKPOINT_PERIOD") == 0) {
 				sscanf(values, "%ld", &CHECKPOINT_PERIOD);
 				parsed.CHECKPOINT_PERIOD = 1;
@@ -504,27 +502,12 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				curr_mass = (char *) strtok(values, ",; ");
 				for (NO_MASS_BINS = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_MASS_BINS++);
 				parsed.MASS_BINS = 1;
-			} else if (strcmp(parameter_name, "MEGA_YEAR") == 0) {
-				sscanf(values, "%lf", &MEGA_YEAR);
-				parsed.MEGA_YEAR = 1;
-			} else if (strcmp(parameter_name, "METALLICITY") == 0) {
-				sscanf(values, "%lf", &METALLICITY);
-				parsed.METALLICITY = 1;
 			} else if (strcmp(parameter_name, "MINIMUM_R") == 0) {
 				sscanf(values, "%lf", &MINIMUM_R);
 				parsed.MINIMUM_R = 1;
 			} else if (strcmp(parameter_name, "STOPATCORECOLLAPSE") == 0) {
 				sscanf(values, "%d", &STOPATCORECOLLAPSE);
 				parsed.STOPATCORECOLLAPSE = 1;
-			} else if (strcmp(parameter_name, "N_BINARY") == 0) {
-				sscanf(values, "%ld", &clus.N_BINARY);
-				parsed.N_BINARY = 1;
-			} else if (strcmp(parameter_name, "NUM_CORE_STARS") == 0) {
-				wprintf("The parameter \"NUM_CORE_STARS\" has been changed to \"NUM_CENTRAL_STARS\" for clarity.\n");
-				wprintf("Please update your input file appropriately.\n");
-				wprintf("Using \"NUM_CORE_STARS\" for \"NUM_CENTRAL_STARS\".\n");
-				sscanf(values, "%ld", &NUM_CENTRAL_STARS);
-				parsed.NUM_CENTRAL_STARS = 1;
 			} else if (strcmp(parameter_name, "NUM_CENTRAL_STARS") == 0) {
 				sscanf(values, "%ld", &NUM_CENTRAL_STARS);
 				parsed.NUM_CENTRAL_STARS = 1;
@@ -537,12 +520,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "THETASEMAX") == 0) {
 				sscanf(values, "%lf", &THETASEMAX);
 				parsed.THETASEMAX = 1;
-			} else if (strcmp(parameter_name, "R_MAX") == 0) {
-				sscanf(values, "%lf", &R_MAX);
-				parsed.R_MAX = 1;
-			} else if (strcmp(parameter_name, "SOLAR_MASS_DYN") == 0) {
-				sscanf(values, "%lf", &SOLAR_MASS_DYN);
-				parsed.SOLAR_MASS_DYN = 1;
 			} else if (strcmp(parameter_name, "STELLAR_EVOLUTION") == 0) {
 				sscanf(values, "%ld", &STELLAR_EVOLUTION);
 				parsed.STELLAR_EVOLUTION = 1;
@@ -570,16 +547,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "GAMMA") == 0) {
 				sscanf(values, "%lf", &GAMMA);
 				parsed.GAMMA = 1;
-			} else if (strcmp(parameter_name, "BININITKT") == 0) {
-				sscanf(values, "%d", &BININITKT);
-				parsed.BININITKT = 1;
-			} else if (strcmp(parameter_name, "BININITEBMIN") == 0) {
-				sscanf(values, "%lf", &BININITEBMIN);
-				parsed.BININITEBMIN = 1;
-			} else if (strcmp(parameter_name, "BININITEBMAX") == 0) {
-				sscanf(values, "%lf", &BININITEBMAX);
-				parsed.BININITEBMAX = 1;
-                        } else if (strcmp(parameter_name, "SEARCH_GRID")== 0) {
+			} else if (strcmp(parameter_name, "SEARCH_GRID")== 0) {
 				sscanf(values, "%ld", &SEARCH_GRID);
 				parsed.SEARCH_GRID = 1;
                         } else if (strcmp(parameter_name, "SG_STARSPERBIN")== 0) {
@@ -640,8 +608,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		allparsed = 0; \
 	}
 	
-	CHECK_PARSED(BINBIN);
-	CHECK_PARSED(BINSINGLE);
 	CHECK_PARSED(CENTRAL_MASS);
 	CHECK_PARSED(CHECKPOINT_PERIOD);
 	CHECK_PARSED(SNAPSHOT_PERIOD);
@@ -650,17 +616,12 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(INPUT_FILE);
 	CHECK_PARSED(MASS_PC);
 	CHECK_PARSED(MASS_BINS);
-	CHECK_PARSED(MEGA_YEAR);
-	CHECK_PARSED(METALLICITY);
 	CHECK_PARSED(MINIMUM_R);
 	CHECK_PARSED(STOPATCORECOLLAPSE);
-	CHECK_PARSED(N_BINARY);
 	CHECK_PARSED(NUM_CENTRAL_STARS);
 	CHECK_PARSED(PERTURB);
 	CHECK_PARSED(RELAXATION);
 	CHECK_PARSED(THETASEMAX);
-	CHECK_PARSED(R_MAX);
-	CHECK_PARSED(SOLAR_MASS_DYN);
 	CHECK_PARSED(STELLAR_EVOLUTION);
 	CHECK_PARSED(SS_COLLISION);
 	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT);
@@ -670,9 +631,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(T_PRINT_STEP);
 	CHECK_PARSED(WIND_FACTOR);
 	CHECK_PARSED(GAMMA);
-	CHECK_PARSED(BININITKT);
-	CHECK_PARSED(BININITEBMIN);
-	CHECK_PARSED(BININITEBMAX);
 	
 #undef CHECK_PARSED
 
@@ -683,6 +641,8 @@ void parser(int argc, char *argv[], gsl_rng *r)
                 A=DEFAULT; \
 	}
 	
+	CHECK_PARSED(BINBIN, 1);
+	CHECK_PARSED(BINSINGLE, 1);
 	CHECK_PARSED(SEARCH_GRID, 0);
         CHECK_PARSED(SG_STARSPERBIN, 100);
         CHECK_PARSED(SG_MAXLENGTH, 1000000);
@@ -691,7 +651,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(SG_MATCH_AT_FRACTION, 0.5);
         CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95);
         CHECK_PARSED(BH_LOSS_CONE, 1);
-        CHECK_PARSED(CENTRAL_MASS_FROM_FILE, 0);
         CHECK_PARSED(BH_R_DISRUPT_NB, 0.);
         CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 1);
         CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 1);
@@ -710,8 +669,12 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	}
 	
 	/* read the number of stars and possibly other parameters */
-	read_fits_file_parameters(INPUT_FILE, r);
-	
+	cmc_read_fits_file(filename, &cfd);
+	clus.N_STAR = cfd->NOBJ;
+	clus.N_BINARY = cfd->NBINARY;
+	R_MAX = cfd->Rtid;
+	METALLICITY = cfd->Z;
+
 	if(!ReadSnapshot){
 		clus.N_STAR_NEW = clus.N_STAR;
 		/* add 2 * clus.N_BINARY for binary disruptions */

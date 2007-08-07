@@ -962,13 +962,15 @@ void mini_sshot(){
 /* set the units */
 void units_set(void)
 {
-	/* define (N-body) units (in CGS here): U_l = U_t^(2/3) G^(1/3) U_m^(1/3) */
-	units.t = log(GAMMA * clus.N_STAR)/(clus.N_STAR * MEGA_YEAR) * 1.0e6 * YEAR;
-	units.m = clus.N_STAR * initial_total_mass / SOLAR_MASS_DYN * MSUN;
-	units.l = pow(units.t, 2.0/3.0) * pow(G, 1.0/3.0) * pow(units.m, 1.0/3.0);
+	units.m = cfd->Mclus * MSUN;
+	units.l = cfd->Rvir * PARSEC;
+	units.t = pow(units.l * pow(G * units.m, -1.0/3.0), 3.0/2.0);
 	units.E = G * sqr(units.m) / units.l;
-	/* stars' masses are kept in different units */
-	units.mstar = initial_total_mass / SOLAR_MASS_DYN * MSUN;
+	units.mstar = units.m / ((double) clus.N_STAR);
+	
+	/* derivative quantities */
+	MEGA_YEAR = log(GAMMA * clus.N_STAR)/(clus.N_STAR * units.t) * 1.0e6 * YEAR;
+	SOLAR_MASS_DYN = clus.N_STAR / units.m * MSUN;
 
 	/* Masses such as star.m and binary.m1 and binary.m2 are not stored in code units, 
 	   but rather in code units * clus.N_STAR.  This means that whenever you want to

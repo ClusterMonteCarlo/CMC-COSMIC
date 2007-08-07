@@ -86,7 +86,6 @@ _EXTERN_ long total_bisections;
 
 /* an optional switch to turn off black hole accretion but having a non-zero central mass */
 _EXTERN_ long BH_LOSS_CONE;
-_EXTERN_ int CENTRAL_MASS_FROM_FILE;
 _EXTERN_ double BH_R_DISRUPT_NB;
 /* force to use the relaxation step, even if relaxation is turned off */
 _EXTERN_ int FORCE_RLX_STEP;
@@ -104,3 +103,6 @@ _EXTERN_ double APSIDES_PRECISION;
 _EXTERN_ long APSIDES_MAX_ITER;
 _EXTERN_ double APSIDES_CONVERGENCE;
 
+/* FITS stuff */
+_EXTERN_ cmc_fits_data_t cfd;
+_EXTERN_ int OVERRIDE_CENTRAL_MASS;

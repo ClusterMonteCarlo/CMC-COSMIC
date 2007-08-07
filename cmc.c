@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 #endif
 	/* Set up initial conditions, possibly from a previous snapshot */
 	/* ReadSnapshot is supposed to be set here if necessary         */
-	read_fits_file_data(INPUT_FILE);
+	load_fits_file_data();
 
 	if (!ReadSnapshot) {
 		TidalMassLoss = 0.0;

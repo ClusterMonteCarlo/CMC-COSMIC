@@ -6,6 +6,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
 #include <fitsio.h>
+#include "common/fitslib.h"
 #include "common/taus113-v2.h"
 #include "fewbody-0.24/fewbody.h"
 
@@ -145,11 +146,10 @@ struct get_pos_str {
 };
 
 typedef struct{
-	int MMIN;
 	int BINBIN;
 	int BINSINGLE;
+	int OVERRIDE_CENTRAL_MASS;
 	int CENTRAL_MASS;
-        int CENTRAL_MASS_FROM_FILE;
 	int SNAPSHOT_PERIOD;
         int SNAPSHOT_CORE_COLLAPSE;
         int SNAPSHOT_CORE_BOUNCE;
@@ -161,18 +161,13 @@ typedef struct{
 	int MASS_PC;
 	int MASS_BINS;
 	int MAX_INDEX;
-	int MEGA_YEAR;
-	int METALLICITY;
 	int MINIMUM_R;
 	int STOPATCORECOLLAPSE;
-	int N_BINARY;
 	int NUM_CENTRAL_STARS;
 	int PERTURB;
 	int MONITOR_COLL;
 	int RELAXATION;
 	int THETASEMAX;
-	int R_MAX;
-	int SOLAR_MASS_DYN;
 	int STELLAR_EVOLUTION;
 	int SS_COLLISION;
 	int TERMINAL_ENERGY_DISPLACEMENT;
@@ -182,9 +177,6 @@ typedef struct{
 	int T_PRINT_STEP;
 	int WIND_FACTOR;
 	int GAMMA;
-	int BININITKT;
-	int BININITEBMIN;
-	int BININITEBMAX;
         int SEARCH_GRID;
         int SG_STARSPERBIN;
         int SG_MAXLENGTH;
@@ -386,7 +378,6 @@ long create_binary(void);
 void dynamics_apply(double dt, gsl_rng *rng);
 void perturb_stars_fewbody(double dt, gsl_rng *rng);
 void qsorts(star_t *s, long n);
-void fits_sanity_check(void);
 int move_to_hdu(fitsfile *fptr, char *sea_extname);
 void mini_sshot(void);
 void units_set(void);
