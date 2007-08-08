@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
 	quiet = 0;
 	debug = 0;
 	ReadSnapshot = 0; /* this becomes 1 if a snapshot is used for restart */
+	initial_total_mass = 1.0;
 	newstarid = 0;
 
 	/* trap signals */

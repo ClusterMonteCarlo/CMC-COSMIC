@@ -32,7 +32,7 @@ void load_fits_file_data(void)
 		star[i].rad = cfd.obj_Reff[i];
 		star[i].r = cfd.obj_r[i];
 		star[i].vr = cfd.obj_vr[i];
-		star[i].vt = cfd.obj_vr[i];
+		star[i].vt = cfd.obj_vt[i];
 		star[i].binind = cfd.obj_binind[i];
 	}
 
@@ -59,7 +59,4 @@ void load_fits_file_data(void)
 	star[0].r = ZERO; 
 	star[clus.N_STAR + 1].r = SF_INFINITY;
 	Mtotal = 1.0;
-
-	/* some normalization that set_imf() used to take care of */
-	initial_total_mass = 1.0; //+ star[0].m;
 }
