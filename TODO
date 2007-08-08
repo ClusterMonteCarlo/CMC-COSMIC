@@ -2,9 +2,7 @@
 *** things that _have_ to be done, in order of priority ***
 ***********************************************************
 
-* Rewrite CMC internals that depend on input FITS file.
 * Remove snapshot restarting, since it needs to be updated anyway.
-* Make sane defaults for all input file parameters.
 
 *************************************************************
 *** things that would be nice to do, in order of priority ***

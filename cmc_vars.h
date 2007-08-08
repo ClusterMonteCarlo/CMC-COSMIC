@@ -105,4 +105,3 @@ _EXTERN_ double APSIDES_CONVERGENCE;
 
 /* FITS stuff */
 _EXTERN_ cmc_fits_data_t cfd;
-_EXTERN_ int OVERRIDE_CENTRAL_MASS;

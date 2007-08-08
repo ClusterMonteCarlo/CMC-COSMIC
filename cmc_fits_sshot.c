@@ -104,7 +104,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Age of cluster", &status);
 	fits_write_key(fptr, TLONG, "Step", &tcount, 
 			"Iteration Step", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* random number state */
 	get_rng_t113(&rng_st);
 	fits_write_comment(fptr,
@@ -117,7 +117,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"RNG STATE Z3", &status);
 	fits_write_key(fptr, TULONG, "RNG_Z4", &(rng_st.z4), 
 			"RNG STATE Z4", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* Total Energy in various forms */
 	fits_write_comment(fptr,
 		"Total Energy in various forms", &status);
@@ -135,7 +135,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Total Intermediate Energy", &status);
 	fits_write_key(fptr, TDOUBLE, "Ebtotal", &(Etotal.Eb), 
 			"Total binary Energy", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* various N's of cluster */
 	fits_write_comment(fptr,
 		"It is not clear what the following different N's do", &status);
@@ -149,7 +149,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Number of stars in cluster (all)", &status);
 	fits_write_key(fptr, TLONG, "NBINARY", &(clus.N_BINARY), 
 			"Number of binaries in cluster", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* Input file parameters */
 	fits_write_comment(fptr,
 		"Input file parameters", &status);
@@ -167,7 +167,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"SS_COLLISION", &status);
 	fits_write_key(fptr, TLONG, "ECONS", &(E_CONS), 
 			"E_CONS", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* IDUM is unnecessary to save, since RNG state is restored */
 	fits_write_key(fptr, TLONG, "PERTUR", &(PERTURB), 
 			"PERTURB", &status);
@@ -211,7 +211,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"BINSINGLE", &status);
 	fits_write_key(fptr, TINT, "BINBIN", &(BINBIN), 
 			"BINBIN", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* variables related to tidal truncation */
 	fits_write_comment(fptr,
 		"Tidal Truncation parameters", &status);
@@ -235,7 +235,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Cluster to Galaxy Mass Ratio", &status);
 	fits_write_key(fptr, TDOUBLE, "DISGLC", &dist_gal_center, 
 			"Distance to Galactic Center", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* variables related to binaries */
 	fits_write_comment(fptr,
 		"Binary parameters", &status);
@@ -249,7 +249,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"M_b", &status);
 	fits_write_key(fptr, TDOUBLE, "EB", &E_b, 
 			"E_b", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* variables related to core  */
 	fits_write_comment(fptr,
 		"Core parameters", &status);
@@ -263,7 +263,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"v_core", &status);
 	fits_write_key(fptr, TDOUBLE, "CORER", &core_radius, 
 			"core_radius", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* variables related to escaped stars  */
 	fits_write_comment(fptr,
 		"Escaped stars' parameters", &status);
@@ -275,7 +275,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Escaped Stars Int Energy", &status);
 	fits_write_key(fptr, TDOUBLE, "EBESC", &Ebescaped, 
 			"Escaped Binaries Energy", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* Total mass and co.  */
 	fits_write_comment(fptr,
 		"Total mass and co.", &status);
@@ -283,14 +283,14 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"initial_total_mass", &status);
 	fits_write_key(fptr, TDOUBLE, "MTOTAL", &Mtotal, 
 			"Mtotal", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* everything else except arrays */
 	fits_write_comment(fptr,
 		"Everything else", &status);
 	/* integers */
 	fits_write_key(fptr, TINT, "SEFCNT", &se_file_counter, 
 			"se_file_counter", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* long integers */
 	fits_write_key(fptr, TLONG, "TCOUNT", &tcount, 
 			"tcount", &status);
@@ -300,7 +300,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"snap_num", &status);
 	fits_write_key(fptr, TLONG, "STCNT", &StepCount, 
 			"StepCount", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* doubles */
 	fits_write_key(fptr, TDOUBLE, "DECORS", &rho_core_single, 
 			"rho_core_single", &status);
@@ -316,7 +316,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Sin2Beta", &status);
 	fits_write_key(fptr, TDOUBLE, "MADHOC", &madhoc, 
 			"madhoc", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* units */
 	fits_write_key(fptr, TDOUBLE, "UNITT", &(units.t), 
 			"Time unit", &status);
@@ -328,7 +328,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 			"Energy unit", &status);
 	fits_write_key(fptr, TDOUBLE, "UNITSM", &(units.mstar), 
 			"Star mass unit", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* it may be necessary to save and restore central.* variables */
 
 	i = 0;
@@ -410,7 +410,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	}
 	fits_write_col(fptr, TDOUBLE, 1, firstrow, firstelem, nrows,
 			dbl_arr, &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	
 	rng_st_ptr = (char *) rng->state;
 	for(i=0; i<nrows; i++){
@@ -422,7 +422,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	}
 	fits_write_col(fptr, TINT, 2, firstrow, firstelem, nrows,
 			int_arr, &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	
 	for(i=0; i<nrows; i++){
 		dbl_arr[i] = 0.0;
@@ -432,7 +432,7 @@ void write_restart_param(fitsfile *fptr, gsl_rng *rng){
 	}
 	fits_write_col(fptr, TDOUBLE, 3, firstrow, firstelem, nrows,
 			dbl_arr, &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	FREE_TSTUFF
 	free(dbl_arr); free(lng_arr); free(int_arr); free(dvar);
 
@@ -560,7 +560,7 @@ void write_ss_dyn_param(fitsfile *fptr){
 	FREE_TSTUFF
 	free(dbl_arr); free(lng_arr);
 
-	printerror(status);
+	cmc_fits_printerror(status);
 }
 
 void write_ss_se_param(fitsfile *fptr){
@@ -627,7 +627,7 @@ void write_ss_se_param(fitsfile *fptr){
 	FREE_TSTUFF
 	free(dbl_arr); free(int_arr);
 
-	printerror(status);
+	cmc_fits_printerror(status);
 }
 
 void write_basic_info(fitsfile *fptr){
@@ -647,7 +647,7 @@ void write_basic_info(fitsfile *fptr){
 	is_snapshot = 1;
 	fits_write_key(fptr, TINT, "IS_SS", &is_snapshot, 
 			"Is this a snapshot", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 }
 
 void write_bs_dyn_param(fitsfile *fptr){
@@ -725,7 +725,7 @@ void write_bs_dyn_param(fitsfile *fptr){
 			"Number of binaries", &status);
 	fits_write_key(fptr, TLONG, "NBINW", &(N), 
 			"Number of binaries written", &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 
 	/* id1 */
 	for(i=0;i<N;i++){
@@ -733,77 +733,77 @@ void write_bs_dyn_param(fitsfile *fptr){
 	}
 	fits_write_col(fptr, TLONG, 1, firstrow, firstelem, nrows, lng_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* id2 */
 	for(i=0;i<N;i++){
 		lng_arr[i] = binary[i].id2;
 	}
 	fits_write_col(fptr, TLONG, 2, firstrow, firstelem, nrows, lng_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* radius1 */
 	for(i=0;i<N;i++){
 		dbl_arr[i] =  binary[i].rad1;
 	}
 	fits_write_col(fptr, TDOUBLE, 3, firstrow, firstelem, nrows, dbl_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* radius2 */
 	for(i=0;i<N;i++){
 		dbl_arr[i] =  binary[i].rad2;
 	}
 	fits_write_col(fptr, TDOUBLE, 4, firstrow, firstelem, nrows, dbl_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* mass1 */
 	for(i=0;i<N;i++){
 		dbl_arr[i] =  binary[i].m1;
 	}
 	fits_write_col(fptr, TDOUBLE, 5, firstrow, firstelem, nrows, dbl_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* mass2 */
 	for(i=0;i<N;i++){
 		dbl_arr[i] =  binary[i].m2;
 	}
 	fits_write_col(fptr, TDOUBLE, 6, firstrow, firstelem, nrows, dbl_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* Internal energy 1 */
 	for(i=0;i<N;i++){
 		dbl_arr[i] =  binary[i].Eint1;
 	}
 	fits_write_col(fptr, TDOUBLE, 7, firstrow, firstelem, nrows, dbl_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* Internal energy 2 */
 	for(i=0;i<N;i++){
 		dbl_arr[i] =  binary[i].Eint2;
 	}
 	fits_write_col(fptr, TDOUBLE, 8, firstrow, firstelem, nrows, dbl_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* semimajor axis */
 	for(i=0;i<N;i++){
 		dbl_arr[i] =  binary[i].a;
 	}
 	fits_write_col(fptr, TDOUBLE, 9, firstrow, firstelem, nrows, dbl_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* eccentricity */
 	for(i=0;i<N;i++){
 		dbl_arr[i] =  binary[i].e;
 	}
 	fits_write_col(fptr, TDOUBLE, 10, firstrow, firstelem, nrows, dbl_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	/* binary inuse flag */
 	for(i=0;i<N;i++){
 		int_arr[i] =  binary[i].inuse;
 	}
 	fits_write_col(fptr, TINT, 11, firstrow, firstelem, nrows, int_arr,
                    &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 
 
 	FREE_TSTUFF
@@ -845,7 +845,7 @@ void chkpnt_fits(gsl_rng *rng){
 	sprintf(filename[fileno], "!%s_chkpnt%ld.fit", outprefix, tcount);
 	status = 0;
 	fits_create_file(&fptr, filename[fileno], &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 
 	/* 1st Extension, Basic info */
 	write_basic_info(fptr);
@@ -863,7 +863,7 @@ void chkpnt_fits(gsl_rng *rng){
 	}
 
 	fits_close_file(fptr, &status);
-	printerror(status);
+	cmc_fits_printerror(status);
 	fileno++;
 }
 

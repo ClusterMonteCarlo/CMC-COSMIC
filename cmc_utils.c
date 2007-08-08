@@ -962,8 +962,8 @@ void mini_sshot(){
 /* set the units */
 void units_set(void)
 {
-	units.m = cfd->Mclus * MSUN;
-	units.l = cfd->Rvir * PARSEC;
+	units.m = cfd.Mclus * MSUN;
+	units.l = cfd.Rvir * PARSEC;
 	units.t = pow(units.l * pow(G * units.m, -1.0/3.0), 3.0/2.0);
 	units.E = G * sqr(units.m) / units.l;
 	units.mstar = units.m / ((double) clus.N_STAR);

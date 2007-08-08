@@ -16,7 +16,7 @@
 int main(int argc, char *argv[])
 {
 	struct tms tmsbuf, tmsbufref;
-	long i;
+	long i, j;
 	gsl_rng *rng;
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
@@ -69,15 +69,21 @@ int main(int argc, char *argv[])
 		tcount = 1;
 		TotalTime = 0.0;
 		reset_rng_t113(IDUM);
-		
-		/* assign star id's */
-		for(i=1; i<=clus.N_STAR_NEW; i++) {
-			star[i].id = star_get_id_new();
-		}
-		
-		/* assign binaries */
+
+		/* binary remainders */
 		clus.N_MAX = clus.N_STAR;
-		assign_binaries();
+		N_b = clus.N_BINARY;
+		calc_sigma_r();
+		central_calculate();
+		M_b = 0.0;
+		E_b = 0.0;
+		for (i=1; i<=clus.N_STAR; i++) {
+			j = star[i].binind;
+			if (j && binary[j].inuse) {
+				M_b += star[i].m;
+			E_b += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
+			}
+		}
 
 		/* print out binary properties to a file */
 		print_initial_binaries();

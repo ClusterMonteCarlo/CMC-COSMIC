@@ -148,7 +148,6 @@ struct get_pos_str {
 typedef struct{
 	int BINBIN;
 	int BINSINGLE;
-	int OVERRIDE_CENTRAL_MASS;
 	int CENTRAL_MASS;
 	int SNAPSHOT_PERIOD;
         int SNAPSHOT_CORE_COLLAPSE;
@@ -337,11 +336,6 @@ void print_2Dsnapshot(void);
 void get_physical_units(void);
 void update_vars(void);
 
-/******* Binary routines **********/
-void assign_binaries(void);
-void print_initial_binaries(void);
-void assign_binaries_test(void);
-
 void print_version(FILE *stream);
 void print_usage(FILE *stream, char *argv[]);
 void parser(int argc, char *argv[], gsl_rng *r);
@@ -355,14 +349,8 @@ void free_vector(double *v, long nl, long nh);
 void free_ivector(int *v, long nl, long nh);
 
 /* fits stuff */
-void read_fits_file_data(char *fits_file_name);
-void read_fits_file_data_old(fitsfile *fptr);
-void read_fits_file_data_new(fitsfile *fptr);
-void read_fits_file_parameters_new(fitsfile *fptr, gsl_rng *r);
-void read_fits_file_parameters_old(fitsfile *fptr, gsl_rng *r);
-void read_fits_file_parameters(char *fits_file_name, gsl_rng *r);
+void load_fits_file_data(void);
 void chkpnt_fits(gsl_rng *r);
-void printerror(int status);
 
 /* stellar evolution stuff */
 void stellar_evolution_init(void);
@@ -396,6 +384,8 @@ void zero_star(long j);
 void zero_binary(long j);
 
 void sscollision_do(long k, long kp, double rcm, double vcm[4]);
+
+void print_initial_binaries(void);
 
 void bs_calcunits(fb_obj_t *obj[2], fb_units_t *bs_units);
 fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hier_t *hier, gsl_rng *rng);
