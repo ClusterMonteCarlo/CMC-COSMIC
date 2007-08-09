@@ -237,9 +237,9 @@ int main(int argc, char *argv[])
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
 		 */
-		if(SNAPSHOT_PERIOD && (tcount%SNAPSHOT_PERIOD==0)) {
+		if(tcount%SNAPSHOT_DELTACOUNT==0) {
 			print_2Dsnapshot();
-		}
+		}		
 	} /* End FOR (time step iteration loop) */
 
 	times(&tmsbuf);

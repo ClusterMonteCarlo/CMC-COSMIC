@@ -20,8 +20,8 @@ endif
 ##############################################################################
 ### set versioning
 ##############################################################################
-VERSION = $(shell grep revision .svn/entries | cut -d \" -f 2)
-DATE = $(shell date | sed -e 's|[[:space:]]|_|g')
+#VERSION = $(shell grep revision .svn/entries | cut -d \" -f 2)
+#DATE = $(shell date | sed -e 's|[[:space:]]|_|g')
 
 ##############################################################################
 ### set debugging symbols if we are in DEBUGGING mode
@@ -40,20 +40,20 @@ endif
 UNAME = $(shell uname)
 
 ifeq ($(UNAME),Linux)
-CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
+CFLAGS = -Wall -O3 $(DEBUG_FLAGS)
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
 CC = g++
-#CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+#CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib 
+CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm
 else
 ifeq ($(UNAME),AIX)
-CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty -lm
 else
-CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS = -Wall -O3
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
 endif
 endif
@@ -89,7 +89,7 @@ endif
 
 ifeq ($(HOSTNAME),fugu.phys.northwestern.edu)
 #CC = pathcc
-#CFLAGS := -Wall -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" -Ofast -OPT:fast_math=on -LNO:fu=9:full_unroll_size=7000 -static-data -I/usr/include/cfitsio
+#CFLAGS := -Wall -Ofast -OPT:fast_math=on -LNO:fu=9:full_unroll_size=7000 -static-data -I/usr/include/cfitsio
 #CFLAGS := $(CFLAGS) -march=opteron -I/usr/include/cfitsio
 #CC = gcc
 #CFLAGS := $(CFLAGS) -march=k8 -I/usr/include/cfitsio
@@ -100,7 +100,7 @@ endif
 DOMNAME = $(shell hostname | cut -d . -f 2-)
 ifeq ($(DOMNAME),ncsa.uiuc.edu)
 CC = icc
-CFLAGS := -wd864,1188 -I $(HOME)/libs_et_al/include -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS := -wd864,1188 -I $(HOME)/libs_et_al/include
 # redefine libflags, leave out -lm to link with intel math library
 # turn of diagn. 864: extern inline function ... was referenced but not defined
 #           and 1188: floating-point value cannot be represented exactly

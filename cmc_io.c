@@ -43,45 +43,50 @@ void print_2Dsnapshot(void)
 {
 	long i, j;
 	char outfile[100];
-
-	/* open file for 2D snapshot */
-	sprintf(outfile, "%s.snap%04ld.dat.gz", outprefix, snap_num);
-	if ((snapfile = (FILE *) gzopen(outfile, "wb")) == NULL) {
-		eprintf("cannot create 2D snapshot file %s\n", outfile);
-		exit_cleanly(1);
-	}
-
-	/* print useful header */
-	gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
-	gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]\n");
-
-	/* then print data */
-	for (i=1; i<=clus.N_MAX; i++) {
-		gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
-			 star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, star[i].r, star[i].vr, star[i].vt, star[i].E, star[i].J);
-		if (star[i].binind) {
-			j = star[i].binind;
-			gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
-				 binary[j].m1 * (units.m / clus.N_STAR) / MSUN, binary[j].m2 * (units.m / clus.N_STAR) / MSUN, 
-				 binary[j].id1, binary[j].id2,
-				 binary[j].a * units.l / AU,
-				 binary[j].e);
-		} else {
-			gzprintf(snapfile, "0 0 0 0 0 0 0 ");	
+	
+	if (SNAPSHOTTING) {
+		/* open file for 2D snapshot */
+		sprintf(outfile, "%s.snap%04ld.dat.gz", outprefix, snap_num);
+		if ((snapfile = (FILE *) gzopen(outfile, "wb")) == NULL) {
+			eprintf("cannot create 2D snapshot file %s\n", outfile);
+			exit_cleanly(1);
 		}
 		
-		if (star[i].binind == 0) {
-			gzprintf(snapfile, "%d %.8g %.8g ", star[i].k, star[i].lum, star[i].rad * units.l / RSUN);
-		} else {
-			gzprintf(snapfile, "0 0 0 ");
+		/* print useful header */
+		gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
+		gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]\n");
+		
+		/* then print data */
+		for (i=1; i<=clus.N_MAX; i++) {
+			gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
+				 star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, 
+				 star[i].r, star[i].vr, star[i].vt, 
+				 star[i].E, star[i].J);
+			if (star[i].binind) {
+				j = star[i].binind;
+				gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+					 binary[j].m1 * (units.m / clus.N_STAR) / MSUN, 
+					 binary[j].m2 * (units.m / clus.N_STAR) / MSUN, 
+					 binary[j].id1, binary[j].id2,
+					 binary[j].a * units.l / AU, binary[j].e);
+			} else {
+				gzprintf(snapfile, "0 0 0 0 0 0 0 ");	
+			}
+			
+			if (star[i].binind == 0) {
+				gzprintf(snapfile, "%d %.8g %.8g ", 
+					 star[i].k, star[i].lum, star[i].rad * units.l / RSUN);
+			} else {
+				gzprintf(snapfile, "0 0 0 ");
+			}
+			gzprintf(snapfile, "\n");
 		}
-		gzprintf(snapfile, "\n");
+		
+		gzclose(snapfile);
+		
+		/* global counter for snapshot output file */
+		snap_num++;
 	}
-
-	gzclose(snapfile);
-
-	/* global counter for snapshot output file */
-	snap_num++;
 }
 
 void PrintLogOutput(void)
@@ -344,11 +349,9 @@ void PrintFileOutput(void) {
 	}
 
 	/* also saves INITIAL snapshot (StepCount=0) */
-	if (TotalTime >= T_PRINT_STEP * StepCount) {
+	if (TotalTime >= SNAPSHOT_DELTAT * StepCount) {
 		StepCount++;
-		if (SNAPSHOT_PERIOD) {
-			print_2Dsnapshot();
-		}
+		print_2Dsnapshot();
 	}
 }
 
@@ -467,10 +470,16 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(values, "%lf", &cenma.m);
 				cenma.E = 0.0;
 				parsed.CENTRAL_MASS = 1;
-			} else if (strcmp(parameter_name, "SNAPSHOT_PERIOD") == 0) {
-				sscanf(values, "%ld", &SNAPSHOT_PERIOD);
-				parsed.SNAPSHOT_PERIOD = 1;
-                        } else if (strcmp(parameter_name, "SNAPSHOT_CORE_BOUNCE") == 0) {
+			} else if (strcmp(parameter_name, "SNAPSHOTTING") == 0) {
+				sscanf(values, "%d", &SNAPSHOTTING);
+				parsed.SNAPSHOTTING = 1;
+                        } else if (strcmp(parameter_name, "SNAPSHOT_DELTACOUNT") == 0) {
+				sscanf(values, "%ld", &SNAPSHOT_DELTACOUNT);
+				parsed.SNAPSHOT_DELTACOUNT = 1;
+                        } else if (strcmp(parameter_name, "SNAPSHOT_DELTAT") == 0) {
+				sscanf(values, "%lf", &SNAPSHOT_DELTAT);
+				parsed.SNAPSHOT_DELTAT = 1;
+			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_BOUNCE") == 0) {
 				sscanf(values, "%d", &SNAPSHOT_CORE_BOUNCE);
 				parsed.SNAPSHOT_CORE_BOUNCE = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_COLLAPSE") == 0) {
@@ -532,9 +541,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "MAX_WCLOCK_TIME") == 0) {
 				sscanf(values, "%ld", &MAX_WCLOCK_TIME);
 				parsed.MAX_WCLOCK_TIME = 1;
-			} else if (strcmp(parameter_name, "T_PRINT_STEP") == 0) {
-				sscanf(values, "%lf", &T_PRINT_STEP);
-				parsed.T_PRINT_STEP = 1;
 			} else if (strcmp(parameter_name, "WIND_FACTOR") == 0) {
 				sscanf(values, "%lf", &WIND_FACTOR);
 				parsed.WIND_FACTOR = 1;
@@ -620,7 +626,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(T_MAX, 20.0);
 	CHECK_PARSED(T_MAX_COUNT, 1000000);
 	CHECK_PARSED(MAX_WCLOCK_TIME, 2592000);
-	CHECK_PARSED(T_PRINT_STEP, 0.0);
+	CHECK_PARSED(SNAPSHOTTING, 0);
+	CHECK_PARSED(SNAPSHOT_DELTACOUNT, 1000);
+	CHECK_PARSED(SNAPSHOT_DELTAT, 0.5);
+	CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 1);
+        CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 1);
 	CHECK_PARSED(PERTURB, 1);
 	CHECK_PARSED(RELAXATION, 1);
 	CHECK_PARSED(MINIMUM_R, 0.0);
@@ -643,10 +653,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(STOPATCORECOLLAPSE, 1);
 	CHECK_PARSED(BH_LOSS_CONE, 1);
         CHECK_PARSED(BH_R_DISRUPT_NB, 0.);
-        CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 1);
-        CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 1);
-        CHECK_PARSED(FORCE_RLX_STEP, 0);
-	CHECK_PARSED(SNAPSHOT_PERIOD, 0);
+	CHECK_PARSED(FORCE_RLX_STEP, 0);
 	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT, 0.5);
 #ifdef DEBUGGING
         CHECK_PARSED(BH_LC_FDT, 0.0);

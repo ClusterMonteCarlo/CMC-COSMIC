@@ -10,8 +10,8 @@
 #include "common/taus113-v2.h"
 #include "fewbody-0.24/fewbody.h"
 
-/* #define CMCVERSION "$Revision$" */
-/* #define CMCDATE "$Date$" */
+#define CMCVERSION "$Revision$"
+#define CMCDATE "$Date$"
 #define CMCNICK "SVN"
 #define CMCPRETTYNAME "ClusterMonteCarlo"
 
@@ -149,7 +149,9 @@ typedef struct{
 	int BINBIN;
 	int BINSINGLE;
 	int CENTRAL_MASS;
-	int SNAPSHOT_PERIOD;
+	int SNAPSHOTTING;
+	int SNAPSHOT_DELTAT;
+	int SNAPSHOT_DELTACOUNT;
         int SNAPSHOT_CORE_COLLAPSE;
         int SNAPSHOT_CORE_BOUNCE;
 	int E_CONS;
@@ -169,7 +171,6 @@ typedef struct{
 	int T_MAX;
 	int T_MAX_COUNT;
 	int MAX_WCLOCK_TIME;
-	int T_PRINT_STEP;
 	int WIND_FACTOR;
 	int GAMMA;
         int SEARCH_GRID;

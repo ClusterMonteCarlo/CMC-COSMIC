@@ -379,22 +379,19 @@ long CheckStop(struct tms tmsbufref) {
 	tspent /= 60;
 
 	if (tspent >= MAX_WCLOCK_TIME) {
-		if (SNAPSHOT_PERIOD)
-			print_2Dsnapshot();
+		print_2Dsnapshot();
 		diaprintf("MAX_WCLOCK_TIME exceeded ... Terminating.\n");
 		return (1);
 	}
 	
 	if (tcount >= T_MAX_COUNT) {
-		if (SNAPSHOT_PERIOD)
-			print_2Dsnapshot();
+		print_2Dsnapshot();
 		diaprintf("No. of timesteps > T_MAX_COUNT ... Terminating.\n");
 		return (1);
 	}
 
 	if (TotalTime >= T_MAX) {
-		if (SNAPSHOT_PERIOD)
-			print_2Dsnapshot();
+		print_2Dsnapshot();
 		diaprintf("TotalTime > T_MAX ... Terminating.\n");
 		return (1);
 	}
@@ -402,16 +399,14 @@ long CheckStop(struct tms tmsbufref) {
 	/* Stop if cluster is disrupted -- N_MAX is too small */
 	/* if (clus.N_MAX < (0.02 * clus.N_STAR)) { */
 	if (clus.N_MAX < (0.005 * clus.N_STAR)) {
-		if (SNAPSHOT_PERIOD)
-			print_2Dsnapshot();
+		print_2Dsnapshot();
 		diaprintf("N_MAX < 0.005 * N_STAR ... Terminating.\n");
 		return (1);
 	}
 
 	/* Stop if Etotal > 0 */
 	if (Etotal.K + Etotal.P > 0.0) {
-		if (SNAPSHOT_PERIOD)
-			print_2Dsnapshot();
+		print_2Dsnapshot();
 		diaprintf("Etotal > 0 ... Terminating.\n");
 		return (1);
 	}
@@ -423,9 +418,7 @@ long CheckStop(struct tms tmsbufref) {
 	   binary formation. */
 	if (STOPATCORECOLLAPSE) {
 		if (N_core <= 100.0) {
-			if (SNAPSHOT_PERIOD) {
-				print_2Dsnapshot();
-			}
+			print_2Dsnapshot();
 			diaprintf("N_core < 100.0; terminating.\n");
 			return (1);
 		}
@@ -433,8 +426,7 @@ long CheckStop(struct tms tmsbufref) {
 
 	/* Output some snapshots near core collapse 
 	 * (if core density is high enough) */
-	if (SNAPSHOT_PERIOD) {
-          if (SNAPSHOT_CORE_COLLAPSE) { 
+	if (SNAPSHOT_CORE_COLLAPSE) { 
 		if (rho_core > 50.0 && Echeck == 0) {
 			print_2Dsnapshot();
 			Echeck++;
@@ -466,15 +458,15 @@ long CheckStop(struct tms tmsbufref) {
 			print_2Dsnapshot();
 			Echeck++;
 		}
-          }
+	}
 
-		/* added by ato 
-		 * to try to take snapshots for core bounce as well. 
-		 * idea is if we reduced core density by 10 percent the
-		 * last time we took snapshot, take another one and adjust
-		 * parameters to take further snapshots if further collapse
-		 * occurs */
-          if (SNAPSHOT_CORE_BOUNCE) {
+	/* added by ato 
+	 * to try to take snapshots for core bounce as well. 
+	 * idea is if we reduced core density by 10 percent the
+	 * last time we took snapshot, take another one and adjust
+	 * parameters to take further snapshots if further collapse
+	 * occurs */
+	if (SNAPSHOT_CORE_BOUNCE) {
 		if (rho_core < 0.9e6 && Echeck == 10){
 			print_2Dsnapshot();
 			Echeck--;
@@ -506,13 +498,11 @@ long CheckStop(struct tms tmsbufref) {
 			print_2Dsnapshot();
 			Echeck--;
 		} 
-          }
 	}
 
 	/* If total Energy has diminished by TERMINAL_ENERGY_DISPLACEMENT, then stop */
 	if (Etotal.tot < Etotal.ini - TERMINAL_ENERGY_DISPLACEMENT) {
-		if (SNAPSHOT_PERIOD)
-			print_2Dsnapshot();
+		print_2Dsnapshot();
 		diaprintf("Terminal Energy reached... Terminating.\n");
 		return (1);
 	}
