@@ -18,6 +18,12 @@ CC := ccache $(CC)
 endif
 
 ##############################################################################
+### set versioning
+##############################################################################
+VERSION = $(shell grep revision .svn/entries | cut -d \" -f 2)
+DATE = $(shell date | sed -e 's|[[:space:]]|_|g')
+
+##############################################################################
 ### set debugging symbols if we are in DEBUGGING mode
 ##############################################################################
 ifdef DEBUGGING
@@ -34,20 +40,20 @@ endif
 UNAME = $(shell uname)
 
 ifeq ($(UNAME),Linux)
-CFLAGS = -Wall -O3 $(DEBUG_FLAGS)
+CFLAGS = -Wall -O3 $(DEBUG_FLAGS) -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
 CC = g++
-#CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib 
-CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib
+#CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm
 else
 ifeq ($(UNAME),AIX)
-CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib
+CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty -lm
 else
-CFLAGS = -Wall -O3
+CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
 endif
 endif

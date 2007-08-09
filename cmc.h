@@ -10,8 +10,9 @@
 #include "common/taus113-v2.h"
 #include "fewbody-0.24/fewbody.h"
 
-#define CMCVERSION "$Revision$"
-#define CMCDATE "$Date$"
+// This automatic SVN versioning only updates the version of this file.
+//#define CMCVERSION "$Revision$"
+//#define CMCDATE "$Date$"
 #define CMCNICK "SVN"
 #define CMCPRETTYNAME "ClusterMonteCarlo"
 
