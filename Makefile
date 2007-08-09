@@ -44,7 +44,7 @@ $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 	$(CC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
 
 %.o: %.c cmc.h cmc_vars.h Makefile
-	$(CC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # fake dependency to tell make that these targets do not produce files
 .PHONY: install clean mrproper
