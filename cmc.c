@@ -36,6 +36,9 @@ int main(int argc, char *argv[])
 	/* parse input */
 	parser(argc, argv, rng);
 
+	/* print version information to log file */
+	print_version(logfile);
+
         /* initialize the Search_Grid r_grid */
         if (SEARCH_GRID) {
           r_grid= search_grid_initialize(SG_POWER_LAW_EXPONENT, \
