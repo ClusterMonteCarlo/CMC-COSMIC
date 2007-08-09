@@ -485,9 +485,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_COLLAPSE") == 0) {
 				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
 				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
-			} else if (strcmp(parameter_name, "E_CONS") == 0) {
-				sscanf(values, "%ld", &E_CONS);
-				parsed.E_CONS = 1;
 			} else if (strcmp(parameter_name, "IDUM") == 0) {
 				sscanf(values, "%ld", &IDUM);
 				parsed.IDUM = 1;
@@ -636,7 +633,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(MINIMUM_R, 0.0);
 	CHECK_PARSED(BINBIN, 1);
 	CHECK_PARSED(BINSINGLE, 1);
-	CHECK_PARSED(E_CONS, 3);
 	CHECK_PARSED(NUM_CENTRAL_STARS, 300);
 	CHECK_PARSED(IDUM, 0);
 	CHECK_PARSED(THETASEMAX, 1.0);

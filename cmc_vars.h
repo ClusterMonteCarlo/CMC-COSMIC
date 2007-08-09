@@ -22,7 +22,7 @@ _EXTERN_ double Eescaped, Jescaped, Eintescaped, Ebescaped;
 _EXTERN_ double initial_total_mass, Mtotal;
 /******************* Input file parameters *************************/
 _EXTERN_ long N_STAR_DIM, N_BIN_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, SS_COLLISION, NO_MASS_BINS;
-_EXTERN_ long SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME, E_CONS;
+_EXTERN_ long SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME;
 _EXTERN_ int SNAPSHOTTING, SNAPSHOT_CORE_COLLAPSE, SNAPSHOT_CORE_BOUNCE;
 _EXTERN_ long IDUM, PERTURB, RELAXATION;
 _EXTERN_ long NUM_CENTRAL_STARS;

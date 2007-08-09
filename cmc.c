@@ -165,33 +165,29 @@ int main(int argc, char *argv[])
 
 		/* some numbers necessary to implement Stodolkiewicz's
 	 	 * energy conservation scheme */
-		if(E_CONS==2 || E_CONS==3){
-			for (i = 1; i <= clus.N_MAX_NEW; i++) {
-				/* saving velocities */
-				star[i].vtold = star[i].vt;
-				star[i].vrold = star[i].vr;
-				
-				/* the following will get updated after sorting and
-				 * calling potential_calculate(), needs to be saved 
-				 * now */  
-				star[i].Uoldrold = star[i].phi + PHI_S(star[i].r, i);
-				
-				/* Unewrold will be calculated after 
-				 * potential_calculate() using [].rOld
-				 * Unewrnew is [].phi after potential_calculate() */
-			}
+		for (i = 1; i <= clus.N_MAX_NEW; i++) {
+			/* saving velocities */
+			star[i].vtold = star[i].vt;
+			star[i].vrold = star[i].vr;
+			
+			/* the following will get updated after sorting and
+			 * calling potential_calculate(), needs to be saved 
+			 * now */  
+			star[i].Uoldrold = star[i].phi + PHI_S(star[i].r, i);
+			
+			/* Unewrold will be calculated after 
+			 * potential_calculate() using [].rOld
+			 * Unewrnew is [].phi after potential_calculate() */
 		}
-
+		
 		tidally_strip_stars();
 
 		/* more numbers necessary to implement Stodolkiewicz's
 	 	 * energy conservation scheme */
-		if(E_CONS==2 || E_CONS==3){
-			for (i = 1; i <= clus.N_MAX_NEW; i++) {
-				/* the following cannot be calculated after sorting 
-				 * and calling potential_calculate() */
-				star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);
-			}
+		for (i = 1; i <= clus.N_MAX_NEW; i++) {
+			/* the following cannot be calculated after sorting 
+			 * and calling potential_calculate() */
+			star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);
 		}
 
 		/* Compute Intermediate Energies of stars. 
@@ -209,11 +205,7 @@ int main(int argc, char *argv[])
                 if (SEARCH_GRID)
                   search_grid_update(r_grid);
 
-		if(E_CONS==2){
-			set_velocities();
-		} else if (E_CONS == 3) {
-			set_velocities3();
-		}
+		set_velocities3();
 
 		comp_mass_percent();
 		comp_multi_mass_percent();

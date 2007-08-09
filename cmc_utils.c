@@ -118,74 +118,6 @@ void sf_gsl_errhandler(const char *reason, const char *file, int line, int gsl_e
 	exit_cleanly(gsl_errno);
 }
 
-void set_velocities(void){
-	/* set velocities a la Stodolkiewicz to be able to conserve energy */
-	double vold2, vnew2, Unewrold, Unewrnew;
-	double vt, vr;
-	double Eexcess, exc_ratio;
-	long i, k;
-	
-	k = 0;
-	Eexcess = 0.0;
-	for (i = 1; i <= clus.N_MAX; i++) {
-		/* modify velocities of stars that have only undergone relaxation */
-		if (star[i].interacted == 0) {
-			Unewrold = potential(star[i].rOld) + PHI_S(star[i].rOld, i);
-			Unewrnew = star[i].phi + PHI_S(star[i].r, i);
-			vold2 = star[i].vtold*star[i].vtold + 
-				star[i].vrold*star[i].vrold;
-			vnew2 = vold2 + star[i].Uoldrold + Unewrold
-				- star[i].Uoldrnew - Unewrnew;
-			vt = star[i].vtold * star[i].rOld / star[i].rnew;
-			if( vnew2 < vt*vt ) {
-//			wprintf("*** OOOPSSS, trouble...\n");
-				k++;
-				vr = 0.0;
-//			wprintf("% 7ld %11.4e %11.4e %11.4e\n" , 
-//					i, star[i].vtold, star[i].vrold, vold2);
-//			wprintf("        %11.4e %11.4e\n", 
-//					star[i].Uoldrold, Unewrold);
-//			wprintf("        %11.4e %11.4e %11.4e\n", 
-//					star[i].Uoldrnew, Unewrnew, vnew2);
-				/* by setting vr to 0, we add this much energy 
-				   to the system */
-				Eexcess += 0.5*(vt*vt-vnew2)*star[i].m;
-			} else {
-				/* choose randomized sign for vr, based on how vr was already
-				   randomized in get_positions() -- don't want to waste random
-				   numbers! */
-				if (star[i].vr >= 0.0) {
-					vr = sqrt(vnew2-vt*vt);
-				} else {
-					vr = -sqrt(vnew2-vt*vt);
-				}
-				/* if there is excess energy added, try to remove at 
-				   least part of it from this star */
-				if(Eexcess > 0){
-					if(Eexcess < 0.5*(vt*vt+vr*vr)*star[i].m){
-						exc_ratio = 
-							sqrt((vt*vt+vr*vr-2*Eexcess/star[i].m)/
-							     (vt*vt+vr*vr));
-						vt *= exc_ratio;
-						vr *= exc_ratio;
-						Eexcess = 0.0;
-					}
-				}
-			}
-			star[i].vt = vt;
-			star[i].vr = vr;
-		}
-	}
-		
-	/* keep track of the energy that's vanishing due to our negligence */
-	Eoops += -Eexcess * madhoc;
-
-//	if(k>0){
-//		wprintf("** DAMN ! %ld out of %ld cases of TROUBLE!! **\n",
-//				k, clus.N_MAX);
-//	}
-}
-
 void set_velocities3(void){
 	/* set velocities a la Stodolkiewicz to be able to conserve energy */
 	double vold2, vnew2, Unewrold, Unewrnew;
@@ -234,8 +166,7 @@ void set_velocities3(void){
 }
 
 void RecomputeEnergy(void) {
-	double dtemp;
-	long i, neligible=0, ntrustvr=0, nstodol=0, nsplit=0, ntransfer=0;
+	long i;
 
 	/* Recalculating Energies */
 	Etotal.tot = 0.0;
@@ -243,80 +174,6 @@ void RecomputeEnergy(void) {
 	Etotal.P = 0.0;
 	Etotal.Eint = 0.0;
 	Etotal.Eb = 0.0;
-	
-	/* Kris Joshi: Try to conserve energy by using intermediate potential */
-	/* John Fregeau: This is an obfuscated and incorrect way of applying 
-	   the scheme of Stodolkiewicz (1982) to better conserve energy.  See eq. (33) 
-	   of that paper.  Here are the important variables:
-	   
-	   r_old, vr_old, vt_old = values taken after dynamics_apply() but before get_positions()
-	   r, vr, vt = values taken after get_positions(), these are "predicted" values based 
-	               on old potential
-	   r_new=r, vr_new, vt_new = values calculated based on improved energy conservation scheme
-	                             of Stodolkiewicz (1982)
-	   Phi_old = the potential before it is updated
-	   Phi = the "predicted" potential after it is updated
-	   EI = v_old^2 + Phi_old(r_old) - Phi_old(r)
-	   dtemp = v_old^2 + Phi_old(r_old) - Phi_old(r) - Phi(r) + Phi(r_old) = v_new^2
-	*/
-	
-	if (E_CONS==1) {
-		for (i=1; i<=clus.N_MAX; i++) {
-			/* Kris Joshi: Note: svt[] = J/r_new is already computed in get_positions() */
-			/* John Fregeau: In other words, vt_new = vt_old * r_old / r_new, as specified 
-			   in eq. (34) of Stodolkiewicz (1982) (as long as J == vt_old * r_old, which I'm
-			   not exactly sure of). */
-			/* Kris Joshi: ignore stars near pericenter, and those with strong interactions */
-			if (star[i].X > 0.05 && star[i].interacted == 0) {
-				/* count up number of stars on which we could have applied the energy correction technique */
-				neligible++;
-				/* John Fregeau: dtemp = v_new^2; see eq. (33) of Stodolkiewicz (1982) */
-				dtemp = star[i].EI - star[i].phi + potential(star[i].rOld);
-
-				if (dtemp > sqr(star[i].vr)) {
-					ntrustvr++;
-					/* Kris Joshi: preserve star[i].vr and change star[i].vt */
-					/* John Fregeau: I guess for some reason one assumes that if v_new^2 > vr_predicted^2,
-					   then we should trust vr.  I don't see why this should be true. */
-					star[i].vt = sqrt(dtemp - star[i].vr * star[i].vr);
-				} else {
-					if (dtemp > 0) {
-						if (dtemp > star[i].vt * star[i].vt) {
-							nstodol++;
-							/* John Fregeau: this is the standard Stodolkiewicz scheme */
-							/* choose randomized sign for vr, based on how vr was already
-							   randomized in get_positions() -- don't want to waste random
-							   numbers! */
-							if (star[i].vr >= 0.0) {
-								star[i].vr = sqrt(dtemp - sqr(star[i].vt));
-							} else {
-								star[i].vr = -sqrt(dtemp - sqr(star[i].vt));
-							}
-						} else {
-							nsplit++;
-							/* John Fregeau: just arbitrarily split the kinetic energy equally
-							   into radial and tangential?!? */
-							star[i].vt = sqrt(dtemp / 2.0);
-							star[i].vr = sqrt(dtemp / 2.0);
-						}
-					} else {
-						/* Kris Joshi: reduce the energy of the next star to compensate */ 
-						/* John Fregeau: ad hoc energy transfer from star to star to conserve
-						   energy. */
-						if (i < clus.N_MAX) {
-							ntransfer++;
-							star[i + 1].EI += dtemp - (sqr(star[i].vt) + sqr(star[i].vr));
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/* report statistics on Stodolkiewicz scheme */
-	/* dprintf("Stodolkiewicz energy scheme: neligible=%ld of %ld ntrustvr=%.3g%% nstodol=%.3g%% nsplit=%.3g%% ntransfer=%.3g%%\n",
-		neligible, clus.N_MAX, 100.0*((double) ntrustvr)/((double) neligible), 100.0*((double) nstodol)/((double) neligible), 
-		100.0*((double) nsplit)/((double) neligible), 100.0*((double) ntransfer)/((double) neligible)); */
 
 	/* calculate energies */
 	for (i=1; i<=clus.N_MAX; i++) {
@@ -563,20 +420,6 @@ void ComputeEnergy(void)
 long potential_calculate(void) {
 	long k;
 	double mprev;
-	static int firstcall=1;
-	static double M, KE, a;
-
-	/* calculate Plummer parameters on first function call */
-	if (firstcall) {
-		firstcall = 0;
-		M = 0.0;
-		KE = 0.0;
-		for (k=1; k<=clus.N_STAR; k++) {
-			M += star[k].m/clus.N_STAR;
-			KE += 0.5 * star[k].m/clus.N_STAR * (sqr(star[k].vr)+sqr(star[k].vt));
-		}
-		a = (3.0*PI/64.0) * sqr(M) / KE;
-	}
 
 	/* count up all the mass and set N_MAX */
 	k = 1;
@@ -612,8 +455,6 @@ long potential_calculate(void) {
 	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute potential at each r */
 		star[k].phi = star[k + 1].phi - mprev * (1.0 / star[k].r - 1.0 / star[k + 1].r);
 		mprev -= star[k].m / clus.N_STAR;
-		/* explicitly do Plummer potential */
-		/* star[k].phi = -(M/a) / sqrt(1.0 + sqr(star[k].r/a)); */
 	}
 
 	/*for (k = 1; k <= clus.N_MAX; k++){
@@ -919,28 +760,6 @@ void update_vars(void)
 			}
 		}
 	}
-}
-
-void mini_sshot(){
-	FILE *mss;
-	char *mss_fname;
-	int fname_len;
-	int i;
-
-	fname_len = strlen(outprefix);
-	fname_len += strlen("miniss.");
-	fname_len += 10;
-	mss_fname = (char *) malloc(fname_len*sizeof(char));
-	sprintf(mss_fname,"%s_miniss.%05ld", outprefix, tcount);
-	mss = fopen(mss_fname, "w+");
-	for(i=0; i<1000; i++){
-		fprintf(mss, "%8ld %.16e %.16e %.16e %.16e ", 
-				star[i].id, star[i].m, star[i].r_peri, 
-				star[i].r, star[i].r_apo);
-		fprintf(mss, "%.16e %.16e %.16e %.16e\n", 
-				star[i].vr, star[i].vt, star[i].E, star[i].phi);
-	}
-	fclose(mss);
 }
 
 /* set the units */
