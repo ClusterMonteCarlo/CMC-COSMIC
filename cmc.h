@@ -152,19 +152,15 @@ typedef struct{
 	int SNAPSHOT_PERIOD;
         int SNAPSHOT_CORE_COLLAPSE;
         int SNAPSHOT_CORE_BOUNCE;
-	int CHECKPOINT_PERIOD;
 	int E_CONS;
 	int IDUM;
-	int INDEX_UNIT;
 	int INPUT_FILE;
 	int MASS_PC;
 	int MASS_BINS;
-	int MAX_INDEX;
 	int MINIMUM_R;
 	int STOPATCORECOLLAPSE;
 	int NUM_CENTRAL_STARS;
 	int PERTURB;
-	int MONITOR_COLL;
 	int RELAXATION;
 	int THETASEMAX;
 	int STELLAR_EVOLUTION;
@@ -350,7 +346,6 @@ void free_ivector(int *v, long nl, long nh);
 
 /* fits stuff */
 void load_fits_file_data(void);
-void chkpnt_fits(gsl_rng *r);
 
 /* stellar evolution stuff */
 void stellar_evolution_init(void);
@@ -366,7 +361,6 @@ long create_binary(void);
 void dynamics_apply(double dt, gsl_rng *rng);
 void perturb_stars_fewbody(double dt, gsl_rng *rng);
 void qsorts(star_t *s, long n);
-int move_to_hdu(fitsfile *fptr, char *sea_extname);
 void mini_sshot(void);
 void units_set(void);
 void central_calculate(void);

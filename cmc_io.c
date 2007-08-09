@@ -467,9 +467,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(values, "%lf", &cenma.m);
 				cenma.E = 0.0;
 				parsed.CENTRAL_MASS = 1;
-			} else if (strcmp(parameter_name, "CHECKPOINT_PERIOD") == 0) {
-				sscanf(values, "%ld", &CHECKPOINT_PERIOD);
-				parsed.CHECKPOINT_PERIOD = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_PERIOD") == 0) {
 				sscanf(values, "%ld", &SNAPSHOT_PERIOD);
 				parsed.SNAPSHOT_PERIOD = 1;
@@ -649,7 +646,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 1);
         CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 1);
         CHECK_PARSED(FORCE_RLX_STEP, 0);
-	CHECK_PARSED(CHECKPOINT_PERIOD, 60);
 	CHECK_PARSED(SNAPSHOT_PERIOD, 0);
 	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT, 0.5);
 #ifdef DEBUGGING
@@ -672,56 +668,54 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	R_MAX = cfd.Rtid;
 	METALLICITY = cfd.Z;
 
-	if(!ReadSnapshot){
-		clus.N_STAR_NEW = clus.N_STAR;
-		/* add 2 * clus.N_BINARY for binary disruptions */
-		N_STAR_DIM = 2 + clus.N_STAR + 2 * clus.N_BINARY;
-		N_BIN_DIM = 2 + clus.N_BINARY;
-
-		/* safety factors, so we don't have to worry about memory management/garbage collection */
-		N_STAR_DIM = (long) floor(1.5 * ((double) N_STAR_DIM));
-		N_BIN_DIM = (long) floor(1.5 * ((double) N_BIN_DIM));
-
-		/*********************************************/
-		/* allocation of memory for global variables */
-		/*********************************************/
-
-		/* the main star array containing all star parameters */
-		star = (star_t *) calloc(N_STAR_DIM, sizeof(star_t));
-		
-		/* allocate memory for velocity dispersion array */
-		sigma_array.n = 0;
-		sigma_array.r = (double *) calloc(N_STAR_DIM, sizeof(double));
-		sigma_array.sigma = (double *) calloc(N_STAR_DIM, sizeof(double));
-
-		/* the main binary array containing all binary parameters */
-		binary = (binary_t *) calloc(N_BIN_DIM, sizeof(binary_t));
-		
-		/* quantities calculated for various lagrange radii */
-		mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
-		ave_mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
-		no_star_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
-		densities_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
-		ke_rad_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
-		ke_tan_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
-		v2_rad_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
-		v2_tan_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
-		mass_pc = (double *) calloc(MASS_PC_COUNT, sizeof(double));
-		mass_bins = (double *) calloc(NO_MASS_BINS, sizeof(double));
-		multi_mass_r = (double **) malloc(NO_MASS_BINS * sizeof(double *));
-		for(i=0; i<NO_MASS_BINS; i++){
-			multi_mass_r[i] = (double *) malloc(MASS_PC_COUNT * sizeof(double));
-		}
-
-		/*======= Reading values for the Lagrange radii =======*/
-		curr_mass = (char *) strtok(MASS_PC, ",; ");
-		sscanf(curr_mass, "%lf", &mass_pc[0]);
-
-		for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
-			sscanf(curr_mass, "%lf", &mass_pc[i]);
-		}
-		
+	clus.N_STAR_NEW = clus.N_STAR;
+	/* add 2 * clus.N_BINARY for binary disruptions */
+	N_STAR_DIM = 2 + clus.N_STAR + 2 * clus.N_BINARY;
+	N_BIN_DIM = 2 + clus.N_BINARY;
+	
+	/* safety factors, so we don't have to worry about memory management/garbage collection */
+	N_STAR_DIM = (long) floor(1.5 * ((double) N_STAR_DIM));
+	N_BIN_DIM = (long) floor(1.5 * ((double) N_BIN_DIM));
+	
+	/*********************************************/
+	/* allocation of memory for global variables */
+	/*********************************************/
+	
+	/* the main star array containing all star parameters */
+	star = (star_t *) calloc(N_STAR_DIM, sizeof(star_t));
+	
+	/* allocate memory for velocity dispersion array */
+	sigma_array.n = 0;
+	sigma_array.r = (double *) calloc(N_STAR_DIM, sizeof(double));
+	sigma_array.sigma = (double *) calloc(N_STAR_DIM, sizeof(double));
+	
+	/* the main binary array containing all binary parameters */
+	binary = (binary_t *) calloc(N_BIN_DIM, sizeof(binary_t));
+	
+	/* quantities calculated for various lagrange radii */
+	mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	ave_mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	no_star_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	densities_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	ke_rad_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	ke_tan_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	v2_rad_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	v2_tan_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
+	mass_pc = (double *) calloc(MASS_PC_COUNT, sizeof(double));
+	mass_bins = (double *) calloc(NO_MASS_BINS, sizeof(double));
+	multi_mass_r = (double **) malloc(NO_MASS_BINS * sizeof(double *));
+	for(i=0; i<NO_MASS_BINS; i++){
+		multi_mass_r[i] = (double *) malloc(MASS_PC_COUNT * sizeof(double));
 	}
+	
+	/*======= Reading values for the Lagrange radii =======*/
+	curr_mass = (char *) strtok(MASS_PC, ",; ");
+	sscanf(curr_mass, "%lf", &mass_pc[0]);
+	
+	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
+		sscanf(curr_mass, "%lf", &mass_pc[i]);
+	}
+	
 	/*======= Reading values for the mass bins =======*/
 	curr_mass = (char *) strtok(MASS_BINS, ",; ");
 	sscanf(curr_mass, "%lf", &mass_bins[0]);

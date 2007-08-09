@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
 	/* set some important global variables */
 	quiet = 0;
 	debug = 0;
-	ReadSnapshot = 0; /* this becomes 1 if a snapshot is used for restart */
 	initial_total_mass = 1.0;
 	newstarid = 0;
 
@@ -52,72 +51,67 @@ int main(int argc, char *argv[])
         /* load a trace list */
         //load_id_table(star_ids, "trace_list");
 #endif
-	/* Set up initial conditions, possibly from a previous snapshot */
-	/* ReadSnapshot is supposed to be set here if necessary         */
+	/* Set up initial conditions */
 	load_fits_file_data();
 
-	if (!ReadSnapshot) {
-		TidalMassLoss = 0.0;
-		Etidal = 0.0;
-		N_bb = 0;			/* number of bin-bin interactions */
-		N_bs = 0;
-		E_bb = 0.0;
-		E_bs = 0.0;
-		Echeck = 0; 		
-		se_file_counter = 0; 	
-		snap_num = 0; 		
-		StepCount = 0; 		
-		tcount = 1;
-		TotalTime = 0.0;
-		reset_rng_t113(IDUM);
-
-		/* binary remainders */
-		clus.N_MAX = clus.N_STAR;
-		N_b = clus.N_BINARY;
-		calc_sigma_r();
-		central_calculate();
-		M_b = 0.0;
-		E_b = 0.0;
-		for (i=1; i<=clus.N_STAR; i++) {
-			j = star[i].binind;
-			if (j && binary[j].inuse) {
-				M_b += star[i].m;
+	TidalMassLoss = 0.0;
+	Etidal = 0.0;
+	N_bb = 0;			/* number of bin-bin interactions */
+	N_bs = 0;
+	E_bb = 0.0;
+	E_bs = 0.0;
+	Echeck = 0; 		
+	se_file_counter = 0; 	
+	snap_num = 0; 		
+	StepCount = 0; 		
+	tcount = 1;
+	TotalTime = 0.0;
+	reset_rng_t113(IDUM);
+	
+	/* binary remainders */
+	clus.N_MAX = clus.N_STAR;
+	N_b = clus.N_BINARY;
+	calc_sigma_r();
+	central_calculate();
+	M_b = 0.0;
+	E_b = 0.0;
+	for (i=1; i<=clus.N_STAR; i++) {
+		j = star[i].binind;
+		if (j && binary[j].inuse) {
+			M_b += star[i].m;
 			E_b += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
-			}
 		}
-
-		/* print out binary properties to a file */
-		print_initial_binaries();
-
-		orbit_r = R_MAX;
-		potential_calculate();
-                total_bisections= 0;
-                if (SEARCH_GRID) 
-                  search_grid_update(r_grid);
 	}
+	
+	/* print out binary properties to a file */
+	print_initial_binaries();
+	
+	orbit_r = R_MAX;
+	potential_calculate();
+	total_bisections= 0;
+	if (SEARCH_GRID) 
+		search_grid_update(r_grid);
 	
 	ComputeEnergy();
 
-	if (!ReadSnapshot) {
-		Etotal.ini = Etotal.tot;   /* Noting the total initial energy, in order to set termination energy. */
-		
-		Etotal.New = 0.0;
-		Eescaped = 0.0;
-		Jescaped = 0.0;
-		Eintescaped = 0.0;
-		Ebescaped = 0.0;
-		Eoops = 0.0;
-		
-		comp_mass_percent();
-		comp_multi_mass_percent();
-		
-		/* initialize stellar evolution things */
-		if (STELLAR_EVOLUTION > 0) {
-			stellar_evolution_init();
-		}
-		
-		update_vars();
+	Etotal.ini = Etotal.tot;   /* Noting the total initial energy, in order to set termination energy. */
+	
+	Etotal.New = 0.0;
+	Eescaped = 0.0;
+	Jescaped = 0.0;
+	Eintescaped = 0.0;
+	Ebescaped = 0.0;
+	Eoops = 0.0;
+	
+	comp_mass_percent();
+	comp_multi_mass_percent();
+	
+	/* initialize stellar evolution things */
+	if (STELLAR_EVOLUTION > 0) {
+		stellar_evolution_init();
 	}
+	
+	update_vars();
 	
 	times(&tmsbufref);
 
@@ -243,9 +237,6 @@ int main(int argc, char *argv[])
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
 		 */
-		if(CHECKPOINT_PERIOD && (tcount%CHECKPOINT_PERIOD==0)) {
-			chkpnt_fits(rng);
-		}
 		if(SNAPSHOT_PERIOD && (tcount%SNAPSHOT_PERIOD==0)) {
 			print_2Dsnapshot();
 		}

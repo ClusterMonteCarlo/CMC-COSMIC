@@ -523,41 +523,35 @@ void ComputeEnergy(void)
 {
 	long k, i;
 	
-	if (!ReadSnapshot) {
-		Etotal.tot = 0.0;
-		Etotal.K = 0.0;
-		Etotal.P = 0.0;
-		Etotal.Eint = 0.0;
-		Etotal.Eb = 0.0;
-		star[0].E = star[0].J = 0.0;
-	}
-
+	Etotal.tot = 0.0;
+	Etotal.K = 0.0;
+	Etotal.P = 0.0;
+	Etotal.Eint = 0.0;
+	Etotal.Eb = 0.0;
+	star[0].E = star[0].J = 0.0;
+	
 	for (i = 1; i <= clus.N_MAX; i++) {
 		k = i;
 		star[k].E = star[k].phi + 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt);
 		star[k].J = star[k].r * star[k].vt;
 		
-		if (!ReadSnapshot) {
-			Etotal.K += 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt) * star[k].m / clus.N_STAR;
-			Etotal.P += star[k].phi * star[k].m / clus.N_STAR;
-			Etotal.P += star[0].phi * cenma.m*madhoc/ clus.N_STAR;
-			
-			if (star[k].binind == 0) {
-				Etotal.Eint += star[k].Eint;
-			} else if (binary[star[k].binind].inuse) {
-				Etotal.Eb += -(binary[star[k].binind].m1/clus.N_STAR) * (binary[star[k].binind].m2/clus.N_STAR) / 
-					(2.0 * binary[star[k].binind].a);
-				Etotal.Eint += binary[star[k].binind].Eint1 + binary[star[k].binind].Eint2;
-			}
+		Etotal.K += 0.5 * (star[k].vr * star[k].vr + star[k].vt * star[k].vt) * star[k].m / clus.N_STAR;
+		Etotal.P += star[k].phi * star[k].m / clus.N_STAR;
+		Etotal.P += star[0].phi * cenma.m*madhoc/ clus.N_STAR;
+		
+		if (star[k].binind == 0) {
+			Etotal.Eint += star[k].Eint;
+		} else if (binary[star[k].binind].inuse) {
+			Etotal.Eb += -(binary[star[k].binind].m1/clus.N_STAR) * (binary[star[k].binind].m2/clus.N_STAR) / 
+				(2.0 * binary[star[k].binind].a);
+			Etotal.Eint += binary[star[k].binind].Eint1 + binary[star[k].binind].Eint2;
 		}
 	}
-
-	if (!ReadSnapshot) {
-		star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
-		Etotal.P *= 0.5;
-		Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
-	}
-
+	
+	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
+	Etotal.P *= 0.5;
+	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
+	
 	gprintf("Time = %.8G   Tcount = %ld\n", TotalTime, tcount);
 	gprintf("N = %ld, Total E = %.8G, Total Mass = %.8G, Virial ratio = %.8G\n",
 		clus.N_MAX, Etotal.tot, Mtotal, -2.0 * Etotal.K / Etotal.P);

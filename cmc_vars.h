@@ -22,9 +22,9 @@ _EXTERN_ double Eescaped, Jescaped, Eintescaped, Ebescaped;
 _EXTERN_ double initial_total_mass, Mtotal;
 /******************* Input file parameters *************************/
 _EXTERN_ long N_STAR_DIM, N_BIN_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, SS_COLLISION, NO_MASS_BINS;
-_EXTERN_ long SNAPSHOT_PERIOD, CHECKPOINT_PERIOD, MAX_WCLOCK_TIME, E_CONS;
+_EXTERN_ long SNAPSHOT_PERIOD, MAX_WCLOCK_TIME, E_CONS;
 _EXTERN_ int SNAPSHOT_CORE_COLLAPSE, SNAPSHOT_CORE_BOUNCE;
-_EXTERN_ long IDUM, PERTURB, RELAXATION, MONITOR_COLL;
+_EXTERN_ long IDUM, PERTURB, RELAXATION;
 _EXTERN_ long NUM_CENTRAL_STARS;
 _EXTERN_ double T_PRINT_STEP, T_MAX, THETASEMAX;
 _EXTERN_ double TERMINAL_ENERGY_DISPLACEMENT, R_MAX;
@@ -55,7 +55,6 @@ _EXTERN_ long newstarid;
 _EXTERN_ double rho_core_single, rho_core_bin, rh_single, rh_binary;
 _EXTERN_ double TotalTime, Dt;
 _EXTERN_ double Sin2Beta;
-_EXTERN_ int ReadSnapshot;
 /* arrays */
 _EXTERN_ star_t *star;
 _EXTERN_ double *mass_pc, *mass_r, *ave_mass_r, *densities_r, *no_star_r;

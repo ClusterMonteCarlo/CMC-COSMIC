@@ -2,7 +2,9 @@
 *** things that _have_ to be done, in order of priority ***
 ***********************************************************
 
-* Remove snapshot restarting, since it needs to be updated anyway.
+* Get central black hole initialization working again.  It kind
+  of got broken when changing the input format and moving all 
+  mass normalization to setimf.c.
 * Fix stellar rejuvenation in cmc_dynamics_helper.c, and implement
   collision matrix for different stellar types.
 * Remove redundant functions, especially for calculating energy:
