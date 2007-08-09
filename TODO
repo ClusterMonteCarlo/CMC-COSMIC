@@ -3,7 +3,6 @@
 ***********************************************************
 
 * Add printout of parsed input file.
-* Add printout of CMC version to log file.
 * Get central black hole initialization working again.  It kind
   of got broken when changing the input format and moving all 
   mass normalization to setimf.c.
