@@ -320,7 +320,6 @@ double GetTimeStep(gsl_rng *rng);
 long CheckStop(struct tms tmsbuf);
 void ComputeIntermediateEnergy(void);
 void set_velocities3(void);
-void RecomputeEnergy(void);
 double rtbis(double (*func) (double), double x1, double x2, double xacc);
 double trapzd(double (*func) (double), double a, double b, long n);
 double qsimp(double (*func) (double), double a, double b);

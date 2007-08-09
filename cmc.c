@@ -92,9 +92,13 @@ int main(int argc, char *argv[])
 	if (SEARCH_GRID) 
 		search_grid_update(r_grid);
 	
+	/* compute energy initially */
+	star[0].E = star[0].J = 0.0;
 	ComputeEnergy();
+	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
 
-	Etotal.ini = Etotal.tot;   /* Noting the total initial energy, in order to set termination energy. */
+	/* Noting the total initial energy, in order to set termination energy. */
+	Etotal.ini = Etotal.tot;
 	
 	Etotal.New = 0.0;
 	Eescaped = 0.0;
@@ -210,8 +214,7 @@ int main(int argc, char *argv[])
 		comp_mass_percent();
 		comp_multi_mass_percent();
 
-		/* Recompute Energy. Uses the specified ECONS_MODE */
-		RecomputeEnergy();
+		ComputeEnergy();
 
 		/* reset interacted flag */
 		for (i = 1; i <= clus.N_MAX; i++) {

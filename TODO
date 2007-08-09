@@ -7,8 +7,6 @@
   mass normalization to setimf.c.
 * Fix stellar rejuvenation in cmc_dynamics_helper.c, and implement
   collision matrix for different stellar types.
-* Remove redundant functions, especially for calculating energy:
-  leav only E_CONS=3 code.
 
 *************************************************************
 *** things that would be nice to do, in order of priority ***
