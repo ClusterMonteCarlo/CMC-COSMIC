@@ -443,8 +443,8 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
 
 	cfd->Mclus = total_mass;
 	
+	// code commented out by Stefan
         //total_mass+= param.bhmass;
-
 	// rescale masses to N-body units
 	for(i=0; i<=cfd->NOBJ; i++){
 		cfd->obj_m[i] /= total_mass;
@@ -513,6 +513,7 @@ int main(int argc, char *argv[]){
 
 	cmc_read_fits_file(param.infile, &cfd);
 	
+	/* add central BH, hidden in 0th star */
         if (param.bhmass > 0.0) {
 		cfd.obj_m[0] = param.bhmass;
         }

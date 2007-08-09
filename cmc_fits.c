@@ -59,4 +59,9 @@ void load_fits_file_data(void)
 	star[0].r = ZERO; 
 	star[clus.N_STAR + 1].r = SF_INFINITY;
 	Mtotal = 1.0;
+
+	// central mass business, read in from file
+	// I believe the normalization should be correct, from above
+	cenma.m = star[0].m;
+	star[0].m = 0.0;
 }

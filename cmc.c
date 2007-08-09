@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 	debug = 0;
 	initial_total_mass = 1.0;
 	newstarid = 0;
+	cenma.E = 0.0;
 
 	/* trap signals */
 	trap_sigs();

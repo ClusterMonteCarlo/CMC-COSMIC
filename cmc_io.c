@@ -466,10 +466,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			} else if (strcmp(parameter_name, "BINSINGLE") == 0) {
 				sscanf(values, "%d", &BINSINGLE);
 				parsed.BINSINGLE = 1;
-			} else if (strcmp(parameter_name, "CENTRAL_MASS") == 0) {
-				sscanf(values, "%lf", &cenma.m);
-				cenma.E = 0.0;
-				parsed.CENTRAL_MASS = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOTTING") == 0) {
 				sscanf(values, "%d", &SNAPSHOTTING);
 				parsed.SNAPSHOTTING = 1;
@@ -605,12 +601,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		allparsed = 0; \
 	}
 	
-	CHECK_PARSED(CENTRAL_MASS);
-	CHECK_PARSED(MINIMUM_R);
+	CHECK_PARSED(GAMMA);
 	CHECK_PARSED(INPUT_FILE);
 	CHECK_PARSED(MASS_PC);
 	CHECK_PARSED(MASS_BINS);
-	CHECK_PARSED(GAMMA);
 	
 #undef CHECK_PARSED
 
@@ -630,7 +624,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(BINBIN, 1);
 	CHECK_PARSED(BINSINGLE, 1);
 	CHECK_PARSED(BH_LOSS_CONE, 0);
-
+	CHECK_PARSED(MINIMUM_R, 0.0);
+	CHECK_PARSED(BH_R_DISRUPT_NB, 0.);
+	
         CHECK_PARSED(T_MAX, 20.0);
 	CHECK_PARSED(T_MAX_COUNT, 1000000);
 	CHECK_PARSED(MAX_WCLOCK_TIME, 2592000);
@@ -653,8 +649,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(SG_POWER_LAW_EXPONENT, 0.5);
         CHECK_PARSED(SG_MATCH_AT_FRACTION, 0.5);
         CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95);
-        CHECK_PARSED(BH_R_DISRUPT_NB, 0.);
-	CHECK_PARSED(FORCE_RLX_STEP, 0);
+        CHECK_PARSED(FORCE_RLX_STEP, 0);
 #ifdef DEBUGGING
         CHECK_PARSED(BH_LC_FDT, 0.0);
 #endif

@@ -149,7 +149,6 @@ struct get_pos_str {
 typedef struct{
 	int BINBIN;
 	int BINSINGLE;
-	int CENTRAL_MASS;
 	int SNAPSHOTTING;
 	int SNAPSHOT_DELTAT;
 	int SNAPSHOT_DELTACOUNT;
