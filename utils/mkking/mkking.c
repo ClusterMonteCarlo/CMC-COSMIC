@@ -160,7 +160,7 @@ void write_output_file(double *m, double *r, double *vr, double *vt, long int N,
 
 	cmc_malloc_fits_data_t(&cfd);
 
-	for (i=1; i<=cfd.NOBJ; i++) {
+	for (i=1; i<=cfd.NOBJ+1; i++) {
 		cfd.obj_id[i] = i;
 		cfd.obj_k[i] = 0;
 		cfd.obj_m[i] = m[i];
