@@ -146,47 +146,87 @@ struct get_pos_str {
 	gsl_rng *thr_rng;
 };
 
+// This is a total hack for including parameter documentation
 typedef struct{
+#define PARAMDOC_BINBIN "toggles binary--binary interactions (0=off, 1=on)"
 	int BINBIN;
+#define PARAMDOC_BINSINGLE "toggles binary--single interactions (0=off, 1=on)"
 	int BINSINGLE;
+#define PARAMDOC_SNAPSHOTTING "toggles output snapshotting (0=off, 1=on)"
 	int SNAPSHOTTING;
+#define PARAMDOC_SNAPSHOT_DELTAT "snapshotting time interval (FP units)"
 	int SNAPSHOT_DELTAT;
+#define PARAMDOC_SNAPSHOT_DELTACOUNT "snapshotting interval in time steps"
 	int SNAPSHOT_DELTACOUNT;
+#define PARAMDOC_SNAPSHOT_CORE_COLLAPSE "output extra snapshotting information during core collapse (0=off, 1=on)"
         int SNAPSHOT_CORE_COLLAPSE;
+#define PARAMDOC_SNAPSHOT_CORE_BOUNCE "output extra snapshotting information during core bounce (0=off, 1=on)"
         int SNAPSHOT_CORE_BOUNCE;
+#define PARAMDOC_IDUM "random number generator seed"
 	int IDUM;
+#define PARAMDOC_INPUT_FILE "input FITS file"
 	int INPUT_FILE;
+#define PARAMDOC_MASS_PC "mass fractions for Lagrange radii"
 	int MASS_PC;
+#define PARAMDOC_MASS_BINS "mass ranges for calculating derived quantities"
 	int MASS_BINS;
+#define PARAMDOC_MINIMUM_R "radius of central mass"
 	int MINIMUM_R;
+#define PARAMDOC_STOPATCORECOLLAPSE "stop calculation at core collapse (0=no, 1=yes)"
 	int STOPATCORECOLLAPSE;
+#define PARAMDOC_NUM_CENTRAL_STARS "number of central stars used to calculate certain averages"
 	int NUM_CENTRAL_STARS;
+#define PARAMDOC_PERTURB "perform dynamical perturbations on objects (0=off, 1=on)"
 	int PERTURB;
+#define PARAMDOC_RELAXATION "perform two-body relaxation (0=off, 1=on)"
 	int RELAXATION;
+#define PARAMDOC_THETASEMAX "maximum super-encounter scattering angle (radians)"
 	int THETASEMAX;
+#define PARAMDOC_STELLAR_EVOLUTION "stellar evolution (0=off, 1=on)"
 	int STELLAR_EVOLUTION;
+#define PARAMDOC_SS_COLLISION "perform physical stellar collisions (0=off, 1=on)"
 	int SS_COLLISION;
+#define PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT "energy change calculation stopping criterion"
 	int TERMINAL_ENERGY_DISPLACEMENT;
+#define PARAMDOC_T_MAX "maximum integration time (FP units)"
 	int T_MAX;
+#define PARAMDOC_T_MAX_COUNT "maximum number of time steps"
 	int T_MAX_COUNT;
+#define PARAMDOC_MAX_WCLOCK_TIME "maximum wall clock time (seconds)"
 	int MAX_WCLOCK_TIME;
+#define PARAMDOC_WIND_FACTOR "stellar evolution wind mass loss factor (0.5-2)"
 	int WIND_FACTOR;
+#define PARAMDOC_GAMMA "gamma in Coulomb logarithm"
 	int GAMMA;
+#define PARAMDOC_SEARCH_GRID "search grid (0=off, 1=on)"
         int SEARCH_GRID;
+#define PARAMDOC_SG_STARSPERBIN "ask Stefan"
         int SG_STARSPERBIN;
+#define PARAMDOC_SG_MAXLENGTH "ask Stefan"
         int SG_MAXLENGTH;
+#define PARAMDOC_SG_MINLENGTH "ask Stefan"
         int SG_MINLENGTH;
+#define PARAMDOC_SG_POWER_LAW_EXPONENT "ask Stefan"
         int SG_POWER_LAW_EXPONENT;
+#define PARAMDOC_SG_MATCH_AT_FRACTION "ask Stefan"
         int SG_MATCH_AT_FRACTION;
+#define PARAMDOC_SG_PARTICLE_FRACTION "ask Stefan"
         int SG_PARTICLE_FRACTION;
+#define PARAMDOC_BH_LOSS_CONE "perform loss-cone physics for central black hole (0=ff, 1=on)"
         int BH_LOSS_CONE;
+#define PARAMDOC_BH_R_DISRUPT_NB "central black hole disruption radius (N-body units)"
         int BH_R_DISRUPT_NB;
+#define PARAMDOC_FORCE_RLX_STEP "force a relaxation step (useful when RELAXATION=0) (0=off, 1=on)"
         int FORCE_RLX_STEP; 
 #ifdef DEBUGGING
+#define PARAMDOC_BH_LC_FDT "ask Stefan"
         int BH_LC_FDT;
 #endif
+#define PARAMDOC_APSIDES_PRECISION "ask Stefan"
         int APSIDES_PRECISION;
+#define PARAMDOC_APSIDES_MAX_ITER "ask Stefan"
         int APSIDES_MAX_ITER;
+#define PARAMDOC_APSIDES_CONVERGENCE "ask Stefan"
         int APSIDES_CONVERGENCE;
 } parsed_t;
 

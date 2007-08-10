@@ -366,7 +366,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	long i;
 	int allparsed=1;
 	/* int *ip; */
-	FILE *in;
+	FILE *in, *parsedfp;
 	const char *short_opts = "qdVh";
 	const struct option long_opts[] = {
 		{"quiet", no_argument, NULL, 'q'},
@@ -419,6 +419,12 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		eprintf("Cannot open input file \"%s\".\n", inputfile);
 		exit(1);
 	}
+	
+	sprintf(outfile, "%s.cmc.parsed", outprefix);
+	if ((parsedfp = fopen(outfile, "w")) == NULL) {
+		eprintf("cannot create output file \"%s\".\n", outfile);
+		exit(1);
+	}
 
 	/* nothing is set yet, so assigning all zeros to variable parsed */
 	/* one way to do it is a complicated for loop (?which depends on the 
@@ -461,127 +467,166 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			exit(1);
 		} else if (sscanf(line, "%s %s", parameter_name, values) == 2) {
 			if (strcmp(parameter_name, "BINBIN") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BINBIN, line);
 				sscanf(values, "%d", &BINBIN);
 				parsed.BINBIN = 1;
 			} else if (strcmp(parameter_name, "BINSINGLE") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BINSINGLE, line);
 				sscanf(values, "%d", &BINSINGLE);
 				parsed.BINSINGLE = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOTTING") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOTTING, line);
 				sscanf(values, "%d", &SNAPSHOTTING);
 				parsed.SNAPSHOTTING = 1;
                         } else if (strcmp(parameter_name, "SNAPSHOT_DELTACOUNT") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOT_DELTACOUNT, line);
 				sscanf(values, "%ld", &SNAPSHOT_DELTACOUNT);
 				parsed.SNAPSHOT_DELTACOUNT = 1;
                         } else if (strcmp(parameter_name, "SNAPSHOT_DELTAT") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOT_DELTAT, line);
 				sscanf(values, "%lf", &SNAPSHOT_DELTAT);
 				parsed.SNAPSHOT_DELTAT = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_BOUNCE") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOT_CORE_BOUNCE, line);
 				sscanf(values, "%d", &SNAPSHOT_CORE_BOUNCE);
 				parsed.SNAPSHOT_CORE_BOUNCE = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_COLLAPSE") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOT_CORE_COLLAPSE, line);
 				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
 				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
 			} else if (strcmp(parameter_name, "IDUM") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_IDUM, line);
 				sscanf(values, "%ld", &IDUM);
 				parsed.IDUM = 1;
 			} else if (strcmp(parameter_name, "INPUT_FILE") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_INPUT_FILE, line);
 				sscanf(values, "%s", INPUT_FILE);
 				parsed.INPUT_FILE = 1;
 			} else if (strcmp(parameter_name, "MASS_PC") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_MASS_PC, line);
 				strcpy(MASS_PC, values);
 				curr_mass = (char *) strtok(values, ",; ");
 				for (MASS_PC_COUNT = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; MASS_PC_COUNT++);
 				parsed.MASS_PC = 1;
 			} else if (strcmp(parameter_name, "MASS_BINS") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_MASS_BINS, line);
 				/* we recycle variable "curr_mass" for mass bins */
 				strcpy(MASS_BINS, values);
 				curr_mass = (char *) strtok(values, ",; ");
 				for (NO_MASS_BINS = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_MASS_BINS++);
 				parsed.MASS_BINS = 1;
 			} else if (strcmp(parameter_name, "MINIMUM_R") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_MINIMUM_R, line);
 				sscanf(values, "%lf", &MINIMUM_R);
 				parsed.MINIMUM_R = 1;
 			} else if (strcmp(parameter_name, "STOPATCORECOLLAPSE") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_STOPATCORECOLLAPSE, line);
 				sscanf(values, "%d", &STOPATCORECOLLAPSE);
 				parsed.STOPATCORECOLLAPSE = 1;
 			} else if (strcmp(parameter_name, "NUM_CENTRAL_STARS") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_NUM_CENTRAL_STARS, line);
 				sscanf(values, "%ld", &NUM_CENTRAL_STARS);
 				parsed.NUM_CENTRAL_STARS = 1;
 			} else if (strcmp(parameter_name, "PERTURB") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_PERTURB, line);
 				sscanf(values, "%ld", &PERTURB);
 				parsed.PERTURB = 1;
 			} else if (strcmp(parameter_name, "RELAXATION") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_RELAXATION, line);
 				sscanf(values, "%ld", &RELAXATION);
 				parsed.RELAXATION = 1;
 			} else if (strcmp(parameter_name, "THETASEMAX") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_THETASEMAX, line);
 				sscanf(values, "%lf", &THETASEMAX);
 				parsed.THETASEMAX = 1;
 			} else if (strcmp(parameter_name, "STELLAR_EVOLUTION") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_STELLAR_EVOLUTION, line);
 				sscanf(values, "%ld", &STELLAR_EVOLUTION);
 				parsed.STELLAR_EVOLUTION = 1;
 			} else if (strcmp(parameter_name, "SS_COLLISION") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SS_COLLISION, line);
 				sscanf(values, "%ld", &SS_COLLISION);
 				parsed.SS_COLLISION = 1;
 			} else if (strcmp(parameter_name, "TERMINAL_ENERGY_DISPLACEMENT") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT, line);
 				sscanf(values, "%lf", &TERMINAL_ENERGY_DISPLACEMENT);
 				parsed.TERMINAL_ENERGY_DISPLACEMENT = 1;
 			} else if (strcmp(parameter_name, "T_MAX") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_T_MAX, line);
 				sscanf(values, "%lf", &T_MAX);
 				parsed.T_MAX = 1;
 			} else if (strcmp(parameter_name, "T_MAX_COUNT") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_T_MAX_COUNT, line);
 				sscanf(values, "%ld", &T_MAX_COUNT);
 				parsed.T_MAX_COUNT = 1;
 			} else if (strcmp(parameter_name, "MAX_WCLOCK_TIME") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_MAX_WCLOCK_TIME, line);
 				sscanf(values, "%ld", &MAX_WCLOCK_TIME);
 				parsed.MAX_WCLOCK_TIME = 1;
 			} else if (strcmp(parameter_name, "WIND_FACTOR") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_WIND_FACTOR, line);
 				sscanf(values, "%lf", &WIND_FACTOR);
 				parsed.WIND_FACTOR = 1;
 			} else if (strcmp(parameter_name, "GAMMA") == 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_GAMMA, line);
 				sscanf(values, "%lf", &GAMMA);
 				parsed.GAMMA = 1;
 			} else if (strcmp(parameter_name, "SEARCH_GRID")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SEARCH_GRID, line);
 				sscanf(values, "%ld", &SEARCH_GRID);
 				parsed.SEARCH_GRID = 1;
                         } else if (strcmp(parameter_name, "SG_STARSPERBIN")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_STARSPERBIN, line);
 				sscanf(values, "%ld", &SG_STARSPERBIN);
 				parsed.SG_STARSPERBIN = 1;
                         } else if (strcmp(parameter_name, "SG_MAXLENGTH")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_MAXLENGTH, line);
 				sscanf(values, "%ld", &SG_MAXLENGTH);
 				parsed.SG_MAXLENGTH = 1;
                         } else if (strcmp(parameter_name, "SG_MINLENGTH")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_MINLENGTH, line);
 				sscanf(values, "%ld", &SG_MINLENGTH);
 				parsed.SG_MINLENGTH = 1;
                         } else if (strcmp(parameter_name, "SG_POWER_LAW_EXPONENT")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_POWER_LAW_EXPONENT, line);
 				sscanf(values, "%lf", &SG_POWER_LAW_EXPONENT);
 				parsed.SG_POWER_LAW_EXPONENT = 1;
                         } else if (strcmp(parameter_name, "SG_MATCH_AT_FRACTION")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_MATCH_AT_FRACTION, line);
 				sscanf(values, "%lf", &SG_MATCH_AT_FRACTION);
 				parsed.SG_MATCH_AT_FRACTION = 1;
                         } else if (strcmp(parameter_name, "SG_PARTICLE_FRACTION")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_PARTICLE_FRACTION, line);
 				sscanf(values, "%lf", &SG_PARTICLE_FRACTION);
 				parsed.SG_PARTICLE_FRACTION = 1;
 			} else if (strcmp(parameter_name, "BH_LOSS_CONE")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BH_LOSS_CONE, line);
 				sscanf(values, "%li", &BH_LOSS_CONE);
 				parsed.BH_LOSS_CONE = 1;
                         } else if (strcmp(parameter_name, "BH_R_DISRUPT_NB")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BH_R_DISRUPT_NB, line);
 				sscanf(values, "%lf", &BH_R_DISRUPT_NB);
 				parsed.BH_R_DISRUPT_NB = 1;
         		} else if (strcmp(parameter_name, "FORCE_RLX_STEP")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_FORCE_RLX_STEP, line);
 				sscanf(values, "%i", &FORCE_RLX_STEP);
 				parsed.FORCE_RLX_STEP = 1;
 #ifdef DEBUGGING
                         } else if (strcmp(parameter_name, "BH_LC_FDT")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BH_LC_FDT, line);
 				sscanf(values, "%lf", &BH_LC_FDT);
 				parsed.BH_LC_FDT = 1;
 #endif
         		} else if (strcmp(parameter_name, "APSIDES_PRECISION")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_APSIDES_PRECISION, line);
 				sscanf(values, "%lf", &APSIDES_PRECISION);
 				parsed.APSIDES_PRECISION = 1;
         		} else if (strcmp(parameter_name, "APSIDES_MAX_ITER")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_APSIDES_MAX_ITER, line);
 				sscanf(values, "%li", &APSIDES_MAX_ITER);
 				parsed.APSIDES_MAX_ITER = 1;
                         } else if (strcmp(parameter_name, "APSIDES_CONVERGENCE")== 0) {
+				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_APSIDES_CONVERGENCE, line);
 				sscanf(values, "%lf", &APSIDES_CONVERGENCE);
 				parsed.APSIDES_CONVERGENCE = 1;
 			} else {
@@ -609,59 +654,62 @@ void parser(int argc, char *argv[], gsl_rng *r)
 #undef CHECK_PARSED
 
 /* but only warn if some other parameters are unset and default values are used */
-#define CHECK_PARSED(A,DEFAULT) \
+#define CHECK_PARSED(A,DEFAULT,DOC) \
 	if (parsed.A == 0) { \
 		wprintf("parameter \"%s\" unset: using default value \"%s\").\n", #A, #DEFAULT); \
                 A=DEFAULT; \
+                fprintf(parsedfp, "# %s\n%s   %s # default value\n", #DOC, #A, #DEFAULT); \
 	}
 	
-	CHECK_PARSED(PERTURB, 1);
-	CHECK_PARSED(RELAXATION, 1);
-	CHECK_PARSED(THETASEMAX, 1.0);
-	CHECK_PARSED(STELLAR_EVOLUTION, 0);
-	CHECK_PARSED(WIND_FACTOR, 1.0);
-	CHECK_PARSED(SS_COLLISION, 0);
-	CHECK_PARSED(BINBIN, 1);
-	CHECK_PARSED(BINSINGLE, 1);
-	CHECK_PARSED(BH_LOSS_CONE, 0);
-	CHECK_PARSED(MINIMUM_R, 0.0);
-	CHECK_PARSED(BH_R_DISRUPT_NB, 0.);
+	CHECK_PARSED(PERTURB, 1, PARAMDOC_PERTURB);
+	CHECK_PARSED(RELAXATION, 1, PARAMDOC_RELAXATION);
+	CHECK_PARSED(THETASEMAX, 1.0, PARAMDOC_THETASEMAX);
+	CHECK_PARSED(STELLAR_EVOLUTION, 0, PARAMDOC_STELLAR_EVOLUTION);
+	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
+	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
+	CHECK_PARSED(BINBIN, 1, PARAMDOC_BINBIN);
+	CHECK_PARSED(BINSINGLE, 1, PARAMDOC_BINSINGLE);
+	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);
+	CHECK_PARSED(MINIMUM_R, 0.0, PARAMDOC_MINIMUM_R);
+	CHECK_PARSED(BH_R_DISRUPT_NB, 0., PARAMDOC_BH_R_DISRUPT_NB);
 	
-        CHECK_PARSED(T_MAX, 20.0);
-	CHECK_PARSED(T_MAX_COUNT, 1000000);
-	CHECK_PARSED(MAX_WCLOCK_TIME, 2592000);
-	CHECK_PARSED(STOPATCORECOLLAPSE, 1);
-	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT, 0.5);
+        CHECK_PARSED(T_MAX, 20.0, PARAMDOC_T_MAX);
+	CHECK_PARSED(T_MAX_COUNT, 1000000, PARAMDOC_T_MAX_COUNT);
+	CHECK_PARSED(MAX_WCLOCK_TIME, 2592000, PARAMDOC_MAX_WCLOCK_TIME);
+	CHECK_PARSED(STOPATCORECOLLAPSE, 1, PARAMDOC_STOPATCORECOLLAPSE);
+	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT, 0.5, PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT);
 
-	CHECK_PARSED(SNAPSHOTTING, 0);
-	CHECK_PARSED(SNAPSHOT_DELTACOUNT, 250);
-	CHECK_PARSED(SNAPSHOT_DELTAT, 0.25);
-	CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 0);
-        CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 0);
+	CHECK_PARSED(SNAPSHOTTING, 0, PARAMDOC_SNAPSHOTTING);
+	CHECK_PARSED(SNAPSHOT_DELTACOUNT, 250, PARAMDOC_SNAPSHOT_DELTACOUNT);
+	CHECK_PARSED(SNAPSHOT_DELTAT, 0.25, PARAMDOC_SNAPSHOT_DELTAT);
+	CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 0, PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
+        CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 0, PARAMDOC_SNAPSHOT_CORE_BOUNCE);
 
-	CHECK_PARSED(NUM_CENTRAL_STARS, 300);
-	CHECK_PARSED(IDUM, 0);
+	CHECK_PARSED(NUM_CENTRAL_STARS, 300, PARAMDOC_NUM_CENTRAL_STARS);
+	CHECK_PARSED(IDUM, 0, PARAMDOC_IDUM);
 
-	CHECK_PARSED(SEARCH_GRID, 0);
-        CHECK_PARSED(SG_STARSPERBIN, 100);
-        CHECK_PARSED(SG_MAXLENGTH, 1000000);
-        CHECK_PARSED(SG_MINLENGTH, 1000);
-        CHECK_PARSED(SG_POWER_LAW_EXPONENT, 0.5);
-        CHECK_PARSED(SG_MATCH_AT_FRACTION, 0.5);
-        CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95);
-        CHECK_PARSED(FORCE_RLX_STEP, 0);
+	CHECK_PARSED(SEARCH_GRID, 0, PARAMDOC_SEARCH_GRID);
+        CHECK_PARSED(SG_STARSPERBIN, 100, PARAMDOC_SG_STARSPERBIN);
+        CHECK_PARSED(SG_MAXLENGTH, 1000000, PARAMDOC_SG_MAXLENGTH);
+        CHECK_PARSED(SG_MINLENGTH, 1000, PARAMDOC_SG_MINLENGTH);
+        CHECK_PARSED(SG_POWER_LAW_EXPONENT, 0.5, PARAMDOC_SG_POWER_LAW_EXPONENT);
+        CHECK_PARSED(SG_MATCH_AT_FRACTION, 0.5, PARAMDOC_SG_MATCH_AT_FRACTION);
+        CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95, PARAMDOC_SG_PARTICLE_FRACTION);
+        CHECK_PARSED(FORCE_RLX_STEP, 0, PARAMDOC_FORCE_RLX_STEP);
 #ifdef DEBUGGING
-        CHECK_PARSED(BH_LC_FDT, 0.0);
+        CHECK_PARSED(BH_LC_FDT, 0.0, PARAMDOC_BH_LC_FDT);
 #endif
-        CHECK_PARSED(APSIDES_PRECISION, 1.0e-11);
-        CHECK_PARSED(APSIDES_MAX_ITER, 100);
-        CHECK_PARSED(APSIDES_CONVERGENCE, 5.e-13);
+        CHECK_PARSED(APSIDES_PRECISION, 1.0e-11, PARAMDOC_APSIDES_PRECISION);
+        CHECK_PARSED(APSIDES_MAX_ITER, 100, PARAMDOC_APSIDES_MAX_ITER);
+        CHECK_PARSED(APSIDES_CONVERGENCE, 5.e-13, PARAMDOC_APSIDES_CONVERGENCE);
 #undef CHECK_PARSED
 
 	/* exit if something is not set */
 	if (!allparsed) {
 		exit(1);
 	}
+	
+	fclose(parsedfp);
 	
 	/* read the number of stars and possibly other parameters */
 	cmc_read_fits_file(INPUT_FILE, &cfd);
