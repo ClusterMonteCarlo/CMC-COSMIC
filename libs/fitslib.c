@@ -10,6 +10,8 @@
 #include <fitsio.h>
 #include "../common/fitslib.h"
 
+#define LARGE_DISTANCE 1.0e40
+
 void cmc_fits_printerror(int status)
 {
     /*****************************************************/
@@ -43,7 +45,7 @@ void cmc_malloc_fits_data_t(cmc_fits_data_t *cfd){
 	cfd->obj_k[0] = 0;
 	cfd->obj_m[0] = 0.0;
 	cfd->obj_Reff[0] = 0.0;
-	cfd->obj_r[0] = 0.0;
+	cfd->obj_r[0] = DBL_MIN;
 	cfd->obj_vr[0] = 0.0;
 	cfd->obj_vt[0] = 0.0;
 	cfd->obj_binind[0] = 0;
@@ -52,7 +54,7 @@ void cmc_malloc_fits_data_t(cmc_fits_data_t *cfd){
 	cfd->obj_k[NSS-1] = 0;
 	cfd->obj_m[NSS-1] = 0.0;
 	cfd->obj_Reff[NSS-1] = 0.0;
-	cfd->obj_r[NSS-1] = 0.0;
+	cfd->obj_r[NSS-1] = LARGE_DISTANCE;
 	cfd->obj_vr[NSS-1] = 0.0;
 	cfd->obj_vt[NSS-1] = 0.0;
 	cfd->obj_binind[NSS-1] = 0;
