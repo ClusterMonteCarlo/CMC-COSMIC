@@ -749,12 +749,6 @@ void units_set(void)
 	diaprintf("units.l=%g PARSEC\n", units.l/PARSEC);
 	diaprintf("units.E=%g erg\n", units.E);
 	diaprintf("t_rel=%g YEAR\n", units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / YEAR);
-        if (BH_R_DISRUPT_NB> 0) {
-          diaprintf("R_disrupt in NB-units for all stars, Rdisr=%lg\n", BH_R_DISRUPT_NB);
-        } else {
-          diaprintf("R_disrupt for a solar mass star in NB-units, Rdisr=%lg\n", 
-            pow(2.*cenma.m/MSUN*units.mstar, 1./3.)*RSUN/units.l);
-        };
 }
 
 /* calculate central quantities */

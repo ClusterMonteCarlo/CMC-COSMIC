@@ -64,4 +64,11 @@ void load_fits_file_data(void)
 	// I believe the normalization should be correct, from above
 	cenma.m = star[0].m;
 	star[0].m = 0.0;
+
+	if (BH_R_DISRUPT_NB> 0) {
+          diaprintf("R_disrupt in NB-units for all stars, Rdisr=%lg\n", BH_R_DISRUPT_NB);
+        } else {
+          diaprintf("R_disrupt for a solar mass star in NB-units, Rdisr=%lg\n", 
+            pow(2.*cenma.m/MSUN*units.mstar, 1./3.)*RSUN/units.l);
+        };
 }
