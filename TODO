@@ -3,9 +3,6 @@
 ***********************************************************
 
 * Add printout of parsed input file.
-* Get central black hole initialization working again.  It kind
-  of got broken when changing the input format and moving all 
-  mass normalization to setimf.c.
 * Fix stellar rejuvenation in cmc_dynamics_helper.c, and implement
   collision matrix for different stellar types.
 
