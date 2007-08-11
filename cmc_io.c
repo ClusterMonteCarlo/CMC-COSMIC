@@ -658,7 +658,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	if (parsed.A == 0) { \
 		wprintf("parameter \"%s\" unset: using default value \"%s\").\n", #A, #DEFAULT); \
                 A=DEFAULT; \
-                fprintf(parsedfp, "# %s\n%s   %s # default value\n", #DOC, #A, #DEFAULT); \
+                fprintf(parsedfp, "# %s\n%s %s     # default value\n", DOC, #A, #DEFAULT); \
 	}
 	
 	CHECK_PARSED(PERTURB, 1, PARAMDOC_PERTURB);
