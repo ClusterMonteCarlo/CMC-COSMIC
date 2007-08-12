@@ -461,172 +461,174 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			i++;
 		}
 
+#define PRINT_PARSED(DOC) fprintf(parsedfp, "# %s\n%s\n", DOC, line)
+
 		/* see if there are too many values for parameter */
 		if (sscanf(line, "%s %s %s", parameter_name, values, dummy) == 3) {
 			eprintf("too many values for parameter: \"%s\".\n", line);
 			exit(1);
 		} else if (sscanf(line, "%s %s", parameter_name, values) == 2) {
 			if (strcmp(parameter_name, "BINBIN") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BINBIN, line);
+				PRINT_PARSED(PARAMDOC_BINBIN);
 				sscanf(values, "%d", &BINBIN);
 				parsed.BINBIN = 1;
 			} else if (strcmp(parameter_name, "BINSINGLE") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BINSINGLE, line);
+				PRINT_PARSED(PARAMDOC_BINSINGLE);
 				sscanf(values, "%d", &BINSINGLE);
 				parsed.BINSINGLE = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOTTING") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOTTING, line);
+				PRINT_PARSED(PARAMDOC_SNAPSHOTTING);
 				sscanf(values, "%d", &SNAPSHOTTING);
 				parsed.SNAPSHOTTING = 1;
                         } else if (strcmp(parameter_name, "SNAPSHOT_DELTACOUNT") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOT_DELTACOUNT, line);
+				PRINT_PARSED(PARAMDOC_SNAPSHOT_DELTACOUNT);
 				sscanf(values, "%ld", &SNAPSHOT_DELTACOUNT);
 				parsed.SNAPSHOT_DELTACOUNT = 1;
                         } else if (strcmp(parameter_name, "SNAPSHOT_DELTAT") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOT_DELTAT, line);
+				PRINT_PARSED(PARAMDOC_SNAPSHOT_DELTAT);
 				sscanf(values, "%lf", &SNAPSHOT_DELTAT);
 				parsed.SNAPSHOT_DELTAT = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_BOUNCE") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOT_CORE_BOUNCE, line);
+				PRINT_PARSED(PARAMDOC_SNAPSHOT_CORE_BOUNCE);
 				sscanf(values, "%d", &SNAPSHOT_CORE_BOUNCE);
 				parsed.SNAPSHOT_CORE_BOUNCE = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_COLLAPSE") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SNAPSHOT_CORE_COLLAPSE, line);
+				PRINT_PARSED(PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
 				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
 				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
 			} else if (strcmp(parameter_name, "IDUM") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_IDUM, line);
+				PRINT_PARSED(PARAMDOC_IDUM);
 				sscanf(values, "%ld", &IDUM);
 				parsed.IDUM = 1;
 			} else if (strcmp(parameter_name, "INPUT_FILE") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_INPUT_FILE, line);
+				PRINT_PARSED(PARAMDOC_INPUT_FILE);
 				sscanf(values, "%s", INPUT_FILE);
 				parsed.INPUT_FILE = 1;
 			} else if (strcmp(parameter_name, "MASS_PC") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_MASS_PC, line);
+				PRINT_PARSED(PARAMDOC_MASS_PC);
 				strcpy(MASS_PC, values);
 				curr_mass = (char *) strtok(values, ",; ");
 				for (MASS_PC_COUNT = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; MASS_PC_COUNT++);
 				parsed.MASS_PC = 1;
 			} else if (strcmp(parameter_name, "MASS_BINS") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_MASS_BINS, line);
+				PRINT_PARSED(PARAMDOC_MASS_BINS);
 				/* we recycle variable "curr_mass" for mass bins */
 				strcpy(MASS_BINS, values);
 				curr_mass = (char *) strtok(values, ",; ");
 				for (NO_MASS_BINS = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_MASS_BINS++);
 				parsed.MASS_BINS = 1;
 			} else if (strcmp(parameter_name, "MINIMUM_R") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_MINIMUM_R, line);
+				PRINT_PARSED(PARAMDOC_MINIMUM_R);
 				sscanf(values, "%lf", &MINIMUM_R);
 				parsed.MINIMUM_R = 1;
 			} else if (strcmp(parameter_name, "STOPATCORECOLLAPSE") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_STOPATCORECOLLAPSE, line);
+				PRINT_PARSED(PARAMDOC_STOPATCORECOLLAPSE);
 				sscanf(values, "%d", &STOPATCORECOLLAPSE);
 				parsed.STOPATCORECOLLAPSE = 1;
 			} else if (strcmp(parameter_name, "NUM_CENTRAL_STARS") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_NUM_CENTRAL_STARS, line);
+				PRINT_PARSED(PARAMDOC_NUM_CENTRAL_STARS);
 				sscanf(values, "%ld", &NUM_CENTRAL_STARS);
 				parsed.NUM_CENTRAL_STARS = 1;
 			} else if (strcmp(parameter_name, "PERTURB") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_PERTURB, line);
+				PRINT_PARSED(PARAMDOC_PERTURB);
 				sscanf(values, "%ld", &PERTURB);
 				parsed.PERTURB = 1;
 			} else if (strcmp(parameter_name, "RELAXATION") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_RELAXATION, line);
+				PRINT_PARSED(PARAMDOC_RELAXATION);
 				sscanf(values, "%ld", &RELAXATION);
 				parsed.RELAXATION = 1;
 			} else if (strcmp(parameter_name, "THETASEMAX") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_THETASEMAX, line);
+				PRINT_PARSED(PARAMDOC_THETASEMAX);
 				sscanf(values, "%lf", &THETASEMAX);
 				parsed.THETASEMAX = 1;
 			} else if (strcmp(parameter_name, "STELLAR_EVOLUTION") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_STELLAR_EVOLUTION, line);
+				PRINT_PARSED(PARAMDOC_STELLAR_EVOLUTION);
 				sscanf(values, "%ld", &STELLAR_EVOLUTION);
 				parsed.STELLAR_EVOLUTION = 1;
 			} else if (strcmp(parameter_name, "SS_COLLISION") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SS_COLLISION, line);
+				PRINT_PARSED(PARAMDOC_SS_COLLISION);
 				sscanf(values, "%ld", &SS_COLLISION);
 				parsed.SS_COLLISION = 1;
 			} else if (strcmp(parameter_name, "TERMINAL_ENERGY_DISPLACEMENT") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT, line);
+				PRINT_PARSED(PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT);
 				sscanf(values, "%lf", &TERMINAL_ENERGY_DISPLACEMENT);
 				parsed.TERMINAL_ENERGY_DISPLACEMENT = 1;
 			} else if (strcmp(parameter_name, "T_MAX") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_T_MAX, line);
+				PRINT_PARSED(PARAMDOC_T_MAX);
 				sscanf(values, "%lf", &T_MAX);
 				parsed.T_MAX = 1;
 			} else if (strcmp(parameter_name, "T_MAX_COUNT") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_T_MAX_COUNT, line);
+				PRINT_PARSED(PARAMDOC_T_MAX_COUNT);
 				sscanf(values, "%ld", &T_MAX_COUNT);
 				parsed.T_MAX_COUNT = 1;
 			} else if (strcmp(parameter_name, "MAX_WCLOCK_TIME") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_MAX_WCLOCK_TIME, line);
+				PRINT_PARSED(PARAMDOC_MAX_WCLOCK_TIME);
 				sscanf(values, "%ld", &MAX_WCLOCK_TIME);
 				parsed.MAX_WCLOCK_TIME = 1;
 			} else if (strcmp(parameter_name, "WIND_FACTOR") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_WIND_FACTOR, line);
+				PRINT_PARSED(PARAMDOC_WIND_FACTOR);
 				sscanf(values, "%lf", &WIND_FACTOR);
 				parsed.WIND_FACTOR = 1;
 			} else if (strcmp(parameter_name, "GAMMA") == 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_GAMMA, line);
+				PRINT_PARSED(PARAMDOC_GAMMA);
 				sscanf(values, "%lf", &GAMMA);
 				parsed.GAMMA = 1;
 			} else if (strcmp(parameter_name, "SEARCH_GRID")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SEARCH_GRID, line);
+				PRINT_PARSED(PARAMDOC_SEARCH_GRID);
 				sscanf(values, "%ld", &SEARCH_GRID);
 				parsed.SEARCH_GRID = 1;
                         } else if (strcmp(parameter_name, "SG_STARSPERBIN")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_STARSPERBIN, line);
+				PRINT_PARSED(PARAMDOC_SG_STARSPERBIN);
 				sscanf(values, "%ld", &SG_STARSPERBIN);
 				parsed.SG_STARSPERBIN = 1;
                         } else if (strcmp(parameter_name, "SG_MAXLENGTH")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_MAXLENGTH, line);
+				PRINT_PARSED(PARAMDOC_SG_MAXLENGTH);
 				sscanf(values, "%ld", &SG_MAXLENGTH);
 				parsed.SG_MAXLENGTH = 1;
                         } else if (strcmp(parameter_name, "SG_MINLENGTH")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_MINLENGTH, line);
+				PRINT_PARSED(PARAMDOC_SG_MINLENGTH);
 				sscanf(values, "%ld", &SG_MINLENGTH);
 				parsed.SG_MINLENGTH = 1;
                         } else if (strcmp(parameter_name, "SG_POWER_LAW_EXPONENT")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_POWER_LAW_EXPONENT, line);
+				PRINT_PARSED(PARAMDOC_SG_POWER_LAW_EXPONENT);
 				sscanf(values, "%lf", &SG_POWER_LAW_EXPONENT);
 				parsed.SG_POWER_LAW_EXPONENT = 1;
                         } else if (strcmp(parameter_name, "SG_MATCH_AT_FRACTION")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_MATCH_AT_FRACTION, line);
+				PRINT_PARSED(PARAMDOC_SG_MATCH_AT_FRACTION);
 				sscanf(values, "%lf", &SG_MATCH_AT_FRACTION);
 				parsed.SG_MATCH_AT_FRACTION = 1;
                         } else if (strcmp(parameter_name, "SG_PARTICLE_FRACTION")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_SG_PARTICLE_FRACTION, line);
+				PRINT_PARSED(PARAMDOC_SG_PARTICLE_FRACTION);
 				sscanf(values, "%lf", &SG_PARTICLE_FRACTION);
 				parsed.SG_PARTICLE_FRACTION = 1;
 			} else if (strcmp(parameter_name, "BH_LOSS_CONE")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BH_LOSS_CONE, line);
+				PRINT_PARSED(PARAMDOC_BH_LOSS_CONE);
 				sscanf(values, "%li", &BH_LOSS_CONE);
 				parsed.BH_LOSS_CONE = 1;
                         } else if (strcmp(parameter_name, "BH_R_DISRUPT_NB")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BH_R_DISRUPT_NB, line);
+				PRINT_PARSED(PARAMDOC_BH_R_DISRUPT_NB);
 				sscanf(values, "%lf", &BH_R_DISRUPT_NB);
 				parsed.BH_R_DISRUPT_NB = 1;
         		} else if (strcmp(parameter_name, "FORCE_RLX_STEP")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_FORCE_RLX_STEP, line);
+				PRINT_PARSED(PARAMDOC_FORCE_RLX_STEP);
 				sscanf(values, "%i", &FORCE_RLX_STEP);
 				parsed.FORCE_RLX_STEP = 1;
 #ifdef DEBUGGING
                         } else if (strcmp(parameter_name, "BH_LC_FDT")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_BH_LC_FDT, line);
+				PRINT_PARSED(PARAMDOC_BH_LC_FDT);
 				sscanf(values, "%lf", &BH_LC_FDT);
 				parsed.BH_LC_FDT = 1;
 #endif
         		} else if (strcmp(parameter_name, "APSIDES_PRECISION")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_APSIDES_PRECISION, line);
+				PRINT_PARSED(PARAMDOC_APSIDES_PRECISION);
 				sscanf(values, "%lf", &APSIDES_PRECISION);
 				parsed.APSIDES_PRECISION = 1;
         		} else if (strcmp(parameter_name, "APSIDES_MAX_ITER")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_APSIDES_MAX_ITER, line);
+				PRINT_PARSED(PARAMDOC_APSIDES_MAX_ITER);
 				sscanf(values, "%li", &APSIDES_MAX_ITER);
 				parsed.APSIDES_MAX_ITER = 1;
                         } else if (strcmp(parameter_name, "APSIDES_CONVERGENCE")== 0) {
-				fprintf(parsedfp, "# %s\n%s\n", PARAMDOC_APSIDES_CONVERGENCE, line);
+				PRINT_PARSED(PARAMDOC_APSIDES_CONVERGENCE);
 				sscanf(values, "%lf", &APSIDES_CONVERGENCE);
 				parsed.APSIDES_CONVERGENCE = 1;
 			} else {
