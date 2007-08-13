@@ -961,15 +961,19 @@ void break_wide_binaries(void)
 /* calculate and store the velocity dispersion profile */
 void calc_sigma_r(void)
 {
-	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax;
-	double Mv2ave, Mave, sigma;
+	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
+	double Mv2ave, Mave;
 	
 	N_LIMIT = clus.N_MAX;
 	sigma_array.n = N_LIMIT;
 
-	/* calculate sliding average timesteps */
 	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
+	siminlast = 1;
+	simaxlast = 0;
+	Mv2ave = 0.0;
+	Mave = 0.0;
 	for (si=1; si<=N_LIMIT; si++) {
+		// determine appropriate bounds for summing
 		simin = si - p;
 		simax = simin + (2 * p - 1);
 		if (simin < 1) {
@@ -980,21 +984,26 @@ void calc_sigma_r(void)
 			simin = simax - (2 * p - 1);
 		}
 
-		Mv2ave = 0.0;
-		Mave = 0.0;
-		for (k=simin; k<=simax; k++) {
+		// do sliding sum
+		for (k=siminlast; k<simin; k++) {
+			Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mave -= star[k].m * madhoc;
+		}
+
+		for (k=simaxlast+1; k<=simax; k++) {
 			Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += star[k].m * madhoc;
 		}
-		Mv2ave /= (double) (2 * p);
-		Mave /= (double) (2 * p);
+		// don't need to average since one gets divided by the other
+		//Mv2ave /= (double) (2 * p);
+		//Mave /= (double) (2 * p);
 		
-		/* sigma is the 3D velocity dispersion */
-		sigma = sqrt(Mv2ave/Mave);
-		
-		/* store sigma */
+		/* store sigma (sigma is the 3D velocity dispersion) */
 		sigma_array.r[si] = star[si].r;
-		sigma_array.sigma[si] = sigma;
+		sigma_array.sigma[si] = sqrt(Mv2ave/Mave);
+		
+		siminlast = simin;
+		simaxlast = simax;
 	}
 }
 #ifdef DEBUGGING
