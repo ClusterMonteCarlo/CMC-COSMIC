@@ -231,7 +231,9 @@ void tidally_strip_stars(void) {
 	j = 0;
 	Etidal = 0.0;
 	OldTidalMassLoss = TidalMassLoss;
+	/******************************/
 	/* get new particle positions */
+	/******************************/
 	max_r = get_positions();
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 		
