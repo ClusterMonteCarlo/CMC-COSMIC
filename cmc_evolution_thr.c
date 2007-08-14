@@ -152,11 +152,31 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
                   vr_rmax_positive= calc_vr(orbit_rs.ra, si, E, J)>= 0.;
 
                   if (!(rmax_in_interval && vr_rmax_positive)) {
-                    orbit_rs.ra= find_root_vr(si, kmax, E, J);
+                    rmax= find_root_vr(si, kmax, E, J);
+                    i = kmax;
+		    i1 = kmax + 1;
+		    rk = star[i].r;
+		    rk1 = star[i1].r;
+		    Uk = star[i].phi + PHI_S(rk, si);
+		    Uk1 = star[i1].phi  + PHI_S(rk1, si);		
+		    a = (Uk1 - Uk) / (1. / rk1 - 1. / rk);
+		    dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
+                    orbit_rs.ra= rmax;
+	            orbit_rs.dQdra = dQdr_max;
                   };
 
                   if (!(rmin_in_interval && vr_rmin_positive)) {
-                    orbit_rs.rp= find_root_vr(si, kmin, E, J);
+                    rmin= find_root_vr(si, kmin, E, J);
+                    i = kmin;
+                    i1 = kmin + 1;
+                    rk = star[i].r;
+                    rk1 = star[i1].r;
+                    Uk = star[i].phi + PHI_S(rk, si);
+                    Uk1 = star[i1].phi + PHI_S(rk1, si);
+                    a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
+                    dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
+                    orbit_rs.rp= rmin;
+                    orbit_rs.dQdrp = dQdr_min;
                   };
                 };
 #endif
