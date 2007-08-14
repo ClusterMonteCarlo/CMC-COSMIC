@@ -26,7 +26,9 @@
 
 #define N_TRY 50000
 
+#ifndef DEBUGGING
 #define AVEKERNEL 20
+#endif
 
 #define MSUN 1.989e+33
 #define SOLAR_MASS MSUN
@@ -221,6 +223,8 @@ typedef struct{
 #ifdef DEBUGGING
 #define PARAMDOC_BH_LC_FDT "ask Stefan"
         int BH_LC_FDT;
+#define PARAMDOC_AVEKERNEL "one half the number of stars over which to average certain quantities"
+        int AVEKERNEL;
 #endif
 #define PARAMDOC_APSIDES_PRECISION "ask Stefan"
         int APSIDES_PRECISION;

@@ -618,6 +618,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_BH_LC_FDT);
 				sscanf(values, "%lf", &BH_LC_FDT);
 				parsed.BH_LC_FDT = 1;
+                        } else if (strcmp(parameter_name, "AVEKERNEL")== 0) {
+				PRINT_PARSED(PARAMDOC_AVEKERNEL);
+				sscanf(values, "%li", &AVEKERNEL);
+				parsed.AVEKERNEL = 1;
 #endif
         		} else if (strcmp(parameter_name, "APSIDES_PRECISION")== 0) {
 				PRINT_PARSED(PARAMDOC_APSIDES_PRECISION);
@@ -700,6 +704,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(FORCE_RLX_STEP, 0, PARAMDOC_FORCE_RLX_STEP);
 #ifdef DEBUGGING
         CHECK_PARSED(BH_LC_FDT, 0.0, PARAMDOC_BH_LC_FDT);
+        CHECK_PARSED(AVEKERNEL, 20, PARAMDOC_AVEKERNEL);
 #endif
         CHECK_PARSED(APSIDES_PRECISION, 1.0e-11, PARAMDOC_APSIDES_PRECISION);
         CHECK_PARSED(APSIDES_MAX_ITER, 100, PARAMDOC_APSIDES_MAX_ITER);

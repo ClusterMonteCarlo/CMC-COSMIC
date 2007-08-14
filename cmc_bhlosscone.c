@@ -19,38 +19,47 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	double w_mag, l2_scale;
 	int i;
 #ifdef DEBUGGING
-        FILE *rwalk_file;
+        FILE *rwalk_file=NULL;
         char fname[80];
         long is_in_ids;
         double Trel, n_local, M2ave; 
-        double W, n_steps;
+        double W, n_steps= 1.;
         
         is_in_ids= 0;
+        sprintf(fname, "%s.rwalk_steps.dat", outprefix);
         n_local= calc_n_local(index, AVEKERNEL, clus.N_MAX);
         W = 4.0 * sigma_array.sigma[index] / sqrt(3.0*PI);
         M2ave= calc_average_mass_sqr(index, clus.N_MAX);
         Trel= (PI/32.)*cub(W)/ ( ((double) clus.N_STAR) * n_local * (4.0* M2ave) );
-
-        if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
-          //sprintf(fname, "%s.rwalk_steps_%.4li", outprefix, star[index].id);
-          //rwalk_file= fopen(fname, "a");
-          //fprintf(rwalk_file, "# Time deltabeta_orb deltasafe sqrt(L2) delta n_orb beta r fdt l2_scale\n");
+        //if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
+	if (index==1 && TotalTime>= T_PRINT_STEP*(StepCount)) {
+          rwalk_file= fopen(fname, "a");
+	  printf("file opened %li %li\n", index, StepCount);
+	  fprintf(rwalk_file, "\n");
+          fprintf(rwalk_file, 
+	      "# 1:index, 2:Time, 3:r, 4:Trel, 5:dt, 6:l2_scale, 7:n_steps, 8:beta 9:n_local, 10:W, 11:P_orb, 12:n_orb\n");
           is_in_ids=1;
+	  fclose(rwalk_file);
         };
 #endif
  	/* simulate loss cone physics for central mass */
 	P_orb = calc_P_orb(index);
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
-	deltabeta_orb = 1.0/sqrt(n_orb) * beta;
         l2_scale= 1.;
 #ifdef DEBUGGING
         /* scale down L2 if the time step is larger than BH_LC_FDT*Trel */
-        if (BH_LC_FDT>0. && dt> BH_LC_FDT*Trel) {
+	/* This is inconsistent, as for stars with dt< BH_LC_FDT*Trel the probability
+	 * of hitting the loss cone becomes smaller, compared to the case with 
+	 * dt=BH_LC_FDT*Trel
+	 */
+        /* if (BH_LC_FDT>0. && dt> BH_LC_FDT*Trel) { */
+	if (BH_LC_FDT>0.) {
           n_steps= dt/BH_LC_FDT/Trel;
           l2_scale= 1./n_steps;
-        }
+        };
 #endif
-	L2 = l2_scale*fb_sqr(beta); 
+	deltabeta_orb = 1.0/sqrt(n_orb) * sqrt(l2_scale)*beta;
+	L2 = l2_scale*fb_sqr(beta);
         if (BH_R_DISRUPT_NB>0.) {
           Rdisr= BH_R_DISRUPT_NB;
 	} else {
@@ -87,8 +96,11 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		} 
 	}; 
 #ifdef DEBUGGING
-        if (is_in_ids) {
-          //fclose(rwalk_file);
+        if (TotalTime>= T_PRINT_STEP*(StepCount)) {
+	  rwalk_file= fopen(fname, "a");
+	  fprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
+	      index, TotalTime, star[index].r, Trel, dt, sqrt(l2_scale), n_steps, beta, n_local, W, P_orb, n_orb);
+          fclose(rwalk_file);
         }
 #endif
 }; 

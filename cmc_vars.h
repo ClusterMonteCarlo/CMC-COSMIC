@@ -93,6 +93,7 @@ _EXTERN_ int FORCE_RLX_STEP;
  * cone by Trel*BH_LC_FDT/dt 
  */
 _EXTERN_ double BH_LC_FDT;
+_EXTERN_ long AVEKERNEL;
 _EXTERN_ GHashTable *star_ids;
 _EXTERN_ GArray *id_array;
 #endif

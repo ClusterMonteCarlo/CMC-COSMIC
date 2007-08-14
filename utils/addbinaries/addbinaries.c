@@ -18,6 +18,7 @@
 #define EBMIN 3.0
 #define EBMAX 133.0
 #define SEED 8732UL
+#define AVEKERNEL 20
 
 /* global variables needed by Star Track */
 double METALLICITY, WIND_FACTOR=1.0;
