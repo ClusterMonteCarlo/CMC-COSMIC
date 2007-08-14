@@ -32,7 +32,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
         M2ave= calc_average_mass_sqr(index, clus.N_MAX);
         Trel= (PI/32.)*cub(W)/ ( ((double) clus.N_STAR) * n_local * (4.0* M2ave) );
         //if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
-	if (index==1 && TotalTime>= T_PRINT_STEP*(StepCount)) {
+	if (index==1 && TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING) {
           rwalk_file= fopen(fname, "a");
 	  printf("file opened %li %li\n", index, StepCount);
 	  fprintf(rwalk_file, "\n");
@@ -96,7 +96,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		} 
 	}; 
 #ifdef DEBUGGING
-        if (TotalTime>= T_PRINT_STEP*(StepCount)) {
+        if (TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING) {
 	  rwalk_file= fopen(fname, "a");
 	  fprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
 	      index, TotalTime, star[index].r, Trel, dt, sqrt(l2_scale), n_steps, beta, n_local, W, P_orb, n_orb);
