@@ -23,12 +23,15 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	long ktemp=si, kmin, kmax, i, i1;
 	double Qtemp, rk, rk1, Uk, Uk1, a, b, rmin, dQdr_min, rmax, dQdr_max;
 
-	/* for newly created stars, position si is not ordered, so do simple linear search */
+	/* for newly created stars, position si is not ordered */
 	if (si > clus.N_MAX) {
-		ktemp = 0;
-		while (ktemp < clus.N_MAX && star[ktemp].r < star[si].rnew) {
-			ktemp++;
-		}
+		// Not sure how this stupid linear search got here in the first place...
+		//ktemp = 0;
+		//while (ktemp < clus.N_MAX && star[ktemp].r < star[si].rnew) {
+		//	ktemp++;
+		//}
+		// Replaced by much more efficient bisection...
+		ktemp = FindZero_r(0, clus.N_MAX, star[si].rnew) + 1;
 	}
 	
 	/* Q(si) is positive for a standard object that has undergone relaxation 
