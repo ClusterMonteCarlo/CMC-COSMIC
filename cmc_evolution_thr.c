@@ -522,6 +522,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
 }
 
+/* return maximum stellar radius, get r_p and r_a for all objects */
 double get_positions(){
 #ifdef USE_THREADS
 	pthread_t threads[NUM_THREADS];

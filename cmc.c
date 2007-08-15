@@ -188,6 +188,7 @@ int main(int argc, char *argv[])
 			 * Unewrnew is [].phi after potential_calculate() */
 		}
 		
+		/* this calls get_positions() */
 		tidally_strip_stars();
 
 		/* more numbers necessary to implement Stodolkiewicz's
