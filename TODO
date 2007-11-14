@@ -14,6 +14,15 @@
 *** things that would be nice to do, in order of priority ***
 *************************************************************
 
+* Add Holger Baumgardt's algorithm for "maximal" primordial mass segregation:
+  1) an initial model of equal-mass stars is created, their energies tabulated
+     into a list, and ordered from lowest energy to highest
+  2) the masses are drawn from the mass spectrum and ordered from most massive
+     to least massive
+  3) the first star, m_0, in the mass array has its dynamical properties taken
+     from the first fraction m_0/m_clus of the elements in the energy array,
+     the second star, m_1, has its dynamical properties taken from one of the 
+     next fraction m_1/m_clus of the elements in the energy array, and so on.
 * Resurrect binary interaction logging.
 * Keep triples?  This should be easier to do now that the dynamical
   interaction part of the code has been generalized.
