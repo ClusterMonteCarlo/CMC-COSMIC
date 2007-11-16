@@ -115,10 +115,10 @@ long FindZero_r(long x1, long x2, double r)
        (2.0 * (E - star[k].phi) - SQR(J / star[k].r))
 */
 /* #define FUNC(j, k, E, J) (2.0 * (E - (star[k].phi)) - SQR(J / star[k].r)) */
-#ifndef DEBUGGING
+#ifndef EXPERIMENTAL
 #define FUNC(j, k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J))
 #else
-#define FUNC(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J/star[(k)].r))
+#define FUNC(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR((J)/star[(k)].r))
 #endif
 long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 	/* another binary search:
@@ -155,7 +155,6 @@ struct calc_vr_params {
   long index, k;
   double E, J;
 };
-
 double calc_pot_within_interval(double r, void *p) {
   double pot;
   struct calc_vr_params *params= (struct calc_vr_params *) p;
@@ -165,9 +164,14 @@ double calc_pot_within_interval(double r, void *p) {
   index= params->index; k= params->k;
   E= params->E; J= params->J;
   
-  if (r==star[k].r) {
+  if (r< (star[k].r-DBL_EPSILON) || r> star[k+1].r+DBL_EPSILON) {
+    eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r, 
+        star[k].r, star[k+1].r, r-star[k].r, r-star[k+1].r);
+    exit_cleanly(-1);
+  };
+  if (fabs(r-star[k].r)< DBL_EPSILON) {
     pot= star[k].phi;
-  } else if (r== star[k+1].r) {
+  } else if (fabs(r-star[k+1].r)< DBL_EPSILON) {
     pot= star[k+1].phi;
   } else {
     pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
@@ -178,17 +182,122 @@ double calc_pot_within_interval(double r, void *p) {
   return(pot);
 };
 
-double calc_vr_within_interval(double r, void *p) {
+double calc_pot_in_interval(double r, long k) {
   double pot;
+  if (r< (star[k].r-DBL_EPSILON) || r> star[k+1].r+DBL_EPSILON) {
+    eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r, 
+        star[k].r, star[k+1].r, r-star[k].r, r-star[k+1].r);
+    exit_cleanly(-1);
+  };
+  if (fabs(r-star[k].r)< DBL_EPSILON) {
+    pot= star[k].phi;
+  } else if (fabs(r-star[k+1].r)< DBL_EPSILON) {
+    pot= star[k+1].phi;
+  } else {
+    pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
+			 * (1.0/star[k].r - 1.0/r) /
+			 (1.0/star[k].r - 1.0/star[k + 1].r));
+  };
+
+  return(pot);
+};
+
+
+long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
+  /* another binary search:
+   * anologous to above, except FUNC(k) may be decreasing 
+   * rather than increasing */
+  long ktry, kmax1, fevals;
+  long double rmax, pot_max, rmin, pot_min;
+  long double rtry, pot_try;
+  long double qmin, qmax, qtry, func;
+
+  fevals= 0;
+  kmax1= kmax;
+  rmax= star[kmax].r; pot_max= star[kmax].phi;
+  rmin= star[kmin].r; pot_min= star[kmin].phi;
+  qmin= function_q(j, rmin, pot_min, E, J);
+  qmax= function_q(j, rmax, pot_max, E, J);
+  fevals+= 2;
+  /*
+   *if (j==3265) {
+   *  printf("search starts at kmin=%li, rmin=%Lg, q[kmin]=%Lg\n", kmin, rmin, qmin);
+   *  printf("search starts at kmax=%li, rmax=%Lg, q[kmax]=%Lg pot[kmax]=%Lg\n", kmax, rmax, qmax, pot_max);
+   *} else {
+   *  dprintf("search starts at kmin=%li, rmin=%Lg, q[kmin]=%Lg\n", kmin, rmin, qmin);
+   *  dprintf("search starts at kmax=%li, rmax=%Lg, q[kmax]=%Lg\n", kmax, rmax, qmax);
+   *  dprintf("E=%Lg, J=%Lg, pot_min=%Lg, pot_max=%Lg\n", E, J, pot_min, pot_max);
+   *}
+   */
+  if(qmin< qmax){
+    //dprintf("increasing\n");
+    do {
+      ktry = (kmin+kmax+1)/2;
+      rtry= star[ktry].r; pot_try= star[ktry].phi;
+      qtry= function_q(j, rtry, pot_try, E, J);
+      fevals++;
+      //dprintf("ktry=%li, q[ktry]=%g\n", ktry, (double) qtry);
+      if (qtry<0.e0){
+        kmin = ktry;
+      } else {
+        kmax = ktry-1;
+      }
+    } while (kmax!=kmin);
+  } else {
+    //dprintf("decreasing\n");
+    do {
+      ktry = (kmin+kmax+1)/2;
+      rtry= star[ktry].r; pot_try= star[ktry].phi;
+      qtry= function_q(j, rtry, pot_try, E, J);
+      fevals++;
+      if (j==3265) printf("ktry=%li, q[ktry]=%g\n", ktry, (double) qtry);
+      if (qtry>0.e0){
+        kmin = ktry;
+      } else {
+        kmax = ktry-1;
+      }
+    } while (kmax!=kmin);
+  };
+
+  /*
+   *if (j==3265) {
+   *  qtry= function_q(j, star[kmin].r, star[kmin].phi, E, J);
+   *  printf("search ends at kmin=%li, q[kmin]=%Lg\n", kmin, qtry);
+   *  qtry= function_q(j, star[kmin+1].r, star[kmin+1].phi, E, J);
+   *  printf("search ends at rmin=%g, q[kmin+1]=%Lg\n", star[kmin].r, qtry);
+   *  func= FUNC(j, kmax1, E, J);
+   *  printf("E=%Lg, J=%Lg, FUNC[max]=%Lg, N_MAX+1=%li\n", E, J, func, clus.N_MAX +1);
+   *}
+   */
+  //printf("f_z_Q fevals=%li\n", fevals);
+  return (kmin);
+} 
+
+/* Calculate the square of vr ! */
+double calc_vr_within_interval(double r, void *p) {
   struct calc_vr_params *params= (struct calc_vr_params *) p;
   long index, k;
-  double E, J;
+  double pot, E, J;
 
   index= params->index; k= params->k;
   E= params->E; J= params->J;
   pot= calc_pot_within_interval(r, p);
+  return(function_q(index, r, pot, E, J));
+};
+
+/* Calculates the square of vr */
+double calc_vr_in_interval(double r, long index, long k, double E, double J) {
+  struct calc_vr_params params;
+  double vr;
+
+  params. index = index;
+  params. k     = k;
+  params. E     = E;
+  params. J     = J;
+
+  vr= calc_vr_within_interval(r, &params);
   
-  return(2.0 * (E - (pot + PHI_S(r, index)))- fb_sqr(J/r));
+  return(vr);
 };
 
 double calc_Q_within_interval(double r, void *p) {
@@ -203,6 +312,7 @@ double calc_Q_within_interval(double r, void *p) {
   return(2.0 * SQR(r) * (E - pot - PHI_S(r, index))- SQR(J));
 };
 
+/* Calculates the square of vr! */
 double calc_vr(double r, long index, double E, double J) {
   long k;
   struct Interval inter;
@@ -212,7 +322,7 @@ double calc_vr(double r, long index, double E, double J) {
   if (SEARCH_GRID) {
     inter= search_grid_get_interval(r_grid, r);
   } else {
-    inter.min= 1;
+    inter.min= 0;
     inter.max= clus.N_MAX+1;
   };
   if (inter.min== inter.max-1) {
@@ -253,6 +363,7 @@ double find_root_vr(long index, long k, double E, double J) {
     eprintf("k= %li, F[k]= %g, F[k+1]= %g, r[k]= %g, r[k+1]= %g\n", k, 
         GSL_FN_EVAL(&F, star[k].r), GSL_FN_EVAL(&F, star[k+1].r), star[k].r, star[k+1].r);
     eprintf("FUNC[k]= %g, FUNC[k+1]= %g\n", FUNC(index, k, E, J), FUNC(index, k+1, E, J));
+    eprintf("DBL_EPSILON= %g, r[k]= %g\n", DBL_EPSILON, star[k].r);
     exit(1);
   }
 
@@ -291,7 +402,8 @@ double find_root_vr(long index, long k, double E, double J) {
 	prev_apsis= gsl_root_fsolver_root(q_root);
       } else {
 	apsis= gsl_root_fsolver_root(q_root);
-	not_converged= gsl_root_test_delta(apsis, prev_apsis, APSIDES_CONVERGENCE, 0.)==GSL_CONTINUE;
+	not_converged=  not_converged && 
+          (gsl_root_test_delta(apsis, prev_apsis, APSIDES_CONVERGENCE, 0.)==GSL_CONTINUE);
 	prev_apsis= apsis;
       };
     };
@@ -328,7 +440,7 @@ double find_root_vr(long index, long k, double E, double J) {
 
   if (GSL_FN_EVAL(&F, apsis)< 0.) {
     eprintf("Residual is negative! Apsis= %g, vr(apsis)= %g\n", apsis, GSL_FN_EVAL(&F, apsis));
-    exit(1);
+    exit_cleanly(-1);
   }
 
   return(apsis);

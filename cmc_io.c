@@ -613,7 +613,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_FORCE_RLX_STEP);
 				sscanf(values, "%i", &FORCE_RLX_STEP);
 				parsed.FORCE_RLX_STEP = 1;
-#ifdef DEBUGGING
+#ifdef EXPERIMENTAL
                         } else if (strcmp(parameter_name, "BH_LC_FDT")== 0) {
 				PRINT_PARSED(PARAMDOC_BH_LC_FDT);
 				sscanf(values, "%lf", &BH_LC_FDT);
@@ -623,7 +623,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				sscanf(values, "%li", &AVEKERNEL);
 				parsed.AVEKERNEL = 1;
 #endif
-        		} else if (strcmp(parameter_name, "APSIDES_PRECISION")== 0) {
+			} else if (strcmp(parameter_name, "APSIDES_PRECISION")== 0) {
 				PRINT_PARSED(PARAMDOC_APSIDES_PRECISION);
 				sscanf(values, "%lf", &APSIDES_PRECISION);
 				parsed.APSIDES_PRECISION = 1;
@@ -702,7 +702,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(SG_MATCH_AT_FRACTION, 0.5, PARAMDOC_SG_MATCH_AT_FRACTION);
         CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95, PARAMDOC_SG_PARTICLE_FRACTION);
         CHECK_PARSED(FORCE_RLX_STEP, 0, PARAMDOC_FORCE_RLX_STEP);
-#ifdef DEBUGGING
+#ifdef EXPERIMENTAL
         CHECK_PARSED(BH_LC_FDT, 0.0, PARAMDOC_BH_LC_FDT);
         CHECK_PARSED(AVEKERNEL, 20, PARAMDOC_AVEKERNEL);
 #endif

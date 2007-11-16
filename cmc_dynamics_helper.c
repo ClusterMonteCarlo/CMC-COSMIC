@@ -1006,7 +1006,7 @@ void calc_sigma_r(void)
 		simaxlast = simax;
 	}
 }
-#ifdef DEBUGGING
+
 double calc_average_mass_sqr(long index, long N_LIMIT) {
   long simin, simax, si, p, k;
   double M2ave;
@@ -1033,4 +1033,3 @@ double calc_average_mass_sqr(long index, long N_LIMIT) {
 
   return(M2ave);
 };
-#endif

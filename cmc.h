@@ -26,7 +26,7 @@
 
 #define N_TRY 50000
 
-#ifndef DEBUGGING
+#ifndef EXPERIMENTAL
 #define AVEKERNEL 20
 #endif
 
@@ -86,6 +86,15 @@ typedef struct{
 	double e; /* eccentricity */
 	int inuse; /* whether or not binary exists */
 } binary_t;
+struct star_coords {
+  long index;
+  long field_index;
+  double r;
+  double vr;
+  double vt;
+  double E, J;
+  double pot;
+};
 
 /* single stars/objects */
 typedef struct{
@@ -220,7 +229,7 @@ typedef struct{
         int BH_R_DISRUPT_NB;
 #define PARAMDOC_FORCE_RLX_STEP "force a relaxation step (useful when RELAXATION=0) (0=off, 1=on)"
         int FORCE_RLX_STEP; 
-#ifdef DEBUGGING
+#ifdef EXPERIMENTAL
 #define PARAMDOC_BH_LC_FDT "ask Stefan"
         int BH_LC_FDT;
 #define PARAMDOC_AVEKERNEL "one half the number of stars over which to average certain quantities"
@@ -519,14 +528,28 @@ void search_grid_free(struct Search_Grid *grid);
 #ifdef DEBUGGING
 #include <glib.h>
 void load_id_table(GHashTable* ids, char *filename);
-double calc_average_mass_sqr(long index, long N_LIMIT);
 #endif
+struct star_coords get_position(long index, double E, double J, double old_r, orbit_rs_t orbit);
+orbit_rs_t calc_orbit_new_J(long index, double J, struct star_coords old_pos, orbit_rs_t orbit_old);
+void set_a_b(long index, long k, double *a, double *b);
+long find_zero_Q_slope(long index, long k, double E, double J, int positive);
+//long get_positive_Q_index(long index, double E, double J);
+long find_zero_Q(long j, long kmin, long kmax, long double E, long double J);
+//extern inline long double function_q(long j, long double r, long double pot, long double E, long double J);
+orbit_rs_t calc_orbit_new(long index, double E, double J);
+double calc_average_mass_sqr(long index, long N_LIMIT);
 struct Interval get_r_interval(double r);
 double calc_vr_within_interval(double r, void *p);
+double calc_vr_in_interval(double r, long index, long k, double E, double J);
 double calc_vr(double r, long index, double E, double J);
 double find_root_vr(long index, long k, double E, double J);
+void stellar_type_changed(int type, int type_prev, long index);
+void retain_neutron_stars(long index, double fraction);
+double calc_pot_in_interval(double r, long k);
+void remove_star(long j, double phi_rtidal, double phi_zero);
 
 /* macros */ 
+#define Q_function(j, r, pot, E, J) (2.0 * ((E) - ((pot) + PHI_S((r), j))) - SQR((J) / (r)) )
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
 /* #define PHI_S(rad, j) ( ((rad)>=star[(j)].r ? star[(j)].m/(rad) : star[(j)].m/star[(j)].r) * (1.0/clus.N_STAR) - 0.5*star[(j)].m/clus.N_STAR/(rad) ) */
 /* correction to potential due to subtracting star's contribution (this is what Marc uses) */

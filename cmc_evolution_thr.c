@@ -20,10 +20,11 @@
 orbit_rs_t calc_orbit_rs(long si, double E, double J)
 {
 	orbit_rs_t orbit_rs;
-	long ktemp=si, kmin, kmax, i, i1;
+	long ktemp=si, kmin, kmax, i, i1, fevals;
 	double Qtemp, rk, rk1, Uk, Uk1, a, b, rmin, dQdr_min, rmax, dQdr_max;
 
 	/* for newly created stars, position si is not ordered */
+        dprintf("clus.N_MAX= %li\n", clus.N_MAX);
 	if (si > clus.N_MAX) {
 		// Not sure how this stupid linear search got here in the first place...
 		//ktemp = 0;
@@ -38,20 +39,21 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	   (see Joshi, Rasio, & Portegies Zwart 2000).  However, it can be negative
 	   for newly created stars.  We ignore this for now and hope for the best. */
 	Qtemp = function_Q(si, ktemp, E, J);
-	
+	fevals=1; 
 	/* check for nearly circular orbit and do linear search */
-	if (Qtemp < 0.0) {
-		ktemp = -1;
-		do {
-			ktemp++;
-			Qtemp = function_Q(si, ktemp, E, J);
-		} while (Qtemp < 0.0 && ktemp <= clus.N_MAX);		
-		if (ktemp >= clus.N_MAX) {
-			dprintf("linear search failed\n");
-			ktemp = si;
-		}
-	}
-	
+        if (Qtemp < 0.0) {
+          ktemp = -1;
+          do {
+            ktemp++; fevals++;
+            Qtemp = function_Q(si, ktemp, E, J);
+          } while (Qtemp < 0.0 && ktemp <= clus.N_MAX);		
+          if (ktemp >= clus.N_MAX) {
+            dprintf("linear search failed\n");
+            ktemp = si;
+          }
+        }
+	//printf("==> index=%li, fevals=%li\n", si, fevals);
+
 	if (Qtemp <= 0) { /* possibly a circular orbit */
 		while (function_Q(si, ktemp + 1, E, J) > function_Q(si, ktemp, E, J) 
 		       && function_Q(si, ktemp, E, J) < 0 && ktemp <= clus.N_MAX) {
@@ -144,15 +146,15 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			orbit_rs.circular_flag = 0;	
 		}
 
-#ifdef DEBUGGING
+#ifdef EXPERIMENTAL
                 /* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
                 if (!orbit_rs.circular_flag) {
                   int rmax_in_interval, rmin_in_interval, vr_rmax_positive, vr_rmin_positive;
 
                   rmin_in_interval= orbit_rs.rp< star[kmin+1].r && orbit_rs.rp> star[kmin].r;
                   rmax_in_interval= orbit_rs.ra< star[kmax+1].r && orbit_rs.ra> star[kmax].r;
-                  vr_rmin_positive= calc_vr(orbit_rs.rp, si, E, J)>= 0.;
-                  vr_rmax_positive= calc_vr(orbit_rs.ra, si, E, J)>= 0.;
+                  vr_rmin_positive= calc_vr_in_interval(orbit_rs.rp, si, kmin, E, J)>= 0.;
+                  vr_rmax_positive= calc_vr_in_interval(orbit_rs.ra, si, kmax, E, J)>= 0.;
 
                   if (!(rmax_in_interval && vr_rmax_positive)) {
                     rmax= find_root_vr(si, kmax, E, J);
@@ -316,7 +318,7 @@ void tidally_strip_stars(void) {
 	} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
 }
 
-static void remove_star(long j, double phi_rtidal, double phi_zero) {
+void remove_star(long j, double phi_rtidal, double phi_zero) {
 	double E, J;
 
 	/* dprintf("removing star: i=%ld id=%ld m=%g E=%g bin=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
@@ -410,8 +412,11 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		}
 
 		/* calculate peri- and apocenter of orbit */
+#ifdef EXPERIMENTAL
+    orbit_rs = calc_orbit_new(j, E, J);
+#else
 		orbit_rs = calc_orbit_rs(j, E, J);
-		
+#endif		
 		/* skip the rest if the star is on a nearly circular orbit */
 		if (orbit_rs.circular_flag == 1) {
 			star[si].rnew = star[si].r;

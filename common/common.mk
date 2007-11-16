@@ -28,10 +28,18 @@ DATE = $(shell date | sed -e 's|[[:space:]]|_|g')
 ##############################################################################
 ifdef DEBUGGING
   DEBUG_LIBS = $(shell pkg-config --libs glib-2.0)
-  DEBUG_FLAGS = "-DDEBUGGING" $(shell pkg-config --cflags glib-2.0)
+  DEBUG_FLAGS = -DDEBUGGING $(shell pkg-config --cflags glib-2.0)
+  #Using extra libraries for debugging
 else
   DEBUG_LIBS = 
   DEBUG_FLAGS = 
+endif
+
+##############################################################################
+### Enable experimental features when EXPERIMENTAL is set.
+##############################################################################
+ifdef EXPERIMENTAL
+  DEBUG_FLAGS+= -DEXPERIMENTAL
 endif
 
 ##############################################################################
@@ -40,13 +48,14 @@ endif
 UNAME = $(shell uname)
 
 ifeq ($(UNAME),Linux)
-CFLAGS = -Wall -O3 $(DEBUG_FLAGS) -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS = -Wall -mieee-fp -O3 -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
+#CFLAGS = -Wall -g -mieee-fp -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
 CC = g++
 #CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS = -Wall -O3 -I/sw/include -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm
 else
 ifeq ($(UNAME),AIX)
@@ -89,12 +98,13 @@ endif
 
 ifeq ($(HOSTNAME),fugu.phys.northwestern.edu)
 #CC = pathcc
+#CFLAGS = -Wall -O3 $(DEBUG_FLAGS) -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 #CFLAGS := -Wall -Ofast -OPT:fast_math=on -LNO:fu=9:full_unroll_size=7000 -static-data -I/usr/include/cfitsio
 #CFLAGS := $(CFLAGS) -march=opteron -I/usr/include/cfitsio
 #CC = gcc
 #CFLAGS := $(CFLAGS) -march=k8 -I/usr/include/cfitsio
 CFLAGS := $(CFLAGS) -m32 -march=k8 -I/share/apps/gsl/include -L/share/apps/gsl/lib -I/share/apps/cfitsio/include -L/share/apps/cfitsio/lib $(DEBUG_FLAGS)
-LIBFLAGS := $(LIBFLAGS) $(DEBUG_LIBS) -static 
+LIBFLAGS := $(LIBFLAGS) -static 
 endif
 
 DOMNAME = $(shell hostname | cut -d . -f 2-)

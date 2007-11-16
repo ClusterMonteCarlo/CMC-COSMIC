@@ -107,35 +107,55 @@ void stellar_evolution_init(void){
  */
 
 void do_stellar_evolution(void){
-	long int i, k;
-	double frac, tdesired;
-	
-	tdesired = dynamic2stellar_time(TotalTime);
-//	if(star[1].tend > tdesired){
-//		wprintf(" PROBABLY NO  STELLAR EVOLUTION\n");
-//	} else {
-//		wprintf(" YES STELLAR EVOLUTION\n");
-//	}
-	for(k=1; k<=clus.N_MAX; k++){
-		i = k;
-		if ((tdesired-star[i].tend) < 0.5*star[i].dt) continue;
-//		dprintf("Evolving star no:%8ld, mass = %e \r", 
-//				i, star[i].mass);
-		while (star[i].tend<tdesired) {
-			star[i].tbeg = star[i].tend;
-			star[i].tend = tdesired;
-			frac = 0.0;
-			singl(&(star[i].mzams), &(star[i].m0), &(star[i].mass), 
-				&(star[i].k), &(star[i].tbeg), &(star[i].tvir),
-				&(star[i].tend), &(star[i].lum), &(star[i].rad),
-				&(star[i].mc), &(star[i].mcHe), &(star[i].mcCO),
-				&(star[i].flag), &(star[i].dt), &(star[i].mpre),
-				&(star[i].kpre), &(star[i].tstart), &frac);
-		}
-		star[i].m = stellar2dynamic_mass(star[i].mass);
-	}
-	gprintf("\n");
+  long int i, k;
+  double frac, tdesired;
+
+  tdesired = dynamic2stellar_time(TotalTime);
+  //	if(star[1].tend > tdesired){
+  //		wprintf(" PROBABLY NO  STELLAR EVOLUTION\n");
+  //	} else {
+  //		wprintf(" YES STELLAR EVOLUTION\n");
+  //	}
+  for(k=1; k<=clus.N_MAX; k++){
+    int type_prev;
+    i = k;
+    type_prev= star[i].k;
+    if ((tdesired-star[i].tend) < 0.5*star[i].dt) continue;
+    //		dprintf("Evolving star no:%8ld, mass = %e \r", 
+    //				i, star[i].mass);
+    while (star[i].tend<tdesired) {
+      star[i].tbeg = star[i].tend;
+      star[i].tend = tdesired;
+      frac = 0.0;
+      singl(&(star[i].mzams), &(star[i].m0), &(star[i].mass), 
+          &(star[i].k), &(star[i].tbeg), &(star[i].tvir),
+          &(star[i].tend), &(star[i].lum), &(star[i].rad),
+          &(star[i].mc), &(star[i].mcHe), &(star[i].mcCO),
+          &(star[i].flag), &(star[i].dt), &(star[i].mpre),
+          &(star[i].kpre), &(star[i].tstart), &frac);
+    };
+    if (star[i].k!= type_prev) 
+      stellar_type_changed(star[i].k, type_prev, i);
+    star[i].m = stellar2dynamic_mass(star[i].mass);
+  }
+  gprintf("\n");
 }
+
+void stellar_type_changed(int type, int type_prev, long index) {
+    retain_neutron_stars(index, 0.15);
+};
+
+void retain_neutron_stars(long index, double fraction) {
+  double X;
+  if (star[index].k==NEUTRON_STAR) {
+    X = rng_t113_dbl();
+    if (X> fraction) {
+      /* turn it into a stellar-evolution victim */
+      dprintf("Remove a neutron star. index= %li, id= %li\n", index, star[index].id);
+      star[index].m= 0;
+    };
+  };
+};
 
 void write_stellar_data(void){
 	long i, k;

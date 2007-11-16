@@ -18,7 +18,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	double deltamax, deltasafe, delta, dbeta;
 	double w_mag, l2_scale;
 	int i;
-#ifdef DEBUGGING
+#ifdef EXPERIMENTAL
         FILE *rwalk_file=NULL;
         char fname[80];
         long is_in_ids;
@@ -45,26 +45,32 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
  	/* simulate loss cone physics for central mass */
 	P_orb = calc_P_orb(index);
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
-        l2_scale= 1.;
-#ifdef DEBUGGING
-        /* scale down L2 if the time step is larger than BH_LC_FDT*Trel */
-	/* This is inconsistent, as for stars with dt< BH_LC_FDT*Trel the probability
-	 * of hitting the loss cone becomes smaller, compared to the case with 
-	 * dt=BH_LC_FDT*Trel
-	 */
-        /* if (BH_LC_FDT>0. && dt> BH_LC_FDT*Trel) { */
-	if (BH_LC_FDT>0.) {
-          n_steps= dt/BH_LC_FDT/Trel;
-          l2_scale= 1./n_steps;
-        };
+  l2_scale= 1.;
+#ifdef EXPERIMENTAL
+  /* scale down L2 if the time step is larger than BH_LC_FDT*Trel */
+  /* This is inconsistent, as for stars with dt< BH_LC_FDT*Trel the probability
+   * of hitting the loss cone becomes smaller, compared to the case with 
+   * dt=BH_LC_FDT*Trel
+   */
+  /* if (BH_LC_FDT>0. && dt> BH_LC_FDT*Trel) { */
+  if (BH_LC_FDT>0.) {
+    n_steps= dt/BH_LC_FDT/Trel;
+    l2_scale= 1./n_steps;
+  };
 #endif
 	deltabeta_orb = 1.0/sqrt(n_orb) * sqrt(l2_scale)*beta;
 	L2 = l2_scale*fb_sqr(beta);
-        if (BH_R_DISRUPT_NB>0.) {
-          Rdisr= BH_R_DISRUPT_NB;
-	} else {
-          Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad;
-        };
+  if (BH_R_DISRUPT_NB>0.) {
+    Rdisr= BH_R_DISRUPT_NB;
+  } else if (STELLAR_EVOLUTION){
+    double Rss;
+    //dprintf("cenma.m= %g, star[%li].m= %g\n", cenma.m, index, star[index].m);
+    Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad*RSUN/units.l;
+    Rss= 4.24e-06*cenma.m/SOLAR_MASS_DYN*RSUN/units.l;
+    Rdisr= MAX(Rdisr, Rss);
+  } else {
+    Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad;
+  };
 	Jlc= sqrt(2.*cenma.m*madhoc*Rdisr);
 	vlc= Jlc/star[index].r;
   	for (i=0; i<3; i++) {
@@ -87,15 +93,15 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 			//delta = MAX(deltabeta_orb, MIN(deltamax, sqrt(L2)));
            		dbeta = 2.0 * PI * rng_t113_dbl(); 
 			do_random_step(w, dbeta, delta); 
-#ifdef DEBUGGING
-                        if (is_in_ids) {
-                          //fprintf(rwalk_file, "%f %g %g %g %g %g %g %g %g %g\n",
-                            //TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel, l2_scale);
-                        };
+#ifdef EXPERIMENTAL
+      if (is_in_ids) {
+        //fprintf(rwalk_file, "%f %g %g %g %g %g %g %g %g %g\n",
+        //TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel, l2_scale);
+      };
 #endif
 		} 
 	}; 
-#ifdef DEBUGGING
+#ifdef EXPERIMENTAL
         if (TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING) {
 	  rwalk_file= fopen(fname, "a");
 	  fprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
