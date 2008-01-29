@@ -6,7 +6,7 @@ PREFIX = $(HOME)
 ##############################################################################
 ### C compiler
 ##############################################################################
-CC = g++
+CC = gcc
 
 ##############################################################################
 ### test for ccache
@@ -53,7 +53,7 @@ CFLAGS = -Wall -mieee-fp -O3 -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DAT
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
-CC = g++
+CC = gcc
 #CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 CFLAGS = -Wall -O3 -I/sw/include -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm

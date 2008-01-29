@@ -2,11 +2,10 @@
 /* header for single.c and binary.c */
 
 #ifndef _MAIN_
-#define _EXTERN_ extern
+#define _EXTERN_ /* extern */
 #else
 #define _EXTERN_
 #endif
-
 
 #define Vicky 1                     /* 0--evol continus, 1--evol stops in cases pointed out by Vicky */
 

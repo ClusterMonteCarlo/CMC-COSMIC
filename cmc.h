@@ -547,6 +547,7 @@ void stellar_type_changed(int type, int type_prev, long index);
 void retain_neutron_stars(long index, double fraction);
 double calc_pot_in_interval(double r, long k);
 void remove_star(long j, double phi_rtidal, double phi_zero);
+inline double function_q(long j, long double r, long double pot, long double E, long double J);
 
 /* macros */ 
 #define Q_function(j, r, pot, E, J) (2.0 * ((E) - ((pot) + PHI_S((r), j))) - SQR((J) / (r)) )
