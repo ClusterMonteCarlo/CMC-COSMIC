@@ -49,7 +49,7 @@ long star_get_id_new(void)
 }
 
 /* calculate and store the velocity dispersion profile */
-void calc_sigma_r(cmc_fits_data_t *cfd, double *r, double *sigma, double *mave)
+void addbin_calc_sigma_r(cmc_fits_data_t *cfd, double *r, double *sigma, double *mave)
 {
 	long si, k, p=AVEKERNEL, simin, simax;
 	double Mv2ave, Mave, Sigma;
@@ -239,7 +239,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 	r = (double *) malloc((cfd->NOBJ+1)*sizeof(double));
 	sigma = (double *) malloc((cfd->NOBJ+1)*sizeof(double));
 	mave = (double *) malloc((cfd->NOBJ+1)*sizeof(double));
-	calc_sigma_r(cfd, r, sigma, mave);
+	addbin_calc_sigma_r(cfd, r, sigma, mave);
 
 	/* calculate kT in cluster core to get scale for binary semimajor axis distribution */
 	kTcore = 0.0;

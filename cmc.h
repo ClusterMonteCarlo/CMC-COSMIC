@@ -384,7 +384,7 @@ void get_physical_units(void);
 void update_vars(void);
 
 void print_version(FILE *stream);
-void print_usage(FILE *stream, char *argv[]);
+void cmc_print_usage(FILE *stream, char *argv[]);
 void parser(int argc, char *argv[], gsl_rng *r);
 void PrintFileOutput(void);
 

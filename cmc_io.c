@@ -20,7 +20,7 @@ void print_version(FILE *stream)
 }
 
 /* print the usage */
-void print_usage(FILE *stream, char *argv[])
+void cmc_print_usage(FILE *stream, char *argv[])
 {
 	fprintf(stream, "USAGE:\n");
 	fprintf(stream, "  %s [options...] <input_file> <output_file_prefix>\n", argv[0]);
@@ -396,7 +396,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		case 'h':
 			print_version(stdout);
 			fprintf(stdout, "\n");
-			print_usage(stdout, argv);
+			cmc_print_usage(stdout, argv);
 			exit(0);
 		default:
 			break;
@@ -405,7 +405,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 
 	/* check to make sure there was nothing crazy on the command line */
 	if (argc - optind != 2) {
-		print_usage(stdout, argv);
+		cmc_print_usage(stdout, argv);
 		exit(0);
 	}
 	
