@@ -1,5 +1,6 @@
 /* -*- linux-c -*- */
 
+/* "extern" should be uncommented here when compiling with g++ */
 #ifndef _MAIN_
 #define _EXTERN_ /* extern */
 #else

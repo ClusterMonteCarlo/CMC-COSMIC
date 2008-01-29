@@ -1,6 +1,7 @@
 /* software by kabel: last modified on Feb 18, 2002 */
 /* header for single.c and binary.c */
 
+/* "extern" should be uncommented here when compiling with g++ */
 #ifndef _MAIN_
 #define _EXTERN_ /* extern */
 #else
