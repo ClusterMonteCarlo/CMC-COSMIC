@@ -9,7 +9,7 @@
 #include "../../cmc.h"
 #include "../../common/fitslib.h"
 #include "../../common/taus113-v2.h"
-#include "../../startrack/sinbin.h"
+#include "../../bse_wrap/bse_wrap.h"
 
 #define INFILE "in.fits"
 #define OUTFILE "debug.fits"
@@ -21,7 +21,7 @@
 #define AVEKERNEL 20
 
 /* global variables needed by Star Track */
-double METALLICITY, WIND_FACTOR=1.0;
+double *zpars, METALLICITY, WIND_FACTOR=1.0;
 /* global variable for new star id */
 long newstarid;
 
@@ -90,18 +90,44 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 	long i, j;
 	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew;
 	double kTcore, vcore, Eb, Ebmin, Ebmax;
-	double frac, *r, *sigma, *mave;
+	double frac, *r, *sigma, *mave, dtp, tphysf;
 	star_t star;
 
-	/* the following function calls need to be done for
-	 * Chris' stellar evolution code */
-	/* -- begin black_magic -- */
-	M_hook=M_hookf();    
-	M_HeF=M_HeFf();
-	M_FGB=M_FGBf();
-	coef_aa();
-	coef_bb(); 
-	/* --  end  black_magic -- */
+	/* initialize stellar evolution */
+	/* SSE */
+	/* bse_set_hewind(0.5); */
+	
+	/* BSE */
+	bse_set_neta(0.5);
+	bse_set_bwind(0.0);
+	bse_set_hewind(1.0);
+	bse_set_alpha1(3.0);
+	bse_set_lambda(0.5);
+	bse_set_ceflag(0);
+	bse_set_tflag(1);
+	bse_set_ifflag(0);
+	bse_set_wdflag(1);
+	bse_set_bhflag(0);
+	bse_set_nsflag(1);
+	bse_set_mxns(3.0);
+	bse_set_idum(29769);
+	bse_set_pts1(0.05);
+	bse_set_pts2(0.01);
+	bse_set_pts3(0.02);
+	bse_set_sigma(190.0);
+	bse_set_beta(0.125);
+	bse_set_xi(1.0);
+	bse_set_acc2(1.5);
+	bse_set_epsnov(0.001);
+	bse_set_eddfac(10.0);
+	bse_set_gamma(-1.0);
+	
+	/* set parameters relating to metallicity */
+	zpars = (double *) malloc(20 * sizeof(double));
+	bse_zcnsts(&METALLICITY, zpars);
+	
+	/* set collisions matrix */
+	bse_instar();
 
 	/* set newstarid to emulate CMC function */
 	newstarid = cfd->NOBJ;
@@ -170,34 +196,30 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			cfd->bs_m2[j] = Mmin + rng_t113_dbl() * (cfd->bs_m1[j] - Mmin);
 			
 			/* stellar evolution stuff */
-			star.mass = cfd->bs_m2[j] * cfd->Mclus;
-			if(star.mass <= 0.7){
-				star.k = S_MASS_MS_STAR;
+			star.se_mass = cfd->bs_m2[j] * cfd->Mclus;
+			if(star.se_mass <= 0.7){
+				star.se_k = 0;
 			} else {
-				star.k = L_MASS_MS_STAR;
+				star.se_k = 1;
 			}
 			/* setting the rest of the variables */
-			star.mzams = star.m0 = star.mass;
-			star.tbeg = star.tvir = 0.0;
-			star.tend = star.tbeg + 1e-11;
-			star.mc = star.mcHe = star.mcCO = 0.0;
-			star.dt = star.mpre = star.tstart = frac = 0.0;
-			star.kpre = star.k;
-			star.flag = 0;
-			star.lum = star.rad = 1.0;
+			star.se_mt = star.se_mass;
+			star.se_ospin = 0.0;
+			star.se_epoch = 0.0;
+			star.se_tphys = 0.0;
 
 			/* evolving stars a little bit to set luminosity and radius */
-			singl(&(star.mzams), &(star.m0), &(star.mass), 
-			      &(star.k), &(star.tbeg), &(star.tvir),
-			      &(star.tend), &(star.lum), &(star.rad),
-			      &(star.mc), &(star.mcHe), &(star.mcCO),
-			      &(star.flag), &(star.dt), &(star.mpre),
-			      &(star.kpre), &(star.tstart), &frac);
-			
+			tphysf = 1.0e-6;
+			dtp = tphysf;
+			bse_evolv1(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius), 
+				   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
+				   &(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
+				   &(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars);
+
 			/* setting star properties in FITS file, being careful with units */
-			cfd->bs_k2[j] = star.k;
-			cfd->bs_m2[j] = star.mass / cfd->Mclus;
-			cfd->bs_Reff2[j] = star.rad / (cfd->Rvir * PARSEC / RSUN);
+			cfd->bs_k2[j] = star.se_k;
+			cfd->bs_m2[j] = star.se_mass / cfd->Mclus;
+			cfd->bs_Reff2[j] = star.se_radius / (cfd->Rvir * PARSEC / RSUN);
 
 			/* set/unset stellar properties for obj */
 			cfd->obj_id[i] = NOT_A_STAR;

@@ -50,20 +50,20 @@ UNAME = $(shell uname)
 ifeq ($(UNAME),Linux)
 CFLAGS = -Wall -mieee-fp -O3 -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
 #CFLAGS = -Wall -g -mieee-fp -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
-LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm $(DEBUG_LIBS)
+LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lg2c -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
 CC = gcc
 #CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 CFLAGS = -Wall -O3 -I/sw/include -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lm
+LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lg2c -lm
 else
 ifeq ($(UNAME),AIX)
 CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty -lm
+LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty -lg2c -lm
 else
 CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lm
+LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lg2c -lm
 endif
 endif
 endif
@@ -114,9 +114,11 @@ CFLAGS := -wd864,1188 -I $(HOME)/libs_et_al/include
 # redefine libflags, leave out -lm to link with intel math library
 # turn of diagn. 864: extern inline function ... was referenced but not defined
 #           and 1188: floating-point value cannot be represented exactly
-LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio
+LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lg2c
 LIBFLAGS := $(LIBFLAGS) -L $(HOME)/libs_et_al/lib -static
 CHRISCFLAGS = 
 endif
 
 FEWBODYDIR = fewbody-0.24
+BSEDIR = bse_wrap/bse
+BSEWRAPDIR = bse_wrap

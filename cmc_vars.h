@@ -107,3 +107,4 @@ _EXTERN_ gsl_root_fsolver *q_root;
 _EXTERN_ double APSIDES_PRECISION;
 _EXTERN_ long APSIDES_MAX_ITER;
 _EXTERN_ double APSIDES_CONVERGENCE;
+_EXTERN_ double *zpars;

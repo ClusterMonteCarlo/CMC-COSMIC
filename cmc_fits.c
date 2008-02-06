@@ -27,7 +27,7 @@ void load_fits_file_data(void)
 		if (star[i].id > newstarid) {
 			newstarid = star[i].id;
 		}
-		star[i].k = cfd.obj_k[i];
+		star[i].se_k = cfd.obj_k[i];
 		star[i].m = cfd.obj_m[i] * ((double) clus.N_STAR);
 		star[i].rad = cfd.obj_Reff[i];
 		star[i].r = cfd.obj_r[i];

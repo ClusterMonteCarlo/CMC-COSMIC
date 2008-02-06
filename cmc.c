@@ -165,10 +165,11 @@ int main(int argc, char *argv[])
 		   will disappear! */
 		clus.N_MAX_NEW++;
 
+		/* evolve stars up to new time */
 		if (STELLAR_EVOLUTION > 0) {
-			do_stellar_evolution(); /* may not work... */
+			do_stellar_evolution();
 		}
-
+		
 		Prev_Dt = Dt;
 
 		/* some numbers necessary to implement Stodolkiewicz's
@@ -240,6 +241,11 @@ int main(int argc, char *argv[])
 		if(tcount%SNAPSHOT_DELTACOUNT==0) {
 			print_2Dsnapshot();
 		}		
+
+		/* DEBUG */
+		if(tcount%50==0) {
+			write_stellar_data();
+		}
 	} /* End FOR (time step iteration loop) */
 
 	times(&tmsbuf);

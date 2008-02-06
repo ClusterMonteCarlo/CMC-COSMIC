@@ -36,23 +36,19 @@ void zero_star(long j)
 	star[j].Uoldrnew = 0.0;
 	star[j].vtold = 0.0;
 	star[j].vrold = 0.0;
-	star[j].mzams = 0.0;
-	star[j].m0 = 0.0;
-	star[j].mass = 0.0;
-	star[j].tbeg = 0.0;
-	star[j].tvir = 0.0;
-	star[j].tend = 0.0;
-	star[j].lum = 0.0;
-	star[j].mc = 0.0;
-	star[j].mcHe = 0.0;
-	star[j].mcCO = 0.0;
-	star[j].dt = 0.0;
-	star[j].mpre = 0.0;
-	star[j].tstart = 0.0;
-	star[j].init_no = 0;
-	star[j].k = 0;
-	star[j].flag = 0;
-	star[j].kpre = 0;
+	star[j].se_mass = 0.0;
+	star[j].se_k = 0;
+	star[j].se_mt = 0.0;
+	star[j].se_ospin = 0.0;
+	star[j].se_epoch = 0.0;
+	star[j].se_tphys = 0.0;
+	star[j].se_radius = 0.0;
+	star[j].se_lum = 0.0;
+	star[j].se_mc = 0.0;
+	star[j].se_rc = 0.0;
+	star[j].se_menv = 0.0;
+	star[j].se_renv = 0.0;
+	star[j].se_tms = 0.0;
 }
 
 void zero_binary(long j)

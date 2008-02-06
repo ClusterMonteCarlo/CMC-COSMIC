@@ -75,7 +75,7 @@ void print_2Dsnapshot(void)
 			
 			if (star[i].binind == 0) {
 				gzprintf(snapfile, "%d %.8g %.8g ", 
-					 star[i].k, star[i].lum, star[i].rad * units.l / RSUN);
+					 star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
 			} else {
 				gzprintf(snapfile, "0 0 0 ");
 			}

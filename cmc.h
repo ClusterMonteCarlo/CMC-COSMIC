@@ -52,25 +52,8 @@
 /* by Freitag & Benz (2002) */
 #define CSAFE 0.2
 
-/* star types, from StarTrack */
-#define S_MASS_MS_STAR                    (0)
-#define L_MASS_MS_STAR                    (1)
-#define HERTZ_GAP_STAR                    (2)
-#define FIRST_GIANT_BRANCH_STAR           (3)
-#define CORE_He_BURNING_STAR              (4)
-#define EARLY_ASYM_GIANT_BRANCH_STAR      (5)
-#define THERM_PULS_ASYM_GIANT_BRANCH_STAR (6)
-#define MS_NAKED_He_STAR                  (7)
-#define HERTZ_GAP_NAKED_He_STAR           (8)
-#define GIANT_BRANCH_NAKED_He_STAR        (9)
-#define He_WD                             (10)
-#define CO_WD                             (11)
-#define ONe_WD                            (12)
-#define NEUTRON_STAR                      (13)
-#define BLACK_HOLE                        (14)
-#define MASSLESS_REMNANT                  (15)
-#define NAKED_CO_CORE                     (-1)
-#define NOT_A_STAR                        (-100)
+/* extra star type */
+#define NOT_A_STAR (-100)
 
 /* binaries */
 typedef struct{
@@ -86,6 +69,7 @@ typedef struct{
 	double e; /* eccentricity */
 	int inuse; /* whether or not binary exists */
 } binary_t;
+
 struct star_coords {
   long index;
   long field_index;
@@ -122,24 +106,20 @@ typedef struct{
 	double rad; /* radius */
 	double Uoldrold, Uoldrnew; /* variables for Stodolkiewicz */
 	double vtold, vrold;       /* energy conservation scheme  */
-	/* stellar evolution variables */
-	double mzams;  /* ZAMS mass                                       */
-	double m0;     /* initial mass                                    */
-	double mass;   /* real mass, this is the one relevant to dynamics */
-	double tbeg;   /* time where evolution step begins                */
-	double tvir;   /* virtual/internal time                           */
-	double tend;   /* time where evolution step is supposed to end    */
-	double lum;    /* luminosity                                      */
-	double mc;     /* core mass                                       */
-	double mcHe;   /* He core mass                                    */
-	double mcCO;   /* C/O core mass                                   */
-	double dt;     /* ???                                             */
-	double mpre;   /* pre SN mass                                     */
-	double tstart; /* ???                                             */
-	long init_no;  /* for bookkeeping                                 */
-	int k;	       /* star type                                       */ 
-	int flag;      /* ???                                             */
-	int kpre;      /* pre SN type                                     */
+	/* TODO: stellar evolution variables */
+	double se_mass;
+	int se_k;
+	double se_mt;
+	double se_ospin;
+	double se_epoch;
+	double se_tphys;
+	double se_radius;
+	double se_lum;
+	double se_mc;
+	double se_rc;
+	double se_menv;
+	double se_renv;
+	double se_tms;
 } star_t;
 
 struct CenMa{
@@ -543,8 +523,6 @@ double calc_vr_within_interval(double r, void *p);
 double calc_vr_in_interval(double r, long index, long k, double E, double J);
 double calc_vr(double r, long index, double E, double J);
 double find_root_vr(long index, long k, double E, double J);
-void stellar_type_changed(int type, int type_prev, long index);
-void retain_neutron_stars(long index, double fraction);
 double calc_pot_in_interval(double r, long k);
 void remove_star(long j, double phi_rtidal, double phi_zero);
 inline double function_q(long j, long double r, long double pot, long double E, long double J);

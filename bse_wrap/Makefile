@@ -1,14 +1,15 @@
-CC = gcc
-CFLAGS = -Wall -O3 -L/sw/lib
-LIBFLAGS = -lm -lg2c
+include ../common/common.mk
 
-BSEDIR = bse
-BSEOBJS = $(BSEDIR)/comenv.o $(BSEDIR)/corerd.o $(BSEDIR)/deltat.o \
-	$(BSEDIR)/dgcore.o $(BSEDIR)/evolv1.o $(BSEDIR)/evolv2.o \
-	$(BSEDIR)/gntage.o $(BSEDIR)/hrdiag.o $(BSEDIR)/instar.o \
-	$(BSEDIR)/kick.o $(BSEDIR)/mix.o $(BSEDIR)/mlwind.o \
-	$(BSEDIR)/mrenv.o $(BSEDIR)/ran3.o $(BSEDIR)/rl.o $(BSEDIR)/star.o \
-	$(BSEDIR)/zcnsts.o $(BSEDIR)/zfuncs.o
+#CC = gcc
+#CFLAGS = -Wall -O3 -L/sw/lib
+#LIBFLAGS = -lm -lg2c
+
+BSEOBJS = bse/comenv.o bse/corerd.o bse/deltat.o \
+	bse/dgcore.o bse/evolv1.o bse/evolv2.o \
+	bse/gntage.o bse/hrdiag.o bse/instar.o \
+	bse/kick.o bse/mix.o bse/mlwind.o \
+	bse/mrenv.o bse/ran3.o bse/rl.o bse/star.o \
+	bse/zcnsts.o bse/zfuncs.o
 
 all: c_sse c_bse
 
@@ -27,8 +28,8 @@ c_bse.o: c_bse.c bse_wrap.h
 bse_wrap.o: bse_wrap.c bse_wrap.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BSEDIR)/%.o: $(BSEDIR)/%.f $(BSEDIR)/const_bse.h $(BSEDIR)/zdata.h
-	cd $(BSEDIR) && $(MAKE) `echo $@ | cut -d / -f 2`
+bse/%.o: bse/%.f bse/const_bse.h bse/zdata.h
+	cd bse && $(MAKE) `echo $@ | cut -d / -f 2`
 
 bseclean:
 	rm -f $(BSEOBJS)

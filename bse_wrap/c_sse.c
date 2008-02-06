@@ -8,7 +8,7 @@ int main(void)
   int i, j, kw[2];
   double mass[2], mt[2], r[2], lum[2], mc[2], rc[2];
   double menv[2], renv[2], ospin[2], epoch[2], tms[2], tphys[2];
-  double tphysf=1.0e-3, dtp=12000.0, z=0.02, *zpars;
+  double tphysf=12000.0, dtp=12000.0, z=0.02, *zpars;
 
   zpars = (double *) malloc(20 * sizeof(double));
 
@@ -28,7 +28,7 @@ int main(void)
 
   bse_zcnsts(&z, zpars);
   
-  mass[0] = 15.0;
+  mass[0] = 30.0;
   mass[1] = 1.0;
   kw[0] = 1;
   kw[1] = 1;

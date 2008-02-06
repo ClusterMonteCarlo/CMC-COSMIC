@@ -5,160 +5,104 @@
 
 #include "cmc.h"
 #include "cmc_vars.h"
-#include "startrack/sinbin.h"
+#include "bse_wrap/bse_wrap.h"
 
-/* MEGA_YEAR is 10^6 years in dynamic units.
- * The time written in lagrange radii file, "Totaltime"
- * is in FP units, the exact conversion depends on,
- * among other things, total mass and size of the cluster
- * so it cannot be calculated automatically and is read
- * from the input file.
- */
+void stellar_evolution_init(void){  
+  double tphysf, dtp;
+  long k;
 
-/* the following is for a Plummer model trh(0)~20Myr */
-/* #define MEGA_YEAR 0.004655 */
-double dynamic2stellar_time(double time_dyn){
-	return time_dyn/MEGA_YEAR;
-}
-double stellar2dynamic_time(double time_ste){
-	return time_ste*MEGA_YEAR;
-}
+  /* SSE */
+  /* bse_set_hewind(0.5); */
 
-/* SOLAR_MASS_DYN is the mass of Sun in dynamic units. 
- * stellar mass is given in units of solar mass, 
- * dynamic mass is given in strange units, basically it looks like
- * sum m = N, ie. <m> = 1.0, 
- * this transformation loses information so the conversion
- * factor has to be determined at the beginning. it is read from 
- * the input file as SOLAR_MASS_DYN = 1.0/<m> ie. it is what value a 1 solar
- * mass star would assume. In late versions of IMGE this will go also into
- * the FITS file produced by massspec. 
- */
+  /* BSE */
+  bse_set_neta(0.5);
+  bse_set_bwind(0.0);
+  bse_set_hewind(1.0);
+  bse_set_alpha1(3.0);
+  bse_set_lambda(0.5);
+  bse_set_ceflag(0);
+  bse_set_tflag(1);
+  bse_set_ifflag(0);
+  bse_set_wdflag(1);
+  bse_set_bhflag(0);
+  bse_set_nsflag(1);
+  bse_set_mxns(3.0);
+  bse_set_idum(29769);
+  bse_set_pts1(0.05);
+  bse_set_pts2(0.01);
+  bse_set_pts3(0.02);
+  bse_set_sigma(190.0);
+  bse_set_beta(0.125);
+  bse_set_xi(1.0);
+  bse_set_acc2(1.5);
+  bse_set_epsnov(0.001);
+  bse_set_eddfac(10.0);
+  bse_set_gamma(-1.0);
 
-/* the following is a 0.5-100 Salpeter IMF, 65536 stars */
-/* #define SOLAR_MASS_DYN 0.6142742970 */
-double dynamic2stellar_mass(double mass_dyn){
-	return mass_dyn/SOLAR_MASS_DYN;
-}
-double stellar2dynamic_mass(double mass_ste){
-	return mass_ste*SOLAR_MASS_DYN;
-}
+  /* set parameters relating to metallicity */
+  zpars = (double *) malloc(20 * sizeof(double));
+  bse_zcnsts(&METALLICITY, zpars);
 
-void stellar_evolution_init(void){
-	long int i, k;
-	double frac;
+  /* set collisions matrix */
+  bse_instar();
 
-	/* the following function calls need to be done for
-	 * Chris' stellar evolution code */
-	/* -- begin black_magic -- */
-	M_hook=M_hookf();    
-	M_HeF=M_HeFf();
-	M_FGB=M_FGBf();
-	coef_aa();
-	coef_bb(); 
-	/* --  end  black_magic -- */
-	
-	if((fp0=fopen("error.dat","w"))==NULL) {    /* errors and warnings */
-		eprintf("can't open file fp0\n");
-		exit_cleanly(-2);
-	}
-
-	for(k=1; k<=clus.N_MAX; k++){
-		i = k;
-		/* converting mass into solar mass unit */
-		star[i].mass = dynamic2stellar_mass(star[i].m);
-		/* setting the type */
-		if(star[i].mass <= 0.7){
-			star[i].k = S_MASS_MS_STAR;
-		} else {
-			star[i].k = L_MASS_MS_STAR;
-		}
-		/* setting the rest of the variables */
-		star[i].mzams = star[i].m0 = star[i].mass;
-		star[i].tbeg = star[i].tvir = 0.0;
-		star[i].tend = star[i].tbeg + 1e-11;
-		star[i].mc = star[i].mcHe = star[i].mcCO = 0.0;
-		star[i].dt = star[i].mpre = star[i].tstart = frac = 0.0;
-		star[i].kpre = star[i].k;
-		star[i].flag = 0;
-		star[i].lum = star[i].rad = 1.0;
-	}
-	
-	/* evolving stars a little bit to set luminosity and radius */
-	for(k=1; k<=clus.N_MAX; k++){
-		i = k;
-		frac = 0.0;
-		singl(&(star[i].mzams), &(star[i].m0), &(star[i].mass), 
-			&(star[i].k), &(star[i].tbeg), &(star[i].tvir),
-			&(star[i].tend), &(star[i].lum), &(star[i].rad),
-			&(star[i].mc), &(star[i].mcHe), &(star[i].mcCO),
-			&(star[i].flag), &(star[i].dt), &(star[i].mpre),
-			&(star[i].kpre), &(star[i].tstart), &frac);
-	}
-}
-
-/* An accelaration scheme for SE:
- * the SE routine is called after dynamical evolution
- * tdesired is the time reached by dynamical evolution
- * star[i].tend is the time up to which star have already evolved
- *        .dt is the time scale over which SE stuff will change ~1%
- * therefore, if (tdesired-star[i].tend) < 0.5*star[i].dt, no
- * need to evolve, one can skip the star.
- */
-
-void do_stellar_evolution(void){
-  long int i, k;
-  double frac, tdesired;
-
-  tdesired = dynamic2stellar_time(TotalTime);
-  //	if(star[1].tend > tdesired){
-  //		wprintf(" PROBABLY NO  STELLAR EVOLUTION\n");
-  //	} else {
-  //		wprintf(" YES STELLAR EVOLUTION\n");
-  //	}
-  for(k=1; k<=clus.N_MAX; k++){
-    int type_prev;
-    i = k;
-    type_prev= star[i].k;
-    if ((tdesired-star[i].tend) < 0.5*star[i].dt) continue;
-    //		dprintf("Evolving star no:%8ld, mass = %e \r", 
-    //				i, star[i].mass);
-    while (star[i].tend<tdesired) {
-      star[i].tbeg = star[i].tend;
-      star[i].tend = tdesired;
-      frac = 0.0;
-      singl(&(star[i].mzams), &(star[i].m0), &(star[i].mass), 
-          &(star[i].k), &(star[i].tbeg), &(star[i].tvir),
-          &(star[i].tend), &(star[i].lum), &(star[i].rad),
-          &(star[i].mc), &(star[i].mcHe), &(star[i].mcCO),
-          &(star[i].flag), &(star[i].dt), &(star[i].mpre),
-          &(star[i].kpre), &(star[i].tstart), &frac);
-    };
-    if (star[i].k!= type_prev) 
-      stellar_type_changed(star[i].k, type_prev, i);
-    star[i].m = stellar2dynamic_mass(star[i].mass);
+  /* set initial properties of stars */
+  for (k=1; k<=clus.N_MAX; k++){
+    star[k].se_mass = star[k].m * units.mstar / MSUN;
+    /* setting the type */
+    if(star[k].se_mass <= 0.7){
+      star[k].se_k = 0;
+    } else {
+      star[k].se_k = 1;
+    }
+    star[k].se_mt = star[k].se_mass;
+    star[k].se_ospin = 0.0;
+    star[k].se_epoch = 0.0;
+    star[k].se_tphys = 0.0;
   }
-  gprintf("\n");
+
+  /* evolve slightly (1 year) for initial radii */
+  tphysf = 1.0e-6;
+  dtp = tphysf;
+  for(k=1; k<=clus.N_MAX; k++){
+    bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
+	       &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
+	       &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
+	       &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars);
+    star[k].rad = star[k].se_radius * RSUN / units.l;
+    star[k].m = star[k].se_mass * MSUN / units.mstar;
+  }
 }
 
-void stellar_type_changed(int type, int type_prev, long index) {
-    retain_neutron_stars(index, 0.15);
-};
+/* note that this routine is called after perturb_stars() and get_positions() */
+void do_stellar_evolution(void){
+  long k;
+  int kprev;
+  double dtp, tphysf;
+  
+  for(k=1; k<=clus.N_MAX; k++){
+    tphysf = TotalTime / MEGA_YEAR;
+    dtp = tphysf;
+    kprev = star[k].se_k;
 
-void retain_neutron_stars(long index, double fraction) {
-  double X;
-  if (star[index].k==NEUTRON_STAR) {
-    X = rng_t113_dbl();
-    if (X> fraction) {
-      /* turn it into a stellar-evolution victim */
-      dprintf("Remove a neutron star. index= %li, id= %li\n", index, star[index].id);
-      star[index].m= 0;
-    };
-  };
-};
+    bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
+	       &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
+	       &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
+	       &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars);
+
+    star[k].rad = star[k].se_radius * RSUN / units.l;
+    star[k].m = star[k].se_mass * MSUN / units.mstar;
+
+    if (star[k].se_k == 13 && star[k].se_k != kprev) {
+      /* impose NS birth kick */
+    } else if (star[k].se_k == 14 && star[k].se_k != kprev) {
+      /* impose BH birth kick */
+    }
+  }
+}
 
 void write_stellar_data(void){
-	long i, k;
+	long k;
 	FILE *stel_file;
 	char filename[1024];
 
@@ -170,20 +114,19 @@ void write_stellar_data(void){
 			"file cannot be opened to write stellar info\n");
 		return;
 	}
-	fprintf(stel_file, "# time (Myr): %e\n", 
-			dynamic2stellar_time(TotalTime));
+	fprintf(stel_file, "# time (Myr): %e\n",
+			TotalTime/MEGA_YEAR);
 	fprintf(stel_file, "# time (FP):  %e\n", TotalTime);
 	fprintf(stel_file,
 	       "#  id        mass        radius     luminosity  type\n");
 	fprintf(stel_file,
 	       "#======= ============ ============ ============ ====\n");
 	for(k=1; k<=clus.N_MAX; k++){
-		i = k;
 		fprintf(stel_file, "%08ld ", k);
-		fprintf(stel_file, "%e ", star[k].mass);
-		fprintf(stel_file, "%e ", star[k].rad);
-		fprintf(stel_file, "%e ", star[k].lum);
-		fprintf(stel_file, "%2d ", star[k].k);
+		fprintf(stel_file, "%e ", star[k].se_mass);
+		fprintf(stel_file, "%e ", star[k].se_radius);
+		fprintf(stel_file, "%e ", star[k].se_lum);
+		fprintf(stel_file, "%d ", star[k].se_k);
 		fprintf(stel_file, "\n");
 	}
 	fclose(stel_file);
