@@ -13,6 +13,7 @@ void evolv2_(int *kstar, double *mass0, double *mass, double *rad, double *lum,
 	     double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 	     double *z, double *zpars, double *tb, double *ecc);
 void instar_(void);
+float ran3_(int *idum);
 
 /* wrapped BSE functions */
 void bse_zcnsts(double *z, double *zpars);
@@ -73,3 +74,6 @@ float bse_get_bpp(int i, int j); /* binary evolution log */
 float bse_get_bcm(int i, int j); /* stored binary parameters at interval dtp */
 char *bse_get_sselabel(int kw); /* converts stellar type number to text label */
 char *bse_get_bselabel(int kw); /* converts binary type number to text label */
+
+/* copied functions */
+double bse_kick_speed(int *startype); /* routine for generating birth kick speed from distribution */

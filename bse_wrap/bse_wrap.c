@@ -141,3 +141,32 @@ char *bse_get_bselabel(int kw)
     return("Unkown Stellar Type!");
   }
 }
+
+/* kick speed from distribution, taken directly from BSE code */
+/* may change startype in certain cases */
+double bse_kick_speed(int *startype)
+{
+  int k;
+  double u1, u2, s, theta, vk2, vk, v[4]; /* yes, v is supposed to be 4-D */
+
+  for (k=1; k<=2; k++) {
+    u1 = ran3_(&(value3_.idum));
+    u2 = ran3_(&(value3_.idum));
+    s = value4_.sigma * sqrt(-2.0*log(1.0-u1));
+    theta = 2.0 * M_PI * u2;
+    v[2*k-1-1] = s*cos(theta);
+    v[2*k-1] = s*sin(theta);
+  }
+  vk2 = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+  vk = sqrt(vk2);
+
+  if (((*startype) == 14 && value4_.bhflag == 0) || (*startype) < 0) {
+    vk2 = 0.0;
+    vk = 0.0;
+    if ((*startype) < 0) {
+      (*startype) = 13;
+    }
+  }
+
+  return(vk);
+}
