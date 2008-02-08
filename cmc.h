@@ -380,7 +380,7 @@ void load_fits_file_data(void);
 
 /* stellar evolution stuff */
 void stellar_evolution_init(void);
-void do_stellar_evolution(void);
+void do_stellar_evolution(gsl_rng *rng);
 void write_stellar_data(void);
 double r_of_m(double M);
 

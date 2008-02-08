@@ -2,7 +2,9 @@
 *** things that _have_ to be done, in order of priority ***
 ***********************************************************
 
-* Fix addbinaries so it works with new stellar evolution.
+* Test SSE by comparing with results in literature.
+* Add binary star evolution, with careful attention paid to
+  binary disruption.
 * Add fixed radius option to setstellar.c.
 * Make default output names of utilities more descriptive,
   like input_to_setimf.fits, input_to_setstellar.fits.

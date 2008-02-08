@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 
 		/* evolve stars up to new time */
 		if (STELLAR_EVOLUTION > 0) {
-			do_stellar_evolution();
+			do_stellar_evolution(rng);
 		}
 		
 		Prev_Dt = Dt;

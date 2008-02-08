@@ -75,10 +75,10 @@ void stellar_evolution_init(void){
 }
 
 /* note that this routine is called after perturb_stars() and get_positions() */
-void do_stellar_evolution(void){
+void do_stellar_evolution(gsl_rng *rng){
   long k;
   int kprev;
-  double dtp, tphysf;
+  double dtp, tphysf, theta, vk;
   
   for(k=1; k<=clus.N_MAX; k++){
     tphysf = TotalTime / MEGA_YEAR;
@@ -93,10 +93,12 @@ void do_stellar_evolution(void){
     star[k].rad = star[k].se_radius * RSUN / units.l;
     star[k].m = star[k].se_mass * MSUN / units.mstar;
 
-    if (star[k].se_k == 13 && star[k].se_k != kprev) {
-      /* impose NS birth kick */
-    } else if (star[k].se_k == 14 && star[k].se_k != kprev) {
-      /* impose BH birth kick */
+    /* impose compact object birth kick, and add speed to systemic speed */
+    if ((star[k].se_k == 13 || star[k].se_k == 14) && star[k].se_k != kprev) {
+      vk = bse_kick_speed(&(star[k].se_k));
+      theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0);
+      star[k].vr += cos(theta) * vk;
+      star[k].vt += sin(theta) * vk;
     }
   }
 }
