@@ -71,7 +71,6 @@ endif
 ##############################################################################
 ### extra C flags
 ##############################################################################
-CHRISCFLAGS = -Wno-uninitialized -Wno-unused
 # possibilities: 
 # -DUSE_THREADS	(using threads, results will change due different RNGs)
 # -DUSE_THREADS_SORT	(using threads, for sorting only, results should
@@ -116,7 +115,6 @@ CFLAGS := -wd864,1188 -I $(HOME)/libs_et_al/include
 #           and 1188: floating-point value cannot be represented exactly
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lg2c
 LIBFLAGS := $(LIBFLAGS) -L $(HOME)/libs_et_al/lib -static
-CHRISCFLAGS = 
 endif
 
 FEWBODYDIR = fewbody-0.24

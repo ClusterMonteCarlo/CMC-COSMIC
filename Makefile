@@ -8,7 +8,6 @@ OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
 	cmc_utils.o cmc_fits.o cmc_stellar_evolution.o \
 	cmc_sort.o cmc_sscollision.o cmc_bhlosscone.o \
 	cmc_search_grid.o cmc_trace.o \
-	startrack/singl.o \
 	libs/fitslib.o libs/taus113-v2.o
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
@@ -36,7 +35,7 @@ libs/fitslib.o:
 libs/taus113-v2.o:
 	cd libs && $(MAKE)
 
-UTILS: libs/fitslib.o libs/taus113-v2.o startrack/singl.o
+UTILS: libs/fitslib.o libs/taus113-v2.o
 	cd utils && $(MAKE)
 
 CONTRIBS:
@@ -45,9 +44,6 @@ CONTRIBS:
 # the standard executable
 $(EXE): $(OBJS) $(FEWBODYOBJS) $(BSEOBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
-
-startrack/singl.o: startrack/singl.c Makefile
-	$(CC) $(CFLAGS) $(CHRISCFLAGS) -c $< -o $@
 
 $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 	$(CC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
