@@ -95,10 +95,12 @@ void do_stellar_evolution(gsl_rng *rng){
 
     /* impose compact object birth kick, and add speed to systemic speed */
     if ((star[k].se_k == 13 || star[k].se_k == 14) && star[k].se_k != kprev) {
-      vk = bse_kick_speed(&(star[k].se_k));
+      /* convert speed in km/s to code units */
+      vk = bse_kick_speed(&(star[k].se_k)) * 1.0e5 / (units.l/units.t);
       theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0);
       star[k].vr += cos(theta) * vk;
       star[k].vt += sin(theta) * vk;
+      set_star_EJ(k);
     }
   }
 }
