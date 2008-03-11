@@ -24,7 +24,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	double Qtemp, rk, rk1, Uk, Uk1, a, b, rmin, dQdr_min, rmax, dQdr_max;
 
 	/* for newly created stars, position si is not ordered */
-        dprintf("clus.N_MAX= %li\n", clus.N_MAX);
+        //dprintf("clus.N_MAX= %li\n", clus.N_MAX);
 	if (si > clus.N_MAX) {
 		// Not sure how this stupid linear search got here in the first place...
 		//ktemp = 0;
