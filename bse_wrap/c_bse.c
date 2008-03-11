@@ -41,8 +41,8 @@ int main(void)
 
   bse_instar();
   
-  mass0[0] = 8.0;
-  mass0[1] = 0.3;
+  mass0[0] = 0.3;
+  mass0[1] = 8.0;
   mass[0] = mass0[0];
   mass[1] = mass0[1];
   kw[0] = 1;
@@ -62,13 +62,16 @@ int main(void)
   j = 1;
   while (bse_get_bpp(j, 1) >= 0.0) {
     fprintf(stdout, "time=%g m1=%g m2=%g k1=%d k2=%d sep=%g ecc=%g r1/rol1=%g r2/rol2=%g type=%s\n",
-	    bse_get_bpp(j, 1), bse_get_bpp(j, 2), bse_get_bpp(j, 3), kw[0], kw[1],
+	    bse_get_bpp(j, 1), bse_get_bpp(j, 2), bse_get_bpp(j, 3), (int) bse_get_bpp(j, 4), (int) bse_get_bpp(j, 5),
 	    bse_get_bpp(j, 6), bse_get_bpp(j, 7), bse_get_bpp(j, 8), bse_get_bpp(j, 9),
 	    bse_get_bselabel((int) bse_get_bpp(j, 10)));
 
     j++;
   }
   
+  fprintf(stdout, "m1=%f m2=%f tb=%f e=%f\n", mass[0], mass[1], tb, ecc);
+
+
   free(zpars);
 
   return(0);
