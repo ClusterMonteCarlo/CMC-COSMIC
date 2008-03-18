@@ -3,7 +3,7 @@
 ***********************************************************
 
 * Test SSE by comparing with results in literature.
-* Add BSE and SE parameter handling following binary evolution.
+* Add BSE and SE parameter handling following binary interactions (binint_do()).
 * Add BSE and SE parameter handling following collisions.
 * Add rejuvenation for collisions.
 * Add fixed radius option to setstellar.c.

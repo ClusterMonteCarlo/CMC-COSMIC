@@ -558,6 +558,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				exit(1);
 			}
 			
+			/* FIXME: need to copy over SE variables here */
+			
 			/* generic properties */
 			/* set radial position */
 			star[knew].r = rcm;
@@ -622,6 +624,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				/* single star */
 				/* internal energy */
 				star[knew].Eint = hier.obj[i]->Eint * cmc_units.E;
+
+				/* FIXME: need to copy over SE variables here */
 				
 				/* id */
 				if (hier.obj[i]->ncoll == 1) {
@@ -654,6 +658,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				/* internal energies */
 				binary[star[knew].binind].Eint1 = hier.obj[i]->obj[0]->Eint * cmc_units.E;
 				binary[star[knew].binind].Eint2 = hier.obj[i]->obj[1]->Eint * cmc_units.E;
+				
+				/* FIXME: need to copy over SE variables here */
 				
 				/* id's */
 				if (hier.obj[i]->obj[0]->ncoll == 1) {
@@ -718,6 +724,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				hier.obj[i]->obj[bid]->a = -(hier.obj[i]->obj[bid]->obj[0]->m)*(hier.obj[i]->obj[bid]->obj[1]->m)/
 					(2.0 * (fb_ketot(threeobjs, 3) + fb_petot(threeobjs, 3)));
 				
+				/* FIXME: need to copy over SE variables here */
+
 				/********************************/
 				/* set single star's properties */
 				/********************************/
@@ -893,44 +901,9 @@ void break_wide_binaries(void)
 				/* create two stars for the binary components */
 				knew = create_star();
 				knewp = create_star();
-
-				/* and set the stars' properties */
-				star[knew].r = star[k].r;
-				star[knewp].r = star[k].r;
 				
-				star[knew].vr = star[k].vr;
-				star[knewp].vr = star[k].vr;
-				
-				star[knew].vt = star[k].vt;
-				star[knewp].vt = star[k].vt;
-				
-				star[knew].m = binary[j].m1;
-				star[knewp].m = binary[j].m2;
-				
-				star[knew].phi = star[k].phi;
-				star[knewp].phi = star[k].phi;
-
-				set_star_EJ(knew);
-				set_star_EJ(knewp);
-				
-				set_star_news(knew);
-				set_star_news(knewp);
-				
-				set_star_olds(knew);
-				set_star_olds(knewp);
-				
-				/* mark stars as interacted so they don't undergo E_CONS mode stuff */
-				star[knew].interacted = 1;
-				star[knewp].interacted = 1;
-				
-				star[knew].Eint = binary[j].Eint1;
-				star[knewp].Eint = binary[j].Eint2;
-				
-				star[knew].id = binary[j].id1;
-				star[knewp].id = binary[j].id2;
-				
-				star[knew].rad = binary[j].rad1;
-				star[knewp].rad = binary[j].rad2;
+				cp_binmemb_to_star(k, 0, knew);
+				cp_binmemb_to_star(k, 1, knewp);
 				
 				/* destroy this binary */
 				destroy_obj(k);

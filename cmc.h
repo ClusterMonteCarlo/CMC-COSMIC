@@ -396,6 +396,8 @@ void load_fits_file_data(void);
 void stellar_evolution_init(void);
 void do_stellar_evolution(gsl_rng *rng);
 void write_stellar_data(void);
+void handle_bse_outcome(long k, long kb);
+void cp_binmemb_to_star(long k, int kbi, long knew);
 double r_of_m(double M);
 
 /* Fewbody stuff */
