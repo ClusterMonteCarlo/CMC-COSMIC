@@ -3,8 +3,9 @@
 ***********************************************************
 
 * Test SSE by comparing with results in literature.
-* Add binary star evolution, with careful attention paid to
-  binary disruption.
+* Add BSE and SE parameter handling following binary evolution.
+* Add BSE and SE parameter handling following collisions.
+* Add rejuvenation for collisions.
 * Add fixed radius option to setstellar.c.
 * Make default output names of utilities more descriptive,
   like input_to_setimf.fits, input_to_setstellar.fits.
