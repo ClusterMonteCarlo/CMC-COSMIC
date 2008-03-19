@@ -8,7 +8,7 @@ int main(void)
   int i, j, kw[2];
   double mass[2], mt[2], r[2], lum[2], mc[2], rc[2];
   double menv[2], renv[2], ospin[2], epoch[2], tms[2], tphys[2];
-  double tphysf=12000.0, dtp=12000.0, z=0.02, *zpars;
+  double tphysf=15000.0, dtp=12000.0, z=0.001, *zpars;
 
   zpars = (double *) malloc(20 * sizeof(double));
 
@@ -45,6 +45,8 @@ int main(void)
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), &(tphys[0]), 
 	     &tphysf, &dtp, &z, zpars);
   
+  fprintf(stdout, "star 0: mass=%f mt=%f\n", mass[0], mt[0]);
+
   i = 1;
   while (bse_get_spp(i, 1) >= 0.0) {
     fprintf(stdout, "star 0: type=%25s time=%f mass=%f radius=%f\n", 
@@ -58,6 +60,8 @@ int main(void)
   bse_evolv1(&(kw[1]), &(mass[1]), &(mt[1]), &(r[1]), &(lum[1]), &(mc[1]), &(rc[1]), 
 	     &(menv[1]), &(renv[1]), &(ospin[1]), &(epoch[1]), &(tms[1]), &(tphys[1]), 
 	     &tphysf, &dtp, &z, zpars);
+
+  fprintf(stdout, "star 1: mass=%f mt=%f\n", mass[1], mt[1]);
   
   i = 1;
   while (bse_get_spp(i, 1) >= 0.0) {

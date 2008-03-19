@@ -398,6 +398,8 @@ void do_stellar_evolution(gsl_rng *rng);
 void write_stellar_data(void);
 void handle_bse_outcome(long k, long kb);
 void cp_binmemb_to_star(long k, int kbi, long knew);
+void cp_SEvars_to_newstar(long oldk, int kbi, long knew);
+void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew);
 double r_of_m(double M);
 
 /* Fewbody stuff */
@@ -434,6 +436,7 @@ void bb_calcunits(fb_obj_t *obj[2], fb_units_t *bb_units);
 fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hier, gsl_rng *rng);
 
 double binint_get_mass(long k, long kp, long id);
+long binint_get_indices(long k, long kp, long id, int *bi);
 void binint_log_obj(fb_obj_t *obj, fb_units_t units);
 void binint_log_status(fb_ret_t retval);
 void binint_log_collision(const char interaction_type[], long id, double mass, double r, fb_obj_t obj, long k, long kp);

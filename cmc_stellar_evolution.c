@@ -70,19 +70,19 @@ void stellar_evolution_init(void){
 		 &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 		 &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars);
       star[k].rad = star[k].se_radius * RSUN / units.l;
-      star[k].m = star[k].se_mass * MSUN / units.mstar;
+      star[k].m = star[k].se_mt * MSUN / units.mstar;
     } else if (star[k].binind > 0) { /* binary */
       star[k].se_k = NOT_A_STAR; /* just for safety */
       kb = star[k].binind;
-      binary[kb].bse_mass[0] = binary[kb].m1 * units.mstar / MSUN;
-      binary[kb].bse_mass[1] = binary[kb].m2 * units.mstar / MSUN;
+      binary[kb].bse_mass0[0] = binary[kb].m1 * units.mstar / MSUN;
+      binary[kb].bse_mass0[1] = binary[kb].m2 * units.mstar / MSUN;
       for (i=0; i<=1; i++) {
-	if(binary[kb].bse_mass[i] <= 0.7){
+	if(binary[kb].bse_mass0[i] <= 0.7){
 	  binary[kb].bse_kw[i] = 0;
 	} else {
 	  binary[kb].bse_kw[i] = 1;
 	}
-	binary[kb].bse_mass0[i] = binary[kb].bse_mass[i];
+	binary[kb].bse_mass[i] = binary[kb].bse_mass0[i];
 	binary[kb].bse_ospin[i] = 0.0;
 	binary[kb].bse_epoch[i] = 0.0;
       }
@@ -125,7 +125,7 @@ void do_stellar_evolution(gsl_rng *rng){
 		 &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars);
       
       star[k].rad = star[k].se_radius * RSUN / units.l;
-      star[k].m = star[k].se_mass * MSUN / units.mstar;
+      star[k].m = star[k].se_mt * MSUN / units.mstar;
       
       /* impose compact object birth kick, and add speed to systemic speed */
       if ((star[k].se_k == 13 || star[k].se_k == 14) && star[k].se_k != kprev) {
@@ -177,7 +177,7 @@ void write_stellar_data(void){
 	  "#======= ============ ============ ============ ====\n");
   for(k=1; k<=clus.N_MAX; k++){
     fprintf(stel_file, "%08ld ", k);
-    fprintf(stel_file, "%e ", star[k].se_mass);
+    fprintf(stel_file, "%e ", star[k].se_mt);
     fprintf(stel_file, "%e ", star[k].se_radius);
     fprintf(stel_file, "%e ", star[k].se_lum);
     fprintf(stel_file, "%d ", star[k].se_k);
@@ -276,9 +276,9 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
     star[knew].id = binary[kb].id2;
   }
   star[knew].rad = binary[kb].bse_radius[kbi] * RSUN / units.l;
-  star[knew].se_mass = binary[kb].bse_mass[kbi];
+  star[knew].se_mass = binary[kb].bse_mass0[kbi]; /* initial mass (at curent epoch?) */
   star[knew].se_k = binary[kb].bse_kw[kbi];
-  star[knew].se_mt = binary[kb].bse_mass0[kbi]; /* FIXME: is this right? */
+  star[knew].se_mt = binary[kb].bse_mass[kbi]; /* current mass */
   star[knew].se_ospin = binary[kb].bse_ospin[kbi];
   star[knew].se_epoch = binary[kb].bse_epoch[kbi];
   star[knew].se_tphys = binary[kb].bse_tphys;
@@ -289,4 +289,82 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   star[knew].se_menv = binary[kb].bse_menv[kbi];
   star[knew].se_renv = binary[kb].bse_renv[kbi];
   star[knew].se_tms = binary[kb].bse_tms[kbi];
+}
+
+/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
+{
+  long kb;
+  
+  kb = star[oldk].binind;
+  
+  if (kbi == -1) { /* star comes from input single star */
+    star[knew].se_mass = star[oldk].se_mass;
+    star[knew].se_k = star[oldk].se_k;
+    star[knew].se_mt = star[oldk].se_mt;
+    star[knew].se_ospin = star[oldk].se_ospin;
+    star[knew].se_epoch = star[oldk].se_epoch;
+    star[knew].se_tphys = star[oldk].se_tphys;
+    star[knew].se_radius = star[oldk].se_radius;
+    star[knew].se_lum = star[oldk].se_lum;
+    star[knew].se_mc = star[oldk].se_mc;
+    star[knew].se_rc = star[oldk].se_rc;
+    star[knew].se_menv = star[oldk].se_menv;
+    star[knew].se_renv = star[oldk].se_renv;
+    star[knew].se_tms = star[oldk].se_tms;
+  } else { /* star comes from input binary */
+    star[knew].se_mass = binary[kb].bse_mass0[kbi];
+    star[knew].se_k = binary[kb].bse_kw[kbi];
+    star[knew].se_mt = binary[kb].bse_mass[kbi];
+    star[knew].se_ospin = binary[kb].bse_ospin[kbi];
+    star[knew].se_epoch = binary[kb].bse_epoch[kbi];
+    star[knew].se_tphys = binary[kb].bse_tphys;
+    star[knew].se_radius = binary[kb].bse_radius[kbi];
+    star[knew].se_lum = binary[kb].bse_lum[kbi];
+    star[knew].se_mc = binary[kb].bse_massc[kbi];
+    star[knew].se_rc = binary[kb].bse_radc[kbi];
+    star[knew].se_menv = binary[kb].bse_menv[kbi];
+    star[knew].se_renv = binary[kb].bse_renv[kbi];
+    star[knew].se_tms = binary[kb].bse_tms[kbi];
+  }
+}
+
+/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+/* set everything except tb */
+void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
+{
+  long kb, kbnew;
+  
+  kb = star[oldk].binind;
+  kbnew = star[knew].binind;
+
+  if (oldkbi == -1) { /* star comes from input single star */
+    binary[kbnew].bse_mass0[kbinew] = star[oldk].se_mass;
+    binary[kbnew].bse_kw[kbinew] = star[oldk].se_k;
+    binary[kbnew].bse_mass[kbinew] = star[oldk].se_mt;
+    binary[kbnew].bse_ospin[kbinew] = star[oldk].se_ospin;
+    binary[kbnew].bse_epoch[kbinew] = star[oldk].se_epoch;
+    binary[kbnew].bse_tphys = star[oldk].se_tphys; /* tphys should be the same for both input stars so this should be OK */
+    binary[kbnew].bse_radius[kbinew] = star[oldk].se_radius;
+    binary[kbnew].bse_lum[kbinew] = star[oldk].se_lum;
+    binary[kbnew].bse_massc[kbinew] = star[oldk].se_mc;
+    binary[kbnew].bse_radc[kbinew] = star[oldk].se_rc;
+    binary[kbnew].bse_menv[kbinew] = star[oldk].se_menv;
+    binary[kbnew].bse_renv[kbinew] = star[oldk].se_renv;
+    binary[kbnew].bse_tms[kbinew] = star[oldk].se_tms;
+  } else { /* star comes from input binary */
+    binary[kbnew].bse_mass0[kbinew] = binary[kb].bse_mass0[oldkbi];
+    binary[kbnew].bse_kw[kbinew] = binary[kb].bse_kw[oldkbi];
+    binary[kbnew].bse_mass[kbinew] = binary[kb].bse_mass[oldkbi];
+    binary[kbnew].bse_ospin[kbinew] = binary[kb].bse_ospin[oldkbi];
+    binary[kbnew].bse_epoch[kbinew] = binary[kb].bse_epoch[oldkbi];
+    binary[kbnew].bse_tphys = binary[kb].bse_tphys;
+    binary[kbnew].bse_radius[kbinew] = binary[kb].bse_radius[oldkbi];
+    binary[kbnew].bse_lum[kbinew] = binary[kb].bse_lum[oldkbi];
+    binary[kbnew].bse_massc[kbinew] = binary[kb].bse_massc[oldkbi];
+    binary[kbnew].bse_radc[kbinew] = binary[kb].bse_radc[oldkbi];
+    binary[kbnew].bse_menv[kbinew] = binary[kb].bse_menv[oldkbi];
+    binary[kbnew].bse_renv[kbinew] = binary[kb].bse_renv[oldkbi];
+    binary[kbnew].bse_tms[kbinew] = binary[kb].bse_tms[oldkbi];
+  }
 }

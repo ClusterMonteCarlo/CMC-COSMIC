@@ -296,6 +296,48 @@ double binint_get_mass(long k, long kp, long id)
 	exit(1);
 }
 
+/* return star index of star with id "id" from binary interaction components,
+   along with which member "bi=0,1" if a binary */
+long binint_get_indices(long k, long kp, long id, int *bi)
+{
+	*bi = -1;
+
+	/* first look at k */
+	if (star[k].binind == 0) {
+		if (star[k].id == id) {
+			return(k);
+		}
+	} else {
+		if (binary[star[k].binind].id1 == id) {
+			*bi = 0;
+			return(k);
+		} else if (binary[star[k].binind].id2 == id) {
+			*bi = 1;
+			return(k);
+		}
+	}
+	
+	/* then at kp */
+	if (star[kp].binind == 0) {
+		if (star[kp].id == id) {
+			return(kp);
+		}
+	} else {
+		if (binary[star[kp].binind].id1 == id) {
+			*bi = 0;
+			return(kp);
+		} else if (binary[star[kp].binind].id2 == id) {
+			*bi = 1;
+			return(kp);
+		}
+	}
+	
+	eprintf("cannot find matching id %ld!\n", id);
+	exit_cleanly(1);
+	/* this is just for the compiler */
+	exit(1);
+}
+
 void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 {
 	int bid, sid, i;
@@ -399,8 +441,8 @@ void binint_log_collision(const char interaction_type[], long id,
 /* do binary interaction (bin-bin or bin-single) */
 void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng)
 {
-	int i, j, isbinsingle=0, isbinbin=0, sid=-1, bid=-1, istriple;
-	long ksin=-1, kbin=-1, jbin, jbinp, knew, knewp=-1;
+	int i, j, isbinsingle=0, isbinbin=0, sid=-1, bid=-1, istriple, bi;
+	long ksin=-1, kbin=-1, jbin, jbinp, knew, knewp=-1, oldk;
 	double t, bmax, wp, wx[4], wy[4], wz[4], vnew[4], alpha, BEi, BEf=0.0;
 	fb_hier_t hier;
 	fb_units_t cmc_units, printing_units;
@@ -558,8 +600,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				exit(1);
 			}
 			
-			/* FIXME: need to copy over SE variables here */
-			
 			/* generic properties */
 			/* set radial position */
 			star[knew].r = rcm;
@@ -625,14 +665,15 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				/* internal energy */
 				star[knew].Eint = hier.obj[i]->Eint * cmc_units.E;
 
-				/* FIXME: need to copy over SE variables here */
-				
 				/* id */
 				if (hier.obj[i]->ncoll == 1) {
 					star[knew].id = hier.obj[i]->id[0];
+					/* copy SE variables over to new star from old single star or binary member */
+					oldk = binint_get_indices(k, kp, star[knew].id, &bi);
+					cp_SEvars_to_newstar(oldk, bi, knew);
 				} else {
 					star[knew].id = star_get_id_new();
-
+					/* FIXME: need to implement rejuvenation prescription here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						star[knew].id, star[knew].m, 
@@ -640,8 +681,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						*(hier.obj[i]), k, kp);
 				}
 				
-				/* radius */
-				star[knew].rad = r_of_m(star[knew].m);
+				star[knew].rad = star[knew].se_radius * RSUN / units.l;
 
 				/* track binding energy */
 				BEf += -star[knew].Eint;
@@ -659,14 +699,15 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				binary[star[knew].binind].Eint1 = hier.obj[i]->obj[0]->Eint * cmc_units.E;
 				binary[star[knew].binind].Eint2 = hier.obj[i]->obj[1]->Eint * cmc_units.E;
 				
-				/* FIXME: need to copy over SE variables here */
-				
 				/* id's */
 				if (hier.obj[i]->obj[0]->ncoll == 1) {
 					binary[star[knew].binind].id1 = hier.obj[i]->obj[0]->id[0];
+					/* copy SE variables over to new star from old single star or binary member */
+					oldk = binint_get_indices(k, kp, binary[star[knew].binind].id1, &bi);
+					cp_SEvars_to_newbinary(oldk, bi, knew, 0);
 				} else {
 					binary[star[knew].binind].id1 = star_get_id_new();
-					
+					/* FIXME: need to treat rejuvenation here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id1,
@@ -676,9 +717,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				}
 				if (hier.obj[i]->obj[1]->ncoll == 1) {
 					binary[star[knew].binind].id2 = hier.obj[i]->obj[1]->id[0];
+					/* copy SE variables over to new star from old single star or binary member */
+					oldk = binint_get_indices(k, kp, binary[star[knew].binind].id2, &bi);
+					cp_SEvars_to_newbinary(oldk, bi, knew, 1);
 				} else {
 					binary[star[knew].binind].id2 = star_get_id_new();
-					
+					/* FIXME: need to treat rejuvenation here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id2,
@@ -687,10 +731,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						*(hier.obj[i]->obj[1]), k, kp);
 				}
 				
-				/* radii */
-				binary[star[knew].binind].rad1 = r_of_m(binary[star[knew].binind].m1);
-				binary[star[knew].binind].rad2 = r_of_m(binary[star[knew].binind].m2);
-				
+				/* radii, and tb */
+				binary[star[knew].binind].rad1 = binary[star[knew].binind].bse_radius[0] * RSUN / units.l;
+				binary[star[knew].binind].rad2 = binary[star[knew].binind].bse_radius[1] * RSUN / units.l;
+				binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
 				/* track binding energy */
 				BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc) 
 					/ (2.0 * binary[star[knew].binind].a) 
@@ -724,8 +768,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				hier.obj[i]->obj[bid]->a = -(hier.obj[i]->obj[bid]->obj[0]->m)*(hier.obj[i]->obj[bid]->obj[1]->m)/
 					(2.0 * (fb_ketot(threeobjs, 3) + fb_petot(threeobjs, 3)));
 				
-				/* FIXME: need to copy over SE variables here */
-
 				/********************************/
 				/* set single star's properties */
 				/********************************/
@@ -735,9 +777,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				/* id */
 				if (hier.obj[i]->obj[sid]->ncoll == 1) {
 					star[knewp].id = hier.obj[i]->obj[sid]->id[0];
+					/* copy SE variables over to new star from old single star or binary member */
+					oldk = binint_get_indices(k, kp, star[knewp].id, &bi);
+					cp_SEvars_to_newstar(oldk, bi, knewp);
 				} else {
 					star[knewp].id = star_get_id_new();
-
+					/* FIXME: rejuvenation here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						star[knewp].id, star[knewp].m, 
@@ -746,7 +791,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				}
 
 				/* radius */
-				star[knewp].rad = r_of_m(star[knewp].m);
+				star[knewp].rad = star[knewp].se_radius * RSUN / units.l;
 
 				/***************************/
 				/* set binary's properties */
@@ -766,9 +811,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				/* id's */
 				if (hier.obj[i]->obj[bid]->obj[0]->ncoll == 1) {
 					binary[star[knew].binind].id1 = hier.obj[i]->obj[bid]->obj[0]->id[0];
+					/* copy SE variables over to new star from old single star or binary member */
+					oldk = binint_get_indices(k, kp, binary[star[knew].binind].id1, &bi);
+					cp_SEvars_to_newbinary(oldk, bi, knew, 0);
 				} else {
 					binary[star[knew].binind].id1 = star_get_id_new();
-					
+					/* FIXME: rejuvenation prescription here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id1,
@@ -778,9 +826,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				}
 				if (hier.obj[i]->obj[bid]->obj[1]->ncoll == 1) {
 					binary[star[knew].binind].id2 = hier.obj[i]->obj[bid]->obj[1]->id[0];
+					/* copy SE variables over to new star from old single star or binary member */
+					oldk = binint_get_indices(k, kp, binary[star[knew].binind].id2, &bi);
+					cp_SEvars_to_newbinary(oldk, bi, knew, 1);
 				} else {
 					binary[star[knew].binind].id2 = star_get_id_new();
-					
+					/* FIXME: rejuvenation prescription here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id2,
@@ -789,9 +840,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						*(hier.obj[i]->obj[bid]->obj[1]), k, kp);
 				}
 				
-				/* radii */
-				binary[star[knew].binind].rad1 = r_of_m(binary[star[knew].binind].m1);
-				binary[star[knew].binind].rad2 = r_of_m(binary[star[knew].binind].m2);
+				/* radii and tb */
+				binary[star[knew].binind].rad1 = binary[star[knew].binind].bse_radius[0] * RSUN / units.l;
+				binary[star[knew].binind].rad2 = binary[star[knew].binind].bse_radius[1] * RSUN / units.l;
+				binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
 				
 				/* track binding energy */
 				BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc) / 

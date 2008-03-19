@@ -2,15 +2,13 @@
 *** things that should be done, in order of priority ***
 ***********************************************************
 
+* Add Michele Trenti's idea of having r_c calculated via Casertano & Hut 
+  in 2D on the stellar luminosity?
 * Test SSE by comparing with results in literature.
-* Add BSE and SE parameter handling following binary interactions (binint_do()).
-* Add BSE and SE parameter handling following collisions.
-* Add rejuvenation for collisions.
+* Add rejuvenation (and BSE and SE parameter handling) following collisions.
 * Add fixed radius option to setstellar.c.
 * Make default output names of utilities more descriptive,
   like input_to_setimf.fits, input_to_setstellar.fits.
-* Fix stellar rejuvenation in cmc_dynamics_helper.c, and implement
-  collision matrix for different stellar types.
 * Add GPU-accelerated CUDA code for get_positions()/FindZero_Q().
 * Parallelize fewbody interactions again?
 

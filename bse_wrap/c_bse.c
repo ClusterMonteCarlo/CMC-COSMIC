@@ -41,13 +41,13 @@ int main(void)
 
   bse_instar();
   
-  mass0[0] = 0.3;
-  mass0[1] = 8.0;
+  mass0[0] = 30.0;
+  mass0[1] = 1.0;
   mass[0] = mass0[0];
   mass[1] = mass0[1];
   kw[0] = 1;
   kw[1] = 1;
-  tb = 10000.0;
+  tb = 10000000.0;
   ecc = 0.0;
 
   ospin[0] = 0.0;
@@ -58,6 +58,9 @@ int main(void)
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
 	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc);
+
+  fprintf(stdout, "star 0: mass0=%f mass=%f\n", mass0[0], mass[0]);
+  fprintf(stdout, "star 1: mass0=%f mass=%f\n", mass0[1], mass[1]);
 
   j = 1;
   while (bse_get_bpp(j, 1) >= 0.0) {
