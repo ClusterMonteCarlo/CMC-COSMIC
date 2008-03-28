@@ -19,7 +19,7 @@ void stellar_evolution_init(void){
   bse_set_neta(0.5);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
-  bse_set_alpha1(3.0);
+  bse_set_alpha1(3.0); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambda(0.5);
   bse_set_ceflag(0);
   bse_set_tflag(1);
@@ -37,7 +37,7 @@ void stellar_evolution_init(void){
   bse_set_xi(1.0);
   bse_set_acc2(1.5);
   bse_set_epsnov(0.001);
-  bse_set_eddfac(10.0);
+  bse_set_eddfac(10.0); /* FIXME: is 10 too high? (normally 1.0) */
   bse_set_gamma(-1.0);
 
   /* set parameters relating to metallicity */
@@ -248,6 +248,9 @@ void handle_bse_outcome(long k, long kb)
     /* both stars gone */
     dprintf("binary disrupted via BSE with no stars intact\n");
     destroy_obj(k);
+  } else {
+    dprintf("unhandled binary outcome!\n");
+    exit_cleanly(-1);
   }
 }
 

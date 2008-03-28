@@ -299,8 +299,11 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			Eb = pow(10.0, rng_t113_dbl()*(log10(Ebmax)-log10(Ebmin))+log10(Ebmin));
 			cfd->bs_a[i] = cfd->bs_m1[i] * cfd->bs_m2[i] / (2.0 * Eb);
 			
+			amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
+			emax = 1.0 - amin / cfd->bs_a[i];
+			cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
 			/* get eccentricity from thermal distribution */
-			cfd->bs_e[i] = sqrt(rng_t113_dbl());
+			/* cfd->bs_e[i] = sqrt(rng_t113_dbl()); */
 		}
 	}
 
