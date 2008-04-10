@@ -14,7 +14,7 @@ endif
 COPTS = -Wall -O3 -I../gensort -I../taus113-v2
 LIBS = -lcfitsio -lgsl -lgslcblas -lm
 
-EXE = ascii2fits
+EXE = nbody2fits
 OBJS = $(EXE).o ../taus113-v2/taus113-v2.o
 
 #pattern rule to compile object files from C files
