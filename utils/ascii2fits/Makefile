@@ -11,11 +11,11 @@ ifneq ($(CCACHE),)
 CC := ccache $(CC)
 endif
 
-COPTS = -Wall -O3 -I../gensort -I../taus113-v2
+COPTS = -Wall -O3 -I ../../common/ 
 LIBS = -lcfitsio -lgsl -lgslcblas -lm
 
 EXE = nbody2fits
-OBJS = $(EXE).o ../taus113-v2/taus113-v2.o
+OBJS = $(EXE).o ../../libs/taus113-v2.o
 
 #pattern rule to compile object files from C files
 %.o : %.c Makefile
