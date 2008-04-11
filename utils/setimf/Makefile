@@ -1,5 +1,8 @@
 include ../../common/common.mk
 
+# unset FLIBS as here it is not needed
+FLIBS=
+
 EXE = setimf
 OBJS = $(EXE).o ../../libs/taus113-v2.o ../../libs/fitslib.o
 

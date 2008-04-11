@@ -47,23 +47,25 @@ endif
 ##############################################################################
 UNAME = $(shell uname)
 
+FLIBS=-lg2c
+
 ifeq ($(UNAME),Linux)
 CFLAGS = -Wall -mieee-fp -O3 -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
 #CFLAGS = -Wall -g -mieee-fp -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
-LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lg2c -lm $(DEBUG_LIBS)
+LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio $(FLIBS) -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
 CC = gcc
 #CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 CFLAGS = -Wall -O3 -I/sw/include -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -lg2c -lm
+LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio $(FLIBS) -lm
 else
 ifeq ($(UNAME),AIX)
 CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty -lg2c -lm
+LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty $(FLIBS) -lm
 else
 CFLAGS = -Wall -O3 -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio -lg2c -lm
+LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio $(FLIBS) -lm
 endif
 endif
 endif
