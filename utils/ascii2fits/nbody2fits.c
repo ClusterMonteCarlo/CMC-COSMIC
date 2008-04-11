@@ -8,6 +8,7 @@
 #include <getopt.h>
 #include <fitsio.h>
 #include "taus113-v2.h"
+#include "../../common/fitslib.h"
 
 #define LARGE_DISTANCE 1.0e40
 #define PI 3.14159265358979323
@@ -69,66 +70,33 @@ void printerror( int status)
     return;
 }
 
-void write_output_file(double *m, double *r, double *vr, double *vt, 
-		long int N, char *filename){
-
-	struct rng_t113_state rng_st;
-
-	fitsfile *fptr;
-	int status;
-	long firstrow, firstelem;
-	int tfields;       /* table will have n columns */
-	long nrows;	
-
-	char extname[] = "CLUSTER_STARS";          /* extension name */
-	char *ttype[] = { "Mass",  "Position", "vr",    "vt" };
-	char *tform[] = { "1D",    "1D",       "1D",    "1D" };
-	char *tunit[] = { "Nbody", "Nbody",    "Nbody", "Nbody" };
+void write_output_file(double *m, double *r, double *vr, double *vt, long int N, char *filename){
+	long i;
+	cmc_fits_data_t cfd;
 	
-	/* these go to header */
-	int tstep = 0;
-	double time = 0.0;
+	cfd.NOBJ = N;
+	cfd.NBINARY = 0;
+	cfd.Mclus = Mtot;
+	cfd.Rvir = 1.0;
+	cfd.Rtid = 1.0e6;
+	cfd.Z = 0.02;
+
+	cmc_malloc_fits_data_t(&cfd);
+
+	for (i=1; i<=cfd.NOBJ; i++) {
+		cfd.obj_id[i] = i;
+		cfd.obj_k[i] = 0;
+		cfd.obj_m[i] = m[i];
+		cfd.obj_Reff[i] = 0.0;
+		cfd.obj_r[i] = r[i];
+		cfd.obj_vr[i] = vr[i];
+		cfd.obj_vt[i] = vt[i];
+		cfd.obj_binind[i] = 0;
+	}
 	
-	status = 0;
-	tfields = 4;
-	nrows = N+2;
+	cmc_write_fits_file(&cfd, filename);
 
-	get_rng_t113(&rng_st);
-
-	fits_create_file(&fptr, filename, &status);
-	fits_open_file(&fptr, filename, READWRITE, &status);
-
-	fits_create_tbl(fptr, BINARY_TBL, nrows, tfields, ttype, tform,
-                tunit, extname, &status);
-	fits_update_key(fptr, TLONG, "NSTAR", &N, 
-			"No of Stars", &status);
-	fits_update_key(fptr, TDOUBLE, "Time", &time, 
-			"Age of cluster", &status);
-	fits_update_key(fptr, TLONG, "Step", &tstep, 
-			"Iteration Step", &status);
-	fits_update_key(fptr, TULONG, "RNG_Z1", &(rng_st.z1), 
-			"RNG STATE Z1", &status);
-	fits_update_key(fptr, TULONG, "RNG_Z2", &(rng_st.z2), 
-			"RNG STATE Z2", &status);
-	fits_update_key(fptr, TULONG, "RNG_Z3", &(rng_st.z3), 
-			"RNG STATE Z3", &status);
-	fits_update_key(fptr, TULONG, "RNG_Z4", &(rng_st.z4), 
-			"RNG STATE Z4", &status);
-
-	firstrow  = 1;  /* first row in table to write   */
-	firstelem = 1;  /* first element in row  (ignored in ASCII tables) */
-
-	fits_write_col(fptr, TDOUBLE, 1, firstrow, firstelem, nrows, m,
-                   &status);
-	fits_write_col(fptr, TDOUBLE, 2, firstrow, firstelem, nrows, r,
-                   &status);
-	fits_write_col(fptr, TDOUBLE, 3, firstrow, firstelem, nrows, vr,
-                   &status);
-	fits_write_col(fptr, TDOUBLE, 4, firstrow, firstelem, nrows, vt,
-                   &status);
-
-	fits_close_file(fptr, &status);
-	printerror(status);
+	cmc_free_fits_data_t(&cfd);
 }
 
 void check_for_file(char *filename){
