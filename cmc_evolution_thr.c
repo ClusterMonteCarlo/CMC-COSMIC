@@ -122,7 +122,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		
 		rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
 		dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
-		
+
 		/* another case of a circular orbit */
 		if (rmin > rmax) {
 			eprintf("rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g\n",
@@ -144,17 +144,21 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			orbit_rs.dQdrp = dQdr_min;
 			orbit_rs.dQdra = dQdr_max;
 			orbit_rs.circular_flag = 0;	
+			orbit_rs.kmax= kmax;
+			orbit_rs.kmin= kmin;
 		}
 
 #ifdef EXPERIMENTAL
                 /* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
                 if (!orbit_rs.circular_flag) {
-                  int rmax_in_interval, rmin_in_interval, vr_rmax_positive, vr_rmin_positive;
+                  int rmax_in_interval=0, rmin_in_interval=0, vr_rmax_positive=0, vr_rmin_positive=0;
 
                   rmin_in_interval= orbit_rs.rp< star[kmin+1].r && orbit_rs.rp> star[kmin].r;
                   rmax_in_interval= orbit_rs.ra< star[kmax+1].r && orbit_rs.ra> star[kmax].r;
-                  vr_rmin_positive= calc_vr_in_interval(orbit_rs.rp, si, kmin, E, J)>= 0.;
-                  vr_rmax_positive= calc_vr_in_interval(orbit_rs.ra, si, kmax, E, J)>= 0.;
+		  if (rmin_in_interval)
+			  vr_rmin_positive= calc_vr_in_interval(orbit_rs.rp, si, kmin, E, J)>= 0.;
+	          if (rmax_in_interval)
+			  vr_rmax_positive= calc_vr_in_interval(orbit_rs.ra, si, kmax, E, J)>= 0.;
 
                   if (!(rmax_in_interval && vr_rmax_positive)) {
                     rmax= find_root_vr(si, kmax, E, J);
