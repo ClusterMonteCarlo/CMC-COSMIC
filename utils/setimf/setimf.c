@@ -7,8 +7,17 @@
 #include <string.h>
 #include "../../common/fitslib.h"
 #include "../../common/taus113-v2.h"
+#include <gsl/gsl_permutation.h>
+#include <gsl/gsl_permute_double.h>
+
 
 #define SEED 768364873UL
+
+/* a fast square function */
+double sqr(double x)
+{
+        return(x*x);
+}
 
 struct imf_param {
 	int imf;
@@ -22,6 +31,7 @@ struct imf_param {
 	double Cms;
         double bhmass;
         int scale;
+        long N_mass_seg;
 	char infile[1024];
 	char outfile[1024];
 };
@@ -50,6 +60,10 @@ void write_usage(void){
         printf("-b <dbl>  : add a central black hole with mass <dbl>\n");
         printf("-s        : scale positions and velocities such that the cluster is in exact ");
         printf("virial equilibrium (T/2W = 1)\n");
+        printf("-S <int>  : Create a maximally mass segregated cluster according to Baumgardt et al. (2008).\n");
+        printf("          : <int> is the number of stars which must be smaller or equal to NSTAR * m_low/<m>,\n");
+        printf("          : where NSTAR is the number of stars in the input file, m_low the lowest mass star,\n"); 
+        printf("          : and <m> the mean stellar mass. For <int> = -1, the largest value is assumed.\n");
 	printf("-r <dbl>  : rcr, the value of r within which average mass");
 	printf(" is different\n");
 	printf("-C <dbl>  : Cms, how much will the masses be different\n");
@@ -72,10 +86,11 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 	param->Cms = 1.00;
         param->bhmass = 0.0;
         param->scale = 0;
+        param->N_mass_seg= 0;
 	(param->infile)[0] = '\0';
 	(param->outfile)[0] = '\0';
 
-	while((c = getopt(argc, argv, "i:o:I:wm:M:p:u:N:r:C:hsb:")) != -1)
+	while((c = getopt(argc, argv, "i:o:I:wm:M:p:u:N:r:C:hsb:S:")) != -1)
 		switch(c) {
 		case 'i':
 			strncpy(param->infile, optarg, 1024);
@@ -115,6 +130,15 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 			break;
                 case 's':
                         param->scale = 1;
+                        break;
+                case 'S':
+                        param->N_mass_seg = strtol(optarg, NULL, 10);
+                        if (param->N_mass_seg == 0) {
+                          printf("WARNING: Setting -S to 0 disables the generation of ");
+                          printf("a mass segregated cluster\n");
+                          printf("       : Set it to -1 if you want a mass segregated cluster with the\n");
+                          printf("       : maximum number of stars (see setimf --help)\n");
+                        };
                         break;
 		case 'h':
 			write_usage();
@@ -504,30 +528,250 @@ void scale_pos_and_vel(struct imf_param param, cmc_fits_data_t *cfd, double tota
 	printf("After  scaling: PEtot = %f, KEtot = %f, vir rat = %f\n", 
 			PEtot, KEtot, KEtot/PEtot);
 }
+
+/** 
+ * @brief Calculates the maximum number of stars for a mass segregated cluster 
+ * for the recipe  of Baumgardt et al. (2008)
+ *
+ * The maximum number of stars the generated mass segregated cluster can have depends on
+ * the number N' of stars of the 'configuration' cluster (the cluster that determines the 
+ * density profile), as well as the minimum and average mass of the stars, m_min and 
+ * m_ave respectively. N_max= N' * m_min/m_ave .
+ * 
+ * @param s Array containing the cluster members of the 'configuration' cluster.
+ * @param clus Cluster mass and number of stars.
+ * 
+ * @return Maximium number of stars for mass segregated cluster.
+ */
+long calc_n_mass_seg_max(cmc_fits_data_t *cfd) {
+  long i;
+  double m_ave, m_min;
+
+  m_ave= cfd->Mclus/cfd->NOBJ;
+  printf("Mclus= %g, NOBJ=%li\n", cfd->Mclus, cfd->NOBJ);
+
+  m_min= cfd->obj_m[1];
+
+  for (i=2; i< cfd->NOBJ+1; i++) {
+    if (cfd->obj_m[i] < m_min) m_min= cfd->obj_m[i];
+  }
+
+  m_min*= cfd->Mclus;
+  printf("m_ave= %g, m_min=%g\n", m_ave, m_min);
+  /* The "-2" is for safety - keep fingers crossed that this is enough */
+  return ((long)(cfd->NOBJ*m_min/m_ave)-2);
+}
+
+/** 
+ * @brief Calculates the total mechanical energy of each star.
+ * 
+ * This routine assumes N-body units for all quantities, i.e.
+ * G=1, M_total=1, E_total=-1/4.
+ *
+ * @param s Pointer to star array.
+ * @param clus Cluster paramters. Only NSTARS is used.
+ * 
+ * @return Returns an array of total energies for each star in (*s)[1:NSTARS+1]
+ * (python slice notation!)
+ */
+double * calc_energy(cmc_fits_data_t *cfd) {
+  double *E, phi;
+  long double m_total, mprev;
+  long i;
+
+  E= (double *) calloc(cfd->NOBJ, sizeof(double));
+
+  /* This is just for safety, the masses should already be normalized to 1 */
+  m_total= 0.;
+  for (i=1; i<cfd->NOBJ+1; i++) {
+    m_total+= cfd->obj_m[i];
+  }
+
+  /* calculate energy for outermost star */
+  mprev= 1.; phi= 0.; i= cfd->NOBJ;
+
+  phi= - mprev/cfd->obj_r[i];
+  E[i-1]= phi+ 0.5* (sqr(cfd->obj_vr[i]) + sqr(cfd->obj_vt[i]));
+  mprev-= cfd->obj_m[i]/m_total;
+
+  for (i=cfd->NOBJ-1; i>0; i--) {
+    phi= phi - mprev * (1. / cfd->obj_r[i] - 1. / cfd->obj_r[i+1] );
+    E[i-1]= phi+ 0.5  * (sqr(cfd->obj_vr[i]) + sqr(cfd->obj_vt[i]));
+    mprev-= cfd->obj_m[i]/m_total;
+  }
+
+  return (E);
+}
+
+/* routine to sort the mass array in decreasing order */
+#define GENSORT_NAME                 mass_sort
+#define GENSORT_TYPE                 double
+#define GENSORT_KEYTYPE              double
+#define GENSORT_GETKEY(a)            a
+#define GENSORT_COMPAREKEYS(k1,k2)   k1 > k2
+
+#include "../../common/gensort.h"
+
+/* routine to sort an array E in increasing order indirectly*/
+#define GENSORT_NAME                 table_sort
+#define GENSORT_ARGS                 ,E
+#define GENSORT_ARGSPROTO            ,double *E
+#define GENSORT_TYPE                 size_t
+#define GENSORT_KEYTYPE              double
+#define GENSORT_GETKEY(a)            E[a]
+#define GENSORT_COMPAREKEYS(k1,k2)   k1<k2
+
+#include "../../common/gensort.h"
+
+/** 
+ * @brief Create a fully mass segregated cluster from the 'configuration' cluster s.
+ *
+ * This is based on the recipe given in Baumgardt et al. (2008). The 'configuration' 
+ * cluster determines the density distribution and is generated the standard way, e.g.,
+ * mkplummer, mkking. 
+ *  
+ * @param param Provides N_mass_seg, the number of stars for the mass segregated cluster.
+ * @param cfd Contains the 'configuration' cluster.
+ * 
+ * @return The fully mass segregated cluster.
+ */
+cmc_fits_data_t * create_mass_seg(struct imf_param param, cmc_fits_data_t *cfd)
+{
+  size_t N_config= cfd->NOBJ, N_mass= param.N_mass_seg, *ind, i;
+  size_t lower_i, higher_i, index;
+  double *E, *Mcum, X;
+  cmc_fits_data_t *ms;
+  gsl_permutation *perm;
+  int res;
+
+  /* Allocate fits structure */
+  ms= (cmc_fits_data_t *) calloc(1, sizeof(cmc_fits_data_t));
+
+  /* Initialize the new mass segregated cluster */
+  ms->NOBJ= N_mass;
+  ms->NBINARY= cfd->NBINARY;
+  cmc_malloc_fits_data_t(ms);
+
+  E= calc_energy(cfd);
+
+  /* Initialize the indirection table ... */
+  ind= (size_t *) calloc(N_config, sizeof(size_t));
+  for (i=0; i< N_config; i++) ind[i]= i;
+
+  /* ... and get the ordered indices for the energy */
+  table_sort(ind, N_config, E);
+
+  /* Set the masses for the new particle number N_mass */
+  /* Note: set_masses already normalizes them wrt. the total cluster
+   * mass.
+   */
+  set_masses(param, ms);
+
+  /* Read the masses into the masses array and sort them in descending 
+   * order. (This is a bit ugly but spares me to rewrite 
+   * substantial parts of the code)
+   */
+  Mcum = (double *) calloc(N_mass, sizeof(double)); 
+
+  mass_sort(&(ms->obj_m[1]), N_mass);
+
+  Mcum[0]= ms->obj_m[1];
+  for (i=1; i< N_mass; i++) {
+    Mcum[i]= Mcum[i-1]+ ms->obj_m[i+1];
+  }
+
+  /* For each mass in the mass array choose a random position and velocity 
+   * between N_config*Mcum[i-1] and N_config*Mcum[i]. 
+   */
+  for (i=0; i< N_mass; i++) {
+    if (i==0) {
+      lower_i= 0;
+    } else {
+      lower_i= N_config* Mcum[i-1];
+    }
+    higher_i= N_config*Mcum[i];
+
+    /* choose random index between [lower_i, higher_i) */
+    /* FIXME: I have chosen the inclusive/exclusive boundaries according 
+     * to what I thought might make sense but can't tell if this choice 
+     * was intended by Baumgardt et al. (2008).
+     */
+    X = rng_t113_dbl();
+    index= (long) floor(lower_i + (higher_i-lower_i)*X);
+
+    /* Transfer positions and velocities from s[index] to ms[i] */
+    ms->obj_r [i+1] = cfd->obj_r [ind[index]+1];
+    ms->obj_vr[i+1] = cfd->obj_vr[ind[index]+1];
+    ms->obj_vt[i+1] = cfd->obj_vt[ind[index]+1];
+    
+  }
+
+  /* need to sort radially for cmc*/
+  perm= gsl_permutation_calloc(N_mass);
+  gsl_permutation_init(perm);
+  
+  table_sort(perm->data, N_mass, &(ms->obj_r[1]));
+  
+  res= gsl_permute(perm->data, &(ms->obj_r[1]), 1, N_mass);
+  res= gsl_permute(perm->data, &(ms->obj_vr[1]), 1, N_mass);
+  res= gsl_permute(perm->data, &(ms->obj_vt[1]), 1, N_mass);
+  res= gsl_permute(perm->data, &(ms->obj_m[1]), 1, N_mass);
+
+  free(Mcum); free(ind); free(E);
+
+  return (ms);
+}
+
 int main(int argc, char *argv[]){
-	cmc_fits_data_t cfd;
+	cmc_fits_data_t *cfd, *ms;
 	struct imf_param param;
 	double total_mass;
+	/* int i; */
 	
 	parse_options(&param, argc, argv);
 
-	cmc_read_fits_file(param.infile, &cfd);
+        /* Allocate fits structure */
+        cfd= (cmc_fits_data_t *) calloc(1, sizeof(cmc_fits_data_t));
+
+	cmc_read_fits_file(param.infile, cfd);
 	
 	/* add central BH, hidden in 0th star */
         if (param.bhmass > 0.0) {
-		cfd.obj_m[0] = param.bhmass;
+		cfd->obj_m[0] = param.bhmass;
         }
 
-	total_mass = set_masses(param, &cfd);
+	total_mass = set_masses(param, cfd);
+
+        if (param.N_mass_seg!=0) {
+
+          if (param.N_mass_seg<0) {
+            param.N_mass_seg= calc_n_mass_seg_max(cfd);
+            printf("Using N=%li for mass segregated cluster\n", param.N_mass_seg);
+          } else {
+            /* Check if NSTAR is large enough to produce a segr. cluster 
+             * with N_mass_seg stars*/
+            long nmax;
+            nmax= calc_n_mass_seg_max(cfd);
+            if (param.N_mass_seg> nmax) {
+              printf("The requested number of stars (%li) is larger than", param.N_mass_seg);
+              printf("the maximum (%li).\n", nmax);
+              write_usage();
+              exit(EXIT_FAILURE);
+            }
+          }
+
+          ms= create_mass_seg(param, cfd);
+	  cmc_free_fits_data_t(cfd);
+          cfd= ms;
+        }
 
 	/* I might add scaling to E0 = -1/4 here */
         if (param.scale) {
-		scale_pos_and_vel(param, &cfd, total_mass);
+		scale_pos_and_vel(param, cfd, total_mass);
         };
-
-	cmc_write_fits_file(&cfd, param.outfile);
-
-	cmc_free_fits_data_t(&cfd);
+	
+	cmc_write_fits_file(cfd, param.outfile);
+	cmc_free_fits_data_t(cfd);
 
 	return 0;
 }
