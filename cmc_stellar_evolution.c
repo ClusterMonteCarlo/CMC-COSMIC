@@ -224,7 +224,7 @@ void handle_bse_outcome(long k, long kb)
     star[k].m = binary[kb].m1 + binary[kb].m2;
     binary[kb].a = pow((binary[kb].bse_mass[0]+binary[kb].bse_mass[1])*sqr(binary[kb].bse_tb/365.25), 1.0/3.0)
       * AU / units.l;
-  } else if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] != 0.0 && binary[kb].bse_tb <= 0.0) {
+  } else if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] != 0.0) {
     /* disruption with both stars "intact" */
     dprintf("binary disrupted via BSE with both stars intact\n");
     knew = create_star();
@@ -232,24 +232,26 @@ void handle_bse_outcome(long k, long kb)
     cp_binmemb_to_star(k, 0, knew);
     cp_binmemb_to_star(k, 1, knew);
     destroy_obj(k);
-  } else if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] == 0.0 && binary[kb].bse_tb <= 0.0) {
+  } else if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] == 0.0) {
     /* secondary star gone */
     dprintf("binary disrupted via BSE with first star intact\n");
     knew = create_star();
     cp_binmemb_to_star(k, 0, knew);
     destroy_obj(k);
-  } else if (binary[kb].bse_mass[0] == 0.0 && binary[kb].bse_mass[1] != 0.0 && binary[kb].bse_tb <= 0.0) {
+  } else if (binary[kb].bse_mass[0] == 0.0 && binary[kb].bse_mass[1] != 0.0) {
     /* primary star gone */
     dprintf("binary disrupted via BSE with second star intact\n");
     knew = create_star();
     cp_binmemb_to_star(k, 1, knew);
     destroy_obj(k);
-  } else if (binary[kb].bse_mass[0] == 0.0 && binary[kb].bse_mass[1] == 0.0 && binary[kb].bse_tb <= 0.0) {
+  } else if (binary[kb].bse_mass[0] == 0.0 && binary[kb].bse_mass[1] == 0.0) {
     /* both stars gone */
     dprintf("binary disrupted via BSE with no stars intact\n");
     destroy_obj(k);
   } else {
     dprintf("unhandled binary outcome!\n");
+    dprintf("bse_mass0=%g bse_mass1=%g tb=%g\n", 
+	    binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_tb);
     exit_cleanly(-1);
   }
 }
