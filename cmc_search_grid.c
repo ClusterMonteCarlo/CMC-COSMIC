@@ -21,7 +21,8 @@ search_grid_initialize(double power_law_exponent, double fraction, long starsPer
 
   grid->radius=NULL;
   grid->length=0;
-  grid->max_length= 1000000;
+  grid->max_length= SG_MAXLENGTH;
+  grid->min_length= SG_MINLENGTH;
   grid->power_law_exponent= power_law_exponent;
   grid->starsPerBin= starsPerBin;
   grid->fraction= fraction;
