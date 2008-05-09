@@ -205,35 +205,35 @@ typedef struct{
 	int GAMMA;
 #define PARAMDOC_SEARCH_GRID "search grid (0=off, 1=on)"
         int SEARCH_GRID;
-#define PARAMDOC_SG_STARSPERBIN "ask Stefan"
+#define PARAMDOC_SG_STARSPERBIN "number of stars that should ideally be in each search bin"
         int SG_STARSPERBIN;
-#define PARAMDOC_SG_MAXLENGTH "ask Stefan"
+#define PARAMDOC_SG_MAXLENGTH "maximum length of the search grid"
         int SG_MAXLENGTH;
-#define PARAMDOC_SG_MINLENGTH "ask Stefan"
+#define PARAMDOC_SG_MINLENGTH "minimum length of the search grid"
         int SG_MINLENGTH;
-#define PARAMDOC_SG_POWER_LAW_EXPONENT "ask Stefan"
+#define PARAMDOC_SG_POWER_LAW_EXPONENT "slope of the assumed power-law for r(N), where N is the number of stars within r. (0.5 hard coded)"
         int SG_POWER_LAW_EXPONENT;
-#define PARAMDOC_SG_MATCH_AT_FRACTION "ask Stefan"
+#define PARAMDOC_SG_MATCH_AT_FRACTION "fraction frac that adjusts the constant factor in the power-law for r(N) such that r_pl(frac*N_tot)=r(frac*N_tot) (0.5)"
         int SG_MATCH_AT_FRACTION;
-#define PARAMDOC_SG_PARTICLE_FRACTION "ask Stefan"
+#define PARAMDOC_SG_PARTICLE_FRACTION "frac_p that defines the maximum Np= frac_p*N_tot for which r(N<Np) can be reasonably approximated as a power-law (0.95)"
         int SG_PARTICLE_FRACTION;
-#define PARAMDOC_BH_LOSS_CONE "perform loss-cone physics for central black hole (0=ff, 1=on)"
+#define PARAMDOC_BH_LOSS_CONE "perform loss-cone physics for central black hole (0=off, 1=on)"
         int BH_LOSS_CONE;
 #define PARAMDOC_BH_R_DISRUPT_NB "central black hole disruption radius (N-body units)"
         int BH_R_DISRUPT_NB;
 #define PARAMDOC_FORCE_RLX_STEP "force a relaxation step (useful when RELAXATION=0) (0=off, 1=on)"
         int FORCE_RLX_STEP; 
 #ifdef EXPERIMENTAL
-#define PARAMDOC_BH_LC_FDT "ask Stefan"
+#define PARAMDOC_BH_LC_FDT "sub time step size on which the code tries to approximately advance particles that have a MC time step larger than BH_LC_FDT times the local relaxation time. In some versions of the code the particles are literally advanced while in other a simple scaling is used. None of them really work. (0)"
         int BH_LC_FDT;
 #define PARAMDOC_AVEKERNEL "one half the number of stars over which to average certain quantities"
         int AVEKERNEL;
 #endif
-#define PARAMDOC_APSIDES_PRECISION "ask Stefan"
+#define PARAMDOC_APSIDES_PRECISION "absolute precision of the roots of vr^2 for the numerical root finding algorithm."
         int APSIDES_PRECISION;
-#define PARAMDOC_APSIDES_MAX_ITER "ask Stefan"
+#define PARAMDOC_APSIDES_MAX_ITER "maximum number of iterations to find the roots of vr^2 numerically"
         int APSIDES_MAX_ITER;
-#define PARAMDOC_APSIDES_CONVERGENCE "ask Stefan"
+#define PARAMDOC_APSIDES_CONVERGENCE "difference of the roots between two consecutive iterations of the numerical root finding algorithm below which the result is considered to be converged."
         int APSIDES_CONVERGENCE;
 } parsed_t;
 
