@@ -172,7 +172,11 @@ double calc_P_orb(long index)
 	
 	//dprintf("index=%ld ", index);
 
+#ifdef EXPERIMENTAL
+	orbit_rs = calc_orbit_new(index, E, J);
+#else
 	orbit_rs = calc_orbit_rs(index, E, J);
+#endif
 	
 	//dprintf("rp=%g ra=%g ", orbit_rs.rp, orbit_rs.ra);
 
