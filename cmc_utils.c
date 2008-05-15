@@ -36,8 +36,6 @@ double potential(double r) {
 		return (star[0].phi);
 	};
 	if (r < star[1].r) {
-	     dprintf("r in the last bin. r= %lg, r[1]= %lf, phi[0]=  %lg, Mbh/r= %lg\n", 
-		r, star[1].r, star[0].phi, cenma.m*madhoc/r);
 	     return (star[0].phi-cenma.m*madhoc/r);
 	};
 
