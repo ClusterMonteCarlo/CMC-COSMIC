@@ -684,6 +684,8 @@ cmc_fits_data_t * create_mass_seg(struct imf_param param, cmc_fits_data_t *cfd)
    * between N_config*Mcum[i-1] and N_config*Mcum[i]. 
    */
   for (i=0; i< N_mass; i++) {
+    long j;
+
     if (i==0) {
       lower_i= 0;
     } else {
@@ -703,7 +705,28 @@ cmc_fits_data_t * create_mass_seg(struct imf_param param, cmc_fits_data_t *cfd)
     ms->obj_r [i+1] = cfd->obj_r [ind[index]+1];
     ms->obj_vr[i+1] = cfd->obj_vr[ind[index]+1];
     ms->obj_vt[i+1] = cfd->obj_vt[ind[index]+1];
-    
+
+    /* copy the rest of the structure */
+    ms->obj_id[i+1] = i+1;
+    ms->obj_k [i+1] = cfd->obj_k [ind[index]+1];
+    ms->obj_Reff[i+1] = cfd->obj_Reff[ind[index]+1];
+    ms->obj_binind[i+1] = cfd->obj_binind[ind[index]+1];
+    for (j=0; j< cfd->NBINARY+1; j++) {
+      ms->bs_index[j] = cfd->bs_index[j];
+      ms->bs_id1[j] = cfd->bs_id1[j]; 
+      ms->bs_k1[j] = cfd->bs_k1[j];
+      ms->bs_m1[j] = cfd->bs_m1[j];
+      ms->bs_Reff1[j] = cfd->bs_Reff1[j];
+      ms->bs_id2[j] = cfd->bs_id2[j];
+      ms->bs_k2[j] = cfd->bs_k2[j];
+      ms->bs_m2[j] = cfd->bs_m2[j];
+      ms->bs_Reff2[j] = cfd->bs_Reff2[j];
+      ms->bs_a[j] = cfd->bs_a[j];
+      ms->bs_e[j] = cfd->bs_e[j];
+    }
+    ms->Rvir = cfd->Rvir;
+    ms->Rtid = cfd->Rtid;
+    ms->Z    = cfd->Z;
   }
 
   /* need to sort radially for cmc*/
