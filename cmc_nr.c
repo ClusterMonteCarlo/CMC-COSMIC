@@ -250,7 +250,6 @@ long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
       rtry= star[ktry].r; pot_try= star[ktry].phi;
       qtry= function_q(j, rtry, pot_try, E, J);
       fevals++;
-      if (j==3265) printf("ktry=%li, q[ktry]=%g\n", ktry, (double) qtry);
       if (qtry>0.e0){
         kmin = ktry;
       } else {
