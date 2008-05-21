@@ -237,6 +237,8 @@ typedef struct{
         int APSIDES_CONVERGENCE;
 #define PARAMDOC_CIRC_PERIOD_THRESHOLD "A threshold value for the difference between apastron and periastron below which an orbit is considered to be circular. Currently this is only used for the period calculation in the loss-cone routine."
         int CIRC_PERIOD_THRESHOLD;
+#define PARAMDOC_WRITE_STELLAR_INFO "Write out information about stellar evolution for each single and binary star, (0=off, 1=on)"
+        int WRITE_STELLAR_INFO;
 } parsed_t;
 
 /* a struct containing the units used */

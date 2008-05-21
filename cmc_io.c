@@ -639,6 +639,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_CIRC_PERIOD_THRESHOLD);
 				sscanf(values, "%lf", &CIRC_PERIOD_THRESHOLD);
 				parsed.CIRC_PERIOD_THRESHOLD = 1;
+                        } else if (strcmp(parameter_name, "WRITE_STELLAR_INFO")== 0) {
+				PRINT_PARSED(PARAMDOC_WRITE_STELLAR_INFO);
+				sscanf(values, "%i", &WRITE_STELLAR_INFO);
+				parsed.WRITE_STELLAR_INFO = 1;
 			} else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -675,6 +679,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(RELAXATION, 1, PARAMDOC_RELAXATION);
 	CHECK_PARSED(THETASEMAX, 1.0, PARAMDOC_THETASEMAX);
 	CHECK_PARSED(STELLAR_EVOLUTION, 0, PARAMDOC_STELLAR_EVOLUTION);
+        CHECK_PARSED(WRITE_STELLAR_INFO, 1, PARAMDOC_WRITE_STELLAR_INFO);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
 	CHECK_PARSED(BINBIN, 1, PARAMDOC_BINBIN);
