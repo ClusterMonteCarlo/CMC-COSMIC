@@ -635,6 +635,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_APSIDES_CONVERGENCE);
 				sscanf(values, "%lf", &APSIDES_CONVERGENCE);
 				parsed.APSIDES_CONVERGENCE = 1;
+                        } else if (strcmp(parameter_name, "CIRC_PERIOD_THRESHOLD")== 0) {
+				PRINT_PARSED(PARAMDOC_CIRC_PERIOD_THRESHOLD);
+				sscanf(values, "%lf", &CIRC_PERIOD_THRESHOLD);
+				parsed.CIRC_PERIOD_THRESHOLD = 1;
 			} else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -678,6 +682,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);
 	CHECK_PARSED(MINIMUM_R, 0.0, PARAMDOC_MINIMUM_R);
 	CHECK_PARSED(BH_R_DISRUPT_NB, 0., PARAMDOC_BH_R_DISRUPT_NB);
+        CHECK_PARSED(CIRC_PERIOD_THRESHOLD, 1e-18, PARAMDOC_CIRC_PERIOD_THRESHOLD);
 	
         CHECK_PARSED(T_MAX, 20.0, PARAMDOC_T_MAX);
 	CHECK_PARSED(T_MAX_COUNT, 1000000, PARAMDOC_T_MAX_COUNT);

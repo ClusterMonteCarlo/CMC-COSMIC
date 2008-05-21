@@ -235,6 +235,8 @@ typedef struct{
         int APSIDES_MAX_ITER;
 #define PARAMDOC_APSIDES_CONVERGENCE "difference of the roots between two consecutive iterations of the numerical root finding algorithm below which the result is considered to be converged."
         int APSIDES_CONVERGENCE;
+#define PARAMDOC_CIRC_PERIOD_THRESHOLD "A threshold value for the difference between apastron and periastron below which an orbit is considered to be circular. Currently this is only used for the period calculation in the loss-cone routine."
+        int CIRC_PERIOD_THRESHOLD;
 } parsed_t;
 
 /* a struct containing the units used */

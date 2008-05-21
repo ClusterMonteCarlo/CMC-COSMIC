@@ -188,6 +188,13 @@ double calc_P_orb(long index)
 	   the radial period will be calculated properly. */
 	//return(Porbapprox);
 
+        if (orbit_rs.ra-orbit_rs.rp< CIRC_PERIOD_THRESHOLD) {
+          dprintf("Orbit is considered circular for period calculation.\n");
+          dprintf("ra-rp= %g and is less than the threshold %g\n", 
+              orbit_rs.ra-orbit_rs.rp, CIRC_PERIOD_THRESHOLD);
+          orbit_rs.circular_flag = 1;
+        }
+
 	if (orbit_rs.circular_flag == 1) {
 		/* We're returning the azimuthal period here, which is not the same as the
 		   radial period for the general cluster potential.  This shouldn't make

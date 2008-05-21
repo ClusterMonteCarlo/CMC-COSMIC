@@ -90,6 +90,13 @@ _EXTERN_ long BH_LOSS_CONE;
 _EXTERN_ double BH_R_DISRUPT_NB;
 /* force to use the relaxation step, even if relaxation is turned off */
 _EXTERN_ int FORCE_RLX_STEP;
+/* A threshold value for the difference between apastron and periastron below
+ * which an orbit is considered to be circular. Currently this is only used 
+ * for the period calculation in the loss-cone routine, as the integrator 
+ * barfs when the difference between the two apsides (which form the integration
+ * interval) gets too small.
+ */
+_EXTERN_ double CIRC_PERIOD_THRESHOLD;
 #ifdef EXPERIMENTAL
 /* scale the square of the deflection angle used for testing of entry into the loss 
  * cone by Trel*BH_LC_FDT/dt 
