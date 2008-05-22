@@ -23,11 +23,10 @@ long get_positive_Q_index(long index, double E, double J) {
   ktemp= index;
   fevals=1;
 
-  /*
-   *if (star[index].id==113150) {
-   *  printf("index=%li, id=%li, E=%g, J=%g\n", index, star[index].id, E, J);
-   *};
-   */
+  if (index > clus.N_MAX) {
+    ktemp = FindZero_r(0, clus.N_MAX, star[index].rnew) + 1;
+  };
+
   Qtemp = function_q(index, star[ktemp].r, star[ktemp].phi, E, J);
   /* check for nearly circular orbit and do linear search */
   if (Qtemp <= 0.0) {
@@ -35,7 +34,6 @@ long get_positive_Q_index(long index, double E, double J) {
     do {
       ktemp++; fevals++;
       Qtemp = function_q(index, star[ktemp].r, star[ktemp].phi, E, J);
-      //if (index==3) dprintf("==> ktemp= %li, Qtemp= %g\n", ktemp, Qtemp);
     } while (Qtemp <= 0.0 && ktemp <= clus.N_MAX);		
     if (ktemp >= clus.N_MAX) {
       dprintf("There is no positive Q index for index=%li, star.id=%li!\n", index, 
@@ -43,8 +41,6 @@ long get_positive_Q_index(long index, double E, double J) {
       return(-1);
     }
   };
-  //if (star[index].id==113150) 
-    //printf("++> index=%li, fevals=%li, ktemp=%li\n", index, fevals, ktemp);
   return(ktemp);
 };
 
@@ -281,7 +277,6 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
   return(new_pos);
 };
 
-/* Do not use for newly created stars! */
 orbit_rs_t calc_orbit_new(long index, double E, double J) {
   orbit_rs_t orbit_rs;
   long ktemp, kmin, kmax;
@@ -290,15 +285,6 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   int circular;
 
   circular=0;
-
-  /* for newly created stars, position si is not ordered, so do simple linear search */
-  //dprintf("clus.N_MAX= %li\n", clus.N_MAX);
-  if (index > clus.N_MAX) {
-    ktemp = 0;
-    while (ktemp < clus.N_MAX && star[ktemp].r < star[index].rnew) {
-      ktemp++;
-    }
-  };
 
   ktemp= get_positive_Q_index(index, E, J);
   if (ktemp<=-1) {
@@ -321,8 +307,6 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   /* calculate new kmax */
   kmax= find_zero_Q(index, ktemp, clus.N_MAX +1, E, J);
 
-  //if (index==56204)
-  //  printf("kmin=%li, kmax=%li\n", kmin, kmax);
   /* calculate rmin and rmax */
   if (!circular) {
     int rmax_in_interval, rmin_in_interval, vr_rmax_positive, vr_rmin_positive;
