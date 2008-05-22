@@ -22,6 +22,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	orbit_rs_t orbit_rs;
 	long ktemp=si, kmin, kmax, i, i1, fevals;
 	double Qtemp, rk, rk1, Uk, Uk1, a, b, rmin, dQdr_min, rmax, dQdr_max;
+        double dQdr_min_num, dQdr_max_num, inside_sqrt, actual_rmin, actual_rmax;
 
 	/* for newly created stars, position si is not ordered */
         //dprintf("clus.N_MAX= %li\n", clus.N_MAX);
@@ -96,8 +97,26 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
 		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
 		
-		rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
+		/*Sourav: Avoiding a negative argument for the sqrt in rmin */
+		inside_sqrt = a * a - 2.0 * J * J * (b - E);
+		if (inside_sqrt<0.0){
+			rmin = -1.0 *J * J / a ;
+			actual_rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
+			dprintf("The sqrt in the expression for rmin has a negative argument!");
+			dprintf("It is, therefore, set to zero.\n");
+			dprintf("rmin_old= %g rmin_new= %g rmin_sqrt= %g\n", actual_rmin, rmin, inside_sqrt);
+			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
+				star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
+			dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+
+		}
+		else{
+			// /*rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));*/
+			rmin = J * J / (-a + sqrt(inside_sqrt));
+		}
+		
 		dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
+		dQdr_min_num = (function_Q(si, kmin+1, E, J)-function_Q(si, kmin, E, J))/(star[kmin+1].r-star[kmin].r);
                
 		/*  For rmax- Look for rk, rk1 such that 
 		 *  Q(rk) > 0 > Q(rk1) */
@@ -119,16 +138,35 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		
 		a = (Uk1 - Uk) / (1. / rk1 - 1. / rk);
 		b = (Uk / rk1 - Uk1 / rk) / (1. / rk1 - 1. / rk);
-		
-		rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
+	        
+		/*Sourav: Avoiding a negative argument for the sqrt in rmax */
+		inside_sqrt = a * a - 2.0 * J * J * (b - E);
+		if (inside_sqrt<0.0){
+			rmax = -a / (2.0 * (b - E));
+			actual_rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
+			dprintf("The sqrt in the expression for rmax has a negative argument!");
+			dprintf("It is, therefore, set to zero.\n");
+			dprintf("rmax_old= %g rmax_new= %g rmax_sqrt= %g\n", actual_rmax, rmax, inside_sqrt);
+			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
+				star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
+			dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+		}
+		else{
+		/*rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));*/
+		  rmax = (-a + sqrt(inside_sqrt)) / (2.0 * (b - E));
+		}
+
 		dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
+		dQdr_max_num = (function_Q(si, kmax+1, E, J)-function_Q(si, kmax, E, J))/(star[kmax+1].r-star[kmax].r);
 
 		/* another case of a circular orbit */
-		if (rmin > rmax) {
-			eprintf("rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g\n",
+		if ((rmin > rmax)||(dQdr_min<0.)||(dQdr_max>0.)) {
+		        eprintf("circular orbit found!\n");
+		 	eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
 				rmin, rmax, kmin, kmax, si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E,
-				function_Q(si, kmin, star[si].E, star[si].J), function_Q(si, kmax, star[si].E, star[si].J));
-			
+				function_Q(si, kmin, star[si].E, star[si].J), function_Q(si, kmax, star[si].E, star[si].J),
+				dQdr_min,dQdr_max,dQdr_min_num,dQdr_max_num);
+
 			orbit_rs.rp = star[si].r;
 			orbit_rs.ra = star[si].r;
 			orbit_rs.kmin = si;
@@ -421,6 +459,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #else
 		orbit_rs = calc_orbit_rs(j, E, J);
 #endif		
+
 		/* skip the rest if the star is on a nearly circular orbit */
 		if (orbit_rs.circular_flag == 1) {
 			star[si].rnew = star[si].r;
@@ -433,6 +472,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			dQdr_min = orbit_rs.dQdrp;
 			dQdr_max = orbit_rs.dQdra;
 		}
+
 
 		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {

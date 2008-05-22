@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vim: set shiftwidth=2 */
 
 /* use commandline option -DUSE_THREADS to turn on threading */
 /*#define USE_THREADS*/
@@ -282,6 +283,7 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   long ktemp, kmin, kmax;
   double rmin, rmax;
   double a, b, dQdr_min, dQdr_max;
+  double dQdr_min_num, dQdr_max_num;
   int circular;
 
   circular=0;
@@ -310,17 +312,48 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   /* calculate rmin and rmax */
   if (!circular) {
     int rmax_in_interval, rmin_in_interval, vr_rmax_positive, vr_rmin_positive;
+    double inside_sqrt, actual_rmin, actual_rmax; 
 
     vr_rmax_positive= 0; vr_rmin_positive= 0;
 
     /* First we try Henon's method. If it fails we use bisection. */
     set_a_b(index, kmin, &a, &b);
-    rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
+    inside_sqrt= a * a - 2.0 * J * J * (b - E);
+
+    if (inside_sqrt<0.0) {
+      rmin = -1.0 *J * J / a ;
+      actual_rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
+      dprintf("The sqrt in the expression for rmin has a negative argument!");
+      dprintf("It is, therefore, set to zero.\n");
+      dprintf("rmin_old= %g rmin_new= %g rmin_sqrt= %g\n", actual_rmin, rmin, inside_sqrt);
+      dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
+	  star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
+      dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+    } else {
+      rmin = J * J / (-a + sqrt(inside_sqrt));
+    }
+
     dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
+    dQdr_min_num = (function_Q(index, kmin+1, E, J)-function_Q(index, kmin, E, J))/(star[kmin+1].r-star[kmin].r);
 
     set_a_b(index, kmax, &a, &b);
-    rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
+    inside_sqrt= a * a - 2.0 * J * J * (b - E);
+
+    if (inside_sqrt<0.0){
+      rmax = -a / (2.0 * (b - E));
+      actual_rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
+      dprintf("The sqrt in the expression for rmax has a negative argument!");
+      dprintf("It is, therefore, set to zero.\n");
+      dprintf("rmax_old= %g rmax_new= %g rmax_sqrt= %g\n", actual_rmax, rmax, inside_sqrt);
+      dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
+	  star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
+      dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+    } else {
+      rmax = (-a + sqrt(inside_sqrt)) / (2.0 * (b - E));
+    }
+    
     dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
+    dQdr_max_num = (function_Q(index, kmax+1, E, J)- function_Q(index, kmax, E, J))/(star[kmax+1].r-star[kmax].r);
     
     /* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
     rmin_in_interval= rmin < star[kmin+1].r && rmin > star[kmin].r;
@@ -352,11 +385,12 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   };
  
   /* another case of a circular orbit */
-  if (!circular && (rmin >= rmax)) {
-    eprintf("rmin=%g>=rmax=%g: kmin=%ld kmax=%ld index=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g\n",
-        rmin, rmax, kmin, kmax, index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E,
-        function_Q(index, kmin, star[index].E, star[index].J), function_Q(index, kmax, star[index].E, star[index].J));
-    eprintf("rmin-rmax= %g\n", rmin-rmax);
+  if (!circular && ((rmin > rmax)||(dQdr_min<0.)||(dQdr_max>0.))) {
+    eprintf("circular orbit found!\n");
+    eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
+	rmin, rmax, kmin, kmax, index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E,
+	function_Q(index, kmin, star[index].E, star[index].J), function_Q(index, kmax, star[index].E, star[index].J),
+	dQdr_min,dQdr_max,dQdr_min_num,dQdr_max_num);
     circular= 1;
   }
 
