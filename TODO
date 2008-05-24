@@ -2,10 +2,10 @@
 *** things that should be done, in order of priority ***
 ***********************************************************
 
+* Add systemic NS/BH birth kicks for binaries!!!
 * Add Michele Trenti's idea of having r_c calculated via Casertano & Hut 
   in 2D on the stellar luminosity?
 * Test SSE by comparing with results in literature.
-* Add rejuvenation (and BSE and SE parameter handling) following collisions.
 * Add fixed radius option to setstellar.c.
 * Make default output names of utilities more descriptive,
   like input_to_setimf.fits, input_to_setstellar.fits.

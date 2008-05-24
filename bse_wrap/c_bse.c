@@ -9,7 +9,7 @@ int main(void)
   double mass0[2], mass[2], tb, ecc;
   double menv[2], renv[2], ospin[2], epoch[2], tms[2], tphys=0.0;
   double rad[2], lum[2], massc[2], radc[2];
-  double tphysf=15000.0, dtp=0.0, z=0.001, *zpars;
+  double tphysf=1.0e-15, dtp=0.0, z=0.001, *zpars;
 
   zpars = (double *) malloc(20 * sizeof(double));
 
@@ -41,26 +41,36 @@ int main(void)
 
   bse_instar();
   
-  mass0[0] = 30.0;
+  mass0[0] = 3.0;
   mass0[1] = 1.0;
   mass[0] = mass0[0];
   mass[1] = mass0[1];
   kw[0] = 1;
   kw[1] = 1;
-  tb = 10000000.0;
-  ecc = 0.0;
+  tb = 1.0e10;
+  ecc = 0.99;
 
   ospin[0] = 0.0;
   ospin[1] = 0.0;
   epoch[0] = 0.0;
   epoch[1] = 0.0;
   
+  tphysf = 1.0e3;
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
 	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc);
 
-  fprintf(stdout, "star 0: mass0=%f mass=%f\n", mass0[0], mass[0]);
-  fprintf(stdout, "star 1: mass0=%f mass=%f\n", mass0[1], mass[1]);
+  fprintf(stdout, "star 0: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[0], mass[0], tms[0], epoch[0], massc[0]);
+  fprintf(stdout, "star 1: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[1], mass[1], tms[1], epoch[1], massc[1]);
+
+  tb = 1.0;
+  tphysf=1.0e3 + 1.0;
+  bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
+	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
+	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc);
+
+  fprintf(stdout, "star 0: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[0], mass[0], tms[0], epoch[0], massc[0]);
+  fprintf(stdout, "star 1: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[1], mass[1], tms[1], epoch[1], massc[1]);
 
   j = 1;
   while (bse_get_bpp(j, 1) >= 0.0) {

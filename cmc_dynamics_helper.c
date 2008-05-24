@@ -441,7 +441,7 @@ void binint_log_collision(const char interaction_type[], long id,
 /* do binary interaction (bin-bin or bin-single) */
 void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng)
 {
-	int i, j, isbinsingle=0, isbinbin=0, sid=-1, bid=-1, istriple, bi;
+	int i, j, isbinsingle=0, isbinbin=0, sid=-1, bid=-1, istriple, bi, nmerged;
 	long ksin=-1, kbin=-1, jbin, jbinp, knew, knewp=-1, oldk;
 	double t, bmax, wp, wx[4], wy[4], wz[4], vnew[4], alpha, BEi, BEf=0.0;
 	fb_hier_t hier;
@@ -449,6 +449,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	fb_ret_t retval;
 	fb_obj_t threeobjs[3];
 	char string1[1024], string2[1024];
+	star_t tempstar, tempstar2;
 
 	/* perform actions that are specific to the type of binary interaction */
 	if (star[k].binind != 0 && star[kp].binind != 0) {
@@ -621,7 +622,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				star[knewp].vt = sqrt(sqr(vnew[1]) + sqr(vnew[2]));
 			}
 			
-			/* set mass */
+			/* set mass; this gets overwritten later for collisions */
 			if (istriple) {
 				star[knew].m = hier.obj[i]->obj[bid]->m * cmc_units.m / madhoc;
 				star[knewp].m = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
@@ -672,8 +673,21 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, star[knew].id, &bi);
 					cp_SEvars_to_newstar(oldk, bi, knew);
 				} else {
+					/* merge progenitor stars one by one */
+					oldk = binint_get_indices(k, kp, hier.obj[i]->id[0], &bi);
+					cp_SEvars_to_newstar(oldk, bi, knew);
+					cp_m_to_newstar(oldk, bi, knew);
+					nmerged = 1;
+					while (nmerged < hier.obj[i]->ncoll) {
+						oldk = binint_get_indices(k, kp, hier.obj[i]->id[nmerged], &bi);
+						nmerged++;
+						cp_SEvars_to_star(oldk, bi, &tempstar);
+						cp_m_to_star(oldk, bi, &tempstar);
+						merge_two_stars(&(star[knew]), &tempstar, &(star[knew]));
+					}
+					
 					star[knew].id = star_get_id_new();
-					/* FIXME: need to implement rejuvenation prescription here */
+
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						star[knew].id, star[knew].m, 
@@ -706,8 +720,23 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, binary[star[knew].binind].id1, &bi);
 					cp_SEvars_to_newbinary(oldk, bi, knew, 0);
 				} else {
+					/* merge progenitor stars one by one */
+					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[0]->id[0], &bi);
+					cp_SEvars_to_star(oldk, bi, &tempstar);
+					cp_m_to_star(oldk, bi, &tempstar);
+					nmerged = 1;
+					while (nmerged < hier.obj[i]->obj[0]->ncoll) {
+						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[0]->id[nmerged], &bi);
+						nmerged++;
+						cp_SEvars_to_star(oldk, bi, &tempstar2);
+						cp_m_to_star(oldk, bi, &tempstar2);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar);
+					}
+					
+					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 0);
+					cp_starmass_to_binmember(tempstar, star[knew].binind, 0);
+
 					binary[star[knew].binind].id1 = star_get_id_new();
-					/* FIXME: need to treat rejuvenation here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id1,
@@ -721,8 +750,23 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, binary[star[knew].binind].id2, &bi);
 					cp_SEvars_to_newbinary(oldk, bi, knew, 1);
 				} else {
+					/* merge progenitor stars one by one */
+					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[1]->id[0], &bi);
+					cp_SEvars_to_star(oldk, bi, &tempstar);
+					cp_m_to_star(oldk, bi, &tempstar);
+					nmerged = 1;
+					while (nmerged < hier.obj[i]->obj[1]->ncoll) {
+						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[1]->id[nmerged], &bi);
+						nmerged++;
+						cp_SEvars_to_star(oldk, bi, &tempstar2);
+						cp_m_to_star(oldk, bi, &tempstar2);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar);
+					}
+					
+					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 1);
+					cp_starmass_to_binmember(tempstar, star[knew].binind, 1);
+
 					binary[star[knew].binind].id2 = star_get_id_new();
-					/* FIXME: need to treat rejuvenation here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id2,
@@ -731,6 +775,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						*(hier.obj[i]->obj[1]), k, kp);
 				}
 				
+				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
+
 				/* radii, and tb */
 				binary[star[knew].binind].rad1 = binary[star[knew].binind].bse_radius[0] * RSUN / units.l;
 				binary[star[knew].binind].rad2 = binary[star[knew].binind].bse_radius[1] * RSUN / units.l;
@@ -781,8 +827,20 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, star[knewp].id, &bi);
 					cp_SEvars_to_newstar(oldk, bi, knewp);
 				} else {
+					/* merge progenitor stars one by one */
+					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[sid]->id[0], &bi);
+					cp_SEvars_to_newstar(oldk, bi, knewp);
+					cp_m_to_newstar(oldk, bi, knewp);
+					nmerged = 1;
+					while (nmerged < hier.obj[i]->obj[sid]->ncoll) {
+						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[sid]->id[nmerged], &bi);
+						nmerged++;
+						cp_SEvars_to_star(oldk, bi, &tempstar);
+						cp_m_to_star(oldk, bi, &tempstar);
+						merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]));
+					}
+					
 					star[knewp].id = star_get_id_new();
-					/* FIXME: rejuvenation here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						star[knewp].id, star[knewp].m, 
@@ -815,8 +873,23 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, binary[star[knew].binind].id1, &bi);
 					cp_SEvars_to_newbinary(oldk, bi, knew, 0);
 				} else {
+					/* merge progenitor stars one by one */
+					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[0], &bi);
+					cp_SEvars_to_star(oldk, bi, &tempstar);
+					cp_m_to_star(oldk, bi, &tempstar);
+					nmerged = 1;
+					while (nmerged < hier.obj[i]->obj[bid]->obj[0]->ncoll) {
+						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged], &bi);
+						nmerged++;
+						cp_SEvars_to_star(oldk, bi, &tempstar2);
+						cp_m_to_star(oldk, bi, &tempstar2);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar);
+					}
+					
+					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 0);
+					cp_starmass_to_binmember(tempstar, star[knew].binind, 0);
+
 					binary[star[knew].binind].id1 = star_get_id_new();
-					/* FIXME: rejuvenation prescription here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id1,
@@ -830,8 +903,23 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, binary[star[knew].binind].id2, &bi);
 					cp_SEvars_to_newbinary(oldk, bi, knew, 1);
 				} else {
+					/* merge progenitor stars one by one */
+					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[0], &bi);
+					cp_SEvars_to_star(oldk, bi, &tempstar);
+					cp_m_to_star(oldk, bi, &tempstar);
+					nmerged = 1;
+					while (nmerged < hier.obj[i]->obj[bid]->obj[1]->ncoll) {
+						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged], &bi);
+						nmerged++;
+						cp_SEvars_to_star(oldk, bi, &tempstar2);
+						cp_m_to_star(oldk, bi, &tempstar2);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar);
+					}
+					
+					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 1);
+					cp_starmass_to_binmember(tempstar, star[knew].binind, 1);
+
 					binary[star[knew].binind].id2 = star_get_id_new();
-					/* FIXME: rejuvenation prescription here */
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id2,
@@ -840,6 +928,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						*(hier.obj[i]->obj[bid]->obj[1]), k, kp);
 				}
 				
+				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
+
 				/* radii and tb */
 				binary[star[knew].binind].rad1 = binary[star[knew].binind].bse_radius[0] * RSUN / units.l;
 				binary[star[knew].binind].rad2 = binary[star[knew].binind].bse_radius[1] * RSUN / units.l;

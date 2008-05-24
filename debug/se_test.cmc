@@ -6,3 +6,4 @@ MASS_BINS = 0.1,1.0,10.0,100.0,1000.0
 
 # additional parameters
 STELLAR_EVOLUTION = 1
+SS_COLLISION = 1

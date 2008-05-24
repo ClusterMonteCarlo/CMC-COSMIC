@@ -335,6 +335,80 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
 }
 
 /* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+void cp_m_to_newstar(long oldk, int kbi, long knew)
+{
+  long kb;
+  
+  kb = star[oldk].binind;
+  
+  if (kbi == -1) { /* star comes from input single star */
+    star[knew].m = star[oldk].m;
+  } else { /* star comes from input binary */
+    if (kbi == 0) {
+      star[knew].m = binary[kb].m1;
+    } else {
+      star[knew].m = binary[kb].m2;
+    }
+  }
+}
+
+/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
+{
+  long kb;
+  
+  kb = star[oldk].binind;
+  
+  if (kbi == -1) { /* star comes from input single star */
+    target_star->se_mass = star[oldk].se_mass;
+    target_star->se_k = star[oldk].se_k;
+    target_star->se_mt = star[oldk].se_mt;
+    target_star->se_ospin = star[oldk].se_ospin;
+    target_star->se_epoch = star[oldk].se_epoch;
+    target_star->se_tphys = star[oldk].se_tphys;
+    target_star->se_radius = star[oldk].se_radius;
+    target_star->se_lum = star[oldk].se_lum;
+    target_star->se_mc = star[oldk].se_mc;
+    target_star->se_rc = star[oldk].se_rc;
+    target_star->se_menv = star[oldk].se_menv;
+    target_star->se_renv = star[oldk].se_renv;
+    target_star->se_tms = star[oldk].se_tms;
+  } else { /* star comes from input binary */
+    target_star->se_mass = binary[kb].bse_mass0[kbi];
+    target_star->se_k = binary[kb].bse_kw[kbi];
+    target_star->se_mt = binary[kb].bse_mass[kbi];
+    target_star->se_ospin = binary[kb].bse_ospin[kbi];
+    target_star->se_epoch = binary[kb].bse_epoch[kbi];
+    target_star->se_tphys = binary[kb].bse_tphys;
+    target_star->se_radius = binary[kb].bse_radius[kbi];
+    target_star->se_lum = binary[kb].bse_lum[kbi];
+    target_star->se_mc = binary[kb].bse_massc[kbi];
+    target_star->se_rc = binary[kb].bse_radc[kbi];
+    target_star->se_menv = binary[kb].bse_menv[kbi];
+    target_star->se_renv = binary[kb].bse_renv[kbi];
+    target_star->se_tms = binary[kb].bse_tms[kbi];
+  }
+}
+
+/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+void cp_m_to_star(long oldk, int kbi, star_t *target_star)
+{
+  long kb;
+  
+  kb = star[oldk].binind;
+  
+  if (kbi == -1) { /* star comes from input single star */
+    target_star->m = star[oldk].m;
+  } else { /* star comes from input binary */
+    if (kbi == 0) {
+      target_star->m = binary[kb].m1;
+    } else {
+      target_star->m = binary[kb].m2;
+    }
+  }
+}
+
+/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
 /* set everything except tb */
 void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
 {
@@ -371,5 +445,33 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
     binary[kbnew].bse_menv[kbinew] = binary[kb].bse_menv[oldkbi];
     binary[kbnew].bse_renv[kbinew] = binary[kb].bse_renv[oldkbi];
     binary[kbnew].bse_tms[kbinew] = binary[kb].bse_tms[oldkbi];
+  }
+}
+
+/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+/* set everything except tb */
+void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid)
+{
+  binary[binindex].bse_mass0[bid] = instar.se_mass;
+  binary[binindex].bse_kw[bid] = instar.se_k;
+  binary[binindex].bse_mass[bid] = instar.se_mt;
+  binary[binindex].bse_ospin[bid] = instar.se_ospin;
+  binary[binindex].bse_epoch[bid] = instar.se_epoch;
+  binary[binindex].bse_tphys = instar.se_tphys; /* tphys should be the same for both input stars so this should be OK */
+  binary[binindex].bse_radius[bid] = instar.se_radius;
+  binary[binindex].bse_lum[bid] = instar.se_lum;
+  binary[binindex].bse_massc[bid] = instar.se_mc;
+  binary[binindex].bse_radc[bid] = instar.se_rc;
+  binary[binindex].bse_menv[bid] = instar.se_menv;
+  binary[binindex].bse_renv[bid] = instar.se_renv;
+  binary[binindex].bse_tms[bid] = instar.se_tms;
+}
+
+void cp_starmass_to_binmember(star_t instar, long binindex, int bid)
+{
+  if (bid == 0) {
+    binary[binindex].m1 = instar.m;
+  } else {
+    binary[binindex].m2 = instar.m;
   }
 }

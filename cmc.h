@@ -403,7 +403,12 @@ void write_stellar_data(void);
 void handle_bse_outcome(long k, long kb);
 void cp_binmemb_to_star(long k, int kbi, long knew);
 void cp_SEvars_to_newstar(long oldk, int kbi, long knew);
+void cp_m_to_newstar(long oldk, int kbi, long knew);
+void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star);
+void cp_m_to_star(long oldk, int kbi, star_t *target_star);
 void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew);
+void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid);
+void cp_starmass_to_binmember(star_t instar, long binindex, int bid);
 double r_of_m(double M);
 
 /* Fewbody stuff */
@@ -430,6 +435,7 @@ void zero_star(long j);
 void zero_binary(long j);
 
 void sscollision_do(long k, long kp, double rcm, double vcm[4]);
+void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star);
 
 void print_initial_binaries(void);
 
