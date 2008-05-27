@@ -36,7 +36,7 @@ double potential(double r) {
 		return (star[0].phi);
 	};
 	if (r < star[1].r) {
-	     return (star[0].phi-cenma.m*madhoc/r);
+	     return (star[0].phi-(star[0].phi-star[1].phi)*star[1].r/r);
 	};
 
    //i = check_if_r_around_last_index(last_index, r);
