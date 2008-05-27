@@ -50,8 +50,8 @@ UNAME = $(shell uname)
 FLIBS=-lg2c
 
 ifeq ($(UNAME),Linux)
-CFLAGS = -Wall -mieee-fp -O3 -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
-#CFLAGS = -Wall -g -mieee-fp -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
+CFLAGS = -Wall -O3 -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
+#CFLAGS = -Wall -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio $(FLIBS) -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
