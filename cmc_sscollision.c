@@ -114,9 +114,16 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star) {
 		} else if (tempbinary.bse_mass[1] != 0) {
 			tbi = 1;
 		} else {
-			eprintf("Artificial stellar evolution of eccentric binary failed: both stars have zero mass.\n");
-			eprintf("k1=%d k2=%d\n", star1->se_k, star2->se_k);
-			exit_cleanly(1);
+			if (tempbinary.bse_kw[0] == 15) {
+				tbi = 0;
+			} else if (tempbinary.bse_kw[1] == 15) {
+				tbi = 1;
+			} else {
+				eprintf("Artificial stellar evolution of eccentric binary failed: both stars have zero mass.\n");
+				eprintf("k1=%d k2=%d kb1=%d kb2=%d\n", star1->se_k, star2->se_k, 
+					tempbinary.bse_kw[0], tempbinary.bse_kw[1]);
+				exit_cleanly(1);
+			}
 		}
 		
 		/* debug stuff */
