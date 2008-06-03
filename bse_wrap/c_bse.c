@@ -7,12 +7,13 @@ int main(void)
 {
   int i, j, kw[2];
   double mass0[2], mass[2], tb, ecc;
-  double menv[2], renv[2], ospin[2], epoch[2], tms[2], tphys=0.0;
+  double menv[2], renv[2], ospin[2], epoch[2], tms[2], tphys;
   double rad[2], lum[2], massc[2], radc[2];
-  double tphysf=1.0e-15, dtp=0.0, z=0.001, *zpars;
+  double tphysf, dtp, z=0.02, *zpars;
 
   zpars = (double *) malloc(20 * sizeof(double));
 
+  /* evolution parameters */
   bse_set_neta(0.5);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
@@ -37,10 +38,9 @@ int main(void)
   bse_set_eddfac(10.0);
   bse_set_gamma(-1.0);
   
+  /*
   bse_zcnsts(&z, zpars);
-
   bse_instar();
-  
   mass0[0] = 3.0;
   mass0[1] = 1.0;
   mass[0] = mass0[0];
@@ -48,23 +48,51 @@ int main(void)
   kw[0] = 1;
   kw[1] = 1;
   tb = 1.0e10;
-  ecc = 0.99;
-
+  ecc = 0.1;
   ospin[0] = 0.0;
   ospin[1] = 0.0;
   epoch[0] = 0.0;
   epoch[1] = 0.0;
-  
+  tphys = 0.0;
   tphysf = 1.0e3;
-  bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
-	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
-	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc);
+  */
 
-  fprintf(stdout, "star 0: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[0], mass[0], tms[0], epoch[0], massc[0]);
-  fprintf(stdout, "star 1: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[1], mass[1], tms[1], epoch[1], massc[1]);
+  /* a particularly troublesome binary merger */
+  z = 0.02;
+  bse_zcnsts(&z, zpars);
+  bse_instar();
+  tphys = 501.583;
+  tphysf = tphys + 1.0e-6;
+  dtp = 0.0;
+  mass0[0] = 0.330345;
+  mass0[1] = 2.98122;
+  kw[0] = 0;
+  kw[1] = 4;
+  mass[0] = 0.330345;
+  mass[1] = 2.96019;
+  ospin[0] = 79.7765;
+  ospin[1] = 39.7016;
+  epoch[0] = 0.0;
+  epoch[1] = -0.0634474;
+  rad[0] = 0.323029;
+  rad[1] = 24.0672;
+  lum[0] = 0.0156506;
+  lum[1] = 248.853;
+  massc[0] = 0.0;
+  massc[1] = 0.64247;
+  radc[0] = 0.0;
+  radc[1] = 0.167354;
+  menv[0] = 0.330345;
+  menv[1] = 0.168182;
+  renv[0] = 0.323029;
+  renv[1] = 12.4044;
+  tms[0] = 331066;
+  tms[1] = 383.917;
+  //tb = 2.01352e-16;
+  //ecc = 0.999;
+  tb = 1.0e6;
+  ecc = 0.0;
 
-  tb = 1.0;
-  tphysf=1.0e3 + 1.0;
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
 	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc);
@@ -83,7 +111,6 @@ int main(void)
   }
   
   fprintf(stdout, "m1=%f m2=%f tb=%f e=%f\n", mass[0], mass[1], tb, ecc);
-
 
   free(zpars);
 
