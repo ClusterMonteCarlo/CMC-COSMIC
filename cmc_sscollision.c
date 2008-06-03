@@ -54,7 +54,7 @@ void sscollision_do(long k, long kp, double rcm, double vcm[4])
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star) {
 	double tphysf, dtp;
 	binary_t tempbinary;
-	int tbi=-1;
+	int tbi=-1, j;
 	
 	if (STELLAR_EVOLUTION) {
 		/* create temporary tight, eccentric binary that will merge immediately */
@@ -108,6 +108,22 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star) {
 		/* make sure outcome was as expected */
 		if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) {
 			eprintf("Artificial stellar evolution of eccentric binary failed: both stars have non-zero mass.\n");
+			eprintf("k1=%d k2=%d kb1=%d kb2=%d\n", star1->se_k, star2->se_k, 
+				tempbinary.bse_kw[0], tempbinary.bse_kw[1]);
+			eprintf("m1=%g m2=%g mb1=%g mb2=%g\n", star1->se_mt, star2->se_mt,
+				tempbinary.bse_mass[0], tempbinary.bse_mass[1]);
+			eprintf("tphys=%g tphysf=%g (tphysf-tphys)/tphys=%g\n", tempbinary.bse_tphys, tphysf,
+				(tphysf-tempbinary.bse_tphys)/tempbinary.bse_tphys);
+			eprintf("tb=%g a=%g e=%g\n", tempbinary.bse_tb, tempbinary.a * units.l / AU, tempbinary.e);
+			j = 1;
+			while (bse_get_bpp(j, 1) >= 0.0) {
+				fprintf(stdout, "time=%g m1=%g m2=%g k1=%d k2=%d sep=%g ecc=%g r1/rol1=%g r2/rol2=%g type=%s\n",
+					bse_get_bpp(j, 1), bse_get_bpp(j, 2), bse_get_bpp(j, 3), (int) bse_get_bpp(j, 4), (int) bse_get_bpp(j, 5),
+					bse_get_bpp(j, 6), bse_get_bpp(j, 7), bse_get_bpp(j, 8), bse_get_bpp(j, 9),
+					bse_get_bselabel((int) bse_get_bpp(j, 10)));
+				fflush(NULL);
+				j++;
+			}
 			exit_cleanly(1);
 		} else if (tempbinary.bse_mass[0] != 0) {
 			tbi = 0;
@@ -127,7 +143,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star) {
 		}
 		
 		/* debug stuff */
-		dprintf("\ninstar1: se_k=%d se_mass=%g se_epoch=%g se_mc=%g se_menv=%g se_tms=%g\n", 
+		dprintf("instar1: se_k=%d se_mass=%g se_epoch=%g se_mc=%g se_menv=%g se_tms=%g\n", 
 			star1->se_k, star1->se_mass, star1->se_epoch, star1->se_mc, star1->se_menv, star1->se_tms);
 		dprintf("instar2: se_k=%d se_mass=%g se_epoch=%g se_mc=%g se_menv=%g se_tms=%g\n", 
 			star2->se_k, star2->se_mass, star2->se_epoch, star2->se_mc, star2->se_menv, star2->se_tms);
