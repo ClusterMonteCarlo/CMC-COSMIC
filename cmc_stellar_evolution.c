@@ -230,7 +230,7 @@ void handle_bse_outcome(long k, long kb)
     knew = create_star();
     knewp = create_star();
     cp_binmemb_to_star(k, 0, knew);
-    cp_binmemb_to_star(k, 1, knew);
+    cp_binmemb_to_star(k, 1, knewp);
     destroy_obj(k);
   } else if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] == 0.0) {
     /* secondary star gone */
