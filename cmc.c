@@ -113,7 +113,10 @@ int main(int argc, char *argv[])
 	
 	comp_mass_percent();
 	comp_multi_mass_percent();
-	
+
+	/* If we don't set it here, new stars created by breaking binaries (BSE) will
+	 * end up in the wrong place */
+	clus.N_MAX_NEW = clus.N_MAX;
 	/* initialize stellar evolution things */
 	if (STELLAR_EVOLUTION > 0) {
 		stellar_evolution_init();
