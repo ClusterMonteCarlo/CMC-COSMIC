@@ -135,7 +135,14 @@ void do_stellar_evolution(gsl_rng *rng){
 	star[k].vr += cos(theta) * vk;
 	star[k].vt += sin(theta) * vk;
 	set_star_EJ(k);
-      } 
+      } else if ((star[k].se_k >= 10 && star[k].se_k <= 12) && star[k].se_k != kprev) {
+	/* WD birth kicks, just in case they exist */
+	/* vk = 2.0e5 / (units.l/units.t); */
+/* 	theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0); */
+/* 	star[k].vr += cos(theta) * vk; */
+/* 	star[k].vt += sin(theta) * vk; */
+/* 	set_star_EJ(k); */
+      }
     } else { /* binary */
 	tphysf = TotalTime / MEGA_YEAR;
 	dtp = tphysf;
