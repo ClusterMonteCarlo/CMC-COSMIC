@@ -1,7 +1,7 @@
 ***
       SUBROUTINE evolv2(kstar,mass0,mass,rad,lumin,massc,radc,
      &                  menv,renv,ospin,epoch,tms,
-     &                  tphys,tphysf,dtp,z,zpars,tb,ecc)
+     &                  tphys,tphysf,dtp,z,zpars,tb,ecc,vs)
       implicit none
 ***
 *

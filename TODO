@@ -2,8 +2,6 @@
 *** things that should be done, in order of priority ***
 ***********************************************************
 
-* Add systemic NS/BH birth kicks for binaries!!!  This must be
-  extractable from BSE in some way.
 * Add Michele Trenti's idea of having r_c calculated via Casertano & Hut 
   in 2D on the stellar luminosity?
 * Test SSE by comparing with results in literature.

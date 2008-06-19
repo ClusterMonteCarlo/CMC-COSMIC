@@ -400,7 +400,7 @@ void load_fits_file_data(void);
 void stellar_evolution_init(void);
 void do_stellar_evolution(gsl_rng *rng);
 void write_stellar_data(void);
-void handle_bse_outcome(long k, long kb);
+void handle_bse_outcome(long k, long kb, double *vs);
 void cp_binmemb_to_star(long k, int kbi, long knew);
 void cp_SEvars_to_newstar(long oldk, int kbi, long knew);
 void cp_m_to_newstar(long oldk, int kbi, long knew);
@@ -435,7 +435,7 @@ void zero_star(long j);
 void zero_binary(long j);
 
 void sscollision_do(long k, long kp, double rcm, double vcm[4]);
-void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star);
+void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs);
 
 void print_initial_binaries(void);
 

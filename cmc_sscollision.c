@@ -10,12 +10,13 @@
 void sscollision_do(long k, long kp, double rcm, double vcm[4])
 {
 	long knew;
+	double vs[3];
 	
 	/* create new star */
 	knew = create_star();
 
 	/* merge parent stars, setting mass, stellar radius, and SE params */
-	merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]));
+	merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs);
 	
 	star[knew].r = rcm;
 	star[knew].vr = vcm[3];
@@ -51,7 +52,7 @@ void sscollision_do(long k, long kp, double rcm, double vcm[4])
 }
 
 /* merge two stars using stellar evolution if it's enabled */
-void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star) {
+void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs) {
 	double tphysf, dtp;
 	binary_t tempbinary;
 	int tbi=-1, j;
@@ -103,7 +104,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star) {
 			   &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), 
 			   &(tempbinary.bse_renv[0]), &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
 			   &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-			   &(tempbinary.bse_tb), &(tempbinary.e));
+			   &(tempbinary.bse_tb), &(tempbinary.e), vs);
 		
 		/* make sure outcome was as expected */
 		if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) {

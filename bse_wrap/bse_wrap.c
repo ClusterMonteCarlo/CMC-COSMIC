@@ -13,20 +13,20 @@ void bse_zcnsts(double *z, double *zpars)
 void bse_evolv1(int *kw, double *mass, double *mt, double *r, double *lum,
 		double *mc, double *rc, double *menv, double *renv, double *ospin,
 		double *epoch, double *tms, double *tphys, double *tphysf, 
-		double *dtp, double *z, double *zpars)
+		double *dtp, double *z, double *zpars, double *vs)
 {
   evolv1_(kw, mass, mt, r, lum, mc, rc, menv, renv, ospin,
-	  epoch, tms, tphys, tphysf, dtp, z, zpars);
+	  epoch, tms, tphys, tphysf, dtp, z, zpars, vs);
 }
 
 /* evolve a binary */
 void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
 		double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
-		double *z, double *zpars, double *tb, double *ecc)
+		double *z, double *zpars, double *tb, double *ecc, double *vs)
 {
   evolv2_(kstar, mass0, mass, rad, lum, massc, radc, menv, renv, ospin,
-	  epoch, tms, tphys, tphysf, dtp, z, zpars, tb, ecc);
+	  epoch, tms, tphys, tphysf, dtp, z, zpars, tb, ecc, vs);
 }
 
 /* set collision matrix */

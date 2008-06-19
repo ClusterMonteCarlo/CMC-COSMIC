@@ -35,6 +35,7 @@ void stellar_evolve(cmc_fits_data_t *cfd)
 	long int k;
 	double frac, dtp, tphysf;
 	star_t star;
+	double vs[3];
 
 	/* initialize stellar evolution */
 	/* SSE */
@@ -96,7 +97,7 @@ void stellar_evolve(cmc_fits_data_t *cfd)
 			bse_evolv1(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius), 
 				   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   &(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   &(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars);
+				   &(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
 			
 			/* setting star properties in FITS file, being careful with units */
 			cfd->obj_k[k] = star.se_k;

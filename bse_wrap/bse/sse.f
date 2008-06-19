@@ -37,7 +37,7 @@ c-------------------------------------------------------------c
 *
       integer kw,j,k
 *
-      real*8 mass,mt,z,zpars(20)
+      real*8 mass,mt,z,zpars(20),vs(3)
       real*8 epoch,tms,tphys,tphysf,dtp
       real*8 r,lum,ospin
       real*8 mc,rc,menv,renv
@@ -131,7 +131,7 @@ c-------------------------------------------------------------c
       dtp = 0.d0
 * 
       CALL evolv1(kw,mass,mt,r,lum,mc,rc,menv,renv,ospin,
-     &            epoch,tms,tphys,tphysf,dtp,z,zpars)
+     &            epoch,tms,tphys,tphysf,dtp,z,zpars,vs)
 *
 ************************************************************************
 * Output:

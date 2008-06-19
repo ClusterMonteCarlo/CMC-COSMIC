@@ -5,10 +5,11 @@
 
 int main(void)
 {
-  int i, j, kw[2];
-  double mass[2], mt[2], r[2], lum[2], mc[2], rc[2];
-  double menv[2], renv[2], ospin[2], epoch[2], tms[2], tphys[2];
-  double tphysf=15000.0, dtp=12000.0, z=0.001, *zpars;
+  int i, kw, counter;
+  double mass, mt, rad, lum, mc, rc;
+  double menv, renv, ospin, epoch, tms, tphys;
+  double tphysf, dtp, z=0.001, *zpars;
+  double vs[3];
 
   zpars = (double *) malloc(20 * sizeof(double));
 
@@ -28,51 +29,37 @@ int main(void)
 
   bse_zcnsts(&z, zpars);
   
-  mass[0] = 30.0;
-  mass[1] = 1.0;
-  kw[0] = 1;
-  kw[1] = 1;
-  mt[0] = mass[0];
-  mt[1] = mass[1];
-  ospin[0] = 0.0;
-  ospin[1] = 0.0;
-  epoch[0] = 0.0;
-  epoch[1] = 0.0;
-  tphys[0] = 0.0;
-  tphys[1] = 0.0;
+  mass = 14.0;
+  mt = mass;
+  kw = 1;
+  ospin = 0.0;
+  epoch = 0.0;
+  tphys = 0.0;
 
-  bse_evolv1(&(kw[0]), &(mass[0]), &(mt[0]), &(r[0]), &(lum[0]), &(mc[0]), &(rc[0]), 
-	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), &(tphys[0]), 
-	     &tphysf, &dtp, &z, zpars);
-  
-  fprintf(stdout, "star 0: mass=%f mt=%f\n", mass[0], mt[0]);
+  counter = 0;
+  tphysf = 0.0;
+  while (kw <= 6 && tphys < 15000.0) {
+    counter ++;
+    tphysf += ((double) counter) * 0.1;
+    dtp = 0.0;
 
-  i = 1;
-  while (bse_get_spp(i, 1) >= 0.0) {
-    fprintf(stdout, "star 0: type=%25s time=%f mass=%f radius=%f\n", 
-	    bse_get_sselabel((int) bse_get_spp(i, 2)), 
-	    bse_get_spp(i, 1), 
-	    bse_get_spp(i, 3),
-	    r[0]);
-    i++;
+    bse_evolv1(&kw, &mass, &mt, &rad, &lum, &mc, &rc, 
+	       &menv, &renv, &ospin, &epoch, &tms, &tphys, 
+	       &tphysf, &dtp, &z, zpars, vs);
+    
+    fprintf(stdout, "mass=%f mt=%f vs=%f\n", mass, mt, sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+
+    i = 1;
+    while (bse_get_spp(i, 1) >= 0.0) {
+      fprintf(stdout, "type=%25s time=%f mass=%f radius=%f\n", 
+	      bse_get_sselabel((int) bse_get_spp(i, 2)), 
+	      bse_get_spp(i, 1), 
+	      bse_get_spp(i, 3),
+	      rad);
+      i++;
+    }
   }
   
-  bse_evolv1(&(kw[1]), &(mass[1]), &(mt[1]), &(r[1]), &(lum[1]), &(mc[1]), &(rc[1]), 
-	     &(menv[1]), &(renv[1]), &(ospin[1]), &(epoch[1]), &(tms[1]), &(tphys[1]), 
-	     &tphysf, &dtp, &z, zpars);
-
-  fprintf(stdout, "star 1: mass=%f mt=%f\n", mass[1], mt[1]);
-  
-  i = 1;
-  while (bse_get_spp(i, 1) >= 0.0) {
-    fprintf(stdout, "star 1: type=%25s time=%f mass=%f radius=%f\n", 
-	    bse_get_sselabel((int) bse_get_spp(i, 2)), 
-	    bse_get_spp(i, 1), 
-	    bse_get_spp(i, 3),
-	    r[1]);
-    i++;
-  }
-
   free(zpars);
 
   return(0);

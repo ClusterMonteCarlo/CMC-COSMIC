@@ -92,6 +92,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 	double kTcore, vcore, Eb, Ebmin, Ebmax;
 	double frac, *r, *sigma, *mave, dtp, tphysf;
 	star_t star;
+	double vs[3];
 
 	/* initialize stellar evolution */
 	/* SSE */
@@ -214,7 +215,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			bse_evolv1(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius), 
 				   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   &(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   &(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars);
+				   &(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
 
 			/* setting star properties in FITS file, being careful with units */
 			cfd->bs_k2[j] = star.se_k;

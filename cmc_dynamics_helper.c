@@ -450,6 +450,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	fb_obj_t threeobjs[3];
 	char string1[1024], string2[1024];
 	star_t tempstar, tempstar2;
+	double vs[3];
 
 	/* perform actions that are specific to the type of binary interaction */
 	if (star[k].binind != 0 && star[kp].binind != 0) {
@@ -683,7 +684,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
-						merge_two_stars(&(star[knew]), &tempstar, &(star[knew]));
+						merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs);
 					}
 					
 					star[knew].id = star_get_id_new();
@@ -730,7 +731,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
 					}
 					
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 0);
@@ -760,7 +761,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
 					}
 					
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 1);
@@ -837,7 +838,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
-						merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]));
+						merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs);
 					}
 					
 					star[knewp].id = star_get_id_new();
@@ -883,7 +884,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
 					}
 					
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 0);
@@ -913,7 +914,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
 					}
 					
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 1);

@@ -10,6 +10,7 @@ int main(void)
   double menv[2], renv[2], ospin[2], epoch[2], tms[2], tphys;
   double rad[2], lum[2], massc[2], radc[2];
   double tphysf, dtp, z=0.02, *zpars;
+  double vs[3];
 
   zpars = (double *) malloc(20 * sizeof(double));
 
@@ -95,7 +96,7 @@ int main(void)
 
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
-	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc);
+	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
 
   fprintf(stdout, "star 0: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[0], mass[0], tms[0], epoch[0], massc[0]);
   fprintf(stdout, "star 1: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[1], mass[1], tms[1], epoch[1], massc[1]);
@@ -111,6 +112,8 @@ int main(void)
   }
   
   fprintf(stdout, "m1=%f m2=%f tb=%f e=%f\n", mass[0], mass[1], tb, ecc);
+  
+  fprintf(stdout, "vs=%g\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
 
   free(zpars);
 
