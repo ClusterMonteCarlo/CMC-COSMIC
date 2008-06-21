@@ -10,7 +10,6 @@
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_permute_double.h>
 
-
 #define SEED 768364873UL
 
 /* a fast square function */
@@ -51,6 +50,7 @@ void write_usage(void){
 	printf("            7: Tracers (1 species, the rest are 1 Msun)\n");
 	printf("            8: Power-law with neutron stars (objects at 1.4 Msun)\n");
         printf("            9: single mass (set by -m)\n");
+	printf("           10: Arches cluster IMF (Dib, 2007)\n");
 	printf("-w        : overwrite flag\n");
 	printf("-m <dbl>  : minimum mass, or tracer mass\n");
 	printf("-M <dbl>  : maximum mass\n");
@@ -176,7 +176,7 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
-	if (param->imf<0 || param->imf>9){
+	if (param->imf<0 || param->imf>10){
 		printf("Invalid IMF model value\n");
 		write_usage();
 		exit(EXIT_FAILURE);
@@ -459,6 +459,44 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
 			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
+	  }
+	  else if (param.imf==10){
+	    Cons[0] = 0.273790828274247451;
+	    Cons[1] = 0.136895414137123726;
+	    Cons[2] = 0.136895414137123726;
+	    Cons[3] = 0.098458343217690494;
+	    alpha[0] = 1.3;
+	    alpha[1] = 2.3;
+	    alpha[2] = 2.04;
+	    alpha[3] = 1.74;
+	    Xlim[0] = 0.0;
+	    Xlim[1] = 0.697361577282682826;
+	    Xlim[2] = 0.851346680757908496;
+	    Xlim[3] = 0.940986540417828543;
+	    Xlim[4] = 1.0;
+	    Mass[0] = 0.1;
+	    Mass[1] = 0.5;
+	    Mass[2] = 1.0;
+	    Mass[3] = 3.0;
+	    
+	    /* implement broken power-law, and use rejection for new limits */
+	    for(i=1; i<=cfd->NOBJ; i++){
+	      do {
+		X = rng_t113_dbl();
+		j = 0;
+		while (X > Xlim[j+1]) {
+		  j++;
+		}
+		m = pow((1.0-alpha[j])/Cons[j]*(X-Xlim[j])+pow(Mass[j],1.0-alpha[j]), 1.0/(1.0-alpha[j]));
+		if (isnan(m)) {
+		  fprintf(stderr, "Oops!  m=NaN.  Please make coefficients more precise.\n");
+		  exit(-127);
+		}
+	      } while (m<param.mmin || m>param.mmax) ;
+	      /* fprintf(stderr, "X=%g Xlim[j]=%g j=%d m=%g\n", X, Xlim[j], j, m); */
+	      cfd->obj_m[i] = m;
+	      total_mass += m;
+	    }
 	  }
 	else {
 		printf("This can't happen!\n");
