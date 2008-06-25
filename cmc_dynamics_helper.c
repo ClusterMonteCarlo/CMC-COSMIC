@@ -1037,7 +1037,7 @@ void break_wide_binaries(void)
 			/* Destroy binary if its orbital speed is less than some fraction of the 
 			   local relative velocity. */
 			if (vorb <= XHS*W) {
-				dprintf("breaking wide binary: vorb=%g W=%g\n", vorb, W);
+				//dprintf("breaking wide binary: vorb=%g W=%g\n", vorb, W);
 				
 				Eexcess += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 

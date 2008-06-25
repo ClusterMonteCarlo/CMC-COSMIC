@@ -369,8 +369,8 @@ c-------------------------------------------------------------c
       if(ip.ge.nv)then
          WRITE(99,*)' EVOLV1 ARRAY ERROR ',mass
          WRITE(*,*)' STOP: EVOLV1 ARRAY ERROR '
-         CALL exit(0)
-         STOP
+*         CALL exit(0)
+*         STOP
       endif
 *
       RETURN

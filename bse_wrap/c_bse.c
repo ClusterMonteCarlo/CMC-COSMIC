@@ -62,44 +62,44 @@ int main(void)
   z = 0.02;
   bse_zcnsts(&z, zpars);
   bse_instar();
-  tphys = 501.583;
+  tphys = 4080.99360647987578;
   tphysf = tphys + 1.0e-6;
   dtp = 0.0;
-  mass0[0] = 0.330345;
-  mass0[1] = 2.98122;
-  kw[0] = 0;
-  kw[1] = 4;
-  mass[0] = 0.330345;
-  mass[1] = 2.96019;
-  ospin[0] = 79.7765;
-  ospin[1] = 39.7016;
-  epoch[0] = 0.0;
-  epoch[1] = -0.0634474;
-  rad[0] = 0.323029;
-  rad[1] = 24.0672;
-  lum[0] = 0.0156506;
-  lum[1] = 248.853;
+  mass0[0] = 4.84669901967864369;
+  mass0[1] = 1.37137522564870173;
+  kw[0] = 1;
+  kw[1] = 3;
+  mass[0] = 4.84669901967864369;
+  mass[1] = 2.56120364567049563;
+  ospin[0] = 82.3218704130343184;
+  ospin[1] = 3470.299431889483;
+  epoch[0] = 3942.88331438252681;
+  epoch[1] = -3.16627647681798408;
+  rad[0] = 6.34740059621568786;
+  rad[1] = 3.72620512826865546;
+  lum[0] = 998.455400442978089;
+  lum[1] = 10.3362468697233147;
   massc[0] = 0.0;
-  massc[1] = 0.64247;
+  massc[1] = 0.18795785445876928;
   radc[0] = 0.0;
-  radc[1] = 0.167354;
-  menv[0] = 0.330345;
-  menv[1] = 0.168182;
-  renv[0] = 0.323029;
-  renv[1] = 12.4044;
-  tms[0] = 331066;
-  tms[1] = 383.917;
-  //tb = 2.01352e-16;
-  //ecc = 0.999;
-  tb = 1.0e6;
-  ecc = 0.0;
+  radc[1] = 0.109536671904153504;
+  menv[0] = 1.00000000000000004e-10;
+  menv[1] = 2.04620307949515423;
+  renv[0] = 1.00000000000000004e-10;
+  renv[1] = 3.26779454511162415;
+  tms[0] = 112.005061125185307;
+  tms[1] = 3593.50144103976754;
+  tb = 1.341969331661761e-16;
+  ecc = 0.998999999999999999;
+  //tb = 1.0e6;
+  //ecc = 0.0;
 
-  bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
+  bse_evolv2_safely(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
 	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
 
-  fprintf(stdout, "star 0: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[0], mass[0], tms[0], epoch[0], massc[0]);
-  fprintf(stdout, "star 1: mass0=%f mass=%f tms=%g epoch=%g massc=%g\n", mass0[1], mass[1], tms[1], epoch[1], massc[1]);
+  fprintf(stdout, "star 0: mass0=%f mass=%f tms=%g epoch=%g massc=%g rad=%g\n", mass0[0], mass[0], tms[0], epoch[0], massc[0], rad[0]);
+  fprintf(stdout, "star 1: mass0=%f mass=%f tms=%g epoch=%g massc=%g rad=%g\n", mass0[1], mass[1], tms[1], epoch[1], massc[1], rad[1]);
 
   j = 1;
   while (bse_get_bpp(j, 1) >= 0.0) {

@@ -21,10 +21,18 @@ void bse_evolv1(int *kw, double *mass, double *mt, double *r, double *lum,
 		double *mc, double *rc, double *menv, double *renv, double *ospin,
 		double *epoch, double *tms, double *tphys, double *tphysf, 
 		double *dtp, double *z, double *zpars, double *vs);
+void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum,
+		       double *mc, double *rc, double *menv, double *renv, double *ospin,
+		       double *epoch, double *tms, double *tphys, double *tphysf, 
+		       double *dtp, double *z, double *zpars, double *vs);
 void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
 		double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		double *z, double *zpars, double *tb, double *ecc, double *vs);
+void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
+		       double *massc, double *radc, double *menv, double *renv, double *ospin,
+		       double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
+		       double *z, double *zpars, double *tb, double *ecc, double *vs);
 void bse_instar(void);
 
 /* structs to access BSE common blocks */
@@ -77,3 +85,8 @@ char *bse_get_bselabel(int kw); /* converts binary type number to text label */
 
 /* copied functions */
 double bse_kick_speed(int *startype); /* routine for generating birth kick speed from distribution */
+
+/* useful macros */
+#define BSE_WRAP_MAX(a, b) ((a)>=(b)?(a):(b))
+#define BSE_WRAP_MIN(a, b) ((a)<=(b)?(a):(b))
+

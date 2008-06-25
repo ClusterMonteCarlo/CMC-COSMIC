@@ -5,7 +5,7 @@
 
 int main(void)
 {
-  int i, kw, counter;
+  int i, kw;
   double mass, mt, rad, lum, mc, rc;
   double menv, renv, ospin, epoch, tms, tphys;
   double tphysf, dtp, z=0.001, *zpars;
@@ -36,28 +36,39 @@ int main(void)
   epoch = 0.0;
   tphys = 0.0;
 
-  counter = 0;
-  tphysf = 0.0;
-  while (kw <= 6 && tphys < 15000.0) {
-    counter ++;
-    tphysf += ((double) counter) * 0.1;
-    dtp = 0.0;
+  z = 0.02;
+  bse_zcnsts(&z, zpars);
+  tphys = 501.583;
+  tphysf = tphys;
+  //tphysf = 0.0;
+  dtp = 0.0;
+  mass = 2.98122;
+  kw = 4;
+  mt = 2.96019;
+  ospin = 39.7016;
+  epoch = -0.0634474;
+  rad = 24.0672;
+  lum = 248.853;
+  mc = 0.64247;
+  rc = 0.167354;
+  menv = 0.168182;
+  renv = 12.4044;
+  tms = 383.917;
 
-    bse_evolv1(&kw, &mass, &mt, &rad, &lum, &mc, &rc, 
-	       &menv, &renv, &ospin, &epoch, &tms, &tphys, 
-	       &tphysf, &dtp, &z, zpars, vs);
-    
-    fprintf(stdout, "mass=%f mt=%f vs=%f\n", mass, mt, sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
-
-    i = 1;
-    while (bse_get_spp(i, 1) >= 0.0) {
-      fprintf(stdout, "type=%25s time=%f mass=%f radius=%f\n", 
-	      bse_get_sselabel((int) bse_get_spp(i, 2)), 
-	      bse_get_spp(i, 1), 
-	      bse_get_spp(i, 3),
-	      rad);
-      i++;
-    }
+  bse_evolv1(&kw, &mass, &mt, &rad, &lum, &mc, &rc, 
+	     &menv, &renv, &ospin, &epoch, &tms, &tphys, 
+	     &tphysf, &dtp, &z, zpars, vs);
+  
+  fprintf(stdout, "mass=%f mt=%f vs=%f\n", mass, mt, sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+  
+  i = 1;
+  while (bse_get_spp(i, 1) >= 0.0) {
+    fprintf(stdout, "type=%25s time=%f mass=%f radius=%f\n", 
+	    bse_get_sselabel((int) bse_get_spp(i, 2)), 
+	    bse_get_spp(i, 1), 
+	    bse_get_spp(i, 3),
+	    rad);
+    i++;
   }
   
   free(zpars);
