@@ -4,7 +4,7 @@ include ../../common/common.mk
 FLIBS=
 
 EXE = setimf
-OBJS = $(EXE).o ../../libs/taus113-v2.o ../../libs/fitslib.o
+OBJS = $(EXE).o genimf.o ../../libs/taus113-v2.o ../../libs/fitslib.o
 
 #pattern rule to compile object files from C files
 %.o : %.c Makefile
@@ -18,4 +18,4 @@ install: $(EXE)
 	install -m 0755 $^ $(PREFIX)/bin/cmc_$^
 
 clean:
-	rm -f $(EXE).o $(EXE)
+	rm -f $(EXE).o $(EXE) genimf.o
