@@ -46,7 +46,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	input.ncount = 500;
 	input.tidaltol = 1.0e-5;
 	input.firstlogentry[0] = '\0';
-	input.fexp = 3.0;
+	input.fexp = 1.0;
 	fb_debug = 0;
 	
 	/* initialize a few things for integrator */

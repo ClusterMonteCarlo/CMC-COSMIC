@@ -2,6 +2,7 @@
 *** things that should be done, in order of priority ***
 ***********************************************************
 
+* Set stellar evolution timestep.
 * Add Michele Trenti's idea of having r_c calculated via Casertano & Hut 
   in 2D on the stellar luminosity?
 * Test SSE by comparing with results in literature.

@@ -50,7 +50,7 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hi
 	input.ncount = 500;
 	input.tidaltol = 1.0e-5;
 	input.firstlogentry[0] = '\0';
-	input.fexp = 3.0;
+	input.fexp = 1.0;
 	fb_debug = 0;
 	
 	/* initialize a few things for integrator */

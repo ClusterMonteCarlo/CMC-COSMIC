@@ -685,10 +685,13 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
 						merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs);
+						star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);
+						star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
 					}
+					set_star_EJ(knew);
 					
 					star[knew].id = star_get_id_new();
-
+					
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						star[knew].id, star[knew].m, 
@@ -732,8 +735,18 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
 						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
+						/* FIXME: really we're supposed to add the kick to each binary
+						   member separately, then calculate the systemic kick to the binary,
+						   but hopefully this doesn't happen too much. */
+						if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
+							wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
+								sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+						}
+						star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);					       
+						star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
 					}
-					
+					set_star_EJ(knew);
+
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 0);
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 0);
 
@@ -762,7 +775,17 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
 						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
+						/* FIXME: really we're supposed to add the kick to each binary
+						   member separately, then calculate the systemic kick to the binary,
+						   but hopefully this doesn't happen too much. */
+						if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
+							wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
+								sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+						}
+						star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);					       
+						star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
 					}
+					set_star_EJ(knew);
 					
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 1);
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 1);
@@ -839,7 +862,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
 						merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs);
+						star[knewp].vr += vs[2] * 1.0e5 / (units.l/units.t);					       
+						star[knewp].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
 					}
+					set_star_EJ(knewp);
 					
 					star[knewp].id = star_get_id_new();
 					/* log collision */
@@ -885,7 +911,17 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
 						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
+						/* FIXME: really we're supposed to add the kick to each binary
+						   member separately, then calculate the systemic kick to the binary,
+						   but hopefully this doesn't happen too much. */
+						if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
+							wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
+								sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+						}
+						star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);					       
+						star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
 					}
+					set_star_EJ(knew);
 					
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 0);
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 0);
@@ -915,7 +951,17 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
 						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
+						/* FIXME: really we're supposed to add the kick to each binary
+						   member separately, then calculate the systemic kick to the binary,
+						   but hopefully this doesn't happen too much. */
+						if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
+							wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
+								sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+						}
+						star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);					       
+						star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
 					}
+					set_star_EJ(knew);
 					
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 1);
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 1);

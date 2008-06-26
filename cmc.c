@@ -246,9 +246,9 @@ int main(int argc, char *argv[])
 		}		
 
 		/* DEBUG */
-		if(tcount%50==0 && WRITE_STELLAR_INFO) {
-			write_stellar_data();
-		}
+		/* if(tcount%50==0 && WRITE_STELLAR_INFO) { */
+		/* write_stellar_data(); */
+		/* } */
 	} /* End FOR (time step iteration loop) */
 
 	times(&tmsbuf);

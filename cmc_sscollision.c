@@ -21,6 +21,8 @@ void sscollision_do(long k, long kp, double rcm, double vcm[4])
 	star[knew].r = rcm;
 	star[knew].vr = vcm[3];
 	star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+	star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);
+	star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
 	star[knew].phi = potential(star[knew].r);
 	set_star_EJ(knew);
 	set_star_news(knew);
@@ -53,7 +55,7 @@ void sscollision_do(long k, long kp, double rcm, double vcm[4])
 
 /* merge two stars using stellar evolution if it's enabled */
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs) {
-	double tphysf, dtp;
+	double tphysf, dtp, vsaddl[3];
 	binary_t tempbinary, tbcopy;
 	int tbi=-1, j;
 	
@@ -201,14 +203,20 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		bse_evolv1_safely(&(merged_star->se_k), &(merged_star->se_mass), &(merged_star->se_mt), &(merged_star->se_radius), 
 				  &(merged_star->se_lum), &(merged_star->se_mc), &(merged_star->se_rc), &(merged_star->se_menv), 
 				  &(merged_star->se_renv), &(merged_star->se_ospin), &(merged_star->se_epoch), &(merged_star->se_tms), 
-				  &(merged_star->se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+				  &(merged_star->se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vsaddl);
 		
+		vs[0] += vsaddl[0];
+		vs[1] += vsaddl[1];
+		vs[2] += vsaddl[2];
+
 		merged_star->rad = merged_star->se_radius * RSUN / units.l;
 		merged_star->m = merged_star->se_mt * MSUN / units.mstar;
-
-		/* FIXME: really have to treat birth kicks here, just in case */
 	} else {
 		merged_star->m = star1->m + star2->m;
 		merged_star->rad = r_of_m(merged_star->m);
+
+		vs[0] = 0.0;
+		vs[1] = 0.0;
+		vs[2] = 0.0;
 	}
 }
