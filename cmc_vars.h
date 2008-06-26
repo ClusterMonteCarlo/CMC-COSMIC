@@ -21,6 +21,8 @@ _EXTERN_ double N_core, Trc, rho_core, v_core, core_radius;
 _EXTERN_ double Eescaped, Jescaped, Eintescaped, Ebescaped;
 /* total mass & co */
 _EXTERN_ double initial_total_mass, Mtotal;
+/* mass lost due to stellar evolution */
+_EXTERN_ double DMse;
 /******************* Input file parameters *************************/
 _EXTERN_ long N_STAR_DIM, N_BIN_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, SS_COLLISION, NO_MASS_BINS;
 _EXTERN_ long SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME;

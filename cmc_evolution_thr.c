@@ -233,7 +233,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 }
 
 double GetTimeStep(gsl_rng *rng) {
-	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs;
+	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs, Tse, DTse;
 	
 	/* calculate the relaxation timestep */
 	if (RELAXATION || FORCE_RLX_STEP) {
@@ -279,13 +279,30 @@ double GetTimeStep(gsl_rng *rng) {
 	DTbs = 5.0e-3 * Tbs;
 	Dt = MIN(Dt, DTbs);
 
+	/* calculate DTse, for now using the SE mass loss from the previous step as an indicator
+	   for this step; in the future perhaps we can get an estimate of the mass loss rate
+	   from SSE/BSE */
+	if (!STELLAR_EVOLUTION || DMse == 0.0 || tcount == 1) {
+		DTse = GSL_POSINF;
+	} else {
+		if (DMse < 0.0) {
+			eprintf("DMse = %g < 0.0!\n", DMse);
+			exit_cleanly(-1);
+		}
+		/* get timescale for 1% mass loss from cluster */
+		Tse = 0.01 * Mtotal / (fabs(DMse) / Prev_Dt);
+		/* and take a fraction of that for the timestep */
+		DTse = 0.1 * Tse;
+	}
+	Dt = MIN(Dt, DTse);
+	
 	/* take a reasonable timestep if all physics is turned off */
 	if (Dt == GSL_POSINF) {
 		Dt = 1.0;
 	}
 
 	/* debugging */
-	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs);
+	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse);
 
 	return (Dt);
 }

@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
 	 * end up in the wrong place */
 	clus.N_MAX_NEW = clus.N_MAX;
 	/* initialize stellar evolution things */
+	DMse = 0.0;
 	if (STELLAR_EVOLUTION > 0) {
 		stellar_evolution_init();
 	}
@@ -169,6 +170,7 @@ int main(int argc, char *argv[])
 		clus.N_MAX_NEW++;
 
 		/* evolve stars up to new time */
+		DMse = 0.0;
 		if (STELLAR_EVOLUTION > 0) {
 			do_stellar_evolution(rng);
 		}

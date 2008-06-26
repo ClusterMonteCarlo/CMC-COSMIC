@@ -65,12 +65,14 @@ void stellar_evolution_init(void){
       /* evolve slightly (1 year) for initial radii */
       tphysf = 1.0e-6;
       dtp = tphysf;
+      DMse += star[k].m * madhoc;
       bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
 		 &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
 		 &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 		 &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
       star[k].rad = star[k].se_radius * RSUN / units.l;
       star[k].m = star[k].se_mt * MSUN / units.mstar;
+      DMse -= star[k].m * madhoc;
       /* birth kicks */
       if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
 	//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
@@ -101,6 +103,7 @@ void stellar_evolution_init(void){
       /* evolve slightly (1 year) for initial radii */
       tphysf = 1.0e-6;
       dtp = tphysf;
+      DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
       bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
 		 &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
 		 &(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
@@ -127,6 +130,7 @@ void do_stellar_evolution(gsl_rng *rng){
       dtp = tphysf;
       kprev = star[k].se_k;
       
+      DMse += star[k].m * madhoc;
       bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
 		 &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
 		 &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
@@ -134,6 +138,7 @@ void do_stellar_evolution(gsl_rng *rng){
       
       star[k].rad = star[k].se_radius * RSUN / units.l;
       star[k].m = star[k].se_mt * MSUN / units.mstar;
+      DMse -= star[k].m * madhoc;
       
       /* birth kicks */
       if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
@@ -158,7 +163,7 @@ void do_stellar_evolution(gsl_rng *rng){
 
 	/* set binary orbital period (in days) from a */
 	binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
-	
+	DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
 	bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
 		   &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
 		   &(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
@@ -238,6 +243,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     binary[kb].m1 = binary[kb].bse_mass[0] * MSUN / units.mstar;
     binary[kb].m2 = binary[kb].bse_mass[1] * MSUN / units.mstar;
     star[k].m = binary[kb].m1 + binary[kb].m2;
+    DMse -= star[k].m * madhoc;
     binary[kb].a = pow((binary[kb].bse_mass[0]+binary[kb].bse_mass[1])*sqr(binary[kb].bse_tb/365.25), 1.0/3.0)
       * AU / units.l;
     if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
@@ -253,6 +259,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     knewp = create_star();
     cp_binmemb_to_star(k, 0, knew);
     cp_binmemb_to_star(k, 1, knewp);
+    DMse -= (star[knew].m + star[knewp].m) * madhoc;
     destroy_obj(k);
     /* in this case vs is relative speed between stars at infinity */
     star[knew].vr += star[knewp].m/(star[knew].m+star[knewp].m) * vs[2] * 1.0e5 / (units.l/units.t);
@@ -283,7 +290,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     
     star[knew].rad = star[knew].se_radius * RSUN / units.l;
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
-    
+    DMse -= star[knew].m * madhoc;
     /* birth kicks */
     if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
@@ -313,7 +320,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     
     star[knew].rad = star[knew].se_radius * RSUN / units.l;
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
-    
+    DMse -= star[knew].m * madhoc;    
     /* birth kicks */
     if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
