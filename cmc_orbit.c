@@ -385,7 +385,7 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   };
  
   /* another case of a circular orbit */
-  if (!circular && ((rmin > rmax)||(dQdr_min<0.)||(dQdr_max>0.))) {
+  if (!circular && ((rmin > rmax)||(dQdr_min<=0.)||(dQdr_max>=0.))) {
     eprintf("circular orbit found!\n");
     eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
 	rmin, rmax, kmin, kmax, index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E,

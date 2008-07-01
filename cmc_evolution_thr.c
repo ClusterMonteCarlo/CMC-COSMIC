@@ -160,7 +160,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		dQdr_max_num = (function_Q(si, kmax+1, E, J)-function_Q(si, kmax, E, J))/(star[kmax+1].r-star[kmax].r);
 
 		/* another case of a circular orbit */
-		if ((rmin > rmax)||(dQdr_min<0.)||(dQdr_max>0.)) {
+		if ((rmin > rmax)||(dQdr_min<=0.)||(dQdr_max>=0.)) {
 		        eprintf("circular orbit found!\n");
 		 	eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
 				rmin, rmax, kmin, kmax, si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E,
