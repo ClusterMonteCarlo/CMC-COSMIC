@@ -10,6 +10,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <gsl/gsl_rng.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "cmc.h"
 #include "cmc_vars.h"
 
@@ -557,6 +559,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_T_MAX);
 				sscanf(values, "%lf", &T_MAX);
 				parsed.T_MAX = 1;
+			} else if (strcmp(parameter_name, "T_MAX_PHYS") == 0) {
+				PRINT_PARSED(PARAMDOC_T_MAX_PHYS);
+				sscanf(values, "%lf", &T_MAX_PHYS);
+				parsed.T_MAX_PHYS = 1;
 			} else if (strcmp(parameter_name, "T_MAX_COUNT") == 0) {
 				PRINT_PARSED(PARAMDOC_T_MAX_COUNT);
 				sscanf(values, "%ld", &T_MAX_COUNT);
@@ -690,6 +696,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(CIRC_PERIOD_THRESHOLD, 1e-18, PARAMDOC_CIRC_PERIOD_THRESHOLD);
 	
         CHECK_PARSED(T_MAX, 20.0, PARAMDOC_T_MAX);
+	CHECK_PARSED(T_MAX_PHYS, 12.0, PARAMDOC_T_MAX_PHYS);
 	CHECK_PARSED(T_MAX_COUNT, 1000000, PARAMDOC_T_MAX_COUNT);
 	CHECK_PARSED(MAX_WCLOCK_TIME, 2592000, PARAMDOC_MAX_WCLOCK_TIME);
 	CHECK_PARSED(STOPATCORECOLLAPSE, 1, PARAMDOC_STOPATCORECOLLAPSE);
@@ -946,4 +953,45 @@ void trap_sigs(void)
 	
 	/* override GSL error handler */
 	//gsl_set_error_handler(&sf_gsl_errhandler);
+}
+
+/* print handy script for converting output files to physical units */
+void print_conversion_script(void)
+{
+	char dummystring[1024];
+	FILE *ofp;
+	/* BOOKMARK */
+
+	sprintf(dummystring, "%s.conv.sh", outprefix);
+	if ((ofp = fopen(dummystring, "w")) == NULL) {
+		eprintf("cannot create convsersion script file \"%s\".\n", dummystring);
+		exit(1);
+	}
+	
+	fprintf(ofp, "#!/bin/bash\n");
+	fprintf(ofp, "\n");
+	fprintf(ofp, "# outfile prefix\n");
+	fprintf(ofp, "outprefix=%s\n", outprefix);
+	fprintf(ofp, "# code unit of mass (cgs)\n");
+	fprintf(ofp, "massunitcgs=%g\n", units.m);
+	fprintf(ofp, "# code unit of mass (M_sun)\n");
+	fprintf(ofp, "massunitmsun=%g\n", units.m/MSUN);
+	fprintf(ofp, "# code unit of stellar mass (cgs)\n");
+	fprintf(ofp, "mstarunitcgs=%g\n", units.mstar);
+	fprintf(ofp, "# code unit of stellar mass (M_Sun)\n");
+	fprintf(ofp, "mstarunitmsun=%g\n", units.mstar/MSUN);
+	fprintf(ofp, "# code unit of length (cgs)\n");
+	fprintf(ofp, "lengthunitcgs=%g\n", units.l);
+	fprintf(ofp, "# code unit of length (parsecs)\n");	
+	fprintf(ofp, "lengthunitparsec=%g\n", units.l/PARSEC);
+	fprintf(ofp, "# code unit of time (cgs)\n");
+	fprintf(ofp, "timeunitcgs=%g\n", units.t * clus.N_STAR / log(GAMMA * clus.N_STAR));
+	fprintf(ofp, "# code unit of time (Myr)\n");
+	fprintf(ofp, "timeunitsmyr=%g\n", units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / (1.0e6 * YEAR));
+	fprintf(ofp, "\n");
+	fprintf(ofp, "cat $outprefix.dyn.dat | grep -vE '^#' | awk '{print $1*'$timeunitsmyr', $8/$21}' > $outprefix.tmyr_rcrh.dat\n");
+	fprintf(ofp, "prunedata.pl -d 30 $outprefix.tmyr_rcrh.dat > $outprefix.tmyr_rcrh-pruned.dat\n");
+	fclose(ofp);
+
+	chmod(dummystring, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 }

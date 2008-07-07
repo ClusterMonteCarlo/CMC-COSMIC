@@ -215,6 +215,12 @@ long CheckStop(struct tms tmsbufref) {
 		return (1);
 	}
 
+	if (TotalTime / (1.0e3*MEGA_YEAR) >= T_MAX_PHYS) {
+		print_2Dsnapshot();
+		diaprintf("TotalTime > T_MAX_PHYS ... Terminating.\n");
+		return (1);
+	}
+
 	/* Stop if cluster is disrupted -- N_MAX is too small */
 	/* if (clus.N_MAX < (0.02 * clus.N_STAR)) { */
 	if (clus.N_MAX < (0.005 * clus.N_STAR)) {

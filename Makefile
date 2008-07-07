@@ -27,7 +27,7 @@ all: $(EXE) UTILS CONTRIBS
 
 # peripheral stuff
 $(BSEWRAPDIR)/bse_wrap.o: $(BSEWRAPDIR)/bse_wrap.c $(BSEWRAPDIR)/bse_wrap.h
-	cd $(BSEWRAPDIR) && make
+	cd $(BSEWRAPDIR) && make && rm -f c_sse c_bse
 
 libs/fitslib.o: 
 	cd libs && $(MAKE)
@@ -66,5 +66,15 @@ clean:
 	cd libs && $(MAKE) clean
 
 mrproper: clean
-	rm -f   *~   .smhist   *.dat   *.dat.gz    *out_*   *.stdout   *.stderr   *.log
-	rm -f */*~ */.smhist */*.dat */*.dat.gz  */*out_* */*.stdout */*.stderr */*.log
+	find . -name \*~ | xargs rm -f
+	find . -name .smhist | xargs rm -f
+	find . -name \*.dat | xargs rm -f
+	find . -name \*.dat.gz | xargs rm -f
+	find . -name \*.log | xargs rm -f
+	find . -name \*.stdout | xargs rm -f
+	find . -name \*.stderr | xargs rm -f
+	find . -name \*.cmc.parsed | xargs rm -f
+	find . -name \*.conv_to_phys.sh | xargs rm -f
+	find . -name fort.99 | xargs rm -f
+	find . -name \*.fits | xargs rm -f
+	find . -name \*.fit | xargs rm -f

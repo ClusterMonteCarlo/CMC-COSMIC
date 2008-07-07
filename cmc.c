@@ -135,6 +135,9 @@ int main(int argc, char *argv[])
 
 	/* Printing Results for initial model */
 	print_results();
+
+	/* print handy script for converting output files to physical units */
+	print_conversion_script();
 	
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/

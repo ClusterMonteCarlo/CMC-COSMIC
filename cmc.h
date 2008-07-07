@@ -195,6 +195,8 @@ typedef struct{
 	int TERMINAL_ENERGY_DISPLACEMENT;
 #define PARAMDOC_T_MAX "maximum integration time (FP units)"
 	int T_MAX;
+#define PARAMDOC_T_MAX_PHYS "maximum integration time (Gyr)"
+	int T_MAX_PHYS;
 #define PARAMDOC_T_MAX_COUNT "maximum number of time steps"
 	int T_MAX_COUNT;
 #define PARAMDOC_MAX_WCLOCK_TIME "maximum wall clock time (seconds)"
@@ -354,6 +356,7 @@ double cub(double x);
 void tidally_strip_stars(void);
 void remove_star_center(long j);
 void print_results(void);
+void print_conversion_script(void);
 double potential(double r);	       /* get potential using star.phi */
 double fastpotential(double r, long kmin, long kmax);
 long potential_calculate(void);	/* calculate potential at star locations in star.phi */

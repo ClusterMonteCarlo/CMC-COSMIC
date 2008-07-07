@@ -24,18 +24,12 @@
      from the first fraction m_0/m_clus of the elements in the energy array,
      the second star, m_1, has its dynamical properties taken from one of the 
      next fraction m_1/m_clus of the elements in the energy array, and so on.
-* Resurrect binary interaction logging.
 * Keep triples?  This should be easier to do now that the dynamical
   interaction part of the code has been generalized.
-* Perhaps automate writing of snapshotting routines?  This could be done with,
-  e.g., a Perl script that catalogs all global variables, then writes the 
-  routines to dump them to a FITS file.
 * Decouple the potential from the star structure.  They are physically
   different things, and the fact that they're tied together has caused
   significant problems already.  We just need a quickly searchable array
   containing (radius, potential) pairs.
-* Set criterion for stopping calculation based on tstop in code and physical
-  units.
 * Rewrite get_positions().  Can solve dQ/dr=0 to get r at v_r,max, which can be
   used to bisect the r interval into two portions, each containing a root of
   Q(r)=0.  This is what the force_t variable type is for.

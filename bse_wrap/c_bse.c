@@ -94,7 +94,7 @@ int main(void)
   //tb = 1.0e6;
   //ecc = 0.0;
 
-  bse_evolv2_safely(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
+  bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
 	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
 
