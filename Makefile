@@ -74,7 +74,7 @@ mrproper: clean
 	find . -name \*.stdout | xargs rm -f
 	find . -name \*.stderr | xargs rm -f
 	find . -name \*.cmc.parsed | xargs rm -f
-	find . -name \*.conv_to_phys.sh | xargs rm -f
+	find . -name \*.conv.sh | xargs rm -f
 	find . -name fort.99 | xargs rm -f
 	find . -name \*.fits | xargs rm -f
 	find . -name \*.fit | xargs rm -f

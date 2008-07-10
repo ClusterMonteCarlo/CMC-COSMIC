@@ -760,6 +760,7 @@ void central_calculate(void)
 {
 	double m=0.0, *rhoj, mrho, Vrj, rhojsum, Msincentral, Mbincentral, Vcentral, rcentral;
 	long J=6, i, j, jmin, jmax, nave, Ncentral;
+	double rhoj2sum;
 
 	/* average over all stars out to half-mass radius */
 	nave = 1;
@@ -798,15 +799,19 @@ void central_calculate(void)
 	/* calculate core quantities using density weighted averages (note that in 
 	   Casertano & Hut (1985) only rho and rc are analyzed and tested) */
 	rhojsum = 0.0;
+	rhoj2sum = 0.0;
+	rc_nb = 0.0;
 	central.rho = 0.0;
 	central.v_rms = 0.0;
 	central.rc = 0.0;
 	central.m_ave = 0.0;
 	for (i=1; i<=nave; i++) {
 		rhojsum += rhoj[i];
+		rhoj2sum += sqr(rhoj[i]);
 		central.rho += sqr(rhoj[i]);
 		central.v_rms += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
 		central.rc += rhoj[i] * star[i].r;
+		rc_nb += sqr(rhoj[i] * star[i].r);
 		central.m_ave += rhoj[i] * star[i].m * madhoc;
 	}
 	central.rho /= rhojsum;
@@ -815,6 +820,7 @@ void central_calculate(void)
 	central.v_rms /= rhojsum;
 	central.v_rms = sqrt(central.v_rms);
 	central.rc /= rhojsum;
+	rc_nb = sqrt(rc_nb/rhoj2sum);
 	central.m_ave /= rhojsum;
 	
 	/* quantities derived from averages */
