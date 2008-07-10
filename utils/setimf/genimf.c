@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "../../common/taus113-v2.h"
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_permute_double.h>
 #include "genimf.h"
@@ -91,7 +92,7 @@ double* generateIMF(char *parse, long N, double mmin, double mmax)
   //-----------------------------------------------
   for(i=0; i<N; i++){
     do {
-      double X = rand()/((double)RAND_MAX);
+      double X = rng_t113_dbl();
       int j = 0;
       while (X > lims[j+1]) {
 	j++;
