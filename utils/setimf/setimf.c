@@ -188,7 +188,7 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
-	if (param->imf<0 || param->imf>11){
+	if (param->imf<0 || param->imf>12){
 		printf("Invalid IMF model value\n");
 		write_usage();
 		exit(EXIT_FAILURE);
@@ -478,8 +478,11 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
 		}
 	  }
 	  else if (param.imf==10){
-	    double *m = generateIMF("0.1(1.3)0.5(2.3)1.0(2.04)3.0(1.74)", 
-				    cfd->NOBJ+1, param.mmin, param.mmax);
+            char str_imf[1024]="";
+            double *m;
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.04)3.0(1.74)", 1024);
+            m = generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
 
 	    for (i=1; i<=cfd->NOBJ; i++){
 	      cfd->obj_m[i] = m[i];
@@ -493,7 +496,31 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
 	      cfd->obj_m[i] = m[i];
 	      total_mass += m[i];
 	    }
-	  }	    
+	  } 
+          else if (param.imf==12) {
+            double *m1, *m2, m;
+            char str_imf[1024]="";
+            
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.04)3.0(1.74)", 1024);
+            m1= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.3)3.0(2.3)", 1024);
+            m2= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            for(i=1; i<=cfd->NOBJ; i++){
+              X = rng_t113_dbl();
+              X2 = rng_t113_dbl();
+              if (X2<0.5 && cfd->obj_r[i]<param.rcr){
+                m= m1[i];
+              } else {
+                m= m2[i];
+              }
+              cfd->obj_m[i] = m;
+              total_mass += m;
+            } 
+          }
 	else {
 		printf("This can't happen!\n");
 		exit(EXIT_FAILURE);
