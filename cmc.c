@@ -248,12 +248,10 @@ int main(int argc, char *argv[])
 		 */
 		if(tcount%SNAPSHOT_DELTACOUNT==0) {
 			print_2Dsnapshot();
+			if (WRITE_STELLAR_INFO) {
+				write_stellar_data();
+			}
 		}		
-
-		/* DEBUG */
-		/* if(tcount%50==0 && WRITE_STELLAR_INFO) { */
-		/* write_stellar_data(); */
-		/* } */
 	} /* End FOR (time step iteration loop) */
 
 	times(&tmsbuf);
