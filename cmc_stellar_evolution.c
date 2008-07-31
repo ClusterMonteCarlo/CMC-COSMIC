@@ -181,7 +181,7 @@ void write_stellar_data(void){
   se_file_counter++;
 
   /* single star info */
-  sprintf(filename, "%s_stellar_info.%05d", outprefix, se_file_counter);
+  sprintf(filename, "%s_stellar_info.%05d.dat", outprefix, se_file_counter);
   stel_file = fopen(filename, "w");
   if (stel_file==NULL){
     fprintf(stderr,
@@ -206,7 +206,7 @@ void write_stellar_data(void){
   fclose(stel_file);
 
   /* binary star info */
-  sprintf(filename, "%s_binary_stellar_info.%05d", outprefix, se_file_counter);
+  sprintf(filename, "%s_binary_stellar_info.%05d.dat", outprefix, se_file_counter);
   stel_file = fopen(filename, "w");
   if (stel_file==NULL){
     fprintf(stderr,
