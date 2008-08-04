@@ -29,31 +29,32 @@ int main(void)
 
   bse_zcnsts(&z, zpars);
   
-  mass = 14.0;
+  mass = 50.0;
   mt = mass;
   kw = 1;
   ospin = 0.0;
   epoch = 0.0;
   tphys = 0.0;
+  tphysf = 100.0;
 
-  z = 0.02;
-  bse_zcnsts(&z, zpars);
-  tphys = 501.583;
-  tphysf = tphys;
+  //z = 0.02;
+  //bse_zcnsts(&z, zpars);
+  //tphys = 501.583;
+  //tphysf = tphys;
   //tphysf = 0.0;
-  dtp = 0.0;
-  mass = 2.98122;
-  kw = 4;
-  mt = 2.96019;
-  ospin = 39.7016;
-  epoch = -0.0634474;
-  rad = 24.0672;
-  lum = 248.853;
-  mc = 0.64247;
-  rc = 0.167354;
-  menv = 0.168182;
-  renv = 12.4044;
-  tms = 383.917;
+  //dtp = 0.0;
+  //mass = 2.98122;
+  //kw = 4;
+  //mt = 2.96019;
+  //ospin = 39.7016;
+  //epoch = -0.0634474;
+  //rad = 24.0672;
+  //lum = 248.853;
+  //mc = 0.64247;
+  //rc = 0.167354;
+  //menv = 0.168182;
+  //renv = 12.4044;
+  //tms = 383.917;
 
   bse_evolv1(&kw, &mass, &mt, &rad, &lum, &mc, &rc, 
 	     &menv, &renv, &ospin, &epoch, &tms, &tphys, 

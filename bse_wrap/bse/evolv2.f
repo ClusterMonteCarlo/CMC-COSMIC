@@ -706,7 +706,7 @@
 *
          if(mt.gt.100.d0)then
             WRITE(99,*)' MASS EXCEEDED ',mass1i,mass2i,tbi,ecci,mt
-            goto 140
+*            goto 140
          endif
 *
          CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
@@ -1912,7 +1912,7 @@
 *
          if(mt.gt.100.d0)then
             WRITE(99,*)' MASS EXCEEDED ',mass1i,mass2i,tbi,ecci,mt
-            goto 140
+*            goto 140
          endif
          kw = kstar(k)
          CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
