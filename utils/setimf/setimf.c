@@ -388,7 +388,8 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
 			cfd->obj_m[i] = m;
 			total_mass += m;
 		}
-	} else if (param.imf==4){ /* Kroupa         */
+	} else if (param.imf==4){ 
+	  /* Kroupa, Tout, & Gilmore 1993, eq. (14), to represent eq. (13) (\alpha_1=1.3) */
 		for(i=1; i<=cfd->NOBJ; i++){
 			do {
 				X = rng_t113_dbl();

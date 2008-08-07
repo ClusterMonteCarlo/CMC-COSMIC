@@ -35,7 +35,7 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  -i --infile <infile>           : input file [%s]\n", INFILE);
 	fprintf(stream, "  -o --outfile <outfile>         : output file [%s]\n", OUTFILE);
 	fprintf(stream, "  -N --Nbin <N_bin>              : number of binaries [%ld]\n", NBIN);
-	fprintf(stream, "  -l --limits <limits algorithm> : algorithm for setting limits on binary semimajor axes (0=physical, 1=kT prescription) [%d]\n", LIMITS);
+	fprintf(stream, "  -l --limits <limits algorithm> : algorithm for setting limits on binary semimajor axes (0=physical, 1=kT prescription, 2=M67 model of Hurley, et al. (2005)) [%d]\n", LIMITS);
 	fprintf(stream, "  -m --Ebmin <E_b,min>           : minimum binding energy, in kT [%g]\n", EBMIN);
 	fprintf(stream, "  -M --Ebmax <E_b,max>           : maximum binding energy, in kT [%g]\n", EBMAX);
 	fprintf(stream, "  -s --seed <seed>               : random seed [%ld]\n", SEED);
@@ -275,7 +275,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 	kTcore /= AVEKERNEL;
 
 	/* assign binary parameters */
-	if (!limits) {
+	if (limits == 0) {
 		/* assign binaries physically */
 		for (i=1; i<=cfd->NBINARY; i++) {
 			/* choose a from a distribution uniform in 1/a from near contact to hard/soft boundary */
@@ -289,7 +289,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			emax = 1.0 - amin / cfd->bs_a[i];
 			cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
 		}
-	} else {
+	} else if (limits == 1) {
 		/* assign binaries via kT description */
 		/* set max and min binding energies */
 		Ebmin = EbminkT * kTcore;
@@ -306,6 +306,21 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			/* get eccentricity from thermal distribution */
 			/* cfd->bs_e[i] = sqrt(rng_t113_dbl()); */
 		}
+	} else if (limits == 2) {
+		/* assign binaries sort of physically, similarly to the M67 model of Hurley, et al. (2005) */
+		for (i=1; i<=cfd->NBINARY; i++) {
+			/* choose a from a distribution uniform in 1/a from near contact to 50 AU */
+			amin = 2.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
+			amax = 50.0 * AU / (cfd->Rvir * PARSEC);
+			cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
+			
+			/* get eccentricity from thermal distribution, truncated near contact */
+			emax = 1.0 - amin / cfd->bs_a[i];
+			cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
+		}
+	} else {
+		fprintf(stderr, "limits=%d unknown!\n", limits);
+		exit(1);
 	}
 
 	free(sigma);
@@ -359,10 +374,6 @@ int main(int argc, char *argv[]){
 			break;
 		case 'l':
 			limits = strtol(optarg, NULL, 10);
-			if (limits != 0 && limits != 1) {
-				fprintf(stderr, "limits must be either 0 or 1!\n");
-				exit(1);
-			}
 			break;
 		case 'm':
 			Ebmin = strtod(optarg, NULL);
