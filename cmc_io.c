@@ -881,7 +881,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 	/* print header */
-	fprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J\n");
+	fprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id\n");
 
 	/* Collision log file */
 	sprintf(outfile, "%s.collision.log", outprefix);

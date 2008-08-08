@@ -359,10 +359,10 @@ void tidally_strip_stars(void) {
 
 				/* logging */
 				fprintf(escfile,
-					"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
+					"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld\n",
 					tcount, TotalTime, star[i].m,
 					star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
-					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J);
+					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
 
 				/* perhaps this will fix the problem wherein stars are ejected (and counted)
 				   multiple times */
@@ -408,8 +408,8 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 		tcount, TotalTime, star[j].m);
 	fprintf(escfile, "%.8g %.8g %.8g ",
 		star[j].r, star[j].vr, star[j].vt);
-	fprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
-		0.0, 0.0, Rtidal, phi_rtidal, phi_zero, E, J);
+	fprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld\n",
+		0.0, 0.0, Rtidal, phi_rtidal, phi_zero, E, J, star[j].id);
 
 	/* perhaps this will fix the problem wherein stars are ejected (and counted)
 	   multiple times */
