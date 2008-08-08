@@ -341,7 +341,7 @@ void tidally_strip_stars(void) {
 		/* XXX maybe we should use clus.N_MAX_NEW below?? */
 		for (i = 1; i <= clus.N_MAX; i++) {
 			if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) {
-				/* dprintf("tidally stripping star i=%ld id=%ld m=%g E=%g\n", i, star[i].id, star[i].m, star[i].E); */
+				dprintf("tidally stripping star i=%ld id=%ld m=%g E=%g\n", i, star[i].id, star[i].m, star[i].E);
 				star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 				star[i].vrnew = 0.0;
 				star[i].vtnew = 0.0;
