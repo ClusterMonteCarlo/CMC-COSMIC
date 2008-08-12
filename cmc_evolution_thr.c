@@ -341,7 +341,7 @@ void tidally_strip_stars(void) {
 		/* XXX maybe we should use clus.N_MAX_NEW below?? */
 		for (i = 1; i <= clus.N_MAX; i++) {
 			if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) {
-				dprintf("tidally stripping star i=%ld id=%ld m=%g E=%g\n", i, star[i].id, star[i].m, star[i].E);
+				dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
 				star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 				star[i].vrnew = 0.0;
 				star[i].vtnew = 0.0;
@@ -470,6 +470,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		/* remove unbound stars */
 		if (E >= 0.0) {
+			dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind);
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
 		}
@@ -497,6 +498,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {
+			dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind);
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
 		}
