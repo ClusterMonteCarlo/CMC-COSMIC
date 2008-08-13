@@ -216,16 +216,24 @@ void write_stellar_data(void){
   fprintf(stel_file, "# time (Myr): %e\n",
 	  TotalTime/MEGA_YEAR);
   fprintf(stel_file, "# time (FP):  %e\n", TotalTime);
-  fprintf(stel_file, "#1:id1 #2:id2 #3:m1 #4:m2 #5:R1 #6:R2 #7:kw1 #8:kw2 #9:tb #10:e\n");
+  fprintf(stel_file, "#1:id1 #2:id2 #3:M1[MSUN] #4:M2 #5:R1[RSUN] #6:R2 #7:k1 #8:k2 #9:Porb[day] #10:e #11:L1[LSUN] #12:L2 #13:Mcore1[MSUN] #14:Mcore2 #15:Rcore1[RSUN] #16:Rcore2 #17:Menv1[MSUN] #18:Menv2 #19:Renv1[RSUN] #20:Renv2 #21:Tms1[MYR] #22:Tms2 #23:Mdot1[MSUN/YR] #24:Mdot2 #25:R1/ROL1 #26:R2/ROL2\n");
   for(k=1; k<=clus.N_MAX; k++){
     if (star[k].binind) {
       kb = star[k].binind;
-      fprintf(stel_file, "%08ld %08ld %g %g %g %g %d %d %g %g\n", 
+      fprintf(stel_file, "%08ld %08ld %g %g %g %g %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", 
 	      binary[kb].id1, binary[kb].id2,
 	      binary[kb].bse_mass[0], binary[kb].bse_mass[1],
 	      binary[kb].bse_radius[0], binary[kb].bse_radius[1],
 	      binary[kb].bse_kw[0], binary[kb].bse_kw[1],
-	      binary[kb].bse_tb, binary[kb].e);
+	      binary[kb].bse_tb, binary[kb].e,
+	      binary[kb].bse_lum[0], binary[kb].bse_lum[1],
+	      binary[kb].bse_massc[0], binary[kb].bse_massc[1],
+	      binary[kb].bse_radc[0], binary[kb].bse_radc[1],
+	      binary[kb].bse_menv[0], binary[kb].bse_menv[1],
+	      binary[kb].bse_renv[0], binary[kb].bse_renv[1],
+	      binary[kb].bse_tms[0], binary[kb].bse_tms[1],
+	      binary[kb].bse_bcm_dmdt[0], binary[kb].bse_bcm_dmdt[1],
+	      binary[kb].bse_bcm_radrol[0], binary[kb].bse_bcm_radrol[1]);
     }
   }
   fclose(stel_file);
@@ -233,6 +241,7 @@ void write_stellar_data(void){
 
 void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
 {
+  int j;
   long knew, knewp;
   double dtp;
 
@@ -252,6 +261,25 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     star[k].vr += vs[2] * 1.0e5 / (units.l/units.t);
     star[k].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
     set_star_EJ(k);
+    /* extract some binary info from BSE's bcm array */
+    j = 1;
+    while (bse_get_bcm(j, 1) >= 0.0) {
+      j++;
+    }
+    j--;
+    if (j >= 1) {
+      if (fabs((binary[kb].bse_tphys - bse_get_bcm(j,1))/binary[kb].bse_tphys) >= 1.0e-6) {
+	wprintf("binary[kb].bse_tphys=%g bcmtime=%g\n", binary[kb].bse_tphys, bse_get_bcm(j,1));
+	/* exit_cleanly(-1); */
+      }
+      binary[kb].bse_bcm_dmdt[0] = bse_get_bcm(j, 14);
+      binary[kb].bse_bcm_dmdt[1] = bse_get_bcm(j, 28);
+      binary[kb].bse_bcm_radrol[0] = bse_get_bcm(j, 15);
+      binary[kb].bse_bcm_radrol[1] = bse_get_bcm(j, 29);
+    } else {
+      eprintf("Could not extract BSE bcm info!  Input dtp not exactly equal to tphysf-tphys?");
+      exit_cleanly(-1);
+    }
   } else if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] != 0.0) {
     /* disruption with both stars "intact" */
     //dprintf("binary disrupted via BSE with both stars intact\n");
