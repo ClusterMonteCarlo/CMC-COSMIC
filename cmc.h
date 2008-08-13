@@ -82,6 +82,8 @@ typedef struct{
 	double bse_tms[2];
 	double bse_tphys; /* physical time */
 	double bse_tb; /* binary orbital period */
+	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
+	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
 } binary_t;
 
 struct star_coords {

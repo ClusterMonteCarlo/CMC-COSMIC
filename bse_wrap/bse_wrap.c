@@ -51,7 +51,12 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
     mytphys = BSE_WRAP_MAX(*tphys - ((float) kattempt) * pow(1.2, kattempt), 0.0);
     tphystried = mytphys;
     mytphysf = *tphysf;
-    mydtp = *dtp;
+    /* try to interpret what is meant by the input dtp */
+    if (*dtp == *tphysf - *tphys) {
+      mydtp = mytphysf - mytphys;
+    } else {
+      mydtp = *dtp;
+    }
     bse_evolv1(&mykw, &mymass, &mymt, &myr, &mylum, &mymc, &myrc, &mymenv, &myrenv, &myospin,
 	       &myepoch, &mytms, &mytphys, &mytphysf, &mydtp, z, zpars, myvs);
   } while ((isnan(myr) || mymc < 0.0 || mymt < 0.0 || mymass < 0.0 || mylum < 0.0) && tphystried > 0.0);
@@ -128,7 +133,12 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
     mytphys = BSE_WRAP_MAX(*tphys - ((float) kattempt) * pow(1.2, kattempt), 0.0);
     tphystried = mytphys;
     mytphysf = *tphysf;
-    mydtp = *dtp;
+    /* try to interpret what is meant by the input dtp */
+    if (*dtp == *tphysf - *tphys) {
+      mydtp = mytphysf - mytphys;
+    } else {
+      mydtp = *dtp;
+    }
     mytb = *tb;
     myecc = *ecc;
     bse_evolv2(mykstar, mymass0, mymass, myrad, mylum, mymassc, myradc, mymenv, myrenv, myospin,

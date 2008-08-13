@@ -64,7 +64,7 @@ void stellar_evolution_init(void){
       
       /* evolve slightly (1 year) for initial radii */
       tphysf = 1.0e-6;
-      dtp = tphysf;
+      dtp = tphysf - star[k].se_tphys;
       DMse += star[k].m * madhoc;
       bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
 		 &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
@@ -102,7 +102,7 @@ void stellar_evolution_init(void){
       
       /* evolve slightly (1 year) for initial radii */
       tphysf = 1.0e-6;
-      dtp = tphysf;
+      dtp = tphysf - binary[kb].bse_tphys;
       DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
       bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
 		 &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
@@ -127,7 +127,7 @@ void do_stellar_evolution(gsl_rng *rng){
   for(k=1; k<=clus.N_MAX; k++){
     if (star[k].binind == 0) { /* single star */
       tphysf = TotalTime / MEGA_YEAR;
-      dtp = tphysf;
+      dtp = tphysf - star[k].se_tphys;
       kprev = star[k].se_k;
       
       DMse += star[k].m * madhoc;
@@ -158,8 +158,8 @@ void do_stellar_evolution(gsl_rng *rng){
       /* } */
     } else { /* binary */
 	tphysf = TotalTime / MEGA_YEAR;
-	dtp = tphysf;
 	kb = star[k].binind;
+	dtp = tphysf - binary[kb].bse_tphys;
 
 	/* set binary orbital period (in days) from a */
 	binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
@@ -282,7 +282,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     set_star_EJ(knew);
     
     /* here we do a safe single evolve, just in case the remaining star is a non self-consistent merger */
-    dtp = tphysf;
+    dtp = tphysf - star[knew].se_tphys;
     bse_evolv1_safely(&(star[knew].se_k), &(star[knew].se_mass), &(star[knew].se_mt), &(star[knew].se_radius), 
 		      &(star[knew].se_lum), &(star[knew].se_mc), &(star[knew].se_rc), &(star[knew].se_menv), 
 		      &(star[knew].se_renv), &(star[knew].se_ospin), &(star[knew].se_epoch), &(star[knew].se_tms), 
@@ -312,7 +312,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     set_star_EJ(knew);
     
     /* here we do a safe single evolve, just in case the remaining star is a non self-consistent merger */
-    dtp = tphysf;
+    dtp = tphysf - star[knew].se_tphys;
     bse_evolv1_safely(&(star[knew].se_k), &(star[knew].se_mass), &(star[knew].se_mt), &(star[knew].se_radius), 
 		      &(star[knew].se_lum), &(star[knew].se_mc), &(star[knew].se_rc), &(star[knew].se_menv), 
 		      &(star[knew].se_renv), &(star[knew].se_ospin), &(star[knew].se_epoch), &(star[knew].se_tms), 

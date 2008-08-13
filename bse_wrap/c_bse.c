@@ -41,20 +41,21 @@ int main(void)
   
   bse_zcnsts(&z, zpars);
   bse_instar();
-  mass0[0] = 120.0;
-  mass0[1] = 75.0;
+  mass0[0] = 18.0;
+  mass0[1] = 12.0;
   mass[0] = mass0[0];
   mass[1] = mass0[1];
   kw[0] = 1;
   kw[1] = 1;
-  tb = 1.0e-19;
-  ecc = 0.9999;
+  tb = 1.0e2;
+  ecc = 0.1;
   ospin[0] = 0.0;
   ospin[1] = 0.0;
   epoch[0] = 0.0;
   epoch[1] = 0.0;
   tphys = 0.0;
-  tphysf = 1.0;
+  tphysf = 10.0;
+  dtp = 10.0;
 
   /* a particularly troublesome binary merger */
   /* z = 0.02; */
@@ -92,9 +93,20 @@ int main(void)
   //tb = 1.0e6;
   //ecc = 0.0;
 
+  tphysf = 5.0;
+  dtp = 5.0;
+
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
 	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
+
+  tphysf = 100.0;
+  dtp = 0.0;
+
+  bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
+	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
+	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
+
 
   fprintf(stdout, "star 0: mass0=%f mass=%f tms=%g epoch=%g massc=%g rad=%g\n", mass0[0], mass[0], tms[0], epoch[0], massc[0], rad[0]);
   fprintf(stdout, "star 1: mass0=%f mass=%f tms=%g epoch=%g massc=%g rad=%g\n", mass0[1], mass[1], tms[1], epoch[1], massc[1], rad[1]);
@@ -107,6 +119,21 @@ int main(void)
 	    bse_get_bselabel((int) bse_get_bpp(j, 10)));
 
     j++;
+  }
+
+  /* print additional info stored only in bcm array */
+  j = 1;
+  while (bse_get_bcm(j, 1) >= 0.0) {
+    fprintf(stdout, "j=%d t=%g dm/dt=%g %g rad/rol=%g %g\n", j, bse_get_bcm(j, 1),
+	    bse_get_bcm(j,14), bse_get_bcm(j,28), 
+	    bse_get_bcm(j,15), bse_get_bcm(j,29));
+    j++;
+  }
+  j--;
+  if (j >= 1) {
+    fprintf(stdout, "j=%d dm/dt=%g %g rad/rol=%g %g\n", j, 
+	    bse_get_bcm(j,14), bse_get_bcm(j,28), 
+	    bse_get_bcm(j,15), bse_get_bcm(j,29));
   }
   
   fprintf(stdout, "m1=%f m2=%f tb=%f e=%f\n", mass[0], mass[1], tb, ecc);
