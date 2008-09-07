@@ -200,10 +200,10 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			
 			/* check to see whether stars should be eaten by central BH */
 			if (cenma.m > 0.0 && BH_LOSS_CONE) {
-				if (star[k].E < 0.0) {
+				if (star[k].E+ PHI_S(star[k].r, k) < 0.0) {
 					bh_rand_walk(k, v_new, vcm, beta, dt);
 				}
-				if (star[kp].E < 0.0) {
+				if (star[kp].E+ PHI_S(star[k].r, k) < 0.0) {
 					bh_rand_walk(kp, vp_new, vcm, beta, dt);
 				}
 			}
