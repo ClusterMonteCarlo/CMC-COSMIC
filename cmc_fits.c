@@ -63,7 +63,7 @@ void load_fits_file_data(void)
 	// central mass business, read in from file
 	// I believe the normalization should be correct, from above
 	cenma.m = star[0].m;
-        cenma.m_new= star[0].m
+        cenma.m_new= star[0].m;
 	star[0].m = 0.0;
 
 	if (BH_R_DISRUPT_NB> 0) {
