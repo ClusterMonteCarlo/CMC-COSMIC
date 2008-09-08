@@ -55,11 +55,12 @@ void sscollision_do(long k, long kp, double rcm, double vcm[4])
 
 /* merge two stars using stellar evolution if it's enabled */
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs) {
-	double tphysf, dtp, vsaddl[3];
+	double tphysf, dtp, vsaddl[3], age;
 	binary_t tempbinary, tbcopy;
 	int tbi=-1, j;
-	
-	if (STELLAR_EVOLUTION) {
+
+		
+	if (STELLAR_EVOLUTION && !STAR_AGING_SCHEME) {
 		/* evolve for just a year for merger */
 		tphysf = star1->se_tphys + 1.0e-6;
 		
@@ -212,7 +213,45 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 
 		merged_star->rad = merged_star->se_radius * RSUN / units.l;
 		merged_star->m = merged_star->se_mt * MSUN / units.mstar;
-	} else {
+	} 
+
+
+	//Sourav: toy rejuvenation version of stellar mergers
+	else if (STAR_AGING_SCHEME && !STELLAR_EVOLUTION){
+		merged_star->m = star1->m + star2->m;
+		merged_star->rad = r_of_m(merged_star->m);
+		vs[0] = 0.0;
+		vs[1] = 0.0;
+		vs[2] = 0.0;
+
+
+		if (STAR_AGING_SCHEME==1){
+			merged_star->lifetime = pow(10.0,9.921)*pow(merged_star->m*units.mstar/MSUN,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			age = (merged_star->lifetime/merged_star->m)*
+				((star1->m*(TotalTime-star1->createtime)/star1->lifetime)
+					+ star2->m*(TotalTime-star2->createtime)/star2->lifetime);
+			merged_star->createtime = TotalTime-age;
+		}
+		else if (STAR_AGING_SCHEME==2){
+		/*Sourav: zero lifetime of the collision product all else has infinite lifetime*/
+			merged_star->lifetime = 0.0;
+			merged_star->createtime = TotalTime;
+		}
+		else if (STAR_AGING_SCHEME==3) {
+		/*Sourav: this is arbitrary lifetime for the collision products.  They are 
+		uniformly chosen between 10^6 years to 10^8 years.  Reference: Sills et.al. 2007, 
+		Sills et.al. 1997; all other stars have infinite lifetime*/
+			merged_star->lifetime = 1.0e6*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR + rng_t113_dbl() * (1.0e8-1.0e6)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			merged_star->createtime = TotalTime;
+		}
+
+
+	}
+
+
+
+
+	else {
 		merged_star->m = star1->m + star2->m;
 		merged_star->rad = r_of_m(merged_star->m);
 

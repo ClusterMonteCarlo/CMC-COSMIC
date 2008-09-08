@@ -1,4 +1,5 @@
 IGNORE:
+#CMPLR = gfortran
 CMPLR = g77
 FFLAGS = 
 LFLAGS = const_bse.h zdata.h 

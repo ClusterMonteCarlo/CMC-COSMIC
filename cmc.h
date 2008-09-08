@@ -84,6 +84,11 @@ typedef struct{
 	double bse_tb; /* binary orbital period */
 	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
 	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
+	//Sourav:toy rejuvenation variables
+	double lifetime_m1; /*Sourav: lifetime of star1*/
+	double lifetime_m2; /*Sourav: lifetime of star2*/
+	double createtime_m1; /*Sourav: createtime of star1*/
+	double createtime_m2; /*Sourav: createtime of star2*/
 } binary_t;
 
 struct star_coords {
@@ -136,6 +141,9 @@ typedef struct{
 	double se_menv;
 	double se_renv;
 	double se_tms;
+	//Sourav: toy rejuvenation variables
+	double createtime, createtimenew, createtimeold;
+	double lifetime, lifetimeold, lifetimenew;
 } star_t;
 
 struct CenMa{
@@ -194,6 +202,9 @@ typedef struct{
 	int STELLAR_EVOLUTION;
 #define PARAMDOC_SS_COLLISION "perform physical stellar collisions (0=off, 1=on)"
 	int SS_COLLISION;
+	//Sourav: toy rejuvenation flags
+#define PARAMDOC_STAR_AGING_SCHEME "the aging scheme of the stars (0=infinite age of all stars, 1=rejuvenation, 2=zero lifetime of collision stars, 3=arbitrary lifetime)"
+	int STAR_AGING_SCHEME;
 #define PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT "energy change calculation stopping criterion"
 	int TERMINAL_ENERGY_DISPLACEMENT;
 #define PARAMDOC_T_MAX "maximum integration time (FP units)"

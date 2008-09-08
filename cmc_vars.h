@@ -22,9 +22,9 @@ _EXTERN_ double Eescaped, Jescaped, Eintescaped, Ebescaped;
 /* total mass & co */
 _EXTERN_ double initial_total_mass, Mtotal;
 /* mass lost due to stellar evolution */
-_EXTERN_ double DMse;
+_EXTERN_ double DMse, DMrejuv;
 /******************* Input file parameters *************************/
-_EXTERN_ long N_STAR_DIM, N_BIN_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, SS_COLLISION, NO_MASS_BINS;
+_EXTERN_ long N_STAR_DIM, N_BIN_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, SS_COLLISION, STAR_AGING_SCHEME, NO_MASS_BINS;
 _EXTERN_ long SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME;
 _EXTERN_ int SNAPSHOTTING, SNAPSHOT_CORE_COLLAPSE, SNAPSHOT_CORE_BOUNCE;
 _EXTERN_ long IDUM, PERTURB, RELAXATION;
@@ -47,7 +47,7 @@ _EXTERN_ binary_t *binary;
 /* file pointers */
 _EXTERN_ FILE *lagradfile, *dynfile, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
-_EXTERN_ FILE *binaryfile, *binintfile, *collisionfile, *relaxationfile;
+_EXTERN_ FILE *binaryfile, *binintfile, *collisionfile, *removestarfile, *relaxationfile;
 /* everything else except arrays */
 _EXTERN_ char outprefix[100];
 _EXTERN_ int se_file_counter;

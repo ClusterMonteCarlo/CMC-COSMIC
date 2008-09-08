@@ -47,7 +47,8 @@ endif
 ##############################################################################
 UNAME = $(shell uname)
 
-FLIBS=-lg2c
+#FLIBS= -lgfortran
+FLIBS= -lg2c
 
 ifeq ($(UNAME),Linux)
 CFLAGS = -Wall -O3 -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
@@ -57,7 +58,8 @@ else
 ifeq ($(UNAME),Darwin)
 CC = gcc
 #CFLAGS = -Wall -O3 -fast -I/sw/include -I/sw/include/gnugetopt -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-CFLAGS = -Wall -O3 -I/sw/include -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+#CFLAGS = -Wall -O3 -I/sw/include -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio $(FLIBS) -lm
 else
 ifeq ($(UNAME),AIX)

@@ -34,6 +34,9 @@ void zero_star(long j)
 	star[j].rad = 0.0;
 	star[j].Uoldrold = 0.0;
 	star[j].Uoldrnew = 0.0;
+	//Sourav: toy rejuvenation- some more variables
+	star[j].createtime = 0.0;
+	star[j].lifetime = GSL_POSINF;
 	star[j].vtold = 0.0;
 	star[j].vrold = 0.0;
 	star[j].se_mass = 0.0;
@@ -64,6 +67,11 @@ void zero_binary(long j)
 	binary[j].a = 0.0;
 	binary[j].e = 0.0;
 	binary[j].inuse = 0;
+	//Sourav: toy rejuvenation- some new variables
+	binary[j].createtime_m1 = 0.0;
+	binary[j].createtime_m2 = 0.0;
+	binary[j].lifetime_m1 = GSL_POSINF;
+	binary[j].lifetime_m2 = GSL_POSINF;
 }
 
 void print_interaction_status(char status_text[])
@@ -295,6 +303,78 @@ double binint_get_mass(long k, long kp, long id)
 	/* this is just for the compiler */
 	exit(1);
 }
+
+
+//Sourav: toy rejuvenation- finding creation times of binary interaction components
+double binint_get_createtime(long k, long kp, long id)
+{
+	/* first look at k */
+	if (star[k].binind == 0) {
+		if (star[k].id == id) {
+			return(star[k].createtime);
+		}
+	} else {
+		if (binary[star[k].binind].id1 == id) {
+			return(binary[star[k].binind].createtime_m1);
+		} else if (binary[star[k].binind].id2 == id) {
+			return(binary[star[k].binind].createtime_m2);
+		}
+	}
+	
+	/* then at kp */
+	if (star[kp].binind == 0) {
+		if (star[kp].id == id) {
+			return(star[kp].createtime);
+		}
+	} else {
+		if (binary[star[kp].binind].id1 == id) {
+			return(binary[star[kp].binind].createtime_m1);
+		} else if (binary[star[kp].binind].id2 == id) {
+			return(binary[star[kp].binind].createtime_m2);
+		}
+	}
+	
+	eprintf("cannot find matching id %ld!\n", id);
+	exit_cleanly(1);
+	/* this is just for the compiler */
+	exit(1);
+}
+
+//Sourav: toy rejuvenation- finding MS lifetimes of binary interaction components
+double binint_get_lifetime(long k, long kp, long id)
+{
+	/* first look at k */
+	if (star[k].binind == 0) {
+		if (star[k].id == id) {
+			return(star[k].lifetime);
+		}
+	} else {
+		if (binary[star[k].binind].id1 == id) {
+			return(binary[star[k].binind].lifetime_m1);
+		} else if (binary[star[k].binind].id2 == id) {
+			return(binary[star[k].binind].lifetime_m2);
+		}
+	}
+	
+	/* then at kp */
+	if (star[kp].binind == 0) {
+		if (star[kp].id == id) {
+			return(star[kp].lifetime);
+		}
+	} else {
+		if (binary[star[kp].binind].id1 == id) {
+			return(binary[star[kp].binind].lifetime_m1);
+		} else if (binary[star[kp].binind].id2 == id) {
+			return(binary[star[kp].binind].lifetime_m2);
+		}
+	}
+	
+	eprintf("cannot find matching id %ld!\n", id);
+	exit_cleanly(1);
+	/* this is just for the compiler */
+	exit(1);
+}
+
 
 /* return star index of star with id "id" from binary interaction components,
    along with which member "bi=0,1" if a binary */

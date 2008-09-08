@@ -292,12 +292,12 @@ void PrintFileOutput(void) {
 	/* print useful header */
 	if (tcount == 1) {
 		fprintf(dynfile, "# Dynamical information [code units]\n");
-		fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb\n");
+		fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN)\n");
 	}
-	fprintf(dynfile, "%.8g %.8g %ld %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
+	fprintf(dynfile, "%.8g %.8g %ld %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
 		TotalTime, Dt, tcount, clus.N_MAX, Mtotal, -2.0*Etotal.K/Etotal.P, N_core, core_radius, max_r, 
 		Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped, 
-		Eoops, Etotal.tot+Eoops, clusdyn.rh, central.rho, central.rc_spitzer, central.v_rms, rc_nb);
+		Eoops, Etotal.tot+Eoops, clusdyn.rh, central.rho, central.rc_spitzer, central.v_rms, rc_nb, DMse*units.m/MSUN, DMrejuv*units.m/MSUN);
 	
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
 	   whereas N_b only counts EXISTING BOUND binaries. */
@@ -551,6 +551,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_SS_COLLISION);
 				sscanf(values, "%ld", &SS_COLLISION);
 				parsed.SS_COLLISION = 1;
+			} /*Sourav:new parameter*/
+			else if (strcmp(parameter_name, "STAR_AGING_SCHEME") == 0) {
+			 	PRINT_PARSED(PARAMDOC_STAR_AGING_SCHEME);
+				sscanf(values, "%ld", &STAR_AGING_SCHEME);
+				parsed.STAR_AGING_SCHEME = 1;
 			} else if (strcmp(parameter_name, "TERMINAL_ENERGY_DISPLACEMENT") == 0) {
 				PRINT_PARSED(PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT);
 				sscanf(values, "%lf", &TERMINAL_ENERGY_DISPLACEMENT);
@@ -688,6 +693,8 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(WRITE_STELLAR_INFO, 1, PARAMDOC_WRITE_STELLAR_INFO);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
+	/*Sourav: new parameter*/
+	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
 	CHECK_PARSED(BINBIN, 1, PARAMDOC_BINBIN);
 	CHECK_PARSED(BINSINGLE, 1, PARAMDOC_BINSINGLE);
 	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);
@@ -892,6 +899,17 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	/* print header */
 	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r)\n");
 
+	/*Sourav: old star removal info file*/
+	sprintf(outfile, "%s.removestar.log", outprefix);
+	if ((removestarfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create old star removal log file \"%s\".\n", outfile);
+		exit(1);
+	}
+	/*Sourav: print header*/
+	fprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
+	fprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
+
+
 	/* Relaxation data file */
 	sprintf(outfile, "%s.relaxation.dat", outprefix);
 	if ((relaxationfile = fopen(outfile, outfilemode)) == NULL) {
@@ -931,6 +949,8 @@ void close_buffers(void)
 	fclose(escfile);
 	fclose(collisionfile);
 	fclose(relaxationfile);
+	/*Sourav: closing the file I opened*/
+	fclose(removestarfile);
 
 	if (clus.N_BINARY > 0) {
 		fclose(binaryfile);

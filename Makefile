@@ -6,7 +6,7 @@ OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
 	cmc_dynamics_helper.o cmc_evolution_thr.o cmc_funcs.o \
 	cmc_init.o cmc_io.o cmc.o cmc_nr.o \
 	cmc_utils.o cmc_fits.o cmc_stellar_evolution.o \
-	cmc_sort.o cmc_sscollision.o cmc_bhlosscone.o \
+	cmc_sort.o cmc_sscollision.o cmc_remove_star.o cmc_bhlosscone.o \
 	cmc_search_grid.o cmc_trace.o cmc_orbit.o\
 	libs/fitslib.o libs/taus113-v2.o
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \

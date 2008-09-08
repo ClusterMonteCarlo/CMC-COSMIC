@@ -233,7 +233,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 }
 
 double GetTimeStep(gsl_rng *rng) {
-	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs, Tse, DTse;
+	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs, Tse, DTse, Trejuv, DTrejuv;
 	
 	/* calculate the relaxation timestep */
 	if (RELAXATION || FORCE_RLX_STEP) {
@@ -299,14 +299,30 @@ double GetTimeStep(gsl_rng *rng) {
 		DTse = 0.1 * Tse;
 	}
 	Dt = MIN(Dt, DTse);
+
+	//Sourav: Toy rejuvenation prescription, early mass loss indication for timestep
+	if (!STAR_AGING_SCHEME || DMrejuv == 0.0 || tcount == 1){
+		DTrejuv = GSL_POSINF;
+	} else {
+		if (DMrejuv<0.0) {
+			eprintf("DMrejuv = %g < 0.0!\n", DMrejuv);
+			exit_cleanly(-1);
+		}
+		/* get timescale for 1% mass loss from cluster */
+		Trejuv = 0.01 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
+		DTrejuv = 0.01 * Tse; //Check if this fraction can make virial ratio better
+		printf ("THIS IS WHERE THE TIMESCALE GOT SET: T= %f DT=%f DM=%f\n", Trejuv, DTrejuv, DMrejuv);
+		printf ("*****************************\n"); //checking what's going on
+	}	
+	Dt = MIN(Dt, DTrejuv);
 	
 	/* take a reasonable timestep if all physics is turned off */
 	if (Dt == GSL_POSINF) {
-		Dt = 1.0;
+		Dt = 0.001;
 	}
 
 	/* debugging */
-	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse);
+	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
 
 	return (Dt);
 }

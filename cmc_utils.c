@@ -418,6 +418,12 @@ long potential_calculate(void) {
 	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute potential at each r */
 		star[k].phi = star[k + 1].phi - mprev * (1.0 / star[k].r - 1.0 / star[k + 1].r);
 		mprev -= star[k].m / clus.N_STAR;
+		if (isnan(star[k].phi)) {
+		  eprintf("NaN in phi[%li] detected\n", k);
+		  eprintf("phi[k+1]=%g mprev=%g, r[k]=%g, r[k+1]=%g, m[k]=%g, clus.N_STAR=%li\n", 
+		  	star[k + 1].phi, mprev, star[k].r, star[k + 1].r, star[k].m, clus.N_STAR);
+		  //exit_cleanly(-1);
+		}
 	}
 
 	/*for (k = 1; k <= clus.N_MAX; k++){

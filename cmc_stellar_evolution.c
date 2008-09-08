@@ -11,10 +11,10 @@ void stellar_evolution_init(void){
   double tphysf, dtp, vs[3];
   int i;
   long k, kb;
-
+  
   /* SSE */
   /* bse_set_hewind(0.5); */
-
+  
   /* BSE */
   bse_set_neta(0.5);
   bse_set_bwind(0.0);
@@ -39,7 +39,7 @@ void stellar_evolution_init(void){
   bse_set_epsnov(0.001);
   bse_set_eddfac(10.0); /* FIXME: is 10 too high? (normally 1.0) */
   bse_set_gamma(-1.0);
-
+  
   /* set parameters relating to metallicity */
   zpars = (double *) malloc(20 * sizeof(double));
   bse_zcnsts(&METALLICITY, zpars);
@@ -127,7 +127,7 @@ void do_stellar_evolution(gsl_rng *rng){
   for(k=1; k<=clus.N_MAX; k++){
     if (star[k].binind == 0) { /* single star */
       tphysf = TotalTime / MEGA_YEAR;
-      dtp = tphysf - star[k].se_tphys;
+      dtp = tphysf;
       kprev = star[k].se_k;
       
       DMse += star[k].m * madhoc;
@@ -147,14 +147,14 @@ void do_stellar_evolution(gsl_rng *rng){
       star[k].vr += vs[2] * 1.0e5 / (units.l/units.t);
       star[k].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
       set_star_EJ(k);
- 
+      
       /* WD birth kicks, just in case they exist */
       /* if ((star[k].se_k >= 10 && star[k].se_k <= 12) && star[k].se_k != kprev) { */
-	/* vk = 2.0e5 / (units.l/units.t); */
-/* 	theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0); */
-/* 	star[k].vr += cos(theta) * vk; */
-/* 	star[k].vt += sin(theta) * vk; */
-/* 	set_star_EJ(k); */
+      /* vk = 2.0e5 / (units.l/units.t); */
+      /* 	theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0); */
+      /* 	star[k].vr += cos(theta) * vk; */
+      /* 	star[k].vt += sin(theta) * vk; */
+      /* 	set_star_EJ(k); */
       /* } */
     } else { /* binary */
 	tphysf = TotalTime / MEGA_YEAR;
@@ -179,7 +179,7 @@ void write_stellar_data(void){
   char filename[1024];
   
   se_file_counter++;
-
+  
   /* single star info */
   sprintf(filename, "%s_stellar_info.%05d.dat", outprefix, se_file_counter);
   stel_file = fopen(filename, "w");
@@ -204,7 +204,7 @@ void write_stellar_data(void){
     fprintf(stel_file, "\n");
   }
   fclose(stel_file);
-
+  
   /* binary star info */
   sprintf(filename, "%s_binary_stellar_info.%05d.dat", outprefix, se_file_counter);
   stel_file = fopen(filename, "w");
@@ -244,7 +244,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
   int j;
   long knew, knewp;
   double dtp;
-
+  
   if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] != 0.0 && binary[kb].bse_tb > 0.0) {
     /* normal evolution */
     binary[kb].rad1 = binary[kb].bse_radius[0] * RSUN / units.l;
@@ -372,7 +372,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
 void cp_binmemb_to_star(long k, int kbi, long knew)
 {
   long kb;
-
+  
   kb = star[k].binind;
   /* and set the stars' dynamical properties */
   star[knew].r = star[k].r;
@@ -406,6 +406,14 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   star[knew].se_menv = binary[kb].bse_menv[kbi];
   star[knew].se_renv = binary[kb].bse_renv[kbi];
   star[knew].se_tms = binary[kb].bse_tms[kbi];
+  //Sourav: toy rejuvenation- variables updating
+  if (kbi==0){
+    star[knew].createtime = binary[kb].createtime_m1;
+    star[knew].lifetime = binary[kb].lifetime_m1;
+  } else {
+    star[knew].createtime = binary[kb].createtime_m2;
+    star[knew].lifetime = binary[kb].lifetime_m2;
+  }
 }
 
 /* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
@@ -429,6 +437,9 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
     star[knew].se_menv = star[oldk].se_menv;
     star[knew].se_renv = star[oldk].se_renv;
     star[knew].se_tms = star[oldk].se_tms;
+    //Sourav: toy rejuvenation- updating the createtime and lifetime
+    star[knew].createtime = star[oldk].createtime;
+    star[knew].lifetime = star[oldk].lifetime;
   } else { /* star comes from input binary */
     star[knew].se_mass = binary[kb].bse_mass0[kbi];
     star[knew].se_k = binary[kb].bse_kw[kbi];
@@ -443,6 +454,14 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
     star[knew].se_menv = binary[kb].bse_menv[kbi];
     star[knew].se_renv = binary[kb].bse_renv[kbi];
     star[knew].se_tms = binary[kb].bse_tms[kbi];
+    //Sourav: toy rejuvenation- updating the rejuv variables for two cases- mass1 and mass2 
+    if (kbi==0){
+    	star[knew].createtime = binary[kb].createtime_m1;
+    	star[knew].lifetime = binary[kb].lifetime_m1;
+    } else {
+	star[knew].createtime = binary[kb].createtime_m2;
+    	star[knew].lifetime = binary[kb].lifetime_m2;	
+    } 
   }
 }
 
@@ -485,6 +504,9 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
     target_star->se_menv = star[oldk].se_menv;
     target_star->se_renv = star[oldk].se_renv;
     target_star->se_tms = star[oldk].se_tms;
+    //Sourav: toy rejuvenation- updating rejuv variables
+    target_star->createtime = star[oldk].createtime;
+    target_star->lifetime = star[oldk].lifetime;
   } else { /* star comes from input binary */
     target_star->se_mass = binary[kb].bse_mass0[kbi];
     target_star->se_k = binary[kb].bse_kw[kbi];
@@ -499,6 +521,15 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
     target_star->se_menv = binary[kb].bse_menv[kbi];
     target_star->se_renv = binary[kb].bse_renv[kbi];
     target_star->se_tms = binary[kb].bse_tms[kbi];
+    //Sourav: toy rejuvenation- updating rejuv variables for two cases mass1 and mass2
+    if (kbi==1){
+   	target_star->createtime = binary[kb].createtime_m1;
+	target_star->lifetime = binary[kb].lifetime_m1;
+    } 
+    else {
+	target_star->createtime = binary[kb].createtime_m2;
+	target_star->lifetime = binary[kb].lifetime_m2;
+    }
   }
 }
 
@@ -524,9 +555,9 @@ void cp_m_to_star(long oldk, int kbi, star_t *target_star)
 /* set everything except tb */
 void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
 {
-  long kb, kbnew;
+  long kbold, kbnew;
   
-  kb = star[oldk].binind;
+  kbold = star[oldk].binind;
   kbnew = star[knew].binind;
 
   if (oldkbi == -1) { /* star comes from input single star */
@@ -543,22 +574,50 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
     binary[kbnew].bse_menv[kbinew] = star[oldk].se_menv;
     binary[kbnew].bse_renv[kbinew] = star[oldk].se_renv;
     binary[kbnew].bse_tms[kbinew] = star[oldk].se_tms;
+    //Sourav: toy rejuv- updating rejuv variables to the binary member from the single star
+    if (kbinew==0){
+      binary[kbnew].createtime_m1 = star[oldk].createtime;
+      binary[kbnew].createtime_m1 = star[oldk].createtime;
+    } else {
+      binary[kbnew].createtime_m2 = star[oldk].createtime;
+      binary[kbnew].createtime_m2 = star[oldk].createtime;
+    }
   } else { /* star comes from input binary */
-    binary[kbnew].bse_mass0[kbinew] = binary[kb].bse_mass0[oldkbi];
-    binary[kbnew].bse_kw[kbinew] = binary[kb].bse_kw[oldkbi];
-    binary[kbnew].bse_mass[kbinew] = binary[kb].bse_mass[oldkbi];
-    binary[kbnew].bse_ospin[kbinew] = binary[kb].bse_ospin[oldkbi];
-    binary[kbnew].bse_epoch[kbinew] = binary[kb].bse_epoch[oldkbi];
-    binary[kbnew].bse_tphys = binary[kb].bse_tphys;
-    binary[kbnew].bse_radius[kbinew] = binary[kb].bse_radius[oldkbi];
-    binary[kbnew].bse_lum[kbinew] = binary[kb].bse_lum[oldkbi];
-    binary[kbnew].bse_massc[kbinew] = binary[kb].bse_massc[oldkbi];
-    binary[kbnew].bse_radc[kbinew] = binary[kb].bse_radc[oldkbi];
-    binary[kbnew].bse_menv[kbinew] = binary[kb].bse_menv[oldkbi];
-    binary[kbnew].bse_renv[kbinew] = binary[kb].bse_renv[oldkbi];
-    binary[kbnew].bse_tms[kbinew] = binary[kb].bse_tms[oldkbi];
+    binary[kbnew].bse_mass0[kbinew] = binary[kbold].bse_mass0[oldkbi];
+    binary[kbnew].bse_kw[kbinew] = binary[kbold].bse_kw[oldkbi];
+    binary[kbnew].bse_mass[kbinew] = binary[kbold].bse_mass[oldkbi];
+    binary[kbnew].bse_ospin[kbinew] = binary[kbold].bse_ospin[oldkbi];
+    binary[kbnew].bse_epoch[kbinew] = binary[kbold].bse_epoch[oldkbi];
+    binary[kbnew].bse_tphys = binary[kbold].bse_tphys;
+    binary[kbnew].bse_radius[kbinew] = binary[kbold].bse_radius[oldkbi];
+    binary[kbnew].bse_lum[kbinew] = binary[kbold].bse_lum[oldkbi];
+    binary[kbnew].bse_massc[kbinew] = binary[kbold].bse_massc[oldkbi];
+    binary[kbnew].bse_radc[kbinew] = binary[kbold].bse_radc[oldkbi];
+    binary[kbnew].bse_menv[kbinew] = binary[kbold].bse_menv[oldkbi];
+    binary[kbnew].bse_renv[kbinew] = binary[kbold].bse_renv[oldkbi];
+    binary[kbnew].bse_tms[kbinew] = binary[kbold].bse_tms[oldkbi];
+    //Sourav: toy rejuv- updating rejuv variables to binary members from binary members
+    //There can be four cases. m1,2(old)->m1,2(new) 
+    if(kbinew==0){
+      if (oldkbi==0){
+	binary[kbnew].createtime_m1 = binary[kbold].createtime_m1;
+	binary[kbnew].lifetime_m1 = binary[kbold].lifetime_m1;
+      } else {
+	binary[kbnew].createtime_m1 = binary[kbold].createtime_m2;
+	binary[kbnew].lifetime_m1 = binary[kbold].lifetime_m2;
+      }
+    } else {
+      if (oldkbi==0){
+	binary[kbnew].createtime_m2 = binary[kbold].createtime_m1;
+	binary[kbnew].lifetime_m2 = binary[kbold].lifetime_m1;
+      } else {
+	binary[kbnew].createtime_m2 = binary[kbold].createtime_m2;
+	binary[kbnew].lifetime_m2 = binary[kbold].lifetime_m2;
+      }
+    }
   }
 }
+
 
 /* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
 /* set everything except tb */
@@ -577,6 +636,14 @@ void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid)
   binary[binindex].bse_menv[bid] = instar.se_menv;
   binary[binindex].bse_renv[bid] = instar.se_renv;
   binary[binindex].bse_tms[bid] = instar.se_tms;
+  //Sourav: toy rejuv- updating rejuv variables from a single to a binary member
+  if (bid==0){
+    binary[binindex].createtime_m1 = instar.createtime;
+    binary[binindex].lifetime_m1 = instar.lifetime;
+  } else {
+    binary[binindex].createtime_m2 = instar.createtime;
+    binary[binindex].lifetime_m2 = instar.lifetime;
+  }
 }
 
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid)

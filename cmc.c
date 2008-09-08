@@ -196,6 +196,15 @@ int main(int argc, char *argv[])
 			 * potential_calculate() using [].rOld
 			 * Unewrnew is [].phi after potential_calculate() */
 		}
+
+		/*Sourav: checking all stars for their possible extinction from old age*/
+		//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
+		DMrejuv = 0.0;
+		if (STAR_AGING_SCHEME > 0) {
+			for (i=1; i<=clus.N_MAX; i++){
+				remove_old_star(TotalTime, i);
+			}	
+		}
 		
 		/* this calls get_positions() */
 		tidally_strip_stars();
