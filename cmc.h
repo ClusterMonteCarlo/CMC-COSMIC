@@ -140,6 +140,7 @@ typedef struct{
 
 struct CenMa{
 	double m;
+        double m_new;
 	double E;
 };
 
