@@ -174,9 +174,13 @@ double calc_pot_within_interval(double r, void *p) {
   } else if (fabs(r-star[k+1].r)< DBL_EPSILON) {
     pot= star[k+1].phi;
   } else {
-    pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
-			 * (1.0/star[k].r - 1.0/r) /
-			 (1.0/star[k].r - 1.0/star[k + 1].r));
+    if (r< star[1].r) {
+      pot= star[0].phi-cenma.m*madhoc/r;
+    } else {
+      pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
+                           * (1.0/star[k].r - 1.0/r) /
+                           (1.0/star[k].r - 1.0/star[k + 1].r));
+    }
   };
 
   return(pot);
@@ -194,9 +198,13 @@ double calc_pot_in_interval(double r, long k) {
   } else if (fabs(r-star[k+1].r)< DBL_EPSILON) {
     pot= star[k+1].phi;
   } else {
-    pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
-			 * (1.0/star[k].r - 1.0/r) /
-			 (1.0/star[k].r - 1.0/star[k + 1].r));
+    if (r< star[1].r) {
+      pot= star[0].phi-cenma.m*madhoc/r;
+    } else {
+      pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
+                           * (1.0/star[k].r - 1.0/r) /
+                           (1.0/star[k].r - 1.0/star[k + 1].r));
+    } 
   };
 
   return(pot);
@@ -276,12 +284,13 @@ long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
 double calc_vr_within_interval(double r, void *p) {
   struct calc_vr_params *params= (struct calc_vr_params *) p;
   long index, k;
-  double pot, E, J;
+  double pot, E, J, vr;
 
   index= params->index; k= params->k;
   E= params->E; J= params->J;
   pot= calc_pot_within_interval(r, p);
-  return(function_q(index, r, pot, E, J));
+  vr= function_q(index, r, pot, E, J);
+  return(vr);
 };
 
 /* Calculates the square of vr */
@@ -379,7 +388,7 @@ double find_root_vr(long index, long k, double E, double J) {
     if (!status) {
       r_low= gsl_root_fsolver_x_lower(q_root);
       r_high= gsl_root_fsolver_x_upper(q_root);
-      not_converged= (gsl_root_test_interval(r_low, r_high, APSIDES_PRECISION, 0.)==GSL_CONTINUE);
+      not_converged= (gsl_root_test_interval(r_low, r_high, APSIDES_PRECISION, APSIDES_PRECISION)==GSL_CONTINUE);
     } else {
       if (status== GSL_EBADFUNC) {
         eprintf("Iteration encountered a singular point, i.e. vr= Inf or NaN!\n");
@@ -402,7 +411,7 @@ double find_root_vr(long index, long k, double E, double J) {
       } else {
 	apsis= gsl_root_fsolver_root(q_root);
 	not_converged=  not_converged && 
-          (gsl_root_test_delta(apsis, prev_apsis, APSIDES_CONVERGENCE, 0.)==GSL_CONTINUE);
+          (gsl_root_test_delta(apsis, prev_apsis, APSIDES_CONVERGENCE, APSIDES_CONVERGENCE)==GSL_CONTINUE);
 	prev_apsis= apsis;
       };
     };
@@ -425,7 +434,9 @@ double find_root_vr(long index, long k, double E, double J) {
   };
 
 
-  if (r_high-r_low>APSIDES_PRECISION) dprintf("Wrong assumption!!!\n");
+  if (r_high-r_low>APSIDES_PRECISION+APSIDES_PRECISION*MIN(r_high, r_low)) 
+    dprintf("Wrong assumption!!! delta_r=%g, prec=%g\n", r_high-r_low, 
+APSIDES_PRECISION+APSIDES_PRECISION*MIN(r_high,r_low));
 
   apsis= gsl_root_fsolver_root(q_root);
   if (GSL_FN_EVAL(&F,apsis)< 0.) {

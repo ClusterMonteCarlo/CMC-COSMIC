@@ -397,6 +397,9 @@ long potential_calculate(void) {
 	/* New N_MAX */
 	clus.N_MAX = k - 1;
 
+        /* update central BH mass */
+        cenma.m= cenma.m_new;
+
 	/* New total Mass; This IS correct for multiple components */
 	Mtotal = mprev * madhoc + cenma.m * madhoc;	
         dprintf("Mtotal is %lf, cenma.m is %lf, madhoc is %lg, mprev is %lf\n", Mtotal, cenma.m, madhoc, mprev);

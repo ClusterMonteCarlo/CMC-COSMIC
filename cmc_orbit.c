@@ -582,15 +582,21 @@ void set_a_b(long index, long k, double *a, double *b) {
   long i, i1;
   double rk, rk1, Uk, Uk1;
 
-  i = k;
-  i1 = k + 1;
-  rk = star[i].r;
-  rk1 = star[i1].r;
-  Uk = star[i].phi + PHI_S(rk, index);
-  Uk1 = star[i1].phi  + PHI_S(rk1, index);
+  if (k==0) {
+    *a= -cenma.m*madhoc;
+    *b= star[1].phi+ cenma.m*madhoc/star[1].r+ star[index].m*madhoc/star[index].r;
+    dprintf("Inner Henon coefficient: a= %g, b= %g\n", *a, *b);
+  } else {
+    i = k;
+    i1 = k + 1;
+    rk = star[i].r;
+    rk1 = star[i1].r;
+    Uk = star[i].phi + PHI_S(rk, index);
+    Uk1 = star[i1].phi  + PHI_S(rk1, index);
 
-  *a = (Uk1 - Uk) / (1. / rk1 - 1. / rk);
-  *b = (Uk / rk1 - Uk1 / rk) / (1. / rk1 - 1. / rk);
+    *a = (Uk1 - Uk) / (1. / rk1 - 1. / rk);
+    *b = (Uk / rk1 - Uk1 / rk) / (1. / rk1 - 1. / rk);
+  }
 };
 
 long find_zero_Q_slope(long index, long k, double E, double J, int positive) {

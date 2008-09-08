@@ -82,7 +82,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		L2 -= fb_sqr(delta); 
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
 			dprintf("index=%ld, id=%ld: star eaten by BH\n", index, star[index].id);
-			cenma.m += star[index].m; 
+			cenma.m_new += star[index].m; 
 			destroy_obj(index);
 			L2 = 0.0; 
 		} else { 
@@ -173,6 +173,7 @@ double calc_P_orb(long index)
 	//dprintf("index=%ld ", index);
 
 #ifdef EXPERIMENTAL
+        //if (index>80000) dprintf("Aaaaahhh index= %li\n", index);
 	orbit_rs = calc_orbit_new(index, E, J);
 #else
 	orbit_rs = calc_orbit_rs(index, E, J);
