@@ -72,7 +72,7 @@ int remove_old_star(double time, long k)
 			left_component_id = binary[star[k].binind].id2;
 			bin_mass1 = binary[star[k].binind].m1;
 			bin_mass2 = binary[star[k].binind].m2;
-			DMrejuv+= binary[star[k].binind].m1 * madhoc;  //Storing DTrejuv in Nbody units since comparing with mtotal later 
+			DMrejuv+= binary[star[k].binind].m1 * madhoc;  //Storing DMrejuv in Nbody units since comparing with mtotal later 
 			bin_mass_removed = binary[star[k].binind].m1;
 			bin_mass_left = binary[star[k].binind].m2;
 			removed_birth_time = binary[star[k].binind].createtime_m1 ;
@@ -155,7 +155,7 @@ int remove_old_star(double time, long k)
 			left_component_id = binary[star[k].binind].id1;
 			bin_mass1 = binary[star[k].binind].m1;
 			bin_mass2 = binary[star[k].binind].m2;
-			DMrejuv+= binary[star[k].binind].m2 * madhoc; //Storing DTrejuv in Nbody units since comparing with mtotal later
+			DMrejuv+= binary[star[k].binind].m2 * madhoc; //Storing DMrejuv in Nbody units since comparing with mtotal later
 			bin_mass_removed = binary[star[k].binind].m2;
 			bin_mass_left = binary[star[k].binind].m1;
 			removed_birth_time = binary[star[k].binind].createtime_m2 ;
@@ -193,7 +193,7 @@ int remove_old_star(double time, long k)
 		if ((time-star[k].createtime)>star[k].lifetime){
 			removed_id = star[k].id;
 	 		mass = star[k].m; 
-			DMrejuv+= star[k].m * madhoc; //Storing DTrejuv in Nbody units since comparing with mtotal later	
+			DMrejuv+= star[k].m * madhoc; //Storing DMrejuv in Nbody units since comparing with mtotal later	
 			birth_time = star[k].createtime;
 			life_time = star[k].lifetime;
 			destroy_obj(k);

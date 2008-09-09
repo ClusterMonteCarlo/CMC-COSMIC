@@ -55,6 +55,9 @@
 /* extra star type */
 #define NOT_A_STAR (-100)
 
+/*Sourav: this is required for the preaging when STAR_AGING_SCHEME is emabled*/
+#define PREAGING_MASS 5.0
+
 /* binaries */
 typedef struct{
 	long id1; /* unique id of star 1 */

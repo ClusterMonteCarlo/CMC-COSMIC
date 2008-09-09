@@ -301,16 +301,16 @@ double GetTimeStep(gsl_rng *rng) {
 	Dt = MIN(Dt, DTse);
 
 	//Sourav: Toy rejuvenation prescription, early mass loss indication for timestep
-	if (!STAR_AGING_SCHEME || DMrejuv == 0.0 || tcount == 1){
+	if (!STAR_AGING_SCHEME || DMrejuv == 0.0){
 		DTrejuv = GSL_POSINF;
 	} else {
 		if (DMrejuv<0.0) {
 			eprintf("DMrejuv = %g < 0.0!\n", DMrejuv);
 			exit_cleanly(-1);
 		}
-		/* get timescale for 1% mass loss from cluster */
-		Trejuv = 0.01 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
-		DTrejuv = 0.01 * Tse; //Check if this fraction can make virial ratio better
+		/* get timescale for 0.1% mass loss from cluster */
+		Trejuv = 0.001 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
+		DTrejuv = 0.001 * Trejuv; //Check if this fraction can make virial ratio better
 		printf ("THIS IS WHERE THE TIMESCALE GOT SET: T= %f DT=%f DM=%f\n", Trejuv, DTrejuv, DMrejuv);
 		printf ("*****************************\n"); //checking what's going on
 	}	
