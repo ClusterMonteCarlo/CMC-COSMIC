@@ -58,7 +58,6 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 	double tphysf, dtp, vsaddl[3], age;
 	binary_t tempbinary, tbcopy;
 	int tbi=-1, j;
-
 		
 	if (STELLAR_EVOLUTION && !STAR_AGING_SCHEME) {
 		/* evolve for just a year for merger */
@@ -113,7 +112,18 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 			   &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
 			   &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 			   &(tempbinary.bse_tb), &(tempbinary.e), vs);
-		
+
+		if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) {
+		  /* Try again with dtp=0 since BSE is sometimes acting weird when you force an output interval */
+		  dtp= 0.;
+		  bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
+			   &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
+			   &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
+			   &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
+			   &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+			   &(tempbinary.bse_tb), &(tempbinary.e), vs);
+		}
+
 		/* make sure outcome was as expected */
 		if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) {
 			eprintf("Artificial stellar evolution of eccentric binary failed: both stars have non-zero mass.\n");
