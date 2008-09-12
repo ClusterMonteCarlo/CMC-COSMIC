@@ -115,8 +115,8 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 
 		if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) {
 		  /* Try again with dtp=0 since BSE is sometimes acting weird when you force an output interval */
-		  tbcopy = tempbinary;
-	       dtp= 0.;
+		  tempbinary = tbcopy;
+	       	  dtp= 0.;
 		  bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 			   &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 			   &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
