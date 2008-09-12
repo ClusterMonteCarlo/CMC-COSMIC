@@ -753,6 +753,7 @@ void units_set(void)
 	madhoc = 1.0/((double) clus.N_STAR);
 
 	/* print out diagnostic information */
+	diaprintf("METALLICITY= %g\n",METALLICITY);
 	diaprintf("MEGA_YEAR=%g\n", MEGA_YEAR);
 	diaprintf("SOLAR_MASS_DYN=%g\n", SOLAR_MASS_DYN);
 	diaprintf("initial_total_mass=%g\n", initial_total_mass);
