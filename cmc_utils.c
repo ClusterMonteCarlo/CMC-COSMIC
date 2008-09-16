@@ -569,21 +569,27 @@ void comp_mass_percent(){
 	long int k, mcount;
 
 	/* Computing radii containing mass_pc[i] % of the mass */
-	mprev = cenma.m * madhoc;
-	for(mcount=0; mcount<MASS_PC_COUNT; mcount++){
-		if ( mprev/Mtotal > mass_pc[mcount] ) {
-			mass_r[mcount] = MINIMUM_R;
-			ave_mass_r[mcount] = 0.0;
-			no_star_r[mcount] = 0;
-			densities_r[mcount] = 0.0;
-			ke_rad_r[mcount] = 0.0;
-			ke_tan_r[mcount] = 0.0;
-			v2_rad_r[mcount] = 0.0;
-			v2_tan_r[mcount] = 0.0;
-		} else {
-			break;
-		}
-	}
+        if (MASS_PC_BH_INCLUDE) {
+          mprev = cenma.m * madhoc;
+          for(mcount=0; mcount<MASS_PC_COUNT; mcount++){
+            if ( mprev/Mtotal > mass_pc[mcount] ) {
+              mass_r[mcount] = MINIMUM_R;
+              ave_mass_r[mcount] = 0.0;
+              no_star_r[mcount] = 0;
+              densities_r[mcount] = 0.0;
+              ke_rad_r[mcount] = 0.0;
+              ke_tan_r[mcount] = 0.0;
+              v2_rad_r[mcount] = 0.0;
+              v2_tan_r[mcount] = 0.0;
+            } else {
+              break;
+            }
+          }
+        } else {
+          mprev= 0.;
+          mcount=0;
+        }
+
 	for (k = 1; k <= clus.N_MAX; k++) {	/* Only need to count up to N_MAX */
 		mprev += star[k].m / clus.N_STAR;
 		ke_rad_prev += 0.5 * star[k].m * madhoc * star[k].vr * star[k].vr;

@@ -187,6 +187,8 @@ typedef struct{
 	int INPUT_FILE;
 #define PARAMDOC_MASS_PC "mass fractions for Lagrange radii"
 	int MASS_PC;
+#define PARAMDOC_MASS_PC_BH_INCLUDE "Shall the central black hole be included for the calculation of the Lagrange radii? (1=yes, 0=no)"
+        int MASS_PC_BH_INCLUDE;
 #define PARAMDOC_MASS_BINS "mass ranges for calculating derived quantities"
 	int MASS_BINS;
 #define PARAMDOC_MINIMUM_R "radius of central mass"

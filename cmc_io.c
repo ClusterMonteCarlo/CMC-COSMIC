@@ -506,6 +506,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_INPUT_FILE);
 				sscanf(values, "%s", INPUT_FILE);
 				parsed.INPUT_FILE = 1;
+			} else if (strcmp(parameter_name, "MASS_PC_BH_INCLUDE") == 0) {
+				PRINT_PARSED(PARAMDOC_MASS_PC_BH_INCLUDE);
+				sscanf(values, "%d", &MASS_PC_BH_INCLUDE);
+				parsed.MASS_PC_BH_INCLUDE = 1;
 			} else if (strcmp(parameter_name, "MASS_PC") == 0) {
 				PRINT_PARSED(PARAMDOC_MASS_PC);
 				strcpy(MASS_PC, values);
@@ -686,6 +690,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
                 fprintf(parsedfp, "# %s\n%s %s     # default value\n", DOC, #A, #DEFAULT); \
 	}
 	
+        CHECK_PARSED(MASS_PC_BH_INCLUDE, 1, PARAMDOC_MASS_PC_BH_INCLUDE);
 	CHECK_PARSED(PERTURB, 1, PARAMDOC_PERTURB);
 	CHECK_PARSED(RELAXATION, 1, PARAMDOC_RELAXATION);
 	CHECK_PARSED(THETASEMAX, 1.0, PARAMDOC_THETASEMAX);
