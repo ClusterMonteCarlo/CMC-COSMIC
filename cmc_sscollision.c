@@ -225,18 +225,14 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 
 		merged_star->rad = merged_star->se_radius * RSUN / units.l;
 		merged_star->m = merged_star->se_mt * MSUN / units.mstar;
-	} 
-
-
-	//Sourav: toy rejuvenation version of stellar mergers
-	else if (STAR_AGING_SCHEME && !STELLAR_EVOLUTION){
+	} else if (STAR_AGING_SCHEME && !STELLAR_EVOLUTION){
+		/* Sourav: toy rejuvenation version of stellar mergers */
 		merged_star->m = star1->m + star2->m;
 		merged_star->rad = r_of_m(merged_star->m);
 		vs[0] = 0.0;
 		vs[1] = 0.0;
 		vs[2] = 0.0;
-
-
+		
 		if (STAR_AGING_SCHEME==1){
 			merged_star->lifetime = pow(10.0,9.921)*pow(merged_star->m*units.mstar/MSUN,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 			age = (merged_star->lifetime/merged_star->m)*
@@ -256,14 +252,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 			merged_star->lifetime = 1.0e6*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR + rng_t113_dbl() * (1.0e8-1.0e6)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 			merged_star->createtime = TotalTime;
 		}
-
-
-	}
-
-
-
-
-	else {
+	} else {
 		merged_star->m = star1->m + star2->m;
 		merged_star->rad = r_of_m(merged_star->m);
 
