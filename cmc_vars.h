@@ -101,6 +101,7 @@ _EXTERN_ int FORCE_RLX_STEP;
  */
 _EXTERN_ double CIRC_PERIOD_THRESHOLD;
 _EXTERN_ int WRITE_STELLAR_INFO;
+_EXTERN_ int WRITE_RWALK_INFO;
 #ifdef EXPERIMENTAL
 /* scale the square of the deflection angle used for testing of entry into the loss 
  * cone by Trel*BH_LC_FDT/dt 

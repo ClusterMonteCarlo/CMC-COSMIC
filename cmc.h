@@ -260,6 +260,8 @@ typedef struct{
         int CIRC_PERIOD_THRESHOLD;
 #define PARAMDOC_WRITE_STELLAR_INFO "Write out information about stellar evolution for each single and binary star, (0=off, 1=on)"
         int WRITE_STELLAR_INFO;
+#define PARAMDOC_WRITE_RWALK_INFO "Write out information about the random walk in J-space around the central black hole, (0=off, 1=on)"
+        int WRITE_RWALK_INFO;
 } parsed_t;
 
 /* a struct containing the units used */

@@ -10,6 +10,27 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
+void create_rwalk_file(char *fname) {
+  FILE *rwalk_file= NULL;
+
+  rwalk_file= fopen(fname, "a");
+  fprintf(rwalk_file, "\n");
+  fprintf(rwalk_file, 
+      "# 1:index, 2:Time, 3:r, 4:Trel, 5:dt, 6:l2_scale, 7:n_steps, 8:beta 9:n_local, 10:W, 11:P_orb, 12:n_orb\n");
+  fclose(rwalk_file);
+}
+
+void write_rwalk_data(char *fname, long index, double Trel, double dt, 
+    double l2_scale, double n_steps, double beta, double n_local, double W, 
+    double P_orb, double n_orb) {
+  FILE *rwalk_file= NULL;
+
+  rwalk_file= fopen(fname, "a");
+  fprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
+      index, TotalTime, star[index].r, Trel, dt, sqrt(l2_scale), n_steps, beta, n_local, W, P_orb, n_orb);
+  fclose(rwalk_file);
+}
+
 void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt)
 { 
 	/*This is the random walk procedure as outlined by Freitag & Benz (2002).
@@ -19,7 +40,6 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	double w_mag, l2_scale;
 	int i;
 #ifdef EXPERIMENTAL
-        FILE *rwalk_file=NULL;
         char fname[80];
         long is_in_ids;
         double Trel, n_local, M2ave; 
@@ -32,14 +52,9 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
         M2ave= calc_average_mass_sqr(index, clus.N_MAX);
         Trel= (PI/32.)*cub(W)/ ( ((double) clus.N_STAR) * n_local * (4.0* M2ave) );
         //if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
-	if (index==1 && TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING) {
-          rwalk_file= fopen(fname, "a");
-	  printf("file opened %li %li\n", index, StepCount);
-	  fprintf(rwalk_file, "\n");
-          fprintf(rwalk_file, 
-	      "# 1:index, 2:Time, 3:r, 4:Trel, 5:dt, 6:l2_scale, 7:n_steps, 8:beta 9:n_local, 10:W, 11:P_orb, 12:n_orb\n");
+	if (index==1 && TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING && WRITE_RWALK_INFO) {
           is_in_ids=1;
-	  fclose(rwalk_file);
+          create_rwalk_file(fname);
         };
 #endif
  	/* simulate loss cone physics for central mass */
@@ -102,11 +117,9 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		} 
 	}; 
 #ifdef EXPERIMENTAL
-        if (TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING) {
-	  rwalk_file= fopen(fname, "a");
-	  fprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
-	      index, TotalTime, star[index].r, Trel, dt, sqrt(l2_scale), n_steps, beta, n_local, W, P_orb, n_orb);
-          fclose(rwalk_file);
+        if (TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING && WRITE_RWALK_INFO) {
+          write_rwalk_data(fname, index, Trel, dt, l2_scale, n_steps, beta, 
+              n_local, W, P_orb, n_orb);
         }
 #endif
 }; 
@@ -472,3 +485,5 @@ struct Interval get_r_interval(double r) {
   star_interval.min= i;
   return (star_interval);
 }
+
+
