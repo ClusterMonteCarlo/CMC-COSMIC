@@ -113,6 +113,8 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 			   &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 			   &(tempbinary.bse_tb), &(tempbinary.e), vs);
 
+		/* Since the evolution time is so short in this routine, we could simply set dtp=0.0 above
+		   without worrying about the bcm arrays filling up. */
 		if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) {
 		  /* Try again with dtp=0 since BSE is sometimes acting weird when you force an output interval */
 		  tempbinary = tbcopy;
