@@ -38,9 +38,12 @@ void load_fits_file_data(void)
 		/*Sourav: this is ongoing changes*/
 		if (!star[i].binind){
 			if (STAR_AGING_SCHEME==1 ||STAR_AGING_SCHEME==3){
-			star[i].createtime = - pow(10.0,9.921)*pow((PREAGING_MASS * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-			//star[i].createtime = 0.0;	
-			star[i].lifetime = pow(10.0,9.921)*pow((star[i].m * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+				if(PREAGING){
+					star[i].createtime = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+				} else {
+					star[i].createtime = 0.0;
+				}	
+				star[i].lifetime = pow(10.0,9.921)*pow((star[i].m * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 			}
 			else {
 				star[i].createtime = 0.0;
@@ -69,11 +72,14 @@ void load_fits_file_data(void)
 		binary[j].inuse = 1;
 		/*Sourav: assign lifetimes to the binary components*/
 		if (STAR_AGING_SCHEME==1 ||STAR_AGING_SCHEME==3){
-			binary[j].createtime_m1 = - pow(10.0,9.921)*pow((PREAGING_MASS * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-			//binary[j].createtime_m1 = 0.0;
+			if (PREAGING){
+				binary[j].createtime_m1 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+				binary[j].createtime_m2 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			}else {
+				binary[j].createtime_m1 = 0.0;
+				binary[j].createtime_m2 = 0.0;
+			}
 			binary[j].lifetime_m1 = pow(10.0,9.921)*pow((binary[j].m1 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-			binary[j].createtime_m2 = - pow(10.0,9.921)*pow((PREAGING_MASS * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-			//binary[j].createtime_m2 = 0.0;
 			binary[j].lifetime_m2 = pow(10.0,9.921)*pow((binary[j].m2 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 		}
 		else {

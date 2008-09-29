@@ -560,6 +560,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			 	PRINT_PARSED(PARAMDOC_STAR_AGING_SCHEME);
 				sscanf(values, "%ld", &STAR_AGING_SCHEME);
 				parsed.STAR_AGING_SCHEME = 1;
+			} else if  (strcmp(parameter_name, "PREAGING") == 0) {
+			 	PRINT_PARSED(PARAMDOC_PREAGING);
+				sscanf(values, "%ld", &PREAGING);
+				parsed.PREAGING = 1;
 			} else if (strcmp(parameter_name, "TERMINAL_ENERGY_DISPLACEMENT") == 0) {
 				PRINT_PARSED(PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT);
 				sscanf(values, "%lf", &TERMINAL_ENERGY_DISPLACEMENT);
@@ -705,6 +709,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
 	/*Sourav: new parameter*/
 	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
+	CHECK_PARSED(PREAGING, 0, PARAMDOC_PREAGING);
 	CHECK_PARSED(BINBIN, 1, PARAMDOC_BINBIN);
 	CHECK_PARSED(BINSINGLE, 1, PARAMDOC_BINSINGLE);
 	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);

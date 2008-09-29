@@ -55,7 +55,7 @@
 /* extra star type */
 #define NOT_A_STAR (-100)
 
-/*Sourav: this is required for the preaging when STAR_AGING_SCHEME is emabled*/
+/*Sourav: required for the preaging when STAR_AGING_SCHEME is emabled in Solar mass*/
 #define PREAGING_MASS 5.0
 
 /* binaries */
@@ -210,6 +210,8 @@ typedef struct{
 	//Sourav: toy rejuvenation flags
 #define PARAMDOC_STAR_AGING_SCHEME "the aging scheme of the stars (0=infinite age of all stars, 1=rejuvenation, 2=zero lifetime of collision stars, 3=arbitrary lifetime)"
 	int STAR_AGING_SCHEME;
+#define PARAMDOC_PREAGING "preage the cluster (0=off, 1=on)"
+	int PREAGING;
 #define PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT "energy change calculation stopping criterion"
 	int TERMINAL_ENERGY_DISPLACEMENT;
 #define PARAMDOC_T_MAX "maximum integration time (FP units)"
