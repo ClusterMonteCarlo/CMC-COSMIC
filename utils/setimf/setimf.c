@@ -32,6 +32,7 @@ struct imf_param {
         double bhmass;
         int scale;
         long N_mass_seg;
+        long seed;
 	char infile[1024];
 	char outfile[1024];
         char str_imf[1024];
@@ -62,19 +63,20 @@ void write_usage(void){
 	printf("-N <int>  : number of tracers\n");
         printf("-b <dbl>  : add a central black hole with mass <dbl>\n");
         printf("-s        : scale positions and velocities such that the cluster is in exact ");
-        printf("virial equilibrium (T/2W = 1)\n");
+        printf("            virial equilibrium (T/2W = 1)\n");
         printf("-S <int>  : Create a maximally mass segregated cluster according to Baumgardt et al. (2008).\n");
         printf("          : <int> is the number of stars which must be smaller or equal to NSTAR * m_low/<m>,\n");
         printf("          : where NSTAR is the number of stars in the input file, m_low the lowest mass star,\n"); 
         printf("          : and <m> the mean stellar mass. For <int> = -1, the largest value is assumed.\n");
 	printf("-r <dbl>  : rcr, the value of r within which average mass");
-	printf(" is different\n");
+	printf("            is different\n");
 	printf("-C <dbl>  : Cms, how much will the masses be different\n");
 	printf("-G <str>  : Implement an arbitrary IMF based on a string formatted as follows: \n");
 	printf("          :     \"mass1(alpha1)mass2(alpha2)mass3(alpha3)...(alphaN)\"\n");
 	printf("          : An example of how to implement the Kroupa 2001 IMF:\n");
 	printf("          :     \"0.01(0.3)0.08(1.3))0.5(2.3)1.0(2.3)\"\n");
 	printf("          : Note: upper mass limit set by -M flag\n");
+	printf("-R <seed> : random seed\n");
 	printf("-h        : prints this message and exits\n");
 }
 
@@ -95,11 +97,12 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
         param->bhmass = 0.0;
         param->scale = 0;
         param->N_mass_seg= 0;
+	param->seed = SEED;
 	(param->infile)[0] = '\0';
 	(param->outfile)[0] = '\0';
 	(param->str_imf)[0] = '\0';
 
-	while((c = getopt(argc, argv, "i:o:I:wm:M:p:u:N:r:C:hsb:S:G:")) != -1)
+	while((c = getopt(argc, argv, "i:o:I:wm:M:p:u:N:r:C:hsb:S:G:R:")) != -1)
 		switch(c) {
 		case 'i':
 			strncpy(param->infile, optarg, 1024);
@@ -151,6 +154,9 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
                         break;
 		case 'G':
 		        strncpy(param->str_imf, optarg, 1024);
+			break;
+		case 'R':
+		        param->seed = strtol(optarg, NULL, 10);
 			break;
 		case 'h':
 			write_usage();
@@ -224,9 +230,9 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		exit(EXIT_FAILURE);
 	}
 	
-	fprintf(stderr, "infile=%s outfile=%s imf=%d Mmin=%g Mmax=%g pl_index=%g rcr=%g Cms=%g\n", 
+	fprintf(stderr, "infile=%s outfile=%s imf=%d Mmin=%g Mmax=%g pl_index=%g rcr=%g Cms=%g seed=%ld\n", 
 		param->infile, param->outfile, param->imf, param->mmin, param->mmax, param->pl_index, 
-		param->rcr, param->Cms);
+		param->rcr, param->Cms, param->seed);
 }
 
 double calc_f_mminp(double mminp,
@@ -291,7 +297,7 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
 	double total_mass, mmin, mmin_ms;
 	double Xcrit, C1, C2, C3, C4;
         
-	reset_rng_t113(SEED);
+	reset_rng_t113(param.seed);
 	total_mass = 0.0;
 	n_rat = ((double) param.n_neutron / (double) cfd->NOBJ);
 	if(param.imf==1 && param.Cms==1.0){  /* Power-law w/o ms     */
