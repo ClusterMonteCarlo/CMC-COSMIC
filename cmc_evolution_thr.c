@@ -425,7 +425,7 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	fprintf(escfile, "%.8g %.8g %.8g ",
 		star[j].r, star[j].vr, star[j].vt);
 	fprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld\n",
-		0.0, 0.0, Rtidal, phi_rtidal, phi_zero, E, J, star[j].id);
+	        star[j].r_peri, star[j].r_apo, Rtidal, phi_rtidal, phi_zero, E, J, star[j].id);
 
 	/* perhaps this will fix the problem wherein stars are ejected (and counted)
 	   multiple times */
@@ -486,7 +486,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		/* remove unbound stars */
 		if (E >= 0.0) {
-			/* dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
+		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
 		}
@@ -515,6 +515,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {
 			/* dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
+                  star[j].r_apo= rmax;
+                  star[j].r_peri= rmin;
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
 		}
