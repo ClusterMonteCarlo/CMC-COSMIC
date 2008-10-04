@@ -329,7 +329,7 @@ double GetTimeStep(gsl_rng *rng) {
 
 /* removes tidally-stripped stars */
 void tidally_strip_stars(void) {
-	double phi_rtidal, phi_zero;
+	double phi_rtidal, phi_zero, gierszalpha;
 	long i, j;
 	
 	j = 0;
@@ -356,7 +356,12 @@ void tidally_strip_stars(void) {
 		DTidalMassLoss = 0.0;
 		/* XXX maybe we should use clus.N_MAX_NEW below?? */
 		for (i = 1; i <= clus.N_MAX; i++) {
-			if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) {
+			/* DEBUG: Now using Giersz prescription for tidal stripping 
+			   (Giersz, Heggie, & Hurley 2008; arXiv:0801.3709).
+			   Note that this alpha factor behaves strangely for small N (N<~10^3) */
+			gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
+			if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
+				/* if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { */
 				/* dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); */
 				star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 				star[i].vrnew = 0.0;
