@@ -249,6 +249,9 @@ double GetTimeStep(gsl_rng *rng) {
 		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(XCOLL) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
 			       (1.0 + central.mR_ave/(2.0*XCOLL*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
 			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+		fprintf (stdout, "Time = %f Gyr Tcoll = %f Gyr\n", 
+			TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09,
+			Tcoll*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09);
 	} else {
 		Tcoll = GSL_POSINF;
 	}
