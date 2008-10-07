@@ -508,7 +508,7 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
             double *m1, *m2, m;
             char str_imf[1024]="";
             
-            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.04)3.0(1.74)", 1024);
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.04)3.0(0.)15(1.72)", 1024);
             m1= generateIMF(str_imf, 
                 cfd->NOBJ+1, param.mmin, param.mmax);
 
