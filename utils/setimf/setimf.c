@@ -400,7 +400,7 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
 			do {
 				X = rng_t113_dbl();
 				m = 0.08 + (0.19*pow(X,1.55) + 0.05*pow(X,0.6))
-	    			/  pow(1-X,0.58);
+	    			/  pow(1.0-X,0.58);
 			} while (m<param.mmin || m>param.mmax) ;
 			cfd->obj_m[i] = m;
 			total_mass += m;
