@@ -23,7 +23,7 @@ static inline int is_member(int k, int* set, int len) {
  * 
  *
  * @param n_points the number of points (stars) over which the local density 
- * is estimated (Casertano & Hut '86 suggest n_points=6)
+ * is estimated (Casertano & Hut '85 suggest n_points=6)
  *
  * @param startypes Array containing the star types that should be considered.
  *
@@ -140,13 +140,16 @@ struct core_t core_properties(struct densities rhoj) {
 void append_core_header(FILE *cfile, char *tag, int core_number) {
   int column;
 
-  column= core_number*8+1;
-  if (core_number==0) fprintf(cfile, "#");
+  column= core_number*8+2;
+  if (core_number==0) {
+    fprintf(cfile, "# ");
+    fprintf(cfile, "1:time");
+  }
   fprintf(cfile, " %i:rho_%s", column, tag);
   column++;
   fprintf(cfile, " %i:v_rms_%s", column, tag);
   column++;
-  fprintf(cfile, "%i:rc_%s", column, tag);
+  fprintf(cfile, " %i:rc_%s", column, tag);
   column++;
   fprintf(cfile, " %i:r_spitzer_%s", column, tag);
   column++;
