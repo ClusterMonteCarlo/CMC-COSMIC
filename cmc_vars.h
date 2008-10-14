@@ -49,6 +49,7 @@ _EXTERN_ binary_t *binary;
 _EXTERN_ FILE *lagradfile, *dynfile, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
 _EXTERN_ FILE *binaryfile, *binintfile, *collisionfile, *removestarfile, *relaxationfile;
+_EXTERN_ FILE *corefile;
 /* everything else except arrays */
 _EXTERN_ char outprefix[100];
 _EXTERN_ int se_file_counter;
@@ -102,6 +103,7 @@ _EXTERN_ int FORCE_RLX_STEP;
 _EXTERN_ double CIRC_PERIOD_THRESHOLD;
 _EXTERN_ int WRITE_STELLAR_INFO;
 _EXTERN_ int WRITE_RWALK_INFO;
+_EXTERN_ int WRITE_EXTRA_CORE_INFO;
 #ifdef EXPERIMENTAL
 /* scale the square of the deflection angle used for testing of entry into the loss 
  * cone by Trel*BH_LC_FDT/dt 
@@ -120,3 +122,5 @@ _EXTERN_ double APSIDES_PRECISION;
 _EXTERN_ long APSIDES_MAX_ITER;
 _EXTERN_ double APSIDES_CONVERGENCE;
 _EXTERN_ double *zpars;
+_EXTERN_ struct core_t no_remnants;
+

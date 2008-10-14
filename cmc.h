@@ -9,6 +9,7 @@
 #include "common/fitslib.h"
 #include "common/taus113-v2.h"
 #include "fewbody-0.24/fewbody.h"
+#include "cmc_core.h"
 
 // This automatic SVN versioning only updates the version of this file.
 //#define CMCVERSION "$Revision$"
@@ -264,6 +265,8 @@ typedef struct{
         int WRITE_STELLAR_INFO;
 #define PARAMDOC_WRITE_RWALK_INFO "Write out information about the random walk in J-space around the central black hole, (0=off, 1=on)"
         int WRITE_RWALK_INFO;
+#define PARAMDOC_WRITE_EXTRA_CORE_INFO "Write out information about cores that are defined differently from the standard (0=off, 1=on)"
+        int WRITE_EXTRA_CORE_INFO;
 } parsed_t;
 
 /* a struct containing the units used */

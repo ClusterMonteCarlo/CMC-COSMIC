@@ -350,6 +350,11 @@ void PrintFileOutput(void) {
 			fb, E_bb, E_bs, DE_bb, DE_bs);
 	}
 
+        if (WRITE_EXTRA_CORE_INFO) {
+          write_core_data(corefile, no_remnants);
+          fprintf(corefile, "\n");
+        }
+
 	/* also saves INITIAL snapshot (StepCount=0) */
 	if (TotalTime >= SNAPSHOT_DELTAT * StepCount) {
 		StepCount++;
@@ -666,7 +671,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_WRITE_RWALK_INFO);
 				sscanf(values, "%i", &WRITE_RWALK_INFO);
 				parsed.WRITE_RWALK_INFO = 1;
-			} else {
+			} else if (strcmp(parameter_name, "WRITE_EXTRA_CORE_INFO")== 0) {
+				PRINT_PARSED(PARAMDOC_WRITE_EXTRA_CORE_INFO);
+				sscanf(values, "%i", &WRITE_EXTRA_CORE_INFO);
+				parsed.WRITE_EXTRA_CORE_INFO = 1;
+                        } else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
 		} else if (sscanf(line, "%s", parameter_name) == 1) {
@@ -705,6 +714,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(STELLAR_EVOLUTION, 0, PARAMDOC_STELLAR_EVOLUTION);
         CHECK_PARSED(WRITE_STELLAR_INFO, 0, PARAMDOC_WRITE_STELLAR_INFO);
         CHECK_PARSED(WRITE_RWALK_INFO, 0, PARAMDOC_WRITE_RWALK_INFO);
+        CHECK_PARSED(WRITE_EXTRA_CORE_INFO, 0, PARAMDOC_WRITE_EXTRA_CORE_INFO);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
 	/*Sourav: new parameter*/
@@ -880,6 +890,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 
+
 	/* output files for binaries */
 	if (clus.N_BINARY > 0) {
 		/* general binary information */
@@ -943,6 +954,19 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			exit(1);
 		}
 	}
+        
+        /* File that contains data for various definitions of core radii */
+        if (WRITE_EXTRA_CORE_INFO) {
+          sprintf(outfile, "%s.core.dat", outprefix);
+          if ((corefile = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+          }
+
+          /* the core that contains no remnants */
+          append_core_header(corefile, "norem", 0);
+          fprintf(corefile, "\n");
+        }
 }
 
 /* close buffers */
@@ -975,6 +999,9 @@ void close_buffers(void)
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		fclose(mlagradfile[i]);
 	}
+        if (WRITE_EXTRA_CORE_INFO) {
+          fclose(corefile);
+        }
 }
 
 /* trap signals */

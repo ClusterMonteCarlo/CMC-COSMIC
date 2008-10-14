@@ -77,6 +77,9 @@ int main(int argc, char *argv[])
 	N_b = clus.N_BINARY;
 	calc_sigma_r();
 	central_calculate();
+        if (WRITE_EXTRA_CORE_INFO) {
+          no_remnants= no_remnants_core(6);
+        }
 	M_b = 0.0;
 	E_b = 0.0;
 	for (i=1; i<=clus.N_STAR; i++) {
@@ -129,6 +132,9 @@ int main(int argc, char *argv[])
 
 	/* calculate central quantities */
 	central_calculate();
+        if (WRITE_EXTRA_CORE_INFO) {
+          no_remnants= no_remnants_core(6);
+        }
 
 	/* calculate dynamical quantities */
 	clusdyn_calculate();
@@ -250,6 +256,9 @@ int main(int argc, char *argv[])
 		
 		/* calculate dynamical quantities */
 		clusdyn_calculate();
+                if (WRITE_EXTRA_CORE_INFO) {
+                  no_remnants= no_remnants_core(6);
+                }
 
 		print_results();
 		/* take a snapshot, we need more accurate 
