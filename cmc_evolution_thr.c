@@ -289,11 +289,9 @@ double GetTimeStep(gsl_rng *rng) {
 		DTse = GSL_POSINF;
 	} else {
 		/* DMse can be negative due to round-off error.  Give up if |DMse| is statistically
-		   significantly larger than the round-off error.  In this case we use the value
-		   of one thousandth of an average star's mass. If the scaling of the round-off error
-		   behaves as I think it does, we should be okay up to at least 10^9 stars. */
-		if (DMse < -1.0e-3 / ((double) clus.N_STAR)) {
-			eprintf("DMse = %g < -1.0e-3 / ((double) clus.N_STAR)!\n", DMse);
+		   significantly larger than the round-off error. */
+		if (DMse < -1.0e-10 * ((double) clus.N_STAR)) {
+			eprintf("DMse = %g < -1.0e-10 * ((double) clus.N_STAR)!\n", DMse);
 			exit_cleanly(-1);
 		}
 		/* get timescale for 1% mass loss from cluster */
