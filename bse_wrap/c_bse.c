@@ -41,57 +41,21 @@ int main(void)
   
   bse_zcnsts(&z, zpars);
   bse_instar();
-  mass0[0] = 18.0;
-  mass0[1] = 12.0;
+  mass0[0] = 21.0;
+  mass0[1] = 3.0;
   mass[0] = mass0[0];
   mass[1] = mass0[1];
   kw[0] = 1;
   kw[1] = 1;
-  tb = 1.0e2;
+  tb = 1.0e3;
   ecc = 0.1;
   ospin[0] = 0.0;
   ospin[1] = 0.0;
   epoch[0] = 0.0;
   epoch[1] = 0.0;
   tphys = 0.0;
-  tphysf = 10.0;
+  tphysf = 1.0e4;
   dtp = 10.0;
-
-  /* a particularly troublesome binary merger */
-  z = 0.001;
-  bse_zcnsts(&z, zpars);
-  bse_instar();
-  tphys = 18.4417722211793311;
-  tphysf = tphys + 1.0e-6;
-  dtp = 0.0;
-  mass0[0] = 20.0544508971730195;
-  mass0[1] = 22.3340962806445802;
-  kw[0] = 1;
-  kw[1] = 4;
-  mass[0] = 20.0544508971730195;
-  mass[1] = 21.107396325683041;
-  ospin[0] = 5027.61670274539665;
-  ospin[1] = 1.43676817717999028;
-  epoch[0] = 10.8313667667552824;
-  epoch[1] = 8.77840140093227106;
-  rad[0] = 7.43876676424248462;
-  rad[1] = 237.401382206489302;
-  lum[0] = 79087.7006960646395;
-  lum[1] = 218353.126873593836;
-  massc[0] = 0.0;
-  massc[1] = 8.12475182709434485;
-  radc[0] = 0.0;
-  radc[1] = 0.91811753083987524;
-  menv[0] = 1.00000000000000004e-10;
-  menv[1] = 1.00000000000000004e-10;
-  renv[0] = 1.00000000000000004e-10;
-  renv[1] = 1.00000000000000004e-10;
-  tms[0] = 9.93196935278644766;
-  tms[1] = 8.813578887981393;
-  tb = 5.69302113899846067e-17;
-  ecc = 0.998999999999999999;
-  //tb = 1.0e6;
-  //ecc = 0.0;
 
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
@@ -120,9 +84,9 @@ int main(void)
   /* print additional info stored only in bcm array */
   j = 1;
   while (bse_get_bcm(j, 1) >= 0.0) {
-    fprintf(stdout, "j=%d t=%g dm/dt=%g %g rad/rol=%g %g\n", j, bse_get_bcm(j, 1),
+    /* fprintf(stdout, "j=%d t=%g dm/dt=%g %g rad/rol=%g %g\n", j, bse_get_bcm(j, 1),
 	    bse_get_bcm(j,14), bse_get_bcm(j,28), 
-	    bse_get_bcm(j,15), bse_get_bcm(j,29));
+	    bse_get_bcm(j,15), bse_get_bcm(j,29)); */
     j++;
   }
   j--;

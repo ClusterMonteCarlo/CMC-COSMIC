@@ -2323,8 +2323,8 @@
       tb = tb*yeardy
       if(jp.ge.80)then
          WRITE(99,*)' EVOLV2 ARRAY ERROR ',mass1i,mass2i,tbi,ecci
-         WRITE(*,*)' STOP: EVOLV2 ARRAY ERROR '
-         CALL exit(0)
+*         WRITE(*,*)' STOP: EVOLV2 ARRAY ERROR '
+*         CALL exit(0)
          STOP
       elseif(jp.ge.40)then
          WRITE(99,*)' EVOLV2 ARRAY WARNING ',mass1i,mass2i,tbi,ecci,jp
