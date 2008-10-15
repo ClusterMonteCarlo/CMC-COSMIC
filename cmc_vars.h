@@ -123,4 +123,8 @@ _EXTERN_ long APSIDES_MAX_ITER;
 _EXTERN_ double APSIDES_CONVERGENCE;
 _EXTERN_ double *zpars;
 _EXTERN_ struct core_t no_remnants;
+_EXTERN_ double OVERWRITE_RVIR;
+_EXTERN_ double OVERWRITE_RTID;
+_EXTERN_ double OVERWRITE_Z;
+_EXTERN_ double OVERWRITE_MCLUS;
 

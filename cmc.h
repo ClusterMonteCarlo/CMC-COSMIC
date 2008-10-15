@@ -267,6 +267,14 @@ typedef struct{
         int WRITE_RWALK_INFO;
 #define PARAMDOC_WRITE_EXTRA_CORE_INFO "Write out information about cores that are defined differently from the standard (0=off, 1=on)"
         int WRITE_EXTRA_CORE_INFO;
+#define PARAMDOC_OVERWRITE_RVIR "Instead of reading the virial radius from the fits file use this value [pc]"
+        int OVERWRITE_RVIR;
+#define PARAMDOC_OVERWRITE_Z "Instead of reading the metallicity from the fits file use this value"
+        int OVERWRITE_Z;
+#define PARAMDOC_OVERWRITE_RTID "Instead of reading the tidal radius from the fits file use this value [pc]"
+        int OVERWRITE_RTID;
+#define PARAMDOC_OVERWRITE_MCLUS "Instead of reading the cluster mass from the fits file use this value [Msun]"
+        int OVERWRITE_MCLUS;
 } parsed_t;
 
 /* a struct containing the units used */

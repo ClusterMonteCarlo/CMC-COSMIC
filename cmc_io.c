@@ -675,6 +675,22 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_WRITE_EXTRA_CORE_INFO);
 				sscanf(values, "%i", &WRITE_EXTRA_CORE_INFO);
 				parsed.WRITE_EXTRA_CORE_INFO = 1;
+			} else if (strcmp(parameter_name, "OVERWRITE_RVIR")== 0) {
+				PRINT_PARSED(PARAMDOC_OVERWRITE_RVIR);
+				sscanf(values, "%lf", &OVERWRITE_RVIR);
+				parsed.OVERWRITE_RVIR = 1;
+			} else if (strcmp(parameter_name, "OVERWRITE_Z")== 0) {
+				PRINT_PARSED(PARAMDOC_OVERWRITE_Z);
+				sscanf(values, "%lf", &OVERWRITE_Z);
+				parsed.OVERWRITE_Z = 1;
+			} else if (strcmp(parameter_name, "OVERWRITE_RTID")== 0) {
+				PRINT_PARSED(PARAMDOC_OVERWRITE_RTID);
+				sscanf(values, "%lf", &OVERWRITE_RTID);
+				parsed.OVERWRITE_RTID = 1;
+			} else if (strcmp(parameter_name, "OVERWRITE_MCLUS")== 0) {
+				PRINT_PARSED(PARAMDOC_OVERWRITE_MCLUS);
+				sscanf(values, "%lf", &OVERWRITE_MCLUS);
+				parsed.OVERWRITE_MCLUS = 1;
                         } else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -758,6 +774,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(APSIDES_PRECISION, 1.0e-11, PARAMDOC_APSIDES_PRECISION);
         CHECK_PARSED(APSIDES_MAX_ITER, 100, PARAMDOC_APSIDES_MAX_ITER);
         CHECK_PARSED(APSIDES_CONVERGENCE, 5.e-13, PARAMDOC_APSIDES_CONVERGENCE);
+        CHECK_PARSED(OVERWRITE_RVIR, 0., PARAMDOC_OVERWRITE_RVIR);
+        CHECK_PARSED(OVERWRITE_Z, 0., PARAMDOC_OVERWRITE_Z);
+        CHECK_PARSED(OVERWRITE_RTID, 0., PARAMDOC_OVERWRITE_RTID);
+        CHECK_PARSED(OVERWRITE_MCLUS, 0., PARAMDOC_OVERWRITE_MCLUS);
 #undef CHECK_PARSED
 
 	/* exit if something is not set */
@@ -771,6 +791,19 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	cmc_read_fits_file(INPUT_FILE, &cfd);
 	clus.N_STAR = cfd.NOBJ;
 	clus.N_BINARY = cfd.NBINARY;
+        if (OVERWRITE_RVIR>0.) {
+          cfd.Rvir= OVERWRITE_RVIR;
+        }
+        if (OVERWRITE_RTID>0.) {
+          cfd.Rtid= OVERWRITE_RTID;
+        }
+        if (OVERWRITE_Z>0.) {
+          cfd.Z= OVERWRITE_Z;
+        }
+        if (OVERWRITE_MCLUS>0.) {
+          cfd.Mclus= OVERWRITE_MCLUS;
+        }
+
 	R_MAX = cfd.Rtid;
 	METALLICITY = cfd.Z;
 
