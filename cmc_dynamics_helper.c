@@ -624,8 +624,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 	/* alpha is the factor by which to scale the velocities, as an artificial
 	   way of bringing the objects to infinity while conserving energy and angular momentum */
-	alpha = sqrt(1.0 + fb_outerpetot(hier.obj, hier.nobj)/fb_outerketot(hier.obj, hier.nobj));
-	
+	if (hier.nobj == 1) {
+		alpha = 1.0;
+	} else {
+		alpha = sqrt(1.0 + fb_outerpetot(hier.obj, hier.nobj)/fb_outerketot(hier.obj, hier.nobj));
+	}
+
 	/* logging */
 	binint_log_status(retval);
 	printing_units.v = cmc_units.v * units.l / units.t;
