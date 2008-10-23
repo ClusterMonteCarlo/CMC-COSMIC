@@ -310,8 +310,8 @@ double GetTimeStep(gsl_rng *rng) {
 			exit_cleanly(-1);
 		}
 		/* get timescale for 0.1% mass loss from cluster */
-		Trejuv = 0.001 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
-		DTrejuv = 0.001 * Trejuv; //Check if this fraction can make virial ratio better
+		Trejuv = 0.01 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
+		DTrejuv = 0.01 * Trejuv; //Check if this fraction can make virial ratio better
 		printf ("THIS IS WHERE THE TIMESCALE GOT SET: T= %f DT=%f DM=%f\n", Trejuv, DTrejuv, DMrejuv);
 		printf ("*****************************\n"); //checking what's going on
 	}	
