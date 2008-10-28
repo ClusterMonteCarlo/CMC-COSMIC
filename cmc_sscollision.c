@@ -125,7 +125,38 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 			   &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
 			   &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 			   &(tempbinary.bse_tb), &(tempbinary.e), vs);
-		  fprintf (stderr, "*******bugfix for sscollision********\n");
+		  fprintf (stderr, "\n*******bugfix for sscollision********\n");
+		}
+		/*Sourav:debug if the collision takes more time to happen?*/
+		if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) {
+		  tphysf+=1.;
+		  dtp= 0.;
+		  bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
+			   &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
+			   &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
+			   &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
+			   &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+			   &(tempbinary.bse_tb), &(tempbinary.e), vs);
+		  fprintf (stderr, "\n*******bugfix2 for sscollision********\n");
+		  j=1;
+		  while (bse_get_bpp(j,1)>=0.0) {
+			  if (bse_get_bpp(j,4)==15 || bse_get_bpp(j,5)==15){
+				tphysf=bse_get_bpp(j,1)+1.0e-06;
+				fprintf (stderr, "k1=bse_get_bpp(j,4)= %d,k2=bse_get_bpp(j,5)= %d\n",bse_get_bpp(j,4),bse_get_bpp(j,5));
+				break;
+			  }
+			  if(j>80){
+				  eprintf ("no 15 found");
+				  exit_cleanly(1);
+			  }
+			  j++;
+		  }
+		  bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
+			   &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
+			   &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
+			   &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
+			   &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+			   &(tempbinary.bse_tb), &(tempbinary.e), vs);
 		}
 
 		/* make sure outcome was as expected */

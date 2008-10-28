@@ -203,8 +203,8 @@
      &            bcm(j,31),bcm(j,32)
       if(bcm(j,1).ge.0.0) goto 30
       CLOSE(23)
- 99   FORMAT(f10.4,2i3,10f10.4,5e12.4,f7.3)
- 999  FORMAT(f10.4,2f10.4,1p,2e12.4)
+ 99   FORMAT(g30.18,2i3,10g30.18,5e30.18,g30.18)
+ 999  FORMAT(g30.18,2g30.18,1p,2e30.18)
 *
 * The bpp array acts as a log, storing parameters at each change
 * of evolution stage.
@@ -220,7 +220,7 @@
       WRITE(*,100)(bpp(j,k),k=1,3),kstar,(bpp(j,k),k=6,9),label(kw)
       goto 52
  60   continue
- 100  FORMAT(f11.4,2f9.3,2i3,f13.3,f6.2,2f8.3,2x,a8)
+ 100  FORMAT(g30.18,2g30.18,2i3,g30.18,g30.18,2g30.18,2x,a8)
       WRITE(*,*)
 *
 ************************************************************************

@@ -393,7 +393,8 @@ int main(int argc, char *argv[]){
 
 	}
 	num_point = i;
-	struct_par.rt = pos[num_point-1];
+	//struct_par.rt = pos[num_point-1];
+	struct_par.rt = 800.0;
 	mR = (double *) malloc(num_point*sizeof(double));
 	mR[0] = 0.0;
 	for(i=1; i<num_point; i++){
