@@ -381,29 +381,30 @@ void tidally_strip_stars(void) {
 
 				/* logging */
 				fprintf(escfile,
-					"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld\n",
+					"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld ",
 					tcount, TotalTime, star[i].m,
 					star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
-					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
+					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id, star[i].binind);
 
 				if (star[i].binind) {
 					k = star[i].binind;
-					gzprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+					fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
 							binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
 							binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
-							binary[k].id1, binary[j].id2,
-							binary[k].a * units.l / AU, binary[j].e);
+							binary[k].id1, binary[k].id2,
+							binary[k].a * units.l / AU, binary[k].e);
 				} else {
-					gzprintf(escfile, "0 0 0 0 0 0 0 ");	
+					fprintf(escfile, "0 0 0 0 0 0 0 ");	
 				}
 
 				if (star[i].binind == 0) {
-					gzprintf(escfile, "%d na na ", 
+					fprintf(escfile, "%d na na ", 
 							star[i].se_k);
 				} else {
-					gzprintf(escfile, "na %d %d",
-							binary[k].bse_kw[0], binary[j].bse_kw[1]);
+					fprintf(escfile, "na %d %d",
+							binary[k].bse_kw[0], binary[k].bse_kw[1]);
 				}
+				fprintf (escfile, "\n");
 
 
 
@@ -426,6 +427,7 @@ void tidally_strip_stars(void) {
 
 void remove_star(long j, double phi_rtidal, double phi_zero) {
 	double E, J;
+	long k;
 
 	/* dprintf("removing star: i=%ld id=%ld m=%g E=%g bin=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 
@@ -451,8 +453,27 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 		tcount, TotalTime, star[j].m);
 	fprintf(escfile, "%.8g %.8g %.8g ",
 		star[j].r, star[j].vr, star[j].vt);
-	fprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld\n",
+	fprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
 	        star[j].r_peri, star[j].r_apo, Rtidal, phi_rtidal, phi_zero, E, J, star[j].id);
+	if (star[j].binind) {
+		k = star[j].binind;
+		fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+				binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
+				binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
+				binary[k].id1, binary[k].id2,
+				binary[k].a * units.l / AU, binary[k].e);
+	} else {
+		fprintf(escfile, "0 0 0 0 0 0 0 ");	
+	}
+
+	if (star[j].binind == 0) {
+		fprintf(escfile, "%d na na ", 
+				star[j].se_k);
+	} else {
+		fprintf(escfile, "na %d %d ",
+				binary[k].bse_kw[0], binary[k].bse_kw[1]);
+	}
+	fprintf (escfile, "\n");
 
 	/* perhaps this will fix the problem wherein stars are ejected (and counted)
 	   multiple times */
