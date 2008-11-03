@@ -331,7 +331,7 @@ double GetTimeStep(gsl_rng *rng) {
 /* removes tidally-stripped stars */
 void tidally_strip_stars(void) {
 	double phi_rtidal, phi_zero, gierszalpha;
-	long i, j;
+	long i, j, k;
 	
 	j = 0;
 	Etidal = 0.0;
@@ -385,6 +385,27 @@ void tidally_strip_stars(void) {
 					tcount, TotalTime, star[i].m,
 					star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
 					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
+
+				if (star[i].binind) {
+					k = star[i].binind;
+					gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+							binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
+							binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
+							binary[k].id1, binary[j].id2,
+							binary[k].a * units.l / AU, binary[j].e);
+				} else {
+					gzprintf(snapfile, "0 0 0 0 0 0 0 ");	
+				}
+
+				if (star[i].binind == 0) {
+					gzprintf(snapfile, "%d na na ", 
+							star[i].se_k);
+				} else {
+					gzprintf(snapfile, "na %d %d",
+							binary[k].bse_kw[0], binary[j].bse_kw[1]);
+				}
+
+
 
 				/* perhaps this will fix the problem wherein stars are ejected (and counted)
 				   multiple times */
