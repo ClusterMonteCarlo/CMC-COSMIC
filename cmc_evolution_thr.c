@@ -381,10 +381,10 @@ void tidally_strip_stars(void) {
 
 				/* logging */
 				fprintf(escfile,
-					"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld ",
+					"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
 					tcount, TotalTime, star[i].m,
 					star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
-					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id, star[i].binind);
+					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
 
 				if (star[i].binind) {
 					k = star[i].binind;
