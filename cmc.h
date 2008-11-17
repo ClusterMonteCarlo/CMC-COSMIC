@@ -206,6 +206,8 @@ typedef struct{
 	int THETASEMAX;
 #define PARAMDOC_STELLAR_EVOLUTION "stellar evolution (0=off, 1=on)"
 	int STELLAR_EVOLUTION;
+#define PARAMDOC_TIDAL_TREATMENT "choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)"
+	int TIDAL_TREATMENT;
 #define PARAMDOC_SS_COLLISION "perform physical stellar collisions (0=off, 1=on)"
 	int SS_COLLISION;
 	//Sourav: toy rejuvenation flags

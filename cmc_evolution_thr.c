@@ -357,71 +357,137 @@ void tidally_strip_stars(void) {
 		DTidalMassLoss = 0.0;
 		/* XXX maybe we should use clus.N_MAX_NEW below?? */
 		for (i = 1; i <= clus.N_MAX; i++) {
-			/* DEBUG: Now using Giersz prescription for tidal stripping 
-			   (Giersz, Heggie, & Hurley 2008; arXiv:0801.3709).
-			   Note that this alpha factor behaves strangely for small N (N<~10^3) */
-			gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
-			if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
-				/* if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { */
-				/* dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); */
-				star[i].rnew = SF_INFINITY;	/* tidally stripped star */
-				star[i].vrnew = 0.0;
-				star[i].vtnew = 0.0;
-				Eescaped += star[i].E * star[i].m / clus.N_STAR;
-				Jescaped += star[i].J * star[i].m / clus.N_STAR;
-				if (star[i].binind == 0) {
-					Eintescaped += star[i].Eint;
-				} else {
-					Ebescaped += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
-						(2.0 * binary[star[i].binind].a);
-					Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
+			if (TIDAL_TREATMENT == 0){
+				/*radial cut off criteria*/
+
+				if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
+					dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
+					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
+					star[i].vrnew = 0.0;
+					star[i].vtnew = 0.0;
+					Eescaped += star[i].E * star[i].m / clus.N_STAR;
+					Jescaped += star[i].J * star[i].m / clus.N_STAR;
+					if (star[i].binind == 0) {
+						Eintescaped += star[i].Eint;
+					} else {
+						Ebescaped += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
+							(2.0 * binary[star[i].binind].a);
+						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
+					}
+
+					DTidalMassLoss += star[i].m / clus.N_STAR;
+					Etidal += star[i].E * star[i].m / clus.N_STAR;
+
+					/* logging */
+					fprintf(escfile,
+							"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
+							tcount, TotalTime, star[i].m,
+							star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
+							star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
+
+					if (star[i].binind) {
+						k = star[i].binind;
+						fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+								binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
+								binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
+								binary[k].id1, binary[k].id2,
+								binary[k].a * units.l / AU, binary[k].e);
+					} else {
+						fprintf(escfile, "0 0 0 0 0 0 0 ");	
+					}
+
+					if (star[i].binind == 0) {
+						fprintf(escfile, "%d na na ", 
+								star[i].se_k);
+					} else {
+						fprintf(escfile, "na %d %d",
+								binary[k].bse_kw[0], binary[k].bse_kw[1]);
+					}
+					fprintf (escfile, "\n");
+
+
+
+					/* perhaps this will fix the problem wherein stars are ejected (and counted)
+					   multiple times */
+					destroy_obj(i);
+
+					if (Etotal.K + Etotal.P - Etidal >= 0)
+						break;
+
 				}
-				DTidalMassLoss += star[i].m / clus.N_STAR;
-				Etidal += star[i].E * star[i].m / clus.N_STAR;
-
-				/* logging */
-				fprintf(escfile,
-					"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
-					tcount, TotalTime, star[i].m,
-					star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
-					star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
-
-				if (star[i].binind) {
-					k = star[i].binind;
-					fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
-							binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
-							binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
-							binary[k].id1, binary[k].id2,
-							binary[k].a * units.l / AU, binary[k].e);
-				} else {
-					fprintf(escfile, "0 0 0 0 0 0 0 ");	
-				}
-
-				if (star[i].binind == 0) {
-					fprintf(escfile, "%d na na ", 
-							star[i].se_k);
-				} else {
-					fprintf(escfile, "na %d %d",
-							binary[k].bse_kw[0], binary[k].bse_kw[1]);
-				}
-				fprintf (escfile, "\n");
-
-
-
-				/* perhaps this will fix the problem wherein stars are ejected (and counted)
-				   multiple times */
-				destroy_obj(i);
-
-				if (Etotal.K + Etotal.P - Etidal >= 0)
-					break;
 			}
+
+
+			else if (TIDAL_TREATMENT == 1){
+				/* DEBUG: Now using Giersz prescription for tidal stripping 
+				   (Giersz, Heggie, & Hurley 2008; arXiv:0801.3709).
+				   Note that this alpha factor behaves strangely for small N (N<~10^3) */
+
+				gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
+				if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
+					dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
+					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
+					star[i].vrnew = 0.0;
+					star[i].vtnew = 0.0;
+					Eescaped += star[i].E * star[i].m / clus.N_STAR;
+					Jescaped += star[i].J * star[i].m / clus.N_STAR;
+					if (star[i].binind == 0) {
+						Eintescaped += star[i].Eint;
+					} else {
+						Ebescaped += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
+							(2.0 * binary[star[i].binind].a);
+						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
+					}
+
+					DTidalMassLoss += star[i].m / clus.N_STAR;
+					Etidal += star[i].E * star[i].m / clus.N_STAR;
+
+					/* logging */
+					fprintf(escfile,
+							"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
+							tcount, TotalTime, star[i].m,
+							star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
+							star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
+
+					if (star[i].binind) {
+						k = star[i].binind;
+						fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+								binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
+								binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
+								binary[k].id1, binary[k].id2,
+								binary[k].a * units.l / AU, binary[k].e);
+					} else {
+						fprintf(escfile, "0 0 0 0 0 0 0 ");	
+					}
+
+					if (star[i].binind == 0) {
+						fprintf(escfile, "%d na na ", 
+								star[i].se_k);
+					} else {
+						fprintf(escfile, "na %d %d",
+								binary[k].bse_kw[0], binary[k].bse_kw[1]);
+					}
+					fprintf (escfile, "\n");
+
+
+
+					/* perhaps this will fix the problem wherein stars are ejected (and counted)
+					   multiple times */
+					destroy_obj(i);
+
+					if (Etotal.K + Etotal.P - Etidal >= 0)
+						break;
+
+				}
+			}
+
 		}
 		j++;
 		TidalMassLoss = TidalMassLoss + DTidalMassLoss;
 		gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-			j, TidalMassLoss, DTidalMassLoss);
+				j, TidalMassLoss, DTidalMassLoss);
 		fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-			j, TidalMassLoss, DTidalMassLoss);
+				j, TidalMassLoss, DTidalMassLoss);
 	} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
 }
 

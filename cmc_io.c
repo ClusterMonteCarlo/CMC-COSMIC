@@ -559,6 +559,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_STELLAR_EVOLUTION);
 				sscanf(values, "%ld", &STELLAR_EVOLUTION);
 				parsed.STELLAR_EVOLUTION = 1;
+			} else if (strcmp(parameter_name, "TIDAL_TREATMENT") == 0) {
+				PRINT_PARSED(PARAMDOC_TIDAL_TREATMENT);
+				sscanf(values, "%ld", &TIDAL_TREATMENT);
+				parsed.TIDAL_TREATMENT = 1;
 			} else if (strcmp(parameter_name, "SS_COLLISION") == 0) {
 				PRINT_PARSED(PARAMDOC_SS_COLLISION);
 				sscanf(values, "%ld", &SS_COLLISION);
@@ -735,6 +739,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(WRITE_RWALK_INFO, 0, PARAMDOC_WRITE_RWALK_INFO);
         CHECK_PARSED(WRITE_EXTRA_CORE_INFO, 0, PARAMDOC_WRITE_EXTRA_CORE_INFO);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
+	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
 	/*Sourav: new parameter*/
 	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
