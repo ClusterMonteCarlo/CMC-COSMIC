@@ -1,3 +1,22 @@
+/* c_sse.c
+
+   Copyright (C) 2008 John M. Fregeau
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -36,25 +55,6 @@ int main(void)
   epoch = 0.0;
   tphys = 0.0;
   tphysf = 100.0;
-
-  //z = 0.02;
-  //bse_zcnsts(&z, zpars);
-  //tphys = 501.583;
-  //tphysf = tphys;
-  //tphysf = 0.0;
-  //dtp = 0.0;
-  //mass = 2.98122;
-  //kw = 4;
-  //mt = 2.96019;
-  //ospin = 39.7016;
-  //epoch = -0.0634474;
-  //rad = 24.0672;
-  //lum = 248.853;
-  //mc = 0.64247;
-  //rc = 0.167354;
-  //menv = 0.168182;
-  //renv = 12.4044;
-  //tms = 383.917;
 
   bse_evolv1(&kw, &mass, &mt, &rad, &lum, &mc, &rc, 
 	     &menv, &renv, &ospin, &epoch, &tms, &tphys, 
