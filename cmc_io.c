@@ -1113,7 +1113,7 @@ void print_conversion_script(void)
 	fprintf(ofp, "cat $outprefix.tmyr_nc.dat | awk '{print NR, $2}' > $outprefix.NR_nc.dat\n");
 	fprintf(ofp, "cat $outprefix.tmyr_fbc.dat | awk '{print NR, $2}' > $outprefix.NR_fbc.dat\n");
 	fprintf(ofp, "join $outprefix.NR_fbc.dat $outprefix.NR_nc.dat | awk '{print $2, $3}' > $outprefix.fbc_nc.dat\n");
-	fprintf(ofp, "prunedata.pl -d 30 $outprefix.fbc_nc.dat > $outprefix.fbc_nc-pruned.dat\n");
+	fprintf(ofp, "prunedata.pl -n 300 $outprefix.fbc_nc.dat > $outprefix.fbc_nc-pruned.dat\n");
 	fprintf(ofp, "head -n 1 $outprefix.fbc_nc.dat > $outprefix.fbc_nc-arrow.dat\n");
 	fprintf(ofp, "tail -n 1 $outprefix.fbc_nc.dat >> $outprefix.fbc_nc-arrow.dat\n");
 	fclose(ofp);
