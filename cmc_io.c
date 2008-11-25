@@ -1091,6 +1091,10 @@ void print_conversion_script(void)
 	fprintf(ofp, "timeunitcgs=%g\n", units.t * clus.N_STAR / log(GAMMA * clus.N_STAR));
 	fprintf(ofp, "# code unit of time (Myr)\n");
 	fprintf(ofp, "timeunitsmyr=%g\n", units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / (1.0e6 * YEAR));
+	fprintf(ofp, "# N-body  unit of time (cgs)\n");
+	fprintf(ofp, "nbtimeunitcgs=%g\n", units.t);
+	fprintf(ofp, "# N-body unit of time (Myr)\n");
+	fprintf(ofp, "nbtimeunitsmyr=%g\n", units.t / (1.0e6 * YEAR));
 	fprintf(ofp, "\n");
 	fprintf(ofp, "cat $outprefix.dyn.dat | grep -vE '^#' | awk '{print $1*'$timeunitsmyr', $8/$21}' > $outprefix.tmyr_rcrh.dat\n");
 	fprintf(ofp, "prunedata.pl -d 30 $outprefix.tmyr_rcrh.dat > $outprefix.tmyr_rcrh-pruned.dat\n");
