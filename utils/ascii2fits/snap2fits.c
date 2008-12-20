@@ -209,12 +209,13 @@ void readSnapshot(const char *filename, double **r, double **vr, double **vt, do
     *vr= (double *) realloc(*vr, sizeof(double)*lines);
     *vt= (double *) realloc(*vt, sizeof(double)*lines);
     *m= (double *) realloc(*m, sizeof(double)*lines);
-    for (; items!=EOF && i<lines-1; i++) {
-      items=fscanf(inputfile, 
+    for (; items!=-1 && i<lines-1; i++) {
+      items= getline(&line, &n, inputfile);
+      sscanf(line, 
           "%*i %lf %lf %lf %lf %*f %*f %*f %*f %*f %*f %*f %*f %*f\n",
           &(*m)[i], &(*r)[i], &(*vr)[i], &(*vt)[i]);
     };
-  } while (items!=EOF);
+  } while (items!=-1);
 
   *N= i-2;
   (*r)[*N+1]= LARGE_DISTANCE;
@@ -222,9 +223,38 @@ void readSnapshot(const char *filename, double **r, double **vr, double **vt, do
   (*m)[*N+1]= 0.;
 }
 
+double read_snapshot_time(const char *filename) {
+  FILE *snap;
+  double time;
+
+  snap= fopen(filename, "r");
+  fscanf(snap, "# t=%lf", &time);
+  fclose(snap);
+
+  return (time);
+}
+
+void write_time_to_fits(double time, const char *fitsname) {
+  int status=0, hdunum, hdutype;
+  fitsfile *fptr;
+
+  fits_open_file(&fptr, fitsname, READWRITE, &status);
+  cmc_fits_printerror(status);
+  hdunum=2;
+  fits_movabs_hdu(fptr, hdunum, &hdutype, &status);
+  cmc_fits_printerror(status);
+
+  fits_update_key(fptr, TDOUBLE, "TIME", &time, "time snapshot was taken", &status);
+  cmc_fits_printerror(status);
+
+  fits_close_file(fptr, &status);
+  cmc_fits_printerror(status);
+}
+
+
 int main(int argc, char *argv[]){
 	double *r, *vr, *vt, *m;
-	double rmax=RMAX;
+	double rmax=RMAX, time;
 	double rcr = 1.0/(6.0*(PI/32.0));
 	unsigned long int N=NSTAR, seed=SEED;
 	char filename[1024]; 
@@ -308,9 +338,13 @@ int main(int argc, char *argv[]){
 
         write_output_file(m, r, vr, vt, N, filename);
 
+        time= read_snapshot_time(input);
+        write_time_to_fits(time, filename);
+
 	/*for(i=1; i<=N; i++){
 		printf("%.30e %.30e %.30e\n", 
 				r[i], X[i], calc_M(r[i], rcr, rmax, cms));
 	}*/
 	return 0;
 }
+
