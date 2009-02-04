@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 
 use Math::Trig;
+use List::Util qw[min max];
+
 
 my ($PI, $SIGMA, $LSUN, $RSUN);
 my (@m, @r, @rproj, @vr, @vt, @startype, @L, @rad);
@@ -77,6 +79,10 @@ while ($line = <STDIN>) {
     if ($line !~ /^\#/) {
 	@vals = split(/[\s]+/, $line);
 	
+	#ids
+	push(@id, $vals[0]);
+	push(@id0,$vals[10]);
+	push(@id1, $vals[11]);	
 	# mass in M_sun
 	push(@m, $vals[1]);
 	# radius in parsecs
@@ -145,15 +151,20 @@ sub extracthrdiag {
     $i = 0;
     while ($i < $n) {
 	if ($binflag[$i] == 0) {
-	    $temp = ($L[$i]*$LSUN/(4.0*$PI*($rad[$i]*$RSUN)**2*$SIGMA))**0.25;
-	    printf("%g %g\n", log10($temp), log10($L[$i]));
+		if ($rad[$i]>0.0){
+	    		$temp = ($L[$i]*$LSUN/(4.0*$PI*($rad[$i]*$RSUN)**2*$SIGMA))**0.25;
+	    		printf("%g %g\n",log10($temp), log10($L[$i]));
+		} 
 	} else {
-	    $temp0 = ($binstarlum0[$i]*$LSUN/(4.0*$PI*($binstarrad0[$i]*$RSUN)**2*$SIGMA))**0.25;
-	    $temp1 = ($binstarlum1[$i]*$LSUN/(4.0*$PI*($binstarrad1[$i]*$RSUN)**2*$SIGMA))**0.25;
-	    $lum0 = $binstarlum0[$i];
-	    $lum1 = $binstarlum1[$i];
-	    $temp = ($lum0 * $temp0 + $lum1 * $temp1) / ($lum0 + $lum1);
-	    printf("%g %g\n", log10($temp), log10($lum0+$lum1));
+		if ($binstarrad0[$i]>0.0 && $binstarrad1[$i]>0.0){
+	    		$temp0 = ($binstarlum0[$i]*$LSUN/(4.0*$PI*($binstarrad0[$i]*$RSUN)**2*$SIGMA))**0.25;
+	    		$temp1 = ($binstarlum1[$i]*$LSUN/(4.0*$PI*($binstarrad1[$i]*$RSUN)**2*$SIGMA))**0.25;
+	    		$lum0 = $binstarlum0[$i];
+	    		$lum1 = $binstarlum1[$i];
+	    		$temp = ($lum0 * $temp0 + $lum1 * $temp1) / ($lum0 + $lum1);
+	    		$m_more[$i] = max($binm0[$i],$binm1[$i]);
+	    		printf("%g %g\n",log10($temp), log10($lum0+$lum1));
+		}
 	}
 	$i++;
     }
