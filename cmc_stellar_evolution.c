@@ -288,6 +288,13 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     cp_binmemb_to_star(k, 0, knew);
     cp_binmemb_to_star(k, 1, knewp);
     DMse -= (star[knew].m + star[knewp].m) * madhoc;
+
+    fprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g)\n", 
+	    TotalTime, 
+	    star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
+	    star[knewp].id, star[knewp].m * units.mstar / FB_CONST_MSUN,
+	    star[k].r);
+
     destroy_obj(k);
     /* in this case vs is relative speed between stars at infinity */
     star[knew].vr += star[knewp].m/(star[knew].m+star[knewp].m) * vs[2] * 1.0e5 / (units.l/units.t);
@@ -301,6 +308,14 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     //dprintf("binary disrupted via BSE with first star intact\n");
     knew = create_star();
     cp_binmemb_to_star(k, 0, knew);
+
+    fprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
+	    TotalTime, 
+	    star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
+	    binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
+	    binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
+	    star[k].r);
+
     destroy_obj(k);
     if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
@@ -331,6 +346,14 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     //dprintf("binary disrupted via BSE with second star intact\n");
     knew = create_star();
     cp_binmemb_to_star(k, 1, knew);
+
+    fprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
+	    TotalTime, 
+	    star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
+	    binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
+	    binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
+	    star[k].r);
+    
     destroy_obj(k);
     if (sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));

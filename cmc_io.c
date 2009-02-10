@@ -966,6 +966,15 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	/* print header */
 	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r)\n");
 
+	/* Stellar evolution merger log file */
+	sprintf(outfile, "%s.semergedisrupt.log", outprefix);
+	if ((semergedisruptfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create stellar evolution merger/disruption log file \"%s\".\n", outfile);
+		exit(1);
+	}
+	/* print header */
+	fprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
+
 	/*Sourav: old star removal info file*/
 	sprintf(outfile, "%s.removestar.log", outprefix);
 	if ((removestarfile = fopen(outfile, outfilemode)) == NULL) {
@@ -1028,6 +1037,7 @@ void close_buffers(void)
 	fclose(centmass_file);
 	fclose(escfile);
 	fclose(collisionfile);
+	fclose(semergedisruptfile);
 	fclose(relaxationfile);
 	/*Sourav: closing the file I opened*/
 	fclose(removestarfile);

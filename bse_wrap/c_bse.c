@@ -60,20 +60,20 @@ int main(void)
   
   bse_zcnsts(&z, zpars);
   bse_instar();
-  mass0[0] = 21.0;
-  mass0[1] = 3.0;
+  mass0[0] = 3.0;
+  mass0[1] = 0.7;
   mass[0] = mass0[0];
   mass[1] = mass0[1];
   kw[0] = 1;
   kw[1] = 1;
-  tb = 1.0e3;
-  ecc = 0.1;
+  tb = 1.0e1;
+  ecc = 0.3;
   ospin[0] = 0.0;
   ospin[1] = 0.0;
   epoch[0] = 0.0;
   epoch[1] = 0.0;
   tphys = 0.0;
-  tphysf = 1.0e4;
+  tphysf = 12.0e3;
   dtp = 10.0;
 
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
