@@ -11,7 +11,7 @@ BSEOBJS = bse/comenv.o bse/corerd.o bse/deltat.o \
 	bse/mrenv.o bse/ran3.o bse/rl.o bse/star.o \
 	bse/zcnsts.o bse/zfuncs.o
 
-all: c_sse c_bse
+all: c_sse c_bse popsynth
 
 c_sse: c_sse.o bse_wrap.o $(BSEOBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
@@ -25,6 +25,12 @@ c_bse: c_bse.o bse_wrap.o $(BSEOBJS)
 c_bse.o: c_bse.c bse_wrap.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+popsynth: popsynth.o bse_wrap.o $(BSEOBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
+
+popsynth.o: popsynth.c popsynth.h bse_wrap.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 bse_wrap.o: bse_wrap.c bse_wrap.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -35,6 +41,6 @@ bseclean:
 	rm -f $(BSEOBJS)
 
 localclean:
-	rm -f bse_wrap.o c_sse.o c_sse c_bse.o c_bse
+	rm -f bse_wrap.o c_sse.o c_sse c_bse.o c_bse popsynth.o popsynth
 
 clean: bseclean localclean

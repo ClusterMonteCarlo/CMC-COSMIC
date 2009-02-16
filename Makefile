@@ -27,7 +27,7 @@ all: $(EXE) UTILS CONTRIBS
 
 # peripheral stuff
 $(BSEWRAPDIR)/bse_wrap.o: $(BSEWRAPDIR)/bse_wrap.c $(BSEWRAPDIR)/bse_wrap.h
-	cd $(BSEWRAPDIR) && make && rm -f c_sse c_bse
+	cd $(BSEWRAPDIR) && make && rm -f c_sse c_bse popsynth
 
 libs/fitslib.o: 
 	cd libs && $(MAKE)
