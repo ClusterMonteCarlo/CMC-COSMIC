@@ -18,7 +18,7 @@ int main(void) {
   gsl_rng *rng;
   const gsl_rng_type *rng_type=gsl_rng_mt19937;
   double z=0.03, *zpars, vs[3];
-  double amin, amax, targettphysf, tphysf, dtp;
+  double amin, amax, targettphysf, tphysf, dtp, rlprimovera;
   
   /* initialize GSL rng */
   gsl_rng_env_setup();
@@ -64,6 +64,13 @@ int main(void) {
     binarray[i].id1 = idctr++;
     binarray[i].id2 = idctr++;
 
+    /* zero out some vars */
+    binarray[i].bse_ospin[0] = 0.0;
+    binarray[i].bse_ospin[1] = 0.0;
+    binarray[i].bse_epoch[0] = 0.0;
+    binarray[i].bse_epoch[1] = 0.0;
+    binarray[i].bse_tphys = 0.0;
+
     /* set primary mass from power law */
     X = gsl_rng_uniform(rng);
     mmin = 6.0;
@@ -82,18 +89,39 @@ int main(void) {
     binarray[i].bse_kw[0] = 1;
     binarray[i].bse_kw[1] = 1;
 
-    /* set semimajor axis uniform in log, eccentricity thermal */
-    amin = 100.0;
-    amax = 1.0e5;
-    binarray[i].a = pow(10.0, gsl_rng_uniform(rng)*(log10(amax)-log10(amin))+log10(amin));
-    binarray[i].bse_tb = sqrt(pow(binarray[i].a, 3.0)/(binarray[i].bse_mass0[0]+binarray[i].bse_mass0[1]));
-    binarray[i].e = sqrt(gsl_rng_uniform(rng));
-    
-    binarray[i].bse_ospin[0] = 0.0;
-    binarray[i].bse_ospin[1] = 0.0;
-    binarray[i].bse_epoch[0] = 0.0;
-    binarray[i].bse_epoch[1] = 0.0;
+    /* evolve each star slightly to set radius */
+    dtp = 0.0;
     binarray[i].bse_tphys = 0.0;
+    tphysf = 1.0;
+    bse_evolv1(&(binarray[i].bse_kw[0]), &(binarray[i].bse_mass0[0]), 
+	       &(binarray[i].bse_mass[0]), &(binarray[i].bse_radius[0]), &(binarray[i].bse_lum[0]), 
+	       &(binarray[i].bse_massc[0]), &(binarray[i].bse_radc[0]), 
+	       &(binarray[i].bse_menv[0]), &(binarray[i].bse_renv[0]), 
+	       &(binarray[i].bse_ospin[0]), &(binarray[i].bse_epoch[0]), 
+	       &(binarray[i].bse_tms[0]), 
+	       &binarray[i].bse_tphys, 
+	       &tphysf, &dtp, &z, zpars, vs);
+
+    dtp = 0.0;
+    binarray[i].bse_tphys = 0.0;
+    tphysf = 1.0;
+    bse_evolv1(&(binarray[i].bse_kw[1]), &(binarray[i].bse_mass0[1]), 
+	       &(binarray[i].bse_mass[1]), &(binarray[i].bse_radius[1]), &(binarray[i].bse_lum[1]), 
+	       &(binarray[i].bse_massc[1]), &(binarray[i].bse_radc[1]), 
+	       &(binarray[i].bse_menv[1]), &(binarray[i].bse_renv[1]), 
+	       &(binarray[i].bse_ospin[1]), &(binarray[i].bse_epoch[1]), 
+	       &(binarray[i].bse_tms[1]), 
+	       &binarray[i].bse_tphys, 
+	       &tphysf, &dtp, &z, zpars, vs);
+    
+    /* set semimajor axis uniform in log from primary radius at half Roche lobe to 10^5 R_sun, 
+       eccentricity thermal */
+    rlprimovera = 0.46224 * pow(binarray[i].bse_mass[0]/(binarray[i].bse_mass[0]+binarray[i].bse_mass[1]), 1.0/3.0);
+    amin = 2.0 * binarray[i].bse_radius[0] / rlprimovera * RSUN / AU;
+    amax = 1.0e5 * RSUN / AU;
+    binarray[i].a = pow(10.0, gsl_rng_uniform(rng)*(log10(amax)-log10(amin))+log10(amin));
+    binarray[i].bse_tb = 365.25 * sqrt(pow(binarray[i].a, 3.0)/(binarray[i].bse_mass0[0]+binarray[i].bse_mass0[1]));
+    binarray[i].e = sqrt(gsl_rng_uniform(rng));
   }
 
   /* loop over time */
