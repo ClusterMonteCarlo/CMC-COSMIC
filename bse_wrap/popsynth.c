@@ -188,8 +188,8 @@ void printoutput(int *filectr, binary_t *binarray, double time)
   
   for (i=0; i<NBIN; i++) {
     if ( binarray[i].bse_tb > 0.0 && 
-	 ( (binarray[i].bse_kw[0] >= 10 && binarray[i].bse_kw[0] <= 14) || 
-	   (binarray[i].bse_kw[1] >= 10 && binarray[i].bse_kw[1] <= 14)) &&
+	 ( (binarray[i].bse_kw[0] >= 13 && binarray[i].bse_kw[0] <= 14) || 
+	   (binarray[i].bse_kw[1] >= 13 && binarray[i].bse_kw[1] <= 14)) &&
 	 (binarray[i].bse_bcm_dmdt[0] != 0.0 || binarray[i].bse_bcm_dmdt[1] != 0.0) ) {
       gzprintf(ofp, "%ld %ld %g %g %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", 
 	       binarray[i].id1, binarray[i].id2,
