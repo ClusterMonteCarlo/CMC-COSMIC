@@ -284,6 +284,11 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			vorb = XHS * W;
 			amax = cfd->obj_m[i] / (vorb * vorb);
 			cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
+
+			if (amin >= amax) {
+			  fprintf(stderr, "amin >= amax! amin=%g amax=%g\n", amin, amax);
+			  exit(1);
+			}
 			
 			/* get eccentricity from thermal distribution, truncated near contact */
 			emax = 1.0 - amin / cfd->bs_a[i];
@@ -301,6 +306,12 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			cfd->bs_a[i] = cfd->bs_m1[i] * cfd->bs_m2[i] / (2.0 * Eb);
 			
 			amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
+
+			if (cfd->bs_a[i] <= amin) {
+			  fprintf(stderr, "a<=amin! a=%g amin=%g\n", cfd->bs_a[i], amin);
+			  exit(1);
+			}
+			
 			emax = 1.0 - amin / cfd->bs_a[i];
 			cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
 			/* get eccentricity from thermal distribution */
@@ -312,6 +323,12 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			/* choose a from a distribution uniform in 1/a from near contact to 50 AU */
 			amin = 2.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 			amax = 50.0 * AU / (cfd->Rvir * PARSEC);
+
+			if (amin >= amax) {
+			  fprintf(stderr, "amin >= amax! amin=%g amax=%g\n", amin, amax);
+			  exit(1);
+			}
+
 			cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
 			
 			/* get eccentricity from thermal distribution, truncated near contact */
