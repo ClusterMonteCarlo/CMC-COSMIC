@@ -76,7 +76,7 @@
 *           WRITE(66,*)' GNTAGE6: changed to 4'
          else
             CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
-            aj = tscls(13)
+            aj = tscls(13) + 2.d0*tiny
          endif
       endif
 *
@@ -91,7 +91,7 @@
 *           WRITE(66,*)' GNTAGE5: changed to 4'
          else
             CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
-            aj = tscls(2) + tscls(3)
+            aj = tscls(2) + tscls(3) + 2.d0*tiny
          endif
       endif
 *

@@ -1198,7 +1198,7 @@
 * Check for planets or low-mass WDs.
 *
             if((kstar(j2).eq.10.and.mass(j2).lt.0.05d0).or.
-     &         (kstar(j2).ge.11.and.mass(j2).lt.0.5d0))then
+     &         (kstar(j2).ge.11.and.mass(j2).lt.0.1d0))then
                kst = kstar(j1)
                mass(j1) = mass(j2) + dm2
                mass(j2) = 0.d0

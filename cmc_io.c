@@ -362,6 +362,9 @@ void PrintFileOutput(void) {
 	if (TotalTime >= SNAPSHOT_DELTAT * StepCount) {
 		StepCount++;
 		print_2Dsnapshot();
+		if (WRITE_STELLAR_INFO){
+			write_stellar_data();	
+		}
 	}
 }
 
