@@ -38,7 +38,8 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  -l --limits <limits algorithm> : algorithm for setting limits on binary semimajor axes (0=physical, 1=kT prescription, 2=M67 model of Hurley, et al. (2005)) [%d]\n", LIMITS);
 	fprintf(stream, "  -m --Ebmin <E_b,min>           : minimum binding energy, in kT [%g]\n", EBMIN);
 	fprintf(stream, "  -M --Ebmax <E_b,max>           : maximum binding energy, in kT [%g]\n", EBMAX);
-	fprintf(stream, "  -s --seed <seed>               : random seed [%ld]\n", SEED);
+	fprintf(stream, "  -I --ignoreradii               : ignore radii when setting binary properties\n");
+	fprintf(stream, "  -s --seed <seed>               : random seed [%ld]\n", SEED);	
 	fprintf(stream, "  -h --help                      : display this help text\n");
 }
 
@@ -85,7 +86,7 @@ void addbin_calc_sigma_r(cmc_fits_data_t *cfd, double *r, double *sigma, double 
 	}
 }
 
-void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT, double EbmaxkT)
+void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT, double EbmaxkT, int ignoreradii)
 {
 	long i, j;
 	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew;
@@ -283,15 +284,19 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			W = 4.0 * vcore / sqrt(3.0 * PI);
 			vorb = XHS * W;
 			amax = cfd->obj_m[i] / (vorb * vorb);
+			if (amax <= amin && ignoreradii == 0) {
+			  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
+			  fprintf(stderr, "WARNING: setting amax = amin\n");
+			  amax = amin;
+			}
 			cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
 
-			if (amin >= amax) {
-			  fprintf(stderr, "amin >= amax! amin=%g amax=%g\n", amin, amax);
-			  exit(1);
-			}
-			
 			/* get eccentricity from thermal distribution, truncated near contact */
-			emax = 1.0 - amin / cfd->bs_a[i];
+			if (ignoreradii == 0) {
+			  emax = 1.0 - amin / cfd->bs_a[i];
+			} else {
+			  emax = 1.0;
+			}
 			cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
 		}
 	} else if (limits == 1) {
@@ -307,12 +312,17 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			
 			amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 
-			if (cfd->bs_a[i] <= amin) {
-			  fprintf(stderr, "a<=amin! a=%g amin=%g\n", cfd->bs_a[i], amin);
-			  exit(1);
+			if (cfd->bs_a[i] <= amin && ignoreradii == 0) {
+			  fprintf(stderr, "WARNING: a <= amin! amax=%g amin=%g\n", cfd->bs_a[i], amin);
+			  fprintf(stderr, "WARNING: setting a = amin\n");
+			  cfd->bs_a[i] = amin;
 			}
 			
-			emax = 1.0 - amin / cfd->bs_a[i];
+			if (ignoreradii == 0) {
+			  emax = 1.0 - amin / cfd->bs_a[i];
+			} else {
+			  emax = 1.0;
+			}
 			cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
 			/* get eccentricity from thermal distribution */
 			/* cfd->bs_e[i] = sqrt(rng_t113_dbl()); */
@@ -324,15 +334,20 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			amin = 2.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 			amax = 50.0 * AU / (cfd->Rvir * PARSEC);
 
-			if (amin >= amax) {
-			  fprintf(stderr, "amin >= amax! amin=%g amax=%g\n", amin, amax);
-			  exit(1);
+			if (amax <= amin && ignoreradii == 0) {
+			  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
+			  fprintf(stderr, "WARNING: setting amax = amin\n");
+			  amax = amin;
 			}
 
 			cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
 			
 			/* get eccentricity from thermal distribution, truncated near contact */
-			emax = 1.0 - amin / cfd->bs_a[i];
+			if (ignoreradii == 0) {
+			  emax = 1.0 - amin / cfd->bs_a[i];
+			} else {
+			  emax = 1.0;
+			}
 			cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
 		}
 	} else {
@@ -346,13 +361,13 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 }
 
 int main(int argc, char *argv[]){
-	int i, limits;
+        int i, limits, ignoreradii;
 	long Nbin;
 	unsigned long seed;
 	double Ebmin, Ebmax;
 	cmc_fits_data_t cfd;
 	char infilename[1024], outfilename[1024];
-	const char *short_opts = "i:o:N:l:m:M:s:h";
+	const char *short_opts = "i:o:N:l:m:M:Is:h";
 	const struct option long_opts[] = {
 		{"infile", required_argument, NULL, 'i'},
 		{"outfile", required_argument, NULL, 'o'},
@@ -360,6 +375,7 @@ int main(int argc, char *argv[]){
 		{"limits", required_argument, NULL, 'l'},
 		{"Ebmin", required_argument, NULL, 'm'},
 		{"Ebmax", required_argument, NULL, 'M'},
+		{"ignoreradii", no_argument, NULL, 'I'},
 		{"seed", required_argument, NULL, 's'},
 		{"help", no_argument, NULL, 'h'},
 		{NULL, 0, NULL, 0}
@@ -372,6 +388,7 @@ int main(int argc, char *argv[]){
 	limits = LIMITS;
 	Ebmin = EBMIN;
 	Ebmax = EBMAX;
+	ignoreradii = 0;
 	seed = SEED;
 
 	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
@@ -406,6 +423,9 @@ int main(int argc, char *argv[]){
 				exit(1);
 			}
 			break;
+		case 'I':
+		        ignoreradii = 1;
+			break;
 		case 's':
 			seed = strtol(optarg, NULL, 10);
 			break;
@@ -429,7 +449,7 @@ int main(int argc, char *argv[]){
 
 	METALLICITY = cfd.Z;
 
-	assign_binaries(&cfd, Nbin, limits, Ebmin, Ebmax);
+	assign_binaries(&cfd, Nbin, limits, Ebmin, Ebmax, ignoreradii);
 
 	cmc_write_fits_file(&cfd, outfilename);
 
