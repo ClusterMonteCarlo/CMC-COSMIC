@@ -25,6 +25,17 @@ double *zpars, METALLICITY, WIND_FACTOR=1.0;
 /* global variable for new star id */
 long newstarid;
 
+/* return roche lobe radius (as fraction of semimajor axis) for object 1 */
+double roche(double m1, double m2)
+{
+  /* Paczynski (1971) [1971ARA&A...9..183P] */
+  if (m1/m2 > 0.523) {
+    return(0.38 + 0.2 * log10(m1/m2));
+  } else {
+    return(2.0/pow(3.0, 4.0/3.0) * pow(m1/(m1+m2), 1.0/3.0));
+  }
+}
+
 /* print the usage */
 void print_usage(FILE *stream)
 {
@@ -35,7 +46,7 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  -i --infile <infile>           : input file [%s]\n", INFILE);
 	fprintf(stream, "  -o --outfile <outfile>         : output file [%s]\n", OUTFILE);
 	fprintf(stream, "  -N --Nbin <N_bin>              : number of binaries [%ld]\n", NBIN);
-	fprintf(stream, "  -l --limits <limits algorithm> : algorithm for setting limits on binary semimajor axes (0=physical, 1=kT prescription, 2=M67 model of Hurley, et al. (2005)) [%d]\n", LIMITS);
+	fprintf(stream, "  -l --limits <limits algorithm> : algorithm for setting limits on binary semimajor axes (0=physical, 1=kT prescription, 2=M67 model of Hurley, et al. (2005), 3=Ivanova, et al. (2005)) [%d]\n", LIMITS);
 	fprintf(stream, "  -m --Ebmin <E_b,min>           : minimum binding energy, in kT [%g]\n", EBMIN);
 	fprintf(stream, "  -M --Ebmax <E_b,max>           : maximum binding energy, in kT [%g]\n", EBMAX);
 	fprintf(stream, "  -I --ignoreradii               : ignore radii when setting binary properties\n");
@@ -89,9 +100,9 @@ void addbin_calc_sigma_r(cmc_fits_data_t *cfd, double *r, double *sigma, double 
 void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT, double EbmaxkT, int ignoreradii)
 {
 	long i, j;
-	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew;
-	double kTcore, vcore, Eb, Ebmin, Ebmax;
-	double frac, *r, *sigma, *mave, dtp, tphysf;
+	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew, aminroche;
+	double kTcore, vcore, Eb, Ebmin, Ebmax, timeunitcgs;
+	double *r, *sigma, *mave, dtp, tphysf;
 	star_t star;
 	double vs[3];
 
@@ -343,6 +354,34 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
 			
 			/* get eccentricity from thermal distribution, truncated near contact */
+			if (ignoreradii == 0) {
+			  emax = 1.0 - amin / cfd->bs_a[i];
+			} else {
+			  emax = 1.0;
+			}
+			cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
+		}
+	} else if (limits == 3) {
+		/* assign binaries in the same way as in Ivanova, et al. (2005), with many soft binaries */
+	        timeunitcgs = pow(cfd->Rvir * PARSEC, 1.5) / sqrt(G * cfd->Mclus * MSUN);
+		fprintf(stderr, "rvir=%g PC mclus=%g MSUN nbtime=%g YR\n", cfd->Rvir, cfd->Mclus, timeunitcgs/YEAR);
+		for (i=1; i<=cfd->NBINARY; i++) {
+			/* choose period from 0.1 d to 10^7 d, subject to roche-lobe limits */
+		        aminroche = MAX(cfd->bs_Reff1[i] / roche(cfd->bs_m1[i], cfd->bs_m2[i]), 
+					cfd->bs_Reff2[i] / roche(cfd->bs_m2[i], cfd->bs_m1[i]));
+		        amin = MAX(pow((0.1/365.25*YEAR/timeunitcgs)*(0.1/365.25*YEAR/timeunitcgs)*(cfd->bs_m1[i]+cfd->bs_m2[i])/(4.0*PI*PI), 1.0/3.0), 
+				   aminroche);
+			amax = pow((1.0e7/365.25*YEAR/timeunitcgs)*(1.0e7/365.25*YEAR/timeunitcgs)*(cfd->bs_m1[i]+cfd->bs_m2[i])/(4.0*PI*PI), 1.0/3.0);
+
+			if (amax <= amin && ignoreradii == 0) {
+			  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
+			  fprintf(stderr, "WARNING: setting amax = amin\n");
+			  amax = amin;
+			}
+
+			cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
+			
+			/* get eccentricity from thermal distribution, truncated at high end */
 			if (ignoreradii == 0) {
 			  emax = 1.0 - amin / cfd->bs_a[i];
 			} else {
