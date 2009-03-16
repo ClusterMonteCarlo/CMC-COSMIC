@@ -16,7 +16,7 @@ _EXTERN_ double max_r, Rtidal, TidalMassLoss, orbit_r;
 _EXTERN_ double OldTidalMassLoss, DTidalMassLoss, Prev_Dt, Etidal; 
 _EXTERN_ double clus_gal_mass_ratio, dist_gal_center;
 /* core variables */
-_EXTERN_ double N_core, Trc, rho_core, v_core, core_radius, rc_nb;
+_EXTERN_ double N_core, N_core_nb, Trc, rho_core, v_core, core_radius, rc_nb;
 /* escaped stars */
 _EXTERN_ double Eescaped, Jescaped, Eintescaped, Ebescaped;
 /* total mass & co */

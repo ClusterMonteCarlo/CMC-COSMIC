@@ -175,8 +175,8 @@ void PrintLogOutput(void)
 }
 
 void PrintFileOutput(void) {
-	long i, j, n_single, n_binary;
-	double fb, fb_core;
+	long i, j, n_single, n_binary, n_single_nb, n_binary_nb, N_core_binary, N_core_binary_nb;
+	double fb, fb_core, fb_core_nb;
 	int *multimassr_empty  = (int *) malloc((NO_MASS_BINS-1)*sizeof(int));
 
 	/* print useful headers */
@@ -295,12 +295,12 @@ void PrintFileOutput(void) {
 	/* print useful header */
 	if (tcount == 1) {
 		fprintf(dynfile, "# Dynamical information [code units]\n");
-		fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN)\n");
+		fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN) #28.N_c_nb\n");
 	}
-	fprintf(dynfile, "%.8g %.8g %ld %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
+	fprintf(dynfile, "%.8g %.8g %ld %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
 		TotalTime, Dt, tcount, clus.N_MAX, Mtotal, -2.0*Etotal.K/Etotal.P, N_core, core_radius, max_r, 
 		Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped, 
-		Eoops, Etotal.tot+Eoops, clusdyn.rh, central.rho, central.rc_spitzer, central.v_rms, rc_nb, DMse*units.m/MSUN, DMrejuv*units.m/MSUN);
+		Eoops, Etotal.tot+Eoops, clusdyn.rh, central.rho, central.rc_spitzer, central.v_rms, rc_nb, DMse*units.m/MSUN, DMrejuv*units.m/MSUN, N_core_nb);
 	
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
 	   whereas N_b only counts EXISTING BOUND binaries. */
@@ -308,6 +308,9 @@ void PrintFileOutput(void) {
 		/* calculate core binary fraction */
 		n_single = 0;
 		n_binary = 0;
+		//Sourav:initialize nb core properties
+		n_single_nb = 0;
+		n_binary_nb = 0;
 		for (i=1; star[i].r<=core_radius; i++) {
 			if (star[i].binind > 0) {
 				n_binary++;
@@ -315,11 +318,30 @@ void PrintFileOutput(void) {
 				n_single++;
 			}
 		}
+		N_core_binary = n_binary;
+
+		//Sourav:calculate n_sing and n_bin for nb core
+		for (i=1; star[i].r<=rc_nb; i++) {
+			if (star[i].binind > 0) {
+				n_binary_nb++;
+			} else {
+				n_single_nb++;
+			}
+		}
+		N_core_binary_nb = n_binary_nb;
+
 		/* this is such a kludge: core_radius is not initialized on the first timestep */
 		if (n_single + n_binary == 0) {
 			fb_core = 0.0;
 		} else {
 			fb_core = ((double) n_binary)/((double) (n_single + n_binary));
+		}
+
+		//calculate the same for nb core
+		if (n_single_nb + n_binary_nb == 0) {
+			fb_core = 0.0;
+		} else {
+			fb_core_nb = ((double) n_binary_nb)/((double) (n_single_nb + n_binary_nb));
 		}
 		
 		/* calculate overall binary fraction */
@@ -342,15 +364,15 @@ void PrintFileOutput(void) {
 		/* print useful header */
 		if (tcount == 1) {
 			fprintf(binaryfile, "# Binary information [code units]\n");
-			fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs\n");
+			fprintf(binaryfile, "# 1:t 2:N_b 3.N_bc 4:M_b 5:E_b 6:r_h,s 7:r_h,b 8:rho_c,s 9:rho_c,b 10:N_bb 11:N_bs 12:f_b,c 13:f_b 14:E_bb 15:E_bs 16:DE_bb 17:DE_bs 18:N_bc,nb 19:f_b,c,nb\n");
 		}
 		/* print data */
 		fprintf(binaryfile,
-			"%.6g %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g\n",
-			TotalTime, N_b, M_b, E_b, rh_single, 
+			"%.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %.8g\n",
+			TotalTime, N_b, N_core_binary, M_b, E_b, rh_single, 
 			rh_binary, rho_core_single, rho_core_bin, 
 			N_bb, N_bs, fb_core, 
-			fb, E_bb, E_bs, DE_bb, DE_bs);
+			fb, E_bb, E_bs, DE_bb, DE_bs, N_core_binary_nb, fb_core_nb);
 	}
 
         if (WRITE_EXTRA_CORE_INFO) {
