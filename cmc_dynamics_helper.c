@@ -1151,7 +1151,7 @@ double simul_relax(gsl_rng *rng)
 void break_wide_binaries(void)
 {
 	long j, k, knew, knewp;
-	double W, vorb, Eexcess=0.0, exc_ratio;
+	double W, vorb, Eexcess=0.0, exc_ratio, nlocal, llocal;
 	
 	for (k=1; k<=clus.N_MAX_NEW; k++) {
 		if (star[k].binind) {
@@ -1164,10 +1164,15 @@ void break_wide_binaries(void)
 			/* this is an order of magnitude estimate for the orbital speed */
 			vorb = sqrt(star[k].m * madhoc / binary[j].a);
 
+			nlocal = calc_n_local(k, AVEKERNEL, clus.N_MAX);
+			llocal = 0.1 * pow(nlocal, -1.0/3.0);
+
 			/* Destroy binary if its orbital speed is less than some fraction of the 
 			   local relative velocity. */
-			if (vorb <= XHS*W) {
-				//dprintf("breaking wide binary: vorb=%g W=%g\n", vorb, W);
+			/* if (vorb <= XHS*W) {*/
+			/* break if apocenter is larger than interparticle separation */
+			if (binary[j].a*(1.0+binary[j].e) >= llocal) {
+				dprintf("breaking wide binary: vorb=%g W=%g\n", vorb, W);
 				
 				Eexcess += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 
