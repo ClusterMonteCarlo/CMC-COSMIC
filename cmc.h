@@ -269,6 +269,8 @@ typedef struct{
         int WRITE_RWALK_INFO;
 #define PARAMDOC_WRITE_EXTRA_CORE_INFO "Write out information about cores that are defined differently from the standard (0=off, 1=on)"
         int WRITE_EXTRA_CORE_INFO;
+#define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"
+        int CALCULATE10;
 #define PARAMDOC_OVERWRITE_RVIR "Instead of reading the virial radius from the fits file use this value [pc]"
         int OVERWRITE_RVIR;
 #define PARAMDOC_OVERWRITE_Z "Instead of reading the metallicity from the fits file use this value"

@@ -928,7 +928,7 @@ void central_calculate(void)
 	/* set global variables that are used throughout the code */
 	rho_core_single = central.rho_sin;
 	rho_core_bin = central.rho_bin;
-
+	
 	free(rhoj);
 }
 

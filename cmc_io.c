@@ -175,8 +175,8 @@ void PrintLogOutput(void)
 }
 
 void PrintFileOutput(void) {
-	long i, j, n_single, n_binary, n_single_nb, n_binary_nb, N_core_binary, N_core_binary_nb;
-	double fb, fb_core, fb_core_nb;
+	long i, j, n_single, n_binary, n_single_nb, n_binary_nb, N_core_binary, N_core_binary_nb, n_10=1, n_sing_10=0, n_bin_10=0;
+	double fb, fb_core, fb_core_nb, m_sing_10=0.0, m_bin_10=0.0, m_10=0.0, r_10=0.0, rho_10=0.0;
 	int *multimassr_empty  = (int *) malloc((NO_MASS_BINS-1)*sizeof(int));
 
 	/* print useful headers */
@@ -296,12 +296,47 @@ void PrintFileOutput(void) {
 	if (tcount == 1) {
 		fprintf(dynfile, "# Dynamical information [code units]\n");
 		fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN) #28.N_c_nb\n");
+		//Sourav:printing properties at 10 lagrange radii
+		if (CALCULATE10){
+			fprintf(lagrad10file, "#Dynamical information at 0.1 lagrange radius\n");
+			fprintf(lagrad10file, "#1.t #2.Dt #3.tcount #4.N_10 #5.M_10 #6.N_s,10 #7.M_s,10 #8.N_b,10 #9.M_b_10 #10.r_10 #11.rho_10\n");
+		}
 	}
 	fprintf(dynfile, "%.8g %.8g %ld %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
 		TotalTime, Dt, tcount, clus.N_MAX, Mtotal, -2.0*Etotal.K/Etotal.P, N_core, core_radius, max_r, 
 		Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped, 
 		Eoops, Etotal.tot+Eoops, clusdyn.rh, central.rho, central.rc_spitzer, central.v_rms, rc_nb, DMse*units.m/MSUN, DMrejuv*units.m/MSUN, N_core_nb);
-	
+
+	//Sourav: printing properties at 10% lagrange radius
+	if (CALCULATE10){
+		n_10=1;
+		m_bin_10 = 0.0;
+		m_sing_10 = 0.0;
+		m_10 = 0.0;
+		while (m_10 < 0.1 * Mtotal) {
+			m_10 += star[n_10].m / clus.N_STAR;
+			if (star[n_10].binind>0){
+				n_bin_10++;
+				m_bin_10 += star[n_10].m / clus.N_STAR;
+			}
+			else{
+				n_sing_10++;
+				m_sing_10 += star[n_10].m / clus.N_STAR;
+			}
+			n_10++;
+		}
+		/* exit if not enough stars */
+		if (n_10 <= 6 || n_10 >= clus.N_STAR-6) {
+			eprintf("clus.N_STAR <= 2*J || n_10 >= clus.N_STAR-6\n");
+			exit_cleanly(-1);
+		}
+		else{
+			r_10=star[n_10].r;
+			rho_10 = m_10/(4.0 * 3.0 * PI * fb_cub(r_10));	
+		}
+		fprintf(lagrad10file, "%.8g %.8g %.ld %ld %.8g %ld %.8g %ld %.8g %.8g %.8g\n",
+					TotalTime, Dt, tcount, n_10, m_10, n_sing_10, m_sing_10, n_bin_10, m_bin_10, r_10, rho_10);
+	}
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
 	   whereas N_b only counts EXISTING BOUND binaries. */
 	if (clus.N_BINARY > 0) {
@@ -339,7 +374,7 @@ void PrintFileOutput(void) {
 
 		//calculate the same for nb core
 		if (n_single_nb + n_binary_nb == 0) {
-			fb_core = 0.0;
+			fb_core_nb = 0.0;
 		} else {
 			fb_core_nb = ((double) n_binary_nb)/((double) (n_single_nb + n_binary_nb));
 		}
@@ -707,6 +742,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_WRITE_EXTRA_CORE_INFO);
 				sscanf(values, "%i", &WRITE_EXTRA_CORE_INFO);
 				parsed.WRITE_EXTRA_CORE_INFO = 1;
+			} else if (strcmp(parameter_name, "CALCULATE10")== 0) {
+				PRINT_PARSED(PARAMDOC_CALCULATE10);
+				sscanf(values, "%i", &CALCULATE10);
+				parsed.CALCULATE10 = 1;
 			} else if (strcmp(parameter_name, "OVERWRITE_RVIR")== 0) {
 				PRINT_PARSED(PARAMDOC_OVERWRITE_RVIR);
 				sscanf(values, "%lf", &OVERWRITE_RVIR);
@@ -763,6 +802,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(WRITE_STELLAR_INFO, 0, PARAMDOC_WRITE_STELLAR_INFO);
         CHECK_PARSED(WRITE_RWALK_INFO, 0, PARAMDOC_WRITE_RWALK_INFO);
         CHECK_PARSED(WRITE_EXTRA_CORE_INFO, 0, PARAMDOC_WRITE_EXTRA_CORE_INFO);
+	CHECK_PARSED(CALCULATE10, 0, PARAMDOC_CALCULATE10);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
@@ -909,6 +949,12 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
+	//Sourav:new file containing info at 10% lagrange radius
+	sprintf(outfile, "%s.lagrad_10_info.dat", outprefix);
+	if ((lagrad10file = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create output file \"%s\".\n", outfile);
+		exit(1);
+	}
 	sprintf(outfile, "%s.avemass_lagrad.dat", outprefix);
 	if ((ave_mass_file = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
@@ -1051,6 +1097,7 @@ void close_buffers(void)
 
 	fclose(lagradfile);
 	fclose(dynfile);
+	fclose(lagrad10file);
 	fclose(logfile);
 	fclose(ave_mass_file);
 	fclose(no_star_file);

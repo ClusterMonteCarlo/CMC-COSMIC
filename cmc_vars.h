@@ -46,7 +46,7 @@ _EXTERN_ long N_b, N_bb, N_bs;
 _EXTERN_ double M_b, E_b;
 _EXTERN_ binary_t *binary;
 /* file pointers */
-_EXTERN_ FILE *lagradfile, *dynfile, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
+_EXTERN_ FILE *lagradfile, *dynfile, *lagrad10file, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
 _EXTERN_ FILE *binaryfile, *binintfile, *collisionfile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
@@ -104,6 +104,8 @@ _EXTERN_ double CIRC_PERIOD_THRESHOLD;
 _EXTERN_ int WRITE_STELLAR_INFO;
 _EXTERN_ int WRITE_RWALK_INFO;
 _EXTERN_ int WRITE_EXTRA_CORE_INFO;
+_EXTERN_ int CALCULATE10;
+
 #ifdef EXPERIMENTAL
 /* scale the square of the deflection angle used for testing of entry into the loss 
  * cone by Trel*BH_LC_FDT/dt 
