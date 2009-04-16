@@ -3,7 +3,6 @@
 use Math::Trig;
 use List::Util qw[min max];
 
-
 my ($PI, $SIGMA, $LSUN, $RSUN);
 my (@m, @r, @rproj, @vr, @vt, @startype, @L, @rad);
 my (@binflag, @binm0, @binm1, @binstartype0, @binstartype1, @binstarlum0, @binstarlum1, @binstarrad0, @binstarrad1);
@@ -18,6 +17,28 @@ $RSUN = 69599000000.0;
 sub log10 {
     my $inval = shift(@_);
     return(log($inval)/log(10.0));
+}
+
+# minimum of two quantities
+sub mymin {
+    my $x = shift(@_);
+    my $y = shift(@_);
+    if ($x <= $y) {
+	return($x);
+    } else {
+	return($y);
+    }
+}
+
+# maximum of two quantities
+sub mymax {
+    my $x = shift(@_);
+    my $y = shift(@_);
+    if ($x >= $y) {
+	return($x);
+    } else {
+	return($y);
+    }
 }
 
 # the usage
@@ -37,6 +58,10 @@ $usage =
     extractwd2dvrms <p> <L_min/L_sun> <L_max/L_sun>
       extract 3D velocity dispersion as a function of projected radius in
       cluster for single WDs, averaging over p WDs for each data point
+    extractobsbinfrac <q_crit> <r_min> <r_max>
+      extract observable binary fraction, estimated as fraction of MS-MS
+      binaries with q>q_crit, for cluster overall, and within r_min<r_r_max,
+      where r is in parsecs
 Note that the out.conv.sh filename must be supplied for physical parameters, and
 that the snapshot file must be fed as STDIN to this script.
 ";
@@ -287,6 +312,50 @@ sub extractwd2dvrms {
     }
 }
 
+# extract observed binary fraction
+sub extractobsbinfrac {
+    # wrong number of arguments?
+    if ($#ARGV+1 != 5) {
+	die("$usage");
+    }
+    
+    $qcrit = $ARGV[2];
+    $rmin = $ARGV[3];
+    $rmax = $ARGV[4];
+
+    $i=0;
+    $nbin = 0;
+    $nbinobs = 0;
+    $nrad = 0;
+    $nbinrad = 0;
+    $nbinobsrad = 0;
+    while ($i < $n) {
+	if ($r[$i] < $rmax && $r[$i] > $rmin) {
+	    $nrad++;
+	}
+	if ($binflag[$i] == 1) {
+	    $nbin++;
+	    if ($r[$i] < $rmax && $r[$i] > $rmin) {
+		$nbinrad++;
+	    }
+	    if (($binstartype0[$i] == 0 || $binstartype0[$i] == 1) 
+		&& ($binstartype1[$i] == 0 || $binstartype1[$i] == 1)) {
+		$q = mymin($binm0[$i], $binm1[$i])/mymax($binm0[$i], $binm1[$i]);
+		if ($q >= $qcrit) {
+		    $nbinobs++;
+		    if ($r[$i] < $rmax && $r[$i] > $rmin) {
+			$nbinobsrad++;
+		    }
+		}
+	    }
+	}
+	$i++;
+    }
+    
+    printf("total cluster: f_b=%g+/-%g f_b,obs=%g+/-%g\n", $nbin/$n, sqrt($nbin)/$n, $nbinobs/$n, sqrt($nbinobs)/$n);
+    printf("r_min<r<r_max: f_b=%g+/-%g f_b,obs=%g+/-%g\n", $nbinrad/$nrad, sqrt($nbinrad)/$nrad, $nbinobsrad/$nrad, sqrt($nbinobsrad)/$nrad);
+}
+
 # the main attraction
 if ($commandname =~ /^extractwds$/) {
     extractwds();
@@ -298,8 +367,8 @@ if ($commandname =~ /^extractwds$/) {
     extract2dvrms();
 } elsif ($commandname =~ /^extractwd2dvrms$/) {
     extractwd2dvrms();
+} elsif ($commandname =~ /^extractobsbinfrac$/) {
+    extractobsbinfrac();
 } else {
     die("$usage");
 }
-
-
