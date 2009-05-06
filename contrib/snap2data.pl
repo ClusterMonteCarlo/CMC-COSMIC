@@ -4,7 +4,7 @@ use Math::Trig;
 use List::Util qw[min max];
 
 my ($PI, $SIGMA, $LSUN, $RSUN);
-my (@m, @r, @rproj, @vr, @vt, @startype, @L, @rad);
+my (@m, @r, @rproj, @vr, @vt, @startype, @L, @rad, @id, @id0, @id1);
 my (@binflag, @binm0, @binm1, @binstartype0, @binstartype1, @binstarlum0, @binstarlum1, @binstarrad0, @binstarrad1);
 
 # some physical constants
@@ -59,9 +59,10 @@ $usage =
       extract 3D velocity dispersion as a function of projected radius in
       cluster for single WDs, averaging over p WDs for each data point
     extractobsbinfrac <q_crit> <r_min> <r_max>
-      extract observable binary fraction, estimated as fraction of MS-MS
-      binaries with q>q_crit, for cluster overall, and within r_min<r_r_max,
-      where r is in parsecs
+      extract observable binary fraction, estimated as number of MS-MS
+      binaries with q>q_crit relative to number of stars appearing on or near MS, 
+      for cluster overall, within r_min<r<r_max (with r in parsecs), and within
+      the 10% Lagrange radius
 Note that the out.conv.sh filename must be supplied for physical parameters, and
 that the snapshot file must be fed as STDIN to this script.
 ";
@@ -74,9 +75,10 @@ if ($#ARGV+1 < 2) {
 $convfile = $ARGV[0];
 $commandname = $ARGV[1];
 
-# parse conv file some physical parameters
+# parse conv file for some physical parameters
 $lengthunitparsec = 0.0;
 $lengthunitcgs = 0.0;
+$massunitcgs = 0.0;
 $nbtimeunitcgs = 0.0;
 open(FP, "$convfile") or die("Can't open \"$convfile\" for reading.\n");
 while ($line = <FP>) {
@@ -88,6 +90,8 @@ while ($line = <FP>) {
 		$lengthunitparsec = $value;
 	    } elsif ($token =~ /^lengthunitcgs$/) {
 		$lengthunitcgs = $value;
+	    } elsif ($token =~ /^massunitcgs$/) {
+		$massunitcgs = $value;
 	    } elsif ($token =~ /^nbtimeunitcgs$/) {
 		$nbtimeunitcgs = $value;
 	    }
@@ -95,8 +99,12 @@ while ($line = <FP>) {
     }
 }
 close(FP);
-if ($lengthunitparsec == 0.0 || $lengthunitcgs == 0.0 || $nbtimeunitcgs == 0.0) {
+
+if ($lengthunitparsec == 0.0 || $lengthunitcgs == 0.0 || $massunitcgs == 0.0) {
     die("Couldn't set all physical parameter values from \"$convfile\".\n");
+}
+if ($nbtimeunitcgs == 0.0) {
+    $nbtimeunitcgs = $lengthunitcgs**1.5 / sqrt(6.67259e-08 * $massunitcgs);
 }
 
 # read in snapfile
@@ -168,6 +176,8 @@ sub extractwds {
 }
 # extract HR diagram
 sub extracthrdiag {
+    my @m_more;
+    
     # wrong number of arguments?
     if ($#ARGV+1 != 2) {
 	die("$usage");
@@ -323,37 +333,188 @@ sub extractobsbinfrac {
     $rmin = $ARGV[3];
     $rmax = $ARGV[4];
 
-    $i=0;
-    $nbin = 0;
-    $nbinobs = 0;
-    $nrad = 0;
-    $nbinrad = 0;
-    $nbinobsrad = 0;
+    # first calculate total cluster mass
+    $mtotal = 0.0;
+    $i = 0;
     while ($i < $n) {
-	if ($r[$i] < $rmax && $r[$i] > $rmin) {
-	    $nrad++;
-	}
+	$mtotal += $m[$i];
+	$i++;
+    }
+
+    # calculate binary fractions for whole cluster
+    $i = 0;
+    $mcount = 0.0;
+    $nbin = 0;
+    $ntot = 0;
+    $nbinobs = 0;
+    $ntotobs = 0;
+    while ($i < $n) {
 	if ($binflag[$i] == 1) {
 	    $nbin++;
-	    if ($r[$i] < $rmax && $r[$i] > $rmin) {
-		$nbinrad++;
-	    }
-	    if (($binstartype0[$i] == 0 || $binstartype0[$i] == 1) 
-		&& ($binstartype1[$i] == 0 || $binstartype1[$i] == 1)) {
+	    # a binary with a large enough mass ratio gets counted as a binary
+	    if (($binstartype0[$i] == 0 || $binstartype0[$i] == 1) && ($binstartype1[$i] == 0 || $binstartype1[$i] == 1)) {
+		$ntotobs++;
 		$q = mymin($binm0[$i], $binm1[$i])/mymax($binm0[$i], $binm1[$i]);
 		if ($q >= $qcrit) {
 		    $nbinobs++;
-		    if ($r[$i] < $rmax && $r[$i] > $rmin) {
-			$nbinobsrad++;
-		    }
 		}
 	    }
+	    # a MS-compact object binary gets counted as a single MS object if it's not too far away from the MS
+	    if ( (($binstartype0[$i] == 0 || $binstartype0[$i] == 1) && $binstartype1[$i] >= 10) ||
+		 (($binstartype1[$i] == 0 || $binstartype1[$i] == 1) && $binstartype0[$i] >= 10) ) {
+		# check for special zero radius case
+		if ($binstarrad0[$i] != 0.0) {
+		    $temp0 = ($binstarlum0[$i]*$LSUN/(4.0*$PI*($binstarrad0[$i]*$RSUN)**2*$SIGMA))**0.25;
+		} else {
+		    $temp0 = 0.0;
+		}
+		$lum0 = $binstarlum0[$i];
+		if ($binstarrad1[$i] != 0.0) {
+		    $temp1 = ($binstarlum1[$i]*$LSUN/(4.0*$PI*($binstarrad1[$i]*$RSUN)**2*$SIGMA))**0.25;
+		} else {
+		    $temp1 = 0.0;
+		}
+		$lum1 = $binstarlum1[$i];
+		$temp = ($lum0 * $temp0 + $lum1 * $temp1) / ($lum0 + $lum1);
+		$lum = $lum0 + $lum1;
+		if ($binstartype0[$i] == 0 || $binstartype0[$i] == 1) {
+		    $reftemp = $temp0;
+		    $reflum = $lum0;
+		} else {
+		    $reftemp = $temp1;
+		    $reflum = $lum1;
+		}
+		if (2.0*abs($temp-$reftemp)/($temp+$reftemp) <= 0.1 &&
+		    2.0*abs($lum-$reflum)/($lum+$reflum) <= 0.1) {
+		    $ntotobs++;
+		}
+	    }
+	} else {
+	    if ($startype[$i] == 0 || $startype[$i] == 1) {
+		$ntotobs++;
+	    }
 	}
+	$ntot++;
 	$i++;
     }
-    
-    printf("total cluster: f_b=%g+/-%g f_b,obs=%g+/-%g\n", $nbin/$n, sqrt($nbin)/$n, $nbinobs/$n, sqrt($nbinobs)/$n);
-    printf("r_min<r<r_max: f_b=%g+/-%g f_b,obs=%g+/-%g\n", $nbinrad/$nrad, sqrt($nbinrad)/$nrad, $nbinobsrad/$nrad, sqrt($nbinobsrad)/$nrad);
+    printf("total cluster: f_b=%g+/-%g f_b,obs=%g+/-%g\n", $nbin/$ntot, sqrt($nbin)/$ntot, $nbinobs/$ntotobs, sqrt($nbinobs)/$ntotobs);
+
+    $i = 0;
+    $mcount = 0.0;
+    $nbin = 0;
+    $ntot = 0;
+    $nbinobs = 0;
+    $ntotobs = 0;
+    while ($mcount < 0.1 * $mtotal) {
+	if ($binflag[$i] == 1) {
+	    $nbin++;
+	    # a binary with a large enough mass ratio gets counted as a binary
+	    if (($binstartype0[$i] == 0 || $binstartype0[$i] == 1) && ($binstartype1[$i] == 0 || $binstartype1[$i] == 1)) {
+		$ntotobs++;
+		$q = mymin($binm0[$i], $binm1[$i])/mymax($binm0[$i], $binm1[$i]);
+		if ($q >= $qcrit) {
+		    $nbinobs++;
+		}
+	    }
+	    # a MS-compact object binary gets counted as a single MS object if it's not too far away from the MS
+	    if ( (($binstartype0[$i] == 0 || $binstartype0[$i] == 1) && $binstartype1[$i] >= 10) ||
+		 (($binstartype1[$i] == 0 || $binstartype1[$i] == 1) && $binstartype0[$i] >= 10) ) {
+		# check for special zero radius case
+		if ($binstarrad0[$i] != 0.0) {
+		    $temp0 = ($binstarlum0[$i]*$LSUN/(4.0*$PI*($binstarrad0[$i]*$RSUN)**2*$SIGMA))**0.25;
+		} else {
+		    $temp0 = 0.0;
+		}
+		$lum0 = $binstarlum0[$i];
+		if ($binstarrad1[$i] != 0.0) {
+		    $temp1 = ($binstarlum1[$i]*$LSUN/(4.0*$PI*($binstarrad1[$i]*$RSUN)**2*$SIGMA))**0.25;
+		} else {
+		    $temp1 = 0.0;
+		}
+		$lum1 = $binstarlum1[$i];
+		$temp = ($lum0 * $temp0 + $lum1 * $temp1) / ($lum0 + $lum1);
+		$lum = $lum0 + $lum1;
+		if ($binstartype0[$i] == 0 || $binstartype0[$i] == 1) {
+		    $reftemp = $temp0;
+		    $reflum = $lum0;
+		} else {
+		    $reftemp = $temp1;
+		    $reflum = $lum1;
+		}
+		if (2.0*abs($temp-$reftemp)/($temp+$reftemp) <= 0.1 &&
+		    2.0*abs($lum-$reflum)/($lum+$reflum) <= 0.1) {
+		    $ntotobs++;
+		}
+	    }
+	} else {
+	    if ($startype[$i] == 0 || $startype[$i] == 1) {
+		$ntotobs++;
+	    }
+	}
+	$ntot++;
+	$mcount += $m[$i];
+	$i++;
+    }
+    printf("10%% Lag. rad.: f_b=%g+/-%g f_b,obs=%g+/-%g\n", $nbin/$ntot, sqrt($nbin)/$ntot, $nbinobs/$ntotobs, sqrt($nbinobs)/$ntotobs);
+
+    $i = 0;
+    $mcount = 0.0;
+    $nbin = 0;
+    $ntot = 0;
+    $nbinobs = 0;
+    $ntotobs = 0;
+    while ($r[$i] <= $rmin) {
+	$i++;
+    }
+    while ($i < $n && $r[$i] < $rmax) {
+	if ($binflag[$i] == 1) {
+	    $nbin++;
+	    # a binary with a large enough mass ratio gets counted as a binary
+	    if (($binstartype0[$i] == 0 || $binstartype0[$i] == 1) && ($binstartype1[$i] == 0 || $binstartype1[$i] == 1)) {
+		$ntotobs++;
+		$q = mymin($binm0[$i], $binm1[$i])/mymax($binm0[$i], $binm1[$i]);
+		if ($q >= $qcrit) {
+		    $nbinobs++;
+		}
+	    }
+	    # a MS-compact object binary gets counted as a single MS object if it's not too far away from the MS
+	    if ( (($binstartype0[$i] == 0 || $binstartype0[$i] == 1) && $binstartype1[$i] >= 10) ||
+		 (($binstartype1[$i] == 0 || $binstartype1[$i] == 1) && $binstartype0[$i] >= 10) ) {
+		if ($binstarrad0[$i] != 0.0) {
+		    $temp0 = ($binstarlum0[$i]*$LSUN/(4.0*$PI*($binstarrad0[$i]*$RSUN)**2*$SIGMA))**0.25;
+		} else {
+		    $temp0 = 0.0;
+		}
+		$lum0 = $binstarlum0[$i];
+		if ($binstarrad1[$i] != 0.0) {
+		    $temp1 = ($binstarlum1[$i]*$LSUN/(4.0*$PI*($binstarrad1[$i]*$RSUN)**2*$SIGMA))**0.25;
+		} else {
+		    $temp1 = 0.0;
+		}
+		$lum1 = $binstarlum1[$i];
+		$temp = ($lum0 * $temp0 + $lum1 * $temp1) / ($lum0 + $lum1);
+		$lum = $lum0 + $lum1;
+		if ($binstartype0[$i] == 0 || $binstartype0[$i] == 1) {
+		    $reftemp = $temp0;
+		    $reflum = $lum0;
+		} else {
+		    $reftemp = $temp1;
+		    $reflum = $lum1;
+		}
+		if (2.0*abs($temp-$reftemp)/($temp+$reftemp) <= 0.1 &&
+		    2.0*abs($lum-$reflum)/($lum+$reflum) <= 0.1) {
+		    $ntotobs++;
+		}
+	    }
+	} else {
+	    if ($startype[$i] == 0 || $startype[$i] == 1) {
+		$ntotobs++;
+	    }
+	}
+	$ntot++;
+	$i++;
+    }
+    printf("r_min<r<r_max: f_b=%g+/-%g f_b,obs=%g+/-%g\n", $nbin/$ntot, sqrt($nbin)/$ntot, $nbinobs/$ntotobs, sqrt($nbinobs)/$ntotobs);
 }
 
 # the main attraction
