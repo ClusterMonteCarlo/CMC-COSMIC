@@ -1184,7 +1184,7 @@ void print_conversion_script(void)
 	fprintf(ofp, "cat $outprefix.dyn.dat | grep -vE '^#' | awk '{print $1*'$timeunitsmyr', $25/$21}' > $outprefix.tmyr_rcnbrh.dat\n");
 	fprintf(ofp, "prunedata.pl -d 30 $outprefix.tmyr_rcnbrh.dat > $outprefix.tmyr_rcnbrh-pruned.dat\n");
 	fprintf(ofp, "\n");
-	fprintf(ofp, "cat $outprefix.dyn.dat | grep -vE '^#' | awk '{print $1*'$timeunitsmyr', $7/($8*'$lengthunitparsec')^3}' > $outprefix.tmyr_nc.dat\n");
+	fprintf(ofp, "cat $outprefix.dyn.dat | grep -vE '^#' | awk '{print $1*'$timeunitsmyr', $7/(4.0/3.0*3.14159265*$8*'$lengthunitparsec')^3}' > $outprefix.tmyr_nc.dat\n");
 	fprintf(ofp, "prunedata.pl -d 30 $outprefix.tmyr_nc.dat > $outprefix.tmyr_nc-pruned.dat\n");
 	fprintf(ofp, "\n");
 	fprintf(ofp, "cat $outprefix.dyn.dat | grep -vE '^#' | awk '{print $1*'$timeunitsmyr', $5}' > $outprefix.tmyr_m.dat\n");
