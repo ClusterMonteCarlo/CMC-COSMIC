@@ -399,15 +399,16 @@ void PrintFileOutput(void) {
 		/* print useful header */
 		if (tcount == 1) {
 			fprintf(binaryfile, "# Binary information [code units]\n");
-			fprintf(binaryfile, "# 1:t 2:N_b 3.N_bc 4:M_b 5:E_b 6:r_h,s 7:r_h,b 8:rho_c,s 9:rho_c,b 10:N_bb 11:N_bs 12:f_b,c 13:f_b 14:E_bb 15:E_bs 16:DE_bb 17:DE_bs 18:N_bc,nb 19:f_b,c,nb\n");
+			fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
 		}
 		/* print data */
 		fprintf(binaryfile,
-			"%.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %.8g\n",
-			TotalTime, N_b, N_core_binary, M_b, E_b, rh_single, 
+			"%.6g %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %.8g %ld\n",
+			TotalTime, N_b, M_b, E_b, rh_single, 
 			rh_binary, rho_core_single, rho_core_bin, 
 			N_bb, N_bs, fb_core, 
-			fb, E_bb, E_bs, DE_bb, DE_bs, N_core_binary_nb, fb_core_nb);
+			fb, E_bb, E_bs, DE_bb, DE_bs, 
+			N_core_binary_nb, fb_core_nb, N_core_binary);
 	}
 
         if (WRITE_EXTRA_CORE_INFO) {
