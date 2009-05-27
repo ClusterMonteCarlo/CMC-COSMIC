@@ -1,5 +1,22 @@
 include common/common.mk
 
+#----------- CUDA suppport ----------------#
+#determines if cuda is compiled and if emulation mode
+use_cuda=0
+emu=0
+
+ifeq ($(use_cuda), 1)
+CFLAGS   += -DUSE_CUDA
+CUDAOBJS = $(CUDADIR)/cmc_cuda.cu_o
+CUDAINC  = -I./$(CUDADIR)/common/inc
+CFLAGS	 += -L/usr/local/lib -L./$(CUDADIR)/common/lib -L./$(CUDADIR)/lib
+CUDALIB  = -fPIC -lcuda -lcudart
+ifeq ($(emu), 1)
+CFLAGS 	+= -D__DEVICE_EMULATION__
+endif 
+endif
+#------------------------------------------#
+
 # standard executable
 EXE = cmc
 OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
@@ -23,7 +40,7 @@ BSEOBJS = $(BSEWRAPDIR)/bse_wrap.o $(BSEDIR)/comenv.o $(BSEDIR)/corerd.o $(BSEDI
         $(BSEDIR)/zcnsts.o $(BSEDIR)/zfuncs.o
 
 # default super-target
-all: $(EXE) UTILS CONTRIBS
+all: $(EXE) UTILS CONTRIBS $(CUDAOBJS)
 
 # peripheral stuff
 $(BSEWRAPDIR)/bse_wrap.o: $(BSEWRAPDIR)/bse_wrap.c $(BSEWRAPDIR)/bse_wrap.h
@@ -41,9 +58,12 @@ UTILS: libs/fitslib.o libs/taus113-v2.o
 CONTRIBS:
 	cd contrib && $(MAKE)
 
+$(CUDAOBJS):
+	cd $(CUDADIR) && $(MAKE)
+
 # the standard executable
-$(EXE): $(OBJS) $(FEWBODYOBJS) $(BSEOBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
+$(EXE): $(CUDAOBJS) $(OBJS) $(FEWBODYOBJS) $(BSEOBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS) $(CUDALIB)
 
 $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 	$(CC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
@@ -64,6 +84,7 @@ clean:
 	rm -f $(OBJS) $(FEWBODYOBJS) $(BSEOBJS) $(EXE)
 	cd utils && $(MAKE) clean
 	cd libs && $(MAKE) clean
+	cd $(CUDADIR) && $(MAKE) clean
 
 mrproper: clean
 	find . -name \*~ | xargs rm -f

@@ -13,6 +13,10 @@
 #define _MAIN_
 #include "cmc_vars.h"
 
+#ifdef USE_CUDA
+#include "cuda/cmc_cuda.h"
+#endif
+
 int main(int argc, char *argv[])
 {
 	struct tms tmsbuf, tmsbufref;
@@ -145,6 +149,10 @@ int main(int argc, char *argv[])
 	/* print handy script for converting output files to physical units */
 	print_conversion_script();
 	
+#ifdef USE_CUDA
+	cuInitialize();
+#endif
+
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
 	while (CheckStop(tmsbufref) == 0) {
@@ -286,6 +294,10 @@ int main(int argc, char *argv[])
 	/* free RNG */
 	gsl_rng_free(rng);
 	
+#ifdef USE_CUDA
+	cuCleanUp();
+#endif
+
 	/* flush buffers before returning */
 	close_buffers();
 	free_arrays();

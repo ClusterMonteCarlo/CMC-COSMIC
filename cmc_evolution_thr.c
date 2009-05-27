@@ -16,6 +16,10 @@
 #include "cmc.h"
 #include "cmc_vars.h"
  
+#ifdef USE_CUDA
+#include "cuda/cmc_cuda.h"
+#endif
+
 /* function to calculate r_p, r_a, dQ/dr|_r_p, and dQ/dr|_r_a for an orbit */
 orbit_rs_t calc_orbit_rs(long si, double E, double J)
 {
@@ -79,7 +83,13 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		orbit_rs.dQdra = 0.0;
 		orbit_rs.circular_flag = 1;
 	} else {
+#ifdef USE_CUDA
+	        kmin = h_kmin[si];
+	        kmax = h_kmax[si];
+#else
 		kmin = FindZero_Q(si, 0, ktemp, E, J);
+		kmax = FindZero_Q(si, ktemp, clus.N_MAX + 1, E, J);
+#endif
 		
 		while (function_Q(si, kmin, E, J) > 0 && kmin > 0)
 			kmin--;
@@ -120,8 +130,6 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
                
 		/*  For rmax- Look for rk, rk1 such that 
 		 *  Q(rk) > 0 > Q(rk1) */
-		
-		kmax = FindZero_Q(si, ktemp, clus.N_MAX + 1, E, J);
 		
 		while (function_Q(si, kmax, E, J) < 0 && kmax > ktemp)
 			kmax--;
@@ -580,6 +588,10 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	phi_zero = get_pos_dat->phi_zero;
 	max_rad = get_pos_dat->max_rad;
 
+#ifdef USE_CUDA
+	cuCalculateKs();
+#endif
+
 #ifdef USE_THREADS
 	for (si = taskid+1; si <= clus.N_MAX_NEW; si+=NUM_THREADS) { /* Repeat for all stars */
 #else
@@ -607,7 +619,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		/* calculate peri- and apocenter of orbit */
 #ifdef EXPERIMENTAL
-    orbit_rs = calc_orbit_new(j, E, J);
+		orbit_rs = calc_orbit_new(j, E, J);
 #else
 		orbit_rs = calc_orbit_rs(j, E, J);
 #endif		

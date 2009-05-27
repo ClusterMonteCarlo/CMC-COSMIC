@@ -1,6 +1,9 @@
 IGNORE:
-#CMPLR = gfortran
+ifeq ($(HOSTNAME), compute-0-79.local)
+CMPLR = gfortran
+else
 CMPLR = g77
+endif
 FFLAGS = 
 LFLAGS = const_bse.h zdata.h 
 

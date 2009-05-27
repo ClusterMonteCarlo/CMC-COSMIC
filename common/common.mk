@@ -47,8 +47,11 @@ endif
 ##############################################################################
 UNAME = $(shell uname)
 
-#FLIBS= -lgfortran
-FLIBS= -lg2c
+ifeq ($(HOSTNAME), compute-0-79.local)
+FLIBS=-lgfortran
+else
+FLIBS=-lg2c
+endif 
 
 ifeq ($(UNAME),Linux)
 CFLAGS = -Wall -O3 -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
@@ -112,6 +115,11 @@ LIBFLAGS := $(LIBFLAGS) -static
 #LIBFLAGS := $(LIBFLAGS) 
 endif
 
+ifeq ($(HOSTNAME), compute-0-79.local)
+CFLAGS := $(CFLAGS) -march=k8 -I/share/apps/gsl/include -L/share/apps/gsl/lib -I/share/apps/cfitsio/include -L/share/apps/cfitsio/lib $(DEBUG_FLAGS)
+LIBFLAGS := $(LIBFLAGS) -L/usr/local/cuda/lib 
+endif
+
 DOMNAME = $(shell hostname | cut -d . -f 2-)
 ifeq ($(DOMNAME),ncsa.uiuc.edu)
 CC = icc
@@ -126,3 +134,4 @@ endif
 FEWBODYDIR = fewbody-0.24
 BSEDIR = bse_wrap/bse
 BSEWRAPDIR = bse_wrap
+CUDADIR = cuda

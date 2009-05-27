@@ -1,0 +1,1 @@
+nvcc -arch sm_13 cmc_cuda.cu -I./common/inc -cubin -I/share/apps/cfitsio/include -I/share/apps/gsl-1.9/include && less cmc_cuda.cubin

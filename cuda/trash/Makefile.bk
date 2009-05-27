@@ -1,0 +1,75 @@
+verbose=1
+dbg=0
+fastmath=0
+
+.SUFFIXES : .cu .cu_dbg_o .c_dbg_o .cpp_dbg_o .cu_rel_o .c_rel_o .cpp_rel_o .cubin
+
+# Compilers
+NVCC       := nvcc 
+LINK       := g++ -fPIC
+
+CUDA_GLOBAL_INSTALL := /usr/local
+INCLUDES  += -I. -I$(CUDA_GLOBAL_INSTALL)/include -I./$(CUDADIR)/common/inc
+LIB       := ${LIB} -L$(CUDA_GLOBAL_INSTALL)/lib -L./$(CUDADIR)/lib -L./$(CUDADIR)/common/lib -lcuda -lcudart -L/usr/lib
+
+# Common flags
+#COMMONFLAGS = $(INCLUDES) -DUNIX
+
+#use of cuda in the program
+CFLAGS 		+= -DUSE_CUDA
+#NVCCFLAGS 	+= -maxrregcount 42 
+
+# Debug/release configuration
+#ifeq ($(dbg),1)
+#	COMMONFLAGS += -g
+#	NVCCFLAGS   += -D_DEBUG
+#else 
+#	COMMONFLAGS += -O3 
+#	NVCC_FLAGS  += --compiler-options -fno-strict-aliasing
+#endif
+
+# Device emulation configuration
+ifeq ($(emu), 1)
+	NVCCFLAGS   += -deviceemu -D__DEVICE_EMULATION__
+	CXXFLAGS    += -D__DEVICE_EMULATION__ -ffloat-store
+	CFLAGS	    += -D__DEVICE_EMULATION__ -ffloat-store
+endif
+
+# check if verbose 
+#ifeq ($(verbose), 1)
+#	VERBOSE :=
+#else
+#	VERBOSE := @
+#endif
+
+ifeq ($(fastmath), 1)
+	NVCCFLAGS += -use_fast_math
+endif
+
+# Add common flags
+NVCCFLAGS += $(COMMONFLAGS)
+CXXFLAGS  += $(COMMONFLAGS)
+CFLAGS    += $(COMMONFLAGS)
+
+ifeq ($(nvcc_warn_verbose),1)
+	NVCCFLAGS += $(addprefix --compiler-options ,$(CXXWARN_FLAGS)) 
+	NVCCFLAGS += --compiler-options -fno-strict-aliasing
+endif
+
+CUDALIBFLAGS := -lcuda -lcudart -lGL -lGLU
+CUDAEXTRAS 	:= 	cuda/common/obj/release/bank_checker.cpp_o \
+	cuda/common/obj/release/cmd_arg_reader.cpp_o \
+	cuda/common/obj/release/cutil.cpp_o \
+	cuda/common/obj/release/cutil_interop.cpp_o \
+	cuda/common/obj/release/error_checker.cpp_o \
+	cuda/common/obj/release/stopwatch.cpp_o \
+	cuda/common/obj/release/stopwatch_linux.cpp_o 
+
+all: cuda.cu_o
+
+OBJS += $(CUDADIR)/cuda.cu_o
+%.cu_o : %.cu $(CU_DEPS)
+	$(VERBOSE)$(NVCC) -o $@ -c $< $(NVCCFLAGS)
+
+clean:
+	rm cuda.cu_o

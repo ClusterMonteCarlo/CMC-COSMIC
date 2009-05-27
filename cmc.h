@@ -331,10 +331,10 @@ typedef struct{
 } central_t;
 
 /* useful structure for core quantities */
-typedef struct{
+/*typedef struct{
 	double N;
 	double kT;
-} core_t;
+} core_t;*/
 
 /* to store the velocity dispersion profile */
 typedef struct{
