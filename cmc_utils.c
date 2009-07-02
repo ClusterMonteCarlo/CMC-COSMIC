@@ -833,6 +833,9 @@ void central_calculate(void)
 	central.rho /= rhojsum;
 	/* correction for inherent bias in estimator */
 	central.rho *= 4.0/5.0;
+	/* and now correct for the fact this estimate of density is systematically smaller than the
+	   theoretical by a factor of about 2 (for a range of King models and for the Plummer model) */
+	central.rho *= 2.0;
 	central.v_rms /= rhojsum;
 	central.v_rms = sqrt(central.v_rms);
 	central.rc /= rhojsum;
