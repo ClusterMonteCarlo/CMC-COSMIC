@@ -63,6 +63,8 @@ $usage =
       binaries with q>q_crit relative to number of stars appearing on or near MS, 
       for cluster overall, within r_min<r<r_max (with r in parsecs), and within
       the 10% Lagrange radius
+    extractmss <M_min/M_sun> <M_max/M_sun>
+      extract MS stars in mass range [M_min,M_max]
 Note that the out.conv.sh filename must be supplied for physical parameters, and
 that the snapshot file must be fed as STDIN to this script.
 ";
@@ -517,6 +519,27 @@ sub extractobsbinfrac {
     printf("r_min<r<r_max: f_b=%g+/-%g f_b,obs=%g+/-%g\n", $nbin/$ntot, sqrt($nbin)/$ntot, $nbinobs/$ntotobs, sqrt($nbinobs)/$ntotobs);
 }
 
+# extract main sequence stars
+sub extractmss {
+    # wrong number of arguments?
+    if ($#ARGV+1 != 4) {
+	die("$usage");
+    }
+    
+    $Mmin = $ARGV[2];
+    $Mmax = $ARGV[3];
+
+    $i=0;
+    while ($i < $n) {
+	if ($binflag[$i] == 0 && ($startype[$i] == 0 || $startype[$i] == 1)) {
+	    if ($m[$i] >= $Mmin && $m[$i] <= $Mmax) {
+		printf("%.8g %.8g %.8g %.8g\n", $r[$i], $rproj[$i], $m[$i], $L[$i]);
+	    }
+	}
+	$i++;
+    }
+}
+
 # the main attraction
 if ($commandname =~ /^extractwds$/) {
     extractwds();
@@ -530,6 +553,8 @@ if ($commandname =~ /^extractwds$/) {
     extractwd2dvrms();
 } elsif ($commandname =~ /^extractobsbinfrac$/) {
     extractobsbinfrac();
+} elsif ($commandname =~ /^extractmss$/) {
+    extractmss();
 } else {
     die("$usage");
 }

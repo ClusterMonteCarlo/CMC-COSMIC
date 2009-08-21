@@ -31,7 +31,7 @@ int main(void) {
   zpars = (double *) malloc(20 * sizeof(double));
 
   /* evolution parameters */
-  bse_set_neta(0.5);
+  bse_set_neta(0.25);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
   bse_set_alpha1(1.0);
