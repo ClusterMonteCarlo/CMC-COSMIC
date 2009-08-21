@@ -197,6 +197,9 @@
       REAL bcm(50000,34),bpp(80,10)
       COMMON /BINARY/ bcm,bpp
 *
+      REAL*8 kw3,wsun,wx
+      PARAMETER(kw3=619.2d0,wsun=9.46d+07,wx=9.46d+08)
+*
 * Save the initial state.
 *
       mass1i = mass0(1)
@@ -458,9 +461,17 @@
 * envelopes. This includes MS stars with M < 1.25, HG stars near the GB 
 * and giants. MB is not allowed for fully convective MS stars. 
 *
-            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
-               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
-               djspint(k) = djspint(k) + djmb
+*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
+*               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
+*               djspint(k) = djspint(k) + djmb
+
+            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+     &              menv(k).gt.0.0d0)then
+              if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
+     &              (ospin(k)/wsun)**3.0d0
+              if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
+     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+              djspint(k) = djspint(k) + djmb
 *
 * Limit to a 3% angular momentum change for the star owing to MB. 
 * This is found to work best with the maximum iteration of 20000, 
@@ -568,10 +579,17 @@
             endif
             dmt(k) = 0.d0
             djspint(k) = (2.d0/3.d0)*dmr(k)*rad(k)*rad(k)*ospin(k)
-            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
-               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
-               djspint(k) = djspint(k) + djmb
-               if(djmb.gt.tiny)then
+*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
+*               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
+*               djspint(k) = djspint(k) + djmb
+             if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+     &              menv(k).gt.0.0d0)then
+                if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
+     &              (ospin(k)/wsun)**3.0d0
+                if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
+     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+                djspint(k) = djspint(k) + djmb
+                if(djmb.gt.tiny)then
                   dtj = 0.03d0*jspin(k)/ABS(djmb)
                   dt = MIN(dt,dtj)
                endif
@@ -1693,9 +1711,16 @@
      &                   xi*dmt(k)*radx(3-k)*radx(3-k)*ospin(3-k))
             djspint(k) = djspint(k)*dt
 *
-            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
-               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
-               djspint(k) = djspint(k) + djmb*dt
+*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
+*               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
+*               djspint(k) = djspint(k) + djmb*dt
+            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+     &              menv(k).gt.0.0d0)then
+                if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
+     &              (ospin(k)/wsun)**3.0d0
+                if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
+     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+                djspint(k) = djspint(k) + djmb               
             endif
 *
  602     continue
