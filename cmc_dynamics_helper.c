@@ -835,12 +835,20 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 0);
 
 					binary[star[knew].binind].id1 = star_get_id_new();
-					/* log collision */
+					
+                                        /* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id1,
 						binary[star[knew].binind].m1, 
 						star[knew].r,
 						*(hier.obj[i]->obj[0]), k, kp);
+
+                                        if (binary[star[knew].binind].m1==0.) {
+                                          dprintf("Zero mass remnant! Parameters: knew=%li, binind=%li, kw[0]=%i, kw[1]=%i\n",
+                                              knew, star[knew].binind, binary[star[knew].binind].bse_kw[0], 
+                                              binary[star[knew].binind].bse_kw[1]);
+                                        }
+                                        
 				}
 				if (hier.obj[i]->obj[1]->ncoll == 1) {
 					binary[star[knew].binind].id2 = hier.obj[i]->obj[1]->id[0];
@@ -881,6 +889,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						binary[star[knew].binind].m2, 
 						star[knew].r,
 						*(hier.obj[i]->obj[1]), k, kp);
+                                        if (binary[star[knew].binind].m2==0.) 
+                                          dprintf("Zero mass remnant! Parameters: knew=%li, binind=%li, kw[0]=%i, kw[1]=%i\n",
+                                              knew, star[knew].binind, binary[star[knew].binind].bse_kw[0], 
+                                              binary[star[knew].binind].bse_kw[1]);
 				}
 				
 				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
@@ -893,6 +905,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc) 
 					/ (2.0 * binary[star[knew].binind].a) 
 					- binary[star[knew].binind].Eint1 - binary[star[knew].binind].Eint2;
+                                compress_binary(&star[knew], &binary[star[knew].binind]);
 			} else if (hier.obj[i]->n == 3) {
 				/******************************************/
 				/* break triple by shrinking inner binary */
@@ -1071,6 +1084,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					(2.0 * binary[star[knew].binind].a) 
 					- binary[star[knew].binind].Eint1 - binary[star[knew].binind].Eint2
 					- star[knewp].Eint;
+                                compress_binary(&star[knew], &binary[star[knew].binind]);
 			}
 		}
 		

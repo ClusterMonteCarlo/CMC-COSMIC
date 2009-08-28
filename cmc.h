@@ -597,6 +597,8 @@ double calc_pot_in_interval(double r, long k);
 void remove_star(long j, double phi_rtidal, double phi_zero);
 inline double function_q(long j, long double r, long double pot, long double E, long double J);
 
+#include "cmc_bse_utils.h"
+
 /* macros */ 
 #define Q_function(j, r, pot, E, J) (2.0 * ((E) - ((pot) + PHI_S((r), j))) - SQR((J) / (r)) )
 /* correction to potential due to subtracting star's contribution, and adding self-gravity */
