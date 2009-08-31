@@ -25,7 +25,7 @@ OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
 	cmc_utils.o cmc_fits.o cmc_stellar_evolution.o \
 	cmc_sort.o cmc_sscollision.o cmc_remove_star.o cmc_bhlosscone.o \
 	cmc_search_grid.o cmc_trace.o cmc_orbit.o cmc_core.o \
-	libs/fitslib.o libs/taus113-v2.o
+	libs/fitslib.o libs/taus113-v2.o cmc_bse_utils.o
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
 	$(FEWBODYDIR)/fewbody_int.o $(FEWBODYDIR)/fewbody_io.o \
@@ -84,6 +84,7 @@ clean:
 	rm -f $(OBJS) $(FEWBODYOBJS) $(BSEOBJS) $(EXE)
 	cd utils && $(MAKE) clean
 	cd libs && $(MAKE) clean
+	cd bse_wrap && $(MAKE) clean
 	cd $(CUDADIR) && $(MAKE) clean
 
 mrproper: clean
@@ -99,3 +100,4 @@ mrproper: clean
 	find . -name fort.99 | xargs rm -f
 	find . -name \*.fits | xargs rm -f
 	find . -name \*.fit | xargs rm -f
+
