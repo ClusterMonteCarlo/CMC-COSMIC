@@ -122,6 +122,10 @@ int main(void) {
     binarray[i].a = pow(10.0, gsl_rng_uniform(rng)*(log10(amax)-log10(amin))+log10(amin));
     binarray[i].bse_tb = 365.25 * sqrt(pow(binarray[i].a, 3.0)/(binarray[i].bse_mass0[0]+binarray[i].bse_mass0[1]));
     binarray[i].e = sqrt(gsl_rng_uniform(rng));
+
+    if (i%(NBIN/50)==0) {
+      fprintf(stderr, "%.0f%% done with initialization (evolution to first output time).\n", 100.0 * ((double) i)/((double) NBIN));
+    }
   }
 
   /* loop over time */
@@ -161,6 +165,8 @@ int main(void) {
     }
 
     printoutput(&filectr, binarray, tphysf);
+
+    fprintf(stderr, "%.1f%% done with recorded evolution.\n", 100.0 * (targettphysf-9.0e3)/(10.0e3-9.0e3));
   }
 
   /* free GSL stuff */
