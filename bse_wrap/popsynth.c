@@ -31,11 +31,11 @@ int main(void) {
   zpars = (double *) malloc(20 * sizeof(double));
 
   /* evolution parameters */
-  bse_set_neta(0.25);
+  bse_set_neta(0.5);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
-  bse_set_alpha1(1.0);
-  bse_set_lambda(0.5);
+  bse_set_alpha1(0.5);
+  bse_set_lambda(1.0);
   bse_set_ceflag(0);
   bse_set_tflag(1);
   bse_set_ifflag(0);
@@ -52,7 +52,7 @@ int main(void) {
   bse_set_xi(1.0);
   bse_set_acc2(1.5);
   bse_set_epsnov(0.001);
-  bse_set_eddfac(10.0);
+  bse_set_eddfac(2.0);
   bse_set_gamma(-1.0);
   
   bse_zcnsts(&z, zpars);
