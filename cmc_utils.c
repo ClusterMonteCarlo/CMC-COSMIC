@@ -850,9 +850,9 @@ void central_calculate(void)
 	v_core = central.v_rms;
 	rho_core = central.rho;
 	core_radius = central.rc;
-	N_core = 4.0 / 3.0 * PI * cub(core_radius) * central.n;
+	N_core = 4.0 / 3.0 * PI * cub(core_radius) * (central.n / 2.0);
 	//Sourav
-	N_core_nb = 4.0 / 3.0 * PI * cub(rc_nb) * central.n;
+	N_core_nb = 4.0 / 3.0 * PI * cub(rc_nb) * (central.n / 2.0);
 	/* core relaxation time, Spitzer (1987) eq. (2-62) */
 	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.m_ave);
 
