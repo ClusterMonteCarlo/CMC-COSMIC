@@ -1,4 +1,4 @@
-#define NBIN 1000000
+#define NBIN 500000
 
 typedef struct{
 	long id1; /* unique id of star 1 */
@@ -21,6 +21,10 @@ typedef struct{
 	double bse_tb; /* binary orbital period */
 	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
 	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
+	double m1init;
+	double m2init;
+	double ainit;
+	double einit;
 } binary_t;
 
 #define RSUN 6.9599e10

@@ -73,8 +73,12 @@ int main(void) {
 
     /* set primary mass from power law */
     X = gsl_rng_uniform(rng);
-    mmin = 6.0;
-    mmax = 150.0;
+    /* comparison with Tassos */
+    /* mmin = 6.0; */
+    /* mmax = 150.0; */
+    /* comparison with Ivanova, et al. (2006) to form CVs */
+    mmin = 0.5;
+    mmax = 10.0;
     index = -2.35;
     norm = pow(mmax/mmin, index+1.0) - 1.0;
     mass = mmin*pow(norm*X+1, 1.0/(index+1.0));
@@ -117,15 +121,22 @@ int main(void) {
     /* set semimajor axis uniform in log from primary radius at half Roche lobe to 10^5 R_sun, 
        eccentricity thermal */
     rlprimovera = 0.46224 * pow(binarray[i].bse_mass[0]/(binarray[i].bse_mass[0]+binarray[i].bse_mass[1]), 1.0/3.0);
-    amin = 2.0 * binarray[i].bse_radius[0] / rlprimovera * RSUN / AU;
-    amax = 1.0e5 * RSUN / AU;
+    /* comparison with Tassos */
+    /* amin = 2.0 * binarray[i].bse_radius[0] / rlprimovera * RSUN / AU; */
+    /* amax = 1.0e5 * RSUN / AU; */
+    /* set semimajor axis uniform in log from 1d to 10^4 d orbital period */
+    amin = pow((binarray[i].bse_mass[0]+binarray[i].bse_mass[1])*(1.0/365.25)*(1.0/365.25), 1.0/3.0);
+    amax = pow((binarray[i].bse_mass[0]+binarray[i].bse_mass[1])*(1.0e4/365.25)*(1.0e4/365.25), 1.0/3.0);
     binarray[i].a = pow(10.0, gsl_rng_uniform(rng)*(log10(amax)-log10(amin))+log10(amin));
     binarray[i].bse_tb = 365.25 * sqrt(pow(binarray[i].a, 3.0)/(binarray[i].bse_mass0[0]+binarray[i].bse_mass0[1]));
-    binarray[i].e = sqrt(gsl_rng_uniform(rng));
+    /* binarray[i].e = sqrt(gsl_rng_uniform(rng)); */
+    binarray[i].e = 0.0;
 
-    if (i%(NBIN/50)==0) {
-      fprintf(stderr, "%.0f%% done with initialization (evolution to first output time).\n", 100.0 * ((double) i)/((double) NBIN));
-    }
+    /* save initial state */
+    binarray[i].m1init = binarray[i].bse_mass[0];
+    binarray[i].m2init = binarray[i].bse_mass[1];
+    binarray[i].ainit = binarray[i].a;
+    binarray[i].einit = binarray[i].e;
   }
 
   /* loop over time */
@@ -165,8 +176,6 @@ int main(void) {
     }
 
     printoutput(&filectr, binarray, tphysf);
-
-    fprintf(stderr, "%.1f%% done with recorded evolution.\n", 100.0 * (targettphysf-9.0e3)/(10.0e3-9.0e3));
   }
 
   /* free GSL stuff */
@@ -190,14 +199,14 @@ void printoutput(int *filectr, binary_t *binarray, double time)
   }
   
   gzprintf(ofp, "#t=%g\n", time);
-  gzprintf(ofp, "#1:id1 #2:id2 #3:m1 #4:m2 #5:k1 #6:k2 #7:tb #8:e #9:rad1 #10:rad2 #11:lum1 #12:lum2 #13:massc1 #14:massc2 #15:radc1 #16:radc2 #17:menv1 #18:menv2 #19:renv1 #20:renv2 #21:ospin1 #22:ospin2 #23:tms1 #24:tms2 #25:dmdt1 #26:dmdt2 #27:radrol1 #28:radrol2\n");
+  gzprintf(ofp, "#1:id1 #2:id2 #3:m1 #4:m2 #5:k1 #6:k2 #7:tb #8:e #9:rad1 #10:rad2 #11:lum1 #12:lum2 #13:massc1 #14:massc2 #15:radc1 #16:radc2 #17:menv1 #18:menv2 #19:renv1 #20:renv2 #21:ospin1 #22:ospin2 #23:tms1 #24:tms2 #25:dmdt1 #26:dmdt2 #27:radrol1 #28:radrol2 #29:m1init #30:m2init #31:ainit #32:einit\n");
   
   for (i=0; i<NBIN; i++) {
     if ( binarray[i].bse_tb > 0.0 && 
-	 ( (binarray[i].bse_kw[0] >= 13 && binarray[i].bse_kw[0] <= 14) || 
-	   (binarray[i].bse_kw[1] >= 13 && binarray[i].bse_kw[1] <= 14)) &&
+	 ( (binarray[i].bse_kw[0] >= 10 && binarray[i].bse_kw[0] <= 10) || 
+	   (binarray[i].bse_kw[1] >= 10 && binarray[i].bse_kw[1] <= 10)) &&
 	 (binarray[i].bse_bcm_dmdt[0] != 0.0 || binarray[i].bse_bcm_dmdt[1] != 0.0) ) {
-      gzprintf(ofp, "%ld %ld %g %g %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", 
+      gzprintf(ofp, "%ld %ld %g %g %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", 
 	       binarray[i].id1, binarray[i].id2,
 	       binarray[i].bse_mass[0], binarray[i].bse_mass[1],
 	       binarray[i].bse_kw[0], binarray[i].bse_kw[1],
@@ -211,7 +220,8 @@ void printoutput(int *filectr, binary_t *binarray, double time)
 	       binarray[i].bse_ospin[0], binarray[i].bse_ospin[1],
 	       binarray[i].bse_tms[0], binarray[i].bse_tms[1],
 	       binarray[i].bse_bcm_dmdt[0], binarray[i].bse_bcm_dmdt[1],
-	       binarray[i].bse_bcm_radrol[0], binarray[i].bse_bcm_radrol[1]);
+	       binarray[i].bse_bcm_radrol[0], binarray[i].bse_bcm_radrol[1],
+	       binarray[i].m1init, binarray[i].m2init, binarray[i].ainit, binarray[i].einit);
     }
   }
 
