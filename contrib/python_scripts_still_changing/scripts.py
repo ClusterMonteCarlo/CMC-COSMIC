@@ -4,9 +4,15 @@ from numpy import *
 import gzip
 import math
 import constants
+import scripts1
+import scripts2
+import scripts3
+import history_cmc
+import subprocess
 
-def read_units(s):
+def read_units(filestring):
 	"""reads from the supplied conv file and stores the physical units"""
+	s = filestring+'.conv.sh'
 	f=open(s,'r')
 	count=0
 	while count<10:
@@ -43,18 +49,29 @@ def read_units(s):
 			nbtimeunitsmyr = float(b[1])
 			count+=1
 	f.close()
-	return (massunitcgs, massunitmsun, mstarunitcgs, mstarunitmsun, lengthunitcgs, lengthunitparsec, timeunitcgs, timeunitsmyr, nbtimeunitcgs, nbtimeunitsmyr)
+	units = []
+	unittype = [('m_cgs', float), ('m_msun', float), ('mstar_cgs', float), ('mstar_msun', float), ('l_cgs', float), ('l_pc', float), ('t_cgs', float),('t_myr', float), ('nbt_cgs', float), ('nbt_myr', float)]
+	units.append((massunitcgs, massunitmsun, mstarunitcgs, mstarunitmsun, lengthunitcgs, lengthunitparsec, timeunitcgs, timeunitsmyr, nbtimeunitcgs, nbtimeunitsmyr))
+	units = array(units, dtype=unittype)
+	#return (massunitcgs, massunitmsun, mstarunitcgs, mstarunitmsun, lengthunitcgs, lengthunitparsec, timeunitcgs, timeunitsmyr, nbtimeunitcgs, nbtimeunitsmyr)
+	return units
 
+def find_correlations(string,snapno, binary):
+	"""finds anything that may be interesting to see correlations:
+		string: file string
+		snapno: snapno as a string
+		binary: whether there were primordial binaries or not.  0: not, 1: yes"""
 
-def find_correlations(string,snapno):
 	snap = string+'.snap'+snapno+'.dat.gz'
 	dyn = string+'.dyn.dat'
-	conv = string+'.conv.sh'
+	from glob import glob
 	out = string+'.out.dat'
 	bin = string+'.bin.dat'
 
-	units = read_units(conv)
-	t_myr = find_t_myr(snap,conv)
+	units = read_units(string)
+	convert_v = units[0]['l_cgs']/units[0]['nbt_cgs']/1e5
+	convert_rho = units[0]['m_msun']/(units[0]['l_pc'])**3.
+	t_myr = find_t_myr(string, snapno)
 	m_to = find_MS_turnoff(t_myr*1000000.)
 
 	f_snap = gzip.open(snap,'rb')
@@ -68,13 +85,14 @@ def find_correlations(string,snapno):
 	dyndata = loadtxt(dyn)
 	for i in range(len(dyndata)):
 		if (dyndata[i,0])==t_snap:
-			m_msun = dyndata[i,4]*units[1]
-			rc_pc = dyndata[i,7]*units[5]
-			rh_pc = dyndata[i,20]*units[5]
-			rho_msun_pc3 = dyndata[i,21]*units[1]/units[5]**3.
+			m = dyndata[i,4]
+			rc = dyndata[i,7]
+			rh = dyndata[i,20]
+			rho0 = dyndata[i,21]
 			#lo behold: time unit in central v calculation is in nbody units
-			v0_rms_km_s = dyndata[i,23]*units[4]/units[8]/100000.
-			print (m_msun,rc_pc,rh_pc,rho_msun_pc3,v0_rms_km_s,t_myr,m_to)
+			v0_rms = dyndata[i,23]
+			print 'v=',v0_rms,convert_v	
+			m_msun,rc_pc,rh_pc,rho0_msun_pc3,v0_rms_km_s = m*units[0]['m_msun'],rc*units[0]['l_pc'],rh*units[0]['l_pc'],rho0*convert_rho,v0_rms*convert_v
 	
 	try:
 		bindata = loadtxt(bin)
@@ -86,10 +104,10 @@ def find_correlations(string,snapno):
 		for i in range(len(bindata)):
 			if (bindata[i,0])-t_snap < 0.00001 and (bindata[i,0])-t_snap > -0.00001:
 				print 'found time'
-				f_bc_array.append(bindata[i,11])
-				f_b_array.append(bindata[i,12])
-				rhb_pc_array.append(bindata[i,6]*units[5])
-				rhs_pc_array.append(bindata[i,5]*units[5])
+				f_bc_array.append(bindata[i,10])
+				f_b_array.append(bindata[i,11])
+				rhb_pc_array.append(bindata[i,5]*units[0]['l_pc'])
+				rhs_pc_array.append(bindata[i,4]*units[0]['l_pc'])
 			f_bc=mean(f_bc_array)
 			f_b=mean(f_b_array)
 			rhb_pc=mean(rhb_pc_array)
@@ -99,14 +117,38 @@ def find_correlations(string,snapno):
 		f_b = 0.0
 		rhb_pc = 0.0
 		rhs_pc = rh_pc	
-
+	
+	BSS_count_core = find_BSS_core(string, snapno, rc)
 	BSS_count = find_BSS(string,snapno)
+	total_BSS = BSS_count[0]+BSS_count[1]
+	print 'look here', rc, rc_pc
+	
+	total_BSS_core = BSS_count_core[0]+BSS_count_core[1]
+	history = history_cmc.history_maker(BSS_count[3], BSS_count[4], string, binary)
+	branching_ratio = history_cmc.branching_ratio(history, binary)
+	#print branching_ratio
+	BSS_binint = total_BSS*branching_ratio['binint']
+	BSS_pure_binint = total_BSS*branching_ratio['pure_binint']
+	BSS_coll = total_BSS*branching_ratio['coll']
+	BSS_pure_coll = total_BSS*branching_ratio['pure_coll']
+	BSS_merger = total_BSS*branching_ratio['merger']
+	BSS_pure_merger = total_BSS*branching_ratio['pure_merger']
+	
+
 	print "got BSS"
+	
 	giants_count = find_giants(string,snapno)
+	giants_core_count = find_giants_core(string, snapno, rc)
 	print "got giants"
 	total_giants = (giants_count[0]+giants_count[1])
+	total_giants_core = (giants_core_count[0] + giants_core_count[1])
 
-	outfile=open(out,'r')
+	try:
+		outfile=open(out,'r')
+	except IOError:
+		print 'could not find out.dat'
+		out=glob('*.o*')[0]
+		outfile = open(out,'r')
 	line='initial'
 	tcoll_array=[]
 	while len(line)>0:
@@ -117,25 +159,38 @@ def find_correlations(string,snapno):
 			if float(tcoll[2])>(0.001*t_myr - 1.) and float(tcoll[2])<=(0.001*t_myr) and tcoll[6]!='nan':
 				tcoll_array.append(float(tcoll[6]))
 	mean_gamma=(mean(tcoll_array))**(-1.)
-				
-	print "%f %f %f %f %f %f %f %f %f %f %f %f %f %d %d %d %f %d %d %d %f %f %f\n" %(m_msun,rc_pc,rh_pc,rc_pc/rh_pc,rho_msun_pc3,mean_gamma,v0_rms_km_s,t_myr,m_to,f_bc,f_b,rhb_pc,rhs_pc,BSS_count[0],BSS_count[1],BSS_count[0]+BSS_count[1],rhb_pc/rhs_pc,giants_count[0], giants_count[1], giants_count[0]+giants_count[1], float(BSS_count[0])/float(total_giants), float(BSS_count[1])/float(total_giants), float(BSS_count[0]+BSS_count[1])/float(total_giants))
 
-	return (m_msun,rc_pc,rh_pc,rc_pc/rh_pc,rho_msun_pc3,mean_gamma,v0_rms_km_s,t_myr,m_to,f_bc,f_b,rhb_pc,rhs_pc,BSS_count[0],BSS_count[1],BSS_count[0]+BSS_count[1], rhb_pc/rhs_pc,giants_count[0], giants_count[1], giants_count[0]+giants_count[1], float(BSS_count[0])/float(total_giants), float(BSS_count[1])/float(total_giants), float(BSS_count[0]+BSS_count[1])/float(total_giants)) 
+	dtype = [('m',float), ('rc', float), ('rh',float), ('rho',float), ('gamma',float), ('v0',float), ('t',float), ('mto', float), 
+			('fbc',float), ('fb',float), ('rhb',float), ('rhs',float), ('bss_sing',int), ('bss_bin',int), ('bssc_sing',int),
+			('bssc_bin',int), ('bss_binint',float), ('bss_pure_binint',float), ('bss_coll',float), ('bss_pure_coll',float), 
+			('bss_merger',float), ('bss_pure_merger',float), ('rgb_sing',int), ('rgb_bin',int), ('rgbc_sing',int), 
+			('rgbc_bin',int)]
+	dummy=[]
+	dummy.append( (m_msun,rc_pc,rh_pc,rho0_msun_pc3,mean_gamma,v0_rms_km_s,t_myr,m_to,f_bc,f_b,rhb_pc,rhs_pc,BSS_count[0],BSS_count[1],BSS_count_core[0], BSS_count_core[1], BSS_binint, BSS_pure_binint, BSS_coll, BSS_pure_coll, BSS_merger, BSS_pure_merger, giants_count[0], giants_count[1], giants_core_count[0], giants_core_count[1]) )
+	dummy=array(dummy,dtype=dtype)
+	
 
+	#for i in range(len(dummy)):
+	#	print "%.3f " %(dummy[i],)
+#
+#	print "\n"
+
+	return dummy
 	
 	
-	
 
-def find_t_myr(s1,s2):
+def find_t_myr(filestring, snapno):
 	"""goes in the given snapshot and finds the physical time corresponding to that snap"""
-	f=gzip.open(s1,'rb')
+	snapfile = filestring+'.snap'+snapno+'.dat.gz'
+
+	f=gzip.open(snapfile,'rb')
 	line=f.readline()
 	a=line.split()
 	b=a[1]
 	c=b.split('=')
 	t=float(c[1])
-	d=read_units(s2)
-	t_myr=t*d[7]
+	d=read_units(filestring)
+	t_myr=t*d['t_myr'][0]
 	f.close()
 	return (t_myr)
 
@@ -162,20 +217,18 @@ def find_giants(file_string,snapno):
 	number of giants in binaries."""
 	snapfile=file_string+'.snap'+snapno+'.dat.gz'
 	convfile=file_string+'.conv.sh'
-	wfile1=file_string+'.snap'+snapno+'single_giants.dat'
-	wfile2=file_string+'.snap'+snapno+'binary_giants.dat'
+	wfile1=file_string+'.snap'+snapno+'.giants.dat'
 
-	t_yr = (find_t_myr(snapfile,convfile))*10**6
+	t_yr = (find_t_myr(file_string, snapno))*10**6
 
 	f=gzip.open(snapfile,'rb')
-	f1 = open(wfile1,'w')
-	f2 = open(wfile2,'w')
+	f1 = open(wfile1, 'w')
 	giants_sing_count = 0
 	giants_bin_count = 0
 
 	#print header
 	f1.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n")
-	f2.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n")
+	#f2.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n")
 	for line in f:	
 		a=line.split()
 		if a[0]!='#' and a[0]!='#1:id':
@@ -189,49 +242,149 @@ def find_giants(file_string,snapno):
 			if a[7]!='0' and a[8]!='0' and a[9]!='0': 
 				if float(a[17])==3.:
 					for i in range(len(a)):
-						f2.write("%s " % (a[i]))
+						f1.write("%s " % (a[i]))
 					giants_bin_count += 1
-					f2.write("\n")
+					f1.write("\n")
 				elif float(a[18])==3.:
 					for i in range(len(a)):
-						f2.write("%s " % (a[i]))
+						f1.write("%s " % (a[i]))
 					giants_bin_count += 1
-					f2.write("\n")
+					f1.write("\n")
 	f1.close()
-	f2.close()
 	return (giants_sing_count, giants_bin_count,t_yr/10**6)
 
-	
 
-def find_BSS(file_string,snapno):
-	"""takes the snapshot file, the conv.sh file, the file name to write the BSS in singles and the file name to write the BSS in binaries at that snapshot.  Returns the number of BSS in single and the number of BSS in binaries."""
+def find_giants_core(file_string,snapno, rc):
+	"""takes the snapshot file, the conv.sh file, the file name to write the BSS in singles and the file name to write the BSS in binaries at that snapshot.  Returns the number of BSS in single within the core and the number of BSS in binaries within the core."""
 	snapfile=file_string+'.snap'+snapno+'.dat.gz'
 	convfile=file_string+'.conv.sh'
-	wfile1=file_string+'.snap'+snapno+'single_BSS.dat'
-	wfile2=file_string+'.snap'+snapno+'binary_BSS.dat'
+	
+	t_yr = (find_t_myr(file_string, snapno))*10**6
+	t_gyr = '%.1f' %(t_yr/10.**9.)
 
-	t_yr = (find_t_myr(snapfile,convfile))*10**6
+	#wfile1=file_string+'.snap'+snapno+'.'+str(t_gyr)+'.core.single_BSS.dat'
+	#wfile2=file_string+'.snap'+snapno+'.'+str(t_gyr)+'.core.binary_BSS.dat'
+
 	m = find_MS_turnoff(float(t_yr))
 	m_cut = (1.+0.1)*m
 	print "looking at a snap at t = %f Gyr, MS turnoff is %f MSun" % (t_yr/10**9, m)
 
 	f=gzip.open(snapfile,'rb')
+	f.seek(0)
+	#f1 = open(wfile1,'w')
+	#f2 = open(wfile2,'w')
+	giants_sing_count = 0
+	giants_bin_count = 0
+
+	#print header
+	#f1.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n")
+	#f2.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n")
+	giants_ids = []
+	giants_positions = []
+	for line in f:	
+		a=line.split()
+		if a[0]!='#' and a[0]!='#1:id':
+			if float(a[2]) <= float(rc):
+				if a[7]=='0' and float(a[14])==3.:
+					#for i in range(len(a)):
+						#f1.write("%s " % (a[i]))
+					giants_sing_count += 1
+					#f1.write("\n")
+					
+				
+				if a[7]!='0' and a[8]!='0' and a[9]!='0': 
+					if float(a[17])==3.:
+						#for i in range(len(a)):
+							#f2.write("%s " % (a[i]))
+						giants_bin_count += 1
+						#f2.write("\n")
+					if float(a[18])==3.:
+						#for i in range(len(a)):
+							#f2.write("%s " % (a[i]))
+						giants_bin_count += 1
+						#f2.write("\n")
+	f.close()
+	#f1.close()
+	#f2.close()
+	return (giants_sing_count, giants_bin_count,t_yr/10**6)
+
+
+	
+
+def find_BSS(file_string,snapno):
+	"""takes the snapshot file, the conv.sh file, the file name to write the BSS in singles and the file name to write the BSS in binaries at that snapshot.  Returns the number of BSS in single and the number of BSS in binaries."""
+	from glob import glob
+	binint=glob('*.binint.log')
+	binary=1
+	if len(binint)==0:
+		binary=0
+	print 'binary=',binary
+	snapfile=file_string+'.snap'+snapno+'.dat.gz'
+	units = read_units(file_string)
+	
+	t_yr = (find_t_myr(file_string, snapno))*10**6
+	t_gyr = '%.1f' %(t_yr/10.**9.)
+
+	wfile1=file_string+'.snap'+snapno+'.'+str(t_gyr)+'.single_BSS.dat'
+	wfile2=file_string+'.snap'+snapno+'.'+str(t_gyr)+'.binary_BSS.dat'
+
+	m = find_MS_turnoff(float(t_yr))
+	m_cut = (1.+0.05)*m
+	print "looking at a snap at t = %f Gyr, MS turnoff is %f MSun" % (t_yr/10**9, m)
+
+	f=gzip.open(snapfile,'rb')
+	f.seek(0)
 	f1 = open(wfile1,'w')
 	f2 = open(wfile2,'w')
 	bss_sing_count = 0
 	bss_bin_count = 0
 
-	#print header
-	f1.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n")
-	f2.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n")
-	for line in f:	
+	print 'header'
+	f1.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.binint? 25.pure_binint? 26.coll? 27.pure_coll? 28.se? 29.pure_se? 30.Leff(LSUN) 31.Teff(K)\n")
+	f2.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.binint? 25.pure_binint? 26.coll? 27.pure_coll? 28.se? 29.pure_se? 30.Leff(LSUN) 31.Teff(K)\n")
+	BSS_ids = []
+	BSS_positions = []
+	for line in f:
+		binint, pure_binint, coll, pure_coll, se, pure_se = 0, 0, 0, 0, 0, 0
+		coll_time = []
 		a=line.split()
 		if a[0]!='#' and a[0]!='#1:id':
 			if float(a[1])>m_cut and a[7]=='0' and float(a[14])<2.:
 				for i in range(len(a)):
 					f1.write("%s " % (a[i]))
 				bss_sing_count += 1
-				f1.write("\n")
+				dummy_id = int(a[0])
+				BSS_ids.append(dummy_id)
+				BSS_positions.append(float(a[2]))
+				#f1.write("\n")
+				#now get info about the BSS
+				hist=history_cmc.history_maker([dummy_id], [float(a[2])], file_string, binary)
+				if binary==1:
+					if len(hist[dummy_id]['binint']['binint'].keys())>0:
+						binint = 1
+						if len(hist[dummy_id]['coll'].keys())==0 and len(hist[dummy_id]['se'].keys())==0:
+							pure_binint = 1
+				if len(hist[dummy_id]['coll'].keys())>0:
+					coll = 1
+					for i in hist[dummy_id]['coll'].keys():
+						print 'key', i
+						coll_time.append(hist[dummy_id]['coll'][i]['coll_params']['time'])
+						coll_time.sort()
+						last_coll=coll_time[-1]
+
+					if len(hist[dummy_id]['binint'].keys())==0 and len(hist[dummy_id]['se'].keys())==0:
+						pure_coll = 1
+				if len(hist[dummy_id]['se'].keys())>0:
+					se = 1
+					if len(hist[dummy_id]['binint'].keys())==0 and len(hist[dummy_id]['coll'].keys())==0:
+						pure_se = 1
+
+				f1.write("%d %d %d %d %d %d " %(binint, pure_binint, coll, pure_coll, se, pure_se))
+				Teff = find_T(float(a[15]), float(a[16]))
+				Leff = float(a[15])
+				f1.write("%f %f\n" %(Leff, Teff))
+
+
 				
 			
 			if a[7]!='0' and a[8]!='0' and a[9]!='0': 
@@ -239,19 +392,200 @@ def find_BSS(file_string,snapno):
 					for i in range(len(a)):
 						f2.write("%s " % (a[i]))
 					bss_bin_count += 1
-					f2.write("\n")
+					dummy_id=int(a[10])
+					BSS_ids.append(dummy_id)
+					BSS_positions.append(float(a[2]))
+
+					#now get info about the BSS
+					hist=history_cmc.history_maker([dummy_id], [float(a[2])], file_string, binary)
+					if binary==1 and len(hist[dummy_id]['binint']['binint'].keys())>0:
+						binint = 1
+						if len(hist[dummy_id]['coll'].keys())==0 and len(hist[dummy_id]['se'].keys())==0:
+							pure_binint = 1
+					if len(hist[dummy_id]['coll'].keys())>0:
+						coll = 1
+						for i in hist[dummy_id]['coll'].keys():
+							coll_time.append(hist[dummy_id]['coll'][i]['coll_params']['time'])
+							coll_time.sort()
+							last_coll=coll_time[-1]
+						if len(hist[dummy_id]['binint'].keys())==0 and len(hist[dummy_id]['se'].keys())==0:
+							pure_coll = 1
+					if len(hist[dummy_id]['se'].keys())>0:
+						se = 1
+						if len(hist[dummy_id]['binint'].keys())==0 and len(hist[dummy_id]['coll'].keys())==0:
+							pure_se = 1
+
+					f2.write("%d %d %d %d %d %d " %(binint, pure_binint, coll, pure_coll, se, pure_se))
+					L0,R0,L1,R1=float(a[19]), float(a[21]), float(a[20]), float(a[22])
+					T0=find_T(L0, R0)
+					T1=find_T(L1, R1)
+					Leff=L0+L1
+					Teff=(L0*T0+L1*T1)/Leff
+					f2.write("%f %f\n" %(Leff, Teff))
+
+
+					#f2.write("\n")
 				if (float(a[9]))>m_cut and float(a[18])<2.:
 					for i in range(len(a)):
 						f2.write("%s " % (a[i]))
 					bss_bin_count += 1
-					f2.write("\n")
+					dummy_id = int(a[11])
+					BSS_ids.append(dummy_id)
+					BSS_positions.append(float(a[2]))
+					
+					#now get info about the BSS
+					hist=history_cmc.history_maker([dummy_id], [float(a[2])], file_string, binary)
+					if binary==1 and len(hist[dummy_id]['binint']['binint'].keys())>0:
+						binint = 1
+						if len(hist[dummy_id]['coll'].keys())==0 and len(hist[dummy_id]['se'].keys())==0:
+							pure_binint = 1
+					if len(hist[dummy_id]['coll'].keys())>0:
+						coll = 1
+						for i in hist[dummy_id]['coll'].keys():
+							coll_time.append(hist[dummy_id]['coll'][i]['coll_params']['time'])
+							coll_time.sort()
+							last_coll=coll_time[-1]
+						if len(hist[dummy_id]['binint'].keys())==0 and len(hist[dummy_id]['se'].keys())==0:
+							pure_coll = 1
+					if len(hist[dummy_id]['se'].keys())>0:
+						se = 1
+						if len(hist[dummy_id]['binint'].keys())==0 and len(hist[dummy_id]['coll'].keys())==0:
+							pure_se = 1
+
+					f2.write("%d %d %d %d %d %d " %(binint, pure_binint, coll, pure_coll, se, pure_se))
+
+					L0,R0,L1,R1=float(a[19]), float(a[21]), float(a[20]), float(a[22])
+					T0=find_T(L0, R0)
+					T1=find_T(L1, R1)
+					Leff=L0+L1
+					Teff=(L0*T0+L1*T1)/Leff
+					f2.write("%f %f\n" %(Leff, Teff))
+
+					
+
+					#f2.write("\n")
+	f.close()
 	f1.close()
 	f2.close()
-	return (bss_sing_count, bss_bin_count,t_yr/10**6)
+	return (bss_sing_count, bss_bin_count,t_yr/10**6, BSS_ids, BSS_positions)
 
 
 
+def find_BSS_core(file_string,snapno, rc):
+	"""takes the snapshot file, the conv.sh file, the file name to write the BSS in singles and the file name to write the BSS in binaries at that snapshot.  Returns the number of BSS in single within the core and the number of BSS in binaries within the core."""
+	snapfile=file_string+'.snap'+snapno+'.dat.gz'
+	convfile=file_string+'.conv.sh'
+	
+	t_yr = (find_t_myr(file_string, snapno))*10**6
+	t_gyr = '%.1f' %(t_yr/10.**9.)
 
+	#wfile1=file_string+'.snap'+snapno+'.'+str(t_gyr)+'.core.single_BSS.dat'
+	#wfile2=file_string+'.snap'+snapno+'.'+str(t_gyr)+'.core.binary_BSS.dat'
+
+	m = find_MS_turnoff(float(t_yr))
+	m_cut = (1.+0.05)*m
+	print "looking at a snap at t = %f Gyr, MS turnoff is %f MSun" % (t_yr/10**9, m)
+
+	f=gzip.open(snapfile,'rb')
+	f.seek(0)
+	#f1 = open(wfile1,'w')
+	#f2 = open(wfile2,'w')
+	bss_sing_count = 0
+	bss_bin_count = 0
+
+	#print header
+	#f1.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n")
+	#f2.write("#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n")
+	BSS_ids = []
+	BSS_positions = []
+	for line in f:	
+		a=line.split()
+		if a[0]!='#' and a[0]!='#1:id':
+			if float(a[2]) <= float(rc):
+				if float(a[1])>m_cut and a[7]=='0' and float(a[14])<2.:
+					#for i in range(len(a)):
+						#f1.write("%s " % (a[i]))
+					bss_sing_count += 1
+					BSS_ids.append(int(a[0]))
+					BSS_positions.append(float(a[2]))
+					#f1.write("\n")
+					
+				
+				if a[7]!='0' and a[8]!='0' and a[9]!='0': 
+					if (float(a[8]))>m_cut and float(a[17])<2.:
+						#for i in range(len(a)):
+							#f2.write("%s " % (a[i]))
+						bss_bin_count += 1
+						BSS_ids.append(int(a[10]))
+						BSS_positions.append(float(a[2]))
+						#f2.write("\n")
+					if (float(a[9]))>m_cut and float(a[18])<2.:
+						#for i in range(len(a)):
+							#f2.write("%s " % (a[i]))
+						bss_bin_count += 1
+						BSS_ids.append(int(a[11]))
+						BSS_positions.append(float(a[2]))
+						#f2.write("\n")
+	f.close()
+	#f1.close()
+	#f2.close()
+	return (bss_sing_count, bss_bin_count,t_yr/10**6, BSS_ids, BSS_positions)
+
+
+
+def BS_r_cum(singlefile, binaryfile, giantfile, rc, writefile, nbin):
+	sing_data=loadtxt(singlefile)
+	bin_data=loadtxt(binaryfile)
+	giant_data=loadtxt(giantfile)
+	f=open(writefile,'w')
+	
+	#initialize
+	sing_roverrc=zeros(len(sing_data))
+	bin_roverrc=zeros(len(bin_data))
+	both_roverrc=zeros(len(bin_data)+len(sing_data))
+	g_roverrc=zeros(len(giant_data))
+	
+	#getting the scaled radial distribution length scaled to the core radius 
+	for i in range(len(sing_data)):
+		sing_roverrc[i]=sing_data[i,2]/rc
+	for i in range(len(bin_data)):
+		bin_roverrc[i]=bin_data[i,2]/rc
+	for i in range(len(giant_data)):
+		g_roverrc[i]=giant_data[i,2]/rc
+	for i in range(len(sing_data)):
+		both_roverrc[i]=sing_roverrc[i]
+	for i in range(len(bin_data)):
+		both_roverrc[i+len(sing_data)]=bin_roverrc[i]
+
+
+	nbinmem = len(g_roverrc)/nbin
+	sing_cum, bin_cum, all_cum = 0., 0., 0.
+	for i in range(1,nbin):
+		temp_sing, temp_bin, temp_all = 0., 0., 0.
+		rmin, rmax = g_roverrc[(i-1)*nbinmem], g_roverrc[i*nbinmem]
+		print rmin, rmax, (rmin+rmax)/2.
+		for j in range(len(sing_roverrc)):
+			if sing_roverrc[j] < rmax and sing_roverrc[j]>=rmin:
+				temp_sing += 1
+		for j in range(len(bin_roverrc)):
+			if bin_roverrc[j] < rmax and bin_roverrc[j]>=rmin:
+				temp_bin += 1
+		for j in range(len(both_roverrc)):
+			if both_roverrc[j] < rmax and both_roverrc[j]>=rmin:
+				temp_all += 1
+		r = (rmin+rmax)/2.
+		temp_sing = temp_sing/float(nbinmem)
+		temp_bin = temp_bin/float(nbinmem)
+		temp_all = temp_all/float(nbinmem)
+		sing_cum += temp_sing
+		bin_cum += temp_bin
+		all_cum += temp_all
+
+		f.write("%f %f %f %f %f %f %f\n" %(r, temp_sing, temp_bin, temp_all, sing_cum, bin_cum, all_cum) )
+		#print r, temp_sing, temp_bin, temp_all, sing_cum, bin_cum, all_cum
+	f.close()
+
+	
 				
 def BS_r(singlefile, binaryfile, giantfile, rc, writefile):
 	"""gives the normalized radial distribution of the BSS population
@@ -286,12 +620,15 @@ def BS_r(singlefile, binaryfile, giantfile, rc, writefile):
 
 	#print sing_roverrc, bin_roverrc, both_roverrc
 	#print len(sing_roverrc), len(bin_roverrc), len(both_roverrc)
+
 	
 	
 	#get histogram for the scaled radii
-	hd_both=histogram(both_roverrc,5)
-	hd_sing=histogram(sing_roverrc,5)
-	hd_bin=histogram(bin_roverrc,5)
+	amin, amax = min(g_roverrc[:]), max(g_roverrc[:])
+	hd_both=histogram(both_roverrc,bins=50, range=(amin, amax))
+	hd_sing=histogram(sing_roverrc,bins=50, range=(amin, amax))
+	hd_bin=histogram(bin_roverrc,bins=50, range=(amin, amax))
+	hd_g=histogram(g_roverrc,bins=50, range=(amin, amax))
 
 	print hd_both, hd_sing, hd_bin
 	print len(hd_both[0]), len(hd_sing[0]), len(hd_bin[0])
@@ -421,9 +758,14 @@ def filter_single(filter,T):
 	return (const,normalized,normalize,sum,mag)
 
 def find_T(L,R):
-	"""L in LSUN and R in RSUN"""
+	"""L in LSUN and R in RSUN: returns T in K"""
 	T= (L*constants.Lsun / (4*pi*(R*constants.Rsun)**2) / constants.sigma)**0.25
 	return (T)
+
+def find_g(M,R):
+	"""M in MSun and R in RSun: returns g in CGS"""
+	g = constants.G*M*constants.Msun/(R*constants.Rsun)**2.
+	return(g)
 
 
 def filter_singles(filterdata,L,R):
@@ -516,12 +858,14 @@ def hrdiag(snap,filter1,filter2,writefile):
 	fwrite.close()
 
 
-def hrdiag_L_T(snap,writefile):
+def hrdiag_L_T(filestring, snapno):
 	"""Give it a snap file and it gives you L and T_eff for all stars
 	for binaries the temperature is a luminosity averaged temperature"""
 	print 'started' 
-	snap=loadtxt(snap)
+	snapfile=filestring+'.snap'+snapno+'.dat.gz'
+	snap=loadtxt(snapfile)
 	print 'snap done'
+	writefile=filestring+'.snap'+snapno+'.hrdiag.dat'
 	fwrite=open(writefile,'w')
 	na=-100
 	fwrite.write("#1.binflag 2.startype0 3.startype1 4.id 5.id0 6.id1 7.m0[MSUN] 8.m1[MSUN] 9.r 10.rad0[RSUN] 11.rad1[RSUN] 12.L0[LSUN] 13.L1[LSUN] 14.T0(K) 15.T1(K) 16.log10(T_eff/K) 17.log10(Leff/LSUN)\n")  #T_eff and T0 are the same for singles. For binaries Teff is L averaged T
@@ -540,8 +884,33 @@ def hrdiag_L_T(snap,writefile):
 			print (i,snap[i,7])
 	fwrite.close()
 
-	
-		
+
+def prune_hrdiag_L_T(filestring, snapno, smoothlength):
+	hrdfile=filestring+'.snap'+snapno+'.hrdiag.dat'
+	writefile=filestring+'.snap'+snapno+'.hrdiag_pruned.dat'
+	f=open(writefile, 'w')
+
+	data=loadtxt(hrdfile)
+	for i in range(len(data)):
+		if data[i,0]==0:  #single
+			if data[i,1]<2 and i%smoothlength==0:  #prune some single MSSs
+				for j in range(len(data[i,:])):
+					f.write("%f " %(data[i,j],))
+				f.write("\n")
+			elif data[i,1]>=2:  #all other stars don't prune
+				for j in range(len(data[i,:])):
+					f.write("%f " %(data[i,j],))
+				f.write("\n")
+		elif data[i,0]==1:   #binaries
+			if data[i,1]<2 and data[i,2]<2 and i%smoothlength==0:   #prune some MS binaries
+				for j in range(len(data[i,:])):
+					f.write("%f " %(data[i,j],))
+				f.write("\n")
+			else:						#print everything else
+				for j in range(len(data[i,:])):
+					f.write("%f " %(data[i,j],))
+				f.write("\n")
+	f.close()	
 
 
 def color_comp(snap,writefile,filter1,filter2,filter3,filter4):
@@ -597,17 +966,397 @@ def find_rtidal(mc,vg,rg):
 	return r_tidal
 
 
-	
-	
+def find_t_vs_rgb(filestring):
+	from glob import glob
+	files = glob('*.dat.gz')
+	dynfile = filestring+'.dyn.dat'
+	dyndata = loadtxt(dynfile)
+	convfile = filestring+'.conv.sh'
+	units = read_units(convfile)
+	wfile = filestring+'.t_rgb_bss.dat'
+	wfile = open(wfile, 'w')
+	wfile.write("#1.t(Myr) 2.SBSS 3.BBSS 4.tot_BSS 5.SRGB 6.BRGB 7.tot_RGB 8.SBSS_c 9.BBSS_c 10.tot_BSS_c\n")
+	for i in range(len(files)):
+		filestring = files[i].split('.snap')[0]
+		snapno = files[i].split('.snap')[1].split('.')[0]
+		snapfile = gzip.open(str(files[i]),'rb')
+		t_snap = float(snapfile.readline().split('=')[1].split('[')[0])
+		m_to = find_MS_turnoff(t_snap*units[7]*1e6)
+		m_cut = 1.1*m_to
+		snapdata = loadtxt(snapfile)
+
+		for j in range(len(dyndata)):
+			if t_snap == dyndata[j,0]:
+				rc_snap = dyndata[j,7]
+				rh_snap = dyndata[j,20]
+
+		#get bss
+		bss_sing_count = 0
+		bss_bin_count = 0
+		bss_sing_count_core = 0
+		bss_bin_count_core = 0
+		giants_sing_count = 0
+		giants_bin_count = 0
+		for j in range(len(snapdata)):
+			if snapdata[j,0]!='#' and snapdata[j,0]!='#1:id':
+				if snapdata[j,1]>m_cut and snapdata[j,7]==0 and snapdata[j,14]<2.:
+					bss_sing_count += 1
+					if snapdata[j,2]<=rc_snap:
+						bss_sing_count_core += 1
+				if snapdata[j,7]==0 and snapdata[j,14]==3:
+					giants_sing_count += 1
+			
+				if snapdata[j,7]!=0. and snapdata[j,8]!=0. and snapdata[j,9]!=0.: 
+					if snapdata[j,8]>m_cut and snapdata[j,17]<2.:
+						bss_bin_count += 1
+						if snapdata[j,2]<=rc_snap:
+							bss_bin_count_core += 1
+					if snapdata[j,9]>m_cut and snapdata[j,18]<2.:
+						bss_bin_count += 1
+						if snapdata[j,2]<=rc_snap:
+							bss_bin_count_core += 1
+					if snapdata[j,17]==3 or snapdata[j,18]==3:
+						giants_bin_count += 1
+
+
+		print t_snap*units[7]/10.**3., 'Gyr'
+		tot_bss_snap = bss_sing_count + bss_bin_count 
+		tot_bss_core_snap = bss_sing_count_core + bss_bin_count_core 
+		tot_giants_snap = giants_sing_count + giants_bin_count 
+
+		dummy = ( t_snap*units[7], bss_sing_count, bss_bin_count, tot_bss_snap, giants_sing_count, giants_bin_count, tot_giants_snap, bss_sing_count_core, bss_bin_count_core, tot_bss_core_snap )
+		for j in range(len(dummy)):
+			wfile.write("%f " %(dummy[j]))
+		wfile.write("\n")
+
+		snapfile.close()
+
+	wfile.close()
 
 
 
+def two_point_correlation(a1, a2):
+	"""given two arrays of numbers of equal dimension gives the 2-point correlation coefficient.  """
 
-	
-	
-	
+	a1_bar = mean(a1)
+	a2_bar = mean(a2)
+	a1_sd = std(a1)
+	a2_sd = std(a2)
 
-					
-				
-	
+	sum=0
+	try:
+		if len(a1)!=len(a2):
+			raise StopIteration()
+		else:
+			for i in range(len(a1)):
+				sum += (a1[i]-a1_bar)*(a2[i]-a2_bar)/(a1_sd*a2_sd)
+	except StopIteration:
+		print "bad arrays: arrays have different dimensions"
+		pass
 		
+	cor = float(sum)/float(len(a1))
+
+	return cor
+
+def tidal_mass_loss(filestring):
+	"""creates file with tidal mass loss and stellar evolution mass loss
+	takes the filestring and creates a file"""
+
+	dynfile=filestring+'.dyn.dat'
+	outfile=filestring+'.mass_loss.dat'
+	convfile=filestring+'.conv.sh'
+
+	data=loadtxt(dynfile)
+	units=read_units(convfile)
+	f=open(outfile, 'w')
+
+	sum_Mse=0.
+	f.write("#1.t(Myr) 2.M/M(0) 3.M_SE/M(0) 4.dM_SE/M(0)\n")
+	for i in range(len(data)):
+		sum_Mse += data[i,25]/units[1]
+		f.write("%f %f %f %f\n" %(data[i,0]*units[7], data[i,4], data[0,4]-sum_Mse, data[i,25]/units[1]))
+	
+	f.close()
+
+def mass_vs_tdiss(filestring):
+
+	dynfile=filestring+'.dyn.dat'
+	convfile=filestring+'.conv.sh'
+
+	units=read_units(convfile)
+	data=loadtxt(dynfile, usecols=(0,4))
+	tdiss=[-100, -100, -100, -100, -100, -100, -100, -100]
+	count=0
+	for j in (0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.05):
+		success=0
+		for i in range(len(data)):
+			if data[i,1]<j and success==0:
+				t1=data[i-1,0]
+				t2=data[i,0]
+				m1=data[i-1,1]
+				m2=data[i,1]
+				t=t1 - (j-m1)*(t2-t1)/(m2-m1)
+				tdiss[count]=t*units[7]
+				success=1
+				count += 1
+	print "%f %f %f %f %f %f %f %f %f" %(units[1], tdiss[0], tdiss[1], tdiss[2], tdiss[3], tdiss[4], tdiss[5], tdiss[6], tdiss[7])
+
+
+def bss_rdist_cumulative(hrdiagfile, mcut, nbin):
+	"""take the file created by hrdiag_L_T and create a cumulative 
+	radial distribution normalized with the RGBs"""
+	data = loadtxt(hrdiagfile)
+	bss_sing_r = []
+	bss_bin_r = []
+	bss_all_r = []
+	rgb_r = []
+	for i in range(len(data)):
+		if data[i,0]==0:  #singles
+			if data[i,6]>mcut and data[i,1]<2:  #BSSs
+				bss_all_r.append(data[i,8])
+				bss_sing_r.append(data[i,8])
+		if data[i,0]==1: #binaries
+			if data[i,6]>mcut and data[i,1]<2:  #BSSs
+				bss_all_r.append(data[i,8])
+				bss_bin_r.append(data[i,8])
+			if data[i,7]>mcut and data[i,2]<2:  #BSSs
+				bss_all_r.append(data[i,8])
+				bss_bin_r.append(data[i,8])
+		if data[i,1]==3 or data[i,2]==3:
+			rgb_r.append(data[i,8])
+
+	maxr_g, minr_g = max(rgb_r), min(rgb_r)
+	maxr_bss = max(bss_all_r)
+	if maxr_g >= maxr_bss:
+		maxr = maxr_g
+	else:
+		maxr = maxr_bss
+	minr = minr_g
+
+	print len(bss_all_r), len(bss_sing_r), len(bss_bin_r), len(rgb_r)
+	
+	cum_bss_all = cumulate_array(bss_all_r, minr, maxr, nbin)
+	cum_bss_sing = cumulate_array(bss_sing_r, minr, maxr, nbin)
+	cum_bss_bin = cumulate_array(bss_bin_r, minr, maxr, nbin)
+	cum_rgb = cumulate_array(rgb_r, minr, maxr, nbin)
+
+	binsize = (maxr-minr)/nbin
+	for i in range(len(cum_rgb)):
+		print cum_rgb[i][0], cum_bss_all[i][1], cum_bss_sing[i][1], cum_bss_bin[i][1], cum_rgb[i][1]
+		
+
+def cumulate_array(a, minvalue, maxvalue, nbin):
+	"""Cumulates from array a from minvalue with steps of 
+	binsize=(maxvalue-minvalue)/nbin and prints out the values"""
+	binsize = (maxvalue-minvalue)/nbin
+	c_array = []
+	for i in range(nbin+1):
+		c = 0
+		a_temp = minvalue+(i+1)*binsize
+		for j in range(len(a)):
+			if a[j] < a_temp:
+				c += 1
+		c_array.append([a_temp, c])
+	return c_array
+		
+
+def nbss_mcut(hrdiagfile, mcut):
+	data = loadtxt(hrdiagfile)
+	for j in range(100):
+		n, ns, nbin = 0, 0, 0
+		for i in range(len(data)):
+        		if data[i,0]==0 and data[i,1]<2 and data[i,6]>mcut:
+            			n += 1
+				ns += 1
+        		elif data[i,1]==1:
+            			if data[i,1]<2 and data[i,6]>mcut:
+                			n += 1
+					nbin += 1
+            			elif data[i,2]<2 and data[i,7]>mcut:
+                			n += 1
+					nbin += 1
+    		print mcut, n, ns, nbin
+    		mcut += 0.01
+
+
+def make_3D(r):
+	"""takes some quantity, like the radial position of a star and creates the 3D position 
+	by randomly creating the angles \theta and \phi.  Assumes spherical symmetry.  """
+	import random
+	costheta = random.uniform(-1, 1)
+	sintheta = (1-costheta**2.)**0.5
+	phi = random.uniform(0, 4*pi)
+	rz = r*costheta
+	rx = r*sintheta*cos(phi)
+	ry = r*sintheta*sin(phi)
+
+	return (rx, ry, rz)
+
+def surface_density_profile_L(filestring, snapno, seedy, proj, nbins, bintype, writefile):
+	"""takes the filestring for the run, snapno of interest, seed the random generator, 
+	projections like (0, 1, 2) gives 3D projection, (0, 1) gives 2d suppressing z
+	no of bins wanted and the binning type, 0:equal member in each bin 1:bins are equidistant 
+	in log10(r2D)"""
+	#first learn the physical units
+	units = read_units(filestring)
+	lpc = units[0]['l_pc']
+
+	writefile=open(writefile, 'w')
+
+	#read the snapfile
+	snapfile = filestring+'.snap'+snapno+'.dat.gz'
+	colnos = (2, 7, 15, 19, 20, 14, 17, 18)
+	data = loadtxt(snapfile, usecols=colnos)
+
+	dtype = [('r', float), ('x', float), ('y', float), ('z', float), ('r2D', float), ('logr2D', float), ('binflag', int), ('L', float), ('type0', int), ('bintype0', int), ('bintype1', int)]
+	a = []
+	import random
+	random.seed(seedy)
+	for i in range(len(data)):
+		rs = make_3D(data[i,0])
+		r2d = 0
+		for j in proj:
+			r2d += rs[j]**2. 
+		r2d = r2d**0.5
+
+		if data[i,1]==0:		#singles
+			a.append((data[i,0]*lpc, rs[0]*lpc, rs[1]*lpc, rs[2]*lpc, r2d*lpc, log10(r2d*lpc), data[i,1], data[i,2], data[i,5], data[i,6], data[i,7]))
+		elif data[i,1]==1:		#binaries
+			a.append((data[i,0]*lpc, rs[0]*lpc, rs[1]*lpc, rs[2]*lpc, r2d*lpc, log10(r2d*lpc), data[i,1], data[i,3]+data[i,4], data[i,5], data[i,6], data[i,7]))
+
+	a = array(a, dtype=dtype)
+	a = sort(a, order='logr2D')
+	print a[:]['logr2D']
+	#for equal member binning
+	if bintype==0:
+		binsize = len(a)/nbins  
+		for i in range(binsize, len(a), binsize):
+			if a[i]['type0']!=3 and a[i]['bintyppe0']!=3 and a[i]['bintype1']!=3:
+				lsum = sum(a[i-binsize:i]['L'])
+			#print lsum, i, binsize, i-binsize
+			#for j in range(i-binsize, i):
+			#	print a[j]['L']
+			area = 4.*pi*(a[i]['r2D']**2. - a[i-binsize]['r2D']**2.)
+			lsum, lsum_err = lsum/area, lsum/float(binsize**0.5)/area
+			n2d, n2d_err = binsize/area, float(binsize**0.5)/area
+			r2d_av = (a[i]['r2D']+a[i-binsize]['r2D'])/2.
+			writefile.write("%f %f %f %f %f\n" %(r2d_av, lsum, lsum_err, n2d, n2d_err))
+			#print r2d_av, lsum, lsum_err, n2d, n2d_err
+
+
+	#for binning equidistant in logr2D
+	elif bintype==1:
+		lbinsize = abs((a[-1]['logr2D']-a[0]['logr2D'])/nbins)
+		n2d_prev=0	
+		for i in range(1, nbins):
+			lsum, lsum_err, rsum, n2d, n2d_err = 0., 0., 0., 0., 0.
+			lsum_cut, lsum_cut_err, n2d_cut, n2d_cut_err = 0., 0., 0., 0.
+			lr_upperbound, lr_lowerbound = a[0]['logr2D']+i*lbinsize, a[0]['logr2D']+(i-1)*lbinsize
+			lr2D_av = (lr_upperbound+lr_lowerbound)/2.
+			area = pi*( (10.**lr_upperbound)**2. - (10**lr_lowerbound)**2. )
+			try:
+				for j in range(n2d_prev, len(a)):
+					if a[j]['logr2D']<lr_upperbound and a[j]['logr2D']>=lr_lowerbound:
+						lsum += a[j]['L'] 
+						n2d += 1
+						if a[j]['L']<=20.:
+							lsum_cut += a[j]['L']
+							n2d_cut += 1
+					else:
+						raise StopIteration()
+			except StopIteration:
+				print n2d, n2d_prev, 'got the values'
+			n2d_prev += n2d
+			#print lr2D_av, n2d
+			if n2d>1:	#just to avoid the points with 100% poisson error
+				lsum, lsum_err = lsum/area, lsum/float(n2d)**(0.5)/area
+				lsum_cut, lsum_cut_err = lsum_cut/area, lsum_cut/float(n2d_cut)**(0.5)/area
+				n2d, n2d_err = n2d/area, float(n2d)**0.5/area
+				n2d_cut, n2d_cut_err = n2d_cut/area, float(n2d_cut)**0.5/area
+				writefile.write("%f %f %f %f %f %f %f %f %f\n" %(10**lr2D_av, lsum, lsum_err, n2d, n2d_err, lsum_cut, lsum_cut_err, n2d_cut, n2d_cut_err))
+				#print 10**lr2D_av, lsum, lsum_err, n2d, n2d_err
+
+
+	writefile.close()
+
+
+
+
+
+def king_fit(r, n, rc_guess, rt_guess):
+	"""fits a single mass King profile given the r array, the n array and 
+	the initial guesses for rc and rt"""
+	rc = []
+	rt = []
+	for i in range(100):
+		rc.append(rc_guess*(1.-50*0.01)+0.01*rc_guess*i)
+		rt.append(rt_guess*(1.-50*0.01)+0.01*rt_guess*i)
+	a = []
+	dtype = [('rc', float), ('rt', float), ('norm', float), ('sqsum', float)]
+	for i in range(len(rc)):
+		for j in range(len(rt)):
+			norm = n[len(n)/2]/( ( 1/ (1+ (r[len(r)/2]/rc[i])**2.)**0.5 ) - ( 1/ (1+ (rt[j]/rc[i])**2.)**0.5 ) )**2.
+			sqsum = 0.
+			for k in range(len(n)):
+				n_k = norm*( 1/( 1+ (r[k]/rc[i])**2. )**0.5 - 1/( 1+ (rt[j]/rc[i])**2. )**0.5 )**2.
+				sqsum += (n[k] - n_k)**2.
+			a.append( (rc[i], rt[j], norm, sqsum) ) 
+	a = array(a, dtype=dtype)
+	a = sort(a, order='sqsum')
+
+	return a
+
+def smooth_data(filename, smoothlength, writefile):
+	"""smoothens data with the smoothing length smoothlength and writes in writefile"""
+	data=loadtxt(filename)
+	writefile=open(writefile, 'w')
+	for i in range(smoothlength, len(data)):
+    		if i%smoothlength==0:
+        		for j in range(len(data[i,:])):
+            			temp=mean(data[i-smoothlength:i,j])
+            			writefile.write("%f " %(temp))
+        		writefile.write("\n")
+	writefile.close()
+
+
+def get_roche_r(q, a):
+	R = a*0.49*q**(2./3.) / (0.6*q**(2./3.) + log(1+q**(1./3.)))
+
+	return R
+
+def get_period(a,m1,m2): #all in CGS
+	p = (4.*pi**2.*(a**3.)/constants.G/(m1+m2))**0.5 /3600./24.	#p in days
+
+	return p
+
+def plot_P_e(bsfilename):
+	data = loadtxt(bsfilename)
+	p = []
+	for i in range(len(data)):
+		p.append(get_period(data[i,12]*constants.AU, data[i,8]*constants.Msun, data[i,9]*constants.Msun))
+	
+	
+	#separate
+	msms=[]
+	msg=[]
+	for i in range(len(data)):
+		if data[i,17]<2 and data[i,18]<2:
+			msms.append((p[i],data[i,13]))
+		else:
+			msg.append((p[i],data[i,13]))
+
+
+
+
+	dtype = [('p', float), ('e', float)] 
+        msms = array(msms, dtype=dtype)
+	msg = array(msg, dtype=dtype)
+
+	print msms[:]['p'], msms[:]['e']
+	#now plot
+	import gracePlot
+	gpl=gracePlot.gracePlot()
+	gpl.hold()
+	gpl.plot(msms[:]['p'], msms[:]['e'], symbols=1)
+	gpl.plot(msg[:]['p'], msg[:]['e'], symbols=1)
+

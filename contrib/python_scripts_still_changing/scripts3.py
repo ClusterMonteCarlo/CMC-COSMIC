@@ -6,6 +6,7 @@ def find_positions(f):
 	"""Takes binint file's file pointer to find the byte positions for interactions"""
 	#f=open(s1,'r')
 	seek_line=()
+	f.seek(0)
 	try:
     		while f:
         		line=f.readline()
@@ -98,6 +99,8 @@ def read_segment(f,position):
 		
 		line=f.readline()
 		if line.rfind('stopped')>-1:
+			raise StopIteration()
+		elif line.rfind('error')>-1:
 			raise StopIteration()
 
 		#print line+' look here %ld ' % position

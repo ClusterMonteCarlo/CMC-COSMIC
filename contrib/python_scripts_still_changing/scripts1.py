@@ -55,52 +55,85 @@ def collision(collfile):
 	return coll_prod
 
 
-
-def id_tracker_coll(coll,id,count,coll_history):
-	"""takes: 
-	coll: collision dictionary made by the collision module, 
-	id: star id in question, 
-	count: counter for the level of branching of the collision tree
-	coll_history: another initialized dictionary where the tree is written out
-	the reason for the need of collision_history is to be able to call this as a module externally from another module"""
+def test_coll(coll, id, coll_history, dummy, level):
+	level.append(dummy)
 	try:
-		#print id
 		if coll.has_key(id):
-			coll_history[count]=coll[id]
-			#coll_history
+			coll_history[id] = {'coll_params': coll[id],
+					'level': level[dummy]
+					}
+			#print coll_history
+			for i in range(coll_history[id]['coll_params']['parents']['nopar']):
+				dummy += 1
+				level.append(dummy)
+				parid = coll_history[id]['coll_params']['parents']['IDs'][i]
+				#print level[dummy], dummy, parid
+				test_coll(coll, parid, coll_history, dummy, level)
+			dummy -= 1
+
 		else:
-			#print 'star %ld did not have a collision' % (id,)
+			#print 'star%ld no collision' %(id,)
 			raise StopIteration()
-	
-		#print coll_history[count]['parents']['nopar']
-		for i in range(coll_history[count]['parents']['nopar']):
-			parid = coll_history[count]['parents']['IDs'][i]
-			print parid, count
-			if coll.has_key(parid):
-				#print 'parid found'
-				count += 1
-				id_tracker_coll(coll,parid,count,coll_history)
-			else:
-				#print 'not found'
-				raise StopIteration()
+
 	except StopIteration:
+		#print '%ld no coll found' %(id)
 		pass
+
 	return coll_history
 
 
-
 def call_collision_tree(coll,id):
-	"""This one basically calls the tree maker above
+	"""This one basically calls the tree maker above and initializes some necessary parameters for the tree maker
 	collfile: the collisionfile is fed to collision routine to populate coll dictionary
 	id: id in question
 	coll_history: initialize the dictionary where the tree will be written out"""
 	#coll=collision(collfile)
+	print id
 	collision_history={}
-	count=0 # this is the first level in the tree so always zero, recursion is in id_tracker_coll
-	coll_tree = id_tracker_coll(coll,id,count,collision_history)
+	level = []
+	dummy = 0
+	coll_tree = test_coll(coll,id,collision_history, dummy, level)
 	return coll_tree
 
 
 
-
+#def id_tracker_coll(coll,id,count,coll_history):
+#	"""takes: 
+#	coll: collision dictionary made by the collision module, 
+#	id: star id in question, 
+#	count: counter for the level of branching of the collision tree
+#	coll_history: another initialized dictionary where the tree is written out
+#	the reason for the need of collision_history is to be able to call this as a module externally from another module"""
+#	try:
+#		#print id
+#		if coll.has_key(id):
+#			coll_history[count]=coll[id]
+#			print coll_history
+#		else:
+#			print 'star %ld did not have a collision' % (id,)
+#			raise StopIteration()
+#	
+#		print 'nopar=', coll_history[count]['parents']['nopar']
+#		print 'range=', range(coll_history[count]['parents']['nopar']), count
+#		#for i in range(coll_history[count]['parents']['nopar']):
+#		for i in coll_history[count]['parents']['IDs']:
+#			print count, i, coll_history[count]['parents']['IDs']
+#			parid = coll_history[i]['parents']['IDs'][i]
+#			print parid, count, i
+#			if coll.has_key(parid):
+#				print 'parid found'
+#				count += 1
+#				id_tracker_coll(coll,parid,count,coll_history)
+#				print 'new', count
+#			else:
+#				print 'not not found'
+#				#raise StopIteration()
+#		count -= 1 
+#		print 'iiiiii', i, count
+#		raise StopIteration()
+#	except StopIteration:
+#		pass
+#	return coll_history
+#
+#
 

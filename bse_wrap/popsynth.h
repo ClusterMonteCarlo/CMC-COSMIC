@@ -1,4 +1,8 @@
+<<<<<<< .mine
+#define NBIN 100
+=======
 #define NBIN 500000
+>>>>>>> .r705
 
 typedef struct{
 	long id1; /* unique id of star 1 */

@@ -6,58 +6,120 @@ import scripts1
 import scripts2
 import scripts3
 
-def history_maker(ids,file_string):
+def history_maker(ids,positions,file_string,binary):
 	"""creates the full history of interesting stars
 	ids: array containing the ids of interesting stars
 	binintfile: binint file
 	collfile: collision log file
 	mergefile: merger file
-	filestring: the filestring from cmc"""
+	filestring: the filestring from cmc
+	binary: whether there was any primordial binaries or not -> 0: no binary, 1: yes binary"""
 	binintfile=file_string+'.binint.log'
 	collfile=file_string+'.collision.log'
 	mergefile=file_string+'.semergedisrupt.log'
 	history_interactions={}
-	#make the binint dictionary by reading from the binint log file
-	binint=scripts3.read_binint(binintfile) 
 	#make the collision dictionary by reading and sorting the collision log file
 	coll=scripts1.collision(collfile)
 	#make the pure stellar evolution dictionary
 	se=scripts2.bse_int(mergefile)
 
+	if binary:
+		#make the binint dictionary by reading from the binint log file
+		binint=scripts3.read_binint(binintfile) 
+
+
 	#now go through the ids of interest and populate the history file with every kind of interactions
 	for i in range(len(ids)):
-		#read the binint history of the id in this dictionary
-		binint_id=scripts3.binary_interaction(binint,ids[i,0])
-		bininteract={'binint': binint_id,
-			'binint_coll': {}
-			}
-		#cross_correlate with collisions: if binint resulted in a merger this gives if any of the stars had any collisions before this
-		if len(binint_id.keys())>0:
-			for j in binint_id.keys():
-				print j
-				if binint_id[j]['merge']==1:
-					for k in range(len(binint_id[j]['mergeids'])):
-						cross_id=int(binint_id[j]['mergeids'][k])
-						print cross_id
-						binint_coll=scripts1.call_collision_tree(coll,cross_id)
-						bininteract['binint_coll'][k]=binint_coll
+		if binary:
+			#read the binint history of the id in this dictionary
+			binint_id=scripts3.binary_interaction(binint,ids[i])
+			bininteract={'binint': binint_id,
+				'binint_coll': {}
+				}
+			#cross_correlate with collisions: if binint resulted in a merger this gives if any of the stars had any collisions before this
+			if len(binint_id.keys())>0:
+				for j in binint_id.keys():
+					print j
+					if binint_id[j]['merge']==1:
+						for k in range(len(binint_id[j]['mergeids'])):
+							cross_id=int(binint_id[j]['mergeids'][k])
+							print cross_id
+							binint_coll=scripts1.call_collision_tree(coll,cross_id)
+							bininteract['binint_coll'][k]=binint_coll
+		else:
+			bininteract = {}
 			
-		collision=scripts1.call_collision_tree(coll,ids[i,0])
+		collision=scripts1.call_collision_tree(coll,ids[i])
 
-		if se.has_key(ids[i,0]):
-			se_id=se[ids[i,0]]
+		if se.has_key(ids[i]):
+			se_id=se[ids[i]]
 		else:
 			se_id={}
 
-		history_interactions[ids[i,0]]={'binint': bininteract,
+		history_interactions[ids[i]]={'binint': bininteract,
 				'coll': collision,
 				'se': se_id,
-				'position': ids[i,1]
+				'position': positions[i]
 				}
 	
 	return history_interactions
 
-def branching_ratio(history,r_reference):
+
+
+def branching_ratio(history, binary):
+	all=[]
+	binint=[]
+	pure_binint=[]
+	coll=[]
+	pure_coll=[]
+	merger=[]
+	pure_merger=[]
+	binint_coll=[]
+	binint_merger=[]
+	
+	for i in history.keys():
+		all+=[history[i]['position']]
+		if binary and len(history[i]['binint']['binint'].keys())>0:
+		#if len(history[i]['binint']['binint'].keys())>0:
+			binint+=[history[i]['position']]
+		
+		if binary==1 and len(history[i]['binint']['binint'].keys())>0 and len(history[i]['coll'].keys())==0 and len(history[i]['se'].keys())==0:
+			pure_binint+=[history[i]['position']]
+
+		if len(history[i]['coll'].keys())>0:
+			coll+=[history[i]['position']]
+
+		if binary==1 and len(history[i]['binint']['binint'].keys())==0 and len(history[i]['coll'].keys())>0 and len(history[i]['se'].keys())==0:
+			pure_coll+=[history[i]['position']]
+			
+		if binary==1 and len(history[i]['se'].keys())>0:
+			merger+=[history[i]['position']]
+
+		if binary==1 and len(history[i]['binint']['binint'].keys())==0 and len(history[i]['coll'].keys())==0 and len(history[i]['se'].keys())>0:
+			pure_merger+=[history[i]['position']]
+
+		if binary==1 and len(history[i]['coll'].keys())>0 and len(history[i]['binint']['binint'].keys())>0:
+			binint_coll+=[history[i]['position']]
+
+		if binary==1 and len(history[i]['se'].keys())>0 and len(history[i]['binint']['binint'].keys())>0:
+			binint_merger+=[history[i]['position']]
+
+	if binary==0:
+		pure_coll = coll
+
+	branching_ratio={'binint': float(len(binint))/float(len(history.keys())),
+			'pure_binint': float(len(pure_binint))/float(len(history.keys())),
+			'coll': float(len(coll))/float(len(history.keys())),
+			'pure_coll': float(len(pure_coll))/float(len(history.keys())),
+			'merger': float(len(merger))/float(len(history.keys())),
+			'pure_merger': float(len(pure_merger))/float(len(history.keys()))
+			}
+
+	return branching_ratio
+
+
+
+def branching_ratio_plot(history,r_reference):
 	all=[]
 	binint=[]
 	pure_binint=[]
