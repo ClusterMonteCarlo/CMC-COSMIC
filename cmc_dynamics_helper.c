@@ -304,6 +304,41 @@ double binint_get_mass(long k, long kp, long id)
 	exit(1);
 }
 
+/*Sourav: find stellar types of merging stars from binary interaction components */
+long binint_get_startype(long k, long kp, long id)
+{
+	/* first look at k */
+	if (star[k].binind == 0) {
+		if (star[k].id == id) {
+			return(star[k].se_k);
+		}
+	} else {
+		if (binary[star[k].binind].id1 == id) {
+			return(binary[star[k].binind].bse_kw[0]);
+		} else if (binary[star[k].binind].id2 == id) {
+			return(binary[star[k].binind].bse_kw[1]);
+		}
+	}
+	
+	/* then at kp */
+	if (star[kp].binind == 0) {
+		if (star[kp].id == id) {
+			return(star[kp].se_k);
+		}
+	} else {
+		if (binary[star[kp].binind].id1 == id) {
+			return(binary[star[kp].binind].bse_kw[0]);
+		} else if (binary[star[kp].binind].id2 == id) {
+			return(binary[star[kp].binind].bse_kw[1]);
+		}
+	}
+	
+	eprintf("cannot find matching id %ld!\n", id);
+	exit_cleanly(1);
+	/* this is just for the compiler */
+	exit(1);
+}
+
 
 //Sourav: toy rejuvenation- finding creation times of binary interaction components
 double binint_get_createtime(long k, long kp, long id)
@@ -499,7 +534,7 @@ void binint_log_status(fb_ret_t retval)
 }
 
 void binint_log_collision(const char interaction_type[], long id,
-			  double mass, double r, fb_obj_t obj, long k, long kp)
+			  double mass, double r, fb_obj_t obj, long k, long kp, long startype)
 {
 	int j;
 	
@@ -514,7 +549,13 @@ void binint_log_collision(const char interaction_type[], long id,
 			binint_get_mass(k, kp, obj.id[j]) * units.mstar 
 							  / FB_CONST_MSUN);
 	}
-	fprintf(collisionfile," (r=%g)", r);
+	fprintf(collisionfile," (r=%g) ", r);
+//Sourav
+	fprintf(collisionfile, "typem=%ld ", startype);
+	for (j=0; j<obj.ncoll; j++) {
+		fprintf(collisionfile, "type%d=%ld ", j+1, 
+				binint_get_startype(k, kp, obj.id[j]));
+	}
 	fprintf(collisionfile, "\n");
 }
 
@@ -780,7 +821,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						star[knew].id, star[knew].m, 
 						star[knew].r,
-						*(hier.obj[i]), k, kp);
+						*(hier.obj[i]), k, kp, star[knew].se_k);
 				}
 				
 				star[knew].rad = star[knew].se_radius * RSUN / units.l;
@@ -841,7 +882,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						binary[star[knew].binind].id1,
 						binary[star[knew].binind].m1, 
 						star[knew].r,
-						*(hier.obj[i]->obj[0]), k, kp);
+						*(hier.obj[i]->obj[0]), k, kp, binary[star[knew].binind].bse_kw[0]);
 
                                         if (binary[star[knew].binind].m1==0.) {
                                           dprintf("Zero mass remnant! Parameters: knew=%li, binind=%li, kw[0]=%i, kw[1]=%i\n",
@@ -888,7 +929,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						binary[star[knew].binind].id2,
 						binary[star[knew].binind].m2, 
 						star[knew].r,
-						*(hier.obj[i]->obj[1]), k, kp);
+						*(hier.obj[i]->obj[1]), k, kp, binary[star[knew].binind].bse_kw[1]);
                                         if (binary[star[knew].binind].m2==0.) 
                                           dprintf("Zero mass remnant! Parameters: knew=%li, binind=%li, kw[0]=%i, kw[1]=%i\n",
                                               knew, star[knew].binind, binary[star[knew].binind].bse_kw[0], 
@@ -969,7 +1010,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						star[knewp].id, star[knewp].m, 
 						star[knewp].r,
-						*(hier.obj[i]->obj[sid]), k, kp);
+						*(hier.obj[i]->obj[sid]), k, kp, star[knewp].se_k);
 				}
 
 				/* radius */
@@ -1029,7 +1070,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						binary[star[knew].binind].id1,
 						binary[star[knew].binind].m1, 
 						star[knew].r,
-						*(hier.obj[i]->obj[bid]->obj[0]), k, kp);
+						*(hier.obj[i]->obj[bid]->obj[0]), k, kp, binary[star[knew].binind].bse_kw[0]);
 				}
 				if (hier.obj[i]->obj[bid]->obj[1]->ncoll == 1) {
 					binary[star[knew].binind].id2 = hier.obj[i]->obj[bid]->obj[1]->id[0];
@@ -1069,7 +1110,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						binary[star[knew].binind].id2,
 						binary[star[knew].binind].m2, 
 						star[knew].r,
-						*(hier.obj[i]->obj[bid]->obj[1]), k, kp);
+						*(hier.obj[i]->obj[bid]->obj[1]), k, kp, binary[star[knew].binind].bse_kw[1]);
 				}
 				
 				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;

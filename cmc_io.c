@@ -56,7 +56,7 @@ void print_2Dsnapshot(void)
 		
 		/* print useful header */
 		gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
-		gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN]\n");
+		gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.star.phi\n");
 		
 		/* then print data */
 		for (i=1; i<=clus.N_MAX; i++) {
@@ -84,7 +84,7 @@ void print_2Dsnapshot(void)
 					binary[j].bse_lum[0], binary[j].bse_lum[1],
 					binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN);
 			}
-			gzprintf(snapfile, "\n");
+			gzprintf(snapfile, "%0.12g\n", star[i].phi);
 		}
 		
 		gzclose(snapfile);
@@ -1036,7 +1036,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 	/* print header */
-	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r)\n");
+	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
 
 	/* Stellar evolution merger log file */
 	sprintf(outfile, "%s.semergedisrupt.log", outprefix);
