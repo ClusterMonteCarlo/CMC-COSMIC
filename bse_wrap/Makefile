@@ -11,7 +11,7 @@ BSEOBJS = bse/comenv.o bse/corerd.o bse/deltat.o \
 	bse/mrenv.o bse/ran3.o bse/rl.o bse/star.o \
 	bse/zcnsts.o bse/zfuncs.o
 
-all: c_sse c_bse popsynth
+all: c_sse c_bse popsynth popsynth-mpi
 
 c_sse: c_sse.o bse_wrap.o $(BSEOBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
@@ -28,8 +28,14 @@ c_bse.o: c_bse.c bse_wrap.h
 popsynth: popsynth.o bse_wrap.o $(BSEOBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
 
+popsynth-mpi: popsynth-mpi.o bse_wrap.o $(BSEOBJS)
+	mpicc $(CFLAGS) $^ -o $@ $(LIBFLAGS)
+
 popsynth.o: popsynth.c popsynth.h bse_wrap.h
 	$(CC) $(CFLAGS) -c $< -o $@
+
+popsynth-mpi.o: popsynth-mpi.c popsynth.h bse_wrap.h
+	mpicc $(CFLAGS) -c $< -o $@
 
 bse_wrap.o: bse_wrap.c bse_wrap.h
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -41,6 +47,6 @@ bseclean:
 	rm -f $(BSEOBJS)
 
 localclean:
-	rm -f bse_wrap.o c_sse.o c_sse c_bse.o c_bse popsynth.o popsynth
+	rm -f bse_wrap.o c_sse.o c_sse c_bse.o c_bse popsynth.o popsynth popsynth-mpi.o popsynth-mpi
 
 clean: bseclean localclean
