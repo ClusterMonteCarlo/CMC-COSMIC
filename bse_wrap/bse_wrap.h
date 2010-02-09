@@ -33,6 +33,13 @@ void evolv2_(int *kstar, double *mass0, double *mass, double *rad, double *lum,
 	     double *z, double *zpars, double *tb, double *ecc, double *vs);
 void instar_(void);
 float ran3_(int *idum);
+void star_(int *kw, double *mass, double *mt, double *tm, double *tn, double *tscls, 
+	   double *lums, double *GB, double *zpars);
+void hrdiag_(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
+	     double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
+	     double *mc, double *rc, double *menv, double *renv, double *k2);
+void kick_(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
+	   double *jorb, double *vs);
 
 /* wrapped BSE functions */
 void bse_zcnsts(double *z, double *zpars);
@@ -53,6 +60,13 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
 		       double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		       double *z, double *zpars, double *tb, double *ecc, double *vs);
 void bse_instar(void);
+void bse_star(int *kw, double *mass, double *mt, double *tm, double *tn, double *tscls, 
+	      double *lums, double *GB, double *zpars);
+void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
+		double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
+		double *mc, double *rc, double *menv, double *renv, double *k2);
+void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
+	      double *jorb, double *vs);
 
 /* structs to access BSE common blocks */
 /* note the index swap between fortran and C: i,j->j,i */
@@ -95,6 +109,8 @@ void bse_set_eddfac(double eddfac); /* Eddington limit factor for mass transfer 
 void bse_set_gamma(double gamma); /* angular momentum factor for mass lost during Roche (-1.0) */
 
 /* getters */
+double bse_get_alpha1(void); /* get CE alpha */
+double bse_get_lambda(void); /* get CE lambda */
 float bse_get_spp(int i, int j); /* stellar evolution log */
 float bse_get_scm(int i, int j); /* stored stellar parameters at interval dtp */
 float bse_get_bpp(int i, int j); /* binary evolution log */
@@ -104,8 +120,8 @@ char *bse_get_bselabel(int kw); /* converts binary type number to text label */
 
 /* copied functions */
 double bse_kick_speed(int *startype); /* routine for generating birth kick speed from distribution */
+double bse_rl(double q); /* Roche lobe formula */
 
 /* useful macros */
 #define BSE_WRAP_MAX(a, b) ((a)>=(b)?(a):(b))
 #define BSE_WRAP_MIN(a, b) ((a)<=(b)?(a):(b))
-

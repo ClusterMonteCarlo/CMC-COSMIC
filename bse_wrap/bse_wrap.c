@@ -203,6 +203,88 @@ void bse_instar(void)
   instar_();
 }
 
+/* star routine; shouldn't need to be used often outside of BSE */
+void bse_star(int *kw, double *mass, double *mt, double *tm, double *tn, double *tscls, 
+	      double *lums, double *GB, double *zpars)
+{
+  /* INPUTS
+
+     kw = stellar type
+     mass = initial mass
+     mt = current mass
+     zpars = evolution parameters based on metallicity (20)
+
+     OUTPUTS
+     
+     tm = main sequence timescale
+     tn = nuclear timescale
+     tscls = timescales array (20)
+     lums = luminosities array (10)
+     GB = giant branch parameters (10)
+   */
+
+  star_(kw, mass, mt, tm, tn, tscls, lums, GB, zpars);
+}
+
+/* hrdiag routine; shouldn't need to be used often outside of BSE */
+void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
+		double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
+		double *mc, double *rc, double *menv, double *renv, double *k2)
+{
+  /* INPUTS
+     
+     mass = mass (old value)
+     aj = current age
+     mt = current mass
+     tm = main sequence timescale
+     tn = nuclear timescale
+     tscls = timescales array (20)
+     lums = luminosities array (10)
+     GB = giant branch parameters (10)
+     zpars = evolution parameters based on metallicity (20)
+     kw = stellar type
+     
+     OUTPUTS
+     
+     mass = mass (new value)
+     aj = curret age (new value)
+     mt = current mass (new value)
+     r = radius
+     lum = luminosity
+     kw = stellar type (new value)
+     mc = core mass
+     rc = core radius
+     menv = envelope mass
+     renv = envelope radius
+     k2 = radius of gyration of envelope
+   */
+
+  hrdiag_(mass, aj, mt, tm, tn, tscls, lums, GB, zpars, r, lum, kw, mc, rc, menv, renv, k2);
+}
+
+/* kick routine; shouldn't need to be used often outside of BSE */
+void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
+	      double *jorb, double *vs)
+{
+  /* INPUTS
+     kw = stellar type
+     m1 = mass of star 1
+     m1n = new mass of star 1
+     m2 = mass of star 2
+     ecc = orbit eccentrity
+     sep = orbit semimajor axis
+     
+     OUTPUTS
+     kw = stellar type (new value if input kw<0)
+     ecc = eccentricity (new value)
+     sep = orbit semimajor axis (new value)
+     jorb = orbital angular momentum
+     vs = velocity (3) of center of mass if bound, relative velocity at infinity if unbound
+   */
+
+  kick_(kw, m1, m1n, m2, ecc, sep, jorb, vs);
+}
+
 /* setters */
 void bse_set_idum(int idum) { value3_.idum = idum; }
 void bse_set_neta(double neta) { value1_.neta = neta; }
@@ -231,6 +313,8 @@ void bse_set_gamma(double gamma) { value5_.gamma = gamma; }
 /* getters */
 /* note the index flip and decrement so the matrices are accessed
    as they would be in fortran */
+double bse_get_alpha1(void) { return(value2_.alpha1); }
+double bse_get_lambda(void) { return(value2_.lambda); }
 float bse_get_spp(int i, int j) { return(single_.spp[j-1][i-1]); }
 float bse_get_scm(int i, int j) { return(single_.scm[j-1][i-1]); }
 float bse_get_bpp(int i, int j) { return(binary_.bpp[j-1][i-1]); }
@@ -339,4 +423,15 @@ double bse_kick_speed(int *startype)
   }
 
   return(vk);
+}
+
+/* Roche lobe formula, taken directly from BSE code. */
+/* Returns R_L1/a, where q=m_1/m_2. */
+double bse_rl(double q)
+{
+  double p;
+
+  p = pow(q, 1.0/3.0);
+
+  return(0.49*p*p/(0.6*p*p+log(1.0+p)));
 }

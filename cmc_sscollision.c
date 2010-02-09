@@ -63,7 +63,9 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		/* evolve for just a year for merger */
 		tphysf = star1->se_tphys + 1.0e-6;
 		
-		/* create temporary tight, eccentric binary that will merge immediately */
+		/* Create temporary binary in which the two stars touch by a factor of 10 at pericenter, 
+		   but underfill their Roche lobes by a factor of 10 at R=a.  This ensures that 
+		   RL overflow is not invoked in BSE, and that the merger routine is called instead. */
 		tempbinary.id1 = star1->id;
 		tempbinary.id2 = star2->id;
 		tempbinary.rad1 = star1->rad;
@@ -72,8 +74,9 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		tempbinary.m2 = star2->m;
 		tempbinary.Eint1 = star1->Eint;
 		tempbinary.Eint2 = star2->Eint;
-		tempbinary.a = 1.0e-12 * AU / units.l;
-		tempbinary.e = 0.999;
+		tempbinary.a = BSE_WRAP_MAX(10.0*star1->rad/bse_rl(star1->m/star2->m), 
+					    10.0*star2->rad/bse_rl(star2->m/star1->m));
+		tempbinary.e = 1.0 - 0.1*(star1->rad+star2->rad)/tempbinary.a;
 		tempbinary.inuse = 1;
 		tempbinary.bse_mass0[0] = star1->se_mass;
 		tempbinary.bse_mass0[1] = star2->se_mass;
