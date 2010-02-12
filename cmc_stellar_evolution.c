@@ -19,7 +19,7 @@ void stellar_evolution_init(void){
   bse_set_neta(0.5);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
-  bse_set_alpha1(3.0); /* FIXME: is 3 too high? (normally 1.0) */
+  bse_set_alpha1(1.0); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambda(0.5);
   bse_set_ceflag(0);
   bse_set_tflag(1);
