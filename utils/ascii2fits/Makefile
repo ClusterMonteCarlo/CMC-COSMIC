@@ -1,32 +1,18 @@
-PREFIX = $(HOME)
-
-CC = gcc
-
-##############################################################################
-### test for ccache
-##############################################################################
-CCACHE = $(shell which ccache 2>/dev/null)
-
-ifneq ($(CCACHE),)
-CC := ccache $(CC)
-endif
-
-COPTS = -Wall -O3 -I ../../common/ 
-LIBS = -lcfitsio -lgsl -lgslcblas -lm
+include ../../common/common.mk
 
 EXE = nbody2fits
 OBJS = $(EXE).o ../../libs/taus113-v2.o ../../libs/fitslib.o
 
 #pattern rule to compile object files from C files
 %.o : %.c Makefile
-	$(CC) $(COPTS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(EXE): $(OBJS) Makefile
-	$(CC) $(COPTS) $(OBJS) -o $(EXE) $(LIBS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(EXE) $(LIBFLAGS)
 
 install: $(EXE)
 	mkdir -p $(PREFIX)/bin/
-	install -m 0755 $^ $(PREFIX)/bin/
+	install -m 0755 $^ $(PREFIX)/bin/cmc_$^
 
 clean:
-	rm -f $(OBJS) $(EXE)
+	rm -f $(EXE).o $(EXE)

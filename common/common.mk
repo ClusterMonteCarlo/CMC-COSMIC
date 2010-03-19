@@ -60,6 +60,8 @@ LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio $(FLIBS) -lm $(DEBUG_LIBS)
 else
 ifeq ($(UNAME),Darwin)
 CC = gcc
+#CFLAGS = -Wall -O3 -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include -L/sw/lib -L/opt/local/lib -L/sw/lib/gcc4.4/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+#CFLAGS = -Wall -O3 -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include -L/sw/lib -L/opt/local/lib -L/sw/lib/gcc4.4/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 CFLAGS = -m32 -Wall -O3 -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include -L/sw/lib -L/opt/local/lib -L/sw/lib/gcc4.4/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 #CFLAGS = -Wall -O3 -I/sw/include -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 #CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""

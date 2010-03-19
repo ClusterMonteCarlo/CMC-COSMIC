@@ -1,6 +1,6 @@
-#define NBIN 500000
+#define NBIN 50
 /* NBIN must be divisible by BATCHSIZE */
-#define BATCHSIZE 500
+#define BATCHSIZE 5
 
 typedef struct{
 	long id1; /* unique id of star 1 */

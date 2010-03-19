@@ -7,7 +7,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <fitsio.h>
-#include "taus113-v2.h"
+#include "../../common/taus113-v2.h"
 #include "../../common/fitslib.h"
 
 #define LARGE_DISTANCE 1.0e40
@@ -124,7 +124,7 @@ void check_for_file(char *filename){
  *#define GENSORT_NISINT
  */
 
-#include "gensort.h"
+#include "../../common/gensort.h"
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_permute_double.h>
 
