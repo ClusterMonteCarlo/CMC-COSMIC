@@ -258,7 +258,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 						success = 1;
 					}
 				}
-				fprintf(stderr, "m1=%g m2=%g\n", m1*cfd->Mclus, m2*cfd->Mclus);
+				//fprintf(stderr, "m1=%g m2=%g\n", m1*cfd->Mclus, m2*cfd->Mclus);
 				cfd->bs_id1[j] = cfd->obj_id[i];
 				cfd->bs_id2[j] = star_get_id_new();
 				if (m1>m2){
@@ -507,26 +507,24 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			/*set a according to Eq. 16 Egleton, Fitchett & Tout 1989*/
 			
 			/*Find normalization in the range amin-amax for Eq. 16 EFT 89*/
-			norm_fa = 0.;
-			binwidth = (amin-amax)/100.;
-			for (it=0; it<100; it++){
-				temp_a = amin + i*binwidth;
-				temp_fa = 0.33/( pow(temp_a/30., 0.33) + pow(30./temp_a, 0.33) );
-				norm_fa += temp_fa*binwidth;
-			}
+			//norm_fa = 0.;
+			//binwidth = (amin-amax)/100.;
+			//for (it=0; it<100; it++){
+			//	temp_a = amin + i*binwidth;
+			//	temp_fa = 0.33/( pow(temp_a/30., 0.33) + pow(30./temp_a, 0.33) );
+			//	norm_fa += temp_fa*binwidth;
+			//}
 			/*now find a distribution from the normalized formula*/
 			success_a = 0;
 			while(!success_a){
-				temp_a = amin + rng_t113_dbl()*(amax-amin);
-				temp_fa = 0.33/( pow(temp_a/30., 0.33) + pow(30./temp_a, 0.33) )/norm_fa;
-				temp_n = rng_t113_dbl()*(0.2/norm_fa);
+				temp_a = (amin + rng_t113_dbl()*(amax-amin)) * (cfd->Rvir * PARSEC)/AU;
+				temp_fa = 0.33/( pow(temp_a/30., 0.33) + pow(30./temp_a, 0.33) );
+				temp_n = rng_t113_dbl() * 0.2;
 				if (temp_n <= temp_fa){
 					success_a = 1;
 					cfd->bs_a[i] = temp_a * AU / (cfd->Rvir * PARSEC);
 				}
 			}
-
-			//cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
 
 			/* get eccentricity from thermal distribution, truncated near contact */
 			if (ignoreradii == 0) {
