@@ -496,7 +496,8 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 		for (i=1; i<=cfd->NBINARY; i++) {
 			/* choose a from from near contact (5*(R1+R2)) to 100 AU with 30 AU mode 
 			 * this is for Hurley 07 papers for runs K100-5 and K100-10*/
-			amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
+			//amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
+			amin = 5.0 * (cfd->bs_Reff1[i]);
 			amax = 100.0 * AU / (cfd->Rvir * PARSEC);
 			if (amax <= amin && ignoreradii == 0) {
 			  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
