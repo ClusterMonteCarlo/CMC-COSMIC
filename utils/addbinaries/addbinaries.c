@@ -47,7 +47,7 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  -i --infile <infile>           : input file [%s]\n", INFILE);
 	fprintf(stream, "  -o --outfile <outfile>         : output file [%s]\n", OUTFILE);
 	fprintf(stream, "  -N --Nbin <N_bin>              : number of binaries [%ld]\n", NBIN);
-	fprintf(stream, "  -l --limits <limits algorithm> : algorithm for setting limits on binary semimajor axes (0=physical, 1=kT prescription, 2=M67 model of Hurley, et al. (2005), 3=Ivanova, et al. (2005)) [%d]\n", LIMITS);
+	fprintf(stream, "  -l --limits <limits algorithm> : algorithm for setting limits on binary semimajor axes (0=physical, 1=kT prescription, 2=M67 model of Hurley, et al. (2005), 3=Ivanova, et al. (2005)), 4=Eq. 16 Egleton, Fitchett & Tout 1989 with peak at 30AU [%d]\n", LIMITS);
 	fprintf(stream, "  -m --Ebmin <E_b,min>           : minimum binding energy, in kT [%g]\n", EBMIN);
 	fprintf(stream, "  -M --Ebmax <E_b,max>           : maximum binding energy, in kT [%g]\n", EBMAX);
 	fprintf(stream, "  -I --ignoreradii               : ignore radii when setting binary properties\n");
