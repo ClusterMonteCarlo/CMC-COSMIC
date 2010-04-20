@@ -52,7 +52,7 @@ _EXTERN_ FILE *binaryfile, *binintfile, *collisionfile, *tidalcapturefile, *seme
 _EXTERN_ FILE *corefile;
 /* everything else except arrays */
 _EXTERN_ char outprefix[100];
-_EXTERN_ char dummystring[MAX_STRING_LENGTH];
+_EXTERN_ char dummystring[MAX_STRING_LENGTH], dummystring2[MAX_STRING_LENGTH], dummystring3[MAX_STRING_LENGTH], dummystring4[MAX_STRING_LENGTH];
 _EXTERN_ int se_file_counter;
 _EXTERN_ long tcount;
 _EXTERN_ long Echeck;

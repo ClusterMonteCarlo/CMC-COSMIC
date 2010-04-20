@@ -118,35 +118,35 @@ void dynamics_apply(double dt, gsl_rng *rng)
 					} else if (star[k].se_k >= 10 && star[kp].se_k == 1) {
 						/* compact object plus n=3 polytrope */
 						S = sigma_tc_nd(3.0, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 					} else if (star[k].se_k >= 10) {
 						/* compact object plus n=1.5 polytrope */
 						S = sigma_tc_nd(1.5, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 					} else if (star[k].se_k == 1 && star[kp].se_k >= 10) {
 						/* n=3 polytrope plus compact object */
 						S = sigma_tc_nd(3.0, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 					} else if (star[kp].se_k >= 10) {
 						/* n=1.5 polytrope plus compact object */
 						S = sigma_tc_nd(1.5, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 					} else if (star[k].se_k == 1 && star[kp].se_k == 1) {
 						/* n=3 polytrope plus n=3 polytrope */
 						S = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 					} else if (star[k].se_k == 1) {
 						/* n=3 polytrope plus n=1.5 polytrope */
 						S = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 					} else if (star[kp].se_k == 1) {
 						/* n=1.5 polytrope plus n=3 polytrope */
 						S = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 					} else {
 						/* n=1.5 polytrope plus n=1.5 polytrope */
 						S = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 					}
 				} else { /* simple sticky spheres */
 					rperi = star[k].rad + star[kp].rad;
