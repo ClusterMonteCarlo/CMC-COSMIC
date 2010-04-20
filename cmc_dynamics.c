@@ -108,11 +108,50 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				S = 0.0;
 			}
 		} else {
-			/* single--single star physical collision cross section */
-			rperi = XCOLL * (star[k].rad + star[kp].rad);
-
 			if (SS_COLLISION) {
-				S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+				if (TIDAL_CAPTURE) {
+					/* single--single star physical collision + tidal capture cross section (Kim & Lee 1999) */
+					if (star[k].se_k >= 10 && star[kp].se_k >= 10) {
+						/* two compact objects, so simply use sticky sphere approximation */
+						rperi = star[k].rad + star[kp].rad;
+						S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+					} else if (star[k].se_k >= 10 && star[kp].se_k == 1) {
+						/* compact object plus n=3 polytrope */
+						S = sigma_tc_nd(3.0, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+					} else if (star[k].se_k >= 10) {
+						/* compact object plus n=1.5 polytrope */
+						S = sigma_tc_nd(1.5, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+					} else if (star[k].se_k == 1 && star[kp].se_k >= 10) {
+						/* n=3 polytrope plus compact object */
+						S = sigma_tc_nd(3.0, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+					} else if (star[kp].se_k >= 10) {
+						/* n=1.5 polytrope plus compact object */
+						S = sigma_tc_nd(1.5, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+					} else if (star[k].se_k == 1 && star[kp].se_k == 1) {
+						/* n=3 polytrope plus n=3 polytrope */
+						S = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+					} else if (star[k].se_k == 1) {
+						/* n=3 polytrope plus n=1.5 polytrope */
+						S = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+					} else if (star[kp].se_k == 1) {
+						/* n=1.5 polytrope plus n=3 polytrope */
+						S = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+					} else {
+						/* n=1.5 polytrope plus n=1.5 polytrope */
+						S = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
+						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+star[kp].m))));
+					}
+				} else { /* simple sticky spheres */
+					rperi = star[k].rad + star[kp].rad;
+					S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+				}
 			} else {
 				S = 0.0; 
 			}
@@ -147,7 +186,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				print_interaction_status("SS");
 				
 				/* do collision */
-				sscollision_do(k, kp, rcm, vcm);
+				sscollision_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "SS %g %g\n", TotalTime, rcm); */
 			}
 		} else if (RELAXATION) {
@@ -207,8 +246,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 					bh_rand_walk(kp, vp_new, vcm, beta, dt);
 				}
 			}
-      
-      /* set new velocities for both stars */
+			
+			/* set new velocities for both stars */
 			star[k].vr = v_new[3];
 			star[k].vt = sqrt(sqr(v_new[1]) + sqr(v_new[2]));
 			star[kp].vr = vp_new[3];
@@ -217,8 +256,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
 			set_star_EJ(kp);
-
-			}
+		}
 	}
 	
 	/* print relaxation information */

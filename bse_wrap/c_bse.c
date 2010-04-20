@@ -30,6 +30,8 @@ int main(void)
   double rad[2], lum[2], massc[2], radc[2];
   double tphysf, dtp, z=0.02, *zpars;
   double vs[3];
+  double aj, tm, tn, tscls[20], lums[10], GB[10], k2;
+  double a;
 
   zpars = (double *) malloc(20 * sizeof(double));
 
@@ -37,7 +39,7 @@ int main(void)
   bse_set_neta(0.5);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
-  bse_set_alpha1(3.0);
+  bse_set_alpha1(1.0);
   bse_set_lambda(0.5);
   bse_set_ceflag(0);
   bse_set_tflag(1);
@@ -60,35 +62,71 @@ int main(void)
   
   bse_zcnsts(&z, zpars);
   bse_instar();
-  mass0[0] = 3.0;
-  mass0[1] = 0.7;
+  mass0[0] = 1.3;
+  mass0[1] = 3.0;
   mass[0] = mass0[0];
   mass[1] = mass0[1];
   kw[0] = 1;
   kw[1] = 1;
-  tb = 1.0e1;
-  ecc = 0.3;
+  tb = 1.0e5;
+  ecc = 0.0;
   ospin[0] = 0.0;
   ospin[1] = 0.0;
   epoch[0] = 0.0;
   epoch[1] = 0.0;
   tphys = 0.0;
-  tphysf = 12.0e3;
+  tphysf = 100.0;
   dtp = 10.0;
+
+  while (kw[0]<=1) {
+    bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
+	       &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
+	       &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
+    
+    j = 1;
+    while (bse_get_bpp(j, 1) >= 0.0) {
+      fprintf(stdout, "time=%g m1=%g m2=%g k1=%d k2=%d sep=%g ecc=%g r1/rol1=%g r2/rol2=%g type=%s\n",
+	      bse_get_bpp(j, 1), bse_get_bpp(j, 2), bse_get_bpp(j, 3), (int) bse_get_bpp(j, 4), (int) bse_get_bpp(j, 5),
+	      bse_get_bpp(j, 6), bse_get_bpp(j, 7), bse_get_bpp(j, 8), bse_get_bpp(j, 9),
+	      bse_get_bselabel((int) bse_get_bpp(j, 10)));
+      
+      j++;
+    }
+    tphysf += 100.0;
+  }
+
+  /* fprintf(stdout, "mc=%g rc=%g\n", massc[1], radc[1]); */
+
+  /* strip envelope of giant */
+  /* fprintf(stdout, "stripping giant's envelope...\n"); */
+/*   aj = tphys - epoch[1]; */
+/*   mass[1] = massc[1]; */
+/*   bse_star(&(kw[1]), &(mass0[1]), &(mass[1]), &tm, &tn, tscls, lums, GB, zpars); */
+/*   bse_hrdiag(&(mass0[1]), &aj, &(mass[1]), &tm, &tn, tscls, lums, GB, zpars, */
+/* 	     &(rad[1]), &(lum[1]), &(kw[1]), &(massc[1]), &(radc[1]), &(menv[1]), &(renv[1]), &k2); */
+/*   epoch[1] = tphys - aj; */
+/*   tphysf = 12.0e3; */
+
+/*   fprintf(stdout, "m=%g r=%g\n", mass[1], rad[1]); */
+
+  /* shrink orbit */
+  /* fprintf(stdout, "shrinking orbit...\n"); */
+  tphysf = 12.0e3;
+
+  fprintf(stdout, "rad0=%g, rad1=%g\n", rad[0], rad[1]);
+
+  a = BSE_WRAP_MAX(10.0*rad[0]/bse_rl(mass[0]/mass[1]), 10.0*rad[1]/bse_rl(mass[1]/mass[0]));
+  /* convert to AU */
+  a /= 214.9456;
+  
+  fprintf(stdout, "new a=%g AU RL1/a=%g RL2/a=%g\n", a, bse_rl(mass[0]/mass[1]), bse_rl(mass[1]/mass[0]));
+
+  tb = 365.25 * sqrt(a*a*a/(mass[0]+mass[1]));
+  ecc = 1.0 - 0.1*(rad[0]+rad[1])/214.9456/a;
 
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
 	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
-
-/*   tphysf = 100.0; */
-/*   dtp = 0.0; */
-
-/*   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]),  */
-/* 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]),  */
-/* 	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs); */
-
-  fprintf(stdout, "star 0: mass0=%f mass=%f tms=%g epoch=%g massc=%g rad=%g\n", mass0[0], mass[0], tms[0], epoch[0], massc[0], rad[0]);
-  fprintf(stdout, "star 1: mass0=%f mass=%f tms=%g epoch=%g massc=%g rad=%g\n", mass0[1], mass[1], tms[1], epoch[1], massc[1], rad[1]);
 
   j = 1;
   while (bse_get_bpp(j, 1) >= 0.0) {
@@ -100,24 +138,9 @@ int main(void)
     j++;
   }
 
-  /* print additional info stored only in bcm array */
-  j = 1;
-  while (bse_get_bcm(j, 1) >= 0.0) {
-    /* fprintf(stdout, "j=%d t=%g dm/dt=%g %g rad/rol=%g %g\n", j, bse_get_bcm(j, 1),
-	    bse_get_bcm(j,14), bse_get_bcm(j,28), 
-	    bse_get_bcm(j,15), bse_get_bcm(j,29)); */
-    j++;
-  }
-  j--;
-  if (j >= 1) {
-    fprintf(stdout, "j=%d dm/dt=%g %g rad/rol=%g %g\n", j, 
-	    bse_get_bcm(j,14), bse_get_bcm(j,28), 
-	    bse_get_bcm(j,15), bse_get_bcm(j,29));
-  }
+  /* fprintf(stdout, "m1=%f m2=%f tb=%f e=%f\n", mass[0], mass[1], tb, ecc); */
   
-  fprintf(stdout, "m1=%f m2=%f tb=%f e=%f\n", mass[0], mass[1], tb, ecc);
-  
-  fprintf(stdout, "vs=%g\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+  /* fprintf(stdout, "vs=%g\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2])); */
 
   free(zpars);
 

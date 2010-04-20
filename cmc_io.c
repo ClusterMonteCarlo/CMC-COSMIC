@@ -628,6 +628,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_SS_COLLISION);
 				sscanf(values, "%ld", &SS_COLLISION);
 				parsed.SS_COLLISION = 1;
+			} else if (strcmp(parameter_name, "TIDAL_CAPTURE") == 0) {
+				PRINT_PARSED(PARAMDOC_TIDAL_CAPTURE);
+				sscanf(values, "%ld", &TIDAL_CAPTURE);
+				parsed.TIDAL_CAPTURE = 1;
 			} /*Sourav:new parameter*/
 			else if (strcmp(parameter_name, "STAR_AGING_SCHEME") == 0) {
 			 	PRINT_PARSED(PARAMDOC_STAR_AGING_SCHEME);
@@ -807,6 +811,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
+	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
 	/*Sourav: new parameter*/
 	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
 	CHECK_PARSED(PREAGING, 0, PARAMDOC_PREAGING);
@@ -1038,6 +1043,15 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	/* print header */
 	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
 
+	/* Tidal capture log file */
+	sprintf(outfile, "%s.tidalcapture.log", outprefix);
+	if ((tidalcapturefile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create tidal capture log file \"%s\".\n", outfile);
+		exit(1);
+	}
+	/* print header */
+	fprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]\n");
+
 	/* Stellar evolution merger log file */
 	sprintf(outfile, "%s.semergedisrupt.log", outprefix);
 	if ((semergedisruptfile = fopen(outfile, outfilemode)) == NULL) {
@@ -1110,6 +1124,7 @@ void close_buffers(void)
 	fclose(centmass_file);
 	fclose(escfile);
 	fclose(collisionfile);
+	fclose(tidalcapturefile);
 	fclose(semergedisruptfile);
 	fclose(relaxationfile);
 	/*Sourav: closing the file I opened*/
@@ -1206,4 +1221,25 @@ void print_conversion_script(void)
 	fclose(ofp);
 
 	chmod(dummystring, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+}
+
+/* routines for printing star/binary info in a unified log format */
+char *sprint_star_dyn(long k, char string[MAX_STRING_LENGTH])
+{
+	snprintf(string, MAX_STRING_LENGTH, "(%ld,%.3g,%d)", 
+		 star[k].id, star[k].m*units.mstar/FB_CONST_MSUN, star[k].se_k);
+	
+	return(string);
+}
+
+char *sprint_bin_dyn(long k, char string[MAX_STRING_LENGTH])
+{
+	long bi=star[k].binind;
+
+	snprintf(string, MAX_STRING_LENGTH, "[(%ld,%.3g,%d)-%.3g,%.3g-(%ld,%.3g,%d)]", 
+		 binary[bi].id1, binary[bi].m1*units.mstar/FB_CONST_MSUN, binary[bi].bse_kw[0],
+		 binary[bi].a*units.l/FB_CONST_AU, binary[bi].e,
+		 binary[bi].id2, binary[bi].m2*units.mstar/FB_CONST_MSUN, binary[bi].bse_kw[1]);
+
+	return(string);
 }
