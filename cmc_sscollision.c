@@ -18,8 +18,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	b = sqrt(rng_t113_dbl()) * bmax;
 	rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+sqr(b*W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 
-	/* fprintf(stderr, "\n *** sscollision: rperimax=%g (%g RSUN) bmax=%g (%g RSUN) b=%g rperi=%g\n", 
-	           rperimax, rperimax * units.l / RSUN, bmax, bmax * units.l / RSUN, b, rperi); */
+	/* fprintf(stderr, "\n *** sscollision: rperimax=%g (%g RSUN) bmax=%g (%g RSUN) b=%g (%g RSUN) rperi=%g (%g RSUN)\n", 
+	   rperimax, rperimax * units.l / RSUN, bmax, bmax * units.l / RSUN, b, b*units.l/RSUN, rperi, rperi*units.l/RSUN); */
 
 	if (TIDAL_CAPTURE && (star[k].se_k <= 1 || star[k].se_k >= 10) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7) && 
 	    rperi <= 1.3 * star[kp].rad) {
@@ -358,10 +358,10 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			destroy_obj(k);
 			destroy_obj(kp);
 		} else {
+			/* This clause should be entered only when TIDAL_CAPTURE==0 due to roundoff error in pericenter calculation. */
 			fprintf(tidalcapturefile, "%.3g SS_TC_FAILED %s+%s->%s+%s\n", TotalTime, 
 				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2),
 				sprint_star_dyn(k, dummystring3), sprint_star_dyn(kp, dummystring4));
-			/* this shouldn't happen if the cross section is accurate, so just ignore */
 		}
 	}
 }

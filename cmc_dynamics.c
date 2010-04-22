@@ -12,7 +12,7 @@
 void dynamics_apply(double dt, gsl_rng *rng)
 {
 	long j, si, p=AVEKERNEL, N_LIMIT, k, kp, ksin, kbin;
-	double SaveDt, S, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
+	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
 	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi;
 	double Trel12;
 	int i;
@@ -110,48 +110,63 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		} else {
 			if (SS_COLLISION) {
 				if (TIDAL_CAPTURE) {
-					/* single--single star physical collision + tidal capture cross section (Kim & Lee 1999) */
+					/* single--single tidal capture cross section (Kim & Lee 1999);
+					   here we treat a compact object (k>=10) as a point mass, a massive MS star (k=1) as an 
+					   n=3 polytrope, and everything else (k=0,2-9) as an n=1.5 polytrope. */
 					if (star[k].se_k >= 10 && star[kp].se_k >= 10) {
 						/* two compact objects, so simply use sticky sphere approximation */
-						rperi = star[k].rad + star[kp].rad;
-						S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+						S_tc = 0.0;
 					} else if (star[k].se_k >= 10 && star[kp].se_k == 1) {
 						/* compact object plus n=3 polytrope */
-						S = sigma_tc_nd(3.0, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+						S_tc = sigma_tc_nd(3.0, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
 					} else if (star[k].se_k >= 10) {
 						/* compact object plus n=1.5 polytrope */
-						S = sigma_tc_nd(1.5, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+						S_tc = sigma_tc_nd(1.5, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
 					} else if (star[k].se_k == 1 && star[kp].se_k >= 10) {
 						/* n=3 polytrope plus compact object */
-						S = sigma_tc_nd(3.0, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+						S_tc = sigma_tc_nd(3.0, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
 					} else if (star[kp].se_k >= 10) {
 						/* n=1.5 polytrope plus compact object */
-						S = sigma_tc_nd(1.5, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+						S_tc = sigma_tc_nd(1.5, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
 					} else if (star[k].se_k == 1 && star[kp].se_k == 1) {
 						/* n=3 polytrope plus n=3 polytrope */
-						S = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+						S_tc = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
 					} else if (star[k].se_k == 1) {
 						/* n=3 polytrope plus n=1.5 polytrope */
-						S = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+						S_tc = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
 					} else if (star[kp].se_k == 1) {
 						/* n=1.5 polytrope plus n=3 polytrope */
-						S = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+						S_tc = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
 					} else {
 						/* n=1.5 polytrope plus n=1.5 polytrope */
-						S = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
-						rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+						S_tc = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
 					}
-				} else { /* simple sticky spheres */
-					rperi = star[k].rad + star[kp].rad;
-					S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+					
+					/* cross section estimate for Lombardi, et al. (2006) */
+					if ((star[k].se_k <= 1 || star[k].se_k >= 10) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7)) {
+						rperi = 1.3 * star[kp].rad;
+						S_lombardi = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+					} else if ((star[kp].se_k <= 1 || star[kp].se_k >= 10) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7)) {
+						rperi = 1.3 * star[k].rad;
+						S_lombardi = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+					} else {
+						S_lombardi = 0.0;
+					}
+
+					S_tmp = MAX(S_tc, S_lombardi);
+				} else {
+					S_tc = 0.0;
+					S_lombardi = 0.0;
+					S_tmp = 0.0;
 				}
+				
+				/* standard sticky sphere collision cross section */
+				rperi = star[k].rad + star[kp].rad;
+				S_coll = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+				
+				/* take the max of all cross sections; the event type will be chosen by sampling the impact parameter */
+				S = MAX(S_coll, S_tmp);
+				rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 			} else {
 				S = 0.0; 
 			}
