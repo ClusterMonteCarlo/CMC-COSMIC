@@ -168,7 +168,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				S = MAX(S_coll, S_tmp);
 				rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
 			} else {
-				S = 0.0; 
+				S = 0.0;
 			}
 		}
 		

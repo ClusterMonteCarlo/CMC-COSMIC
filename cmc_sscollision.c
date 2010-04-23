@@ -358,7 +358,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			destroy_obj(k);
 			destroy_obj(kp);
 		} else {
-			/* This clause should be entered only when TIDAL_CAPTURE==0 due to roundoff error in pericenter calculation. */
 			fprintf(tidalcapturefile, "%.3g SS_TC_FAILED %s+%s->%s+%s\n", TotalTime, 
 				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2),
 				sprint_star_dyn(k, dummystring3), sprint_star_dyn(kp, dummystring4));
