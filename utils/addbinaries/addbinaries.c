@@ -20,6 +20,9 @@
 #define SEED 8732UL
 #define AVEKERNEL 20
 #define BINMF 0
+#define PEAK_A 30.0  //in AU
+#define MIN_A 0.01  //in AU
+#define MAX_A 100.0  //in AU
 
 /* global variables needed by Star Track */
 double *zpars, METALLICITY, WIND_FACTOR=1.0;
@@ -48,6 +51,9 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  -o --outfile <outfile>         : output file [%s]\n", OUTFILE);
 	fprintf(stream, "  -N --Nbin <N_bin>              : number of binaries [%ld]\n", NBIN);
 	fprintf(stream, "  -l --limits <limits algorithm> : algorithm for setting limits on binary semimajor axes (0=physical, 1=kT prescription, 2=M67 model of Hurley, et al. (2005), 3=Ivanova, et al. (2005)), 4=Eq. 16 Egleton, Fitchett & Tout 1989 with peak at 30AU [%d]\n", LIMITS);
+	fprintf(stream, "  -p --peak_a <peak in a dist.>           : choosing where the peak in lognormal a dist. is; need to choose for -l 4: [%g] AU\n", PEAK_A);
+	fprintf(stream, "  -a --min_a <minimum a in a dist.>           : choosing amin in lognormal dist.; need to choose for -l 4: [%g] AU\n", MIN_A);
+	fprintf(stream, "  -A --max_a <max a in a dist.>           : choosing amax in lognormal dist.; need to choose for -l 4: [%g] AU\n", MIN_A);
 	fprintf(stream, "  -m --Ebmin <E_b,min>           : minimum binding energy, in kT [%g]\n", EBMIN);
 	fprintf(stream, "  -M --Ebmax <E_b,max>           : maximum binding energy, in kT [%g]\n", EBMAX);
 	fprintf(stream, "  -I --ignoreradii               : ignore radii when setting binary properties\n");
@@ -99,12 +105,12 @@ void addbin_calc_sigma_r(cmc_fits_data_t *cfd, double *r, double *sigma, double 
 	}
 }
 
-void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT, double EbmaxkT, int ignoreradii, int binmf)
+void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a, double min_a, double max_a, double EbminkT, double EbmaxkT, int ignoreradii, int binmf)
 {
 	int success, success_a;
-	long i, j, it;
+	long i, j;
 	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew, aminroche;
-	double norm_fa, binwidth, temp_a, temp_fa, temp_n;
+	double eta, temp, temp1, temp_a, temp_W, temp_k;
 	double kTcore, vcore, Eb, Ebmin, Ebmax, timeunitcgs, mtotal, m1, m2, X, qbin;
 	double *r, *sigma, *mave, dtp, tphysf;
 	star_t star;
@@ -443,8 +449,10 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 		/* assign binaries sort of physically, similarly to the M67 model of Hurley, et al. (2005) */
 		for (i=1; i<=cfd->NBINARY; i++) {
 			/* choose a from a distribution uniform in 1/a from near contact to 50 AU */
-			amin = 2.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
-			amax = 50.0 * AU / (cfd->Rvir * PARSEC);
+			//amin = 2.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
+			//amax = 50.0 * AU / (cfd->Rvir * PARSEC);
+			amin = 5.0 * (cfd->bs_Reff1[i]);
+			amax = 100.0 * AU / (cfd->Rvir * PARSEC);
 
 			if (amax <= amin && ignoreradii == 0) {
 			  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
@@ -492,13 +500,13 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 		}
 	/* assign binary parameters */
 	} else if (limits == 4) {
-		/* assign binaries physically */
+		/* assign binaries according to Hurley's prescription, lognormal */
 		for (i=1; i<=cfd->NBINARY; i++) {
-			/* choose a from from near contact (5*(R1+R2)) to 100 AU with 30 AU mode 
+			/* choose a from from near contact (5*(R1)) to 100 AU with 30 AU mode 
 			 * this is for Hurley 07 papers for runs K100-5 and K100-10*/
-			//amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 			amin = 5.0 * (cfd->bs_Reff1[i]);
-			amax = 100.0 * AU / (cfd->Rvir * PARSEC);
+			amax = max_a * AU / (cfd->Rvir * PARSEC);
+
 			if (amax <= amin && ignoreradii == 0) {
 			  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
 			  fprintf(stderr, "WARNING: setting amax = amin\n");
@@ -506,24 +514,19 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double EbminkT
 			}
 			
 			/*set a according to Eq. 16 Egleton, Fitchett & Tout 1989*/
-			
-			/*Find normalization in the range amin-amax for Eq. 16 EFT 89*/
-			//norm_fa = 0.;
-			//binwidth = (amin-amax)/100.;
-			//for (it=0; it<100; it++){
-			//	temp_a = amin + i*binwidth;
-			//	temp_fa = 0.33/( pow(temp_a/30., 0.33) + pow(30./temp_a, 0.33) );
-			//	norm_fa += temp_fa*binwidth;
-			//}
-			/*now find a distribution from the normalized formula*/
+			eta = 0.001;
+			temp = 0.5*( pow(eta, 0.33) + pow(eta, -0.33) );
+			temp_k = acos (1./temp);
+
 			success_a = 0;
 			while(!success_a){
-				temp_a = (amin + rng_t113_dbl()*(amax-amin)) * (cfd->Rvir * PARSEC)/AU;
-				temp_fa = 0.33/( pow(temp_a/30., 0.33) + pow(30./temp_a, 0.33) );
-				temp_n = rng_t113_dbl() * 0.2;
-				if (temp_n <= temp_fa){
+				temp_W = (-1. + rng_t113_dbl()*(2.));
+				temp1 = 1./cos(temp_k*temp_W) + tan(temp_k*temp_W) ;
+				temp_a = peak_a * pow(temp1, (1./0.33));
+				temp_a = temp_a * AU / (cfd->Rvir * PARSEC);
+				if (temp_a <= amax && temp_a >= amin){
 					success_a = 1;
-					cfd->bs_a[i] = temp_a * AU / (cfd->Rvir * PARSEC);
+					cfd->bs_a[i] = temp_a;
 				}
 			}
 
@@ -549,15 +552,18 @@ int main(int argc, char *argv[]){
         int i, limits, ignoreradii, binary_mf;
 	long Nbin;
 	unsigned long seed;
-	double Ebmin, Ebmax;
+	double Ebmin, Ebmax, peak_a, min_a, max_a;
 	cmc_fits_data_t cfd;
 	char infilename[1024], outfilename[1024];
-	const char *short_opts = "i:o:N:l:m:M:Is:b:h";
+	const char *short_opts = "i:o:N:l:p:a:A:m:M:Is:b:h";
 	const struct option long_opts[] = {
 		{"infile", required_argument, NULL, 'i'},
 		{"outfile", required_argument, NULL, 'o'},
 		{"Nbin", required_argument, NULL, 'N'},
 		{"limits", required_argument, NULL, 'l'},
+		{"peak_a", required_argument, NULL, 'p'},
+		{"min_a", required_argument, NULL, 'a'},
+		{"max_a", required_argument, NULL, 'A'},
 		{"Ebmin", required_argument, NULL, 'm'},
 		{"Ebmax", required_argument, NULL, 'M'},
 		{"ignoreradii", no_argument, NULL, 'I'},
@@ -572,6 +578,9 @@ int main(int argc, char *argv[]){
 	sprintf(outfilename, "%s", OUTFILE);
 	Nbin = NBIN;
 	limits = LIMITS;
+	peak_a = PEAK_A;
+	min_a = MIN_A;
+	max_a = MAX_A;
 	Ebmin = EBMIN;
 	Ebmax = EBMAX;
 	ignoreradii = 0;
@@ -596,6 +605,18 @@ int main(int argc, char *argv[]){
 		case 'l':
 			limits = strtol(optarg, NULL, 10);
 			break;
+		case 'p':
+			peak_a = strtod(optarg, NULL);
+			fprintf (stderr, "peak of a = %g\n", peak_a);
+			break;
+		case 'a':
+			min_a = strtod(optarg, NULL);
+			fprintf (stderr, "minimum of a = %g\n", min_a);
+			break;
+		case 'A':
+			max_a = strtod(optarg, NULL);
+			fprintf (stderr, "maximum of a = %g\n", max_a);
+			break;
 		case 'm':
 			Ebmin = strtod(optarg, NULL);
 			if (Ebmin <= 0.0) {
@@ -618,7 +639,9 @@ int main(int argc, char *argv[]){
 			break;
 		case 'b':
 			binary_mf = strtol(optarg, NULL, 10);
-			fprintf(stderr, "binary_mf=%d must be either 0 or 1!\n", binary_mf);
+			if (binary_mf!=0 || binary_mf!=1){
+				fprintf(stderr, "binary_mf=%d must be either 0 or 1!\n", binary_mf);
+			}
 			break;
 		case 'h':
 			print_usage(stdout);
@@ -639,8 +662,8 @@ int main(int argc, char *argv[]){
 	cmc_read_fits_file(infilename, &cfd);
 
 	METALLICITY = cfd.Z;
-	fprintf(stderr, "l=%d, m=%g M=%g b=%d\n", limits, Ebmin, Ebmax, binary_mf);
-	assign_binaries(&cfd, Nbin, limits, Ebmin, Ebmax, ignoreradii, binary_mf);
+	fprintf(stderr, "l=%d, p=%g AU, a=%g AU, A=%g AU, m=%g M=%g b=%d\n", limits, peak_a, min_a, max_a, Ebmin, Ebmax, binary_mf);
+	assign_binaries(&cfd, Nbin, limits, peak_a, min_a, max_a, Ebmin, Ebmax, ignoreradii, binary_mf);
 
 	cmc_write_fits_file(&cfd, outfilename);
 
