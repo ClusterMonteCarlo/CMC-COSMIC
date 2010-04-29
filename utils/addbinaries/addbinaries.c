@@ -738,8 +738,8 @@ int main(int argc, char *argv[]){
 			break;
 		case 'b':
 			binary_mf = strtol(optarg, NULL, 10);
-			if (binary_mf!=0 || binary_mf!=1){
-				fprintf(stderr, "binary_mf=%d must be either 0 or 1!\n", binary_mf);
+			if (binary_mf!=0 && binary_mf!=1 && binary_mf!=99){
+				fprintf(stderr, "WARNING: binary_mf=%d must be either 0, 1, 99!\n", binary_mf);
 			}
 			break;
 		case 'h':
