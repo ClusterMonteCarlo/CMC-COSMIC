@@ -55,6 +55,11 @@ void write_usage(void){
         printf("            9: single mass (set by -m)\n");
 	printf("           10: Arches cluster IMF (Dib, 2007)\n");
 	printf("           11: General Power Law IMF (set by -G)\n");
+	printf("           12: Arches cluster IMF (old already used version) (need to give r change with -r)\n");
+	printf("           13: Arches cluster IMF slightly tweaked in the middle but still following Dib (need to give r change with -r)\n");
+	printf("           14: Arches cluster IMF if only 1 power law is used throughout the observed range of masses (need to give r change with -r)\n");
+	printf("           15: Arches cluster IMF if 2 power laws are used throughout the observed range of masses (need to give r change with -r)\n");
+	printf("           16: Arches cluster IMF if only 3 power laws are used throughout the observed range of masses (need to give r change with -r)\n");
 	printf("-w        : overwrite flag\n");
 	printf("-m <dbl>  : minimum mass, or tracer mass\n");
 	printf("-M <dbl>  : maximum mass\n");
@@ -504,11 +509,107 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
 	      total_mass += m[i];
 	    }
 	  } 
-          else if (param.imf==12) {
+          else if (param.imf==12) {  //old Dib
             double *m1, *m2, m;
             char str_imf[1024]="";
             
             strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.04)3.0(0.)15(1.72)", 1024);
+            m1= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.3)3.0(2.3)", 1024);
+            m2= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            for(i=1; i<=cfd->NOBJ; i++){
+              X = rng_t113_dbl();
+              X2 = rng_t113_dbl();
+              if (X2<0.5 && cfd->obj_r[i]<param.rcr){
+                m= m1[i];
+              } else {
+                m= m2[i];
+              }
+              cfd->obj_m[i] = m;
+              total_mass += m;
+            } 
+          }
+	  else if (param.imf==13) { //almost Dib
+            double *m1, *m2, m;
+            char str_imf[1024]="";
+            
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.04)3.0(1.0)15(1.72)", 1024);
+            m1= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.3)3.0(2.3)", 1024);
+            m2= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            for(i=1; i<=cfd->NOBJ; i++){
+              X = rng_t113_dbl();
+              X2 = rng_t113_dbl();
+              if (X2<0.5 && cfd->obj_r[i]<param.rcr){
+                m= m1[i];
+              } else {
+                m= m2[i];
+              }
+              cfd->obj_m[i] = m;
+              total_mass += m;
+            } 
+          }
+	  else if (param.imf==14) { //one PL
+            double *m1, *m2, m;
+            char str_imf[1024]="";
+            
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.0908)", 1024);
+            m1= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.3)3.0(2.3)", 1024);
+            m2= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            for(i=1; i<=cfd->NOBJ; i++){
+              X = rng_t113_dbl();
+              X2 = rng_t113_dbl();
+              if (X2<0.5 && cfd->obj_r[i]<param.rcr){
+                m= m1[i];
+              } else {
+                m= m2[i];
+              }
+              cfd->obj_m[i] = m;
+              total_mass += m;
+            } 
+          }
+	  else if (param.imf==15) { //two PL
+            double *m1, *m2, m;
+            char str_imf[1024]="";
+            
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(3.143)3.1(1.87373)", 1024);
+            m1= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.3)3.0(2.3)", 1024);
+            m2= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            for(i=1; i<=cfd->NOBJ; i++){
+              X = rng_t113_dbl();
+              X2 = rng_t113_dbl();
+              if (X2<0.5 && cfd->obj_r[i]<param.rcr){
+                m= m1[i];
+              } else {
+                m= m2[i];
+              }
+              cfd->obj_m[i] = m;
+              total_mass += m;
+            } 
+          }
+	  else if (param.imf==16) { //three PL
+            double *m1, *m2, m;
+            char str_imf[1024]="";
+            
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(3.143)3.4(1.65769)11.0(1.87154)", 1024);
             m1= generateIMF(str_imf, 
                 cfd->NOBJ+1, param.mmin, param.mmax);
 
