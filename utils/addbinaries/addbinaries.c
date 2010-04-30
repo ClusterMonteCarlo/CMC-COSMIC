@@ -486,7 +486,8 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				/* setting star properties in FITS file, being careful with units */
 				cfd->bs_k2[j] = star.se_k;
 				cfd->bs_m2[j] = star.se_mass / cfd->Mclus;
-				cfd->bs_Reff2[j] = star.se_radius / (cfd->Rvir * PARSEC / RSUN);
+				//cfd->bs_Reff2[j] = star.se_radius / (cfd->Rvir * PARSEC / RSUN);
+				cfd->bs_Reff2[j] = 0.16 / (cfd->Rvir * PARSEC / RSUN);  //forcing it to Jupiter radius
 
 				/* set/unset stellar properties for obj */
 				cfd->obj_id[i] = NOT_A_STAR;
