@@ -1414,7 +1414,7 @@ double sigma_tc_nn(double na, double ma, double ra, double nb, double mb, double
 double Tl(int order, double polytropicindex, double eta)
 {
 	int l=order;
-	double n=polytropicindex, x=log(eta), x2=x*x, x3=x*x2, x4=x2*x2, x5=x2*x3;
+	double n=polytropicindex, x=log10(eta), x2=x*x, x3=x*x2, x4=x2*x2, x5=x2*x3;
 
 	if (l != 2 && l != 3) {
 		eprintf("unknown order l=%d\n", l);
@@ -1424,21 +1424,21 @@ double Tl(int order, double polytropicindex, double eta)
 
 	if (floateq(n, 1.5)) {
 		if (l == 2) {
-			return(exp(-0.397 + 1.678*x + 1.277*x2 - 12.42*x3 + 9.446*x4 - 5.550*x5));
+			return(pow(10.0, -0.397 + 1.678*x + 1.277*x2 - 12.42*x3 + 9.446*x4 - 5.550*x5));
 		} else {
-			return(exp(-0.909 + 1.574*x + 12.37*x2 - 57.40*x3 + 80.10*x4 - 46.43*x5));	
+			return(pow(10.0, -0.909 + 1.574*x + 12.37*x2 - 57.40*x3 + 80.10*x4 - 46.43*x5));	
 		}
 	} else if (floateq(n, 2.0)) {
 		if (l == 2) {
-			return(exp(-0.517 - 0.906*x + 23.88*x2 - 93.49*x3 + 112.3*x4 - 44.15*x5));
+			return(pow(10.0, -0.517 - 0.906*x + 23.88*x2 - 93.49*x3 + 112.3*x4 - 44.15*x5));
 		} else {
-			return(exp(-1.040 - 1.354*x + 37.64*x2 - 139.9*x3 + 168.2*x4 - 66.53*x5));	
+			return(pow(10.0, -1.040 - 1.354*x + 37.64*x2 - 139.9*x3 + 168.2*x4 - 66.53*x5));	
 		}
 	} else if (floateq(n, 3.0)) {
 		if (l == 2) {
-			return(exp(-1.124 + 0.877*x - 13.37*x2 + 21.55*x3 - 16.48*x4 + 4.124*x5));
+			return(pow(10.0, -1.124 + 0.877*x - 13.37*x2 + 21.55*x3 - 16.48*x4 + 4.124*x5));
 		} else {
-			return(exp(-1.703 + 2.653*x - 14.34*x2 + 12.85*x3 - 0.492*x4 - 3.600*x5));	
+			return(pow(10.0, -1.703 + 2.653*x - 14.34*x2 + 12.85*x3 - 0.492*x4 - 3.600*x5));	
 		}
 	} else {
 		eprintf("unknown polytropic index n=%g\n", n);
