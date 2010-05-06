@@ -299,7 +299,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			if (bse_rl(star[k].m/star[kp].m)*anew*(1.0-enew) > star[k].rad && 
 			    bse_rl(star[kp].m/star[k].m)*anew*(1.0-enew) > star[kp].rad) {
 				efinal = 0.0;
-				afinal = anew * (1.0 + enew);
+				afinal = anew * (1.0 - enew*enew);
 			} else {
 				afinal = anew;
 				efinal = enew;
