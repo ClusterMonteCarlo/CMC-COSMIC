@@ -46,7 +46,7 @@
    only to estimate the timestep, so it doesn't have to be commpletely accurate.  The real cross section is still
    used when collisions are checked for.  */
 #define XCOLLTC 4.0 /* tidal capture */
-#define XCOLLSS 1.0 /* simple sticky spheres */
+#define XCOLLSS 1.5 /* simple sticky spheres */
 /* rperi = XBS * a */
 #define XBS 2.0
 /* rperi = XBB * (a_1 + a_2) */
