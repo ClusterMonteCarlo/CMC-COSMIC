@@ -422,6 +422,9 @@ void tidally_strip_stars(void) {
 
 					/* perhaps this will fix the problem wherein stars are ejected (and counted)
 					   multiple times */
+					dprintf ("before SE: id=%ld k=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
+		     star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
+	     		star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star[i].phi, star[i].r);
 					destroy_obj(i);
 
 					if (Etotal.K + Etotal.P - Etidal >= 0)

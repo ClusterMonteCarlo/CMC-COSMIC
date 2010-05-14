@@ -162,6 +162,10 @@ int main(int argc, char *argv[])
 		/* Get new time step */
 		Dt = GetTimeStep(rng);
 		
+		/*dprintf ("before tide: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
+		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
+	     		star[787].se_menv,star[787].se_renv,star[787].se_ospin,star[787].se_epoch,star[787].se_tms,star[787].se_tphys,star[787].phi, star[787].r);*/
+
 		/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
 		if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
 			diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
@@ -171,6 +175,10 @@ int main(int argc, char *argv[])
 			Dt = Prev_Dt * 1.1;
 		}
 		
+		/*dprintf ("after tide before dynamics: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
+		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
+	     		star[787].se_menv,star[787].se_renv,star[787].se_ospin,star[787].se_epoch,star[787].se_tms,star[787].se_tphys,star[787].phi, star[787].r);*/
+			
 		TotalTime += Dt;
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
@@ -182,15 +190,24 @@ int main(int argc, char *argv[])
 			dynamics_apply(Dt, rng);
 		}
 
+		/*dprintf ("after dynamics before SE: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
+		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
+	     		star[787].se_menv,star[787].se_renv,star[787].se_ospin,star[787].se_epoch,star[787].se_tms,star[787].se_tphys,star[787].phi, star[787].r);*/
+
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 		   will disappear! */
 		clus.N_MAX_NEW++;
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
+
 		if (STELLAR_EVOLUTION > 0) {
 			do_stellar_evolution(rng);
 		}
+
+		/*dprintf ("after SE: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
+		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
+	     		star[787].se_menv,star[787].se_renv,star[787].se_ospin,star[787].se_epoch,star[787].se_tms,star[787].se_tphys,star[787].phi, star[787].r);*/
 		
 		Prev_Dt = Dt;
 
