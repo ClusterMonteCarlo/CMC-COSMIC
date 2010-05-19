@@ -20,6 +20,18 @@ AC_ARG_VAR([HOSTNAME], [Full name of the host. Sets default values for certain v
 AX_WITH_PROG([HOSTNAME_PROG], [hostname], [])
 AS_IF([test "x$HOSTNAME" == x ], [AS_IF([test "x$HOSTNAME_PROG"== x], [],[HOSTNAME=`$HOSTNAME_PROG`])])
 
+# Set make variables CMCVERSION and CMCDATE.
+GET_REPO_VERSION([VER])
+AS_IF([test "x$VER" == "xexported"], [CMCVERSION=`cat VERSION`], [CMCVERSION="$VER"; echo "$VER">VERSION])
+# When everything fails, set CMCVERSION to "unknown".
+AS_IF([test "x$CMCVERSION" == "x"], [CMCVERSION="unknown"])
+
+AC_CHECK_PROG([HAS_DATE], [date], [yes], [no])
+AS_IF([test "x$HAS_DATE" == "xyes"], [CMCDATE=[`date | sed -e 's|[[:space:]]|_|g'`]], [CMCDATE="unknown"])
+
+AC_SUBST([CMCVERSION])
+AC_SUBST([CMCDATE])
+
 # We only use libtool to "pass" the -static flag to the C/FORTRAN compiler in a portable way.
 # We do not intend to build shared libraries.
 AC_DISABLE_SHARED
