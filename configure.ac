@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.63)
+AC_PREREQ(2.62)
 AC_INIT([cmc],[[latest]],[[s-umbreit@northwestern.edu]])
 
 # We put all auxiliary scripts into common
@@ -15,6 +15,7 @@ AC_CONFIG_HEADER([config.h])
 AC_ARG_ENABLE(static-linking, [AC_HELP_STRING([--enable-static-linking], [Link all external libraries statically])],
 	[LIBTOOL_LDFLAGS="-all-static"])
 
+AC_PROG_CC([pathcc icc gcc])
 # Set the maximum optimization
 AX_CC_MAXOPT
 AS_IF([test "x$FFLAGS" == x], [FFLAGS='-g -O3'], [])
@@ -44,17 +45,16 @@ AC_SUBST([CMCDATE])
 
 # We only use libtool to "pass" the -static flag to the C/FORTRAN compiler in a portable way.
 # We do not intend to build shared libraries.
-AC_DISABLE_SHARED
+#AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
 
 # get the right fortran flags
-AC_PROG_F77([gfortran pathf90 ifort g77])
+AC_PROG_F77([pathf90 ifort gfortran g77])
 AC_F77_LIBRARY_LDFLAGS
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_AWK
-AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
