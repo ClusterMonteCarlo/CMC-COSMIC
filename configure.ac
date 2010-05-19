@@ -15,6 +15,12 @@ AC_CONFIG_HEADER([config.h])
 AC_ARG_ENABLE(static-linking, [AC_HELP_STRING([--enable-static-linking], [Link all external libraries statically])],
 	[LIBTOOL_LDFLAGS="-all-static"])
 
+AC_ARG_ENABLE(experimental, [AC_HELP_STRING([--enable-experimental], 
+              [Enable a more accurate (but slower) orbit determination.])],
+              [], [enable_experimental=no])
+
+AS_IF([test "x$enable_experimental" == "xyes"], [CFLAGS="$CFLAGS -DEXPERIMENTAL"], [])
+
 AC_PROG_CC([pathcc icc gcc])
 # Set the maximum optimization
 AX_CC_MAXOPT
