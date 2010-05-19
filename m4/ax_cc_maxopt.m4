@@ -76,7 +76,7 @@ if test "$ac_test_CFLAGS" != "set"; then
     dec) CFLAGS="-newc -w0 -O5 -ansi_alias -ansi_args -tune host"
 	 if test "x$acx_maxopt_fmath" = xyes; then
            CFLAGS="$CFLAGS -fp_reorder"
-         fi;;
+         fi
 	 if test "x$acx_maxopt_portable" = xno; then
            CFLAGS="$CFLAGS -arch host"
          fi;;
@@ -84,7 +84,7 @@ if test "$ac_test_CFLAGS" != "set"; then
     sun) CFLAGS="-native -xO5 -dalign"
 	 if test "x$acx_maxopt_fmath" = xyes; then
            CFLAGS="$CFLAGS -fast"
-         fi;;
+         fi
 	 if test "x$acx_maxopt_portable" = xyes; then
 	   CFLAGS="$CFLAGS -xarch=generic"
          fi;;
@@ -159,7 +159,7 @@ if test "$ac_test_CFLAGS" != "set"; then
      if test "x$acx_maxopt_fmath" = xyes; then
        # note that we enable "unsafe" fp optimization with other compilers, too
        AX_CHECK_COMPILER_FLAGS(-ffast-math, CFLAGS="$CFLAGS -ffast-math")
-     fi;;
+     fi
 
      AX_GCC_ARCHFLAG($acx_maxopt_portable)
      ;;
