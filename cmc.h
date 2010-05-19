@@ -575,6 +575,7 @@ long search_grid_get_grid_index(struct Search_Grid *grid, double r);
 double search_grid_get_r(struct Search_Grid *grid, long index);
 double search_grid_get_grid_indexf(struct Search_Grid *grid, double r);
 void search_grid_free(struct Search_Grid *grid);
+void search_grid_print_binsizes(struct Search_Grid *grid);
 
 #ifdef DEBUGGING
 #include <glib.h>
