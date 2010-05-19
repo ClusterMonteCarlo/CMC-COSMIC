@@ -6,6 +6,7 @@ AC_INIT([cmc],[[latest]],[[s-umbreit@northwestern.edu]])
 
 # We put all auxiliary scripts into common
 AC_CONFIG_AUX_DIR([common])
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE
 
