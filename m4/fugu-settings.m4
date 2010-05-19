@@ -8,6 +8,8 @@ AC_DEFUN([SET_FUGU_DIRS], [
           ])
 
 AC_DEFUN([SET_FUGU_FLAGS], [
+        AS_IF([ test "x$enable_cuda" == "xno"], [
         LIBTOOL_LDFLAGS+=" -all-static"
+        ])
         ])
 

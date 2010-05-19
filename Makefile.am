@@ -2,6 +2,9 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = libs bse_wrap fewbody-0.24 
 
+.cu.cpp:
+	${NVCC} --cuda -arch ${CUDAARCH} ${CPPFLAGS} -o $@ $<
+
 bin_PROGRAMS = cmc cmc_mkplummer cmc_mkking cmc_setimf cmc_setunits cmc_setstellar cmc_addbinaries
 
 cmc_SOURCES = cmc_bhlosscone.c cmc_binbin.c cmc_binsingle.c cmc.c cmc_core.c \
@@ -15,6 +18,12 @@ cmc_SOURCES = cmc_bhlosscone.c cmc_binbin.c cmc_binsingle.c cmc.c cmc_core.c \
 cmc_CPPFLAGS = -DCMCVERSION=\"$(CMCVERSION)\" -DCMCDATE=\"$(CMCDATE)\"
 cmc_LDADD = libs/libsupport.la fewbody-0.24/libfewbody.la bse_wrap/libbsewrap.la
 cmc_LDFLAGS = $(LIBTOOL_LDFLAGS)
+
+if USE_CUDA
+cmc_SOURCES += cuda/cmc_cuda.cpp cuda/cmc_cuda.h
+cmc_CPPFLAGS += $(CUDA_CONFIG_INCLUDES) -DUSE_CUDA
+cmc_LDFLAGS += $(CUDA_CONFIG_LIBRARIES)
+endif
 
 cmc_mkplummer_SOURCES = utils/mkplummer/mkplummer.c
 cmc_mkplummer_LDADD = libs/libsupport.la
