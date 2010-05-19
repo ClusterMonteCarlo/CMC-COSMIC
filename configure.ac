@@ -12,10 +12,20 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([cmc_binbin.c])
 AC_CONFIG_HEADER([config.h])
 
-AS_IF([test "x$FFLAGS" == x], [FFLAGS='-g'], [])
-AS_IF([test "x$CFLAGS" == x], [CFLAGS='-g'], [])
+AC_ARG_ENABLE(static-linking, [AC_HELP_STRING([--enable-static-linking], [Link all external libraries statically])],
+	[LIBTOOL_LDFLAGS="-all-static"])
 
-# try to find out the name of the host 
+# Set the maximum optimization
+AX_CC_MAXOPT
+AS_IF([test "x$FFLAGS" == x], [FFLAGS='-g -O3'], [])
+# Always add debug symbols
+CFLAGS="$CFLAGS -g"
+
+# Force the C compiler to issue all warnings
+AX_CFLAGS_WARN_ALL([CFLAGS_WARN])
+CFLAGS="$CFLAGS $CFLAGS_WARN"
+
+# Try to find out the name of the host.
 AC_ARG_VAR([HOSTNAME], [Full name of the host. Sets default values for certain variables.])
 AX_WITH_PROG([HOSTNAME_PROG], [hostname], [])
 AS_IF([test "x$HOSTNAME" == x ], [AS_IF([test "x$HOSTNAME_PROG"== x], [],[HOSTNAME=`$HOSTNAME_PROG`])])
@@ -48,9 +58,11 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
-# First, check if we are on a specific host
+# Check if we are on a specific host
 AS_IF([test "x$HOSTNAME" == "xfugu.phys.northwestern.edu"], SET_FUGU_DIRS)
 AS_IF([test "x$HOSTNAME" == "xfugu.phys.northwestern.edu"], SET_FUGU_FLAGS)
+
+AC_SUBST([LIBTOOL_LDFLAGS])
 
 # Checks for libraries.
 AC_CHECK_LIB([m], [sinl], [],[AC_MSG_ERROR([cannot link with libm], [])], [])

@@ -8,6 +8,6 @@ AC_DEFUN([SET_FUGU_DIRS], [
           ])
 
 AC_DEFUN([SET_FUGU_FLAGS], [
-        LIBTOOL_LDFLAGS+=" -static"
+        LIBTOOL_LDFLAGS+=" -all-static"
         ])
 
