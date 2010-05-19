@@ -145,7 +145,7 @@ if test "$ac_test_CFLAGS" != "set"; then
         fi
 	;;
 
-    gnu)
+    gnu|pathscale)
      # default optimization flags for gcc on all systems
      CFLAGS="-O3 -fomit-frame-pointer"
 
