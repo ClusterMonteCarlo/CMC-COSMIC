@@ -13,6 +13,8 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([cmc_binbin.c])
 AC_CONFIG_HEADER([config.h])
 
+AC_PREFIX_DEFAULT([$HOME])
+
 AC_ARG_ENABLE(static-linking, [AC_HELP_STRING([--enable-static-linking], [Link all external libraries statically])],
 	[LIBTOOL_LDFLAGS="-all-static"])
 
@@ -68,6 +70,7 @@ AC_PROG_AWK
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
+
 # Check if we are on a specific host
 AS_IF([test "x$HOSTNAME" == "xfugu.phys.northwestern.edu"], SET_FUGU_DIRS)
 AS_IF([test "x$HOSTNAME" == "xfugu.phys.northwestern.edu"], SET_FUGU_FLAGS)
@@ -75,19 +78,46 @@ AS_IF([test "x$HOSTNAME" == "xfugu.phys.northwestern.edu"], SET_FUGU_FLAGS)
 AC_SUBST([LIBTOOL_LDFLAGS])
 
 # Checks for libraries.
-AC_CHECK_LIB([m], [sinl], [],[AC_MSG_ERROR([cannot link with libm], [])], [])
+AC_CHECK_LIB([m], [sinl], [],[AC_MSG_ERROR([cannot link with libm])], [])
 AC_CHECK_LIB([dl], [dlopen])
 AC_CHECK_LIB([z], [gzopen], [], [AC_MSG_ERROR([cannot link with zlib])])
 AC_SEARCH_LIBS([crypt], [crypt])
 AC_SEARCH_LIBS([getopt_long], [gnugetopt], [],[AC_MSG_ERROR([cannot link with libgnugetopt], [])], [])
-AC_CHECK_LIB([cfitsio], [ffopen], [],[AC_MSG_ERROR([cannot link with cfitsio], [])], [])
-AC_CHECK_LIB([gslcblas], [cblas_drot])
-AC_CHECK_LIB([gsl], [gsl_root_fsolver_alloc])
+AC_CHECK_LIB([cfitsio], [ffopen], [],[cfitsio_not_found=yes])
+AS_IF([test "x$cfitsio_not_found" == "xyes"], [
+	ADD_FLAGS_PKG_CONF([cfitsio])
+	AS_UNSET([ac_cv_lib_cfitsio_ffopen])
+	AC_CHECK_LIB([cfitsio], [ffopen], [], [AC_MSG_ERROR(["Unable to link against cfitsio."])])
+])
+	
+AC_CHECK_LIB([gslcblas], [cblas_drot], [], [gsl_cblas_not_found=yes])
+AS_IF([test "x$gsl_cblas_not_found" == "xyes"], [
+	ADD_FLAGS_PKG_CONF([gsl])
+	AC_CHECK_LIB([gslcblas], [cblas_drot], [], [AC_MSG_ERROR(["Unable to link against gslcblas."])])
+])
+	
+AC_CHECK_LIB([gsl], [gsl_root_fsolver_alloc], [], [gsl_not_found=yes])
+AS_IF([test "x$gsl_not_found" == "xyes"], [
+	ADD_FLAGS_PKG_CONF([gsl])
+	AC_CHECK_LIB([gsl], [gsl_root_fsolver_alloc], [], [AC_MSG_ERROR(["Unable to link against gsl."])])
+])
+
 ACX_PTHREAD([])
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([float.h stddef.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([float.h stddef.h stdlib.h string.h unistd.h]) 
+
+AC_CHECK_HEADERS([fitsio.h], [], [
+	ADD_FLAGS_PKG_CONF([cfitsio])
+	AS_UNSET([ac_cv_header_fitsio_h])
+	AC_CHECK_HEADERS([fitsio.h], [], [AC_MSG_ERROR([fitsio.h not available/usable.])])
+])
+
+AC_CHECK_HEADERS([gsl/gsl_odeiv.h], [], [
+	ADD_FLAGS_PKG_CONF([gsl])
+	AC_CHECK_HEADERS([gsl/gsl_odeiv.h], [], [AC_MSG_ERROR([GSL headers not available/usable.])])
+])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
