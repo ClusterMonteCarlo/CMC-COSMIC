@@ -1,4 +1,4 @@
-ACLOCAL_AMFLAGS = -I m4 --install
+ACLOCAL_AMFLAGS = -I m4 
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = libs bse_wrap fewbody-0.24 
 
