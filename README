@@ -3,9 +3,9 @@ required. Simply run
 
 autoreconf -ivf
 
-which produces a configure script.  The code can then be installed like any
+which produces a configure script. The code can then be installed like any
 other Autotools project, as described in INSTALL. The default installation path
-is in the users home directory. There are some extra configure options that one
+is the user's home directory. There are some extra configure options that one
 might want to use:
 
 --enable-cuda   enable GPU acceleration for nVidia cards using CUDA C
