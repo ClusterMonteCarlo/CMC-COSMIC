@@ -42,7 +42,11 @@
 
 /* defining maximum pericenters for "strong" interactions */
 /* rperi = XCOLL * (R_1 + R_2) */
-#define XCOLL 1.0
+/* We'll set XCOLL to 4 here, as a generous estimate of the tidal capture + merger cross section.  XCOLL is used
+   only to estimate the timestep, so it doesn't have to be commpletely accurate.  The real cross section is still
+   used when collisions are checked for.  */
+#define XCOLLTC 4.0 /* tidal capture */
+#define XCOLLSS 1.5 /* simple sticky spheres */
 /* rperi = XBS * a */
 #define XBS 2.0
 /* rperi = XBB * (a_1 + a_2) */
@@ -58,6 +62,8 @@
 
 /*Sourav: required for the preaging when STAR_AGING_SCHEME is emabled in Solar mass*/
 #define PREAGING_MASS 5.0
+
+#define MAX_STRING_LENGTH 2048
 
 /* binaries */
 typedef struct{
@@ -210,6 +216,8 @@ typedef struct{
 	int TIDAL_TREATMENT;
 #define PARAMDOC_SS_COLLISION "perform physical stellar collisions (0=off, 1=on)"
 	int SS_COLLISION;
+#define PARAMDOC_TIDAL_CAPTURE "allow for tidal capture in single-single interactions, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)"
+	int TIDAL_CAPTURE;
 	//Sourav: toy rejuvenation flags
 #define PARAMDOC_STAR_AGING_SCHEME "the aging scheme of the stars (0=infinite age of all stars, 1=rejuvenation, 2=zero lifetime of collision stars, 3=arbitrary lifetime)"
 	int STAR_AGING_SCHEME;
@@ -426,6 +434,8 @@ void print_version(FILE *stream);
 void cmc_print_usage(FILE *stream, char *argv[]);
 void parser(int argc, char *argv[], gsl_rng *r);
 void PrintFileOutput(void);
+char *sprint_star_dyn(long k, char string[MAX_STRING_LENGTH]);
+char *sprint_bin_dyn(long k, char string[MAX_STRING_LENGTH]);
 
 /* Unmodified Numerical Recipes Routines */
 void nrerror(char error_text[]);
@@ -475,8 +485,9 @@ void set_star_olds(long k);
 void zero_star(long j);
 void zero_binary(long j);
 
-void sscollision_do(long k, long kp, double rcm, double vcm[4]);
+void sscollision_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng);
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs);
+double coll_CE(double Mrg, double Mint, double Mwd, double Rrg, double vinf);
 
 void print_initial_binaries(void);
 
@@ -498,6 +509,8 @@ double simul_relax(gsl_rng *rng);
 void break_wide_binaries(void);
 void calc_sigma_r(void);
 double sigma_r(double r);
+
+int remove_old_star(double time, long k);
 
 /* signal/GSL error handling stuff */
 void toggle_debugging(int signal);
@@ -590,6 +603,11 @@ long find_zero_Q(long j, long kmin, long kmax, long double E, long double J);
 //extern inline long double function_q(long j, long double r, long double pot, long double E, long double J);
 orbit_rs_t calc_orbit_new(long index, double E, double J);
 double calc_average_mass_sqr(long index, long N_LIMIT);
+double floateq(double a, double b);
+double sigma_tc_nd(double n, double m1, double r1, double m2, double vinf);
+double sigma_tc_nn(double na, double ma, double ra, double nb, double mb, double rb, double vinf);
+double Tl(int order, double polytropicindex, double eta);
+double Etide(double rperi, double Mosc, double Rosc, double nosc, double Mpert);
 struct Interval get_r_interval(double r);
 double calc_vr_within_interval(double r, void *p);
 double calc_vr_in_interval(double r, long index, long k, double E, double J);

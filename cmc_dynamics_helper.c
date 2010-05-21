@@ -1335,3 +1335,122 @@ double calc_average_mass_sqr(long index, long N_LIMIT) {
 
   return(M2ave);
 };
+
+/* generic routine for testing for approximate equality of floating point numbers */
+double floateq(double a, double b) {
+	double diff=a-b, mean=0.5*(a+b);
+
+	if (a == 0.0 && b == 0.0) {
+		return(1);
+	} else if (fabs(diff)/mean < 1.0e-6) {
+		return(1);
+	} else {
+		return(0);
+	}
+}
+
+/* tidal capture (including merger) cross section; inputs are assumed to be in (self-consistent) code units */
+double sigma_tc_nd(double n, double m1, double r1, double m2, double vinf) {
+	double a, beta=2.2, vstar1=sqrt(2.0*m1/r1);
+
+	if (floateq(n, 1.5)) {
+		a = 6.60 * pow(m2/m1, 0.242) + 5.06 * pow(m2/m1, 1.33);
+	} else if (floateq(n, 3.0)) {
+		a = 3.66 * pow(m2/m1, 0.200) + 2.94 * pow(m2/m1, 1.32);
+	} else {
+		eprintf("unknown polytropic index n=%g!\n", n);
+		exit_cleanly(-1);
+		exit(1);
+	}
+	
+	return(a*pow(vinf/vstar1,-beta)*r1*r1);
+}
+
+/* tidal capture (including merger) cross section; inputs are assumed to be in (self-consistent) code units */
+double sigma_tc_nn(double na, double ma, double ra, double nb, double mb, double rb, double vinf) {
+	double n1, m1, r1, n2, m2, r2;
+	double a, beta=2.2, gamma, vstar1;
+
+	/* make sure m2 >= m1 */
+	if (mb >= ma) {
+		n1 = na;
+		m1 = ma;
+		r1 = ra;
+		n2 = nb;
+		m2 = mb;
+		r2 = rb;
+	} else {
+		n1 = nb;
+		m1 = mb;
+		r1 = rb;
+		n2 = na;
+		m2 = ma;
+		r2 = ra;
+	}
+	
+	gamma=log(r2/r1)/log(m2/m1);
+	vstar1=sqrt(2.0*m1/r1);
+
+	if (floateq(n1, 1.5) && floateq(n2, 1.5)) {
+		a = 6.05 * pow(m2/m1, 0.835*log(gamma)+0.468) + 6.50 * pow(m2/m1, 0.563*log(gamma)+1.75);
+	} else if (floateq(n1, 3.0) && floateq(n2, 3.0)) {
+		a = 3.50 * pow(m2/m1, 0.814*log(gamma)+0.551) + 3.53 * pow(m2/m1, 0.598*log(gamma)+1.80);
+	} else if (floateq(n1, 1.5) && floateq(n2, 3.0)) {
+		a = 7.98 * pow(m2/m1, -1.23*log(gamma)-0.232) + 3.57 * pow(m2/m1, 0.625*log(gamma)+1.81);
+	} else if (floateq(n1, 3.0) && floateq(n2, 1.5)) {
+		/* this combo is not presented in Kim & Lee (1999), so we'll use the largest a to make sure we
+		   capture everything */
+		a = 6.05 * pow(m2/m1, 0.835*log(gamma)+0.468) + 6.50 * pow(m2/m1, 0.563*log(gamma)+1.75);
+	} else {
+		eprintf("unknown polytropic indexes n1=%g n2=%g!\n", n1, n2);
+		exit_cleanly(-1);
+		exit(1);
+	}
+	
+	return(a*pow(vinf/vstar1,-beta)*r1*r1);
+}
+
+/* T_l function for use in tidal capture calculations */
+double Tl(int order, double polytropicindex, double eta)
+{
+	int l=order;
+	double n=polytropicindex, x=log10(eta), x2=x*x, x3=x*x2, x4=x2*x2, x5=x2*x3;
+
+	if (l != 2 && l != 3) {
+		eprintf("unknown order l=%d\n", l);
+		exit_cleanly(-1);
+		exit(1);
+	}
+
+	if (floateq(n, 1.5)) {
+		if (l == 2) {
+			return(pow(10.0, -0.397 + 1.678*x + 1.277*x2 - 12.42*x3 + 9.446*x4 - 5.550*x5));
+		} else {
+			return(pow(10.0, -0.909 + 1.574*x + 12.37*x2 - 57.40*x3 + 80.10*x4 - 46.43*x5));	
+		}
+	} else if (floateq(n, 2.0)) {
+		if (l == 2) {
+			return(pow(10.0, -0.517 - 0.906*x + 23.88*x2 - 93.49*x3 + 112.3*x4 - 44.15*x5));
+		} else {
+			return(pow(10.0, -1.040 - 1.354*x + 37.64*x2 - 139.9*x3 + 168.2*x4 - 66.53*x5));	
+		}
+	} else if (floateq(n, 3.0)) {
+		if (l == 2) {
+			return(pow(10.0, -1.124 + 0.877*x - 13.37*x2 + 21.55*x3 - 16.48*x4 + 4.124*x5));
+		} else {
+			return(pow(10.0, -1.703 + 2.653*x - 14.34*x2 + 12.85*x3 - 0.492*x4 - 3.600*x5));	
+		}
+	} else {
+		eprintf("unknown polytropic index n=%g\n", n);
+		exit_cleanly(-1);
+		exit(1);
+	}
+}
+
+/* tidal energy of Mpert acting on Mosc, in the polytropic approximation */
+double Etide(double rperi, double Mosc, double Rosc, double nosc, double Mpert)
+{
+	double eta=sqrt(Mosc/(Mosc+Mpert))*pow(rperi/Rosc, 1.5);
+
+	return(sqr(Mpert)/Rosc * (pow(Rosc/rperi, 6.0) * Tl(2, nosc, eta) + pow(Rosc/rperi, 8.0) * Tl(3, nosc, eta)));
+}

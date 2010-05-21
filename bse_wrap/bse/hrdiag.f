@@ -145,6 +145,10 @@
             else
                kw = 1
             endif
+* planets
+            if(mass.lt.0.005d0.and.mass.ge.tiny)then
+               r = 0.16d0
+            endif
 *
          else 
 *

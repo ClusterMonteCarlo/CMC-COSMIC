@@ -7,50 +7,362 @@
 #include "cmc_vars.h"
 #include "bse_wrap/bse_wrap.h"
 
-void sscollision_do(long k, long kp, double rcm, double vcm[4])
+void sscollision_do(long k, long kp, double rperimax, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng)
 {
 	long knew;
-	double vs[3];
-	
-	/* create new star */
-	knew = create_star();
+	double vs[3], bmax, b, rperi, Eorbnew, acoll, ecoll, ace, ece, anew, enew, efinal, afinal;
+	double aj, tm, tn, tscls[20], lums[10], GB[10], k2;
+	double Einit;
 
-	/* merge parent stars, setting mass, stellar radius, and SE params */
-	merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs);
+	bmax = rperimax * sqrt(1.0 + 2.0 * ((star[k].m + star[kp].m) * madhoc) / (rperimax * sqr(W)));
+	b = sqrt(rng_t113_dbl()) * bmax;
+	rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+sqr(b*W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+
+	/* fprintf(stderr, "\n *** sscollision: rperimax=%g (%g RSUN) bmax=%g (%g RSUN) b=%g (%g RSUN) rperi=%g (%g RSUN)\n", 
+	   rperimax, rperimax * units.l / RSUN, bmax, bmax * units.l / RSUN, b, b*units.l/RSUN, rperi, rperi*units.l/RSUN); */
+
+	if (TIDAL_CAPTURE && (star[k].se_k <= 1 || star[k].se_k >= 10) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7) && 
+	    rperi <= 1.3 * star[kp].rad) {
+		/* log stuff */
+		fprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
+			sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
+
+		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
+		ecoll = 0.88 - rperi/(3.0*star[kp].rad);
+		acoll = rperi/(3.3*(1.0-sqr(ecoll)));
+		
+		ace = coll_CE(star[kp].m*madhoc, star[k].m*madhoc, star[kp].se_mc*MSUN/units.mstar, star[kp].se_radius*RSUN/units.l, W);
+		ece = 0.0;
+
+		if (ace < acoll) {
+			afinal = ace;
+			efinal = ece;
+		} else {
+			afinal = acoll;
+			efinal = ecoll;
+		}
+		
+		/* strip envelope of RG */
+		Einit = star[k].Eint + 0.5 * star[k].m * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
+			star[kp].Eint + 0.5 * star[kp].m * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
+			0.5 * star[k].m * madhoc * star[k].phi + 0.5 * star[kp].m * madhoc * star[kp].phi;
+		DMse += star[kp].m * madhoc;
+		aj = star[kp].se_tphys - star[kp].se_epoch;
+		star[kp].se_mt = star[kp].se_mc;
+		bse_star(&(star[kp].se_k), &(star[kp].se_mass), &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars);
+		bse_hrdiag(&(star[kp].se_mass), &aj, &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars,
+			   &(star[kp].se_radius), &(star[kp].se_lum), &(star[kp].se_k), &(star[kp].se_mc), &(star[kp].se_rc), 
+			   &(star[kp].se_menv), &(star[kp].se_renv), &k2);
+		star[kp].se_epoch = star[kp].se_tphys - aj;
+		star[kp].rad = star[kp].se_radius * RSUN / units.l;
+		star[kp].m = star[kp].se_mt * MSUN / units.mstar;
+		DMse -= star[kp].m * madhoc;
+
+		/* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
+		if (star[k].se_k <= 1 && star[k].se_radius*RSUN/units.l >= bse_rl(star[k].m/star[kp].m)*(1.0-efinal)*afinal) {
+			/* keep only RG core as single star */
+			star[kp].r = rcm;
+			star[kp].vr = vcm[3];
+			star[kp].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+			star[kp].phi = potential(star[kp].r);
+			set_star_EJ(kp);
+			set_star_news(kp);
+			set_star_olds(kp);
+			
+			/* mark stars as interacted so they don't undergo E_CONS mode stuff */
+			star[kp].interacted = 1;
+			star[kp].Eint = star[k].Eint + star[kp].Eint + Einit 
+				- 0.5 * star[kp].m * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt)) 
+				- 0.5 * star[kp].m * madhoc * star[kp].phi;
+			
+			/* log stuff */
+			fprintf(tidalcapturefile, "%s\n", sprint_star_dyn(kp, dummystring));
+
+			destroy_obj(k);
+		} else {
+			/* form compact binary with stripped RG core*/
+			/* put new binary together and destroy original stars */
+			knew = create_binary();
+			star[knew].m = star[k].m + star[kp].m;
+			star[knew].r = rcm;
+			star[knew].vr = vcm[3];
+			star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+			star[knew].phi = potential(star[knew].r);
+			set_star_EJ(knew);
+			set_star_news(knew);
+			set_star_olds(knew);
+			star[knew].interacted = 1;
+			
+			binary[star[knew].binind].a = afinal;
+			binary[star[knew].binind].e = efinal;
+			binary[star[knew].binind].m1 = star[k].m;
+			binary[star[knew].binind].m2 = star[kp].m;
+			binary[star[knew].binind].rad1 = star[k].rad;
+			binary[star[knew].binind].rad2 = star[kp].rad;
+			binary[star[knew].binind].Eint1 = star[k].Eint;
+			binary[star[knew].binind].Eint2 = star[kp].Eint;
+
+			/* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
+			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				 - 0.5 * star[knew].m * madhoc * star[knew].phi
+				 + 0.5 * star[k].m * madhoc * star[kp].m * madhoc / binary[star[knew].binind].a);
+			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				 - 0.5 * star[knew].m * madhoc * star[knew].phi
+				 + 0.5 * star[k].m * madhoc * star[kp].m * madhoc / binary[star[knew].binind].a);
+
+			binary[star[knew].binind].id1 = star[k].id;
+			binary[star[knew].binind].id2 = star[kp].id;
+			cp_SEvars_to_newbinary(k, -1, knew, 0);
+			cp_SEvars_to_newbinary(kp, -1, knew, 1);
+			binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
+			compress_binary(&star[knew], &binary[star[knew].binind]);
+			
+			/* log stuff */
+			fprintf(tidalcapturefile, "%s\n", sprint_bin_dyn(knew, dummystring));
+
+			destroy_obj(k);
+			destroy_obj(kp);
+		}
+	} else if (TIDAL_CAPTURE && (star[kp].se_k <= 1 || star[kp].se_k >= 10) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7) && 
+		   rperi <= 1.3 * star[k].rad) {
+		/* log stuff */
+		fprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
+			sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
+
+		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
+		ecoll = 0.88 - rperi/(3.0*star[k].rad);
+		acoll = rperi/(3.3*(1.0-sqr(ecoll)));
+		
+		ace = coll_CE(star[k].m*madhoc, star[kp].m*madhoc, star[k].se_mc*MSUN/units.mstar, star[k].se_radius*RSUN/units.l, W);
+		ece = 0.0;
+
+		if (ace < acoll) {
+			afinal = ace;
+			efinal = ece;
+		} else {
+			afinal = acoll;
+			efinal = ecoll;
+		}
+		
+		/* strip envelope of RG */
+		Einit = star[k].Eint + 0.5 * star[k].m * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
+			star[kp].Eint + 0.5 * star[kp].m * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
+			0.5 * star[k].m * madhoc * star[k].phi + 0.5 * star[kp].m * madhoc * star[kp].phi;
+		DMse += star[k].m * madhoc;
+		aj = star[k].se_tphys - star[k].se_epoch;
+		star[k].se_mt = star[k].se_mc;
+		bse_star(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars);
+		bse_hrdiag(&(star[k].se_mass), &aj, &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars,
+			   &(star[k].se_radius), &(star[k].se_lum), &(star[k].se_k), &(star[k].se_mc), &(star[k].se_rc), 
+			   &(star[k].se_menv), &(star[k].se_renv), &k2);
+		star[k].se_epoch = star[k].se_tphys - aj;
+		star[k].rad = star[k].se_radius * RSUN / units.l;
+		star[k].m = star[k].se_mt * MSUN / units.mstar;
+		DMse -= star[k].m * madhoc;
+
+		/* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
+		if (star[kp].se_k <= 1 && star[kp].se_radius*RSUN/units.l >= bse_rl(star[kp].m/star[k].m)*(1.0-efinal)*afinal) {
+			/* keep only RG core as single star */
+			star[k].r = rcm;
+			star[k].vr = vcm[3];
+			star[k].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+			star[k].phi = potential(star[k].r);
+			set_star_EJ(k);
+			set_star_news(k);
+			set_star_olds(k);
+			
+			/* mark stars as interacted so they don't undergo E_CONS mode stuff */
+			star[k].interacted = 1;
+			star[k].Eint = star[k].Eint + star[kp].Eint + Einit 
+				- 0.5 * star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
+				- 0.5 * star[k].m * madhoc * star[k].phi;
+			
+			/* log stuff */
+			fprintf(tidalcapturefile, "%s\n", sprint_star_dyn(k, dummystring));
+
+			destroy_obj(kp);
+		} else {
+			/* form compact binary with stripped RG core*/
+			/* put new binary together and destroy original stars */
+			knew = create_binary();
+			star[knew].m = star[k].m + star[kp].m;
+			star[knew].r = rcm;
+			star[knew].vr = vcm[3];
+			star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+			star[knew].phi = potential(star[knew].r);
+			set_star_EJ(knew);
+			set_star_news(knew);
+			set_star_olds(knew);
+			star[knew].interacted = 1;
+			
+			binary[star[knew].binind].a = afinal;
+			binary[star[knew].binind].e = efinal;
+			binary[star[knew].binind].m1 = star[k].m;
+			binary[star[knew].binind].m2 = star[kp].m;
+			binary[star[knew].binind].rad1 = star[k].rad;
+			binary[star[knew].binind].rad2 = star[kp].rad;
+			binary[star[knew].binind].Eint1 = star[k].Eint;
+			binary[star[knew].binind].Eint2 = star[kp].Eint;
+
+			/* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
+			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				 - 0.5 * star[knew].m * madhoc * star[knew].phi
+				 + 0.5 * star[k].m * madhoc * star[kp].m * madhoc / binary[star[knew].binind].a);
+			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				 - 0.5 * star[knew].m * madhoc * star[knew].phi
+				 + 0.5 * star[k].m * madhoc * star[kp].m * madhoc / binary[star[knew].binind].a);
+
+			binary[star[knew].binind].id1 = star[k].id;
+			binary[star[knew].binind].id2 = star[kp].id;
+			cp_SEvars_to_newbinary(k, -1, knew, 0);
+			cp_SEvars_to_newbinary(kp, -1, knew, 1);
+			binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
+			compress_binary(&star[knew], &binary[star[knew].binind]);
+			
+			/* log stuff */
+			fprintf(tidalcapturefile, "%s\n", sprint_bin_dyn(knew, dummystring));
+
+			destroy_obj(k);
+			destroy_obj(kp);
+		}
+	} else if (rperi <= star[k].rad + star[kp].rad) {
+		/* perform standard sticky-sphere merger */
+		/* If tidal capture is turned off, the cross section is just large enough to enter this clause, 
+		   so the next clause should never be entered. */
+
+		/* create new star */
+		knew = create_star();
+		
+		/* merge parent stars, setting mass, stellar radius, and SE params */
+		merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs);
 	
-	star[knew].r = rcm;
-	star[knew].vr = vcm[3];
-	star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-	star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);
-	star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
-	star[knew].phi = potential(star[knew].r);
-	set_star_EJ(knew);
-	set_star_news(knew);
-	set_star_olds(knew);
+		star[knew].r = rcm;
+		star[knew].vr = vcm[3];
+		star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+		star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);
+		star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
+		star[knew].phi = potential(star[knew].r);
+		set_star_EJ(knew);
+		set_star_news(knew);
+		set_star_olds(knew);
 	
-	/* mark stars as interacted so they don't undergo E_CONS mode stuff */
-	star[knew].id = star_get_id_new();
-	star[knew].interacted = 1;
-	star[knew].Eint = star[k].Eint + star[kp].Eint 
-		+ 0.5 * star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
-		+ 0.5 * star[kp].m * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
-		- 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-		+ 0.5 * star[k].m * madhoc * star[k].phi
-		+ 0.5 * star[kp].m * madhoc * star[kp].phi
-		- 0.5 * star[knew].m * madhoc * star[knew].phi;
-	
-	
-	/* log collision */
-	fprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d\n", 
-		TotalTime, 
-		star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN, 
-		star[k].id, star[k].m * units.mstar / FB_CONST_MSUN, 
-		star[kp].id, star[kp].m * units.mstar / FB_CONST_MSUN,
-		star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k);
-	
-	/* destroy two progenitors */
-	destroy_obj(k);
-	destroy_obj(kp);
+		/* mark stars as interacted so they don't undergo E_CONS mode stuff */
+		star[knew].id = star_get_id_new();
+		star[knew].interacted = 1;
+		star[knew].Eint = star[k].Eint + star[kp].Eint 
+			+ 0.5 * star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
+			+ 0.5 * star[kp].m * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+			- 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+			+ 0.5 * star[k].m * madhoc * star[k].phi
+			+ 0.5 * star[kp].m * madhoc * star[kp].phi
+			- 0.5 * star[knew].m * madhoc * star[knew].phi;
+		
+		/* log collision */
+		fprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d\n", 
+			TotalTime, 
+			star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN, 
+			star[k].id, star[k].m * units.mstar / FB_CONST_MSUN, 
+			star[kp].id, star[kp].m * units.mstar / FB_CONST_MSUN,
+			star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k);
+
+		/* destroy two progenitors */
+		destroy_obj(k);
+		destroy_obj(kp);
+	} else if (TIDAL_CAPTURE)  {
+		/* apply tidal capture / common envelope test */
+		Eorbnew = 0.5*madhoc*star[k].m*star[kp].m/(star[k].m+star[kp].m)*sqr(W);
+
+		if (star[k].se_k == 1) {
+			Eorbnew -= Etide(rperi, star[k].m*madhoc, star[k].rad, 3.0, star[kp].m*madhoc);
+		} else if (star[k].se_k < 10) {
+			Eorbnew -= Etide(rperi, star[k].m*madhoc, star[k].rad, 1.5, star[kp].m*madhoc);
+		}
+
+		if (star[kp].se_k == 1) {
+			Eorbnew -= Etide(rperi, star[kp].m*madhoc, star[kp].rad, 3.0, star[k].m*madhoc);
+		} else if (star[kp].se_k < 10) {
+			Eorbnew -= Etide(rperi, star[kp].m*madhoc, star[kp].rad, 1.5, star[k].m*madhoc);
+		}
+
+		if (Eorbnew < 0.0) {
+			/* bound system; don't worry about RL overflow here, since BSE will take care of that automatically */
+			anew = madhoc * star[k].m * madhoc * star[kp].m / (2.0 * fabs(Eorbnew));
+			enew = MIN(0.0, 1.0-rperi/anew);
+			
+			/* apply rapid tidal circularization of orbit, assuming no angular momentum is transferred to 
+			   stars' internal rotation for simplicity; but only if there is no Roche-lobe overflow at 
+			   pericenter */
+			if (bse_rl(star[k].m/star[kp].m)*anew*(1.0-enew) > star[k].rad && 
+			    bse_rl(star[kp].m/star[k].m)*anew*(1.0-enew) > star[kp].rad) {
+				efinal = 0.0;
+				afinal = anew * (1.0 - enew*enew);
+			} else {
+				afinal = anew;
+				efinal = enew;
+			}
+
+			/* put new binary together and destroy original stars */
+			knew = create_binary();
+			star[knew].m = star[k].m + star[kp].m;
+			star[knew].r = rcm;
+			star[knew].vr = vcm[3];
+			star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+			star[knew].phi = potential(star[knew].r);
+			set_star_EJ(knew);
+			set_star_news(knew);
+			set_star_olds(knew);
+			star[knew].interacted = 1;
+			
+			binary[star[knew].binind].a = afinal;
+			binary[star[knew].binind].e = efinal;
+			binary[star[knew].binind].m1 = star[k].m;
+			binary[star[knew].binind].m2 = star[kp].m;
+			binary[star[knew].binind].rad1 = star[k].rad;
+			binary[star[knew].binind].rad2 = star[kp].rad;
+			binary[star[knew].binind].Eint1 = star[k].Eint;
+			binary[star[knew].binind].Eint2 = star[kp].Eint;
+
+			/* put tidal energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
+			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * 
+				(0.5 * star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
+				 + 0.5 * star[kp].m * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				 + 0.5 * star[k].m * madhoc * star[k].phi
+				 + 0.5 * star[kp].m * madhoc * star[kp].phi
+				 - 0.5 * star[knew].m * madhoc * star[knew].phi
+				 + 0.5 * star[k].m * madhoc * star[kp].m * madhoc / binary[star[knew].binind].a);
+			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * 
+				(0.5 * star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
+				 + 0.5 * star[kp].m * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				 + 0.5 * star[k].m * madhoc * star[k].phi
+				 + 0.5 * star[kp].m * madhoc * star[kp].phi
+				 - 0.5 * star[knew].m * madhoc * star[knew].phi
+				 + 0.5 * star[k].m * madhoc * star[kp].m * madhoc / binary[star[knew].binind].a);
+
+			binary[star[knew].binind].id1 = star[k].id;
+			binary[star[knew].binind].id2 = star[kp].id;
+			cp_SEvars_to_newbinary(k, -1, knew, 0);
+			cp_SEvars_to_newbinary(kp, -1, knew, 1);
+			binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
+			compress_binary(&star[knew], &binary[star[knew].binind]);
+
+			/* log stuff */
+			fprintf(tidalcapturefile, "%.3g SS_TC %s+%s->%s\n", TotalTime, 
+				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), sprint_bin_dyn(knew, dummystring3));
+			
+			destroy_obj(k);
+			destroy_obj(kp);
+		} else {
+			fprintf(tidalcapturefile, "%.3g SS_TC_FAILED %s+%s->%s+%s\n", TotalTime, 
+				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2),
+				sprint_star_dyn(k, dummystring3), sprint_star_dyn(kp, dummystring4));
+		}
+	}
 }
 
 /* merge two stars using stellar evolution if it's enabled */
@@ -58,7 +370,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 	double tphysf, dtp, vsaddl[3], age;
 	binary_t tempbinary, tbcopy;
 	int tbi=-1, j, ktry;
-		
+	
 	if (STELLAR_EVOLUTION && !STAR_AGING_SCHEME) {
 		/* evolve for just a year for merger */
 		tphysf = star1->se_tphys + 1.0e-6;
@@ -304,4 +616,23 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		vs[1] = 0.0;
 		vs[2] = 0.0;
 	}
+}
+
+/* calculate resulting semi-major axis from collisional common envelope event */
+double coll_CE(double Mrg, double Mint, double Mwd, double Rrg, double vinf)
+/* 
+   Mrg = mass of red giant
+   Mint = mass of intruder (NS, BH, MS, etc.)
+   Mwd = mass of RG core that will become WD
+   Rrg = radius of RG
+   vinf = relative velocity at infinity between RG and intruder
+*/
+{
+	double alpha, lambda;
+	
+	alpha = bse_get_alpha1();
+	lambda = bse_get_lambda();
+
+	return(1.0/(2.0*Mrg*(Mrg-Mwd)/(Mwd*Mint*alpha*lambda*Rrg)-(Mrg+Mint)/(Mwd*Mint)*vinf*vinf));
+
 }

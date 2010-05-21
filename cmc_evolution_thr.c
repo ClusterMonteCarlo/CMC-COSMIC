@@ -241,7 +241,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 }
 
 double GetTimeStep(gsl_rng *rng) {
-	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs, Tse, DTse, Trejuv, DTrejuv;
+	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs, Tse, DTse, Trejuv, DTrejuv, xcoll;
 	
 	/* calculate the relaxation timestep */
 	if (RELAXATION || FORCE_RLX_STEP) {
@@ -254,8 +254,13 @@ double GetTimeStep(gsl_rng *rng) {
 	/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
 	if (central.N_sin != 0 && SS_COLLISION) {
 		/* X defines pericenter needed for collision: r_p = X (R_1+R_2) */
-		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(XCOLL) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
-			       (1.0 + central.mR_ave/(2.0*XCOLL*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
+		if (TIDAL_CAPTURE) {
+			xcoll = XCOLLTC;
+		} else {
+			xcoll = XCOLLSS;
+		}
+		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(xcoll) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
+			       (1.0 + central.mR_ave/(2.0*xcoll*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
 			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
 		fprintf (stdout, "Time = %f Gyr Tcoll = %f Gyr\n", 
 			TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09,
@@ -417,6 +422,9 @@ void tidally_strip_stars(void) {
 
 					/* perhaps this will fix the problem wherein stars are ejected (and counted)
 					   multiple times */
+					dprintf ("before SE: id=%ld k=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
+		     star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
+	     		star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star[i].phi, star[i].r);
 					destroy_obj(i);
 
 					if (Etotal.K + Etotal.P - Etidal >= 0)

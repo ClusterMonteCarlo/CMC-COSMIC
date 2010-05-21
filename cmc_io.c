@@ -337,79 +337,78 @@ void PrintFileOutput(void) {
 		fprintf(lagrad10file, "%.8g %.8g %.ld %ld %.8g %ld %.8g %ld %.8g %.8g %.8g\n",
 					TotalTime, Dt, tcount, n_10, m_10, n_sing_10, m_sing_10, n_bin_10, m_bin_10, r_10, rho_10);
 	}
+
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
 	   whereas N_b only counts EXISTING BOUND binaries. */
-	if (clus.N_BINARY > 0) {
-		/* calculate core binary fraction */
-		n_single = 0;
-		n_binary = 0;
-		//Sourav:initialize nb core properties
-		n_single_nb = 0;
-		n_binary_nb = 0;
-		for (i=1; star[i].r<=core_radius; i++) {
-			if (star[i].binind > 0) {
-				n_binary++;
-			} else {
-				n_single++;
-			}
-		}
-		N_core_binary = n_binary;
-
-		//Sourav:calculate n_sing and n_bin for nb core
-		for (i=1; star[i].r<=rc_nb; i++) {
-			if (star[i].binind > 0) {
-				n_binary_nb++;
-			} else {
-				n_single_nb++;
-			}
-		}
-		N_core_binary_nb = n_binary_nb;
-
-		/* this is such a kludge: core_radius is not initialized on the first timestep */
-		if (n_single + n_binary == 0) {
-			fb_core = 0.0;
+	/* calculate core binary fraction */
+	n_single = 0;
+	n_binary = 0;
+	//Sourav:initialize nb core properties
+	n_single_nb = 0;
+	n_binary_nb = 0;
+	for (i=1; star[i].r<=core_radius; i++) {
+		if (star[i].binind > 0) {
+			n_binary++;
 		} else {
-			fb_core = ((double) n_binary)/((double) (n_single + n_binary));
+			n_single++;
 		}
-
-		//calculate the same for nb core
-		if (n_single_nb + n_binary_nb == 0) {
-			fb_core_nb = 0.0;
-		} else {
-			fb_core_nb = ((double) n_binary_nb)/((double) (n_single_nb + n_binary_nb));
-		}
-		
-		/* calculate overall binary fraction */
-		n_single = 0;
-		n_binary = 0;
-		for (i=1; i<=clus.N_MAX; i++) {
-			if (star[i].binind > 0) {
-				n_binary++;
-			} else {
-				n_single++;
-			}
-		}
-		/* this is such a kludge: core_radius is not initialized on the first timestep */
-		if (n_single + n_binary == 0) {
-			fb = 0.0;
-		} else {
-			fb = ((double) n_binary)/((double) (n_single + n_binary));
-		}
-		
-		/* print useful header */
-		if (tcount == 1) {
-			fprintf(binaryfile, "# Binary information [code units]\n");
-			fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
-		}
-		/* print data */
-		fprintf(binaryfile,
-			"%.6g %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %.8g %ld\n",
-			TotalTime, N_b, M_b, E_b, rh_single, 
-			rh_binary, rho_core_single, rho_core_bin, 
-			N_bb, N_bs, fb_core, 
-			fb, E_bb, E_bs, DE_bb, DE_bs, 
-			N_core_binary_nb, fb_core_nb, N_core_binary);
 	}
+	N_core_binary = n_binary;
+	
+	//Sourav:calculate n_sing and n_bin for nb core
+	for (i=1; star[i].r<=rc_nb; i++) {
+		if (star[i].binind > 0) {
+			n_binary_nb++;
+		} else {
+			n_single_nb++;
+		}
+	}
+	N_core_binary_nb = n_binary_nb;
+	
+	/* this is such a kludge: core_radius is not initialized on the first timestep */
+	if (n_single + n_binary == 0) {
+		fb_core = 0.0;
+	} else {
+		fb_core = ((double) n_binary)/((double) (n_single + n_binary));
+	}
+	
+	//calculate the same for nb core
+	if (n_single_nb + n_binary_nb == 0) {
+		fb_core_nb = 0.0;
+	} else {
+		fb_core_nb = ((double) n_binary_nb)/((double) (n_single_nb + n_binary_nb));
+	}
+	
+	/* calculate overall binary fraction */
+	n_single = 0;
+	n_binary = 0;
+	for (i=1; i<=clus.N_MAX; i++) {
+		if (star[i].binind > 0) {
+			n_binary++;
+		} else {
+			n_single++;
+		}
+	}
+	/* this is such a kludge: core_radius is not initialized on the first timestep */
+	if (n_single + n_binary == 0) {
+		fb = 0.0;
+	} else {
+		fb = ((double) n_binary)/((double) (n_single + n_binary));
+	}
+	
+	/* print useful header */
+	if (tcount == 1) {
+		fprintf(binaryfile, "# Binary information [code units]\n");
+		fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
+	}
+	/* print data */
+	fprintf(binaryfile,
+		"%.6g %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %.8g %ld\n",
+		TotalTime, N_b, M_b, E_b, rh_single, 
+		rh_binary, rho_core_single, rho_core_bin, 
+		N_bb, N_bs, fb_core, 
+		fb, E_bb, E_bs, DE_bb, DE_bs, 
+		N_core_binary_nb, fb_core_nb, N_core_binary);
 
         if (WRITE_EXTRA_CORE_INFO) {
           write_core_data(corefile, no_remnants);
@@ -628,6 +627,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_SS_COLLISION);
 				sscanf(values, "%ld", &SS_COLLISION);
 				parsed.SS_COLLISION = 1;
+			} else if (strcmp(parameter_name, "TIDAL_CAPTURE") == 0) {
+				PRINT_PARSED(PARAMDOC_TIDAL_CAPTURE);
+				sscanf(values, "%ld", &TIDAL_CAPTURE);
+				parsed.TIDAL_CAPTURE = 1;
 			} /*Sourav:new parameter*/
 			else if (strcmp(parameter_name, "STAR_AGING_SCHEME") == 0) {
 			 	PRINT_PARSED(PARAMDOC_STAR_AGING_SCHEME);
@@ -807,6 +810,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
+	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
 	/*Sourav: new parameter*/
 	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
 	CHECK_PARSED(PREAGING, 0, PARAMDOC_PREAGING);
@@ -884,7 +888,8 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	clus.N_STAR_NEW = clus.N_STAR;
 	/* add 2 * clus.N_BINARY for binary disruptions */
 	N_STAR_DIM = 2 + clus.N_STAR + 2 * clus.N_BINARY;
-	N_BIN_DIM = 2 + clus.N_BINARY;
+	/* remember we can form binaries from tidal capture */
+	N_BIN_DIM = 2 + clus.N_STAR / 2 + clus.N_BINARY;
 	
 	/* safety factors, so we don't have to worry about memory management/garbage collection */
 	N_STAR_DIM = (long) floor(1.5 * ((double) N_STAR_DIM));
@@ -1003,23 +1008,20 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 
-
 	/* output files for binaries */
-	if (clus.N_BINARY > 0) {
-		/* general binary information */
-		sprintf(outfile, "%s.bin.dat", outprefix);
-		if ((binaryfile = fopen(outfile, outfilemode)) == NULL) {
-			eprintf("cannot create binary file \"%s\".\n", outfile);
-			exit(1);
-		}
-		/* file for binary interaction information */
-		sprintf(outfile, "%s.binint.log", outprefix);
-		if ((binintfile = fopen(outfile, outfilemode)) == NULL) {
-			eprintf("cannot create binintlog file \"%s\".\n", outfile);
-			exit(1);
-		}
+	/* general binary information */
+	sprintf(outfile, "%s.bin.dat", outprefix);
+	if ((binaryfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create binary file \"%s\".\n", outfile);
+		exit(1);
 	}
-
+	/* file for binary interaction information */
+	sprintf(outfile, "%s.binint.log", outprefix);
+	if ((binintfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create binintlog file \"%s\".\n", outfile);
+		exit(1);
+	}
+	
 	/* File for parameters of escaping stars */
 	sprintf(outfile, "%s.esc.dat", outprefix);
 	if ((escfile = fopen(outfile, outfilemode)) == NULL) {
@@ -1037,6 +1039,15 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	}
 	/* print header */
 	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
+
+	/* Tidal capture log file */
+	sprintf(outfile, "%s.tidalcapture.log", outprefix);
+	if ((tidalcapturefile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create tidal capture log file \"%s\".\n", outfile);
+		exit(1);
+	}
+	/* print header */
+	fprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]\n");
 
 	/* Stellar evolution merger log file */
 	sprintf(outfile, "%s.semergedisrupt.log", outprefix);
@@ -1110,15 +1121,13 @@ void close_buffers(void)
 	fclose(centmass_file);
 	fclose(escfile);
 	fclose(collisionfile);
+	fclose(tidalcapturefile);
 	fclose(semergedisruptfile);
 	fclose(relaxationfile);
 	/*Sourav: closing the file I opened*/
 	fclose(removestarfile);
-
-	if (clus.N_BINARY > 0) {
-		fclose(binaryfile);
-		fclose(binintfile);
-	}
+	fclose(binaryfile);
+	fclose(binintfile);
 
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		fclose(mlagradfile[i]);
@@ -1206,4 +1215,25 @@ void print_conversion_script(void)
 	fclose(ofp);
 
 	chmod(dummystring, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+}
+
+/* routines for printing star/binary info in a unified log format */
+char *sprint_star_dyn(long k, char string[MAX_STRING_LENGTH])
+{
+	snprintf(string, MAX_STRING_LENGTH, "(%ld,%.3g,%d)", 
+		 star[k].id, star[k].m*units.mstar/FB_CONST_MSUN, star[k].se_k);
+	
+	return(string);
+}
+
+char *sprint_bin_dyn(long k, char string[MAX_STRING_LENGTH])
+{
+	long bi=star[k].binind;
+
+	snprintf(string, MAX_STRING_LENGTH, "[(%ld,%.3g,%d)-%.3g,%.3g-(%ld,%.3g,%d)]", 
+		 binary[bi].id1, binary[bi].m1*units.mstar/FB_CONST_MSUN, binary[bi].bse_kw[0],
+		 binary[bi].a*units.l/FB_CONST_AU, binary[bi].e,
+		 binary[bi].id2, binary[bi].m2*units.mstar/FB_CONST_MSUN, binary[bi].bse_kw[1]);
+
+	return(string);
 }
