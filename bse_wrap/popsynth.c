@@ -17,7 +17,7 @@ int main(void) {
   double X, norm, mmin, mmax, index, mass;
   gsl_rng *rng;
   const gsl_rng_type *rng_type=gsl_rng_mt19937;
-  double z=0.03, *zpars, vs[3];
+  double z=0.03, *zpars, vs[12];
   double amin, amax, targettphysf, tphysf, dtp, rlprimovera;
   
   /* initialize GSL rng */

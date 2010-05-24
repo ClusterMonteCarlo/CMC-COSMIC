@@ -35,9 +35,9 @@
 *
       INCLUDE 'const_bse.h'
 *
-      integer kw,kw2,kstar(2),j,k,time
+      integer i,kw,kw2,kstar(2),j,k,time
 *
-      real*8 mass0(2),mass(2),z,zpars(20),vs(3)
+      real*8 mass0(2),mass(2),z,zpars(20),vs(3),bkick(12)
       real*8 epoch(2),tms(2),tphys,tphysf,dtp,aj
       real*8 rad(2),lum(2),ospin(2)
       real*8 massc(2),radc(2),menv(2),renv(2)
@@ -123,6 +123,15 @@
          epoch(2) = 0.d0
          ospin(2) = 0.d0
       endif
+      do i=1,12
+         bkick(i) = 0.d0
+      enddo 
+* If you would like to enter the seperation as input in place of the binary
+* orbital period uncomment these lines (depending upon which units you wish
+* to use).
+*      tb = sqrt((tb/aursun)**3/(mass0(1)+mass0(2))) !if input was separation [Rsun] use this line.
+*      tb = sqrt((tb)**3/(mass0(1)+mass0(2))) !if input was separation [AU] use this line.
+*      tb = tb*yeardy
       if(idum.gt.0) idum = -idum
       CLOSE(22)
       WRITE(*,*)
@@ -168,7 +177,7 @@
 * 
       CALL evolv2(kstar,mass0,mass,rad,lum,massc,radc,
      &            menv,renv,ospin,epoch,tms,
-     &            tphys,tphysf,dtp,z,zpars,tb,ecc,vs)
+     &            tphys,tphysf,dtp,z,zpars,tb,ecc,bkick)
 *
 ************************************************************************
 * Output:

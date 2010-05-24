@@ -35,9 +35,9 @@ c-------------------------------------------------------------c
 *
       INCLUDE 'const_bse.h'
 *
-      integer kw,j,k
+      integer i,kw,j,k
 *
-      real*8 mass,mt,z,zpars(20),vs(3)
+      real*8 mass,mt,z,zpars(20),vs(3),bkick(12)
       real*8 epoch,tms,tphys,tphysf,dtp
       real*8 r,lum,ospin
       real*8 mc,rc,menv,renv
@@ -96,6 +96,9 @@ c-------------------------------------------------------------c
 *
       CALL zcnsts(z,zpars)
       if(idum.gt.0) idum = -idum
+      do i=1,12
+         bkick(i) = 0.d0
+      enddo
 *
       if(mass.gt.0.0)then
 *
@@ -131,7 +134,7 @@ c-------------------------------------------------------------c
       dtp = 0.d0
 * 
       CALL evolv1(kw,mass,mt,r,lum,mc,rc,menv,renv,ospin,
-     &            epoch,tms,tphys,tphysf,dtp,z,zpars,vs)
+     &            epoch,tms,tphys,tphysf,dtp,z,zpars,bkick)
 *
 ************************************************************************
 * Output:

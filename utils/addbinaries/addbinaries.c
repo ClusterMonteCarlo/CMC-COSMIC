@@ -116,7 +116,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	double kTcore, vcore, Eb, Ebmin, Ebmax, timeunitcgs, mtotal, m1, m2, X, qbin;
 	double *r, *sigma, *mave, dtp, tphysf;
 	star_t star;
-	double vs[3];
+	double vs[12];
 	
 	/* initialize stellar evolution */
 	/* SSE */
