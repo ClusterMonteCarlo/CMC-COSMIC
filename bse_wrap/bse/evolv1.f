@@ -199,6 +199,7 @@ c-------------------------------------------------------------c
                if(it.eq.20.and.kw.eq.4) goto 30
                if(it.gt.30)then
                   WRITE(99,*)' DANGER1! ',it,kw,mass,dr,rm0
+                  FLUSH(99)
                   WRITE(*,*)' STOP: EVOLV1 FATAL ERROR '
                   CALL exit(0)
                   STOP 
@@ -350,6 +351,7 @@ c-------------------------------------------------------------c
          if(it.eq.20.and.kw.eq.4) goto 50
          if(it.gt.30)then
             WRITE(99,*)' DANGER2! ',it,kw,mass,dr,rm0
+            FLUSH(99)
             WRITE(*,*)' STOP: EVOLV1 FATAL ERROR '
             CALL exit(0)
             STOP 

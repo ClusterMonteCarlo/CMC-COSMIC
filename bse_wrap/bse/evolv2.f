@@ -468,18 +468,18 @@
 * envelopes. This includes MS stars with M < 1.25, HG stars near the GB 
 * and giants. MB is not allowed for fully convective MS stars. 
 *
-*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
-*               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
-*               djspint(k) = djspint(k) + djmb
+            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
+               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
+               djspint(k) = djspint(k) + djmb
 
-            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
-     &              menv(k).gt.0.0d0)then
-              if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
-     &              (ospin(k)/wsun)**3.0d0
-              if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
-     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
-              djspint(k) = djspint(k) + djmb
-*
+*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+*     &              menv(k).gt.0.0d0)then
+*              if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &              (ospin(k)/wsun)**3.0d0
+*              if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+*              djspint(k) = djspint(k) + djmb
+
 * Limit to a 3% angular momentum change for the star owing to MB. 
 * This is found to work best with the maximum iteration of 20000, 
 * i.e. does not create an excessive number of iterations, while not 
