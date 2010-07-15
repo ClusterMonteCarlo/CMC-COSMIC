@@ -127,58 +127,58 @@ void do_stellar_evolution(gsl_rng *rng){
   //for(k=1; k<=clus.N_MAX; k++){
   for(k=1; k<=clus.N_MAX_NEW; k++){ 
     if (star[k].binind == 0) { /* single star */
-      if (star[k].m<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
-	dprintf ("zeroed out star: skipping SE:\n"); 
-        dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star[k].m, star[k].vr, star[k].vt, star[k].E, star[k].J);	
-      } else {
         tphysf = TotalTime / MEGA_YEAR;
         dtp = tphysf;
-        kprev = star[k].se_k;
-          
-        DMse += star[k].m * madhoc;
-        bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
-  		   &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
-		   &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
-		   &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+        kprev = star[k].se_k;	  
+
+        if (star[k].m<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
+		dprintf ("zeroed out star: skipping SE:\n"); 
+        	dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star[k].m, star[k].r, star[k].phi, star[k].vr, star[k].vt, star[k].E, star[k].J);	
+     	} else {
+        	DMse += star[k].m * madhoc;
+        	bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
+  			&(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
+		   	&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
+		   	&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
       
-        star[k].rad = star[k].se_radius * RSUN / units.l;
-        star[k].m = star[k].se_mt * MSUN / units.mstar;
-        DMse -= star[k].m * madhoc;
+        	star[k].rad = star[k].se_radius * RSUN / units.l;
+        	star[k].m = star[k].se_mt * MSUN / units.mstar;
+        	DMse -= star[k].m * madhoc;
       
-        /* birth kicks */
-        if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
-          //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
-        }
-        star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
-        star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
-        set_star_EJ(k);
+        	/* birth kicks */
+        	if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+          		//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+        	}
+        	star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
+        	star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+        	set_star_EJ(k);
       
-        /* WD birth kicks, just in case they exist */
-        /* if ((star[k].se_k >= 10 && star[k].se_k <= 12) && star[k].se_k != kprev) { */
-        /* vk = 2.0e5 / (units.l/units.t); */
-        /* 	theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0); */
-        /* 	star[k].vr += cos(theta) * vk; */
-        /* 	star[k].vt += sin(theta) * vk; */
-        /* 	set_star_EJ(k); */
-        /* } */
-      }
+        	/* WD birth kicks, just in case they exist */
+        	/* if ((star[k].se_k >= 10 && star[k].se_k <= 12) && star[k].se_k != kprev) { */
+        	/* vk = 2.0e5 / (units.l/units.t); */
+        	/* 	theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0); */
+        	/* 	star[k].vr += cos(theta) * vk; */
+        	/* 	star[k].vt += sin(theta) * vk; */
+        	/* 	set_star_EJ(k); */
+        	/* } */
+	}
     } else { /* binary */
 	tphysf = TotalTime / MEGA_YEAR;
         kb = star[k].binind;
 	dtp = tphysf - binary[kb].bse_tphys;
 	if (star[k].m<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
-	  dprintf ("zeroed out star: skipping SE:\n");	
-	  dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star[k].m, binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
+	  	dprintf ("zeroed out star: skipping SE:\n");	
+	  	dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star[k].m, binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
 	} else {
-	  /* set binary orbital period (in days) from a */
-	  binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
-	  DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
-	  bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
-	  	     &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
-		     &(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
-		     &(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-		     &(binary[kb].bse_tb), &(binary[kb].e), vs);
-	  handle_bse_outcome(k, kb, vs, tphysf);
+	  	/* set binary orbital period (in days) from a */
+	 	binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
+	  	DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
+	  	bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
+	  	     	&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
+		     	&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
+		     	&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+		     	&(binary[kb].bse_tb), &(binary[kb].e), vs);
+	  	handle_bse_outcome(k, kb, vs, tphysf);
 	}
     }
   }
@@ -735,10 +735,10 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
     //Sourav: toy rejuv- updating rejuv variables to the binary member from the single star
     if (kbinew==0){
       binary[kbnew].createtime_m1 = star[oldk].createtime;
-      binary[kbnew].createtime_m1 = star[oldk].createtime;
+      binary[kbnew].lifetime_m1 = star[oldk].lifetime;
     } else {
       binary[kbnew].createtime_m2 = star[oldk].createtime;
-      binary[kbnew].createtime_m2 = star[oldk].createtime;
+      binary[kbnew].lifetime_m2 = star[oldk].lifetime;
     }
   } else { /* star comes from input binary */
     binary[kbnew].bse_mass0[kbinew] = binary[kbold].bse_mass0[oldkbi];
