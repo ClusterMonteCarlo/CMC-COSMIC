@@ -510,6 +510,12 @@ void break_wide_binaries(void);
 void calc_sigma_r(void);
 double sigma_r(double r);
 
+// Meagan
+/* three-body binary formation */
+double get_eta(void);
+void calc_3bb_encounter_dyns(long k1, long k2, long k3, double angle1, double angle2, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel13[4], double vrel3[4], double vrel2[4], double vcm12[4], double vcm13[4], gsl_rng *rng);
+void make_threebodybinary(long k1, long k2, long k3, long knew, double sigma_local, double v1[4], double v2[4], double v3[4], gsl_rng *rng);
+
 int remove_old_star(double time, long k);
 
 /* signal/GSL error handling stuff */

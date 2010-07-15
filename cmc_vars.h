@@ -48,7 +48,7 @@ _EXTERN_ binary_t *binary;
 /* file pointers */
 _EXTERN_ FILE *lagradfile, *dynfile, *lagrad10file, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
-_EXTERN_ FILE *binaryfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
+_EXTERN_ FILE *binaryfile, *threebbfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
 /* everything else except arrays */
 _EXTERN_ char outprefix[100];

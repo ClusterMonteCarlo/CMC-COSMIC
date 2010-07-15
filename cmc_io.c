@@ -1007,6 +1007,13 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		eprintf("cannot create log output file \"%s\".\n", outfile);
 		exit(1);
 	}
+	
+	/* Meagan: output file for three-body binary formation */
+	sprintf(outfile, "%s.3bb.log", outprefix);
+	if ((threebbfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create 3bb log output file \"%s\".\n", outfile);
+		exit(1);
+	}
 
 	/* output files for binaries */
 	/* general binary information */
@@ -1124,6 +1131,8 @@ void close_buffers(void)
 	fclose(tidalcapturefile);
 	fclose(semergedisruptfile);
 	fclose(relaxationfile);
+	/* Meagan: close 3bb log file */
+	fclose(threebbfile);
 	/*Sourav: closing the file I opened*/
 	fclose(removestarfile);
 	fclose(binaryfile);
