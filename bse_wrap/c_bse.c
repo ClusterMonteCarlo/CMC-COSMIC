@@ -29,7 +29,7 @@ int main(void)
   double menv[2], renv[2], ospin[2], epoch[2], tms[2], tphys;
   double rad[2], lum[2], massc[2], radc[2];
   double tphysf, dtp, z=0.02, *zpars;
-  double vs[3];
+  double vs[12];
   double aj, tm, tn, tscls[20], lums[10], GB[10], k2;
   double a;
 
@@ -39,7 +39,7 @@ int main(void)
   bse_set_neta(0.5);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
-  bse_set_alpha1(1.0);
+  bse_set_alpha1(3.0);
   bse_set_lambda(0.5);
   bse_set_ceflag(0);
   bse_set_tflag(1);
@@ -140,7 +140,7 @@ int main(void)
 
   /* fprintf(stdout, "m1=%f m2=%f tb=%f e=%f\n", mass[0], mass[1], tb, ecc); */
   
-  /* fprintf(stdout, "vs=%g\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2])); */
+  /* fprintf(stdout, "vs=%g\n", sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3])); */
 
   free(zpars);
 

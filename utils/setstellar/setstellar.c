@@ -35,7 +35,7 @@ void stellar_evolve(cmc_fits_data_t *cfd)
 	long int k;
 	double frac, dtp, tphysf;
 	star_t star;
-	double vs[3];
+	double vs[12];
 
 	/* initialize stellar evolution */
 	/* SSE */

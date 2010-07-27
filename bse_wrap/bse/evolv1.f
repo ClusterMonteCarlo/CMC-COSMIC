@@ -1,6 +1,6 @@
 ***
       SUBROUTINE evolv1(kw,mass,mt,r,lum,mc,rc,menv,renv,ospin,
-     &                  epoch,tm,tphys,tphysf,dtp,z,zpars,vs)
+     &                  epoch,tm,tphys,tphysf,dtp,z,zpars,bkick)
 c-------------------------------------------------------------c
 c
 c     Evolves a single star.
@@ -35,7 +35,7 @@ c
 c-------------------------------------------------------------c
       implicit none
 *
-      integer kw,it,ip,jp,j,kwold,rflag
+      integer kw,it,ip,jp,j,kwold,rflag,fb
       integer nv
       parameter(nv=50000)
 *
@@ -43,7 +43,7 @@ c-------------------------------------------------------------c
       real*8 epoch,tphys,tphys2,tmold,tbgold
       real*8 mt,tm,tn,tphysf,dtp,tsave
       real*8 tscls(20),lums(10),GB(10),zpars(20)
-      real*8 r,lum,mc,teff,rc,menv,renv,vs(3)
+      real*8 r,lum,mc,teff,rc,menv,renv,bkick(12)
       real*8 ospin,jspin,djt,djmb,k2,k3
       parameter(k3=0.21d0)
       real*8 m0,r1,lum1,mc1,rc1,menv1,renv1,k21
@@ -55,6 +55,9 @@ c-------------------------------------------------------------c
       real*8 mlwind,vrotf
       external mlwind,vrotf
       logical iplot,isave
+*
+      REAL*8 fallback,vk !PDK
+*
       REAL*8 neta,bwind,hewind,mxns
       COMMON /VALUE1/ neta,bwind,hewind,mxns
       REAL*8 pts1,pts2,pts3
@@ -75,6 +78,9 @@ c-------------------------------------------------------------c
       endif
       k2 = 0.15d0
       rflag = 0
+* PDK additions
+      fb = 1 !turns kick velocity limit owning to fallback on (1) or off (0).
+      vk = 0.d0 !gets passed to and from kick(), is kick mag. can be used to set initial pulsar particulars.
 *
 * Setup variables which control the output (if it is required).
 *
@@ -165,6 +171,17 @@ c-------------------------------------------------------------c
 * Find the current radius, luminosity, core mass and stellar type
 * given the initial mass, current mass, metallicity and age
 *
+* Also calculate possible fallback (only used if SN occurs). PDK.
+         fallback = 0.d0
+         if(fb.eq.1)then
+            if(mc.lt.5.d0)then
+               fallback = 0.d0
+            elseif(mc.le.7.6)then
+               fallback = (mc-5.d0)/2.6d0
+            else
+               fallback = 1.d0
+            endif
+         endif
          kwold = kw
          CALL hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
      &               r,lum,kw,mc,rc,menv,renv,k2)
@@ -182,6 +199,7 @@ c-------------------------------------------------------------c
                if(it.eq.20.and.kw.eq.4) goto 30
                if(it.gt.30)then
                   WRITE(99,*)' DANGER1! ',it,kw,mass,dr,rm0
+                  FLUSH(99)
                   WRITE(*,*)' STOP: EVOLV1 FATAL ERROR '
                   CALL exit(0)
                   STOP 
@@ -239,7 +257,8 @@ c-------------------------------------------------------------c
             if(kw.eq.13.or.kw.eq.14)then
                ospin = 2.0d+08
                jspin = k3*rc*rc*mc*ospin
-               CALL kick(kw,mass,mt,0.d0,0.d0,-1.d0,0.d0,vs)
+               CALL kick(kw,mass,mt,0.d0,0.d0,-1.d0,0.d0,vk,1,
+     &                   0.d0,fallback,bkick)
             endif
             jp = jp + 1
             spp(jp,1) = tphys
@@ -332,6 +351,7 @@ c-------------------------------------------------------------c
          if(it.eq.20.and.kw.eq.4) goto 50
          if(it.gt.30)then
             WRITE(99,*)' DANGER2! ',it,kw,mass,dr,rm0
+            FLUSH(99)
             WRITE(*,*)' STOP: EVOLV1 FATAL ERROR '
             CALL exit(0)
             STOP 

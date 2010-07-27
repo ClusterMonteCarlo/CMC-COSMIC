@@ -39,7 +39,7 @@ void hrdiag_(double *mass, double *aj, double *mt, double *tm, double *tn, doubl
 	     double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
 	     double *mc, double *rc, double *menv, double *renv, double *k2);
 void kick_(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
-	   double *jorb, double *vs);
+	   double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
 
 /* wrapped BSE functions */
 void bse_zcnsts(double *z, double *zpars);
@@ -66,7 +66,7 @@ void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, do
 		double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
 		double *mc, double *rc, double *menv, double *renv, double *k2);
 void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
-	      double *jorb, double *vs);
+	      double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
 
 /* structs to access BSE common blocks */
 /* note the index swap between fortran and C: i,j->j,i */

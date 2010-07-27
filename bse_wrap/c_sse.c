@@ -28,7 +28,7 @@ int main(void)
   double mass, mt, rad, lum, mc, rc;
   double menv, renv, ospin, epoch, tms, tphys;
   double tphysf, dtp, z=0.001, *zpars;
-  double vs[3];
+  double vs[12];
 
   zpars = (double *) malloc(20 * sizeof(double));
 
@@ -60,7 +60,7 @@ int main(void)
 	     &menv, &renv, &ospin, &epoch, &tms, &tphys, 
 	     &tphysf, &dtp, &z, zpars, vs);
   
-  fprintf(stdout, "mass=%f mt=%f vs=%f\n", mass, mt, sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+  fprintf(stdout, "mass=%f mt=%f vs=%f\n", mass, mt, sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
   
   i = 1;
   while (bse_get_spp(i, 1) >= 0.0) {

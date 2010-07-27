@@ -1,7 +1,8 @@
 ***
       SUBROUTINE COMENV(M01,M1,MC1,AJ1,JSPIN1,KW1,
      &                  M02,M2,MC2,AJ2,JSPIN2,KW2,
-     &                  ZPARS,ECC,SEP,JORB,COEL)
+     &                  ZPARS,ECC,SEP,JORB,COEL,star1,star2,vk,
+     &                  fb,bkick)
 *
 * Common Envelope Evolution.
 *
@@ -11,9 +12,13 @@
 *     Redone : J. R. Hurley
 *     Date :   7th July 1998
 *
+*     Update : P. D. Kiel (for ECSN, fallback and bugs)
+*     Date : cmc version mid 2010
+*
       IMPLICIT NONE
 *
-      INTEGER KW1,KW2,KW
+      INTEGER KW1,KW2,KW,fb,KW1i,KW2i,snp
+      INTEGER star1,star2
       INTEGER KTYPE(0:14,0:14)
       COMMON /TYPES/ KTYPE
       INTEGER ceflag,tflag,ifflag,nsflag,wdflag
@@ -26,7 +31,8 @@
       REAL*8 CONST,DELY,DERI,DELMF,MC3,FAGE1,FAGE2
       REAL*8 ECC,SEP,JORB,TB,OORB,OSPIN1,OSPIN2,TWOPI
       REAL*8 RC1,RC2,Q1,Q2,RL1,RL2,LAMB1,LAMB2
-      REAL*8 MENV,RENV,MENVD,RZAMS,VS(3)
+      REAL*8 MENV,RENV,MENVD,RZAMS,vk
+      REAL*8 bkick(12),fallback
       REAL*8 AURSUN,K3,ALPHA1,LAMBDA
       PARAMETER (AURSUN = 214.95D0,K3 = 0.21D0) 
       COMMON /VALUE2/ ALPHA1,LAMBDA
@@ -40,6 +46,7 @@
 *
       TWOPI = 2.D0*ACOS(-1.D0)
       COEL = .FALSE.
+      snp = 0
 *
 * Obtain the core masses and radii.
 *
@@ -125,10 +132,34 @@
             MF = M1
             M1 = MC1
             CALL star(KW1,M01,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS)
+* Fall back of material modifies resultant post SN velocity kick. Do prior
+* to mc modification. Is according to Belczynski et al. (2008).
+            fallback = 0.d0
+            if(fb.eq.1)then
+               if(MC1.le.5.d0)then
+                  fallback = 0.d0
+               elseif(MC1.le.7.6d0)then
+                  fallback = (MC1-5.d0)/2.6d0
+               else
+                  fallback = 1.d0
+               endif
+            endif
             CALL hrdiag(M01,AJ1,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS,
      &                  R1,L1,KW1,MC1,RC1,MENV,RENV,K21)
             IF(KW1.GE.13)THEN
-               CALL kick(KW1,MF,M1,M2,ECC,SEPF,JORB,VS)
+               CALL kick(KW1,MF,M1,M2,ECC,SEPF,JORB,vk,star1,
+     &                   R2,fallback,bkick)
+               snp = 1
+               if(M2.lt.0.d0)then
+                  if(KW2.ge.10) M1 = M1-M2
+                  MC1 = M1
+                  MC2 = 0.D0
+                  M2 = 0.D0
+                  KW2 = 15
+                  AJ1 = 0.D0
+                  COEL = .true.
+                  GOTO 30
+               endif
                IF(ECC.GT.1.D0) GOTO 30
             ENDIF
          ENDIF
@@ -213,20 +244,68 @@
             MF = M1
             M1 = MC1
             CALL star(KW1,M01,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS)
+* Fall back of material modifies resultant post SN velocity kick. Do prior
+* to mc modification. Is according to Belczynski et al. (2008).
+            fallback = 0.d0
+            if(fb.eq.1)then
+               if(MC1.le.5.d0)then
+                  fallback = 0.d0
+               elseif(MC1.le.7.6d0)then
+                  fallback = (MC1-5.d0)/2.6d0
+               else
+                  fallback = 1.d0
+               endif
+            endif
             CALL hrdiag(M01,AJ1,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS,
      &                  R1,L1,KW1,MC1,RC1,MENV,RENV,K21)
             IF(KW1.GE.13)THEN
-               CALL kick(KW1,MF,M1,M2,ECC,SEPF,JORB,VS)
+               CALL kick(KW1,MF,M1,M2,ECC,SEPF,JORB,vk,star1,
+     &                   R2,fallback,bkick)
+               snp = 1
+               if(M2.lt.0.d0)then
+                  if(KW2.ge.10) M1 = M1-M2
+                  MC1 = M1
+                  MC2 = 0.D0
+                  M2 = 0.D0
+                  KW2 = 15
+                  AJ1 = 0.D0
+                  COEL = .true.
+                  GOTO 30
+               endif
                IF(ECC.GT.1.D0) GOTO 30
             ENDIF
             MF = M2
             KW = KW2
             M2 = MC2
             CALL star(KW2,M02,M2,TM2,TN,TSCLS2,LUMS,GB,ZPARS)
+* Fall back of material modifies resultant post SN velocity kick. Do prior
+* to mc modification. Is according to Belczynski et al. (2008).
+            fallback = 0.d0
+            if(fb.eq.1)then
+               if(MC2.le.5.d0)then
+                  fallback = 0.d0
+               elseif(MC2.le.7.6d0)then
+                  fallback = (MC2-5.d0)/2.6d0
+               else
+                  fallback = 1.d0
+               endif
+            endif
             CALL hrdiag(M02,AJ2,M2,TM2,TN,TSCLS2,LUMS,GB,ZPARS,
      &                  R2,L2,KW2,MC2,RC2,MENV,RENV,K22)
             IF(KW2.GE.13.AND.KW.LT.13)THEN
-               CALL kick(KW2,MF,M2,M1,ECC,SEPF,JORB,VS)
+               CALL kick(KW2,MF,M2,M1,ECC,SEPF,JORB,vk,star2,
+     &                   R1,fallback,bkick)
+               snp = 1
+               if(M1.lt.0.d0)then
+                  if(KW2.ge.10) M2 = M2-M1
+                  MC2 = M2
+                  MC1 = 0.D0
+                  M1 = 0.D0
+                  KW1 = 15
+                  AJ2 = 0.D0
+                  COEL = .true.
+                  GOTO 30
+               endif
                IF(ECC.GT.1.D0) GOTO 30
             ENDIF
          ENDIF
@@ -316,8 +395,26 @@
             CALL gntage(MC1,M1,KW,ZPARS,M01,AJ1)
             CALL star(KW,M01,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS)
          ENDIF
+         MF = M1
+         KW1i = KW
+* Fall back of material modifies resultant post SN velocity kick. Do prior
+* to mc modification. Is according to Belczynski et al. (2008).
+         fallback = 0.d0
+         if(fb.eq.1)then
+            if(MC1.le.5.d0)then
+               fallback = 0.d0
+            elseif(MC1.le.7.6d0)then
+               fallback = (MC1-5.d0)/2.6d0
+            else
+               fallback = 1.d0
+            endif
+         endif
          CALL hrdiag(M01,AJ1,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS,
      &               R1,L1,KW,MC1,RC1,MENV,RENV,K21)
+         IF(KW1i.LE.12.and.KW.GE.13)THEN
+            CALL kick(KW,MF,M1,0.d0,0.d0,-1.d0,0.d0,vk,star1,
+     &                0.d0,fallback,bkick)
+         ENDIF
          JSPIN1 = OORB*(K21*R1*R1*(M1-MC1)+K3*RC1*RC1*MC1)
          KW1 = KW
          ECC = 0.D0
@@ -325,12 +422,14 @@
 *
 * Check if any eccentricity remains in the orbit by first using 
 * energy to circularise the orbit before removing angular momentum. 
-* (note this should not be done in case of CE SN ... fix).  
+* (note this should not be done in case of CE SN ... fixed PDK).  
 *
-         IF(EORBF.LT.ECIRC)THEN
-            ECC = SQRT(1.D0 - EORBF/ECIRC)
-         ELSE
-            ECC = 0.D0
+         IF(snp.EQ.0)THEN
+            IF(EORBF.LT.ECIRC)THEN
+               ECC = SQRT(1.D0 - EORBF/ECIRC)
+            ELSE
+               ECC = 0.D0
+            ENDIF
          ENDIF
 *
 * Set both cores in co-rotation with the orbit on exit of CE, 

@@ -1,7 +1,7 @@
 ***
       SUBROUTINE evolv2(kstar,mass0,mass,rad,lumin,massc,radc,
      &                  menv,renv,ospin,epoch,tms,
-     &                  tphys,tphysf,dtp,z,zpars,tb,ecc,vs)
+     &                  tphys,tphysf,dtp,z,zpars,tb,ecc,bkick)
       implicit none
 ***
 *
@@ -152,6 +152,7 @@
 ***
 *
       INTEGER loop,iter,intpol,k,ip,jp,j1,j2
+      INTEGER fb,kcomp1,kcomp2 !PDK
       PARAMETER(loop=20000)
       INTEGER kstar(2),kw,kst,kw1,kw2,kmin,kmax
       INTEGER ktype(0:14,0:14)
@@ -165,7 +166,7 @@
       REAL*8 mass0(2),mass(2),massc(2),menv(2),mass00(2),mcxx(2)
       REAL*8 rad(2),rol(2),rol0(2),rdot(2),radc(2),renv(2),radx(2)
       REAL*8 lumin(2),k2str(2),q(2),dms(2),dmr(2),dmt(2)
-      REAL*8 dml,vorb2,vwind2,omv2,ivsqm,lacc,vs(3)
+      REAL*8 dml,vorb2,vwind2,omv2,ivsqm,lacc,bkick(12)
       REAL*8 sep,dr,tb,dme,tdyn,taum,dm1,dm2,dmchk,qc,dt,pd,rlperi
       REAL*8 m1ce,m2ce,mch,tmsnew,dm22,mew
       PARAMETER(mch=1.44d0)
@@ -180,6 +181,10 @@
       REAL*8 jspin(2),ospin(2),jorb,oorb,jspbru,ospbru
       REAL*8 delet,delet1,dspint(2),djspint(2),djtx(2)
       REAL*8 dtj,djorb,djgr,djmb,djt,djtt,rmin,rdisk
+*
+      REAL*8 fallback
+      REAL*8 vk
+*
       REAL*8 neta,bwind,hewind,mxns
       COMMON /VALUE1/ neta,bwind,hewind,mxns
       REAL*8 beta,xi,acc2,epsnov,eddfac,gamma
@@ -211,6 +216,8 @@
       ngtv = -1.d0
       ngtv2 = -2.d0
       twopi = 2.d0*ACOS(-1.d0)
+* PDK
+      fb = 1
 *
 * Initialize the parameters.
 *
@@ -461,18 +468,18 @@
 * envelopes. This includes MS stars with M < 1.25, HG stars near the GB 
 * and giants. MB is not allowed for fully convective MS stars. 
 *
-*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
-*               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
-*               djspint(k) = djspint(k) + djmb
+            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
+               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
+               djspint(k) = djspint(k) + djmb
 
-            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
-     &              menv(k).gt.0.0d0)then
-              if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
-     &              (ospin(k)/wsun)**3.0d0
-              if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
-     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
-              djspint(k) = djspint(k) + djmb
-*
+*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+*     &              menv(k).gt.0.0d0)then
+*              if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &              (ospin(k)/wsun)**3.0d0
+*              if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+*              djspint(k) = djspint(k) + djmb
+
 * Limit to a 3% angular momentum change for the star owing to MB. 
 * This is found to work best with the maximum iteration of 20000, 
 * i.e. does not create an excessive number of iterations, while not 
@@ -728,6 +735,20 @@
          endif
 *
          CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
+* Use fall back of material during a SN to limit kick strength
+* according to Belczynski et al. (2008). Here we 'remember' the
+* core mass prior to the SN which sets fall back mass. Need to 
+* pass fallback through to kick.f.
+         fallback = 0.d0
+         if(fb.eq.1)then
+            if(mc.le.5.d0)then
+               fallback = 0.d0
+            elseif(mc.le.7.6)then
+               fallback = (mc-5.d0)/2.6d0
+            else
+               fallback = 1.d0
+            endif
+         endif
          CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
      &               rm,lum,kw,mc,rc,me,re,k2)
 *
@@ -740,9 +761,22 @@
          if(kw.ne.kstar(k).and.kstar(k).le.12.and.
      &      (kw.eq.13.or.kw.eq.14))then
             if(sgl)then
-               CALL kick(kw,mass(k),mt,0.d0,0.d0,-1.d0,0.d0,vs)
+               CALL kick(kw,mass(k),mt,0.d0,0.d0,-1.d0,0.d0,vk,k,
+     &                   0.d0,fallback,bkick)
             else
-               CALL kick(kw,mass(k),mt,mass(3-k),ecc,sep,jorb,vs)
+               CALL kick(kw,mass(k),mt,mass(3-k),ecc,sep,jorb,vk,k,
+     &                   rad(k-3),fallback,bkick)
+               if(mass(3-k).lt.0.d0)then
+                  if(kstar(3-k).lt.0.d0) mt = mt-mass(3-k) !ignore TZ object
+                  if(kw.eq.13.and.mt.gt.mxns) kw = 14
+                  kstar(k) = kw
+                  mass(k) = mt
+                  epoch(k) = tphys - age
+                  kstar(3-k) = 15
+                  mass(3-k) = 0.d0
+                  coel = .true.
+                  goto 135 
+               endif
                if(ecc.gt.1.d0)then
                   kstar(k) = kw
                   mass(k) = mt
@@ -1253,9 +1287,22 @@
 *
          m1ce = mass(j1)
          m2ce = mass(j2)
+         kcomp1 = kstar(j1) !PDK
+         kcomp2 = kstar(j2)
          CALL comenv(mass0(j1),mass(j1),massc(j1),aj(j1),jspin(j1),
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
-     &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel)
+     &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
+     &               vk,fb,bkick)
+         if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
+     &      kstar(j1).eq.13)then !PK. 
+* In CE the NS got switched around. Do same to formation.
+            bkick(1) = 3-bkick(1)
+         endif
+         if(j1.eq.1.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
+     &      kstar(j1).eq.13)then !PK. 
+* In CE the NS got switched around. Do same to formation.
+            bkick(1) = 3-bkick(1)
+         endif
 *
          jp = MIN(80,jp + 1)
          bpp(jp,1) = tphys
@@ -1941,6 +1988,16 @@
          endif
          kw = kstar(k)
          CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
+         fallback = 0.d0
+         if(fb.eq.1)then
+            if(mc.le.5.d0)then
+               fallback = 0.d0
+            elseif(mc.le.7.6)then
+               fallback = (mc-5.d0)/2.6d0
+            else
+               fallback = 1.d0
+            endif
+         endif
          CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
      &               rm,lum,kw,mc,rc,me,re,k2)
 *
@@ -1949,7 +2006,18 @@
          if(kw.ne.kstar(k).and.kstar(k).le.12.and.
      &      (kw.eq.13.or.kw.eq.14))then
             dms(k) = mass(k) - mt
-            CALL kick(kw,mass(k),mt,mass(3-k),ecc,sep,jorb,vs)
+            CALL kick(kw,mass(k),mt,mass(3-k),ecc,sep,jorb,vk,k,
+     &                rad(3-k),fallback,bkick)
+            if(mass(3-k).lt.0.d0)then
+               if(kstar(3-k).lt.0.d0) mt = mt-mass(3-k)
+               if(kw.eq.13.and.mt.gt.mxns) kw = 14
+               kstar(k) = kw
+               mass(k) = mt
+               epoch(k) = tphys - age
+               kstar(3-k) = 15
+               mass(3-k) = 0.d0
+               coel = .true.
+            endif
             if(ecc.gt.1.d0)then
                kstar(k) = kw
                mass(k) = mt
@@ -2143,15 +2211,40 @@
       bpp(jp,9) = rrl2
       bpp(jp,10) = 5.0
 *
+      kcomp1 = kstar(j1)
+      kcomp2 = kstar(j2)
+*
       if(kstar(j1).ge.2.and.kstar(j1).le.9.and.kstar(j1).ne.7)then
          CALL comenv(mass0(j1),mass(j1),massc(j1),aj(j1),jspin(j1),
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
-     &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel)
+     &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
+     &               vk,fb,bkick)
+         if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
+     &      kstar(j1).eq.13)then !PK. 
+* In CE the NS got switched around. Do same to formation.
+            bkick(1) = 3-bkick(1)
+         endif
+         if(j1.eq.1.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
+     &      kstar(j1).eq.13)then !PK. 
+* In CE the NS got switched around. Do same to formation.
+            bkick(1) = 3-bkick(1)
+         endif
          com = .true.
       elseif(kstar(j2).ge.2.and.kstar(j2).le.9.and.kstar(j2).ne.7)then
          CALL comenv(mass0(j2),mass(j2),massc(j2),aj(j2),jspin(j2),
      &               kstar(j2),mass0(j1),mass(j1),massc(j1),aj(j1),
-     &               jspin(j1),kstar(j1),zpars,ecc,sep,jorb,coel)
+     &               jspin(j1),kstar(j1),zpars,ecc,sep,jorb,coel,j1,j2,
+     &               vk,fb,bkick)
+         if(j2.eq.2.and.kcomp1.eq.13.and.kstar(j1).eq.15.and.
+     &      kstar(j2).eq.13)then !PK. 
+* In CE the NS got switched around. Do same to formation.
+            bkick(1) = 3-bkick(1)
+         endif
+         if(j2.eq.1.and.kcomp1.eq.13.and.kstar(j1).eq.15.and.
+     &      kstar(j2).eq.13)then !PK. 
+* In CE the NS got switched around. Do same to formation.
+            bkick(1) = 3-bkick(1)
+         endif
          com = .true.
       else
          CALL mix(mass0,mass,aj,kstar,zpars)

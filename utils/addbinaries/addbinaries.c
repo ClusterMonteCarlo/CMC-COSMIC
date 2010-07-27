@@ -116,7 +116,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	double kTcore, vcore, Eb, Ebmin, Ebmax, timeunitcgs, mtotal, m1, m2, X, qbin;
 	double *r, *sigma, *mave, dtp, tphysf;
 	star_t star;
-	double vs[3];
+	double vs[12];
 	
 	/* initialize stellar evolution */
 	/* SSE */
@@ -515,6 +515,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	}
 	
 	cfd->Mclus *= Mtotnew;
+	fprintf (stderr, "Mtotal after addbinaries=%g\n", cfd->Mclus);
 	
 	for (i=0; i<=cfd->NOBJ; i++) {
 		cfd->obj_m[i] /= Mtotnew;
@@ -546,7 +547,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	if (limits == 0 && binmf!=99) {
 		/* assign binaries physically */
 		for (i=1; i<=cfd->NBINARY; i++) {
-			if (cfd->bs_m2[i] < 0.002*cfd->Mclus ){
+			if (cfd->bs_m2[i]*cfd->Mclus < 0.002){
 				cfd->bs_a[i] = 5. * AU / (cfd->Rvir * PARSEC);
 				cfd->bs_e[i] = 0.;
 			} else {
@@ -831,7 +832,7 @@ int main(int argc, char *argv[]){
 	cmc_read_fits_file(infilename, &cfd);
 
 	METALLICITY = cfd.Z;
-	fprintf(stderr, "l=%d, p=%g AU, a=%g AU, A=%g AU, m=%g M=%g b=%d\n", limits, peak_a, min_a, max_a, Ebmin, Ebmax, binary_mf);
+	//fprintf(stderr, "l=%d, p=%g AU, a=%g AU, A=%g AU, m=%g M=%g b=%d\n", limits, peak_a, min_a, max_a, Ebmin, Ebmax, binary_mf);
 	assign_binaries(&cfd, Nbin, limits, peak_a, min_a, max_a, Ebmin, Ebmax, ignoreradii, binary_mf, nplanets);
 
 	cmc_write_fits_file(&cfd, outfilename);

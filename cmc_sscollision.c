@@ -10,7 +10,7 @@
 void sscollision_do(long k, long kp, double rperimax, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng)
 {
 	long knew;
-	double vs[3], bmax, b, rperi, Eorbnew, acoll, ecoll, ace, ece, anew, enew, efinal, afinal;
+	double vs[12], bmax, b, rperi, Eorbnew, acoll, ecoll, ace, ece, anew, enew, efinal, afinal;
 	double aj, tm, tn, tscls[20], lums[10], GB[10], k2;
 	double Einit;
 
@@ -243,8 +243,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		star[knew].r = rcm;
 		star[knew].vr = vcm[3];
 		star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-		star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);
-		star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
+		star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
+		star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 		star[knew].phi = potential(star[knew].r);
 		set_star_EJ(knew);
 		set_star_news(knew);
@@ -367,9 +367,9 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 /* merge two stars using stellar evolution if it's enabled */
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs) {
-	double tphysf, dtp, vsaddl[3], age;
+	double tphysf, dtp, vsaddl[12], age;
 	binary_t tempbinary, tbcopy;
-	int tbi=-1, j, ktry;
+	int tbi=-1, j, ktry, i;
 	
 	if (STELLAR_EVOLUTION && !STAR_AGING_SCHEME) {
 		/* evolve for just a year for merger */
@@ -575,20 +575,26 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 				  &(merged_star->se_renv), &(merged_star->se_ospin), &(merged_star->se_epoch), &(merged_star->se_tms), 
 				  &(merged_star->se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vsaddl);
 		
-		vs[0] += vsaddl[0];
+/*		vs[0] += vsaddl[0];
 		vs[1] += vsaddl[1];
-		vs[2] += vsaddl[2];
-
+		vs[2] += vsaddl[2]; */
+/* PDK vs array has now been increased. Although only 1st 3 would be used here anyways. */
+                for (i=0; i<=11; i++) {
+                    vs[i] += vsaddl[i];
+                }
 		merged_star->rad = merged_star->se_radius * RSUN / units.l;
 		merged_star->m = merged_star->se_mt * MSUN / units.mstar;
 	} else if (STAR_AGING_SCHEME && !STELLAR_EVOLUTION){
 		/* Sourav: toy rejuvenation version of stellar mergers */
 		merged_star->m = star1->m + star2->m;
 		merged_star->rad = r_of_m(merged_star->m);
-		vs[0] = 0.0;
+/*		vs[0] = 0.0;
 		vs[1] = 0.0;
-		vs[2] = 0.0;
-		
+		vs[2] = 0.0; */
+/* */
+                for (i=0; i<=11; i++) {
+                   vs[i] = 0.0;
+                }		
 		if (STAR_AGING_SCHEME==1){
 			merged_star->lifetime = pow(10.0,9.921)*pow(merged_star->m*units.mstar/MSUN,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 			age = (merged_star->lifetime/merged_star->m)*
@@ -612,9 +618,12 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		merged_star->m = star1->m + star2->m;
 		merged_star->rad = r_of_m(merged_star->m);
 
-		vs[0] = 0.0;
+/*		vs[0] = 0.0;
 		vs[1] = 0.0;
-		vs[2] = 0.0;
+		vs[2] = 0.0; */
+                for (i=0; i<=11; i++) {
+                   vs[i] = 0.0;
+                }
 	}
 }
 

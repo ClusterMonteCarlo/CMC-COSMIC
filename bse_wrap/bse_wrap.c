@@ -34,10 +34,14 @@ void bse_evolv1(int *kw, double *mass, double *mt, double *r, double *lum,
 		double *epoch, double *tms, double *tphys, double *tphysf, 
 		double *dtp, double *z, double *zpars, double *vs)
 {
+ int i;
   /* must null out vs, since SSE/BSE is not designed to return it and hence doesn't null it out */
-  vs[0] = 0.0;
+/*  vs[0] = 0.0;
   vs[1] = 0.0;
-  vs[2] = 0.0;
+  vs[2] = 0.0; */
+  for(i=1;i<=11;i++) {
+      vs[i] = 0.0;
+  }
   evolv1_(kw, mass, mt, r, lum, mc, rc, menv, renv, ospin,
 	  epoch, tms, tphys, tphysf, dtp, z, zpars, vs);
 }
@@ -49,9 +53,9 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
 		       double *epoch, double *tms, double *tphys, double *tphysf, 
 		       double *dtp, double *z, double *zpars, double *vs)
 {
-  int mykw, kattempt=-1;
+  int mykw, kattempt=-1, i;
   double mymass, mymt, myr, mylum, mymc, myrc, mymenv, myrenv, myospin, myepoch;
-  double mytms, mytphys, mytphysf, mydtp, myvs[3], tphystried;
+  double mytms, mytphys, mytphysf, mydtp, myvs[12], tphystried;
 
   do {
     kattempt++;
@@ -103,9 +107,12 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
   *tphys = mytphys;
   *tphysf = mytphysf;
   *dtp = mydtp;
-  vs[0] = myvs[0];
+/*  vs[0] = myvs[0];
   vs[1] = myvs[1];
-  vs[2] = myvs[2];
+  vs[2] = myvs[2]; */
+  for(i=0;i<=11;i++) {
+      vs[i] = myvs[i];
+  }
 }
 
 /* evolve a binary */
@@ -114,10 +121,14 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
 		double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		double *z, double *zpars, double *tb, double *ecc, double *vs)
 {
+ int i;
   /* must null out vs, since SSE/BSE is not designed to return it and hence doesn't null it out */
-  vs[0] = 0.0;
+/*  vs[0] = 0.0;
   vs[1] = 0.0;
-  vs[2] = 0.0;
+  vs[2] = 0.0; */
+  for(i=0;i<=11;i++) {
+      vs[i] = 0.0;
+  }
   evolv2_(kstar, mass0, mass, rad, lum, massc, radc, menv, renv, ospin,
 	  epoch, tms, tphys, tphysf, dtp, z, zpars, tb, ecc, vs);
 }
@@ -129,9 +140,9 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
 		       double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		       double *z, double *zpars, double *tb, double *ecc, double *vs)
 {
-  int mykstar[2], kattempt=-1, j;
+  int mykstar[2], kattempt=-1, j, i;
   double mymass0[2], mymass[2], myrad[2], mylum[2], mymassc[2], myradc[2], mymenv[2], myrenv[2], myospin[2], myepoch[2];
-  double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[3];
+  double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[12];
 
   do {
     kattempt++;
@@ -192,9 +203,12 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
   *dtp = mydtp;
   *tb = mytb;
   *ecc = myecc;
-  vs[0] = myvs[0];
+/*  vs[0] = myvs[0];
   vs[1] = myvs[1];
-  vs[2] = myvs[2];
+  vs[2] = myvs[2];*/
+  for(i=0;i<=11;i++) {
+      vs[i] = myvs[i];
+  }
 }
 
 /* set collision matrix */
@@ -264,7 +278,7 @@ void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, do
 
 /* kick routine; shouldn't need to be used often outside of BSE */
 void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
-	      double *jorb, double *vs)
+	      double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs)
 {
   /* INPUTS
      kw = stellar type
@@ -273,16 +287,27 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
      m2 = mass of star 2
      ecc = orbit eccentrity
      sep = orbit semimajor axis
+     snstar = which star (primary 1 or secondary 2) that goes SN
+     r2 = radius of companion, stars may collide if lucky kick
+     fallback = fraction of pre-SN mass that may fall back onto remnant. Can be 0.
+                Kick strength is limited by such fall back of material
      
      OUTPUTS
      kw = stellar type (new value if input kw<0)
      ecc = eccentricity (new value)
      sep = orbit semimajor axis (new value)
      jorb = orbital angular momentum
-     vs = velocity (3) of center of mass if bound, relative velocity at infinity if unbound
+     vk = kick magnitude, can be used to help set initial pulsar properties if desired.
+     old -> vs = velocity (3) of center of mass if bound, relative velocity at infinity if unbound
+     new -> vs = three possible sets of velocities (3). Is an array of 12, correctly accounts for
+     run away velocities and outputs them in the original COM frame. 
+     Array of 12 for two kicks that can occur - one kick may disrupt the system so each star has 
+     output into one of the 3 velocity slots.
+     Another 3 values within the array show which star (1 or 2) went SN for that kick.
+     This helps in differentiating which kick goes where.
    */
 
-  kick_(kw, m1, m1n, m2, ecc, sep, jorb, vs);
+  kick_(kw, m1, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, vs);
 }
 
 /* setters */
