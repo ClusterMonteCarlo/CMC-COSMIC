@@ -423,6 +423,8 @@ void PrintFileOutput(void) {
 			write_stellar_data();	
 		}
 	}
+
+        print_snapshot_windows();
 }
 
 /*** Parsing of Input Parameters / Memory allocation / File I/O ***/
@@ -450,6 +452,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	quiet = 0;
 	debug = 0;
 	NO_MASS_BINS = 0;
+        snapshot_window_count=0;
 	/* DEFAULT PARAMETER VALUES */
 	
 	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
@@ -566,6 +569,21 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
 				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
 				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
+                        } else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
+                                PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
+                                SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
+                                parse_snapshot_windows(values);
+				parsed.SNAPSHOT_WINDOWS = 1;
+                        } else if (strcmp(parameter_name, "SNAPSHOT_WINDOW_UNITS") == 0) {
+                                PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOW_UNITS);
+                                SNAPSHOT_WINDOW_UNITS= (char *) malloc(sizeof(char)*10);
+                                strncpy(SNAPSHOT_WINDOW_UNITS,values, 10);
+                                if (!valid_snapshot_window_units()) {
+                                  eprintf("Unrecognized snapshot window time unit %s.", values);
+                                  free_arrays();
+                                  exit(-1);
+                                }
+				parsed.SNAPSHOT_WINDOW_UNITS = 1;
 			} else if (strcmp(parameter_name, "IDUM") == 0) {
 				PRINT_PARSED(PARAMDOC_IDUM);
 				sscanf(values, "%ld", &IDUM);
@@ -833,6 +851,8 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(SNAPSHOT_DELTAT, 0.25, PARAMDOC_SNAPSHOT_DELTAT);
 	CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 0, PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
         CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 0, PARAMDOC_SNAPSHOT_CORE_BOUNCE);
+        CHECK_PARSED(SNAPSHOT_WINDOWS, NULL, PARAMDOC_SNAPSHOT_WINDOWS);
+        CHECK_PARSED(SNAPSHOT_WINDOW_UNITS, "Trel", PARAMDOC_SNAPSHOT_WINDOW_UNITS);
 
 	CHECK_PARSED(NUM_CENTRAL_STARS, 300, PARAMDOC_NUM_CENTRAL_STARS);
 	CHECK_PARSED(IDUM, 0, PARAMDOC_IDUM);
@@ -1236,4 +1256,132 @@ char *sprint_bin_dyn(long k, char string[MAX_STRING_LENGTH])
 		 binary[bi].id2, binary[bi].m2*units.mstar/FB_CONST_MSUN, binary[bi].bse_kw[1]);
 
 	return(string);
+}
+
+void parse_snapshot_windows(char *param_string) {
+  char *cur_window, *intern_window=NULL, *intern_param=NULL;
+  char *cur_wstring, *cur_pstring;
+  int j;
+  strcpy(SNAPSHOT_WINDOWS, param_string);
+  snapshot_window_count= 0;
+  snapshot_windows= NULL;
+  cur_wstring= param_string;
+  while ((cur_window = strtok_r(cur_wstring,";", &intern_window))!= NULL) {
+    snapshot_window_count++;
+    snapshot_windows = (double *) realloc(snapshot_windows, 3*snapshot_window_count*sizeof(double));
+    cur_wstring= NULL;
+    for (j=0, cur_pstring=cur_window; j< 3; j++, cur_pstring=NULL) {
+      char *wparam;
+      int cur_wpidx;
+      wparam= strtok_r(cur_pstring, ",", &intern_param);
+      if (wparam==NULL) {
+        eprintf("Error parsing snapshot window list.\n");
+        eprintf("The current window is %s, and the config parameter is %s.\n", 
+            cur_window, param_string);
+        free_arrays();
+        exit(-1);
+      }
+      cur_wpidx= (snapshot_window_count-1)*3+j;
+      sscanf(wparam, "%lf", &(snapshot_windows[cur_wpidx]));
+    }
+  }
+
+  dprintf("Finished parsing window list.\n");
+  for (j=0; j< snapshot_window_count; j++) {
+    dprintf("Window %i: ", j);
+    dprintf("start %g, step %g, stop %g\n", snapshot_windows[3*j], snapshot_windows[3*j+1], snapshot_windows[3*j+2]);
+  }
+  snapshot_window_counters= (int *) calloc(snapshot_window_count, sizeof(int));
+}
+
+void print_snapshot_windows(void) {
+  int i, step_counter;
+  double start, stop, step, total_time;
+
+  if (!snapshot_window_count || !SNAPSHOTTING) return;
+
+  if (strncmp(SNAPSHOT_WINDOW_UNITS, "Trel", 5)==0) {
+    total_time= TotalTime;
+  } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Gyr", 4)==0) {
+    total_time= TotalTime * units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / YEAR/1e9;
+  } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Tcr", 4)==0) {
+    total_time= TotalTime * log(GAMMA * clus.N_STAR) / clus.N_STAR;
+  } else {
+    eprintf("Unrecognized unit %s.", SNAPSHOT_WINDOW_UNITS);
+    exit_cleanly(-1);
+  }
+
+  for (i=0; i<snapshot_window_count; i++) {
+    step_counter= snapshot_window_counters[i];
+    start= snapshot_windows[i*3];
+    step=  snapshot_windows[i*3+1];
+    stop=  snapshot_windows[i*3+2];
+    if (total_time>= start+step_counter*step && total_time<=stop) {
+      char outfile[100];
+      sprintf(outfile, "%s.w%02i_snap%04d.dat.gz", outprefix, i+1, step_counter+1);
+      write_snapshot(outfile);
+      snapshot_window_counters[i]++;
+      dprintf("Wrote snapshot #%i for time window %i (%s) at time %g %s.", step_counter+1, i+1, outfile, 
+          total_time, SNAPSHOT_WINDOW_UNITS);
+    }
+  }
+}
+
+int valid_snapshot_window_units(void) {
+  int valid;
+
+  valid=0;
+  if (strncmp(SNAPSHOT_WINDOW_UNITS, "Trel", 5)==0) {
+    valid=1;
+  } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Gyr", 4)) {
+    valid=1;
+  } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Tcr", 4)) {
+    valid=1;
+  } 
+
+  return (valid);
+}
+
+void write_snapshot(char *filename) {
+  long i, j;
+
+  if ((snapfile = (FILE *) gzopen(filename, "wb")) == NULL) {
+    eprintf("cannot create 2D snapshot file %s\n", filename);
+    exit_cleanly(1);
+  }
+
+  /* print useful header */
+  gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
+  gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.star.phi\n");
+
+  /* then print data */
+  for (i=1; i<=clus.N_MAX; i++) {
+    gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
+        star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, 
+        star[i].r, star[i].vr, star[i].vt, 
+        star[i].E, star[i].J);
+    if (star[i].binind) {
+      j = star[i].binind;
+      gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+          binary[j].m1 * (units.m / clus.N_STAR) / MSUN, 
+          binary[j].m2 * (units.m / clus.N_STAR) / MSUN, 
+          binary[j].id1, binary[j].id2,
+          binary[j].a * units.l / AU, binary[j].e);
+    } else {
+      gzprintf(snapfile, "0 0 0 0 0 0 0 ");	
+    }
+
+    if (star[i].binind == 0) {
+      gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 ", 
+          star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
+    } else {
+      gzprintf(snapfile, "0 0 0 %d %d %.8g %.8g %.8g %.8g ",
+          binary[j].bse_kw[0], binary[j].bse_kw[1], 
+          binary[j].bse_lum[0], binary[j].bse_lum[1],
+          binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN);
+    }
+    gzprintf(snapfile, "%0.12g\n", star[i].phi);
+  }
+
+  gzclose(snapfile);
 }

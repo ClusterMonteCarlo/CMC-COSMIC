@@ -188,6 +188,10 @@ typedef struct{
         int SNAPSHOT_CORE_COLLAPSE;
 #define PARAMDOC_SNAPSHOT_CORE_BOUNCE "output extra snapshotting information during core bounce (0=off, 1=on)"
         int SNAPSHOT_CORE_BOUNCE;
+#define PARAMDOC_SNAPSHOT_WINDOWS "Output extra snapshots within time windows. \nThe format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc." 
+        int SNAPSHOT_WINDOWS;
+#define PARAMDOC_SNAPSHOT_WINDOW_UNITS "Units used for time window parameters. Possible choices: Gyr, Trel, and Tcr"
+        int SNAPSHOT_WINDOW_UNITS;
 #define PARAMDOC_IDUM "random number generator seed"
 	int IDUM;
 #define PARAMDOC_INPUT_FILE "input FITS file"
@@ -616,6 +620,11 @@ double find_root_vr(long index, long k, double E, double J);
 double calc_pot_in_interval(double r, long k);
 void remove_star(long j, double phi_rtidal, double phi_zero);
 inline double function_q(long j, long double r, long double pot, long double E, long double J);
+
+void parse_snapshot_windows(char *option_string);
+void print_snapshot_windows(void);
+int valid_snapshot_window_units(void);
+void write_snapshot(char *filename);
 
 #include "cmc_bse_utils.h"
 
