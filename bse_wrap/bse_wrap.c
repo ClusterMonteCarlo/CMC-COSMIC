@@ -39,7 +39,7 @@ void bse_evolv1(int *kw, double *mass, double *mt, double *r, double *lum,
 /*  vs[0] = 0.0;
   vs[1] = 0.0;
   vs[2] = 0.0; */
-  for(i=1;i<=11;i++) {
+  for(i=0;i<=11;i++) {
       vs[i] = 0.0;
   }
   evolv1_(kw, mass, mt, r, lum, mc, rc, menv, renv, ospin,

@@ -254,7 +254,7 @@ c-------------------------------------------------------------c
 *
 * Force new NS or BH to have a one second period. 
 * 
-            if(kw.eq.13.or.kw.eq.14)then
+            if((kw.eq.13.or.kw.eq.14).and.kw.ne.kwold)then
                ospin = 2.0d+08
                jspin = k3*rc*rc*mc*ospin
                CALL kick(kw,mass,mt,0.d0,0.d0,-1.d0,0.d0,vk,1,
