@@ -19,15 +19,15 @@ void stellar_evolution_init(void){
   bse_set_neta(0.5);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
-  bse_set_alpha1(1.0); /* FIXME: is 3 too high? (normally 1.0) */
+  bse_set_alpha1(3.0); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambda(0.5);
   bse_set_ceflag(0);
   bse_set_tflag(1);
   bse_set_ifflag(0);
   bse_set_wdflag(1);
   bse_set_bhflag(0);
-  bse_set_nsflag(1);
-  bse_set_mxns(3.0);
+  bse_set_nsflag(0);
+  bse_set_mxns(2.5);
   bse_set_idum(29769);
   bse_set_pts1(0.05);
   bse_set_pts2(0.01);
@@ -37,7 +37,7 @@ void stellar_evolution_init(void){
   bse_set_xi(1.0);
   bse_set_acc2(1.5);
   bse_set_epsnov(0.001);
-  bse_set_eddfac(10.0); /* FIXME: is 10 too high? (normally 1.0) */
+  bse_set_eddfac(1.0); /* FIXME: is 10 too high? (normally 1.0) */
   bse_set_gamma(-1.0);
   
   /* set parameters relating to metallicity */
