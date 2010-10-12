@@ -36,7 +36,7 @@
 #   and this notice are preserved.
 
 AC_DEFUN([AX_WITH_PROG],[
-    AC_PREREQ([2.61])
+dnl    AC_PREREQ([2.61])
 
     pushdef([VARIABLE],$1)
     pushdef([EXECUTABLE],$2)

@@ -11,7 +11,7 @@ AC_DEFUN([CUDA_FLAGS_APPEND], [
 ])
 
 AC_DEFUN([CUDA_CONFIG_VAR], [
-        AC_REQUIRE([AC_PROG_SED])
+dnl        AC_REQUIRE([AC_PROG_SED])
               
         touch conftest_cuda.cu
         [$]{NVCC} -E conftest_cuda.cu -dryrun 2>&1 |
