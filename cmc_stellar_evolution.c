@@ -16,29 +16,29 @@ void stellar_evolution_init(void){
   /* bse_set_hewind(0.5); */
   
   /* BSE */
-  bse_set_neta(0.5);
-  bse_set_bwind(0.0);
-  bse_set_hewind(1.0);
-  bse_set_alpha1(3.0); /* FIXME: is 3 too high? (normally 1.0) */
-  bse_set_lambda(0.5);
-  bse_set_ceflag(0);
-  bse_set_tflag(1);
-  bse_set_ifflag(0);
-  bse_set_wdflag(1);
-  bse_set_bhflag(0);
-  bse_set_nsflag(0);
-  bse_set_mxns(2.5);
-  bse_set_idum(29769);
+  bse_set_neta(BSE_NETA);
+  bse_set_bwind(BSE_BWIND);
+  bse_set_hewind(BSE_HEWIND);
+  bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
+  bse_set_lambda(BSE_LAMBDA);
+  bse_set_ceflag(BSE_CEFLAG);
+  bse_set_tflag(BSE_TFLAG);
+  bse_set_ifflag(BSE_IFFLAG);
+  bse_set_wdflag(BSE_WDFLAG);
+  bse_set_bhflag(BSE_BHFLAG);
+  bse_set_nsflag(BSE_NSFLAG);
+  bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
+  bse_set_idum(BSE_IDUM);
   bse_set_pts1(0.05);
   bse_set_pts2(0.01);
   bse_set_pts3(0.02);
-  bse_set_sigma(265.0);
-  bse_set_beta(0.125);
+  bse_set_sigma(BSE_SIGMA);
+  bse_set_beta(BSE_BETA);
   bse_set_xi(1.0);
   bse_set_acc2(1.5);
   bse_set_epsnov(0.001);
-  bse_set_eddfac(1.0); /* FIXME: is 10 too high? (normally 1.0) */
-  bse_set_gamma(-1.0);
+  bse_set_eddfac(BSE_EDDFAC); /* (normally 1.0) */
+  bse_set_gamma(BSE_GAMMA);
   
   /* set parameters relating to metallicity */
   zpars = (double *) malloc(20 * sizeof(double));

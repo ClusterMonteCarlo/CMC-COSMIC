@@ -291,6 +291,44 @@ typedef struct{
         int OVERWRITE_RTID;
 #define PARAMDOC_OVERWRITE_MCLUS "Instead of reading the cluster mass from the fits file use this value [Msun]"
         int OVERWRITE_MCLUS;
+#define PARAMDOC_BSE_NETA "neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally)."
+	int BSE_NETA;
+#define PARAMDOC_BSE_BWIND "bwind is the binary enhanced mass-loss parameter (inactive for single, and normally 0.0 anyway)."
+	int BSE_BWIND;
+#define PARAMDOC_BSE_HEWIND "hewind is a helium star mass-loss factor (0.5 normally)."
+	int BSE_HEWIND;
+#define PARAMDOC_BSE_ALPHA1 "alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)"
+	int BSE_ALPHA1;
+#define PARAMDOC_BSE_LAMBDA "labmda is the stellar binding energy factor for common-envelope evolution (0.5; +'ve allows it to vary, -'ve holds it constant at that value always)."
+	int BSE_LAMBDA;
+#define PARAMDOC_BSE_CEFLAG "ceflag sets CE prescription used. = 0 sets Tout et al. method, = 3 activates de Kool common-envelope models (normally 0)."
+	int BSE_CEFLAG;
+#define PARAMDOC_BSE_TFLAG "tflag > 0 activates tidal circularisation (1)."
+	int BSE_TFLAG;
+#define PARAMDOC_BSE_IFFLAG "ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0)."
+	int BSE_IFFLAG;
+#define PARAMDOC_BSE_WDFLAG "wdflag > 0 uses modified-Mestel cooling for WDs (1)."
+	int BSE_WDFLAG;
+#define PARAMDOC_BSE_BHFLAG "bhflag > 0 allows velocity kick at BH formation (1)."
+	int BSE_BHFLAG;
+#define PARAMDOC_BSE_NSFLAG "nsflag > 0 takes NS/BH mass distribution of Belczynski et al. 2002, ApJ, 572, 407 (1)."
+	int BSE_NSFLAG;
+#define PARAMDOC_BSE_MXNS "mxns is the maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1)."
+	int BSE_MXNS;
+#define PARAMDOC_BSE_BCONST "bconst is the magnetic field decay timescale (-3000, although value and decay rate not really established...)."
+	int BSE_BCONST;
+#define PARAMDOC_BSE_CK "CK is an accretion induced field decay constant (-1000, although again this isn't well established...)."
+	int BSE_CK;
+#define PARAMDOC_BSE_IDUM "idum in the random number seed used by kick.f and setting initial pulsar spin period and magnetic field."
+	int BSE_IDUM;
+#define PARAMDOC_BSE_SIGMA "sigma is the Maxwellian dispersion for SN kick speeds (265 km/s)."
+	int BSE_SIGMA;
+#define PARAMDOC_BSE_BETA "beta is the wind velocity factor: proprotinal to vwind^2 (1/8)."
+	int BSE_BETA;
+#define PARAMDOC_BSE_EDDFAC "eddfac is Eddington limit factor for mass transfer (1.0, 10 turns Eddlimitation off)."
+	int BSE_EDDFAC;
+#define PARAMDOC_BSE_GAMMA "gamma is the angular momentum factor for mass lost during Roche (-1.0, see evolv2.f for more details)."
+	int BSE_GAMMA;
 } parsed_t;
 
 /* a struct containing the units used */
