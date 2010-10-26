@@ -598,6 +598,7 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
     //Sourav: toy rejuvenation- updating the createtime and lifetime
     star[knew].createtime = star[oldk].createtime;
     star[knew].lifetime = star[oldk].lifetime;
+    star[knew].rad = star[oldk].rad;
   } else { /* star comes from input binary */
     star[knew].se_mass = binary[kb].bse_mass0[kbi];
     star[knew].se_k = binary[kb].bse_kw[kbi];
@@ -616,9 +617,11 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
     if (kbi==0){
     	star[knew].createtime = binary[kb].createtime_m1;
     	star[knew].lifetime = binary[kb].lifetime_m1;
+        star[knew].rad = binary[kb].rad1;
     } else {
 	star[knew].createtime = binary[kb].createtime_m2;
     	star[knew].lifetime = binary[kb].lifetime_m2;	
+        star[knew].rad = binary[kb].rad2;
     } 
   }
 }
@@ -634,9 +637,9 @@ void cp_m_to_newstar(long oldk, int kbi, long knew)
     star[knew].m = star[oldk].m;
   } else { /* star comes from input binary */
     if (kbi == 0) {
-      star[knew].m = binary[kb].m1;
+      star[knew].m = binary[kb].m1; //should this be multiplied by MSUN/units.mstar ?
     } else {
-      star[knew].m = binary[kb].m2;
+      star[knew].m = binary[kb].m2;//should this be multiplied by MSUN/units.mstar ?
     }
   }
 }
@@ -649,6 +652,7 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
   kb = star[oldk].binind;
   
   if (kbi == -1) { /* star comes from input single star */
+    target_star->rad = star[oldk].rad; //PDK addition
     target_star->se_mass = star[oldk].se_mass;
     target_star->se_k = star[oldk].se_k;
     target_star->se_mt = star[oldk].se_mt;
@@ -683,10 +687,12 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
     if (kbi==1){
    	target_star->createtime = binary[kb].createtime_m1;
 	target_star->lifetime = binary[kb].lifetime_m1;
+        target_star->rad = binary[kb].rad1; // PDK addition
     } 
     else {
 	target_star->createtime = binary[kb].createtime_m2;
 	target_star->lifetime = binary[kb].lifetime_m2;
+        target_star->rad = binary[kb].rad2; // PDK addition
     }
   }
 }
@@ -702,9 +708,9 @@ void cp_m_to_star(long oldk, int kbi, star_t *target_star)
     target_star->m = star[oldk].m;
   } else { /* star comes from input binary */
     if (kbi == 0) {
-      target_star->m = binary[kb].m1;
+      target_star->m = binary[kb].m1;//should this be multiplied by MSUN/units.mstar ?
     } else {
-      target_star->m = binary[kb].m2;
+      target_star->m = binary[kb].m2;//should this be multiplied by MSUN/units.mstar ?
     }
   }
 }
@@ -736,9 +742,11 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
     if (kbinew==0){
       binary[kbnew].createtime_m1 = star[oldk].createtime;
       binary[kbnew].lifetime_m1 = star[oldk].lifetime;
+      binary[kbnew].rad1 = star[oldk].rad; // PDK addition
     } else {
       binary[kbnew].createtime_m2 = star[oldk].createtime;
       binary[kbnew].lifetime_m2 = star[oldk].lifetime;
+      binary[kbnew].rad2 = star[oldk].rad; // PDK addition
     }
   } else { /* star comes from input binary */
     binary[kbnew].bse_mass0[kbinew] = binary[kbold].bse_mass0[oldkbi];
@@ -760,17 +768,21 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
       if (oldkbi==0){
 	binary[kbnew].createtime_m1 = binary[kbold].createtime_m1;
 	binary[kbnew].lifetime_m1 = binary[kbold].lifetime_m1;
+        binary[kbnew].rad1 = binary[kbold].rad1; // PDK addition
       } else {
 	binary[kbnew].createtime_m1 = binary[kbold].createtime_m2;
 	binary[kbnew].lifetime_m1 = binary[kbold].lifetime_m2;
+        binary[kbnew].rad1 = binary[kbold].rad2; // PDK addition
       }
     } else {
       if (oldkbi==0){
 	binary[kbnew].createtime_m2 = binary[kbold].createtime_m1;
 	binary[kbnew].lifetime_m2 = binary[kbold].lifetime_m1;
+        binary[kbnew].rad2 = binary[kbold].rad1; // PDK addition
       } else {
 	binary[kbnew].createtime_m2 = binary[kbold].createtime_m2;
 	binary[kbnew].lifetime_m2 = binary[kbold].lifetime_m2;
+        binary[kbnew].rad2 = binary[kbold].rad2; // PDK addition
       }
     }
   }
@@ -798,9 +810,11 @@ void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid)
   if (bid==0){
     binary[binindex].createtime_m1 = instar.createtime;
     binary[binindex].lifetime_m1 = instar.lifetime;
+    binary[binindex].rad1 = instar.rad; // PDK addition
   } else {
     binary[binindex].createtime_m2 = instar.createtime;
     binary[binindex].lifetime_m2 = instar.lifetime;
+    binary[binindex].rad1 = instar.rad; // PDK addition
   }
 }
 
