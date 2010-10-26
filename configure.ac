@@ -37,7 +37,7 @@ AS_IF([test "x$enable_cuda" == "xyes" && test "x$enable_static_linking" == "xyes
 AC_PROG_CC([gcc pathcc icc])
 # Set the maximum optimization
 AX_CC_MAXOPT
-AS_IF([test "x$FFLAGS" == x], [FFLAGS='-g -O3'], [])
+AS_IF([test "x$FFLAGS" == x], [FFLAGS='-g -O2'], [])
 # Always add debug symbols
 CFLAGS="$CFLAGS -g"
 
