@@ -784,6 +784,83 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_OVERWRITE_MCLUS);
 				sscanf(values, "%lf", &OVERWRITE_MCLUS);
 				parsed.OVERWRITE_MCLUS = 1;
+// Begin reading in stellar and binary evolution assumptions.
+			} else if (strcmp(parameter_name, "BSE_NETA")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_NETA);
+				sscanf(values, "%lf", &BSE_NETA);
+				parsed.BSE_NETA = 1;
+			} else if (strcmp(parameter_name, "BSE_BWIND")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_BWIND);
+				sscanf(values, "%lf", &BSE_BWIND);
+				parsed.BSE_BWIND = 1;
+			} else if (strcmp(parameter_name, "BSE_HEWIND")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_HEWIND);
+				sscanf(values, "%lf", &BSE_HEWIND);
+				parsed.BSE_HEWIND = 1;
+			} else if (strcmp(parameter_name, "BSE_ALPHA1")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_ALPHA1);
+				sscanf(values, "%lf", &BSE_ALPHA1);
+				parsed.BSE_ALPHA1 = 1;
+			} else if (strcmp(parameter_name, "BSE_LAMBDA")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_LAMBDA);
+				sscanf(values, "%lf", &BSE_LAMBDA);
+				parsed.BSE_LAMBDA = 1;
+			} else if (strcmp(parameter_name, "BSE_CEFLAG")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_CEFLAG);
+				sscanf(values, "%i", &BSE_CEFLAG);
+				parsed.BSE_CEFLAG = 1;
+			} else if (strcmp(parameter_name, "BSE_TFLAG")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_TFLAG);
+				sscanf(values, "%i", &BSE_TFLAG);
+				parsed.BSE_TFLAG = 1;
+			} else if (strcmp(parameter_name, "BSE_IFFLAG")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_IFFLAG);
+				sscanf(values, "%i", &BSE_IFFLAG);
+				parsed.BSE_IFFLAG = 1;
+			} else if (strcmp(parameter_name, "BSE_WDFLAG")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_WDFLAG);
+				sscanf(values, "%i", &BSE_WDFLAG);
+				parsed.BSE_WDFLAG = 1;
+			} else if (strcmp(parameter_name, "BSE_BHFLAG")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_BHFLAG);
+				sscanf(values, "%i", &BSE_BHFLAG);
+				parsed.BSE_BHFLAG = 1;
+			} else if (strcmp(parameter_name, "BSE_NSFLAG")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_NSFLAG);
+				sscanf(values, "%i", &BSE_NSFLAG);
+				parsed.BSE_NSFLAG = 1;
+			} else if (strcmp(parameter_name, "BSE_MXNS")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_MXNS);
+				sscanf(values, "%lf", &BSE_MXNS);
+				parsed.BSE_MXNS = 1;
+			} else if (strcmp(parameter_name, "BSE_BCONST")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_BCONST);
+				sscanf(values, "%lf", &BSE_BCONST);
+				parsed.BSE_BCONST = 1;
+			} else if (strcmp(parameter_name, "BSE_CK")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_CK);
+				sscanf(values, "%lf", &BSE_CK);
+				parsed.BSE_CK = 1;
+			} else if (strcmp(parameter_name, "BSE_IDUM")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_IDUM);
+				sscanf(values, "%i", &BSE_IDUM);
+				parsed.BSE_IDUM = 1;
+			} else if (strcmp(parameter_name, "BSE_BETA")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_BETA);
+				sscanf(values, "%lf", &BSE_BETA);
+				parsed.BSE_BETA = 1;
+			} else if (strcmp(parameter_name, "BSE_SIGMA")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_SIGMA);
+				sscanf(values, "%lf", &BSE_SIGMA);
+				parsed.BSE_SIGMA = 1;
+			} else if (strcmp(parameter_name, "BSE_EDDFAC")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_EDDFAC);
+				sscanf(values, "%lf", &BSE_EDDFAC);
+				parsed.BSE_EDDFAC = 1;
+			} else if (strcmp(parameter_name, "BSE_GAMMA")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_GAMMA);
+				sscanf(values, "%lf", &BSE_GAMMA);
+				parsed.BSE_GAMMA = 1;
                         } else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -876,6 +953,25 @@ void parser(int argc, char *argv[], gsl_rng *r)
         CHECK_PARSED(OVERWRITE_Z, 0., PARAMDOC_OVERWRITE_Z);
         CHECK_PARSED(OVERWRITE_RTID, 0., PARAMDOC_OVERWRITE_RTID);
         CHECK_PARSED(OVERWRITE_MCLUS, 0., PARAMDOC_OVERWRITE_MCLUS);
+	CHECK_PARSED(BSE_NETA, 0.50, PARAMDOC_BSE_NETA);
+	CHECK_PARSED(BSE_BWIND, 0.00, PARAMDOC_BSE_BWIND);
+	CHECK_PARSED(BSE_HEWIND, 0.50, PARAMDOC_BSE_HEWIND);
+	CHECK_PARSED(BSE_ALPHA1, 3.00, PARAMDOC_BSE_ALPHA1);
+	CHECK_PARSED(BSE_LAMBDA, 0.50, PARAMDOC_BSE_LAMBDA);
+	CHECK_PARSED(BSE_CEFLAG, 0, PARAMDOC_BSE_CEFLAG);
+	CHECK_PARSED(BSE_TFLAG, 1, PARAMDOC_BSE_TFLAG);
+	CHECK_PARSED(BSE_IFFLAG, 0, PARAMDOC_BSE_IFFLAG);
+	CHECK_PARSED(BSE_WDFLAG, 1, PARAMDOC_BSE_WDFLAG);
+	CHECK_PARSED(BSE_BHFLAG, 1, PARAMDOC_BSE_BHFLAG);
+	CHECK_PARSED(BSE_NSFLAG, 1, PARAMDOC_BSE_NSFLAG);
+	CHECK_PARSED(BSE_MXNS, 3.00, PARAMDOC_BSE_MXNS);
+	CHECK_PARSED(BSE_BCONST, -3000.00, PARAMDOC_BSE_BCONST);
+	CHECK_PARSED(BSE_CK, -1000.00, PARAMDOC_BSE_CK);
+	CHECK_PARSED(BSE_IDUM, -999, PARAMDOC_BSE_IDUM);
+	CHECK_PARSED(BSE_SIGMA, 265.00, PARAMDOC_BSE_SIGMA);
+	CHECK_PARSED(BSE_BETA, 0.12500, PARAMDOC_BSE_BETA);
+	CHECK_PARSED(BSE_EDDFAC, 1.00, PARAMDOC_BSE_EDDFAC);
+	CHECK_PARSED(BSE_GAMMA, -1.00, PARAMDOC_BSE_GAMMA);
 #undef CHECK_PARSED
 
 	/* exit if something is not set */
