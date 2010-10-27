@@ -187,6 +187,8 @@
 *
       REAL*8 neta,bwind,hewind,mxns
       COMMON /VALUE1/ neta,bwind,hewind,mxns
+      REAL*8 sigma
+      COMMON /VALUE4/ sigma
       REAL*8 beta,xi,acc2,epsnov,eddfac,gamma
       COMMON /VALUE5/ beta,xi,acc2,epsnov,eddfac,gamma
 *
@@ -204,6 +206,9 @@
 *
       REAL*8 kw3,wsun,wx
       PARAMETER(kw3=619.2d0,wsun=9.46d+07,wx=9.46d+08)
+      integer id1_pass,id2_pass
+      COMMON /cmcpass/ id1_pass,id2_pass
+      LOGICAL output
 *
 * Save the initial state.
 *
@@ -218,6 +223,14 @@
       twopi = 2.d0*ACOS(-1.d0)
 * PDK
       fb = 1
+      output = .false.  ! .true. turns on, .false. turns off.
+*                       WARNING: can fill up the output file very quickly. 
+*                       With N=2e6 .stdout was 3.2 GB in 6 mins. If needed you can
+*                       be more selective with outputting, but must add this yourself!
+*      if(id1_pass.eq.73637.and.tphysf.gt.17.50d0.and.
+*     &   tphysf.lt.17.6d0)then
+*         output = .true.
+*      endif
 *
 * Initialize the parameters.
 *
@@ -317,6 +330,10 @@
 *
  500  continue
 *
+      if(output) write(*,*)'Init:',mass(1),mass(2),massc(1),massc(2),
+     & rad(1),rad(2),kstar(1),kstar(2),sep,ospin(1),ospin(2),jspin(1),
+     & jspin(2),sigma,eddfac,z,id1_pass,id2_pass,tphysf,tphys,iter
+*
       if(mt2.lt.tiny)then
          sep = 0.d0
          if(kst.gt.0)then
@@ -377,6 +394,9 @@
       eqspin = 0.d0
       djtt = 0.d0
 *
+      if(output) write(*,*)'1st in 5: ',tphys,dt,kw1,kw2,
+     & mass(1),mass(2),intpol,iter
+*
       if(intpol.eq.0.and.ABS(dtm).gt.tiny.and..not.sgl)then
          vorb2 = acc1*(mass(1)+mass(2))/sep
          ivsqm = 1.d0/SQRT(1.d0-ecc*ecc)
@@ -397,6 +417,8 @@
                dmt(3-k) = ivsqm*acc2*dmr(k)*((acc1*mass(3-k)/vwind2)**2)
      &                    /(2.d0*sep*sep*omv2)
                dmt(3-k) = MIN(dmt(3-k),0.8d0*dmr(k))
+               if(output) write(*,*)'wind1:',k,dmt(3-k),dmr(k),beta,
+     & ivsqm,acc1,acc2,vwind2
             else
                dmr(k) = 0.d0
                dmt(3-k) = 0.d0
@@ -471,7 +493,7 @@
             if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
                djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
                djspint(k) = djspint(k) + djmb
-
+*
 *            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
 *     &              menv(k).gt.0.0d0)then
 *              if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
@@ -488,6 +510,7 @@
                if(djmb.gt.tiny)then
                   dtj = 0.03d0*jspin(k)/ABS(djmb)
                   dt = MIN(dt,dtj)
+                  if(output) write(*,*)'mb1:',tphys,dt,djmb,djt
                endif
             endif
 *
@@ -550,6 +573,7 @@
 *
                dspint(k) = (3.d0*q(3-k)*tcqr/(rg2*omecc2**6))*
      &                     (f2*oorb - sqome3*f5*ospin(k))
+               if(output) write(*,*)'502 3:',k,dspint(k),tcqr
 *
 * Calculate the equilibrium spin at which no angular momentum 
 * can be transferred.
@@ -574,6 +598,7 @@
             dt = MIN(dt,dtj)
          endif
          dtm = dt/1.0d+06
+         if(output) write(*,*)'bin lim orb ang mom:',tphys,dt,kstar(1)
 *
       elseif(ABS(dtm).gt.tiny.and.sgl)then
          do 503 , k = kmin,kmax
@@ -586,6 +611,7 @@
             endif
             dmt(k) = 0.d0
             djspint(k) = (2.d0/3.d0)*dmr(k)*rad(k)*rad(k)*ospin(k)
+            if(output) write(*,*)'503 1:',k,djspint(k)
 *            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
 *               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
 *               djspint(k) = djspint(k) + djmb
@@ -596,6 +622,7 @@
                 if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
      &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
                 djspint(k) = djspint(k) + djmb
+                if(output) write(*,*)'503 2:',k,djspint(k),djmb
                 if(djmb.gt.tiny)then
                   dtj = 0.03d0*jspin(k)/ABS(djmb)
                   dt = MIN(dt,dtj)
@@ -627,6 +654,7 @@
                dt = 1.0d+06*dtm
             endif
          endif
+         if(output) write(*,*)'after 1p ml: ',tphys,k,dt,dtm
 *
  504  continue
 *
@@ -646,10 +674,15 @@
      &                k3*massc(k)*radc(k)*radc(k))*dspint(k)
                djorb = djorb + djt
                djspint(k) = djspint(k) - djt
+               if(output) write(*,*)'505: ',k,djt,djspint(k),jspin(k),dt
             endif
          endif
 *
+         if(output) write(*,*)'505 1:',tphys,k,kstar(k),djspint(k),
+     & djspint(k)*dt,jspin(k),intpol
          jspin(k) = MAX(1.0d-10,jspin(k) - djspint(k)*dt)
+         if(output) write(*,*)'505 2:',tphys,k,kstar(k),djspint(k),
+     & djspint(k)*dt,jspin(k)
 *
 * Ensure that the star does not spin up beyond break-up.
 *
@@ -711,6 +744,7 @@
          dtm0 = dtm
       endif
       tphys = tphys + dtm
+      if(output) write(*,*)'time upd:',tphys,dtm,kstar(1),kstar(2),ecc
 *
       do 6 , k = kmin,kmax
 *
@@ -811,6 +845,7 @@
             if(tphys-epoch(k).lt.tiny)then
                ospin(k) = 2.0d+08
                jspin(k) = k3*rc*rc*mc*ospin(k)
+               if(output) write(*,*)'SN: ',k,kstar(k),ospin(k),sigma
             endif
          endif
 *
@@ -826,6 +861,8 @@
 *
          dt = dtmi(k)
          CALL deltat(kw,age,tm,tn,tscls,dt,dtr)
+         if(output) write(*,*)'post deltat:',tphys,dt,dtr,kw,
+     & age,intpol,iter,k,kmin,kmax
 *
 * Choose minimum of time-scale and remaining interval.
 *
@@ -948,14 +985,19 @@
             bcm(ip,31) = sep
             bcm(ip,32) = ecc
             if(isave) tsave = tsave + dtp
+            if(output) write(*,*)'bcm1',kstar(1),kstar(2),mass(1),
+     & mass(2),rad(1),rad(2),ospin(1),ospin(2),jspin(1)
+*     & mass(2),rad(1),rad(2),ospin(1),ospin(2),B(1),B(2),jspin(1)
          endif
       endif
 *
 * If not interpolating set the next timestep.
 *
       if(intpol.eq.0)then
+         if(output) write(*,*)'nxt t, prior:',tphys,dtm,dtmi(1),dtmi(2)
          dtm = MAX(1.0d-07*tphys,MIN(dtmi(1),dtmi(2)))
          dtm = MIN(dtm,tsave-tphys)
+         if(output) write(*,*)'nxt t, after:',tphys,dtm,dtmi(1),dtmi(2)
          if(iter.eq.0) dtm0 = dtm
       endif
       if(sgl) goto 98
@@ -1145,6 +1187,9 @@
          bcm(ip,30) = tb
          bcm(ip,31) = sep
          bcm(ip,32) = ecc
+         if(output) write(*,*)'bcm2:',kstar(1),kstar(2),mass(1),
+     & mass(2),rad(1),rad(2),ospin(1),ospin(2),jspin(1)
+*     & mass(2),rad(1),rad(2),ospin(1),ospin(2),B(1),B(2),jspin(1)
       endif
 *
 * Eddington limit for accretion on to the secondary in one orbit.
@@ -1880,7 +1925,7 @@
             ospbru = twopi*SQRT(mass(k)*aursun**3/radx(k)**3)
             jspbru = (k2str(k)*(mass(k)-massc(k))*radx(k)*radx(k) +
      &                k3*massc(k)*radc(k)*radc(k))*ospbru
-            if(jspin(k).gt.jspbru)then
+            if((jspin(k).gt.jspbru))then
                mew = 1.d0
                if(djtx(2).gt.0.d0)then
                   mew = MIN(mew,(jspin(k) - jspbru)/djtx(2))
@@ -2142,6 +2187,9 @@
             bcm(ip,28) = (-1.0*dm1 - dms(2))/dt
          endif
          if(isave) tsave = tsave + dtp
+         if(output) write(*,*)'bcm3:',kstar(1),kstar(2),mass(1),
+     & mass(2),rad(1),rad(2),ospin(1),ospin(2),jspin(1)
+*     & mass(2),rad(1),rad(2),ospin(1),ospin(2),B(1),B(2),jspin(1)
       endif
 *
       if(tphys.ge.tphysf) goto 140
@@ -2214,11 +2262,16 @@
       kcomp1 = kstar(j1)
       kcomp2 = kstar(j2)
 *
+      if(output) write(*,*)'coal r/rl1 & r/rl2 > 0',tphys,kcomp1,kcomp2,
+     & m1ce,m2ce
+*
       if(kstar(j1).ge.2.and.kstar(j1).le.9.and.kstar(j1).ne.7)then
          CALL comenv(mass0(j1),mass(j1),massc(j1),aj(j1),jspin(j1),
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
      &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick)
+         if(output) write(*,*)'coal1:',tphys,kstar(j1),kstar(j2),coel,
+     & mass(j1),mass(j2)
          if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
      &      kstar(j1).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
@@ -2235,6 +2288,8 @@
      &               kstar(j2),mass0(j1),mass(j1),massc(j1),aj(j1),
      &               jspin(j1),kstar(j1),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick)
+         if(output) write(*,*)'coal2:',tphys,kstar(j1),kstar(j2),coel,
+     & mass(j1),mass(j2)
          if(j2.eq.2.and.kcomp1.eq.13.and.kstar(j1).eq.15.and.
      &      kstar(j2).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
@@ -2424,6 +2479,10 @@
             bcm(ip,14) = (dm2 - dms(1))/dt
             bcm(ip,28) = (-1.0*dm1 - dms(2))/dt
          endif
+         if(output) write(*,*)'bcm4:',kstar(1),kstar(2),mass(1),
+     & mass(2),rad(1),rad(2),ospin(1),ospin(2),jspin(1),
+     & tphys,tphysf
+*     & mass(2),rad(1),rad(2),ospin(1),ospin(2),B(1),B(2),jspin(1),
          if(isave) tsave = tsave + dtp
          if(tphysf.le.0.d0)then
             ip = ip + 1
@@ -2440,12 +2499,19 @@
       endif
       tb = tb*yeardy
       if(jp.ge.80)then
-         WRITE(99,*)' EVOLV2 ARRAY ERROR ',mass1i,mass2i,tbi,ecci
+         WRITE(99,*)' EVOLV2 ARRAY ERROR ',mass1i,mass2i,tbi,ecci,
+     & id1_pass,id2_pass,mass(1),mass(2)
 *         WRITE(*,*)' STOP: EVOLV2 ARRAY ERROR '
 *         CALL exit(0)
          STOP
       elseif(jp.ge.40)then
          WRITE(99,*)' EVOLV2 ARRAY WARNING ',mass1i,mass2i,tbi,ecci,jp
+      endif
+      if(iter.ge.loop)then
+         WRITE(99,*)'ITER>=LOOP:',jp,tphys,tphysf,dtp,kstar,age,kst,
+     & id1_pass,id2_pass,mass(1),mass(2),iter,loop
+         CALL exit(0)
+         STOP
       endif
       bcm(ip+1,1) = -1.0
       bpp(jp+1,1) = -1.0
