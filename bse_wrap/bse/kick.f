@@ -421,6 +421,10 @@ c$$$********ABOVE HAS BEEN ADDED********/\
             v3out = bkick(8)
          endif
       endif
+* Randomly rotate system
+      CALL randomness3(idum,bkick(2),bkick(3),bkick(4),bkick(6),
+     &            bkick(7),
+     &            bkick(8),bkick(10),bkick(11),bkick(12))
 *
       if(ecc.gt.99.9d0) ecc = 99.9d0
       if(output)then
@@ -428,12 +432,10 @@ c$$$********ABOVE HAS BEEN ADDED********/\
             vkout = sqrt(v1out*v1out+v2out*v2out+v3out*v3out)
             write(44,43)kw,m1,m1n,sigma,vk,v1out,v2out,v3out,vkout,
      &                  (bkick(l),l=1,12),id1_pass,id2_pass
-            flush(44) 
          else
             vkout = sqrt(v1out*v1out+v2out*v2out+v3out*v3out)
             write(45,47)kw,m1,m1n,sigma,vk,v1out,v2out,v3out,
      &                  vkout,id1_pass,id2_pass
-            flush(45)
          endif
       endif
  43   FORMAT(i3,1p,8e12.4,1x,12e12.4,1x,i10,i10)
@@ -443,4 +445,86 @@ c$$$********ABOVE HAS BEEN ADDED********/\
       RETURN
       END
 ***
+      SUBROUTINE randomness3(idum,vx1,vy1,vz1,vx2,vy2,vz2,
+     &                            vx3,vy3,vz3)
+*
+      implicit none
+*
+      INTEGER idum
+      real ran3
+      external ran3
+      INTEGER idum2,iy,ir(32)
+      COMMON /RAND3/ idum2,iy,ir
+      REAL*8 vx1,vy1,vz1,alpha,gamma,beta,pi,twopi,vx2,vy2,vz2
+      REAL*8 cg,sg,ca,sa,cb,sb,vx1s,vy1s,vz1s,vx2s,vy2s,vz2s
+      REAL*8 vx3,vy3,vz3,vx3s,vy3s,vz3s
+*
+* Introduce random orientation of binary system to the Galaxy/GC... u bastard.
+*
+      pi = ACOS(-1.d0)
+      twopi = 2.d0*pi
+      alpha = twopi*ran3(idum) - pi
+      gamma = twopi*ran3(idum) - pi
+      beta = pi*ran3(idum) - (pi/2.d0)
+*      write(80,*)alpha,gamma,beta
+      cg = COS(gamma)
+      sg = SIN(gamma)
+      ca = COS(alpha)
+      sa = SIN(alpha)
+      cb = COS(beta)
+      sb = SIN(beta)
+*
+* Randomized orientation
+*
+      vx1s = vx1
+      vy1s = vy1
+      vz1s = vz1
+      vx2s = vx2
+      vy2s = vy2
+      vz2s = vz2
+      vx3s = vx3
+      vy3s = vy3
+      vz3s = vz3
+* theta = b, phi = a, g = psi; pitch-roll-yaw; z-y-x axis rotations
+      vx1 = vx1s*(cb*ca)
+      vx1 = vx1 + vy1s*(cb*sa) 
+      vx1 = vx1 - vz1s*sb
+*     
+      vy1 = vx1s*(sg*sb*ca - cg*sa)
+      vy1 = vy1 + vy1s*(sg*sb*sa + cg*ca)
+      vy1 = vy1 + vz1s*(cb*sg)
+*     
+      vz1 = vx1s*(cg*sb*ca + sg*sa)
+      vz1 = vz1 + vy1s*(cg*sb*sa - sg*ca)
+      vz1 = vz1 + vz1s*(cb*cg)
+**
+**
+      vx2 = vx2s*(cb*ca)
+      vx2 = vx2 + vy2s*(cb*sa) 
+      vx2 = vx2 - vz2s*sb
+*     
+      vy2 = vx2s*(sg*sb*ca - cg*sa)
+      vy2 = vy2 + vy2s*(sg*sb*sa + cg*ca)
+      vy2 = vy2 + vz2s*(cb*sg)
+*     
+      vz2 = vx2s*(cg*sb*ca + sg*sa)
+      vz2 = vz2 + vy2s*(cg*sb*sa - sg*ca)
+      vz2 = vz2 + vz2s*(cb*cg)
+**
+**
+      vx3 = vx3s*(cb*ca)
+      vx3 = vx3 + vy3s*(cb*sa) 
+      vx3 = vx3 - vz3s*sb
+*     
+      vy3 = vx3s*(sg*sb*ca - cg*sa)
+      vy3 = vy3 + vy3s*(sg*sb*sa + cg*ca)
+      vy3 = vy3 + vz3s*(cb*sg)
+*     
+      vz3 = vx3s*(cg*sb*ca + sg*sa)
+      vz3 = vz3 + vy3s*(cg*sb*sa - sg*ca)
+      vz3 = vz3 + vz3s*(cb*cg)
+*
+*
+      RETURN
+      END
 *
