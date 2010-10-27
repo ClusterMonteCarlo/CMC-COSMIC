@@ -689,9 +689,14 @@
          ospbru = twopi*SQRT(mass(k)*aursun**3/rad(k)**3)
          jspbru = (k2str(k)*(mass(k)-massc(k))*rad(k)*rad(k) +
      &             k3*massc(k)*radc(k)*radc(k))*ospbru
-         if(jspin(k).gt.jspbru.and.ABS(dtm).gt.tiny)then
+         if((jspin(k).gt.jspbru.or.
+     &      (jspin(k).eq.1.0d-10.and.intpol.gt.0)).and.
+     &      ABS(dtm).gt.tiny)then !PDK add check for jspin intpol issues here.
+* If rapidly spinning star (generally NS) pushed over the edge (spins up so
+* much so that jspin would have become negative according to bse, so it sets
+* it to 1.d0-10) in intpol then give it the stars maximum spin.
             mew = 1.d0
-            if(djtx(k).gt.0.d0)then
+            if(djtx(k).gt.0.d0.and.jspin(k).gt.1.d0-10)then !dont go in here if jspin hit wall.
                mew = MIN(mew,(jspin(k) - jspbru)/djtx(k))
             endif
             jspin(k) = jspbru
@@ -1925,7 +1930,7 @@
             ospbru = twopi*SQRT(mass(k)*aursun**3/radx(k)**3)
             jspbru = (k2str(k)*(mass(k)-massc(k))*radx(k)*radx(k) +
      &                k3*massc(k)*radc(k)*radc(k))*ospbru
-            if((jspin(k).gt.jspbru))then
+            if(jspin(k).gt.jspbru)then
                mew = 1.d0
                if(djtx(2).gt.0.d0)then
                   mew = MIN(mew,(jspin(k) - jspbru)/djtx(2))
