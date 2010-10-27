@@ -46,6 +46,7 @@ void stellar_evolution_init(void){
   
   /* set collisions matrix */
   bse_instar();
+	dprintf("se_init: %g %g %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
   
   /* set initial properties of stars */
   for (k=1; k<=clus.N_MAX; k++) {
@@ -65,7 +66,11 @@ void stellar_evolution_init(void){
       /* evolve slightly (1 year) for initial radii */
       tphysf = 1.0e-6;
       dtp = tphysf - star[k].se_tphys;
+      dtp = 0.0;
       DMse += star[k].m * madhoc;
+  /* Update star id for pass through. */
+      bse_set_id1_pass(star[k].id);
+      bse_set_id2_pass(0);
       bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
 		 &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
 		 &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
@@ -103,7 +108,11 @@ void stellar_evolution_init(void){
       /* evolve slightly (1 year) for initial radii */
       tphysf = 1.0e-6;
       dtp = tphysf - binary[kb].bse_tphys;
+      dtp = 0.0;
       DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
+  /* Update star id for pass through. */
+      bse_set_id1_pass(binary[kb].id1);
+      bse_set_id2_pass(binary[kb].id2);
       bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
 		 &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
 		 &(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
@@ -129,6 +138,7 @@ void do_stellar_evolution(gsl_rng *rng){
     if (star[k].binind == 0) { /* single star */
         tphysf = TotalTime / MEGA_YEAR;
         dtp = tphysf;
+	dtp = 0.0;
         kprev = star[k].se_k;	  
 
         if (star[k].m<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
@@ -136,6 +146,9 @@ void do_stellar_evolution(gsl_rng *rng){
         	dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star[k].m, star[k].r, star[k].phi, star[k].vr, star[k].vt, star[k].E, star[k].J);	
      	} else {
         	DMse += star[k].m * madhoc;
+	/* Update star id for pass through. */
+		bse_set_id1_pass(star[k].id);
+		bse_set_id2_pass(0);
         	bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
   			&(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
 		   	&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
@@ -166,6 +179,7 @@ void do_stellar_evolution(gsl_rng *rng){
 	tphysf = TotalTime / MEGA_YEAR;
         kb = star[k].binind;
 	dtp = tphysf - binary[kb].bse_tphys;
+	dtp = 0.0;
 	if (star[k].m<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
 	  	dprintf ("zeroed out star: skipping SE:\n");	
 	  	dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star[k].m, binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
@@ -173,6 +187,9 @@ void do_stellar_evolution(gsl_rng *rng){
 	  	/* set binary orbital period (in days) from a */
 	 	binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
 	  	DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
+  /* Update star id for pass through. */
+		bse_set_id1_pass(binary[kb].id1);
+		bse_set_id2_pass(binary[kb].id2);
 	  	bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
 	  	     	&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
 		     	&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
@@ -437,6 +454,10 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     }
     /* here we do a safe single evolve, just in case the remaining star is a non self-consistent merger */
     dtp = tphysf - star[knew].se_tphys;
+    dtp = 0.0;
+  /* Update star id for pass through. */
+    bse_set_id1_pass(star[knew].id);
+    bse_set_id2_pass(0);
     bse_evolv1_safely(&(star[knew].se_k), &(star[knew].se_mass), &(star[knew].se_mt), &(star[knew].se_radius), 
 		      &(star[knew].se_lum), &(star[knew].se_mc), &(star[knew].se_rc), &(star[knew].se_menv), 
 		      &(star[knew].se_renv), &(star[knew].se_ospin), &(star[knew].se_epoch), &(star[knew].se_tms), 
@@ -499,6 +520,10 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     
     /* here we do a safe single evolve, just in case the remaining star is a non self-consistent merger */
     dtp = tphysf - star[knew].se_tphys;
+    dtp = 0.0;
+  /* Update star id for pass through. */
+    bse_set_id1_pass(star[knew].id);
+    bse_set_id2_pass(0);
     bse_evolv1_safely(&(star[knew].se_k), &(star[knew].se_mass), &(star[knew].se_mt), &(star[knew].se_radius), 
 		      &(star[knew].se_lum), &(star[knew].se_mc), &(star[knew].se_rc), &(star[knew].se_menv), 
 		      &(star[knew].se_renv), &(star[knew].se_ospin), &(star[knew].se_epoch), &(star[knew].se_tms), 

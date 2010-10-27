@@ -424,6 +424,8 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		/* Since the evolution time is so short in this routine, we can simply set dtp=0.0
 		   without worrying about the bcm arrays filling up. */
 		dtp = 0.0;
+		bse_set_id1_pass(tempbinary.id1);
+		bse_set_id2_pass(tempbinary.id2);
 		bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 			   &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 			   &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -570,6 +572,15 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		
 		/* here we do a safe single evolve, just in case the remaining star is a non self-consistent merger */
 		dtp = tphysf - merged_star->se_tphys;
+		dtp = 0.0;
+  /* Update star id for pass through. */
+		if(tbi==1){
+		  bse_set_id1_pass(tempbinary.id1);
+		  bse_set_id2_pass(0);
+		} else {
+		  bse_set_id1_pass(tempbinary.id2);
+		  bse_set_id2_pass(0);
+		}
 		bse_evolv1_safely(&(merged_star->se_k), &(merged_star->se_mass), &(merged_star->se_mt), &(merged_star->se_radius), 
 				  &(merged_star->se_lum), &(merged_star->se_mc), &(merged_star->se_rc), &(merged_star->se_menv), 
 				  &(merged_star->se_renv), &(merged_star->se_ospin), &(merged_star->se_epoch), &(merged_star->se_tms), 

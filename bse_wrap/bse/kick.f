@@ -56,14 +56,16 @@
       logical output
 *
       COMMON /VALUE4/ sigma,bhflag
-      real*8 mxns
-      COMMON /VALUE1/ mxns
+      real*8 mxns,neta,bwind,hewind
+      COMMON /VALUE1/ neta,bwind,hewind,mxns
       real*8 bkick(12)
 *      COMMON /VKICK/ bkick
       real ran3,xx
       external ran3
+      integer id1_pass,id2_pass
+      COMMON /cmcpass/ id1_pass,id2_pass
 *
-      output = .false. !useful for debugging...
+      output = .true. !useful for debugging...
       v1out = 0.d0
       v2out = 0.d0
       v3out = 0.d0
@@ -78,6 +80,10 @@
          kickscale = 10.d0
       endif
       sigmah = sigma
+      if(output)then
+         write(48,49)kw,m1,m1n,m2,ecc,sep,snstar,fallback,
+     &               bhflag,sigma,mxns,id1_pass,id2_pass
+      endif
 *      if(kw.lt.0)then
 *         sigma = 20.d0
 *         kw = ABS(kw)
@@ -417,21 +423,24 @@ c$$$********ABOVE HAS BEEN ADDED********/\
       endif
 *
       if(ecc.gt.99.9d0) ecc = 99.9d0
-      if(kw.eq.13.and.output)then
+      if(output)then
          if(sep.le.0.d0.or.ecc.ge.1.d0)then
             vkout = sqrt(v1out*v1out+v2out*v2out+v3out*v3out)
             write(44,43)kw,m1,m1n,sigma,vk,v1out,v2out,v3out,vkout,
-     &                  (bkick(l),l=1,12)
+     &                  (bkick(l),l=1,12),id1_pass,id2_pass
             flush(44) 
          else
             vkout = sqrt(v1out*v1out+v2out*v2out+v3out*v3out)
-            write(45,47)kw,m1,m1n,sigma,vk,v1out,v2out,v3out,vkout
+            write(45,47)kw,m1,m1n,sigma,vk,v1out,v2out,v3out,
+     &                  vkout,id1_pass,id2_pass
             flush(45)
          endif
       endif
- 43   FORMAT(i3,1p,8e12.4,1x,12e12.4)
- 47   FORMAT(i3,1p,8e12.4)
+ 43   FORMAT(i3,1p,8e12.4,1x,12e12.4,1x,i10,i10)
+ 47   FORMAT(i3,1p,8e12.4,1x,i10,i10)
+ 49   FORMAT(i3,1p,5e12.4,1x,0p,i3,f12.4,1x,i3,f12.4,f12.4,1x,i10,i10)
 *
       RETURN
       END
 ***
+*
