@@ -571,7 +571,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	fb_obj_t threeobjs[3];
 	char string1[1024], string2[1024];
 	star_t tempstar, tempstar2;
-	double vs[12];
+	double vs[12], VK0;
 
 	/* perform actions that are specific to the type of binary interaction */
 	if (star[k].binind != 0 && star[kp].binind != 0) {
@@ -812,11 +812,16 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs);
                                                 /* Owing to merger only useful vs's are v[1-3] */
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-						star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
 					
 					star[knew].id = star_get_id_new();
+					if(vs[1]!=0.0){
+						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
+						dprintf("dynhelp_merge1: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,star[knew].id);
+					}
 					
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
@@ -870,7 +875,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
 						}
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
 
@@ -878,6 +884,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 0);
 
 					binary[star[knew].binind].id1 = star_get_id_new();
+					if(vs[1]!=0.0){
+						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
+						dprintf("dynhelp_merge2: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id1);
+					}
 					
                                         /* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
@@ -918,7 +928,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
 						}
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
 					
@@ -926,6 +937,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 1);
 
 					binary[star[knew].binind].id2 = star_get_id_new();
+					if(vs[1]!=0.0){
+						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
+						dprintf("dynhelp_merge3: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id2);
+					}
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id2,
@@ -1003,11 +1018,16 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_m_to_star(oldk, bi, &tempstar);
 						merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs);
 						star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+						vt_add_kick(&(star[knewp].vt),vs[1],vs[2]);
+						//star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knewp);
 					
 					star[knewp].id = star_get_id_new();
+					if(vs[1]!=0.0){
+						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
+						dprintf("dynhelp_merge4: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,star[knewp].id);
+					}
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						star[knewp].id, star[knewp].m, 
@@ -1059,7 +1079,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
 						}
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
 					
@@ -1067,6 +1088,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 0);
 
 					binary[star[knew].binind].id1 = star_get_id_new();
+					if(vs[1]!=0.0){
+						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
+						dprintf("dynhelp_merge5: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id1);
+					}
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id1,
@@ -1099,7 +1124,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
 						}
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
 					
@@ -1456,3 +1482,18 @@ double Etide(double rperi, double Mosc, double Rosc, double nosc, double Mpert)
 
 	return(sqr(Mpert)/Rosc * (pow(Rosc/rperi, 6.0) * Tl(2, nosc, eta) + pow(Rosc/rperi, 8.0) * Tl(3, nosc, eta)));
 }
+
+/* Add kicks to vt */
+ void vt_add_kick(double *vt, double vs1, double vs2)
+{
+	double X, theta, vtx, vty;
+	X = rng_t113_dbl();
+	theta = 2.0 * PI * X;
+	vtx = *vt*sin(theta);
+	vty = *vt*cos(theta);
+	vtx = vtx + vs1*1.0e5/(units.l/units.t);
+	vty = vty + vs2*1.0e5/(units.l/units.t);
+	*vt = sqrt(vtx*vtx+vty*vty);
+}
+
+

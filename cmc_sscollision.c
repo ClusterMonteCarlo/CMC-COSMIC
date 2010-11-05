@@ -244,7 +244,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		star[knew].vr = vcm[3];
 		star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 		star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-		star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+		vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+		//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 		star[knew].phi = potential(star[knew].r);
 		set_star_EJ(knew);
 		set_star_news(knew);
