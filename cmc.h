@@ -658,6 +658,7 @@ double find_root_vr(long index, long k, double E, double J);
 double calc_pot_in_interval(double r, long k);
 void remove_star(long j, double phi_rtidal, double phi_zero);
 inline double function_q(long j, long double r, long double pot, long double E, long double J);
+void vt_add_kick(double *vt, double vs1, double vs2);
 
 void parse_snapshot_windows(char *option_string);
 void print_snapshot_windows(void);
