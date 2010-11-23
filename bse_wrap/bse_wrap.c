@@ -144,7 +144,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
   double mymass0[2], mymass[2], myrad[2], mylum[2], mymassc[2], myradc[2], mymenv[2], myrenv[2], myospin[2], myepoch[2];
   double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[12];
 
-  do {
+  //  do {
     kattempt++;
     for (j=0; j<2; j++) {
       mykstar[j] = kstar[j];
@@ -173,6 +173,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
     myecc = *ecc;
     bse_evolv2(mykstar, mymass0, mymass, myrad, mylum, mymassc, myradc, mymenv, myrenv, myospin,
 	       myepoch, mytms, &mytphys, &mytphysf, &mydtp, z, zpars, &mytb, &myecc, myvs);
+    /*
   } while ((isnan(myrad[0]) || mymassc[0] < 0.0 || mymass[0] < 0.0 || mymass0[0] < 0.0 || mylum[0] < 0.0 || 
 	    isnan(myrad[1]) || mymassc[1] < 0.0 || mymass[1] < 0.0 || mymass0[1] < 0.0 || mylum[1] < 0.0) && tphystried > 0.0);
   
@@ -182,6 +183,43 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
   } else if (kattempt > 1) {
     fprintf(stderr, "bse_evolv2_safely(): Artifical age reduction succeeded.\n");
     fprintf(stderr, "bse_evolv2_safely(): kattempt=%d age_reduction=%g Myr.\n", kattempt, *tphys-tphystried);
+  }
+    */
+  if(isnan(myrad[0])){
+	fprintf(stderr, "An isnan occured for r1\n");
+	fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", *tphys, *tphysf, kstar[0], kstar[1], mass[0], mass[1], rad[0], rad[1], lum[0], lum[1]);
+	fprintf(stderr, "mytphys=%g mytphysf=%g mykw1=%d mykw2=%d mym1=%g mym2=%g myr1=%g myr2=%g myl1=%g myl2=%g \n", mytphys, mytphysf, mykstar[0], mykstar[1], mymass[0], mymass[1], myrad[0], myrad[1], mylum[0], mylum[1]);
+	exit(1);
+  }
+  if(isnan(myrad[1])){
+	fprintf(stderr, "An isnan occured for r2\n");
+	fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", *tphys, *tphysf, kstar[0], kstar[1], mass[0], mass[1], rad[0], rad[1], lum[0], lum[1], tb);
+	fprintf(stderr, "mytphys=%g mytphysf=%g mykw1=%d mykw2=%d mym1=%g mym2=%g myr1=%g myr2=%g myl1=%g myl2=%g \n", mytphys, mytphysf, mykstar[0], mykstar[1], mymass[0], mymass[1], myrad[0], myrad[1], mylum[0], mylum[1]);
+	exit(1);
+  }
+  if(mymass[0]<0.0){
+	fprintf(stderr, "Mymass1<0.0\n");
+	fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", *tphys, *tphysf, kstar[0], kstar[1], mass[0], mass[1], rad[0], rad[1], lum[0], lum[1]);
+	fprintf(stderr, "mytphys=%g mytphysf=%g mykw1=%d mykw2=%d mym1=%g mym2=%g myr1=%g myr2=%g myl1=%g myl2=%g \n", mytphys, mytphysf, mykstar[0], mykstar[1], mymass[0], mymass[1], myrad[0], myrad[1], mylum[0], mylum[1]);
+	exit(1);
+  }
+  if(mymass[1]<0.0){
+	fprintf(stderr, "Mymass2<0.0\n");
+	fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", *tphys, *tphysf, kstar[0], kstar[1], mass[0], mass[1], rad[0], rad[1], lum[0], lum[1]);
+	fprintf(stderr, "mytphys=%g mytphysf=%g mykw1=%d mykw2=%d mym1=%g mym2=%g myr1=%g myr2=%g myl1=%g myl2=%g \n", mytphys, mytphysf, mykstar[0], mykstar[1], mymass[0], mymass[1], myrad[0], myrad[1], mylum[0], mylum[1]);
+	exit(1);
+  }
+  if(mylum[0]<0.0){
+	fprintf(stderr, "Mylum1<0.0\n");
+	fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", *tphys, *tphysf, kstar[0], kstar[1], mass[0], mass[1], rad[0], rad[1], lum[0], lum[1]);
+	fprintf(stderr, "mytphys=%g mytphysf=%g mykw1=%d mykw2=%d mym1=%g mym2=%g myr1=%g myr2=%g myl1=%g myl2=%g \n", mytphys, mytphysf, mykstar[0], mykstar[1], mymass[0], mymass[1], myrad[0], myrad[1], mylum[0], mylum[1]);
+	exit(1);
+  }
+  if(mylum[1]<0.0){
+	fprintf(stderr, "Mylum2<0.0\n");
+	fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", *tphys, *tphysf, kstar[0], kstar[1], mass[0], mass[1], rad[0], rad[1], lum[0], lum[1]);
+	fprintf(stderr, "mytphys=%g mytphysf=%g mykw1=%d mykw2=%d mym1=%g mym2=%g myr1=%g myr2=%g myl1=%g myl2=%g \n", mytphys, mytphysf, mykstar[0], mykstar[1], mymass[0], mymass[1], myrad[0], myrad[1], mylum[0], mylum[1]);
+	exit(1);
   }
   
   for (j=0; j<2; j++) {
