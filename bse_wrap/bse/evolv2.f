@@ -160,7 +160,7 @@
       INTEGER ceflag,tflag,ifflag,nsflag,wdflag
       COMMON /FLAGS/ ceflag,tflag,ifflag,nsflag,wdflag
 *
-      REAL*8 km,km0,tphys,tphys0,dtm0,tphys00
+      REAL*8 km,km0,tphys,tphys0,dtm0,tphys00,tphysfhold
       REAL*8 tphysf,dtp,tsave
       REAL*8 aj(2),aj0(2),epoch(2),tms(2),tbgb(2),tkh(2),dtmi(2)
       REAL*8 mass0(2),mass(2),massc(2),menv(2),mass00(2),mcxx(2)
@@ -227,8 +227,8 @@
 *                       WARNING: can fill up the output file very quickly. 
 *                       With N=2e6 .stdout was 3.2 GB in 6 mins. If needed you can
 *                       be more selective with outputting, but must add this yourself!
-*      if(id1_pass.eq.73637.and.tphysf.gt.17.50d0.and.
-*     &   tphysf.lt.17.6d0)then
+*      if(id1_pass.eq.1)then!.and.tphysf.gt.17.50d0.and.
+**     &   tphysf.lt.17.6d0)then
 *         output = .true.
 *      endif
 *
@@ -239,6 +239,7 @@
       sgl = .false.
       mt2 = MIN(mass(1),mass(2))
       kst = 0
+      iter = 0 ! PDK addition, just incase you bail out before 4 loop (usually from multiple calls for one evolve)
 *
       if(mt2.lt.tiny.or.tb.le.0.d0)then
          sgl = .true.
@@ -259,6 +260,7 @@
                endif
                ospin(1) = 1.0d-10
                jspin(1) = 1.0d-10
+               dtmi(1) = 5.0d+04 !5Gyr, added for use of single stars in evolv2.f
             else
                if(tphys.lt.tiny)then
                   mass0(2) = 0.01d0
@@ -274,6 +276,7 @@
                endif
                ospin(2) = 1.0d-10
                jspin(2) = 1.0d-10
+               dtmi(2) = 5.0d+04 !5Gyr, added for use of single stars in evolv2.f
             endif
          endif
          ecc = -1.d0
@@ -1117,7 +1120,8 @@
       iter = iter + 1
 *
       if(iter.ge.loop)then
-         WRITE(99,*)' MAXIMUM ITER EXCEEDED ',mass1i,mass2i,tbi,ecci
+         WRITE(99,*)' MAXIMUM ITER EXCEEDED ',mass1i,mass2i,tbi,ecci,
+     & tphysf
          goto 140
       endif
       goto 5
@@ -2497,6 +2501,7 @@
          endif
       endif
 *
+      tphysfhold = tphysf
       tphysf = tphys
       if(sgl)then
          if(ecc.ge.0.d0.and.ecc.le.1.d0) ecc = -1.d0
@@ -2513,7 +2518,7 @@
          WRITE(99,*)' EVOLV2 ARRAY WARNING ',mass1i,mass2i,tbi,ecci,jp
       endif
       if(iter.ge.loop)then
-         WRITE(99,*)'ITER>=LOOP:',jp,tphys,tphysf,dtp,kstar,age,kst,
+         WRITE(99,*)'ITER>=LOOP:',jp,tphys,tphysfhold,dtp,kstar,age,kst,
      & id1_pass,id2_pass,mass(1),mass(2),iter,loop
          CALL exit(0)
          STOP
