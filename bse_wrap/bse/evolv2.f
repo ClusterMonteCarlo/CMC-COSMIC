@@ -772,7 +772,8 @@
 * evolution formulae.
 *
          if(mt.gt.100.d0)then
-            WRITE(99,*)' MASS EXCEEDED ',mass1i,mass2i,tbi,ecci,mt
+            WRITE(99,*)' MASS EXCEEDED ',mass1i,mass2i,tbi,ecci,mt,
+     & tphysf,id1_pass,id2_pass
 *            goto 140
          endif
 *
@@ -1121,7 +1122,7 @@
 *
       if(iter.ge.loop)then
          WRITE(99,*)' MAXIMUM ITER EXCEEDED ',mass1i,mass2i,tbi,ecci,
-     & tphysf
+     & tphysf,id1_pass,id2_pass
          goto 140
       endif
       goto 5
@@ -2037,7 +2038,8 @@
 * evolution formulae.
 *
          if(mt.gt.100.d0)then
-            WRITE(99,*)' MASS EXCEEDED ',mass1i,mass2i,tbi,ecci,mt
+            WRITE(99,*)' MASS EXCEEDED ',mass1i,mass2i,tbi,ecci,mt,
+     & tphysf,id1_pass,id2_pass
 *            goto 140
          endif
          kw = kstar(k)
