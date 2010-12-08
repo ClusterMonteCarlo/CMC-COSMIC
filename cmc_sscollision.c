@@ -445,6 +445,44 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    tempbinary.bse_tb = sqrt(cub(tempbinary.a * units.l / AU)/(tempbinary.bse_mass[0]+tempbinary.bse_mass[1]))*365.25;
 		    dtp = 0.0;
 		    tphysf += 1.0e-6;
+		    // PDK added...			
+		    tempbinary.bse_mass0[0] = star1->se_mass;
+		    tempbinary.bse_mass0[1] = star2->se_mass;
+		    tempbinary.bse_kw[0] = star1->se_k;
+		    tempbinary.bse_kw[1] = star2->se_k;
+		    tempbinary.bse_mass[0] = star1->se_mt;
+		    tempbinary.bse_mass[1] = star2->se_mt;
+		    tempbinary.bse_ospin[0] = star1->se_ospin;
+		    tempbinary.bse_ospin[1] = star2->se_ospin;
+		    /*
+		    tempbinary.bse_B_0[0] = star1->se_B_0; // PK add pulsar stuff here
+		    tempbinary.bse_B_0[1] = star2->se_B_0;
+		    tempbinary.bse_bacc[0] = star1->se_bacc;
+		    tempbinary.bse_bacc[1] = star2->se_bacc;
+		    tempbinary.bse_tacc[0] = star1->se_tacc;
+		    tempbinary.bse_tacc[1] = star2->se_tacc;
+		    tempbinary.bse_bcm_B[0] = star1->se_scm_B;
+		    tempbinary.bse_bcm_B[1] = star2->se_scm_B;
+		    tempbinary.bse_bcm_formation[0] = star1->se_scm_formation;
+		    tempbinary.bse_bcm_formation[1] = star2->se_scm_formation;
+		    */
+		    tempbinary.bse_epoch[0] = star1->se_epoch;
+		    tempbinary.bse_epoch[1] = star2->se_epoch;
+		    tempbinary.bse_tphys = star1->se_tphys;
+		    tempbinary.bse_radius[0] = star1->se_radius;
+		    tempbinary.bse_radius[1] = star2->se_radius;
+		    tempbinary.bse_lum[0] = star1->se_lum;
+		    tempbinary.bse_lum[1] = star2->se_lum;
+		    tempbinary.bse_massc[0] = star1->se_mc;
+		    tempbinary.bse_massc[1] = star2->se_mc;
+		    tempbinary.bse_radc[0] = star1->se_rc;
+		    tempbinary.bse_radc[1] = star2->se_rc;
+		    tempbinary.bse_menv[0] = star1->se_menv;
+		    tempbinary.bse_menv[1] = star2->se_menv;
+		    tempbinary.bse_renv[0] = star1->se_renv;
+		    tempbinary.bse_renv[1] = star2->se_renv;
+		    tempbinary.bse_tms[0] = star1->se_tms;
+		    tempbinary.bse_tms[1] = star2->se_tms; 
 		    bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 				      &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 				      &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -583,18 +621,22 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    bse_set_id1_pass(tempbinary.id2);
 		    bse_set_id2_pass(0);
 		  }
+		  /* REMOVED EVOLV1 CALL
 		  bse_evolv1_safely(&(merged_star->se_k), &(merged_star->se_mass), &(merged_star->se_mt), &(merged_star->se_radius), 
 				    &(merged_star->se_lum), &(merged_star->se_mc), &(merged_star->se_rc), &(merged_star->se_menv), 
 				    &(merged_star->se_renv), &(merged_star->se_ospin), &(merged_star->se_epoch), &(merged_star->se_tms), 
 				    &(merged_star->se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vsaddl);
+		  */
 		  
 		  /*		vs[0] += vsaddl[0];
 		    vs[1] += vsaddl[1];
 		    vs[2] += vsaddl[2]; */
 		  /* PDK vs array has now been increased. Although only 1st 3 would be used here anyways. */
+		  /* DONT GIVE MULTIPLE KICKS WHEN NOT USING EVOLV1
 		  for (i=0; i<=11; i++) {
                     vs[i] += vsaddl[i];
 		  }
+		  */
 		  merged_star->rad = merged_star->se_radius * RSUN / units.l;
 		  merged_star->m = merged_star->se_mt * MSUN / units.mstar;
 		} else {

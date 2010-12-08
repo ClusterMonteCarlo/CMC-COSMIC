@@ -53,7 +53,7 @@
 *
 *
       mass0 = mass
-      if(mass0.gt.100.d0) mass = 100.d0
+C      if(mass0.gt.100.d0) mass = 100.d0
 *
       if(kw.ge.7.and.kw.le.9) goto 90
       if(kw.ge.10) goto 95
@@ -227,10 +227,10 @@
          endif
       endif
       tscls(14) = MAX(tbagb,tscls(14))
-      if(mass.ge.100.d0)then
-         tn = tscls(2)
-         goto 100
-      endif
+C      if(mass.ge.100.d0)then
+C         tn = tscls(2)
+C         goto 100
+C      endif
 *
 * Calculate the nuclear timescale - the time of exhausting
 * nuclear fuel without further mass loss.

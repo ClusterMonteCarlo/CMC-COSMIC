@@ -11,6 +11,7 @@ void stellar_evolution_init(void){
   double tphysf, dtp, vs[12];
   int i;
   long k, kb;
+  binary_t tempbinary;
   
   /* SSE */
   /* bse_set_hewind(0.5); */
@@ -46,7 +47,7 @@ void stellar_evolution_init(void){
   
   /* set collisions matrix */
   bse_instar();
-	dprintf("se_init: %g %g %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
+  dprintf("se_init: %g %g %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
   
   /* set initial properties of stars */
   for (k=1; k<=clus.N_MAX; k++) {
@@ -71,10 +72,72 @@ void stellar_evolution_init(void){
   /* Update star id for pass through. */
       bse_set_id1_pass(star[k].id);
       bse_set_id2_pass(0);
+      tempbinary.bse_mass0[0] = star[k].se_mass;
+      tempbinary.bse_mass0[1] = 0.0;
+      tempbinary.bse_kw[0] = star[k].se_k;
+      tempbinary.bse_kw[1] = 15;
+      tempbinary.bse_mass[0] = star[k].se_mt;
+      tempbinary.bse_mass[1] = 0.0;
+      tempbinary.bse_radius[0] = star[k].se_radius;
+      tempbinary.bse_radius[1] = 0.0;
+      tempbinary.bse_lum[0] = star[k].se_lum;
+      tempbinary.bse_lum[1] = 0.0;
+      tempbinary.bse_massc[0] = star[k].se_mc;
+      tempbinary.bse_massc[1] = 0.0;
+      tempbinary.bse_radc[0] = star[k].se_rc;
+      tempbinary.bse_radc[1] = 0.0;
+      tempbinary.bse_menv[0] = star[k].se_menv;
+      tempbinary.bse_menv[1] = 0.0;
+      tempbinary.bse_renv[0] = star[k].se_renv;
+      tempbinary.bse_renv[1] = 0.0;
+      tempbinary.bse_ospin[0] = star[k].se_ospin;
+      tempbinary.bse_ospin[1] = 0.0;
+      /*
+      tempbinary.bse_B_0[0] = star[k].se_B_0;
+      tempbinary.bse_B_0[1] = 0.0;
+      tempbinary.bse_bacc[0] = star[k].se_bacc;
+      tempbinary.bse_bacc[1] = 0.0;
+      tempbinary.bse_tacc[0] = star[k].se_tacc;
+      tempbinary.bse_tacc[1] = 0.0;
+      */
+      tempbinary.bse_epoch[0] = star[k].se_epoch;
+      tempbinary.bse_epoch[1] = 0.0;
+      tempbinary.bse_tms[0] = star[k].se_tms;
+      tempbinary.bse_tms[1] = 0.0;
+      tempbinary.bse_tb = 0.0;
+      tempbinary.e = 0.0;
+      /*
       bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
 		 &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
 		 &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 		 &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+      */
+      bse_evolv2(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
+			&(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
+			&(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
+			&(tempbinary.bse_ospin[0]),
+			&(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
+			&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+			&(tempbinary.bse_tb), &(tempbinary.e), vs);
+
+      star[k].se_mass = tempbinary.bse_mass0[0];
+      star[k].se_k = tempbinary.bse_kw[0];
+      star[k].se_mt = tempbinary.bse_mass[0];
+      star[k].se_radius = tempbinary.bse_radius[0];
+      star[k].se_lum = tempbinary.bse_lum[0];
+      star[k].se_mc = tempbinary.bse_massc[0];
+      star[k].se_rc = tempbinary.bse_radc[0];
+      star[k].se_menv = tempbinary.bse_menv[0];
+      star[k].se_renv = tempbinary.bse_renv[0];
+      star[k].se_ospin = tempbinary.bse_ospin[0];
+      /*
+      star[k].se_B_0 = tempbinary.bse_B_0[0];
+      star[k].se_bacc = tempbinary.bse_bacc[0];
+      star[k].se_tacc = tempbinary.bse_tacc[0];
+      */
+      star[k].se_epoch = tempbinary.bse_epoch[0];
+      star[k].se_tms = tempbinary.bse_tms[0];
+
       star[k].rad = star[k].se_radius * RSUN / units.l;
       star[k].m = star[k].se_mt * MSUN / units.mstar;
       DMse -= star[k].m * madhoc;
@@ -132,6 +195,7 @@ void do_stellar_evolution(gsl_rng *rng){
   long k, kb;
   int kprev,i;
   double dtp, tphysf, vs[12], VKO;
+  binary_t tempbinary;
   /* double vk, theta; */
   
   //for(k=1; k<=clus.N_MAX; k++){
@@ -150,10 +214,71 @@ void do_stellar_evolution(gsl_rng *rng){
 	/* Update star id for pass through. */
 		bse_set_id1_pass(star[k].id);
 		bse_set_id2_pass(0);
+		tempbinary.bse_mass0[0] = star[k].se_mass;
+		tempbinary.bse_mass0[1] = 0.0;
+		tempbinary.bse_kw[0] = star[k].se_k;
+		tempbinary.bse_kw[1] = 15;
+		tempbinary.bse_mass[0] = star[k].se_mt;
+		tempbinary.bse_mass[1] = 0.0;
+		tempbinary.bse_radius[0] = star[k].se_radius;
+		tempbinary.bse_radius[1] = 0.0;
+		tempbinary.bse_lum[0] = star[k].se_lum;
+		tempbinary.bse_lum[1] = 0.0;
+		tempbinary.bse_massc[0] = star[k].se_mc;
+		tempbinary.bse_massc[1] = 0.0;
+		tempbinary.bse_radc[0] = star[k].se_rc;
+		tempbinary.bse_radc[1] = 0.0;
+		tempbinary.bse_menv[0] = star[k].se_menv;
+		tempbinary.bse_menv[1] = 0.0;
+		tempbinary.bse_renv[0] = star[k].se_renv;
+		tempbinary.bse_renv[1] = 0.0;
+		tempbinary.bse_ospin[0] = star[k].se_ospin;
+		tempbinary.bse_ospin[1] = 0.0;
+		/*
+		tempbinary.bse_B_0[0] = star[k].se_B_0;
+		tempbinary.bse_B_0[1] = 0.0;
+		tempbinary.bse_bacc[0] = star[k].se_bacc;
+		tempbinary.bse_bacc[1] = 0.0;
+		tempbinary.bse_tacc[0] = star[k].se_tacc;
+		tempbinary.bse_tacc[1] = 0.0;
+		*/
+		tempbinary.bse_epoch[0] = star[k].se_epoch;
+		tempbinary.bse_epoch[1] = 0.0;
+		tempbinary.bse_tms[0] = star[k].se_tms;
+		tempbinary.bse_tms[1] = 0.0;
+		tempbinary.bse_tb = 0.0;
+		tempbinary.e = 0.0;
+		/*
         	bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
   			&(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
 		   	&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 		   	&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+		*/
+		bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
+				  &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
+				  &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
+				  &(tempbinary.bse_ospin[0]), 
+				  &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
+				  &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+				  &(tempbinary.bse_tb), &(tempbinary.e), vs);
+
+		star[k].se_mass = tempbinary.bse_mass0[0];
+		star[k].se_k = tempbinary.bse_kw[0];
+		star[k].se_mt = tempbinary.bse_mass[0];
+		star[k].se_radius = tempbinary.bse_radius[0];
+		star[k].se_lum = tempbinary.bse_lum[0];
+		star[k].se_mc = tempbinary.bse_massc[0];
+		star[k].se_rc = tempbinary.bse_radc[0];
+		star[k].se_menv = tempbinary.bse_menv[0];
+		star[k].se_renv = tempbinary.bse_renv[0];
+		star[k].se_ospin = tempbinary.bse_ospin[0];
+		/*
+		star[k].se_B_0 = tempbinary.bse_B_0[0];
+		star[k].se_bacc = tempbinary.bse_bacc[0];
+		star[k].se_tacc = tempbinary.bse_tacc[0];
+		*/
+		star[k].se_epoch = tempbinary.bse_epoch[0];
+		star[k].se_tms = tempbinary.bse_tms[0];
       
         	star[k].rad = star[k].se_radius * RSUN / units.l;
         	star[k].m = star[k].se_mt * MSUN / units.mstar;
@@ -518,15 +643,19 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
   /* Update star id for pass through. */
     bse_set_id1_pass(star[knew].id);
     bse_set_id2_pass(0);
+    /* HAVE REMOVED SAFE SINGLE EVOLVE BELIEVING THAT NOW SELF-CONSISTENT MERGERS SHOULD ALWAYS RESULT
     bse_evolv1_safely(&(star[knew].se_k), &(star[knew].se_mass), &(star[knew].se_mt), &(star[knew].se_radius), 
 		      &(star[knew].se_lum), &(star[knew].se_mc), &(star[knew].se_rc), &(star[knew].se_menv), 
 		      &(star[knew].se_renv), &(star[knew].se_ospin), &(star[knew].se_epoch), &(star[knew].se_tms), 
 		      &(star[knew].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+    */
     
     star[knew].rad = star[knew].se_radius * RSUN / units.l;
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
     DMse -= star[knew].m * madhoc;
+
     /* birth kicks */
+    /* ALSO REMOVE BELOW AS WE NOW WONT PRODUCE ANOTHER KICK
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
     }
@@ -539,6 +668,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
 	dprintf("birth kick(iso3): TT=%.18g, vs[0]=%.18g, vs[1]=%.18g, vs[2]=%.18g, vs[3]=%.18g, vr=%.18g, vt=%.18g, VKO=%.18g, id=%ld id1=%ld id2=%ld type1=%d type2=15\n",TotalTime,vs[0],vs[1],vs[2],vs[3],star[k].vr,star[k].vt,VKO,star[knew].id,binary[kb].id1,binary[kb].id2,star[knew].se_k);
     }
+    */
   } else if (binary[kb].bse_mass[0] == 0.0 && binary[kb].bse_mass[1] != 0.0) {
     /* primary star gone */
     //dprintf("binary disrupted via BSE with second star intact\n");
@@ -600,17 +730,21 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     dtp = tphysf - star[knew].se_tphys;
     dtp = 0.0;
   /* Update star id for pass through. */
+    /* REMOVED AS PART OF EVOLV1 PHASE OUT
     bse_set_id1_pass(star[knew].id);
     bse_set_id2_pass(0);
     bse_evolv1_safely(&(star[knew].se_k), &(star[knew].se_mass), &(star[knew].se_mt), &(star[knew].se_radius), 
 		      &(star[knew].se_lum), &(star[knew].se_mc), &(star[knew].se_rc), &(star[knew].se_menv), 
 		      &(star[knew].se_renv), &(star[knew].se_ospin), &(star[knew].se_epoch), &(star[knew].se_tms), 
 		      &(star[knew].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+    */
     
     star[knew].rad = star[knew].se_radius * RSUN / units.l;
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
-    DMse -= star[knew].m * madhoc;    
+    DMse -= star[knew].m * madhoc; 
+
     /* birth kicks */
+    /* REMOVED AGAIN NOT TO ADD KICK AGAIN
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
     }
@@ -623,6 +757,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
 	dprintf("birth kick(iso6): TT=%.18g, vs[0]=%.18g, vs[1]=%.18g, vs[2]=%.18g, vs[3]=%.18g, vr=%.18g, vt=%.18g, VK=%.18g type1=15 type2=%d\n",TotalTime,vs[0],vs[1],vs[2],vs[3],star[k].vr,star[k].vt,VKO,star[knew].se_k);
     }
+    */
   } else if (binary[kb].bse_mass[0] == 0.0 && binary[kb].bse_mass[1] == 0.0) {
     /* both stars gone */
     //dprintf("binary disrupted via BSE with no stars intact\n");
