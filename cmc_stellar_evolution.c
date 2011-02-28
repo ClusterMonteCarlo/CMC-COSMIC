@@ -328,6 +328,18 @@ void do_stellar_evolution(gsl_rng *rng){
 		     	&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
 		     	&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 		     	&(binary[kb].bse_tb), &(binary[kb].e), vs);
+		if(isnan(binary[kb].bse_radius[0])){
+		  fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
+		  fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1], binary[kb].bse_tb);
+		  fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
+		  exit(1);
+		} 
+		if(isnan(binary[kb].bse_radius[1])){
+		  fprintf(stderr, "An isnan occured for r2 cmc_stellar_evolution.c\n");
+		  fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1]);
+		  fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
+		  exit(1);
+		}
 	  	handle_bse_outcome(k, kb, vs, tphysf);
 	}
     }

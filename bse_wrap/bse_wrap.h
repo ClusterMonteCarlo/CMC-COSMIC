@@ -21,6 +21,33 @@
 #include <stdlib.h>
 #include <math.h>
 
+/* A structure used to pass binary information along to bse_wrap.c . */
+typedef struct{
+	double a; /* semimajor axis */
+	double e; /* eccentricity */
+	int bse_kw[2]; /* star types */
+	double bse_mass0[2]; /* initial masses */
+	double bse_mass[2]; /* masses */
+	double bse_radius[2]; /* radii */
+	double bse_lum[2]; /* luminosity */
+	double bse_massc[2];
+	double bse_radc[2];
+	double bse_menv[2];
+	double bse_renv[2];
+	double bse_ospin[2]; /* original spin */
+        double bse_B_0[2]; /* Pulsar magnetic field */
+        double bse_bacc[2]; /* Amount of mass pulsar has accreted */
+        double bse_tacc[2]; /* Amount of time pulsar has spent accreting */
+	double bse_epoch[2];
+	double bse_tms[2];
+	double bse_tphys; /* physical time */
+	double bse_tb; /* binary orbital period */
+	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
+	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
+        double bse_bcm_B[2]; /* Pulsar magnetic field strength at surface */
+        int bse_bcm_formation[2]; /* provides formation pathway of NS */
+} bse_binary;
+
 /* prototypes for fortran BSE functions */
 void zcnsts_(double *z, double *zpars);
 void evolv1_(int *kw, double *mass, double *mt, double *r, double *lum,
@@ -40,6 +67,9 @@ void hrdiag_(double *mass, double *aj, double *mt, double *tm, double *tn, doubl
 	     double *mc, double *rc, double *menv, double *renv, double *k2);
 void kick_(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	   double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
+void mix_(double *mass, double *mt, double *aj, int *kw, double *zpars);
+// note: these function names only work if in lowercase here, even though FORTRAN versions in uppercase.
+void comenv_(double *M01, double *M1, double *MC1, double *AJ1, double *JSPIN1, int *KW1, double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2, double *ZPARS, double *ECC, double *SEP, double *JORB, int *COEL, int *star1, int *star2, double *vk, int *fb, double *bkick);
 
 /* wrapped BSE functions */
 void bse_zcnsts(double *z, double *zpars);
@@ -67,6 +97,9 @@ void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, do
 		double *mc, double *rc, double *menv, double *renv, double *k2);
 void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	      double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
+void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars);
+void bse_comenv(bse_binary *binary, double *zpars,
+                double *vs, int *fb);
 
 /* structs to access BSE common blocks */
 /* note the index swap between fortran and C: i,j->j,i */
@@ -120,6 +153,7 @@ float bse_get_bpp(int i, int j); /* binary evolution log */
 float bse_get_bcm(int i, int j); /* stored binary parameters at interval dtp */
 char *bse_get_sselabel(int kw); /* converts stellar type number to text label */
 char *bse_get_bselabel(int kw); /* converts binary type number to text label */
+int icase_get(int i, int j); /* use to get mixed type from ktype table */
 
 /* copied functions */
 double bse_kick_speed(int *startype); /* routine for generating birth kick speed from distribution */
