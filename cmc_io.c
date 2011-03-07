@@ -1008,8 +1008,8 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	N_BIN_DIM = 2 + clus.N_STAR / 2 + clus.N_BINARY;
 	
 	/* safety factors, so we don't have to worry about memory management/garbage collection */
-	N_STAR_DIM = (long) floor(1.5 * ((double) N_STAR_DIM));
-	N_BIN_DIM = (long) floor(1.5 * ((double) N_BIN_DIM));
+	N_STAR_DIM = (long) floor(1.1 * ((double) N_STAR_DIM));
+	N_BIN_DIM = (long) floor(1.1 * ((double) N_BIN_DIM));
 	
 	/*********************************************/
 	/* allocation of memory for global variables */
