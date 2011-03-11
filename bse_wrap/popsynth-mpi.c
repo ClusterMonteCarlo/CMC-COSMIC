@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
   bse_set_neta(0.5);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
+  bse_set_windflag(0);
   bse_set_alpha1(0.5);
   bse_set_lambda(1.0);
   bse_set_ceflag(0);

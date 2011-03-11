@@ -107,7 +107,7 @@ extern struct { int idum; } value3_;
 extern struct { int idum2, iy, ir[32]; } rand3_;
 extern struct { int ktype[15][15]; } types_;
 extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
-extern struct { double neta, bwind, hewind, mxns; } value1_;
+extern struct { double neta, bwind, hewind, mxns; int windflag; } value1_;
 extern struct { double alpha1, lambda; } value2_;
 extern struct { double sigma; int bhflag; } value4_;
 extern struct { double beta, xi, acc2, epsnov, eddfac, gamma; } value5_;
@@ -122,6 +122,7 @@ void bse_set_idum(int idum); /* RNG seed (for NS birth kicks) */
 void bse_set_neta(double neta); /* Reimers mass-loss coefficent (neta*4x10^-13; 0.5 normally) */
 void bse_set_bwind(double bwind); /* binary enhanced mass loss parameter (inactive for single) */
 void bse_set_hewind(double hewind); /* helium star mass loss factor (1.0 normally) */
+void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
 void bse_set_sigma(double sigma); /* dispersion in the Maxwellian for the SN kick speed (190 km/s) */
 void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0) */
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */

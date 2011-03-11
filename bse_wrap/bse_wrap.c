@@ -494,6 +494,7 @@ void bse_set_idum(int idum) { value3_.idum = idum; }
 void bse_set_neta(double neta) { value1_.neta = neta; }
 void bse_set_bwind(double bwind) { value1_.bwind = bwind; }
 void bse_set_hewind(double hewind) { value1_.hewind = hewind; }
+void bse_set_windflag(int windflag) { value1_.windflag = windflag; }
 void bse_set_sigma(double sigma) { value4_.sigma = sigma; }
 void bse_set_ifflag(int ifflag) { flags_.ifflag = ifflag; }
 void bse_set_wdflag(int wdflag) { flags_.wdflag = wdflag; }

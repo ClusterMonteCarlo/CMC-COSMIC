@@ -797,6 +797,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_BSE_HEWIND);
 				sscanf(values, "%lf", &BSE_HEWIND);
 				parsed.BSE_HEWIND = 1;
+                        } else if (strcmp(parameter_name, "BSE_WINDFLAG")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_WINDFLAG);
+				sscanf(values, "%lf", &BSE_WINDFLAG);
+				parsed.BSE_WINDFLAG = 1;
 			} else if (strcmp(parameter_name, "BSE_ALPHA1")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_ALPHA1);
 				sscanf(values, "%lf", &BSE_ALPHA1);
@@ -956,6 +960,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(BSE_NETA, 0.50, PARAMDOC_BSE_NETA);
 	CHECK_PARSED(BSE_BWIND, 0.00, PARAMDOC_BSE_BWIND);
 	CHECK_PARSED(BSE_HEWIND, 0.50, PARAMDOC_BSE_HEWIND);
+	CHECK_PARSED(BSE_WINDFLAG, 1, PARAMDOC_BSE_WINDFLAG);
 	CHECK_PARSED(BSE_ALPHA1, 3.00, PARAMDOC_BSE_ALPHA1);
 	CHECK_PARSED(BSE_LAMBDA, 0.50, PARAMDOC_BSE_LAMBDA);
 	CHECK_PARSED(BSE_CEFLAG, 0, PARAMDOC_BSE_CEFLAG);
