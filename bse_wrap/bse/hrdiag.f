@@ -479,7 +479,7 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                else
                   if(nsflag.eq.0)then
                      mt = 1.17d0 + 0.09d0*mc
-                  elseif(nsflag.ge.1)then
+                  elseif(nsflag.eq.1)then
 *
 * Use NS/BH mass given by Belczynski et al. 2002, ApJ, 572, 407. 
 *
@@ -493,7 +493,33 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mc.lt.7.6d0)then
                         mt = mcx + (mc - 5.d0)*(mt - mcx)/2.6d0
                      endif
+                  elseif(nsflag.ge.2)then
+*
+* Use NS/BH masses given by Belczynski+08. PK.
+*
+*                     if(ecsnp.gt.0.d0.and.mcbagb.le.ecsnp)then
+*                        mcx = 1.38d0
+*                     elseif(ecsnp.eq.0.d0.and.mcbagb.le.2.25d0)then !this should be ecsnp, unless ecsnp=0
+                     if(mcbagb.le.2.35d0)then
+                        mcx = 1.38d0
+                     elseif(mc.lt.4.29d0)then
+*                     elseif(mc.lt.4.82d0)then
+                        mcx = 1.5d0
+                     elseif(mc.ge.4.29d0.and.mc.lt.6.31d0)then
+*                     elseif(mc.ge.4.82d0.and.mc.lt.6.31d0)then
+                        mcx = 2.11d0
+                     elseif(mc.ge.6.31d0.and.mc.lt.6.75d0)then
+                        mcx = 0.69*mc - 2.26d0
+                     elseif(mc.ge.6.75d0)then
+                        mcx = 0.37*mc - 0.07d0
+                     endif
+                     if(mc.le.5.d0)then
+                        mt = mcx
+                     elseif(mc.lt.7.6d0)then
+                        mt = mcx + (mc - 5.d0)*(mt - mcx)/2.6d0
+                     endif
                   endif
+                  if(nsflag.ge.2) mt = mt*0.9d0 !rough estimate of converting baryonic mass to gravitational mass...
                   mc = mt
                   if(mt.le.mxns)then
 *
