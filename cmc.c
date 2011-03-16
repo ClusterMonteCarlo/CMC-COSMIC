@@ -12,6 +12,7 @@
 #include "cmc.h"
 #define _MAIN_
 #include "cmc_vars.h"
+#include <mpi.h>
 
 #ifdef USE_CUDA
 #include "cuda/cmc_cuda.h"
@@ -19,6 +20,86 @@
 
 int main(int argc, char *argv[])
 {
+	MPI_Init(&argc, &argv);
+	int myid, procs;
+	printf("%d", myid);
+	double *r;
+	double *phi;
+	r = (double*)malloc(sizeof(double)*clus.N_MAX_NEW);
+	phi = (double*)malloc(sizeof(double)*clus.N_MAX_NEW);
+
+  	MPI_Comm_size(MPI_COMM_WORLD,&procs);
+  	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+
+	/* Creating a MPI Structure for the star structure */
+	/* =============================================== */
+	MPI_Datatype Startype;
+	MPI_Datatype type_star[44] = { MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_LONG, MPI_LONG, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,  MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE };  
+	int blocklen_star[44] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	MPI_Aint disp_star[44] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	MPI_Type_struct( 44, blocklen_star, disp_star, type_star, &Startype );
+	MPI_Type_commit( &Startype );
+	/* =============================================== */
+
+	/* Creating a MPI Structure for the binary structure */
+	/* =============================================== */
+	MPI_Datatype Binarytype;
+	MPI_Datatype type_bin[31] = { MPI_LONG, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_INT,  MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,  MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE };  
+	int blocklen_bin[31] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 1, 1, 1, 1 };
+	MPI_Aint disp_bin[31] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), 0, 0, sizeof(double), sizeof(double), 0, 0, 0, 0 };
+	MPI_Type_struct( 31, blocklen_bin, disp_bin, type_bin, &Binarytype );
+	MPI_Type_commit( &Binarytype );
+	/* =============================================== */
+
+	/* Creating a MPI Structure for the clus structure */
+	/* =============================================== */
+/*
+	MPI_Datatype Clustype;
+	MPI_Datatype type_clus[5] = { MPI_LONG, MPI_LONG, MPI_LONG, MPI_LONG, MPI_LONG };  
+	int blocklen_clus[5] = { 1, 1, 1, 1, 1 };
+	MPI_Aint disp_clus[5] = { 0, 0, 0, 0, 0 };
+	MPI_Type_struct( 5, blocklen_clus, disp_clus, type_clus, &Clustype );
+	MPI_Type_commit( &Clustype );
+*/
+	/* =============================================== */
+
+	/* Creating a MPI Structure for the central structure */
+	/* =============================================== */
+/*
+	MPI_Datatype Centraltype;
+	MPI_Datatype type_central[22] = { MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_LONG, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE };  
+	int blocklen_central[22] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	MPI_Aint disp_central[22] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	MPI_Type_struct( 22, blocklen_central, disp_central, type_central, &Centraltype );
+	MPI_Type_commit( &Centraltype );
+*/
+	/* =============================================== */
+
+	/* Creating a MPI Structure for the Etotal structure */
+	/* =============================================== */
+/*
+	MPI_Datatype Etotaltype;
+	MPI_Datatype type_etotal[7] = { MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE };  
+	int blocklen_etotal[7] = { 1, 1, 1, 1, 1, 1, 1 };
+	MPI_Aint disp_etotal[7] = { 0, 0, 0, 0, 0, 0, 0 };
+	MPI_Type_struct( 7, blocklen_etotal, disp_etotal, type_etotal, &Etotaltype );
+	MPI_Type_commit( &Etotaltype );
+*/
+	/* =============================================== */
+
+	/* Creating a MPI Structure for the  structure */
+	/* =============================================== */
+/*
+	MPI_Datatype Clusdyntype;
+	MPI_Datatype type_clusdyn[1] = { MPI_DOUBLE };  
+	int blocklen_clusdyn[1] = { 1 };
+	MPI_Aint disp_clusdyn[1] = { 0 };
+	MPI_Type_struct( 1, blocklen_clusdyn, disp_clusdyn, type_clusdyn, &Clusdyntype );
+	MPI_Type_commit( &Clusdyntype );
+*/
+	/* =============================================== */
+
+
 	struct tms tmsbuf, tmsbufref;
 	long i, j;
 	gsl_rng *rng;
@@ -32,24 +113,29 @@ int main(int argc, char *argv[])
 	cenma.E = 0.0;
 
 	/* trap signals */
-	trap_sigs();
+	trap_sigs(); // captures i/o signals to close
 
 	/* initialize GSL RNG */
 	gsl_rng_env_setup();
 	rng = gsl_rng_alloc(rng_type);
-	
+
+	if(myid == 0)
+	{
 	/* parse input */
-	parser(argc, argv, rng);
+		parser(argc, argv, rng); //to do parallel i/o
+	}
 
 	/* print version information to log file */
-	print_version(logfile);
+	//commenting out print_version temporarily for basic mpi
+	//print_version(logfile);
 
         /* initialize the Search_Grid r_grid */
-        if (SEARCH_GRID) {
+	//If we use the GPU code, we dont need the SEARCH_GRID. So commenting it out
+/*        if (SEARCH_GRID) { //Parallelize Search Grid
           r_grid= search_grid_initialize(SG_POWER_LAW_EXPONENT, \
               SG_MATCH_AT_FRACTION, SG_STARSPERBIN, SG_PARTICLE_FRACTION);
         };
-
+*/
         /* initialize the root finder algorithm */
         q_root = gsl_root_fsolver_alloc (gsl_root_fsolver_brent);
 
@@ -60,7 +146,17 @@ int main(int argc, char *argv[])
         //load_id_table(star_ids, "trace_list");
 #endif
 	/* Set up initial conditions */
-	load_fits_file_data();
+	if(myid == 0)
+	{
+		//This fn populates the star array with the the data obtained after parsing
+		load_fits_file_data(); 
+	}
+
+	if(myid == 0)
+	{
+		//do only on root node
+		star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
+	}
 
 	TidalMassLoss = 0.0;
 	Etidal = 0.0;
@@ -74,16 +170,40 @@ int main(int argc, char *argv[])
 	StepCount = 0; 		
 	tcount = 1;
 	TotalTime = 0.0;
+
+//MPI_Broadcast(); 
+/*broadcast the following:
+star structure
+binary structure
+clus structure
+*/
+	MPI_Bcast( star, clus.N_STAR, Startype, 0, MPI_COMM_WORLD);
+	MPI_Bcast( binary, clus.N_STAR, Binarytype, 0, MPI_COMM_WORLD);
+	MPI_Bcast( &clus, sizeof(clus_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+
 	reset_rng_t113(IDUM);
 	
 	/* binary remainders */
 	clus.N_MAX = clus.N_STAR;
 	N_b = clus.N_BINARY;
-	calc_sigma_r();
+
+	//for first step, do on all nodes. later will need scattering of particles and also some ghost particles data.
+	calc_sigma_r(); //requires data from some neighbouring particles. must be handled during data read
+
+
+	if(myid == 0)
+	{
 	central_calculate();
+	}
+	//broadcast central structure
+	MPI_Bcast( &central, sizeof(central_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+
+/*
         if (WRITE_EXTRA_CORE_INFO) {
           no_remnants= no_remnants_core(6);
         }
+*/
 	M_b = 0.0;
 	E_b = 0.0;
 	for (i=1; i<=clus.N_STAR; i++) {
@@ -93,32 +213,53 @@ int main(int argc, char *argv[])
 			E_b += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 		}
 	}
+//will have to do a reduce for M_b abd E_b later on. for the 1st step ignore.
+
 	
 	/* print out binary properties to a file */
-	print_initial_binaries();
+	//skipping outputs for initial steps of MPI
+	//print_initial_binaries();
 	
 	orbit_r = R_MAX;
-	potential_calculate();
+
+	//first step, ignore
+	potential_calculate(); //requires the whole r and phi array. Communication needed. have to calculate cum.sum.
+
+
 	total_bisections= 0;
+
+/*
+Skipping search grid for MPI
 	if (SEARCH_GRID) 
 		search_grid_update(r_grid);
-	
+*/	
+
 	/* compute energy initially */
 	star[0].E = star[0].J = 0.0;
+	//needs cum.sum. skip for 1st step
 	ComputeEnergy();
-	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
+
+//has been moved after load_fits_file_data() - above
+//	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
 
 	/* Noting the total initial energy, in order to set termination energy. */
-	Etotal.ini = Etotal.tot;
-	
+//do on root
+	if (myid==0)
+		Etotal.ini = Etotal.tot;
+//broadcast Etotal	
+	MPI_Bcast( &Etotal, sizeof(Etotal_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+
 	Etotal.New = 0.0;
 	Eescaped = 0.0;
 	Jescaped = 0.0;
 	Eintescaped = 0.0;
 	Ebescaped = 0.0;
 	Eoops = 0.0;
-	
-	comp_mass_percent();
+
+	//ignore for first step	
+	comp_mass_percent(); //used for diagnostics. needs neighouring particles to compute cum. sum.
+	//ignore for first step	
 	comp_multi_mass_percent();
 
 	/* If we don't set it here, new stars created by breaking binaries (BSE) will
@@ -126,28 +267,46 @@ int main(int argc, char *argv[])
 	clus.N_MAX_NEW = clus.N_MAX;
 	/* initialize stellar evolution things */
 	DMse = 0.0;
+
 	if (STELLAR_EVOLUTION > 0) {
-		stellar_evolution_init();
+		stellar_evolution_init(); //whole stellar evol. part does not need any data from other particles
 	}
 	
-	update_vars();
-	
-	times(&tmsbufref);
+	update_vars(); //might need communication for bin. index array. needs cum.sum.
+
+	//root node	
+	if (myid==0)
+		times(&tmsbufref);
 
 	/* calculate central quantities */
+	if(myid == 0)
+	{
 	central_calculate();
+	}
+	//broadcast central structure
+	MPI_Bcast( &central, sizeof(clus_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+	/* can skip for MPI
         if (WRITE_EXTRA_CORE_INFO) {
           no_remnants= no_remnants_core(6);
         }
+	*/
 
 	/* calculate dynamical quantities */
-	clusdyn_calculate();
+
+	//done on root node
+	if (myid==0)
+		clusdyn_calculate(); //parallel reduction
+	//broadcast clusdyn struct	
+	MPI_Bcast( &clusdyn, sizeof(clusdyn_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
 
 	/* Printing Results for initial model */
-	print_results();
+	//skip outputs for MPI
+	//print_results();
 
 	/* print handy script for converting output files to physical units */
-	print_conversion_script();
+	//skip outputs for MPI
+	//print_conversion_script();
 	
 #ifdef USE_CUDA
 	cuInitialize();
@@ -157,16 +316,23 @@ int main(int argc, char *argv[])
 	/******* This is the main loop in the program *****************/
 	while (CheckStop(tmsbufref) == 0) {
 		/* calculate central quantities */
-		central_calculate();
-		
+
+		if(myid == 0)
+		{
+		central_calculate(); //parallel reduction
+		}		
+		//broadcast central struct or not? Ask Stefan.
+
 		/* Get new time step */
-		Dt = GetTimeStep(rng);
-		
+		//for the next step, only simul_relax needs to be done in parallel, and DTrel needs to be broadcasted. rest can be done on each node.
+		Dt = GetTimeStep(rng); //reduction again. Timestep needs to be communicated to all procs.
+
 		/*dprintf ("before tide: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
 		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
 	     		star[787].se_menv,star[787].se_renv,star[787].se_ospin,star[787].se_epoch,star[787].se_tms,star[787].se_tphys,star[787].phi, star[787].r);*/
 
 		/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
+		//root node
 		if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
 			diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
 			Dt = Prev_Dt * 0.8;
@@ -174,7 +340,10 @@ int main(int argc, char *argv[])
 			diaprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
 			Dt = Prev_Dt * 1.1;
 		}
-		
+		//broadcast Dt		
+		MPI_Bcast( &Dt, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+
 		/*dprintf ("after tide before dynamics: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
 		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
 	     		star[787].se_menv,star[787].se_renv,star[787].se_ospin,star[787].se_epoch,star[787].se_tms,star[787].se_tphys,star[787].phi, star[787].r);*/
@@ -257,11 +426,30 @@ int main(int argc, char *argv[])
 		/* Sorting stars by radius. The 0th star at radius 0 
 		   and (N_STAR+1)th star at SF_INFINITY are already set earlier.
 		 */
-		qsorts(star+1,clus.N_MAX_NEW);
+		qsorts(star+1,clus.N_MAX_NEW); //parallel sort
+
+
+		long si;
+		for (si = 0; si <= clus.N_MAX_NEW + 1; si++)
+		{
+			r[si] = star[si].r;
+			phi[si] = star[si].phi;
+		}
+
+		//MPI: broadcast r array
+		MPI_Bcast( r, clus.N_MAX_NEW, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 		potential_calculate();
+
+		//MPI: broadcast phi array	
+		MPI_Bcast( phi, clus.N_MAX_NEW, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+
+		//commenting out for MPI
+		/*
                 if (SEARCH_GRID)
                   search_grid_update(r_grid);
+		*/
 
 		set_velocities3();
 
@@ -281,11 +469,16 @@ int main(int argc, char *argv[])
 		
 		/* calculate dynamical quantities */
 		clusdyn_calculate();
+
+		//commenting out for MPI
+		/*
                 if (WRITE_EXTRA_CORE_INFO) {
                   no_remnants= no_remnants_core(6);
                 }
+		*/
 
-		print_results();
+		//commenting out for MPI
+		//print_results();
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
 		 */
@@ -297,7 +490,11 @@ int main(int argc, char *argv[])
 		}		
 	} /* End FOR (time step iteration loop) */
 
-	times(&tmsbuf);
+	//root node
+	if (myid == 0)
+		times(&tmsbuf);
+
+
 	dprintf("Usr time = %.6e ", (double)
 		(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
 	dprintf("Sys time = %.6e\n", (double)
@@ -310,6 +507,10 @@ int main(int argc, char *argv[])
         printf("The total number of bisections is %li\n", total_bisections);
 	/* free RNG */
 	gsl_rng_free(rng);
+
+
+//compare results(E,J,vr,vt,r,phi,m) of all nodes for first step
+
 	
 #ifdef USE_CUDA
 	cuCleanUp();
@@ -324,5 +525,6 @@ int main(int argc, char *argv[])
         g_hash_table_destroy(star_ids);
         g_array_free(id_array, TRUE);
 #endif
+	MPI_Finalize();
 	return(0);
 }

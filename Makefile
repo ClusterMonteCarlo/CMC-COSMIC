@@ -9,7 +9,7 @@ ifeq ($(use_cuda), 1)
 CFLAGS   += -DUSE_CUDA
 CUDAOBJS = $(CUDADIR)/cmc_cuda.cu_o
 CUDAINC  = -I./$(CUDADIR)/common/inc
-CFLAGS	 += -L/usr/local/lib -L./$(CUDADIR)/common/lib -L./$(CUDADIR)/lib
+CFLAGS	 += -L/usr/local/cuda/lib64 -L./$(CUDADIR)/common/lib -L./$(CUDADIR)/lib
 CUDALIB  = -fPIC -lcuda -lcudart
 ifeq ($(emu), 1)
 CFLAGS 	+= -D__DEVICE_EMULATION__

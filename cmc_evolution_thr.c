@@ -84,8 +84,8 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		orbit_rs.circular_flag = 1;
 	} else {
 #ifdef USE_CUDA
-	        kmin = h_kmin[si];
-	        kmax = h_kmax[si];
+		kmin = h_kmin[si];
+		kmax = h_kmax[si];
 #else
 		kmin = FindZero_Q(si, 0, ktemp, E, J);
 		kmax = FindZero_Q(si, ktemp, clus.N_MAX + 1, E, J);
