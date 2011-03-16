@@ -297,6 +297,8 @@ typedef struct{
 	int BSE_BWIND;
 #define PARAMDOC_BSE_HEWIND "hewind is a helium star mass-loss factor (0.5 normally)."
 	int BSE_HEWIND;
+#define PARAMDOC_BSE_WINDFLAG "windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink)."
+	int BSE_WINDFLAG;
 #define PARAMDOC_BSE_ALPHA1 "alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)"
 	int BSE_ALPHA1;
 #define PARAMDOC_BSE_LAMBDA "labmda is the stellar binding energy factor for common-envelope evolution (0.5; +'ve allows it to vary, -'ve holds it constant at that value always)."
@@ -503,6 +505,7 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew);
 void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid);
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid);
 double r_of_m(double M);
+void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb);
 
 /* Fewbody stuff */
 void destroy_obj(long i);
