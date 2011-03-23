@@ -177,6 +177,7 @@ void ComputeIntermediateEnergy(void)
 	}
 	
 	/* Transferring new positions to .r, .vr, and .vt from .rnew, .vrnew, and .vtnew */
+
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
 		star[j].rOld = star[j].r;
 		star[j].r = star[j].rnew;
@@ -327,6 +328,7 @@ long CheckStop(struct tms tmsbufref) {
 
 	/* If total Energy has diminished by TERMINAL_ENERGY_DISPLACEMENT, then stop */
 	if (Etotal.tot < Etotal.ini - TERMINAL_ENERGY_DISPLACEMENT) {
+		printf("\nProc: %d\n", myid);
 		print_2Dsnapshot();
 		diaprintf("Terminal Energy reached... Terminating.\n");
 		return (1);

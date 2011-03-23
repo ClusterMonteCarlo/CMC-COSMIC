@@ -14,91 +14,32 @@
 #include "cmc_vars.h"
 #include <mpi.h>
 
+#define USE_MPI
+
 #ifdef USE_CUDA
 #include "cuda/cmc_cuda.h"
 #endif
 
 int main(int argc, char *argv[])
 {
+	#ifdef USE_MPI
+	//int myid, procs; //Declared in cmc.h
 	MPI_Init(&argc, &argv);
-	int myid, procs;
-	printf("%d", myid);
-	double *r;
-	double *phi;
-	r = (double*)malloc(sizeof(double)*clus.N_MAX_NEW);
-	phi = (double*)malloc(sizeof(double)*clus.N_MAX_NEW);
-
   	MPI_Comm_size(MPI_COMM_WORLD,&procs);
   	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+	#endif
 
-	/* Creating a MPI Structure for the star structure */
-	/* =============================================== */
-	MPI_Datatype Startype;
-	MPI_Datatype type_star[44] = { MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_LONG, MPI_LONG, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,  MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE };  
-	int blocklen_star[44] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	MPI_Aint disp_star[44] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	MPI_Type_struct( 44, blocklen_star, disp_star, type_star, &Startype );
-	MPI_Type_commit( &Startype );
-	/* =============================================== */
-
-	/* Creating a MPI Structure for the binary structure */
-	/* =============================================== */
-	MPI_Datatype Binarytype;
-	MPI_Datatype type_bin[31] = { MPI_LONG, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_INT,  MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,  MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE };  
-	int blocklen_bin[31] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 1, 1, 1, 1 };
-	MPI_Aint disp_bin[31] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), sizeof(double), 0, 0, sizeof(double), sizeof(double), 0, 0, 0, 0 };
-	MPI_Type_struct( 31, blocklen_bin, disp_bin, type_bin, &Binarytype );
-	MPI_Type_commit( &Binarytype );
-	/* =============================================== */
-
-	/* Creating a MPI Structure for the clus structure */
-	/* =============================================== */
-/*
-	MPI_Datatype Clustype;
-	MPI_Datatype type_clus[5] = { MPI_LONG, MPI_LONG, MPI_LONG, MPI_LONG, MPI_LONG };  
-	int blocklen_clus[5] = { 1, 1, 1, 1, 1 };
-	MPI_Aint disp_clus[5] = { 0, 0, 0, 0, 0 };
-	MPI_Type_struct( 5, blocklen_clus, disp_clus, type_clus, &Clustype );
-	MPI_Type_commit( &Clustype );
-*/
-	/* =============================================== */
-
-	/* Creating a MPI Structure for the central structure */
-	/* =============================================== */
-/*
-	MPI_Datatype Centraltype;
-	MPI_Datatype type_central[22] = { MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_LONG, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE };  
-	int blocklen_central[22] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	MPI_Aint disp_central[22] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	MPI_Type_struct( 22, blocklen_central, disp_central, type_central, &Centraltype );
-	MPI_Type_commit( &Centraltype );
-*/
-	/* =============================================== */
-
-	/* Creating a MPI Structure for the Etotal structure */
-	/* =============================================== */
-/*
-	MPI_Datatype Etotaltype;
-	MPI_Datatype type_etotal[7] = { MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE };  
-	int blocklen_etotal[7] = { 1, 1, 1, 1, 1, 1, 1 };
-	MPI_Aint disp_etotal[7] = { 0, 0, 0, 0, 0, 0, 0 };
-	MPI_Type_struct( 7, blocklen_etotal, disp_etotal, type_etotal, &Etotaltype );
-	MPI_Type_commit( &Etotaltype );
-*/
-	/* =============================================== */
-
-	/* Creating a MPI Structure for the  structure */
-	/* =============================================== */
-/*
-	MPI_Datatype Clusdyntype;
-	MPI_Datatype type_clusdyn[1] = { MPI_DOUBLE };  
-	int blocklen_clusdyn[1] = { 1 };
-	MPI_Aint disp_clusdyn[1] = { 0 };
-	MPI_Type_struct( 1, blocklen_clusdyn, disp_clusdyn, type_clusdyn, &Clusdyntype );
-	MPI_Type_commit( &Clusdyntype );
-*/
-	/* =============================================== */
-
+	#ifdef USE_MPI
+	FILE *ftest1;
+	FILE *ftest2;
+	N_STAR_DIM = 2 + clus.N_STAR + 2 * clus.N_BINARY;
+	N_BIN_DIM = 2 + clus.N_STAR / 2 + clus.N_BINARY;
+	N_STAR_DIM = (long) floor(1.1 * ((double) N_STAR_DIM));
+	N_BIN_DIM = (long) floor(1.1 * ((double) N_BIN_DIM));
+	//double *r, *phi;
+	//r = (double*)malloc(sizeof(double)*N_STAR_DIM);
+	//phi = (double*)malloc(sizeof(double)*N_BIN_DIM);
+	#endif
 
 	struct tms tmsbuf, tmsbufref;
 	long i, j;
@@ -119,11 +60,27 @@ int main(int argc, char *argv[])
 	gsl_rng_env_setup();
 	rng = gsl_rng_alloc(rng_type);
 
+	#ifdef MPI
 	if(myid == 0)
-	{
+	#endif
 	/* parse input */
 		parser(argc, argv, rng); //to do parallel i/o
+
+	MPI_Barrier( MPI_COMM_WORLD ) ;
+	printf("\nI am process ID: %d\n", myid);
+
+	#ifdef USE_MPI	
+	double test1[N_STAR_DIM];
+	double test2[N_STAR_DIM];	
+	double test3[N_STAR_DIM];	
+	int si;
+	for (si = 0; si < N_STAR_DIM; si++)
+	{	
+		test1[si] = 0.0;
+		test2[si] = 0.0;
+		test3[si] = 0.0;
 	}
+	#endif
 
 	/* print version information to log file */
 	//commenting out print_version temporarily for basic mpi
@@ -146,17 +103,19 @@ int main(int argc, char *argv[])
         //load_id_table(star_ids, "trace_list");
 #endif
 	/* Set up initial conditions */
+	#ifdef USE_MPI
 	if(myid == 0)
-	{
+	#endif
 		//This fn populates the star array with the the data obtained after parsing
 		load_fits_file_data(); 
-	}
 
+
+	#ifdef USE_MPI
 	if(myid == 0)
-	{
+	#endif
 		//do only on root node
 		star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
-	}
+	
 
 	TidalMassLoss = 0.0;
 	Etidal = 0.0;
@@ -177,9 +136,23 @@ star structure
 binary structure
 clus structure
 */
-	MPI_Bcast( star, clus.N_STAR, Startype, 0, MPI_COMM_WORLD);
-	MPI_Bcast( binary, clus.N_STAR, Binarytype, 0, MPI_COMM_WORLD);
-	MPI_Bcast( &clus, sizeof(clus_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	//MPI_Bcast( star, clus.N_STAR, Startype, 0, MPI_COMM_WORLD);
+	//MPI_Bcast( binary, clus.N_STAR, Binarytype, 0, MPI_COMM_WORLD);
+
+	#ifdef USE_MPI
+	MPI_Bcast(star, N_STAR_DIM * sizeof(star_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(binary,N_BIN_DIM * sizeof(binary_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&clus, sizeof(clus_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+	//variables set in in load_fits_file_data()
+	MPI_Bcast(&units, sizeof(units_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&cenma, sizeof(struct CenMa), MPI_BYTE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&MEGA_YEAR, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&SOLAR_MASS_DYN, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&madhoc, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&newstarid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+	#endif
 
 	reset_rng_t113(IDUM);
 	
@@ -191,13 +164,22 @@ clus structure
 	calc_sigma_r(); //requires data from some neighbouring particles. must be handled during data read
 
 
+	#ifdef USE_MPI
 	if(myid == 0)
-	{
+	#endif
 	central_calculate();
-	}
-	//broadcast central structure
-	MPI_Bcast( &central, sizeof(central_t), MPI_BYTE, 0, MPI_COMM_WORLD);
 
+	//broadcast central structure
+	#ifdef USE_MPI
+	MPI_Bcast(&central, sizeof(clus_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&N_core, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&N_core_nb, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&rho_core, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&core_radius, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Trc, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&rho_core_single, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&rho_core_bin, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	#endif
 
 /*
         if (WRITE_EXTRA_CORE_INFO) {
@@ -225,7 +207,6 @@ clus structure
 	//first step, ignore
 	potential_calculate(); //requires the whole r and phi array. Communication needed. have to calculate cum.sum.
 
-
 	total_bisections= 0;
 
 /*
@@ -244,10 +225,14 @@ Skipping search grid for MPI
 
 	/* Noting the total initial energy, in order to set termination energy. */
 //do on root
+	#ifdef USE_MPI
 	if (myid==0)
+	#endif
 		Etotal.ini = Etotal.tot;
 //broadcast Etotal	
-	MPI_Bcast( &Etotal, sizeof(Etotal_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	#ifdef USE_MPI
+	MPI_Bcast(&Etotal, sizeof(Etotal_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	#endif
 
 
 	Etotal.New = 0.0;
@@ -275,16 +260,32 @@ Skipping search grid for MPI
 	update_vars(); //might need communication for bin. index array. needs cum.sum.
 
 	//root node	
+	#ifdef USE_MPI
 	if (myid==0)
+	#endif
 		times(&tmsbufref);
 
+	#ifdef USE_MPI
+	MPI_Bcast(&tmsbufref, sizeof(struct tms), MPI_BYTE, 0, MPI_COMM_WORLD);
+	#endif
+
 	/* calculate central quantities */
+	#ifdef USE_MPI
 	if(myid == 0)
-	{
+	#endif
 	central_calculate();
-	}
+
 	//broadcast central structure
-	MPI_Bcast( &central, sizeof(clus_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	#ifdef USE_MPI
+	MPI_Bcast(&central, sizeof(clus_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&N_core, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&N_core_nb, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&rho_core, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&core_radius, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Trc, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&rho_core_single, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&rho_core_bin, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	#endif
 
 	/* can skip for MPI
         if (WRITE_EXTRA_CORE_INFO) {
@@ -295,10 +296,14 @@ Skipping search grid for MPI
 	/* calculate dynamical quantities */
 
 	//done on root node
+	#ifdef USE_MPI
 	if (myid==0)
+	#endif
 		clusdyn_calculate(); //parallel reduction
 	//broadcast clusdyn struct	
-	MPI_Bcast( &clusdyn, sizeof(clusdyn_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	#ifdef USE_MPI
+	MPI_Bcast(&clusdyn, sizeof(clusdyn_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	#endif
 
 	/* Printing Results for initial model */
 	//skip outputs for MPI
@@ -312,16 +317,32 @@ Skipping search grid for MPI
 	cuInitialize();
 #endif
 
+	//printf("\n%d\tN_Core=%g\t\n", myid, N_core);
+
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
 	while (CheckStop(tmsbufref) == 0) {
+	//while (timecheck == 0) {
 		/* calculate central quantities */
 
+
+		#ifdef USE_MPI
 		if(myid == 0)
-		{
+		#endif
 		central_calculate(); //parallel reduction
-		}		
+
 		//broadcast central struct or not? Ask Stefan.
+		//MPI_Bcast(&central, sizeof(clus_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+		#ifdef USE_MPI
+		MPI_Bcast(&central, sizeof(clus_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&N_core, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&N_core_nb, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&rho_core, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&core_radius, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&Trc, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&rho_core_single, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&rho_core_bin, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		#endif
 
 		/* Get new time step */
 		//for the next step, only simul_relax needs to be done in parallel, and DTrel needs to be broadcasted. rest can be done on each node.
@@ -333,6 +354,9 @@ Skipping search grid for MPI
 
 		/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
 		//root node
+		#ifdef USE_MPI
+		if(myid==0) {
+		#endif
 		if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
 			diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
 			Dt = Prev_Dt * 0.8;
@@ -340,9 +364,14 @@ Skipping search grid for MPI
 			diaprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
 			Dt = Prev_Dt * 1.1;
 		}
-		//broadcast Dt		
-		MPI_Bcast( &Dt, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		#ifdef USE_MPI
+		}
+		#endif
 
+		//broadcast Dt		
+		#ifdef USE_MPI
+		MPI_Bcast(&Dt, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		#endif
 
 		/*dprintf ("after tide before dynamics: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
 		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
@@ -355,6 +384,8 @@ Skipping search grid for MPI
 
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
+
+
 		if (PERTURB > 0) {
 			dynamics_apply(Dt, rng);
 		}
@@ -373,6 +404,7 @@ Skipping search grid for MPI
 		if (STELLAR_EVOLUTION > 0) {
 			do_stellar_evolution(rng);
 		}
+
 
 		/*dprintf ("after SE: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
 		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
@@ -409,6 +441,7 @@ Skipping search grid for MPI
 		/* this calls get_positions() */
 		tidally_strip_stars();
 
+
 		/* more numbers necessary to implement Stodolkiewicz's
 	 	 * energy conservation scheme */
 		for (i = 1; i <= clus.N_MAX_NEW; i++) {
@@ -428,23 +461,82 @@ Skipping search grid for MPI
 		 */
 		qsorts(star+1,clus.N_MAX_NEW); //parallel sort
 
+//printf("\n\n%d\t%d\t%d\n\n",sizeof(rtest1)/sizeof(double), sizeof(star)/sizeof(star_t), N_STAR_DIM);
+//if(myid==0)
+//printf("\n\n%g\n\n", rtest1[N_STAR_DIM-1]);
 
+		//for (si = 0; si < N_STAR_DIM; si++)
+
+		#ifdef USE_MPI
+		for (si = 0; si < N_STAR_DIM; si++)
+			test1[si] = star[si].r;
+		if(myid==0){
+		for (si = 0; si < N_STAR_DIM; si++)
+			test2[si] = test1[si];
+		}
+
+		MPI_Bcast(&test2, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+		double check=5;
+		double test_red=0;
+		if(myid!=0){
+			for (si = 0; si < N_STAR_DIM; si++)
+			{
+				test1[si] = test1[si]-test2[si];
+				test_red += test1[si];
+			}
+		}
+	
+		MPI_Barrier(MPI_COMM_WORLD);	
+		MPI_Reduce(&test_red, &check, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0)
+		printf("\n\nCHECK = %.10g\n\n", check);
+		#endif	
+
+		//MPI_Reduce(test1, test3, N_STAR_DIM, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);		
+/*
+		if(myid==0)
+		{
+			ftest1 = fopen("test_mpi1.dat","w");
+			for (si = 0; si < N_STAR_DIM; si++)
+				fprintf(ftest1, "%ld\t%g\n", si, test1[si]);
+				//fprintf(ftest1, "%ld\t%g\t%g\n", si, test1[si], test2[si]);
+			fclose(ftest1);
+		}
+
+		if(myid==1)
+		{
+			ftest2 = fopen("test_mpi2.dat","w");
+			for (si = 0; si < N_STAR_DIM; si++)
+				fprintf(ftest2, "%d\t%g\n", si, test1[si]);
+				//fprintf(ftest2, "%d\t%g\t%g\n", si, test1[si], test3[si]);
+			fclose(ftest2);
+		}
+		#endif
+*/
+
+/*
+		#ifdef USE_MPI
 		long si;
-		for (si = 0; si <= clus.N_MAX_NEW + 1; si++)
+		for (si = 0; si < N_STAR_DIM; si++)
 		{
 			r[si] = star[si].r;
 			phi[si] = star[si].phi;
 		}
+		#endif
 
+		#ifdef USE_MPI
 		//MPI: broadcast r array
-		MPI_Bcast( r, clus.N_MAX_NEW, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
+		MPI_Bcast(r, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		#endif
+*/
 		potential_calculate();
-
+/*		
+		#ifdef USE_MPI
 		//MPI: broadcast phi array	
-		MPI_Bcast( phi, clus.N_MAX_NEW, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-
+		MPI_Bcast(phi, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		#endif
+*/
 		//commenting out for MPI
 		/*
                 if (SEARCH_GRID)
@@ -488,10 +580,13 @@ Skipping search grid for MPI
 				write_stellar_data();
 			}
 		}		
+
 	} /* End FOR (time step iteration loop) */
 
 	//root node
+	#ifdef USE_MPI
 	if (myid == 0)
+	#endif
 		times(&tmsbuf);
 
 
@@ -525,6 +620,10 @@ Skipping search grid for MPI
         g_hash_table_destroy(star_ids);
         g_array_free(id_array, TRUE);
 #endif
+
+#ifdef USE_MPI
 	MPI_Finalize();
+#endif
+
 	return(0);
 }

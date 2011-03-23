@@ -373,6 +373,7 @@ void tidally_strip_stars(void) {
 			if (TIDAL_TREATMENT == 0){
 				/*radial cut off criteria*/
 
+				//printf("\n%d\t%g\tadsdadasda\n", myid, star[i].r_apo);
 				if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
 					dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */

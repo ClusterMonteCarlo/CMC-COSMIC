@@ -64,6 +64,7 @@
 #define PREAGING_MASS 5.0
 
 #define MAX_STRING_LENGTH 2048
+int myid, procs;
 
 /* binaries */
 typedef struct{
@@ -158,7 +159,7 @@ typedef struct{
 
 struct CenMa{
 	double m;
-        double m_new;
+	double m_new;
 	double E;
 };
 
