@@ -66,10 +66,10 @@ int main(int argc, char *argv[])
 	/* parse input */
 		parser(argc, argv, rng); //to do parallel i/o
 
+	#ifdef USE_MPI	
 	MPI_Barrier( MPI_COMM_WORLD ) ;
 	printf("\nI am process ID: %d\n", myid);
 
-	#ifdef USE_MPI	
 	double test1[N_STAR_DIM];
 	double test2[N_STAR_DIM];	
 	double test3[N_STAR_DIM];	
@@ -461,11 +461,6 @@ Skipping search grid for MPI
 		 */
 		qsorts(star+1,clus.N_MAX_NEW); //parallel sort
 
-//printf("\n\n%d\t%d\t%d\n\n",sizeof(rtest1)/sizeof(double), sizeof(star)/sizeof(star_t), N_STAR_DIM);
-//if(myid==0)
-//printf("\n\n%g\n\n", rtest1[N_STAR_DIM-1]);
-
-		//for (si = 0; si < N_STAR_DIM; si++)
 
 		#ifdef USE_MPI
 		for (si = 0; si < N_STAR_DIM; si++)
@@ -493,7 +488,6 @@ Skipping search grid for MPI
 		printf("\n\nCHECK = %.10g\n\n", check);
 		#endif	
 
-		//MPI_Reduce(test1, test3, N_STAR_DIM, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);		
 /*
 		if(myid==0)
 		{
@@ -589,6 +583,9 @@ Skipping search grid for MPI
 	#endif
 		times(&tmsbuf);
 
+	#ifdef USE_MPI
+		MPI_Bcast(&tmsbuf, sizeof(struct tms), MPI_BYTE, 0, MPI_COMM_WORLD);
+	#endif
 
 	dprintf("Usr time = %.6e ", (double)
 		(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
