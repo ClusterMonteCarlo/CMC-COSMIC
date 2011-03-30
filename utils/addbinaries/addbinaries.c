@@ -542,6 +542,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	}
 	vcore /= AVEKERNEL;
 	kTcore /= AVEKERNEL;
+        printf("kTcore is %g\n", kTcore);
 
 	/* assign binary parameters */
 	if (limits == 0 && binmf!=99) {
@@ -576,7 +577,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 		/* assign binaries via kT description */
 		/* set max and min binding energies */
 		Ebmin = EbminkT * kTcore;
-		Ebmax = EbminkT * kTcore;
+		Ebmax = EbmaxkT * kTcore;
 
 		for (i=1; i<=cfd->NBINARY; i++) {
 			/* choose binding energy uniformly in the log */
