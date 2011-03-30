@@ -36,7 +36,7 @@
       REAL*8 AURSUN,K3,ALPHA1,LAMBDA
       PARAMETER (AURSUN = 214.95D0,K3 = 0.21D0) 
       COMMON /VALUE2/ ALPHA1,LAMBDA
-      LOGICAL COEL
+      LOGICAL COEL,output
       REAL*8 CELAMF,RL,RZAMSF
       EXTERNAL CELAMF,RL,RZAMSF
 *
@@ -47,6 +47,7 @@
       TWOPI = 2.D0*ACOS(-1.D0)
       COEL = .FALSE.
       snp = 0
+      output = .false.
 *
 * Obtain the core masses and radii.
 *
@@ -71,6 +72,7 @@
 * If the secondary star is also giant-like add its envelopes's energy.
 *
       EORBI = M1*M2/(2.D0*SEP)
+      if(output) write(*,*)'Init CE:',M01,M1,R1,M02,M2,R2,EBINDI,EORBI
       IF(KW2.GE.2.AND.KW2.LE.9.AND.KW2.NE.7)THEN
          MENVD = MENV/(M2-MC2)
          RZAMS = RZAMSF(M02)
@@ -212,17 +214,22 @@
 *
             EORBF = MAX(MC1*MC2/(2.D0*SEPL),EORBI)
             EBINDF = EBINDI - ALPHA1*(EORBF - EORBI)
+            if(output) write(*,*)'In dg or giant 1:',M01,M1,R1,M02,M2,
+     & R2,MC1,MC2,MC3,KW1,KW2,KW,EORBF,EBINDF
 *
 * Check if we have the merging of two degenerate cores and if so
 * then see if the resulting core will survive or change form.
 *
             IF(KW1.EQ.6.AND.(KW2.EQ.6.OR.KW2.GE.11))THEN
                CALL dgcore(KW1,KW2,KW,MC1,MC2,MC3,EBINDF)
+               if(output) write(*,*)'dg/giant 2:',KW,MC1,MC2,MC3,EBINDF
             ENDIF
             IF(KW1.LE.3.AND.M01.LE.ZPARS(2))THEN
                IF((KW2.GE.2.AND.KW2.LE.3.AND.M02.LE.ZPARS(2)).OR.
      &             KW2.EQ.10)THEN
                   CALL dgcore(KW1,KW2,KW,MC1,MC2,MC3,EBINDF)
+                  if(output) write(*,*)'dg/giant 2:',KW,MC1,MC2,MC3,
+     & EBINDF
                   IF(KW.GE.10)THEN
                      KW1 = KW
                      M1 = MC3
@@ -334,6 +341,7 @@
                FAGE2 = (AJ2 - TSCLS2(2))/(TSCLS2(13) - TSCLS2(2))
             ENDIF
          ENDIF
+         if(output) write(*,*)'coel 1:',KW,MC1,MC2,MC3,MC22,FAGE1,FAGE2
       ENDIF
 *
 * Now calculate the final mass following coelescence.  This requires a
@@ -374,6 +382,8 @@
 *
 * Combine the core masses.
 *
+         if(output) write(*,*)'coel 2 1:',KW,KW1,KW2,M1,M2,MF,MC22,
+     & TB,OORB
          IF(KW.EQ.2)THEN
             CALL star(KW,M1,M1,TM2,TN,TSCLS2,LUMS,GB,ZPARS)
             IF(GB(9).GE.MC1)THEN
@@ -381,10 +391,14 @@
                AJ1 = TM2 + (TSCLS2(1) - TM2)*(AJ1-TM1)/(TSCLS1(1) - TM1)
                CALL star(KW,M01,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS)
             ENDIF
+            if(output) write(*,*)'coel 2 2:',KW,KW1,KW2,M1,M01,MC22,
+     & TB,OORB
          ELSEIF(KW.EQ.7)THEN
             M01 = M1
             CALL star(KW,M01,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS)
             AJ1 = TM1*(FAGE1*MC1 + FAGE2*MC22)/(MC1 + MC22)
+            if(output) write(*,*)'coel 2 3:',KW,KW1,KW2,M1,M01,MC22,
+     & TB,OORB
          ELSEIF(KW.EQ.4.OR.MC2.GT.0.D0.OR.KW.NE.KW1)THEN
             IF(KW.EQ.4) AJ1 = (FAGE1*MC1 + FAGE2*MC22)/(MC1 + MC22)
             MC1 = MC1 + MC2
@@ -394,6 +408,8 @@
 *
             CALL gntage(MC1,M1,KW,ZPARS,M01,AJ1)
             CALL star(KW,M01,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS)
+            if(output) write(*,*)'coel 2 4:',KW,KW1,KW2,M1,M01,MC22,
+     & TB,OORB
          ENDIF
          MF = M1
          KW1i = KW
@@ -411,13 +427,16 @@
          endif
          CALL hrdiag(M01,AJ1,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS,
      &               R1,L1,KW,MC1,RC1,MENV,RENV,K21)
+         if(output) write(*,*)'coel 2 5:',KW,M1,M01,R1,MENV,RENV
          IF(KW1i.LE.12.and.KW.GE.13)THEN
             CALL kick(KW,MF,M1,0.d0,0.d0,-1.d0,0.d0,vk,star1,
      &                0.d0,fallback,bkick)
+            if(output) write(*,*)'coel 2 6:',KW,M1,M01,R1,MENV,RENV
          ENDIF
          JSPIN1 = OORB*(K21*R1*R1*(M1-MC1)+K3*RC1*RC1*MC1)
          KW1 = KW
          ECC = 0.D0
+         if(output) write(*,*)'coel 2 7:',KW1,M1,M01,R1,MENV,RENV
       ELSE
 *
 * Check if any eccentricity remains in the orbit by first using 
@@ -447,6 +466,8 @@
          JSPIN2 = OSPIN2*(K22*R2*R2*(M2-MC2)+K3*RC2*RC2*MC2)
       ENDIF
    30 SEP = SEPF
+      if(output) write(*,*)'end of CE1:',KW1,M1,M01,R1,MENV,RENV
+      if(output) write(*,*)'end of CE1:',KW2,M2,M02,R2,MENV,RENV
       RETURN
       END
 ***

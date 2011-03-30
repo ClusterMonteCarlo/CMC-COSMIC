@@ -368,10 +368,15 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 /* merge two stars using stellar evolution if it's enabled */
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs) {
-	double tphysf, dtp, vsaddl[12], age;
+	double tphysf, dtp, vsaddl[12], age, temp_rad, bseaj[2];
+	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
 	binary_t tempbinary, tbcopy;
-	int tbi=-1, j, ktry, i;
-	
+	int tbi=-1, j, ktry, i, fb, icase;
+
+	for(i=0;i<=11;i++) {
+	  vs[i] = 0.0;
+	}
+
 	if (STELLAR_EVOLUTION && !STAR_AGING_SCHEME) {
 		/* evolve for just a year for merger */
 		tphysf = star1->se_tphys + 1.0e-6;
@@ -387,9 +392,12 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		tempbinary.m2 = star2->m;
 		tempbinary.Eint1 = star1->Eint;
 		tempbinary.Eint2 = star2->Eint;
-		tempbinary.a = BSE_WRAP_MAX(10.0*star1->rad/bse_rl(star1->m/star2->m), 
-					    10.0*star2->rad/bse_rl(star2->m/star1->m));
-		tempbinary.e = 1.0 - 0.1*(star1->rad+star2->rad)/tempbinary.a;
+		//tempbinary.a = BSE_WRAP_MAX(10.0*star1->rad/bse_rl(star1->m/star2->m), 
+		//			    10.0*star2->rad/bse_rl(star2->m/star1->m));
+		//tempbinary.e = 1.0 - 0.1*(star1->rad+star2->rad)/tempbinary.a;
+		tempbinary.a = star1->rad + star2->rad; //We are directly merging or CEing, where a merger MUST occur. 
+		//So use this for now... But be prepared to revert to previous values.
+		tempbinary.e = 0.0;
 		tempbinary.inuse = 1;
 		tempbinary.bse_mass0[0] = star1->se_mass;
 		tempbinary.bse_mass0[1] = star2->se_mass;
@@ -428,63 +436,104 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		  dtp = 0.0;
 		  bse_set_id1_pass(tempbinary.id1);
 		  bse_set_id2_pass(tempbinary.id2);
-		  bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
-				    &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
-				    &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
-				    &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
-				    &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-				    &(tempbinary.bse_tb), &(tempbinary.e), vs);
+
+		  icase = icase_get(tempbinary.bse_kw[0],tempbinary.bse_kw[1]);
+
+// make ktype callable from cmc then if icase > 100 dont use mix.f
+		  if (icase <= 100 ) {
+		    //
+		    // Merging stars via mixing the stars
+		    //
+		    dprintf("Calling mix from merge_two_stars 1: id1=%ld id2=%ld m1=%g m2=%g kw1=%d kw2=%d \n",tempbinary.id1,tempbinary.id2,tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_kw[0], tempbinary.bse_kw[1]);
+		    //aj = star[kp].se_tphys - star[kp].se_epoch;
+		    bseaj[0] = tempbinary.bse_tphys - tempbinary.bse_epoch[0];
+		    bseaj[1] = tempbinary.bse_tphys - tempbinary.bse_epoch[1];
+		    bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars);
+		    
+		    bse_star(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars);
+		    
+		    bse_hrdiag(&(tempbinary.bse_mass0[0]), &(bseaj[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
+			       &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_kw[0]), &(tempbinary.bse_massc[0]), &(tempbinary.bse_radc[0]), 
+			       &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), &k2);
+		    tempbinary.bse_epoch[0] = tempbinary.bse_tphys - bseaj[0];
+		    tempbinary.bse_mass0[1] = 0.0;
+		    //tempbinary.bse_mass[1] = 0.0;
+		    tempbinary.bse_radius[1] = 0.0;
+		    dprintf("Called mix from merge_two_stars 1: id1=%ld id2=%ld m1=%g m2=%g kw1=%d kw2=%d \n",tempbinary.id1,tempbinary.id2,tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_kw[0], tempbinary.bse_kw[1]);
+		    
+		    //tempbinary.bse_epoch[1] = tempbinary.bse_tphys - bseaj[1];
+		    //if NS and not an MSP reset? Also, there is no bcm array here, yet below it searches it - must do a check of icase before searching bcm...
+		  } else {
+		    //
+		    // Merging stars via common envelope - yet forcing the stars to merge.
+		    //
 		  
 		  /* Force merger if necessary by resetting pericenter to nearly 0;  This may be needed in some cases
 		     because BSE doesn't strictly conserve angular momentum in binaries during common envelope evolution. */
-		  ktry = 0;
-		  while (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0 && ktry < 10) {
-		    dprintf("Attempting to force merger in BSE by repeating evolution with tiny pericenter.\n");
-		    tempbinary.a = 1.0e-12 * AU / units.l;
-		    tempbinary.e = 0.999;
-		    tempbinary.bse_tb = sqrt(cub(tempbinary.a * units.l / AU)/(tempbinary.bse_mass[0]+tempbinary.bse_mass[1]))*365.25;
-		    dtp = 0.0;
-		    tphysf += 1.0e-6;
-		    bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
-				      &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
-				      &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
-				      &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
-				      &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-				      &(tempbinary.bse_tb), &(tempbinary.e), vs);
-		    ktry++;
-		  }
-		  
-		  /*Sourav:debug if the collision takes more time to happen?*/
-		  /* if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) { */
-		  /* 		  tphysf+=1.; */
-		  /* 		  dtp= 0.; */
-		  /* 		  bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]),  */
-		  /* 			   &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]),  */
-		  /* 			   &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]),  */
-		  /* 			   &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]),  */
-		  /* 			   &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars,  */
-		  /* 			   &(tempbinary.bse_tb), &(tempbinary.e), vs); */
-		  /* 		  fprintf (stderr, "\n*******bugfix2 for sscollision********\n"); */
-		  /* 		  j=1; */
-		  /* 		  while (bse_get_bpp(j,1)>=0.0) { */
-		  /* 			  if (bse_get_bpp(j,4)==15 || bse_get_bpp(j,5)==15){ */
-		  /* 				tphysf=bse_get_bpp(j,1)+1.0e-06; */
-		  /* 				fprintf (stderr, "k1=bse_get_bpp(j,4)= %d,k2=bse_get_bpp(j,5)= %d\n",bse_get_bpp(j,4),bse_get_bpp(j,5)); */
-		  /* 				break; */
-		  /* 			  } */
-		  /* 			  if(j>80){ */
-		  /* 				  eprintf ("no 15 found"); */
-		  /* 				  exit_cleanly(1); */
-		  /* 			  } */
-		  /* 			  j++; */
-		  /* 		  } */
-		  /* 		  bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]),  */
-		  /* 			   &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]),  */
-		  /* 			   &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]),  */
-		  /* 			   &(tempbinary.bse_ospin[0]), &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]),  */
-		  /* 			   &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars,  */
-		  /* 			   &(tempbinary.bse_tb), &(tempbinary.e), vs); */
-		  /* 		} */
+		    ktry = 1;
+		    while (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0 && ktry < 10) {
+		      dprintf("Attempting to force merger in CE possibly by repeating evolution with a change of sep and lambda.\n");
+		      if(ktry>2){
+			lamb_val = -0.0001/((float)ktry);
+			bse_set_lambda(lamb_val); //perhaps should do this in the second attempt? 
+		      }
+		      tempbinary.a = tbcopy.a/ktry;
+		      tempbinary.bse_tb = sqrt(cub(tempbinary.a * units.l / AU)/(tempbinary.bse_mass[0]+tempbinary.bse_mass[1]))*365.25;
+		      dtp = 0.0;
+		      //tphysf += 1.0e-6;
+		      // PDK added...			
+		      tempbinary.bse_mass0[0] = star1->se_mass;
+		      tempbinary.bse_mass0[1] = star2->se_mass;
+		      tempbinary.bse_kw[0] = star1->se_k;
+		      tempbinary.bse_kw[1] = star2->se_k;
+		      tempbinary.bse_mass[0] = star1->se_mt;
+		      tempbinary.bse_mass[1] = star2->se_mt;
+		      tempbinary.bse_ospin[0] = star1->se_ospin;
+		      tempbinary.bse_ospin[1] = star2->se_ospin;
+		      /*
+			tempbinary.bse_B_0[0] = star1->se_B_0; // PK add pulsar stuff here
+			tempbinary.bse_B_0[1] = star2->se_B_0;
+			tempbinary.bse_bacc[0] = star1->se_bacc;
+			tempbinary.bse_bacc[1] = star2->se_bacc;
+			tempbinary.bse_tacc[0] = star1->se_tacc;
+			tempbinary.bse_tacc[1] = star2->se_tacc;
+			tempbinary.bse_bcm_B[0] = star1->se_scm_B;
+			tempbinary.bse_bcm_B[1] = star2->se_scm_B;
+			tempbinary.bse_bcm_formation[0] = star1->se_scm_formation;
+			tempbinary.bse_bcm_formation[1] = star2->se_scm_formation;
+		      */
+		      tempbinary.bse_epoch[0] = star1->se_epoch;
+		      tempbinary.bse_epoch[1] = star2->se_epoch;
+		      tempbinary.bse_tphys = star1->se_tphys;
+		      tempbinary.bse_radius[0] = star1->se_radius;
+		      tempbinary.bse_radius[1] = star2->se_radius;
+		      tempbinary.bse_lum[0] = star1->se_lum;
+		      tempbinary.bse_lum[1] = star2->se_lum;
+		      tempbinary.bse_massc[0] = star1->se_mc;
+		      tempbinary.bse_massc[1] = star2->se_mc;
+		      tempbinary.bse_radc[0] = star1->se_rc;
+		      tempbinary.bse_radc[1] = star2->se_rc;
+		      tempbinary.bse_menv[0] = star1->se_menv;
+		      tempbinary.bse_menv[1] = star2->se_menv;
+		      tempbinary.bse_renv[0] = star1->se_renv;
+		      tempbinary.bse_renv[1] = star2->se_renv;
+		      tempbinary.bse_tms[0] = star1->se_tms;
+		      tempbinary.bse_tms[1] = star2->se_tms; 
+		      dprintf("before ce merge1: tb=%g a=%g m1=%g m2=%g e=%g kw1=%d kw2=%d r1=%g r2=%g\n",tempbinary.bse_tb,tempbinary.a,tempbinary.bse_mass[0],tempbinary.bse_mass[1],tempbinary.e,tempbinary.bse_kw[0],tempbinary.bse_kw[1], tempbinary.bse_radius[0],tempbinary.bse_radius[1]);
+		      //tphysf += 1.0e-4; //PDK ADD(was1.0e-6): perhaps should add 100 years here, just to be a little safer in evolv2...
+		      if(tempbinary.bse_tb==0.0){
+			dprintf("tb0ev2_2: %g %g %g %g %g\n",tempbinary.bse_tb,tempbinary.a,tempbinary.bse_mass[0],tempbinary.bse_mass[1],tempbinary.e);
+		      }
+		      //CALL comenv routine...
+		      cmc_bse_comenv(&(tempbinary), units.l, RSUN, zpars, 
+				     vs, &fb);
+		      dprintf("after ce merge1: tb=%g a=%g m1=%g m2=%g e=%g kw1=%d kw2=%d r1=%g r2=%g\n",tempbinary.bse_tb,tempbinary.a,tempbinary.bse_mass[0],tempbinary.bse_mass[1],tempbinary.e,tempbinary.bse_kw[0],tempbinary.bse_kw[1],tempbinary.bse_radius[0],tempbinary.bse_radius[1]);
+		      ktry++;
+		    }
+		    bse_set_lambda(BSE_LAMBDA);
+		    //bse_set_merger(-1.0);
+		  }  //end of merger attempt, either from mix (non-CE) or evolv2 (for CE) with appropriate separation selection.
+
 		  
 		  /* make sure outcome was as expected */
 		  if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) {
@@ -522,6 +571,33 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		      fflush(NULL);
 		      j++;
 		    }
+		    icase = icase_get(tempbinary.bse_kw[0],tempbinary.bse_kw[1]);
+		    // make ktype callable from cmc then if icase > 100 dont use mix.f
+		    if (icase <= 100 ) {
+		      //
+		      // Merging stars via mixing the stars
+		      //
+		      dprintf("Calling mix after merger failure: id1=%ld id2=%ld m1=%g m2=%g kw1=%d kw2=%d \n",tempbinary.id1,tempbinary.id2,tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_kw[0], tempbinary.bse_kw[1]);
+		      //aj = star[kp].se_tphys - star[kp].se_epoch;
+		      bseaj[0] = tempbinary.bse_tphys - tempbinary.bse_epoch[0];
+		      bseaj[1] = tempbinary.bse_tphys - tempbinary.bse_epoch[1];
+		      bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars);
+		      
+		      bse_star(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars);
+		      
+		      bse_hrdiag(&(tempbinary.bse_mass0[0]), &(bseaj[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
+				 &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_kw[0]), &(tempbinary.bse_massc[0]), &(tempbinary.bse_radc[0]), 
+				 &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), &k2);
+		      tempbinary.bse_epoch[0] = tempbinary.bse_tphys - bseaj[0];
+		      tempbinary.bse_mass0[1] = 0.0;
+		      //tempbinary.bse_mass[1] = 0.0;
+		      tempbinary.bse_radius[1] = 0.0;
+		      dprintf("Called mix after merger failure: id1=%ld id2=%ld m1=%g m2=%g kw1=%d kw2=%d \n",tempbinary.id1,tempbinary.id2,tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_kw[0], tempbinary.bse_kw[1]);
+		    } else {
+		      exit_cleanly(1);
+		    }
+		  }
+		  if (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0) {
 		    exit_cleanly(1);
 		  } else if (tempbinary.bse_mass[0] != 0) {
 		    tbi = 0;
@@ -583,18 +659,34 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    bse_set_id1_pass(tempbinary.id2);
 		    bse_set_id2_pass(0);
 		  }
+		  temp_rad = tempbinary.bse_radius[0];
+		  if(isnan(temp_rad)){
+		    fprintf(stderr, "An isnan occured for r1 in sscollision\n");
+		    fprintf(stderr, "tphys=%.18g tphysf=%.18g kstar1=%d kstar2=%d m1=%.18g m2=%.18g r1=%.18g r2=%.18g l1=%.18g l2=%.18g \n", tempbinary.bse_tphys, tphysf, tempbinary.bse_kw[0], tempbinary.bse_kw[1], tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_radius[0], tempbinary.bse_radius[1], tempbinary.bse_lum[0], tempbinary.bse_lum[1]);
+		    exit(1);
+		  }
+		  temp_rad = tempbinary.bse_radius[1];
+		  if(isnan(temp_rad)){
+		    fprintf(stderr, "An isnan occured for r2 in sscollision\n");
+		    fprintf(stderr, "tphys=%.18g tphysf=%.18g kstar1=%d kstar2=%d m1=%.18g m2=%.18g r1=%.18g r2=%.18g l1=%.18g l2=%.18g \n", tempbinary.bse_tphys, tphysf, tempbinary.bse_kw[0], tempbinary.bse_kw[1], tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_radius[0], tempbinary.bse_radius[1], tempbinary.bse_lum[0], tempbinary.bse_lum[1]);
+		    exit(1);
+		  }
+		  /* REMOVED EVOLV1 CALL
 		  bse_evolv1_safely(&(merged_star->se_k), &(merged_star->se_mass), &(merged_star->se_mt), &(merged_star->se_radius), 
 				    &(merged_star->se_lum), &(merged_star->se_mc), &(merged_star->se_rc), &(merged_star->se_menv), 
 				    &(merged_star->se_renv), &(merged_star->se_ospin), &(merged_star->se_epoch), &(merged_star->se_tms), 
 				    &(merged_star->se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vsaddl);
+		  */
 		  
 		  /*		vs[0] += vsaddl[0];
 		    vs[1] += vsaddl[1];
 		    vs[2] += vsaddl[2]; */
 		  /* PDK vs array has now been increased. Although only 1st 3 would be used here anyways. */
+		  /* DONT GIVE MULTIPLE KICKS WHEN NOT USING EVOLV1
 		  for (i=0; i<=11; i++) {
                     vs[i] += vsaddl[i];
 		  }
+		  */
 		  merged_star->rad = merged_star->se_radius * RSUN / units.l;
 		  merged_star->m = merged_star->se_mt * MSUN / units.mstar;
 		} else {

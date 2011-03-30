@@ -2,6 +2,7 @@
 
 #include "cmc.h"
 #include "cmc_vars.h"
+#include "bse_wrap/bse_wrap.h" 
 
 void update_bse_from_sse(bse_t *bvars, sse_t *svars, int bmember) {
   bvars->bse_mass0[bmember] = svars->se_mass;
@@ -167,3 +168,141 @@ void compress_binary(star_t *bincom, binary_t *bin) {
   bincom->binind= 0;
 }
 
+
+void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb)
+		//double *M0, double *M, double *MC, double *AJ, double *OSPIN, int *KW, 
+		//                double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2,
+                //double *ZPARS, double *ECC, double *SEP, double *PORB,  
+{
+  int ii,jj;
+  bse_binary binary;
+  binary_t temphold;
+
+  //Because the FORTRAN routine, comenv.f, takes star one as the initiator of the CE we must ensure
+  //that the first star is a giant or the most massive giant.
+  if((tempbinary->bse_kw[0])>=10 || (tempbinary->bse_kw[0]) <= 1 || (tempbinary->bse_kw[0] == 7)){
+    //switch
+    temphold = *tempbinary;
+    for(ii=0;ii<=1;ii++){
+      jj = abs(ii-1);
+      tempbinary->bse_epoch[ii] = temphold.bse_epoch[jj];
+      tempbinary->bse_mass0[ii] = temphold.bse_mass0[jj];
+      tempbinary->bse_kw[ii] = temphold.bse_kw[jj];
+      tempbinary->bse_mass[ii] = temphold.bse_mass[jj];
+      tempbinary->bse_ospin[ii] = temphold.bse_ospin[jj];
+      //tempbinary->bse_B_0[ii] = temphold.bse_B_0[jj];
+      //tempbinary->bse_bacc[ii] = temphold.bse_bacc[jj];
+      //tempbinary->bse_tacc[ii] = temphold.bse_tacc[jj];
+      //tempbinary->bse_bcm_B[ii] = temphold.bse_bcm_B[jj];
+      //tempbinary->bse_bcm_formation[ii] = temphold.bse_bcm_formation[jj];
+      tempbinary->bse_radius[ii] = temphold.bse_radius[jj];
+      tempbinary->bse_lum[ii] = temphold.bse_lum[jj];
+      tempbinary->bse_massc[ii] = temphold.bse_massc[jj];
+      tempbinary->bse_radc[ii] = temphold.bse_radc[jj];
+      tempbinary->bse_menv[ii] = temphold.bse_menv[jj];
+      tempbinary->bse_renv[ii] = temphold.bse_renv[jj];
+      tempbinary->bse_tms[ii] = temphold.bse_tms[jj];
+      tempbinary->bse_bcm_radrol[ii] = temphold.bse_bcm_radrol[jj];
+      tempbinary->bse_bcm_dmdt[ii] = temphold.bse_bcm_dmdt[jj];
+    }
+  } else if ((tempbinary->bse_kw[1]>=2 && tempbinary->bse_kw[1]<=9 && tempbinary->bse_kw[1]!=7) && (tempbinary->bse_mass[1]>tempbinary->bse_mass[0])) {
+    //switch
+    temphold = *tempbinary;
+    for(ii=0;ii<=1;ii++){
+      jj = abs(ii-1);
+      tempbinary->bse_epoch[ii] = temphold.bse_epoch[jj];
+      tempbinary->bse_mass0[ii] = temphold.bse_mass0[jj];
+      tempbinary->bse_kw[ii] = temphold.bse_kw[jj];
+      tempbinary->bse_mass[ii] = temphold.bse_mass[jj];
+      tempbinary->bse_ospin[ii] = temphold.bse_ospin[jj];
+      //tempbinary->bse_B_0[ii] = temphold.bse_B_0[jj];
+      //tempbinary->bse_bacc[ii] = temphold.bse_bacc[jj];
+      //tempbinary->bse_tacc[ii] = temphold.bse_tacc[jj];
+      //tempbinary->bse_bcm_B[ii] = temphold.bse_bcm_B[jj];
+      //tempbinary->bse_bcm_formation[ii] = temphold.bse_bcm_formation[jj];
+      tempbinary->bse_radius[ii] = temphold.bse_radius[jj];
+      tempbinary->bse_lum[ii] = temphold.bse_lum[jj];
+      tempbinary->bse_massc[ii] = temphold.bse_massc[jj];
+      tempbinary->bse_radc[ii] = temphold.bse_radc[jj];
+      tempbinary->bse_menv[ii] = temphold.bse_menv[jj];
+      tempbinary->bse_renv[ii] = temphold.bse_renv[jj];
+      tempbinary->bse_tms[ii] = temphold.bse_tms[jj];
+      tempbinary->bse_bcm_radrol[ii] = temphold.bse_bcm_radrol[jj];
+      tempbinary->bse_bcm_dmdt[ii] = temphold.bse_bcm_dmdt[jj];
+    }
+  }
+  
+  binary.a = tempbinary->a * cmc_l_unit/RSUN; //separation in solar radii as used in comenv.f
+  binary.bse_tb = tempbinary->bse_tb;
+  binary.e = tempbinary->e;
+  binary.bse_tphys = tempbinary->bse_tphys;
+  binary.bse_epoch[0] = tempbinary->bse_epoch[0];
+  binary.bse_epoch[1] = tempbinary->bse_epoch[1];
+  binary.bse_mass[0] = tempbinary->bse_mass[0];
+  binary.bse_mass[1] = tempbinary->bse_mass[1];
+  binary.bse_mass0[0] = tempbinary->bse_mass0[0];
+  binary.bse_mass0[1] = tempbinary->bse_mass0[1];
+  binary.bse_kw[0] = tempbinary->bse_kw[0];
+  binary.bse_kw[1] = tempbinary->bse_kw[1];
+  binary.bse_radius[0] = tempbinary->bse_radius[0];
+  binary.bse_radius[1] = tempbinary->bse_radius[1];
+  binary.bse_lum[0] = tempbinary->bse_lum[0];
+  binary.bse_lum[1] = tempbinary->bse_lum[1];
+  binary.bse_massc[0] = tempbinary->bse_massc[0];
+  binary.bse_massc[1] = tempbinary->bse_massc[1];
+  binary.bse_radc[0] = tempbinary->bse_radc[0];
+  binary.bse_radc[1] = tempbinary->bse_radc[1];
+  binary.bse_menv[0] = tempbinary->bse_menv[0];
+  binary.bse_menv[1] = tempbinary->bse_menv[1];
+  binary.bse_renv[0] = tempbinary->bse_renv[0];
+  binary.bse_renv[1] = tempbinary->bse_renv[1];
+  binary.bse_ospin[0] = tempbinary->bse_ospin[0];
+  binary.bse_ospin[1] = tempbinary->bse_ospin[1];
+  //binary.bse_B_0[0] = tempbinary->bse_B_0[0];
+  //binary.bse_B_0[1] = tempbinary->bse_B_0[1];
+  //binary.bse_bacc[0] = tempbinary->bse_bacc[0];
+  //binary.bse_bacc[1] = tempbinary->bse_bacc[1];
+  //binary.bse_tacc[0] = tempbinary->bse_tacc[0];
+  //binary.bse_tacc[1] = tempbinary->bse_tacc[1];
+  //binary.bse_bcm_B[0] = tempbinary->bse_bcm_B[0];
+  //binary.bse_bcm_B[1] = tempbinary->bse_bcm_B[1];
+  //binary.bse_bcm_formation[0] = tempbinary->bse_bcm_formation[0];
+  //binary.bse_bcm_formation[1] = tempbinary->bse_bcm_formation[1];
+  //
+  bse_comenv(&(binary), zpars, vs, fb);
+  //
+  tempbinary->a = binary.a * RSUN/cmc_l_unit;
+  tempbinary->bse_tb = binary.bse_tb;
+  tempbinary->e = binary.e;
+  tempbinary->bse_tphys = binary.bse_tphys;
+  tempbinary->bse_epoch[0] = binary.bse_epoch[0];
+  tempbinary->bse_epoch[1] = binary.bse_epoch[1];
+  tempbinary->bse_mass[0] = binary.bse_mass[0];
+  tempbinary->bse_mass[1] = binary.bse_mass[1];
+  tempbinary->bse_mass0[0] = binary.bse_mass0[0];
+  tempbinary->bse_mass0[1] = binary.bse_mass0[1];
+  tempbinary->bse_kw[0] = binary.bse_kw[0];
+  tempbinary->bse_kw[1] = binary.bse_kw[1];
+  tempbinary->bse_radius[0] = binary.bse_radius[0];
+  tempbinary->bse_radius[1] = binary.bse_radius[1];
+  tempbinary->bse_lum[0] = binary.bse_lum[0];
+  tempbinary->bse_lum[1] = binary.bse_lum[1];
+  tempbinary->bse_massc[0] = binary.bse_massc[0];
+  tempbinary->bse_massc[1] = binary.bse_massc[1];
+  tempbinary->bse_radc[0] = binary.bse_radc[0];
+  tempbinary->bse_radc[1] = binary.bse_radc[1];
+  tempbinary->bse_menv[0] = binary.bse_menv[0];
+  tempbinary->bse_menv[1] = binary.bse_menv[1];
+  tempbinary->bse_renv[0] = binary.bse_renv[0];
+  tempbinary->bse_renv[1] = binary.bse_renv[1];
+  tempbinary->bse_ospin[0] = binary.bse_ospin[0];
+  tempbinary->bse_ospin[1] = binary.bse_ospin[1];
+  //tempbinary->bse_B_0[0] = binary.bse_B_0[0];
+  //tempbinary->bse_bacc[0] = binary.bse_bacc[0];
+  //tempbinary->bse_tacc[0] = binary.bse_tacc[0];
+  //tempbinary->bse_bcm_B[0] = binary.bse_bcm_B[0];
+  //tempbinary->bse_bcm_formation[0] = binary.bse_bcm_formation[0];
+  //tempbinary->bse_bcm_formation[1] = binary.bse_bcm_formation[1];
+  printf("after bse_comenv in cmc_bse_comenv: \n");
+  printf("after hrdiag: kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g epoch1=%g epoch2=%g \n", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
+}
