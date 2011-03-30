@@ -73,9 +73,9 @@
 * Make evolutionary changes to stars that have not reached KW > 5.
 *
       mass0 = mass
-C      if(mass0.gt.100.d0) mass = 100.d0
+      if(mass0.gt.100.d0) mass = 100.d0
       mt0 = mt
-C      if(mt0.gt.100.d0) mt = 100.d0
+      if(mt0.gt.100.d0) mt = 100.d0
 *
       if(kw.gt.6) goto 90
 *
@@ -781,12 +781,12 @@ C      if(mt0.gt.100.d0) mt = 100.d0
      &              lums(4),rzams,rtms,rg,menv,renv,k2)
       endif
 *
-C      if(mass.gt.99.99d0)then
-C         mass = mass0
-C      endif
-C      if(mt.gt.99.99d0)then
-C         mt = mt0
-C      endif
+      if(mass.gt.99.99d0)then
+         mass = mass0
+      endif
+      if(mt.gt.99.99d0)then
+         mt = mt0
+      endif
 *
       return
       end

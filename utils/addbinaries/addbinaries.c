@@ -110,7 +110,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 {
 	int success, success_a;
 	long i, j, planetntry;
-	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew, aminroche, mlow, mhigh, norm;
+	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew, aminroche;
 	double eta, temp, temp1, temp_a, temp_W, temp_k;
 	double tempm0, tempm1, tempa, tempe;
 	double kTcore, vcore, Eb, Ebmin, Ebmax, timeunitcgs, mtotal, m1, m2, X, qbin;
@@ -467,17 +467,9 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 			   	this assumes all stars in input file are id'ed sequentially from 1 */
 				cfd->bs_id2[j] = star_get_id_new();
 				/* set all secondary masses equal to 1 Jupiter*/
-				//cfd->bs_m2[j] = 0.001 / cfd->Mclus;
-				/*Assign masses so that df/dlogm = -0.48 equivalently df/dm = -1.48*/
-				X = rng_t113_dbl();
-				mlow = 3e-6;
-				mhigh = 3e-3;
-				norm = pow( (mhigh/mlow), -0.48 ) - 1.;
-				m2 = mlow * pow( (norm*X + 1.), (1./-0.48));
-				fprintf (stdout, "%.6g\n", m2);
-				cfd->bs_m2[j] = m2 / cfd->Mclus ;
+				cfd->bs_m2[j] = 0.001 / cfd->Mclus;
 				/* stellar evolution stuff */
-				star.se_mass = m2;
+				star.se_mass = 0.001;
 				star.se_k = 0;
 				/* setting the rest of the variables */
 				star.se_mt = star.se_mass;
@@ -665,70 +657,41 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	} else if (limits == 4 && binmf!=99) {
 		/* assign binaries according to Hurley's prescription, lognormal */
 		for (i=1; i<=cfd->NBINARY; i++) {
-			if (cfd->bs_m2[i]*cfd->Mclus < 0.01){
-				//fprintf (stdout, "came here\n");
-				/*set a according to Eq. 16 Egleton, Fitchett & Tout 1989; use eta=0.33, mode of a=0.11, in the range 0.01-1.5 AU
-				 * these choices worked reasonably well with the Kepler observed a dist.*/
-				eta = 0.33;
-				temp = 0.5*( pow(eta, 0.33) + pow(eta, -0.33) );
-				temp_k = acos (1./temp);
-	
-				success_a = 0;
-				while(!success_a){
-					temp_W = (-1. + rng_t113_dbl()*(2.));
-					temp1 = 1./cos(temp_k*temp_W) + tan(temp_k*temp_W) ;
-					temp_a = 0.11 * pow(temp1, (1./0.33));
-					temp_a = temp_a * AU / (cfd->Rvir * PARSEC);
-					if (temp_a <= 1.5*AU/(cfd->Rvir*PARSEC) && temp_a >= 0.01*AU/(cfd->Rvir*PARSEC)){
-						success_a = 1;
-						fprintf (stdout, "a= %.6g\n", temp_a*cfd->Rvir*PARSEC/AU);
-						cfd->bs_a[i] = temp_a;
-					}
-				}
-				/*setting some fixed a value*/
-				//cfd->bs_a[i] = 5. * AU / (cfd->Rvir * PARSEC);
-				/*All planets have zero e; reasonable since there is a high abundance of zero e for close in planets. actually we don't know.*/
-				cfd->bs_e[i] = 0.;
-			} else {
-				/* choose a from from near contact (5*(R1)) to 100 AU with 30 AU mode 
-				 * this is for Hurley 07 papers for runs K100-5 and K100-10*/
-				amin = 5.0 * (cfd->bs_Reff1[i]);
-				amax = max_a * AU / (cfd->Rvir * PARSEC);
-	
-				if (amax <= amin && ignoreradii == 0) {
-				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
-				  fprintf(stderr, "WARNING: setting amax = amin\n");
-				  amax = amin;
-				}
-				
-				/*set a according to Eq. 16 Egleton, Fitchett & Tout 1989*/
-				eta = 0.001;
-				temp = 0.5*( pow(eta, 0.33) + pow(eta, -0.33) );
-				temp_k = acos (1./temp);
-	
-				success_a = 0;
-				while(!success_a){
-					temp_W = (-1. + rng_t113_dbl()*(2.));
-					temp1 = 1./cos(temp_k*temp_W) + tan(temp_k*temp_W) ;
-					temp_a = peak_a * pow(temp1, (1./0.33));
-					temp_a = temp_a * AU / (cfd->Rvir * PARSEC);
-					if (temp_a <= amax && temp_a >= amin){
-						success_a = 1;
-						cfd->bs_a[i] = temp_a;
-					}
-				}
+			/* choose a from from near contact (5*(R1)) to 100 AU with 30 AU mode 
+			 * this is for Hurley 07 papers for runs K100-5 and K100-10*/
+			amin = 5.0 * (cfd->bs_Reff1[i]);
+			amax = max_a * AU / (cfd->Rvir * PARSEC);
 
-				/* get eccentricity from thermal distribution, truncated near contact */
-				if (ignoreradii == 0) {
-				  emax = 1.0 - amin / cfd->bs_a[i];
-				} else {
-				  emax = 1.0;
-				}
-				/*Thermal eccentricity*/
-				//cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
-				/*Aaron insists not to put thermal e; Rather putting in flat e dist.*/
-				cfd->bs_e[i] = emax * rng_t113_dbl();
+			if (amax <= amin && ignoreradii == 0) {
+			  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
+			  fprintf(stderr, "WARNING: setting amax = amin\n");
+			  amax = amin;
 			}
+			
+			/*set a according to Eq. 16 Egleton, Fitchett & Tout 1989*/
+			eta = 0.001;
+			temp = 0.5*( pow(eta, 0.33) + pow(eta, -0.33) );
+			temp_k = acos (1./temp);
+
+			success_a = 0;
+			while(!success_a){
+				temp_W = (-1. + rng_t113_dbl()*(2.));
+				temp1 = 1./cos(temp_k*temp_W) + tan(temp_k*temp_W) ;
+				temp_a = peak_a * pow(temp1, (1./0.33));
+				temp_a = temp_a * AU / (cfd->Rvir * PARSEC);
+				if (temp_a <= amax && temp_a >= amin){
+					success_a = 1;
+					cfd->bs_a[i] = temp_a;
+				}
+			}
+
+			/* get eccentricity from thermal distribution, truncated near contact */
+			if (ignoreradii == 0) {
+			  emax = 1.0 - amin / cfd->bs_a[i];
+			} else {
+			  emax = 1.0;
+			}
+			cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
 		}
 	} else if (binmf!=99) {
 		fprintf(stderr, "limits=%d unknown!\n", limits);

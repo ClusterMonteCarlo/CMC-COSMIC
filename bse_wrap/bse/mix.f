@@ -72,10 +72,10 @@
       AGE3 = 0.d0
 *
 *       Restrict merged stars to masses less than 100 Msun. 
-C      IF(M3.GE.100.D0)THEN
-C         M3 = 99.D0
-C         M03 = MIN(M03,M3)
-C      ENDIF
+      IF(M3.GE.100.D0)THEN
+         M3 = 99.D0
+         M03 = MIN(M03,M3)
+      ENDIF
 *
 *       Evaluate apparent age and other parameters.
 *
