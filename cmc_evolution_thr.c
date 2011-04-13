@@ -242,10 +242,15 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 
 double GetTimeStep(gsl_rng *rng) {
 	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs, Tse, DTse, Trejuv, DTrejuv, xcoll;
-	
+
+	double temp;	
 	/* calculate the relaxation timestep */
 	if (RELAXATION || FORCE_RLX_STEP) {
+		//Optimize simul_relax() later 
 		DTrel = simul_relax(rng);
+		temp = simul_relax_new();
+		printf("^^^^^^^^^^^^^^^^\nold=%g\tnew=%g\n^^^^^^^^^^^^^^^^^^\n",DTrel, temp);
+
 	} else {
 		DTrel = GSL_POSINF;
 	}

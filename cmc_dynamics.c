@@ -22,10 +22,17 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	FILE *binfp;
 	char filename[1024];
 
+#ifdef USE_MPI
+	mpi_calc_sigma_r();
+#else
 	/* Calculate and store velocity dispersion profile for use with breaking binaries later.
 	   This can't be calculated later since the properties of the cluster members are changing with time. */
 	calc_sigma_r();
+#endif
 
+#ifdef USE_MPI
+	if(myid==0) {
+#endif
 	/* useful debugging and file headers */
 	if (tcount == 1) {
 		fprintf(relaxationfile, "# time");
@@ -48,6 +55,9 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		fclose(binfp);
 	}
 	/* DEBUG */
+#ifdef USE_MPI
+	}
+#endif
 	
 	/* Original dt provided, saved for repeated encounters, where dt is changed */
 	SaveDt = dt;
@@ -67,7 +77,14 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		fflush(stdout);
 	}
 	fprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
-	
+
+#ifdef USE_MPI	
+   int mpiBegin, mpiEnd;
+   //mpiFindIndices( N_LIMIT-N_LIMIT%2, &mpiBegin, &mpiEnd );
+   mpiFindIndicesEven( 44, &mpiBegin, &mpiEnd );
+   printf("Func\tProc %d:\tLow=%ld\tHigh=%ld\n",myid, mpiBegin, mpiEnd);
+#endif 
+
 	/* the big loop, with limits chosen so that we omit the last star if it is not paired */
 	for (si=1; si<=N_LIMIT-N_LIMIT%2-1; si+=2) {
 		dt = SaveDt;

@@ -8,6 +8,9 @@
 #include <string.h>
 #include "cmc.h"
 #include "cmc_vars.h"
+//#include "cmc_mpi.h"
+
+
 
 void zero_star(long j)
 {
@@ -1175,6 +1178,50 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	fb_free_hier(hier);
 }
 
+double simul_relax_new(void)
+{
+	long si, k, p, N_LIMIT, simin, simax;
+	double dt, dtmin=GSL_POSINF, W, n_local;
+	double Mv2ave, Mave, M2ave, sigma;
+	
+	N_LIMIT = clus.N_MAX;
+
+	p = 5;
+	for (si=p+1; si<N_LIMIT-p; si+=2*p) {
+		simin = si - p;
+		simax = simin + (2 * p - 1);
+
+		Mv2ave = 0.0;
+		Mave = 0.0;
+		M2ave = 0.0;
+		for (k=simin; k<=simax; k++) {
+			Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mave += star[k].m * madhoc;
+			M2ave += sqr(star[k].m * madhoc);
+		}
+		Mv2ave /= (double) (2 * p);
+		Mave /= (double) (2 * p);
+		M2ave /= (double) (2 * p);
+		
+		/* sigma is the 3D velocity dispersion */
+		sigma = sqrt(Mv2ave/Mave);
+		/* average relative speed for a Maxwellian, from Binney & Tremaine */
+		W = 4.0 * sigma / sqrt(3.0 * PI);
+
+		/* Compute local density */
+		n_local = calc_n_local(si, 5, clus.N_MAX);
+		
+		/* remember that code time units are t_cross * N/log(GAMMA*N) */
+		/* this expression is from Freitag & Benz (2001), eqs. (8) and (9), we're just
+		   inputting locally-averaged quantities */
+		dt = sqr(2.0*THETASEMAX/PI) * (PI/32.0) * 
+			cub(W) / ( ((double) clus.N_STAR) * n_local * (4.0 * M2ave) );
+		dtmin = MIN(dtmin, dt);
+	}
+
+	return(dtmin);
+}
+
 /* simulate relaxation to set timestep */
 double simul_relax(gsl_rng *rng)
 {
@@ -1288,6 +1335,67 @@ void break_wide_binaries(void)
 	Eoops += -Eexcess;
 }
 
+void mpi_calc_sigma_r(void)
+{
+	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
+	double Mv2ave, Mave;
+	
+	N_LIMIT = clus.N_MAX;
+
+/*
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+*/
+	sigma_array.n = N_LIMIT;
+
+	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
+
+	int mpi_siminlast, mpi_N_LIMIT;
+	mpiFindIndices(N_LIMIT, &mpi_siminlast, &mpi_N_LIMIT);
+	siminlast = mpi_siminlast;//set to min index
+
+	if (myid!=0)
+		simaxlast = mpi_siminlast - 1 - p;
+	else
+		simaxlast = mpi_siminlast - 1;
+
+	//printf("\n\nProc=%d\tDisp=%ld\tLen=%ld\n\n",myid, mpiDisp[i], mpiLen[i]);
+	
+	Mv2ave = 0.0;
+	Mave = 0.0;
+	for (si=mpi_siminlast; si<=mpi_N_LIMIT; si++) {
+		simin = si - p;
+		simax = simin + (2 * p - 1);
+		if (simin < 1) {
+			simin = 1;
+			simax = simin + (2 * p - 1);
+		} else if (simax > N_LIMIT) {
+			simax = N_LIMIT;
+			simin = simax - (2 * p - 1);
+		}
+		//printf("\n\nProc=%d\tmpi_siminlast=%ld\tmpi_simaxlast=%ld\tsimin=%ld\tsimax=%ld\tmpi_NLIMIT=%ld\t\n\n",myid, siminlast, simaxlast, simin, simax, mpi_N_LIMIT);
+
+		// do sliding sum
+		for (k=siminlast; k<simin; k++) {
+			Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mave -= star[k].m * madhoc;
+		}
+
+		for (k=simaxlast+1; k<=simax; k++) {
+			Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mave += star[k].m * madhoc;
+		}
+		
+		/* store sigma (sigma is the 3D velocity dispersion) */
+		sigma_array.r[si] = star[si].r;
+		sigma_array.sigma[si] = sqrt(Mv2ave/Mave);
+		
+		siminlast = simin;
+		simaxlast = simax;
+	}
+}
+
 /* calculate and store the velocity dispersion profile */
 void calc_sigma_r(void)
 {
@@ -1295,14 +1403,42 @@ void calc_sigma_r(void)
 	double Mv2ave, Mave;
 	
 	N_LIMIT = clus.N_MAX;
+
+/*
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+*/
 	sigma_array.n = N_LIMIT;
 
 	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
-	siminlast = 1;
-	simaxlast = 0;
+/*
+#ifdef USE_MPI
+	int mpi_siminlast, mpi_N_LIMIT;
+	mpiFindIndices(N_LIMIT, &mpi_siminlast, &mpi_N_LIMIT);
+	siminlast = mpi_siminlast;//set to min index
+	if (myid!=0)
+		simaxlast = mpi_siminlast - 1 - p;
+	else
+		simaxlast = mpi_siminlast - 1;//set to min index - 1
+
+	//printf("\n\nProc=%d\tDisp=%ld\tLen=%ld\n\n",myid, mpiDisp[i], mpiLen[i]);
+	int test=0;
+#else
+*/
+	siminlast = 1;//set to min index
+	simaxlast = 0;//set to min index - 1
+//#endif
+	
 	Mv2ave = 0.0;
 	Mave = 0.0;
+/*
+#ifdef USE_MPI
+	for (si=mpi_siminlast; si<=mpi_N_LIMIT; si++) {
+#else
+*/
 	for (si=1; si<=N_LIMIT; si++) {
+//#endif
 		// determine appropriate bounds for summing
 		simin = si - p;
 		simax = simin + (2 * p - 1);
@@ -1313,7 +1449,14 @@ void calc_sigma_r(void)
 			simax = N_LIMIT;
 			simin = simax - (2 * p - 1);
 		}
-
+/*
+#ifdef USE_MPI
+	if (test==0){
+		test++;
+		printf("\n\nProc=%d\tmpi_siminlast=%ld\tmpi_simaxlast=%ld\tsimin=%ld\tsimax=%ld\tmpi_NLIMIT=%ld\t\n\n",myid, siminlast, simaxlast, simin, simax, mpi_N_LIMIT);
+	}
+#endif
+*/
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
 			Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));

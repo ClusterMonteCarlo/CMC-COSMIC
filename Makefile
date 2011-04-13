@@ -25,12 +25,12 @@ OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
 	cmc_utils.o cmc_fits.o cmc_stellar_evolution.o \
 	cmc_sort.o cmc_sscollision.o cmc_remove_star.o cmc_bhlosscone.o \
 	cmc_search_grid.o cmc_trace.o cmc_orbit.o cmc_core.o \
-	libs/fitslib.o libs/taus113-v2.o cmc_bse_utils.o
+	libs/fitslib.o libs/taus113-v2.o cmc_bse_utils.o cmc_mpi.o
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
 	$(FEWBODYDIR)/fewbody_int.o $(FEWBODYDIR)/fewbody_io.o \
 	$(FEWBODYDIR)/fewbody_isolate.o $(FEWBODYDIR)/fewbody_ks.o \
-        $(FEWBODYDIR)/fewbody_nonks.o $(FEWBODYDIR)/fewbody_scat.o \
+	$(FEWBODYDIR)/fewbody_nonks.o $(FEWBODYDIR)/fewbody_scat.o \
 	$(FEWBODYDIR)/fewbody_utils.o
 BSEOBJS = $(BSEWRAPDIR)/bse_wrap.o $(BSEDIR)/comenv.o $(BSEDIR)/corerd.o $(BSEDIR)/deltat.o \
         $(BSEDIR)/dgcore.o $(BSEDIR)/evolv1.o $(BSEDIR)/evolv2.o \

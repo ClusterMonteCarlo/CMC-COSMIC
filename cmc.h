@@ -10,6 +10,7 @@
 #include "common/taus113-v2.h"
 #include "fewbody-0.24/fewbody.h"
 #include "cmc_core.h"
+#include "cmc_mpi.h"
 
 // This automatic SVN versioning only updates the version of this file.
 //#define CMCVERSION "$Revision$"
@@ -64,7 +65,6 @@
 #define PREAGING_MASS 5.0
 
 #define MAX_STRING_LENGTH 2048
-int myid, procs;
 
 /* binaries */
 typedef struct{
@@ -460,6 +460,11 @@ long FindZero_r(long x1, long x2, double r);
 long FindZero_Q(long j, long x1, long x2, double E, double J);
 double potentialDifference(int particleIndex);
 void ComputeEnergy(void);
+#ifdef USE_MPI
+void mpiComputeEnergy1(void);
+void mpiComputeEnergy2(void);
+#endif
+
 void PrintLogOutput(void);
 double GetTimeStep(gsl_rng *rng);
 long CheckStop(struct tms tmsbuf);
@@ -552,8 +557,12 @@ void binint_log_collision(const char interaction_type[], long id, double mass, d
 void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng);
 
 double simul_relax(gsl_rng *rng);
+double simul_relax_new(void);
+
 void break_wide_binaries(void);
 void calc_sigma_r(void);
+void mpi_calc_sigma_r(void);
+
 double sigma_r(double r);
 
 int remove_old_star(double time, long k);

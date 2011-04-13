@@ -328,7 +328,6 @@ long CheckStop(struct tms tmsbufref) {
 
 	/* If total Energy has diminished by TERMINAL_ENERGY_DISPLACEMENT, then stop */
 	if (Etotal.tot < Etotal.ini - TERMINAL_ENERGY_DISPLACEMENT) {
-		printf("\nProc: %d\n", myid);
 		print_2Dsnapshot();
 		diaprintf("Terminal Energy reached... Terminating.\n");
 		return (1);
@@ -336,8 +335,92 @@ long CheckStop(struct tms tmsbufref) {
 	return (0); /* NOT stopping time yet */
 }
 
+void mpiComputeEnergy1(void)
+{
+	int i, mpiBegin, mpiEnd;
+   mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+
+/*
+   int *mpiD, *mpiL;
+   mpiD = (int *) malloc(procs * sizeof(int));
+   mpiL = (int *) malloc(procs * sizeof(int));
+   mpiFindDispAndLen( clus.N_MAX, mpiD, mpiL );
+   printf("Proc %d:\tclus.Nmax=%ld\tLow=%d\tHigh=%d\n",myid,clus.N_MAX, mpiBegin, mpiEnd);
+   for(k=0;k<procs;k++)
+   {
+	if(myid==0)
+      printf("\n\nProc=%d\tDisp=%d\tLen=%d\n\n",k, mpiD[k], mpiL[k]);
+   }
+*/
+	
+	for (i=mpiBegin; i<=mpiEnd; i++) {
+		star[i].E = star[i].phi + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
+		star[i].J = star[i].r * star[i].vt;		
+	}
+}
+
+
+void mpiComputeEnergy2(void)
+{
+	Etotal.tot = 0.0;
+	Etotal.K = 0.0;
+	Etotal.P = 0.0;
+	Etotal.Eint = 0.0;
+	Etotal.Eb = 0.0;
+	double temp = 0.0;
+
+	int i, mpiBegin, mpiEnd;
+   mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+	if (myid==0)
+		temp = star[0].phi;
+	MPI_Bcast(&temp, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	
+	for (i=mpiBegin; i<=mpiEnd; i++) {
+		Etotal.K += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star[i].m / clus.N_STAR;
+		Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
+		//change this so that star[0] is not accesses by all procs. do on root node
+		Etotal.P += temp * cenma.m*madhoc/ clus.N_STAR;
+
+		//Below: Binary indices are involved.		
+		if (star[i].binind == 0) {
+			Etotal.Eint += star[i].Eint;
+		} else if (binary[star[i].binind].inuse) {
+			Etotal.Eb += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
+				(2.0 * binary[star[i].binind].a);
+			Etotal.Eint += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
+		}
+	}
+	
+	Etotal.P *= 0.5;
+	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
+
+	MPI_Reduce(&Etotal.K, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Etotal.K = temp;
+	MPI_Reduce(&Etotal.P, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Etotal.P = temp;
+	MPI_Reduce(&Etotal.Eint, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Etotal.Eint = temp;
+	MPI_Reduce(&Etotal.Eb, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Etotal.Eb = temp;
+	MPI_Reduce(&Etotal.tot, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Etotal.tot = temp;
+}
+
+
 void ComputeEnergy(void)
 {
+/*
+#ifdef USE_MPI
+	//mpiComputeEnergy1();
+	//mpiComputeEnergy2();
+	//return;
+#endif
+*/
 	long i;
 	
 	Etotal.tot = 0.0;
@@ -345,13 +428,16 @@ void ComputeEnergy(void)
 	Etotal.P = 0.0;
 	Etotal.Eint = 0.0;
 	Etotal.Eb = 0.0;
-	
+
+	//split into 2 parts. till next comment can be done on all nodes
 	for (i=1; i<=clus.N_MAX; i++) {
 		star[i].E = star[i].phi + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
 		star[i].J = star[i].r * star[i].vt;
 		
+	//this is a reduce - write as new function
 		Etotal.K += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star[i].m / clus.N_STAR;
 		Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
+		//change this so that star[0] is not accesses by all procs. do on root node
 		Etotal.P += star[0].phi * cenma.m*madhoc/ clus.N_STAR;
 		
 		if (star[i].binind == 0) {
