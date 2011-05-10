@@ -34,6 +34,13 @@ AS_IF([test "x$enable_cuda" == "xyes" && test "x$enable_static_linking" == "xyes
       LIBTOOL_LDFLAGS=""
 ])
 
+AC_ARG_ENABLE([utils],
+              [AC_HELP_STRING([--enable-utils],
+                              [Build all the utilities that generate the initial conditions])],
+              [], [enable_utils=yes])
+
+AM_CONDITIONAL([BUILD_UTILS], test "x$enable_utils" == "xyes")
+
 AC_PROG_CC([gcc pathcc icc])
 # Set the maximum optimization
 AX_CC_MAXOPT

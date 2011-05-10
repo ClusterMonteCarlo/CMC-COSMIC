@@ -5,7 +5,11 @@ SUBDIRS = libs bse_wrap fewbody-0.24
 .cu.cpp:
 	${NVCC} --cuda -arch ${CUDAARCH} ${CPPFLAGS} -o $@ $<
 
-bin_PROGRAMS = cmc cmc_mkplummer cmc_mkking cmc_setimf cmc_setunits cmc_setstellar cmc_addbinaries
+bin_PROGRAMS = cmc
+
+if BUILD_UTILS
+bin_PROGRAMS+= cmc_mkplummer cmc_mkking cmc_setimf cmc_setunits cmc_setstellar cmc_addbinaries
+endif
 
 cmc_SOURCES = cmc_bhlosscone.c cmc_binbin.c cmc_binsingle.c cmc.c cmc_core.c \
 	      cmc_core.h cmc_dynamics.c cmc_dynamics_helper.c \
