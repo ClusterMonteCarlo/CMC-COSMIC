@@ -8,12 +8,15 @@
 #include <string.h>
 #include "cmc.h"
 #include "cmc_vars.h"
-//#include "cmc_mpi.h"
-
 
 
 void zero_star(long j)
 {
+#ifdef USE_MPI
+	star_r[j] = 0.0;
+	star_m[j] = 0.0;
+	star_phi[j] = 0.0;
+#endif
 	star[j].r = 0.0;
 	star[j].vr = 0.0;
 	star[j].vt = 0.0;
@@ -105,11 +108,23 @@ void destroy_obj(long i)
 	}
 	
 	/* need to zero out E's, J, but can't zero out potential---this is the easiest way */
+#ifdef USE_MPI
+	r = star_r[i];
+	phi = star_phi[i];
+#else
 	r = star[i].r;
 	phi = star[i].phi;
+#endif
+
 	zero_star(i);
+
+#ifdef USE_MPI
+	star_r[i] = r;
+	star_phi[i] = phi;
+#else
 	star[i].r = r;
 	star[i].phi = phi;
+#endif
 
 	remove_star_center(i);
 }
@@ -183,7 +198,8 @@ double calc_n_local(long k, long p, long N_LIMIT)
 	long kmin, kmax;
 
 	kmin = k - p;
-	kmax = k + p + 1;
+	//Bharath: Uneven no.of stars on either sides? Setting kmax = k+p rather than k+p+1.
+	kmax = k + p;
 
 	/* shouldn't the boundary here be kmin=1, not 0? */
 	if (kmin < 0) {
@@ -193,8 +209,11 @@ double calc_n_local(long k, long p, long N_LIMIT)
 		kmax = N_LIMIT;
 		kmin = N_LIMIT - 2 * p - 1;
 	}
-	
+#ifdef USE_MPI
+	return((2.0 * ((double) p)) * 3.0 / (4.0 * PI * (cub(star_r[kmax]) - cub(star_r[kmin]))));
+#else	
 	return((2.0 * ((double) p)) * 3.0 / (4.0 * PI * (cub(star[kmax].r) - cub(star[kmin].r))));
+#endif
 }
 
 double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT)
@@ -244,32 +263,54 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 		eprintf("W = 0!\n");
 		exit_cleanly(1);
 	}
-		
+
+#ifdef USE_MPI		
+	*rcm = (star_m[k] * star_r[k] + star_m[kp] * star_r[kp]) / (star_m[k] + star_m[kp]);
+	for (j=1; j<=3; j++) {
+		vcm[j] = (star_m[k] * v[j] + star_m[kp] * vp[j]) / (star_m[k] + star_m[kp]);
+	}
+#else
 	/* compute CM quantities */
 	*rcm = (star[k].m * star[k].r + star[kp].m * star[kp].r) / (star[k].m + star[kp].m);
 	for (j=1; j<=3; j++) {
 		vcm[j] = (star[k].m * v[j] + star[kp].m * vp[j]) / (star[k].m + star[kp].m);
 	}
+#endif
 }
 
 void set_star_EJ(long k)
 {
+#ifdef USE_MPI
+	star[k].E = star_phi[k] + 0.5 * (sqr(star[k].vr) + sqr(star[k].vt));
+	star[k].J = star_r[k] * star[k].vt;
+#else
 	star[k].E = star[k].phi + 0.5 * (sqr(star[k].vr) + sqr(star[k].vt));
 	star[k].J = star[k].r * star[k].vt;
+#endif
 }
 
 void set_star_news(long k)
 {
+#ifdef USE_MPI
+	star[k].rnew = star_r[k];
+#else
 	star[k].rnew = star[k].r;
+#endif
 	star[k].vrnew = star[k].vr;
 	star[k].vtnew = star[k].vt;
 }
 
 void set_star_olds(long k)
 {
+#ifdef USE_MPI
+	star[k].rOld = star_r[k];
+	star[k].r_peri = star_r[k];
+	star[k].r_apo = star_r[k];
+#else
 	star[k].rOld = star[k].r;
 	star[k].r_peri = star[k].r;
 	star[k].r_apo = star[k].r;
+#endif
 }
 
 /* find masses of merging stars from binary interaction components */
@@ -1178,6 +1219,59 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	fb_free_hier(hier);
 }
 
+#ifdef USE_MPI
+double mpi_simul_relax_new(void)
+{
+	long si, k, p, N_LIMIT, simin, simax;
+	double dt, dtmin=GSL_POSINF, DTrel=0.0, W, n_local;
+	double Mv2ave, Mave, M2ave, sigma;
+	
+	N_LIMIT = clus.N_MAX;
+	p = 10; //For this value, the results are very close to the original simul_relax() function.
+
+   int mpi_begin, mpi_end;
+   mpiFindIndices(N_LIMIT, &mpi_begin, &mpi_end);
+
+	for (si=mpi_begin+p+1; si<mpi_end-p; si+=2*p) {
+		simin = si - p;
+		simax = simin + (2 * p - 1);
+
+		Mv2ave = 0.0;
+		Mave = 0.0;
+		M2ave = 0.0;
+		for (k=simin; k<=simax; k++) {
+			Mv2ave += star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mave += star_m[k] * madhoc;
+			M2ave += sqr(star_m[k] * madhoc);
+		}
+		Mv2ave /= (double) (2 * p);
+		Mave /= (double) (2 * p);
+		M2ave /= (double) (2 * p);
+		
+		/* sigma is the 3D velocity dispersion */
+		sigma = sqrt(Mv2ave/Mave);
+		/* average relative speed for a Maxwellian, from Binney & Tremaine */
+		W = 4.0 * sigma / sqrt(3.0 * PI);
+
+		/* Compute local density */
+		n_local = calc_n_local(si, p, clus.N_MAX);
+		
+		/* remember that code time units are t_cross * N/log(GAMMA*N) */
+		/* this expression is from Freitag & Benz (2001), eqs. (8) and (9), we're just
+		   inputting locally-averaged quantities */
+
+		dt = sqr(2.0*THETASEMAX/PI) * (PI/32.0) * 
+			cub(W) / ( ((double) clus.N_STAR) * n_local * (4.0 * M2ave) );
+
+		dtmin = MIN(dtmin, dt);
+	}
+
+	MPI_Reduce(&dtmin, &DTrel, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);     
+
+	return(DTrel);
+}
+#endif
+
 double simul_relax_new(void)
 {
 	long si, k, p, N_LIMIT, simin, simax;
@@ -1185,8 +1279,8 @@ double simul_relax_new(void)
 	double Mv2ave, Mave, M2ave, sigma;
 	
 	N_LIMIT = clus.N_MAX;
+	p = 10; //For this value, the results are very close to the original simul_relax() function.
 
-	p = 5;
 	for (si=p+1; si<N_LIMIT-p; si+=2*p) {
 		simin = si - p;
 		simax = simin + (2 * p - 1);
@@ -1209,14 +1303,17 @@ double simul_relax_new(void)
 		W = 4.0 * sigma / sqrt(3.0 * PI);
 
 		/* Compute local density */
-		n_local = calc_n_local(si, 5, clus.N_MAX);
+		n_local = calc_n_local(si, p, clus.N_MAX);
 		
 		/* remember that code time units are t_cross * N/log(GAMMA*N) */
 		/* this expression is from Freitag & Benz (2001), eqs. (8) and (9), we're just
 		   inputting locally-averaged quantities */
+
 		dt = sqr(2.0*THETASEMAX/PI) * (PI/32.0) * 
 			cub(W) / ( ((double) clus.N_STAR) * n_local * (4.0 * M2ave) );
+
 		dtmin = MIN(dtmin, dt);
+		//dtmin = dt;
 	}
 
 	return(dtmin);
@@ -1335,18 +1432,13 @@ void break_wide_binaries(void)
 	Eoops += -Eexcess;
 }
 
+#ifdef USE_MPI
 void mpi_calc_sigma_r(void)
 {
 	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
 	double Mv2ave, Mave;
 	
 	N_LIMIT = clus.N_MAX;
-
-/*
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-*/
 	sigma_array.n = N_LIMIT;
 
 	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
@@ -1378,23 +1470,27 @@ void mpi_calc_sigma_r(void)
 
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
-			Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-			Mave -= star[k].m * madhoc;
+			/*MPI2: Using the global mass array*/
+			Mv2ave -= star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mave -= star_m[k] * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
-			Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-			Mave += star[k].m * madhoc;
+			/*MPI2: Using the global mass array*/
+			Mv2ave += star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mave += star_m[k] * madhoc;
 		}
 		
 		/* store sigma (sigma is the 3D velocity dispersion) */
-		sigma_array.r[si] = star[si].r;
+		/*MPI2: Using the global r array*/
+		sigma_array.r[si] = star_r[si];
 		sigma_array.sigma[si] = sqrt(Mv2ave/Mave);
 		
 		siminlast = simin;
 		simaxlast = simax;
 	}
 }
+#endif
 
 /* calculate and store the velocity dispersion profile */
 void calc_sigma_r(void)
@@ -1500,7 +1596,11 @@ double calc_average_mass_sqr(long index, long N_LIMIT) {
 
   M2ave = 0.0;
   for (k=simin; k<=simax; k++) {
+#ifdef USE_MPI
+    M2ave += sqr(star_m[k] * madhoc);
+#else
     M2ave += sqr(star[k].m * madhoc);
+#endif
   }
   M2ave /= (double) (2 * p);
 

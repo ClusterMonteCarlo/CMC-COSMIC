@@ -125,7 +125,11 @@ search_grid_get_interval(struct Search_Grid *grid, double r) {
 
   if (grid_index>= grid->length) {
     sindex.min= grid->radius[grid->length-1];
+#ifdef USE_MPI
+    if (r> star_r[clus.N_MAX]) {
+#else
     if (r> star[clus.N_MAX].r) {
+#endif
       sindex.max= clus.N_MAX;
     } else {
       sindex.max= clus.N_MAX-1;
@@ -144,7 +148,11 @@ search_grid_get_interval(struct Search_Grid *grid, double r) {
   sindex.min--;
   
   /* This prevents that min becomes larger than 1 if r<star[1].r (weird!!)*/
+#ifdef USE_MPI
+  if (r<star_r[1]) sindex.min= 0;
+#else
   if (r<star[1].r) sindex.min= 0;
+#endif
 
   return(sindex);
 };
@@ -155,7 +163,13 @@ long search_grid_get_grid_index(struct Search_Grid *grid, double r) {
   long ind;
 
   n= grid->power_law_exponent;
+
+#ifdef USE_MPI
+  r_to_n= (r-star_r[1])/grid->interpol_coeff;
+#else
   r_to_n= (r-star[1].r)/grid->interpol_coeff;
+#endif
+
   //ind_double= floor(exp(log(r_to_n)/n));
   ind_double= floor(r_to_n*r_to_n);
   if (ind_double> long_max) {

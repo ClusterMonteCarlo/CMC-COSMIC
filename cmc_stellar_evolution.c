@@ -193,159 +193,189 @@ void stellar_evolution_init(void){
 
 /* note that this routine is called after perturb_stars() and get_positions() */
 void do_stellar_evolution(gsl_rng *rng){
-  long k, kb;
-  int kprev,i;
-  double dtp, tphysf, vs[12], VKO;
-  binary_t tempbinary;
-  /* double vk, theta; */
-  
-  //for(k=1; k<=clus.N_MAX; k++){
-  for(k=1; k<=clus.N_MAX_NEW; k++){ 
-    if (star[k].binind == 0) { /* single star */
-        tphysf = TotalTime / MEGA_YEAR;
-        dtp = tphysf;
-	dtp = 0.0;
-        kprev = star[k].se_k;	  
+	long k, kb;
+	int kprev,i;
+	double dtp, tphysf, vs[12], VKO;
+	binary_t tempbinary;
+	/* double vk, theta; */
+//static int tst=0;
 
-        if (star[k].m<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
-		dprintf ("zeroed out star: skipping SE:\n"); 
-        	dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star[k].m, star[k].r, star[k].phi, star[k].vr, star[k].vt, star[k].E, star[k].J);	
-     	} else {
-        	DMse += star[k].m * madhoc;
-	/* Update star id for pass through. */
-		bse_set_id1_pass(star[k].id);
-		bse_set_id2_pass(0);
-		tempbinary.bse_mass0[0] = star[k].se_mass;
-		tempbinary.bse_mass0[1] = 0.0;
-		tempbinary.bse_kw[0] = star[k].se_k;
-		tempbinary.bse_kw[1] = 15;
-		tempbinary.bse_mass[0] = star[k].se_mt;
-		tempbinary.bse_mass[1] = 0.0;
-		tempbinary.bse_radius[0] = star[k].se_radius;
-		tempbinary.bse_radius[1] = 0.0;
-		tempbinary.bse_lum[0] = star[k].se_lum;
-		tempbinary.bse_lum[1] = 0.0;
-		tempbinary.bse_massc[0] = star[k].se_mc;
-		tempbinary.bse_massc[1] = 0.0;
-		tempbinary.bse_radc[0] = star[k].se_rc;
-		tempbinary.bse_radc[1] = 0.0;
-		tempbinary.bse_menv[0] = star[k].se_menv;
-		tempbinary.bse_menv[1] = 0.0;
-		tempbinary.bse_renv[0] = star[k].se_renv;
-		tempbinary.bse_renv[1] = 0.0;
-		tempbinary.bse_ospin[0] = star[k].se_ospin;
-		tempbinary.bse_ospin[1] = 0.0;
-		/*
-		tempbinary.bse_B_0[0] = star[k].se_B_0;
-		tempbinary.bse_B_0[1] = 0.0;
-		tempbinary.bse_bacc[0] = star[k].se_bacc;
-		tempbinary.bse_bacc[1] = 0.0;
-		tempbinary.bse_tacc[0] = star[k].se_tacc;
-		tempbinary.bse_tacc[1] = 0.0;
-		*/
-		tempbinary.bse_epoch[0] = star[k].se_epoch;
-		tempbinary.bse_epoch[1] = 0.0;
-		tempbinary.bse_tms[0] = star[k].se_tms;
-		tempbinary.bse_tms[1] = 0.0;
-		tempbinary.bse_tb = 0.0;
-		tempbinary.e = 0.0;
-		/*
-        	bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
-  			&(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
-		   	&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
-		   	&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
-		*/
-		bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
-				  &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
-				  &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
-				  &(tempbinary.bse_ospin[0]), 
-				  &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
-				  &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-				  &(tempbinary.bse_tb), &(tempbinary.e), vs);
+#ifdef USE_MPI 
+	int mpiBegin, mpiEnd;
+	mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
+	//printf("proc=%d\tbegin=%d\tend=%d\n", myid, mpiBegin, mpiEnd);
+	for (k=mpiBegin; k<=mpiEnd; k++) {
+#else
+		//for(k=1; k<=clus.N_MAX; k++){
+		for(k=1; k<=clus.N_MAX_NEW; k++){ 
+#endif
+			if (star[k].binind == 0) { /* single star */
+//tst++;
+//printf("\nprod=%d\ttest=%d\n",myid, tst);
+				tphysf = TotalTime / MEGA_YEAR;
+				dtp = tphysf;
+				dtp = 0.0;
+				kprev = star[k].se_k;	  
 
-		star[k].se_mass = tempbinary.bse_mass0[0];
-		star[k].se_k = tempbinary.bse_kw[0];
-		star[k].se_mt = tempbinary.bse_mass[0];
-		star[k].se_radius = tempbinary.bse_radius[0];
-		star[k].se_lum = tempbinary.bse_lum[0];
-		star[k].se_mc = tempbinary.bse_massc[0];
-		star[k].se_rc = tempbinary.bse_radc[0];
-		star[k].se_menv = tempbinary.bse_menv[0];
-		star[k].se_renv = tempbinary.bse_renv[0];
-		star[k].se_ospin = tempbinary.bse_ospin[0];
-		/*
-		star[k].se_B_0 = tempbinary.bse_B_0[0];
-		star[k].se_bacc = tempbinary.bse_bacc[0];
-		star[k].se_tacc = tempbinary.bse_tacc[0];
-		*/
-		star[k].se_epoch = tempbinary.bse_epoch[0];
-		star[k].se_tms = tempbinary.bse_tms[0];
-      
-        	star[k].rad = star[k].se_radius * RSUN / units.l;
-        	star[k].m = star[k].se_mt * MSUN / units.mstar;
-        	DMse -= star[k].m * madhoc;
-      
-        	/* birth kicks */
-        	if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
-          		//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
-        	}
-        	star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
-		vt_add_kick(&(star[k].vt),vs[1],vs[2]);
-        	//star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
-        	set_star_EJ(k);
-		VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
-		/* birth kicks */
-		if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
-		  //   dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
-		  dprintf("birth kick(iso): TT=%.18g, vs[0]=%.18g, vs[1]=%.18g, vs[2]=%.18g, vs[3]=%.18g, vr=%.18g, vt=%.18g VKO=%.18g type=%d star_id=%ld Pi=%g\n",TotalTime,vs[0],vs[1],vs[2],vs[3],star[k].vr,star[k].vt,VKO,star[k].se_k, star[k].id,star[k].se_ospin);
-		}
-      
-        	/* WD birth kicks, just in case they exist */
-        	/* if ((star[k].se_k >= 10 && star[k].se_k <= 12) && star[k].se_k != kprev) { */
-        	/* vk = 2.0e5 / (units.l/units.t); */
-        	/* 	theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0); */
-        	/* 	star[k].vr += cos(theta) * vk; */
-        	/* 	star[k].vt += sin(theta) * vk; */
-        	/* 	set_star_EJ(k); */
-        	/* } */
-	}
-    } else { /* binary */
-	tphysf = TotalTime / MEGA_YEAR;
-        kb = star[k].binind;
-	dtp = tphysf - binary[kb].bse_tphys;
-	dtp = 0.0;
-	if (star[k].m<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
-	  	dprintf ("zeroed out star: skipping SE:\n");	
-	  	dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star[k].m, binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
-	} else {
-	  	/* set binary orbital period (in days) from a */
-	 	binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
-	  	DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
-  /* Update star id for pass through. */
-		bse_set_id1_pass(binary[kb].id1);
-		bse_set_id2_pass(binary[kb].id2);
-	  	bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
-	  	     	&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
-		     	&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
-		     	&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-		     	&(binary[kb].bse_tb), &(binary[kb].e), vs);
-		if(isnan(binary[kb].bse_radius[0])){
-		  fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
-		  fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1], binary[kb].bse_tb);
-		  fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
-		  exit(1);
-		} 
-		if(isnan(binary[kb].bse_radius[1])){
-		  fprintf(stderr, "An isnan occured for r2 cmc_stellar_evolution.c\n");
-		  fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1]);
-		  fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
-		  exit(1);
-		}
-	  	handle_bse_outcome(k, kb, vs, tphysf);
-	}
-    }
-  }
-}
+#ifdef USE_MPI
+				if (star_m[k]<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
+					dprintf ("zeroed out star: skipping SE:\n"); 
+					dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star_m[k], star[k].r, star[k].phi, star[k].vr, star[k].vt, star[k].E, star[k].J);	
+#else
+					if (star[k].m<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
+						dprintf ("zeroed out star: skipping SE:\n"); 
+						dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star[k].m, star[k].r, star[k].phi, star[k].vr, star[k].vt, star[k].E, star[k].J);	
+#endif
+					} else {
+						DMse += star[k].m * madhoc;
+						/* Update star id for pass through. */
+						bse_set_id1_pass(star[k].id);
+						bse_set_id2_pass(0);
+						tempbinary.bse_mass0[0] = star[k].se_mass;
+						tempbinary.bse_mass0[1] = 0.0;
+						tempbinary.bse_kw[0] = star[k].se_k;
+						tempbinary.bse_kw[1] = 15;
+						tempbinary.bse_mass[0] = star[k].se_mt;
+						tempbinary.bse_mass[1] = 0.0;
+						tempbinary.bse_radius[0] = star[k].se_radius;
+						tempbinary.bse_radius[1] = 0.0;
+						tempbinary.bse_lum[0] = star[k].se_lum;
+						tempbinary.bse_lum[1] = 0.0;
+						tempbinary.bse_massc[0] = star[k].se_mc;
+						tempbinary.bse_massc[1] = 0.0;
+						tempbinary.bse_radc[0] = star[k].se_rc;
+						tempbinary.bse_radc[1] = 0.0;
+						tempbinary.bse_menv[0] = star[k].se_menv;
+						tempbinary.bse_menv[1] = 0.0;
+						tempbinary.bse_renv[0] = star[k].se_renv;
+						tempbinary.bse_renv[1] = 0.0;
+						tempbinary.bse_ospin[0] = star[k].se_ospin;
+						tempbinary.bse_ospin[1] = 0.0;
+						/*
+							tempbinary.bse_B_0[0] = star[k].se_B_0;
+							tempbinary.bse_B_0[1] = 0.0;
+							tempbinary.bse_bacc[0] = star[k].se_bacc;
+							tempbinary.bse_bacc[1] = 0.0;
+							tempbinary.bse_tacc[0] = star[k].se_tacc;
+							tempbinary.bse_tacc[1] = 0.0;
+						 */
+						tempbinary.bse_epoch[0] = star[k].se_epoch;
+						tempbinary.bse_epoch[1] = 0.0;
+						tempbinary.bse_tms[0] = star[k].se_tms;
+						tempbinary.bse_tms[1] = 0.0;
+						tempbinary.bse_tb = 0.0;
+						tempbinary.e = 0.0;
+						/*
+							bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
+							&(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
+							&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
+							&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+						 */
+						bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
+								&(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
+								&(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
+								&(tempbinary.bse_ospin[0]), 
+								&(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
+								&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+								&(tempbinary.bse_tb), &(tempbinary.e), vs);
+
+						star[k].se_mass = tempbinary.bse_mass0[0];
+						star[k].se_k = tempbinary.bse_kw[0];
+						star[k].se_mt = tempbinary.bse_mass[0];
+						star[k].se_radius = tempbinary.bse_radius[0];
+						star[k].se_lum = tempbinary.bse_lum[0];
+						star[k].se_mc = tempbinary.bse_massc[0];
+						star[k].se_rc = tempbinary.bse_radc[0];
+						star[k].se_menv = tempbinary.bse_menv[0];
+						star[k].se_renv = tempbinary.bse_renv[0];
+						star[k].se_ospin = tempbinary.bse_ospin[0];
+						/*
+							star[k].se_B_0 = tempbinary.bse_B_0[0];
+							star[k].se_bacc = tempbinary.bse_bacc[0];
+							star[k].se_tacc = tempbinary.bse_tacc[0];
+						 */
+						star[k].se_epoch = tempbinary.bse_epoch[0];
+						star[k].se_tms = tempbinary.bse_tms[0];
+
+						star[k].rad = star[k].se_radius * RSUN / units.l;
+#ifdef USE_MPI
+						star_m[k] = star[k].se_mt * MSUN / units.mstar;
+						DMse -= star_m[k] * madhoc;
+#else
+						star[k].m = star[k].se_mt * MSUN / units.mstar;
+						DMse -= star[k].m * madhoc;
+#endif     
+
+						/* birth kicks */
+						if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+							//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+						}
+						star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
+						vt_add_kick(&(star[k].vt),vs[1],vs[2]);
+						//star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+						set_star_EJ(k);
+						VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+						/* birth kicks */
+						if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+							//   dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+							dprintf("birth kick(iso): TT=%.18g, vs[0]=%.18g, vs[1]=%.18g, vs[2]=%.18g, vs[3]=%.18g, vr=%.18g, vt=%.18g VKO=%.18g type=%d star_id=%ld Pi=%g\n",TotalTime,vs[0],vs[1],vs[2],vs[3],star[k].vr,star[k].vt,VKO,star[k].se_k, star[k].id,star[k].se_ospin);
+						}
+
+						/* WD birth kicks, just in case they exist */
+						/* if ((star[k].se_k >= 10 && star[k].se_k <= 12) && star[k].se_k != kprev) { */
+						/* vk = 2.0e5 / (units.l/units.t); */
+						/* 	theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0); */
+						/* 	star[k].vr += cos(theta) * vk; */
+						/* 	star[k].vt += sin(theta) * vk; */
+						/* 	set_star_EJ(k); */
+						/* } */
+					}
+				} else { /* binary */
+					tphysf = TotalTime / MEGA_YEAR;
+					kb = star[k].binind;
+					dtp = tphysf - binary[kb].bse_tphys;
+					dtp = 0.0;
+#ifdef USE_MPI
+					if (star_m[k]<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
+						if(myid==0) {
+							dprintf ("zeroed out star: skipping SE:\n");	
+							dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[k], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
+						}
+#else
+						if (star[k].m<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
+							dprintf ("zeroed out star: skipping SE:\n");	
+							dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star[k].m, binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
+#endif
+						} else {
+							/* set binary orbital period (in days) from a */
+							binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
+							DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
+							/* Update star id for pass through. */
+							bse_set_id1_pass(binary[kb].id1);
+							bse_set_id2_pass(binary[kb].id2);
+							bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
+									&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
+									&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
+									&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+									&(binary[kb].bse_tb), &(binary[kb].e), vs);
+							if(isnan(binary[kb].bse_radius[0])){
+								fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
+								fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1], binary[kb].bse_tb);
+								fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
+								exit(1);
+							} 
+							if(isnan(binary[kb].bse_radius[1])){
+								fprintf(stderr, "An isnan occured for r2 cmc_stellar_evolution.c\n");
+								fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1]);
+								fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
+								exit(1);
+							}
+							handle_bse_outcome(k, kb, vs, tphysf);
+						}
+					}
+				}
+			}
+
 void write_stellar_data(void){
   long k, kb;
   FILE *stel_file;
@@ -789,12 +819,18 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   long kb;
   
   kb = star[k].binind;
+#ifdef USE_MPI
+  star_r[knew] = star_r[k];
+  star_m[knew] = binary[kb].bse_mass[kbi] * MSUN / units.mstar;
+  star_phi[knew] = star_phi[k];
+#else
   /* and set the stars' dynamical properties */
   star[knew].r = star[k].r;
-  star[knew].vr = star[k].vr;
-  star[knew].vt = star[k].vt;
   star[knew].m = binary[kb].bse_mass[kbi] * MSUN / units.mstar;
   star[knew].phi = star[k].phi;
+#endif
+  star[knew].vr = star[k].vr;
+  star[knew].vt = star[k].vt;
   set_star_EJ(knew);
   set_star_news(knew);
   set_star_olds(knew);

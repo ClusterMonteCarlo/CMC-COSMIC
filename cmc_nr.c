@@ -17,15 +17,27 @@ long FindZero_r(long kmin, long kmax, double r){
 	 * find and return the index k, such that star[k].r<r<star[k+1].r */
 	long ktry;
 
+#ifdef USE_MPI
+        if ((star_r[kmin]>r && kmin>1) || star_r[kmax]<r) {
+          dprintf("r is outside kmin kmax!!\n");
+          dprintf("star[kmin].r= %lf, star[kmax].r= %lf, kmin= %li, kmax= %li, r=%lf\n", 
+                star_r[kmin], star_r[kmax], kmin, kmax, r);
+        };
+#else
         if ((star[kmin].r>r && kmin>1) || star[kmax].r<r) {
           dprintf("r is outside kmin kmax!!\n");
           dprintf("star[kmin].r= %lf, star[kmax].r= %lf, kmin= %li, kmax= %li, r=%lf\n", 
                 star[kmin].r, star[kmax].r, kmin, kmax, r);
         };
+#endif
 
 	do {
 		ktry = (kmin+kmax+1)/2;
+#ifdef USE_MPI
+		if (star_r[ktry]<r){
+#else
 		if (star[ktry].r<r){
+#endif
 			kmin = ktry;
 		} else {
 			kmax = ktry-1;
@@ -118,7 +130,11 @@ long FindZero_r(long x1, long x2, double r)
 #ifndef EXPERIMENTAL
 #define FUNC(j, k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J))
 #else
+#ifdef USE_MPI
+#define FUNC(j, k, E, J) (2.0 * ((E) - (star_phi[(k)] + MPI_PHI_S(star_r[k], j))) - SQR((J)/star_r[(k)]))
+#else
 #define FUNC(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR((J)/star[(k)].r))
+#endif
 #endif
 long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 	/* another binary search:
@@ -145,7 +161,6 @@ long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 			}
 		} while (kmax!=kmin);
 	}
-
 
 	return kmin;
 }

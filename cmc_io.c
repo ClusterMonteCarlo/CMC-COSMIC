@@ -1342,8 +1342,11 @@ void print_conversion_script(void)
 char *sprint_star_dyn(long k, char string[MAX_STRING_LENGTH])
 {
 	snprintf(string, MAX_STRING_LENGTH, "(%ld,%.3g,%d)", 
+#ifdef USE_MPI
+		 star[k].id, star_m[k]*units.mstar/FB_CONST_MSUN, star[k].se_k);
+#else
 		 star[k].id, star[k].m*units.mstar/FB_CONST_MSUN, star[k].se_k);
-	
+#endif
 	return(string);
 }
 

@@ -451,6 +451,10 @@ void print_conversion_script(void);
 double potential(double r);	       /* get potential using star.phi */
 double fastpotential(double r, long kmin, long kmax);
 long potential_calculate(void);	/* calculate potential at star locations in star.phi */
+#ifdef USE_MPI
+long mpi_potential_calculate(void);
+#endif
+
 void comp_mass_percent(void);
 void comp_multi_mass_percent(void);
 orbit_rs_t calc_orbit_rs(long si, double E, double J);
@@ -460,9 +464,9 @@ long FindZero_r(long x1, long x2, double r);
 long FindZero_Q(long j, long x1, long x2, double E, double J);
 double potentialDifference(int particleIndex);
 void ComputeEnergy(void);
+
 #ifdef USE_MPI
-void mpiComputeEnergy1(void);
-void mpiComputeEnergy2(void);
+void mpi_ComputeEnergy(void);
 #endif
 
 void PrintLogOutput(void);
@@ -523,7 +527,17 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng);
 void qsorts(star_t *s, long n);
 void units_set(void);
 void central_calculate(void);
+
+#ifdef USE_MPI
+void mpi_central_calculate1(void);
+void mpi_central_calculate2(void);
+#endif
+
 void clusdyn_calculate(void);
+#ifdef USE_MPI
+void mpi_clusdyn_calculate(void);
+#endif
+
 void print_interaction_status(char status_text[]);
 void print_interaction_error(void);
 long star_get_id_new(void);
@@ -558,6 +572,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 double simul_relax(gsl_rng *rng);
 double simul_relax_new(void);
+#ifdef USE_MPI
+double mpi_simul_relax_new(void);
+#endif
 
 void break_wide_binaries(void);
 void calc_sigma_r(void);
@@ -685,7 +702,14 @@ void write_snapshot(char *filename);
 /* #define PHI_S(rad, j) ( ((rad)>=star[(j)].r ? star[(j)].m/(rad) : star[(j)].m/star[(j)].r) * (1.0/clus.N_STAR) - 0.5*star[(j)].m/clus.N_STAR/(rad) ) */
 /* correction to potential due to subtracting star's contribution (this is what Marc uses) */
 #define PHI_S(rad, j) ( ((rad)>=star[(j)].r ? star[(j)].m/(rad) : star[(j)].m/star[(j)].r) * (1.0/clus.N_STAR) )
+#define MPI_PHI_S(rad, j) ( ((rad)>=star_r[(j)] ? star_m[(j)]/(rad) : star_m[(j)]/star_r[(j)]) * (1.0/clus.N_STAR) )
+
+#ifdef USE_MPI
+#define function_Q(j, k, E, J) (2.0 * ((E) - (star_phi[(k)] + MPI_PHI_S(star_r[(k)], j))) - SQR((J) / star_r[(k)]))
+#else
 #define function_Q(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[(k)].r, j))) - SQR((J) / star[(k)].r))
+#endif
+
 #define gprintf(args...) if (!quiet) {fprintf(stdout, args);}
 #define diaprintf(args...) if (!quiet) {fprintf(stdout, "DIAGNOSTIC: %s(): ", __FUNCTION__); fprintf(stdout, args);}
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}

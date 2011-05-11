@@ -58,6 +58,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
         };
 #endif
  	/* simulate loss cone physics for central mass */
+	//MPI2: Yet to be parallelized.
 	P_orb = calc_P_orb(index);
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
   l2_scale= 1.;

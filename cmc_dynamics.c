@@ -21,6 +21,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	double qaverelbeta[4]={0.0,0.0,0.0,0.0};
 	FILE *binfp;
 	char filename[1024];
+	double mass_k, mass_kp; //Bharath: MPI
 
 #ifdef USE_MPI
 	mpi_calc_sigma_r();
@@ -31,33 +32,32 @@ void dynamics_apply(double dt, gsl_rng *rng)
 #endif
 
 #ifdef USE_MPI
-	if(myid==0) {
+	if(myid==0) 
 #endif
-	/* useful debugging and file headers */
-	if (tcount == 1) {
-		fprintf(relaxationfile, "# time");
-		for (i=0; i<4; i++) {
-			fprintf(relaxationfile, " thetase>%g:f,q,<M>,<r>", relbeta[i]);
-		}
-		fprintf(relaxationfile, "\n");
-	}
-
-	/* DEBUG: print out binary information every N steps */
-	if (0) {
-	/* if (tcount%50==0 || tcount==1) { */
-		sprintf(filename, "a_e2.%04ld.dat", tcount);
-		binfp = fopen(filename, "w");
-		for (j=1; j<=clus.N_MAX; j++) {
-			if (star[j].binind) {
-				fprintf(binfp, "%g %g\n", binary[star[j].binind].a, sqr(binary[star[j].binind].e));
+	{
+		/* useful debugging and file headers */
+		if (tcount == 1) {
+			fprintf(relaxationfile, "# time");
+			for (i=0; i<4; i++) {
+				fprintf(relaxationfile, " thetase>%g:f,q,<M>,<r>", relbeta[i]);
 			}
+			fprintf(relaxationfile, "\n");
 		}
-		fclose(binfp);
-	}
-	/* DEBUG */
-#ifdef USE_MPI
-	}
-#endif
+
+		/* DEBUG: print out binary information every N steps */
+		if (0) {
+			/* if (tcount%50==0 || tcount==1) { */
+			sprintf(filename, "a_e2.%04ld.dat", tcount);
+			binfp = fopen(filename, "w");
+			for (j=1; j<=clus.N_MAX; j++) {
+				if (star[j].binind) {
+					fprintf(binfp, "%g %g\n", binary[star[j].binind].a, sqr(binary[star[j].binind].e));
+				}
+			}
+			fclose(binfp);
+		}
+		/* DEBUG */
+	}	
 	
 	/* Original dt provided, saved for repeated encounters, where dt is changed */
 	SaveDt = dt;
@@ -71,33 +71,53 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	DE_bs = 0.0;
 
 	N_LIMIT = clus.N_MAX;
-	
+
+#ifdef USE_MPI
+	if(myid==0) 
+#endif
 	gprintf("%s(): performing interactions:", __FUNCTION__);
+
 	if (!quiet) {
 		fflush(stdout);
 	}
+
+#ifdef USE_MPI
+	if(myid==0) 
+#endif
 	fprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
 
 #ifdef USE_MPI	
    int mpiBegin, mpiEnd;
-   //mpiFindIndices( N_LIMIT-N_LIMIT%2, &mpiBegin, &mpiEnd );
-   mpiFindIndicesEven( 44, &mpiBegin, &mpiEnd );
-   printf("Func\tProc %d:\tLow=%ld\tHigh=%ld\n",myid, mpiBegin, mpiEnd);
-#endif 
+   mpiFindIndices( N_LIMIT-N_LIMIT%2, &mpiBegin, &mpiEnd );
+   //mpiFindIndicesEven( 44, &mpiBegin, &mpiEnd );
+   //printf("Func\tProc %d:\tLow=%ld\tHigh=%ld\n",myid, mpiBegin, mpiEnd);
 
+	for (si=mpiBegin; si<=mpiEnd; si+=2) {
+#else
 	/* the big loop, with limits chosen so that we omit the last star if it is not paired */
 	for (si=1; si<=N_LIMIT-N_LIMIT%2-1; si+=2) {
+#endif 
 		dt = SaveDt;
 		
 		k = si;
 		kp = si + 1;
-		
+	
+		//MPI2: Involves rng. To be handled later.	
 		/* set dynamical params for this pair */
 		calc_encounter_dyns(k, kp, v, vp, w, &W, &rcm, vcm, rng, 1);
 
+		//MPI: Makes use of r values of stars outside range. Assuming r array is global, no change needed for MPI version.
 		/* Compute local density */
 		n_local = calc_n_local(k, p, N_LIMIT);
-		
+	
+#ifdef USE_MPI
+	mass_k = star_m[k];
+	mass_kp = star_m[kp];
+#else
+	mass_k = star[k].m;
+	mass_kp = star[kp].m;
+#endif
+	
 		if (star[k].binind > 0 && star[kp].binind > 0) {
 			/* binary--binary cross section */
 			rperi = XBB * (binary[star[k].binind].a + binary[star[kp].binind].a);
@@ -135,37 +155,37 @@ void dynamics_apply(double dt, gsl_rng *rng)
 						S_tc = 0.0;
 					} else if (star[k].se_k >= 10 && star[kp].se_k == 1) {
 						/* compact object plus n=3 polytrope */
-						S_tc = sigma_tc_nd(3.0, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
+						S_tc = sigma_tc_nd(3.0, madhoc * mass_kp, star[kp].rad, madhoc * mass_k, W);
 					} else if (star[k].se_k >= 10) {
 						/* compact object plus n=1.5 polytrope */
-						S_tc = sigma_tc_nd(1.5, madhoc * star[kp].m, star[kp].rad, madhoc * star[k].m, W);
+						S_tc = sigma_tc_nd(1.5, madhoc * mass_kp, star[kp].rad, madhoc * mass_k, W);
 					} else if (star[k].se_k == 1 && star[kp].se_k >= 10) {
 						/* n=3 polytrope plus compact object */
-						S_tc = sigma_tc_nd(3.0, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
+						S_tc = sigma_tc_nd(3.0, madhoc * mass_k, star[k].rad, madhoc * mass_kp, W);
 					} else if (star[kp].se_k >= 10) {
 						/* n=1.5 polytrope plus compact object */
-						S_tc = sigma_tc_nd(1.5, madhoc * star[k].m, star[k].rad, madhoc * star[kp].m, W);
+						S_tc = sigma_tc_nd(1.5, madhoc * mass_k, star[k].rad, madhoc * mass_kp, W);
 					} else if (star[k].se_k == 1 && star[kp].se_k == 1) {
 						/* n=3 polytrope plus n=3 polytrope */
-						S_tc = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
+						S_tc = sigma_tc_nn(3.0, madhoc * mass_k, star[k].rad, 3.0, madhoc * mass_kp, star[kp].rad, W);
 					} else if (star[k].se_k == 1) {
 						/* n=3 polytrope plus n=1.5 polytrope */
-						S_tc = sigma_tc_nn(3.0, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
+						S_tc = sigma_tc_nn(3.0, madhoc * mass_k, star[k].rad, 1.5, madhoc * mass_kp, star[kp].rad, W);
 					} else if (star[kp].se_k == 1) {
 						/* n=1.5 polytrope plus n=3 polytrope */
-						S_tc = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 3.0, madhoc * star[kp].m, star[kp].rad, W);
+						S_tc = sigma_tc_nn(1.5, madhoc * mass_k, star[k].rad, 3.0, madhoc * mass_kp, star[kp].rad, W);
 					} else {
 						/* n=1.5 polytrope plus n=1.5 polytrope */
-						S_tc = sigma_tc_nn(1.5, madhoc * star[k].m, star[k].rad, 1.5, madhoc * star[kp].m, star[kp].rad, W);
+						S_tc = sigma_tc_nn(1.5, madhoc * mass_k, star[k].rad, 1.5, madhoc * mass_kp, star[kp].rad, W);
 					}
 					
 					/* cross section estimate for Lombardi, et al. (2006) */
 					if ((star[k].se_k <= 1 || star[k].se_k >= 10) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7)) {
 						rperi = 1.3 * star[kp].rad;
-						S_lombardi = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+						S_lombardi = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 					} else if ((star[kp].se_k <= 1 || star[kp].se_k >= 10) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7)) {
 						rperi = 1.3 * star[k].rad;
-						S_lombardi = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+						S_lombardi = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 					} else {
 						S_lombardi = 0.0;
 					}
@@ -179,11 +199,11 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				
 				/* standard sticky sphere collision cross section */
 				rperi = star[k].rad + star[kp].rad;
-				S_coll = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+				S_coll = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 				
 				/* take the max of all cross sections; the event type will be chosen by sampling the impact parameter */
 				S = MAX(S_coll, S_tmp);
-				rperi = madhoc*(star[k].m+star[kp].m)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*star[k].m+madhoc*star[kp].m))));
+				rperi = madhoc*(mass_k+mass_kp)/sqr(W) * (-1.0+sqrt(1.0+S/FB_CONST_PI*sqr(W*W/(madhoc*mass_k+madhoc*mass_kp))));
 			} else {
 				S = 0.0;
 			}
@@ -194,9 +214,12 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		P_enc = n_local * W * S * (dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)));
 		
 		/* warn if something went wrong with the calculation of Dt */
+#ifdef USE_MPI
+	if(myid==0)
 		if (P_enc >= 1.0) {
 			wprintf("P_enc = %g >= 1!\n", P_enc);
 		}
+#endif
 
 		/* do encounter or two-body relaxation */
 		if (rng_t113_dbl() < P_enc) {
@@ -290,21 +313,25 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			set_star_EJ(kp);
 		}
 	}
-	
-	/* print relaxation information */
-	fprintf(relaxationfile, "%g", TotalTime);
-	for (i=0; i<4; i++) {
-		fprintf(relaxationfile, " %g %g %g %g", 
-			((double) Nrelbeta[i])/((double) Nrel), 
-			qaverelbeta[i]/((double) Nrelbeta[i]),
-			maverelbeta[i]/((double) Nrelbeta[i]),
-			raverelbeta[i]/((double) Nrelbeta[i]));
-	}
-	fprintf(relaxationfile, "\n");
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	{
+		/* print relaxation information */
+		fprintf(relaxationfile, "%g", TotalTime);
+		for (i=0; i<4; i++) {
+			fprintf(relaxationfile, " %g %g %g %g", 
+					((double) Nrelbeta[i])/((double) Nrel), 
+					qaverelbeta[i]/((double) Nrelbeta[i]),
+					maverelbeta[i]/((double) Nrelbeta[i]),
+					raverelbeta[i]/((double) Nrelbeta[i]));
+		}
+		fprintf(relaxationfile, "\n");
 
-	/* put newline on "...performing interactions..." line */
-	gprintf("\n");
-	fprintf(logfile, "\n");
+		/* put newline on "...performing interactions..." line */
+		gprintf("\n");
+		fprintf(logfile, "\n");
+	}
 
 	/* break pathologically wide binaries */
 	break_wide_binaries();
