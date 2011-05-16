@@ -128,6 +128,7 @@
 *
 * Calculate stellar wind mass loss.
 *
+         write(*,*)'We are in windflag 2'
          teff = 1000.d0*((1130.d0*lum/(r**2.d0))**(1.d0/4.d0))
          dms = 0.d0
          if(lum.gt.4000.d0)then
