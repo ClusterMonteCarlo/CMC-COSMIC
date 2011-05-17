@@ -47,17 +47,17 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 
 	fevals=1; 
 	/* check for nearly circular orbit and do linear search */
-        if (Qtemp < 0.0) {
-          ktemp = -1;
-          do {
-            ktemp++; fevals++;
-				Qtemp = function_Q(si, ktemp, E, J);
-          } while (Qtemp < 0.0 && ktemp <= clus.N_MAX);		
-          if (ktemp >= clus.N_MAX) {
-            dprintf("linear search failed\n");
-            ktemp = si;
-          }
-        }
+	if (Qtemp < 0.0) {
+		ktemp = -1;
+		do {
+			ktemp++; fevals++;
+			Qtemp = function_Q(si, ktemp, E, J);
+		} while (Qtemp < 0.0 && ktemp <= clus.N_MAX);		
+		if (ktemp >= clus.N_MAX) {
+			dprintf("linear search failed\n");
+			ktemp = si;
+		}
+	}
 	//printf("==> index=%li, fevals=%li\n", si, fevals);
 
 	if (Qtemp <= 0) { /* possibly a circular orbit */
@@ -622,6 +622,7 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 			(2.0 * binary[star[j].binind].a);
 		Eintescaped += binary[star[j].binind].Eint1 + binary[star[j].binind].Eint2;
 	}
+
 #ifdef USE_MPI
 	TidalMassLoss += star_m[j] / clus.N_STAR;
 	Etidal += E * star_m[j] / clus.N_STAR;
@@ -699,6 +700,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	phi_rtidal = get_pos_dat->phi_rtidal;
 	phi_zero = get_pos_dat->phi_zero;
 	max_rad = get_pos_dat->max_rad;
+			printf("%d\tRtidal =%g\n",myid,Rtidal);
+
 
 #ifdef USE_CUDA
 	cuCalculateKs();
@@ -709,6 +712,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #else
 #ifdef USE_MPI 
 	int mpiBegin, mpiEnd;
+	int kk=0;
 	mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
 	for (si=mpiBegin; si<=mpiEnd; si++) {
 #else
@@ -733,6 +737,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (star[j].m < ZERO) {
 #endif
 			destroy_obj(j);
+			printf("%d\tindex of stripped star m = %d\t%g\n",myid, j,star_m[j]);
 			continue;
 		}
 
@@ -742,6 +747,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
 		}
+
 
 		/* calculate peri- and apocenter of orbit */
 #ifdef EXPERIMENTAL
@@ -819,6 +825,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			if (g0 < 1.0 / vr * drds)	/* if g0 < g(s0) then success! */
 				break;
 		}
+
 		if (k == N_TRY + 1) {
 			eprintf("N_TRY exceeded\n");
 			exit_cleanly(-1);

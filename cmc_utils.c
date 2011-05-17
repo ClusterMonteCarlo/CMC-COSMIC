@@ -157,11 +157,22 @@ void set_velocities3(void){
 	long i;
 	
 	Eexcess = 0.0;
+#ifdef USE_MPI 
+	int mpiBegin, mpiEnd;
+	mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+	for (i=mpiBegin; i<=mpiEnd; i++) {
+#else
 	for (i = 1; i <= clus.N_MAX; i++) {
+#endif
 		/* modify velocities of stars that have only undergone relaxation */
 		if (star[i].interacted == 0) {
+#ifdef USE_MPI
+			Unewrold = potential(star[i].rOld) + MPI_PHI_S(star[i].rOld, i);
+			Unewrnew = star_phi[i] + MPI_PHI_S(star[i].r, i);
+#else
 			Unewrold = potential(star[i].rOld) + PHI_S(star[i].rOld, i);
 			Unewrnew = star[i].phi + PHI_S(star[i].r, i);
+#endif
 			vold2 = star[i].vtold*star[i].vtold + 
 				star[i].vrold*star[i].vrold;
 			/* predict new velocity */
@@ -170,7 +181,11 @@ void set_velocities3(void){
 			/* new velocity can be unphysical, so just use value predicted by old potential
 			   (this is already set in .vr and .vt) */
 			if (vnew2 <= 0.0) {
+#ifdef USE_MPI
+				Eexcess += 0.5*(sqr(star[i].vr)+sqr(star[i].vt)-vnew2)*star_m[i];
+#else
 				Eexcess += 0.5*(sqr(star[i].vr)+sqr(star[i].vt)-vnew2)*star[i].m;
+#endif
 			} else {
 				/* scale velocity, preserving v_t/v_r */
 				alpha = sqrt(vnew2/(sqr(star[i].vr)+sqr(star[i].vt)));
@@ -179,10 +194,17 @@ void set_velocities3(void){
 				
 				/* if there is excess energy added, try to remove at 
 				   least part of it from this star */
+#ifdef USE_MPI
+				if(Eexcess > 0 && Eexcess < 0.5*(sqr(star[i].vt)+sqr(star[i].vr))*star_m[i]){
+					exc_ratio = 
+						sqrt( (sqr(star[i].vt)+sqr(star[i].vr)-2*Eexcess/star_m[i])/
+						      (sqr(star[i].vt)+sqr(star[i].vr)) );
+#else		
 				if(Eexcess > 0 && Eexcess < 0.5*(sqr(star[i].vt)+sqr(star[i].vr))*star[i].m){
 					exc_ratio = 
 						sqrt( (sqr(star[i].vt)+sqr(star[i].vr)-2*Eexcess/star[i].m)/
 						      (sqr(star[i].vt)+sqr(star[i].vr)) );
+#endif
 					star[i].vr *= exc_ratio;
 					star[i].vt *= exc_ratio;
 					Eexcess = 0.0;
@@ -738,26 +760,26 @@ void comp_mass_percent(){
 	long int k, mcount;
 
 	/* Computing radii containing mass_pc[i] % of the mass */
-        if (MASS_PC_BH_INCLUDE) {
-          mprev = cenma.m * madhoc;
-          for(mcount=0; mcount<MASS_PC_COUNT; mcount++){
-            if ( mprev/Mtotal > mass_pc[mcount] ) {
-              mass_r[mcount] = MINIMUM_R;
-              ave_mass_r[mcount] = 0.0;
-              no_star_r[mcount] = 0;
-              densities_r[mcount] = 0.0;
-              ke_rad_r[mcount] = 0.0;
-              ke_tan_r[mcount] = 0.0;
-              v2_rad_r[mcount] = 0.0;
-              v2_tan_r[mcount] = 0.0;
-            } else {
-              break;
-            }
-          }
-        } else {
-          mprev= 0.;
-          mcount=0;
-        }
+	if (MASS_PC_BH_INCLUDE) {
+		mprev = cenma.m * madhoc;
+		for(mcount=0; mcount<MASS_PC_COUNT; mcount++){
+			if ( mprev/Mtotal > mass_pc[mcount] ) {
+				mass_r[mcount] = MINIMUM_R;
+				ave_mass_r[mcount] = 0.0;
+				no_star_r[mcount] = 0;
+				densities_r[mcount] = 0.0;
+				ke_rad_r[mcount] = 0.0;
+				ke_tan_r[mcount] = 0.0;
+				v2_rad_r[mcount] = 0.0;
+				v2_tan_r[mcount] = 0.0;
+			} else {
+				break;
+			}
+		}
+	} else {
+		mprev= 0.;
+		mcount=0;
+	}
 
 	for (k = 1; k <= clus.N_MAX; k++) {	/* Only need to count up to N_MAX */
 		mprev += star[k].m / clus.N_STAR;
