@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 #endif
 
 	total_bisections= 0;
-	printf("%d\tMtotal=%d\n",myid,Mtotal);
+	printf("%d\tR_MAX=%d\n",myid,R_MAX);
 
 	/*
 		Skipping search grid for MPI
@@ -476,7 +476,6 @@ for(i=0;i<procs;i++)
 #ifdef USE_MPI
 					if(myid==0) 
 						mpi_potential_calculate();
-printf("%d\tHi\n",myid);
 					MPI_Bcast(star_phi, clus.N_MAX_NEW, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #else
 					potential_calculate();
