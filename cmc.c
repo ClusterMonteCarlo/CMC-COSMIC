@@ -186,13 +186,22 @@ int main(int argc, char *argv[])
 	if(myid==0) 
 		mpi_potential_calculate();
 	MPI_Bcast(star_phi, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #else
 		potential_calculate();
 #endif
 
 	total_bisections= 0;
+/*
 	printf("%d\tR_MAX=%d\n",myid,R_MAX);
+	MPI_Barrier(MPI_COMM_WORLD);
+	printf("%d\t1\tRtidal =%g\n",myid,Rtidal);
+	MPI_Barrier(MPI_COMM_WORLD);
 
+	printf("%d\t1\torbit_r =%g\n",myid,orbit_r);
+*/
 	/*
 		Skipping search grid for MPI
 		if (SEARCH_GRID) 
@@ -477,6 +486,9 @@ for(i=0;i<procs;i++)
 					if(myid==0) 
 						mpi_potential_calculate();
 					MPI_Bcast(star_phi, clus.N_MAX_NEW, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #else
 					potential_calculate();
 #endif

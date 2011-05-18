@@ -700,7 +700,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	phi_rtidal = get_pos_dat->phi_rtidal;
 	phi_zero = get_pos_dat->phi_zero;
 	max_rad = get_pos_dat->max_rad;
-			printf("%d\tRtidal =%g\n",myid,Rtidal);
+	printf("%d\tRtidal =%g\n",myid,Rtidal);
 
 
 #ifdef USE_CUDA
