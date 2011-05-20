@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD,&procs);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+	MPI_Status stat;
+
 	int mpiBegin, mpiEnd;
 	double starttime, endtime, temptime; 
 	int *mpiDisp, *mpiLen;
@@ -31,7 +33,6 @@ int main(int argc, char *argv[])
 	mpiLen = (int *) malloc(procs * sizeof(int));
 #endif
 	FILE *ftest1;
-	FILE *ftest2;
 	int si;
 
 	struct tms tmsbuf, tmsbufref;
@@ -61,8 +62,6 @@ int main(int argc, char *argv[])
 #ifdef USE_MPI	
 	//These have to be declared here because N_STAR_DIM is initialized only in parser().
 	double test1[N_STAR_DIM];
-	double test2[N_STAR_DIM];	
-	double test3[N_STAR_DIM];	
 #endif
 
 	/* print version information to log file */
@@ -138,10 +137,8 @@ int main(int argc, char *argv[])
 
 
 	//MPI2: mpi_calc_sigma_r(): Tests for precision: Biggest errors are ~ 1e-13. Might be because of catastrphic cancellation/rounding errors?. This might be due to the already imprecise but faster serial code . In a sense, the MPI version might be more precise, because for every processor, actual average is performed for the 1st local star which means errors dont carry over from the previous set of stars which are handled by another processor.
-
 #ifdef USE_MPI
 	mpi_calc_sigma_r();
-#else
 	//for first step, do on all nodes. later will need scattering of particles and also some ghost particles data.
 		calc_sigma_r(); //requires data from some neighbouring particles. must be handled during data read. look inside function for more comments
 #endif
@@ -194,14 +191,7 @@ int main(int argc, char *argv[])
 #endif
 
 	total_bisections= 0;
-/*
-	printf("%d\tR_MAX=%d\n",myid,R_MAX);
-	MPI_Barrier(MPI_COMM_WORLD);
-	printf("%d\t1\tRtidal =%g\n",myid,Rtidal);
-	MPI_Barrier(MPI_COMM_WORLD);
 
-	printf("%d\t1\torbit_r =%g\n",myid,orbit_r);
-*/
 	/*
 		Skipping search grid for MPI
 		if (SEARCH_GRID) 
@@ -404,9 +394,10 @@ int main(int argc, char *argv[])
 					}	
 				}
 
+				printf("\tStart\n");
 				/* this calls get_positions() */
 				tidally_strip_stars();
-
+				printf("\tStop\n");
 
 #ifdef USE_MPI 
 				mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
@@ -435,53 +426,80 @@ int main(int argc, char *argv[])
 					//MPI2: Collecting the r and m arrays into the original star structure for sorting.
 					mpiFindDispAndLen( clus.N_MAX_NEW, mpiDisp, mpiLen );
 
-for(i=0;i<procs;i++)
-	mpiLen[i] *= sizeof(star_t); 
+					for(i=0;i<procs;i++)
+						mpiLen[i] *= sizeof(star_t); 
 
-					MPI_Gatherv( &star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, &star[1], mpiLen, mpiDisp, MPI_BYTE, 0, MPI_COMM_WORLD);
-					//MPI_Gatherv( star, clus.N_MAX_NEW/procs, sizeof(star_t), &star[1], mpiLen, mpiDisp, sizeof(star_t), 0, MPI_COMM_WORLD);
-					//MPI_Gatherv( &sigma_array.sigma[mpiDisp[myid]], mpiLen[myid], MPI_DOUBLE, &sigma_array.sigma[0], mpiLen, mpiDisp, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
+					for(i=mpiBegin; i<=mpiEnd; i++) {
+						star[i].r = star_r[i];
+						star[i].m = star_m[i];
+						star[i].EI = myid;
+					}
+
+					//printf("%d\tmpiBegin=%d\tmpiEnd=%d\n",myid, mpiBegin, mpiEnd);
+
+					//MPI2: To be refactored into separate function later.
+					if(myid!=0)
+		        		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+					else
+						for(i=1;i<procs;i++)
+							MPI_Recv(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+
+					if(myid==0)
+					{
+						ftest1 = fopen("test_mpi_rtest0.dat","w");
+						for(i=1; i<=clus.N_MAX; i++) {
+							fprintf( ftest1,  "%d\t%g\n",i, star[i].r);
+						}
+						fclose(ftest1);
+					}
 #endif
 
+#ifdef USE_MPI
+					if(myid==0)
+#endif
 					/* Sorting stars by radius. The 0th star at radius 0 
 						and (N_STAR+1)th star at SF_INFINITY are already set earlier.
 					 */
-#ifdef USE_MPI
-					if(myid==0)
-						for(i=0; i<=clus.N_MAX_NEW; i++) {
-							star[i].r = star_r[i];
-							star[i].m = star_m[i];
-						}
-#endif
-
-#ifdef USE_MPI
-					if(myid==0)
-#endif
 						qsorts(star+1,clus.N_MAX_NEW); //parallel sort
 
 #ifdef USE_MPI
-					//MPI_Scatterv(void* sendbuf, int *sendcounts, int *displs, MPI_Datatype sendtype, void* recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm) 
-					MPI_Scatterv( &star[1], mpiLen, mpiDisp, MPI_BYTE, &star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, MPI_COMM_WORLD);
+					//MPI2: To be refactored into separate function later.
 					if(myid==0)
-						for(i=0; i<=clus.N_MAX_NEW; i++) {
+						for(i=1;i<procs;i++)
+							MPI_Send(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD);
+					else
+		        		MPI_Recv(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD, &stat);
+
+					//mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+					if(myid==0)
+						for(i=1; i<=clus.N_MAX; i++) {
 							star_r[i] = star[i].r;
 							star_m[i] = star[i].m;
 						}
-#endif
+					MPI_Bcast(star_m, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(star_r, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-/*
-#ifdef USE_MPI
 					if(myid==0)
-#endif
 					{
-						ftest2 = fopen("test_mpi_tss0.dat","w");
+						ftest1 = fopen("test_mpi_rtest1.dat","w");
 						for(i=1; i<=clus.N_MAX; i++) {
-							fprintf( ftest2,  "%d\t%g\n",i, star[i].r);
+							fprintf( ftest1,  "%d\t%g\n",i, star[i].r);
 						}
-						fclose(ftest2);
+						fclose(ftest1);
 					}
-*/
+					if(myid==1)
+					{
+						ftest1 = fopen("test_mpi_rtest2.dat","w");
+						for(i=1; i<=clus.N_MAX; i++) {
+							fprintf( ftest1,  "%d\t%g\n",i, star_r[i]);
+						}
+						fclose(ftest1);
+					}
+#endif
 
+
+				printf("\tStart\n");
 #ifdef USE_MPI
 					if(myid==0) 
 						mpi_potential_calculate();
@@ -492,6 +510,7 @@ for(i=0;i<procs;i++)
 #else
 					potential_calculate();
 #endif
+				printf("\tStop\n");
 
 					//commenting out for MPI
 					/*

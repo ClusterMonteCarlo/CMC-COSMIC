@@ -72,10 +72,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 
 	N_LIMIT = clus.N_MAX;
 
-#ifdef USE_MPI
-	if(myid==0) 
-#endif
-	gprintf("%s(): performing interactions:", __FUNCTION__);
+	gprintf("%s(): performing interactions:\n", __FUNCTION__);
 
 	if (!quiet) {
 		fflush(stdout);

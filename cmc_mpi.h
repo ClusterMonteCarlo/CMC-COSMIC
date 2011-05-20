@@ -1,9 +1,10 @@
 /* Contains all MPI related variables and functions */
 
+/*
 #ifndef USE_MPI
 #define USE_MPI
 #endif
-
+*/
 #include <mpi.h>
 
 /* Global variables required for any code using MPI */

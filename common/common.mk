@@ -58,6 +58,7 @@ CFLAGS = -Wall -O3 -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DE
 #CFLAGS = -Wall -g -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\"" $(DEBUG_FLAGS)
 LIBFLAGS = -lpthread -lz -lgsl -lgslcblas -lcfitsio $(FLIBS) -lm $(DEBUG_LIBS)
 else
+
 ifeq ($(UNAME),Darwin)
 CC = gcc
 #CFLAGS = -Wall -O3 -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include -L/sw/lib -L/opt/local/lib -L/sw/lib/gcc4.4/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
@@ -68,6 +69,7 @@ CFLAGS = -Wall -O3 -g -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include
 #CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio $(FLIBS) -lm
 else
+
 ifeq ($(UNAME),AIX)
 CFLAGS = -Wall -O3 -I/u/ac/fregeau/local/include -L/u/ac/fregeau/local/lib -I/usr/local/include -L/usr/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio -liberty $(FLIBS) -lm
@@ -112,11 +114,9 @@ ifeq ($(HOSTNAME),fugu.phys.northwestern.edu)
 #CFLAGS := $(CFLAGS) -march=opteron -I/usr/include/cfitsio
 #CC = gcc
 CFLAGS := $(CFLAGS) -march=k8 -I/export/apps/gsl-1.9/include -I/export/apps/cfitsio/include -L/export/apps/gsl-1.9/lib -L/export/apps/cfitsio/lib -L/usr/lib -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/
-CFLAGS := `mpicc -showme:compile` $(CFLAGS)
 #CFLAGS := $(CFLAGS) -march=k8 -I/usr/include/cfitsio
 #CFLAGS := $(CFLAGS) -m32 -march=k8 -I/share/apps/gsl/include -L/share/apps/gsl/lib -I/share/apps/cfitsio/include -L/share/apps/cfitsio/lib $(DEBUG_FLAGS)
 #LIBFLAGS := $(LIBFLAGS) -static 
-LIBFLAGS := $(LIBFLAGS) `mpicc -showme:link`
 #LIBFLAGS := $(LIBFLAGS) 
 endif
 
@@ -142,3 +142,34 @@ FEWBODYDIR = fewbody-0.24
 BSEDIR = bse_wrap/bse
 BSEWRAPDIR = bse_wrap
 CUDADIR = cuda
+
+##############################################################################
+#----------- CUDA suppport ----------------#
+#determines if cuda is compiled and if emulation mode
+##############################################################################
+use_cuda=0
+emu=0
+
+ifeq ($(use_cuda), 1)
+CFLAGS   += -DUSE_CUDA
+CUDAOBJS = $(CUDADIR)/cmc_cuda.cu_o
+CUDAINC  = -I./$(CUDADIR)/common/inc
+CFLAGS	 += -L/usr/local/cuda/lib64 -L./$(CUDADIR)/common/lib -L./$(CUDADIR)/lib
+CUDALIB  = -fPIC -lcuda -lcudart
+ifeq ($(emu), 1)
+CFLAGS 	+= -D__DEVICE_EMULATION__
+endif 
+endif
+
+##############################################################################
+#----------- MPI suppport ----------------#
+##############################################################################
+use_mpi=0
+
+ifeq ($(use_mpi), 1)
+CFLAGS   += -DUSE_MPI
+MPIOBJS = cmc_mpi.o
+CFLAGS := `mpicc -showme:compile` $(CFLAGS)
+LIBFLAGS := $(LIBFLAGS) `mpicc -showme:link`
+endif
+

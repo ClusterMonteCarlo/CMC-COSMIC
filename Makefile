@@ -1,22 +1,5 @@
 include common/common.mk
 
-#----------- CUDA suppport ----------------#
-#determines if cuda is compiled and if emulation mode
-use_cuda=0
-emu=0
-
-ifeq ($(use_cuda), 1)
-CFLAGS   += -DUSE_CUDA
-CUDAOBJS = $(CUDADIR)/cmc_cuda.cu_o
-CUDAINC  = -I./$(CUDADIR)/common/inc
-CFLAGS	 += -L/usr/local/cuda/lib64 -L./$(CUDADIR)/common/lib -L./$(CUDADIR)/lib
-CUDALIB  = -fPIC -lcuda -lcudart
-ifeq ($(emu), 1)
-CFLAGS 	+= -D__DEVICE_EMULATION__
-endif 
-endif
-#------------------------------------------#
-
 # standard executable
 EXE = cmc
 OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
@@ -25,7 +8,7 @@ OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
 	cmc_utils.o cmc_fits.o cmc_stellar_evolution.o \
 	cmc_sort.o cmc_sscollision.o cmc_remove_star.o cmc_bhlosscone.o \
 	cmc_search_grid.o cmc_trace.o cmc_orbit.o cmc_core.o \
-	libs/fitslib.o libs/taus113-v2.o cmc_bse_utils.o cmc_mpi.o
+	libs/fitslib.o libs/taus113-v2.o cmc_bse_utils.o 
 FEWBODYOBJS = $(FEWBODYDIR)/fewbody.o $(FEWBODYDIR)/fewbody_classify.o \
 	$(FEWBODYDIR)/fewbody_coll.o $(FEWBODYDIR)/fewbody_hier.o \
 	$(FEWBODYDIR)/fewbody_int.o $(FEWBODYDIR)/fewbody_io.o \
@@ -40,7 +23,7 @@ BSEOBJS = $(BSEWRAPDIR)/bse_wrap.o $(BSEDIR)/comenv.o $(BSEDIR)/corerd.o $(BSEDI
         $(BSEDIR)/zcnsts.o $(BSEDIR)/zfuncs.o
 
 # default super-target
-all: $(EXE) UTILS CONTRIBS $(CUDAOBJS)
+all: $(EXE) UTILS CONTRIBS $(CUDAOBJS) $(MPIOBJS)
 
 # peripheral stuff
 $(BSEWRAPDIR)/bse_wrap.o: $(BSEWRAPDIR)/bse_wrap.c $(BSEWRAPDIR)/bse_wrap.h
@@ -62,13 +45,13 @@ $(CUDAOBJS):
 	cd $(CUDADIR) && $(MAKE)
 
 # the standard executable
-$(EXE): $(CUDAOBJS) $(OBJS) $(FEWBODYOBJS) $(BSEOBJS)
+$(EXE): $(CUDAOBJS) $(OBJS) $(FEWBODYOBJS) $(BSEOBJS) $(MPIOBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS) $(CUDALIB)
 
 $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 	$(CC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
 
-%.o: %.c cmc.h cmc_vars.h Makefile
+%.o: %.c cmc.h cmc_vars.h cmc_mpi.h Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # fake dependency to tell make that these targets do not produce files
@@ -81,7 +64,7 @@ install: $(EXE)
 	cd contrib && $(MAKE) install
 
 clean:
-	rm -f $(OBJS) $(FEWBODYOBJS) $(BSEOBJS) $(EXE)
+	rm -f $(OBJS) $(FEWBODYOBJS) $(BSEOBJS) $(MPIOBJS) $(EXE)
 	cd utils && $(MAKE) clean
 	cd libs && $(MAKE) clean
 	cd bse_wrap && $(MAKE) clean

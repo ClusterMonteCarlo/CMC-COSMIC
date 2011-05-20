@@ -700,8 +700,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	phi_rtidal = get_pos_dat->phi_rtidal;
 	phi_zero = get_pos_dat->phi_zero;
 	max_rad = get_pos_dat->max_rad;
-	printf("%d\tRtidal =%g\n",myid,Rtidal);
-
 
 #ifdef USE_CUDA
 	cuCalculateKs();
@@ -737,7 +735,9 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (star[j].m < ZERO) {
 #endif
 			destroy_obj(j);
+#ifdef USE_MPI
 			printf("%d\tindex of stripped star m = %d\t%g\n",myid, j,star_m[j]);
+#endif
 			continue;
 		}
 
@@ -745,6 +745,9 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (E >= 0.0) {
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 			remove_star(j, phi_rtidal, phi_zero);
+#ifdef USE_MPI
+			printf("%d\tindex of stripped star E = %d\t%g\n",myid, j,star[j].E);
+#endif
 			continue;
 		}
 
