@@ -300,8 +300,8 @@ double GetTimeStep(gsl_rng *rng) {
 	Dt = MIN(Dt, DTcoll);
 
         if (DT_HARD_BINARIES) {
-          central_hard= central_hard_binary(1., central);
-          dprintf("number of hard binaries with ktmin< 1: %li\n", central_hard.N_bin);
+          central_hard= central_hard_binary(HARD_BINARY_KT, central);
+          dprintf("number of hard binaries with ktmin< %g: %li\n", HARD_BINARY_KT, central_hard.N_bin);
         }
 
 	/* calculate DTbb, using a generalization of the expression for Tcoll */
