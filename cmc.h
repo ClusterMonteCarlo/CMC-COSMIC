@@ -515,6 +515,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng);
 void qsorts(star_t *s, long n);
 void units_set(void);
 void central_calculate(void);
+central_t central_hard_binary(double ktmin, central_t old_cent);
 void clusdyn_calculate(void);
 void print_interaction_status(char status_text[]);
 void print_interaction_error(void);
