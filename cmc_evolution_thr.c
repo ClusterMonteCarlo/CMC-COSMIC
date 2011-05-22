@@ -240,9 +240,37 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	return(orbit_rs);
 }
 
+double get_Tbb(central_t central) {
+  double Tbb;
+  /* X defines pericenter needed for "strong" interaction: r_p = X (a_1+a_2) */	
+  if (central.N_bin != 0) {
+    Tbb = 1.0 / (16.0 * sqrt(PI) * central.n_bin * sqr(XBB) * (central.v_bin_rms/sqrt(3.0)) * central.a2_ave * 
+        (1.0 + central.ma_ave/(2.0*XBB*sqr(central.v_bin_rms/sqrt(3.0))*central.a2_ave))) * 
+      log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+  } else {
+    Tbb = GSL_POSINF;
+  }
+  return(Tbb);
+}
+
+double get_Tbs(central_t central) {
+  double Tbs;
+  /* X defines pericenter needed for "strong" interaction: r_p = X a */
+  if (central.N_bin != 0 && central.N_sin != 0) {
+    Tbs = 1.0 / (4.0 * sqrt(PI) * central.n_sin * sqr(XBS) * (central.v_rms/sqrt(3.0)) * central.a2_ave * 
+        (1.0 + central.m_ave*central.a_ave/(XBS*sqr(central.v_rms/sqrt(3.0))*central.a2_ave))) * 
+      log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+  } else {
+    Tbs = GSL_POSINF;
+  }
+  return(Tbs);
+}
+
 double GetTimeStep(gsl_rng *rng) {
-	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs, Tse, DTse, Trejuv, DTrejuv, xcoll;
-	
+	double DTrel, Tcoll, DTcoll, Tbb, DTbb= GSL_POSINF, Tbs, DTbs=GSL_POSINF, 
+               Tse, DTse, Trejuv, DTrejuv, xcoll;
+	central_t central_hard;
+
 	/* calculate the relaxation timestep */
 	if (RELAXATION || FORCE_RLX_STEP) {
 		DTrel = simul_relax(rng);
@@ -271,29 +299,32 @@ double GetTimeStep(gsl_rng *rng) {
 	DTcoll = 5.0e-3 * Tcoll;
 	Dt = MIN(Dt, DTcoll);
 
+        if (DT_HARD_BINARIES) {
+          central_hard= central_hard_binary(1., central);
+          dprintf("number of hard binaries with ktmin< 1: %li\n", central_hard.N_bin);
+        }
+
 	/* calculate DTbb, using a generalization of the expression for Tcoll */
-	if (central.N_bin != 0 && BINBIN) {
-		/* X defines pericenter needed for "strong" interaction: r_p = X (a_1+a_2) */	
-		Tbb = 1.0 / (16.0 * sqrt(PI) * central.n_bin * sqr(XBB) * (central.v_bin_rms/sqrt(3.0)) * central.a2_ave * 
-			     (1.0 + central.ma_ave/(2.0*XBB*sqr(central.v_bin_rms/sqrt(3.0))*central.a2_ave))) * 
-			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-	} else {
-		Tbb = GSL_POSINF;
-	}
-	DTbb = 5.0e-3 * Tbb;
-	Dt = MIN(Dt, DTbb);
+	if (BINBIN) {
+          if (DT_HARD_BINARIES) {
+            Tbb= get_Tbb(central_hard);
+          } else {
+            Tbb= get_Tbb(central);
+          }
+          DTbb = 5.0e-3 * Tbb;
+          Dt = MIN(Dt, DTbb);
+        }
 
 	/* calculate DTbs, using a generalization of the expression for Tcoll */
-	if (central.N_bin != 0 && central.N_sin != 0 && BINSINGLE) {
-		/* X defines pericenter needed for "strong" interaction: r_p = X a */
-		Tbs = 1.0 / (4.0 * sqrt(PI) * central.n_sin * sqr(XBS) * (central.v_rms/sqrt(3.0)) * central.a2_ave * 
-			     (1.0 + central.m_ave*central.a_ave/(XBS*sqr(central.v_rms/sqrt(3.0))*central.a2_ave))) * 
-			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-	} else {
-		Tbs = GSL_POSINF;
+	if (BINSINGLE) {
+          if (DT_HARD_BINARIES) {
+            Tbs= get_Tbs(central_hard);
+          } else {
+            Tbs= get_Tbs(central);
+          }
+          DTbs = 5.0e-3 * Tbs;
+          Dt = MIN(Dt, DTbs);
 	}
-	DTbs = 5.0e-3 * Tbs;
-	Dt = MIN(Dt, DTbs);
 
 	/* calculate DTse, for now using the SE mass loss from the previous step as an indicator
 	   for this step; in the future perhaps we can get an estimate of the mass loss rate
