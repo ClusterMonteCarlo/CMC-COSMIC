@@ -140,6 +140,7 @@ void check_sort(star_t *s, long N){
 }
 
 void qsorts(star_t *s, long N){
+	strcpy(funcName, __FUNCTION__);
 	pthread_t threads[NUM_THREADS_SORT];
 	pthread_attr_t attr;
 	int rc, t;

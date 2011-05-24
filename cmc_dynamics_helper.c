@@ -1435,6 +1435,8 @@ void break_wide_binaries(void)
 #ifdef USE_MPI
 void mpi_calc_sigma_r(void)
 {
+	strcpy(funcName, __FUNCTION__);
+
 	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
 	double Mv2ave, Mave;
 	
@@ -1495,46 +1497,22 @@ void mpi_calc_sigma_r(void)
 /* calculate and store the velocity dispersion profile */
 void calc_sigma_r(void)
 {
+	strcpy(funcName, __FUNCTION__);
 	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
 	double Mv2ave, Mave;
 	
 	N_LIMIT = clus.N_MAX;
 
-/*
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-*/
 	sigma_array.n = N_LIMIT;
 
 	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
-/*
-#ifdef USE_MPI
-	int mpi_siminlast, mpi_N_LIMIT;
-	mpiFindIndices(N_LIMIT, &mpi_siminlast, &mpi_N_LIMIT);
-	siminlast = mpi_siminlast;//set to min index
-	if (myid!=0)
-		simaxlast = mpi_siminlast - 1 - p;
-	else
-		simaxlast = mpi_siminlast - 1;//set to min index - 1
-
-	//printf("\n\nProc=%d\tDisp=%ld\tLen=%ld\n\n",myid, mpiDisp[i], mpiLen[i]);
-	int test=0;
-#else
-*/
 	siminlast = 1;//set to min index
 	simaxlast = 0;//set to min index - 1
-//#endif
 	
 	Mv2ave = 0.0;
 	Mave = 0.0;
-/*
-#ifdef USE_MPI
-	for (si=mpi_siminlast; si<=mpi_N_LIMIT; si++) {
-#else
-*/
+
 	for (si=1; si<=N_LIMIT; si++) {
-//#endif
 		// determine appropriate bounds for summing
 		simin = si - p;
 		simax = simin + (2 * p - 1);
@@ -1545,14 +1523,7 @@ void calc_sigma_r(void)
 			simax = N_LIMIT;
 			simin = simax - (2 * p - 1);
 		}
-/*
-#ifdef USE_MPI
-	if (test==0){
-		test++;
-		printf("\n\nProc=%d\tmpi_siminlast=%ld\tmpi_simaxlast=%ld\tsimin=%ld\tsimax=%ld\tmpi_NLIMIT=%ld\t\n\n",myid, siminlast, simaxlast, simin, simax, mpi_N_LIMIT);
-	}
-#endif
-*/
+
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
 			Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));

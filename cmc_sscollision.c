@@ -420,7 +420,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 /* merge two stars using stellar evolution if it's enabled */
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs) {
-	double tphysf, dtp, vsaddl[12], age, temp_rad, bseaj[2];
+	double tphysf, dtp, age, temp_rad, bseaj[2];
+	//double vsaddl[12], 
 	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
 	binary_t tempbinary, tbcopy;
 	int tbi=-1, j, ktry, i, fb, icase;

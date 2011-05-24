@@ -11,9 +11,10 @@
 /* core of the code: applies relaxation, does single-single collisions and binary interactions */
 void dynamics_apply(double dt, gsl_rng *rng)
 {
+	strcpy(funcName, __FUNCTION__);
 	long j, si, p=AVEKERNEL, N_LIMIT, k, kp, ksin, kbin;
 	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
-	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi;
+	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi=0;
 	double Trel12;
 	int i;
 	long Nrel=0, Nrelbeta[4]={0,0,0,0};

@@ -220,6 +220,7 @@ void set_velocities3(void){
 /* computes intermediate energies, and transfers "new" dynamical params to the standard variables */
 void ComputeIntermediateEnergy(void)
 {
+	strcpy(funcName, __FUNCTION__);
 	long j;
 
 #ifdef USE_MPI 
@@ -406,9 +407,11 @@ long CheckStop(struct tms tmsbufref) {
 	return (0); /* NOT stopping time yet */
 }
 
+
 #ifdef USE_MPI
 void mpi_ComputeEnergy(void)
 {
+	strcpy(funcName, __FUNCTION__);
 	double Etotal_tot = 0.0;
 	double Etotal_K = 0.0;
 	double Etotal_P = 0.0;
@@ -463,6 +466,7 @@ void mpi_ComputeEnergy(void)
 
 void ComputeEnergy(void)
 {
+	strcpy(funcName, __FUNCTION__);
 	long i;
 	
 	Etotal.tot = 0.0;
@@ -497,6 +501,7 @@ void ComputeEnergy(void)
 
 #ifdef USE_MPI
 long mpi_potential_calculate(void) {
+	strcpy(funcName, __FUNCTION__);
 	long k;
 	double mprev;
 
@@ -569,6 +574,7 @@ long mpi_potential_calculate(void) {
    double precision. Returns N_MAX. Potential given in star[].phi
 */
 long potential_calculate(void) {
+	strcpy(funcName, __FUNCTION__);
 	long k;
 	double mprev;
 
@@ -963,6 +969,15 @@ void units_set(void)
 }
 
 #ifdef USE_MPI
+void mpi_central_calculate(void)
+{
+	strcpy(funcName, __FUNCTION__);
+	mpi_central_calculate1();
+	mpi_central_calculate2();
+}
+#endif
+
+#ifdef USE_MPI
 /* calculate central quantities */
 void mpi_central_calculate1(void)
 {
@@ -1060,7 +1075,7 @@ void mpi_central_calculate1(void)
 #ifdef USE_MPI
 void mpi_central_calculate2(void) {
 	double Msincentral, Mbincentral, Vcentral, rcentral;
-	long i, j, Ncentral;
+	long i, Ncentral;
 
 	if(myid==0) {
 		/* calculate other quantities using old method */
@@ -1165,6 +1180,7 @@ printf( "----------------------\n\n%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n\n-------
 /* calculate central quantities */
 void central_calculate(void)
 {
+	strcpy(funcName, __FUNCTION__);
 	double m=0.0, *rhoj, mrho, Vrj, rhojsum, Msincentral, Mbincentral, Vcentral, rcentral;
 	long J=6, i, j, jmin, jmax, nave, Ncentral;
 	double rhoj2sum;
@@ -1329,6 +1345,7 @@ void central_calculate(void)
 #ifdef USE_MPI
 void mpi_clusdyn_calculate(void)
 {
+	strcpy(funcName, __FUNCTION__);
 	double m=0.0;
 	long k=1;
 	
@@ -1343,6 +1360,7 @@ void mpi_clusdyn_calculate(void)
 /* calculate cluster dynamical quantities */
 void clusdyn_calculate(void)
 {
+	strcpy(funcName, __FUNCTION__);
 	double m=0.0;
 	long k=1;
 	

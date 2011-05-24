@@ -44,6 +44,7 @@ void print_results(void){
 void print_2Dsnapshot(void)
 {
 	long i, j;
+	j=0;
 	char outfile[100];
 	
 	if (SNAPSHOTTING) {
@@ -553,11 +554,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_SNAPSHOTTING);
 				sscanf(values, "%d", &SNAPSHOTTING);
 				parsed.SNAPSHOTTING = 1;
-                        } else if (strcmp(parameter_name, "SNAPSHOT_DELTACOUNT") == 0) {
+			} else if (strcmp(parameter_name, "SNAPSHOT_DELTACOUNT") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_DELTACOUNT);
 				sscanf(values, "%ld", &SNAPSHOT_DELTACOUNT);
 				parsed.SNAPSHOT_DELTACOUNT = 1;
-                        } else if (strcmp(parameter_name, "SNAPSHOT_DELTAT") == 0) {
+			} else if (strcmp(parameter_name, "SNAPSHOT_DELTAT") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_DELTAT);
 				sscanf(values, "%lf", &SNAPSHOT_DELTAT);
 				parsed.SNAPSHOT_DELTAT = 1;
@@ -569,20 +570,20 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
 				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
 				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
-                        } else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
-                                PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
-                                SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
-                                parse_snapshot_windows(values);
+			} else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
+				PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
+				SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
+				parse_snapshot_windows(values);
 				parsed.SNAPSHOT_WINDOWS = 1;
-                        } else if (strcmp(parameter_name, "SNAPSHOT_WINDOW_UNITS") == 0) {
-                                PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOW_UNITS);
-                                SNAPSHOT_WINDOW_UNITS= (char *) malloc(sizeof(char)*10);
-                                strncpy(SNAPSHOT_WINDOW_UNITS,values, 10);
-                                if (!valid_snapshot_window_units()) {
-                                  eprintf("Unrecognized snapshot window time unit %s.", values);
-                                  free_arrays();
-                                  exit(-1);
-                                }
+			} else if (strcmp(parameter_name, "SNAPSHOT_WINDOW_UNITS") == 0) {
+				PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOW_UNITS);
+				SNAPSHOT_WINDOW_UNITS= (char *) malloc(sizeof(char)*10);
+				strncpy(SNAPSHOT_WINDOW_UNITS,values, 10);
+				if (!valid_snapshot_window_units()) {
+					eprintf("Unrecognized snapshot window time unit %s.", values);
+					free_arrays();
+					exit(-1);
+				}
 				parsed.SNAPSHOT_WINDOW_UNITS = 1;
 			} else if (strcmp(parameter_name, "IDUM") == 0) {
 				PRINT_PARSED(PARAMDOC_IDUM);
@@ -690,27 +691,27 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_SEARCH_GRID);
 				sscanf(values, "%ld", &SEARCH_GRID);
 				parsed.SEARCH_GRID = 1;
-                        } else if (strcmp(parameter_name, "SG_STARSPERBIN")== 0) {
+			} else if (strcmp(parameter_name, "SG_STARSPERBIN")== 0) {
 				PRINT_PARSED(PARAMDOC_SG_STARSPERBIN);
 				sscanf(values, "%ld", &SG_STARSPERBIN);
 				parsed.SG_STARSPERBIN = 1;
-                        } else if (strcmp(parameter_name, "SG_MAXLENGTH")== 0) {
+			} else if (strcmp(parameter_name, "SG_MAXLENGTH")== 0) {
 				PRINT_PARSED(PARAMDOC_SG_MAXLENGTH);
 				sscanf(values, "%ld", &SG_MAXLENGTH);
 				parsed.SG_MAXLENGTH = 1;
-                        } else if (strcmp(parameter_name, "SG_MINLENGTH")== 0) {
+			} else if (strcmp(parameter_name, "SG_MINLENGTH")== 0) {
 				PRINT_PARSED(PARAMDOC_SG_MINLENGTH);
 				sscanf(values, "%ld", &SG_MINLENGTH);
 				parsed.SG_MINLENGTH = 1;
-                        } else if (strcmp(parameter_name, "SG_POWER_LAW_EXPONENT")== 0) {
+			} else if (strcmp(parameter_name, "SG_POWER_LAW_EXPONENT")== 0) {
 				PRINT_PARSED(PARAMDOC_SG_POWER_LAW_EXPONENT);
 				sscanf(values, "%lf", &SG_POWER_LAW_EXPONENT);
 				parsed.SG_POWER_LAW_EXPONENT = 1;
-                        } else if (strcmp(parameter_name, "SG_MATCH_AT_FRACTION")== 0) {
+			} else if (strcmp(parameter_name, "SG_MATCH_AT_FRACTION")== 0) {
 				PRINT_PARSED(PARAMDOC_SG_MATCH_AT_FRACTION);
 				sscanf(values, "%lf", &SG_MATCH_AT_FRACTION);
 				parsed.SG_MATCH_AT_FRACTION = 1;
-                        } else if (strcmp(parameter_name, "SG_PARTICLE_FRACTION")== 0) {
+			} else if (strcmp(parameter_name, "SG_PARTICLE_FRACTION")== 0) {
 				PRINT_PARSED(PARAMDOC_SG_PARTICLE_FRACTION);
 				sscanf(values, "%lf", &SG_PARTICLE_FRACTION);
 				parsed.SG_PARTICLE_FRACTION = 1;
@@ -718,20 +719,20 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_BH_LOSS_CONE);
 				sscanf(values, "%li", &BH_LOSS_CONE);
 				parsed.BH_LOSS_CONE = 1;
-                        } else if (strcmp(parameter_name, "BH_R_DISRUPT_NB")== 0) {
+			} else if (strcmp(parameter_name, "BH_R_DISRUPT_NB")== 0) {
 				PRINT_PARSED(PARAMDOC_BH_R_DISRUPT_NB);
 				sscanf(values, "%lf", &BH_R_DISRUPT_NB);
 				parsed.BH_R_DISRUPT_NB = 1;
-        		} else if (strcmp(parameter_name, "FORCE_RLX_STEP")== 0) {
+			} else if (strcmp(parameter_name, "FORCE_RLX_STEP")== 0) {
 				PRINT_PARSED(PARAMDOC_FORCE_RLX_STEP);
 				sscanf(values, "%i", &FORCE_RLX_STEP);
 				parsed.FORCE_RLX_STEP = 1;
 #ifdef EXPERIMENTAL
-                        } else if (strcmp(parameter_name, "BH_LC_FDT")== 0) {
+			} else if (strcmp(parameter_name, "BH_LC_FDT")== 0) {
 				PRINT_PARSED(PARAMDOC_BH_LC_FDT);
 				sscanf(values, "%lf", &BH_LC_FDT);
 				parsed.BH_LC_FDT = 1;
-                        } else if (strcmp(parameter_name, "AVEKERNEL")== 0) {
+			} else if (strcmp(parameter_name, "AVEKERNEL")== 0) {
 				PRINT_PARSED(PARAMDOC_AVEKERNEL);
 				sscanf(values, "%li", &AVEKERNEL);
 				parsed.AVEKERNEL = 1;
@@ -740,23 +741,23 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_APSIDES_PRECISION);
 				sscanf(values, "%lf", &APSIDES_PRECISION);
 				parsed.APSIDES_PRECISION = 1;
-        		} else if (strcmp(parameter_name, "APSIDES_MAX_ITER")== 0) {
+			} else if (strcmp(parameter_name, "APSIDES_MAX_ITER")== 0) {
 				PRINT_PARSED(PARAMDOC_APSIDES_MAX_ITER);
 				sscanf(values, "%li", &APSIDES_MAX_ITER);
 				parsed.APSIDES_MAX_ITER = 1;
-                        } else if (strcmp(parameter_name, "APSIDES_CONVERGENCE")== 0) {
+			} else if (strcmp(parameter_name, "APSIDES_CONVERGENCE")== 0) {
 				PRINT_PARSED(PARAMDOC_APSIDES_CONVERGENCE);
 				sscanf(values, "%lf", &APSIDES_CONVERGENCE);
 				parsed.APSIDES_CONVERGENCE = 1;
-                        } else if (strcmp(parameter_name, "CIRC_PERIOD_THRESHOLD")== 0) {
+			} else if (strcmp(parameter_name, "CIRC_PERIOD_THRESHOLD")== 0) {
 				PRINT_PARSED(PARAMDOC_CIRC_PERIOD_THRESHOLD);
 				sscanf(values, "%lf", &CIRC_PERIOD_THRESHOLD);
 				parsed.CIRC_PERIOD_THRESHOLD = 1;
-                        } else if (strcmp(parameter_name, "WRITE_STELLAR_INFO")== 0) {
+			} else if (strcmp(parameter_name, "WRITE_STELLAR_INFO")== 0) {
 				PRINT_PARSED(PARAMDOC_WRITE_STELLAR_INFO);
 				sscanf(values, "%i", &WRITE_STELLAR_INFO);
 				parsed.WRITE_STELLAR_INFO = 1;
-                        } else if (strcmp(parameter_name, "WRITE_RWALK_INFO")== 0) {
+			} else if (strcmp(parameter_name, "WRITE_RWALK_INFO")== 0) {
 				PRINT_PARSED(PARAMDOC_WRITE_RWALK_INFO);
 				sscanf(values, "%i", &WRITE_RWALK_INFO);
 				parsed.WRITE_RWALK_INFO = 1;
@@ -784,7 +785,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_OVERWRITE_MCLUS);
 				sscanf(values, "%lf", &OVERWRITE_MCLUS);
 				parsed.OVERWRITE_MCLUS = 1;
-// Begin reading in stellar and binary evolution assumptions.
+				// Begin reading in stellar and binary evolution assumptions.
 			} else if (strcmp(parameter_name, "BSE_NETA")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_NETA);
 				sscanf(values, "%lf", &BSE_NETA);
@@ -797,7 +798,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_BSE_HEWIND);
 				sscanf(values, "%lf", &BSE_HEWIND);
 				parsed.BSE_HEWIND = 1;
-                        } else if (strcmp(parameter_name, "BSE_WINDFLAG")==0) {
+			} else if (strcmp(parameter_name, "BSE_WINDFLAG")==0) {
 				PRINT_PARSED(PARAMDOC_BSE_WINDFLAG);
 				sscanf(values, "%lf", &BSE_WINDFLAG);
 				parsed.BSE_WINDFLAG = 1;
@@ -865,7 +866,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_BSE_GAMMA);
 				sscanf(values, "%lf", &BSE_GAMMA);
 				parsed.BSE_GAMMA = 1;
-                        } else {
+			} else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
 		} else if (sscanf(line, "%s", parameter_name) == 1) {
@@ -1401,6 +1402,7 @@ void parse_snapshot_windows(char *param_string) {
 void print_snapshot_windows(void) {
   int i, step_counter;
   double start, stop, step, total_time;
+  total_time = 0;
 
   if (!snapshot_window_count || !SNAPSHOTTING) return;
 
@@ -1448,6 +1450,7 @@ int valid_snapshot_window_units(void) {
 
 void write_snapshot(char *filename) {
   long i, j;
+	j=0;
 
   if ((snapfile = (FILE *) gzopen(filename, "wb")) == NULL) {
     eprintf("cannot create 2D snapshot file %s\n", filename);

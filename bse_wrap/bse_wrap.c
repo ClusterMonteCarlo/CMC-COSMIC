@@ -360,7 +360,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb)
 		//                double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2,
                 //double *ZPARS, double *ECC, double *SEP, double *PORB,  
 {
-  int i, iii, kcomp1,kcomp2, star1, star2, COEL;
+  int i, kcomp1,kcomp2, star1, star2, COEL;
   double vk,OORB,JORB,mce[2],AJ[2], M0ce[2], PI, JSPIN1, JSPIN2;
   double tm, tn, tscls[20], lums[10], GB[10], k2, k3;
   k3 = 0.21;

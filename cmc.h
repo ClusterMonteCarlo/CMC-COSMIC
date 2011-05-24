@@ -6,6 +6,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
 #include <fitsio.h>
+#include <string.h>
 #include "common/fitslib.h"
 #include "common/taus113-v2.h"
 #include "fewbody-0.24/fewbody.h"
@@ -14,6 +15,7 @@
 #ifdef USE_MPI
 #include "cmc_mpi.h"
 #endif
+
 
 // This automatic SVN versioning only updates the version of this file.
 //#define CMCVERSION "$Revision$"
@@ -532,6 +534,7 @@ void units_set(void);
 void central_calculate(void);
 
 #ifdef USE_MPI
+void mpi_central_calculate(void);
 void mpi_central_calculate1(void);
 void mpi_central_calculate2(void);
 #endif

@@ -233,7 +233,7 @@ long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
   long ktry, kmax1, fevals;
   long double rmax, pot_max, rmin, pot_min;
   long double rtry, pot_try;
-  long double qmin, qmax, qtry, func;
+  long double qmin, qmax, qtry;
 
   fevals= 0;
   kmax1= kmax;

@@ -193,8 +193,9 @@ void stellar_evolution_init(void){
 
 /* note that this routine is called after perturb_stars() and get_positions() */
 void do_stellar_evolution(gsl_rng *rng){
+	strcpy(funcName, __FUNCTION__);
 	long k, kb;
-	int kprev,i;
+	int kprev;
 	double dtp, tphysf, vs[12], VKO;
 	binary_t tempbinary;
 	/* double vk, theta; */
@@ -444,7 +445,7 @@ void write_stellar_data(void){
 
 void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
 {
-  int j, i;
+  int j;
   long knew, knewp;
   double dtp, VKO;
   

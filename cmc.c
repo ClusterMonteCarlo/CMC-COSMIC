@@ -27,13 +27,20 @@ int main(int argc, char *argv[])
 	MPI_Status stat;
 
 	int mpiBegin, mpiEnd;
-	double starttime, endtime, temptime; 
 	int *mpiDisp, *mpiLen;
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
+	strcpy(fileNameParallel, "mpi_time_gpu.dat");
+	strcpy(fileNameSerial, "mpi_time_cpu.dat");
+	
+	FILE *file = fopen(fileNameSerial,"w");
+	fprintf(file, "Time(s)\t\tFunction\n");
+	fclose(file);
+	file = fopen(fileNameParallel,"w");
+	fprintf(file, "Time(s)\t\tFunction\n");
+	fclose(file);
 #endif
-	FILE *ftest1;
-	int si;
+	//FILE *ftest1;
 
 	struct tms tmsbuf, tmsbufref;
 	long i, j;
@@ -61,7 +68,7 @@ int main(int argc, char *argv[])
 
 #ifdef USE_MPI	
 	//These have to be declared here because N_STAR_DIM is initialized only in parser().
-	double test1[N_STAR_DIM];
+	//double test1[N_STAR_DIM];
 #endif
 
 	/* print version information to log file */
@@ -97,7 +104,6 @@ int main(int argc, char *argv[])
 	//Step 2: do only on root node....not
 	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
 
-
 	TidalMassLoss = 0.0;
 	Etidal = 0.0;
 	N_bb = 0;			/* number of bin-bin interactions */
@@ -121,26 +127,22 @@ int main(int argc, char *argv[])
 #ifdef USE_MPI
 	/*MPI2: Initializing and extracting global arrays that will be needed by all processors.*/
 	//MPI2: Tested
-	star_r = (double *) malloc(N_STAR_DIM * sizeof(double));
-	star_m = (double *) malloc(N_STAR_DIM * sizeof(double));
-	star_phi = (double *) malloc(N_STAR_DIM * sizeof(double));
-
-	if(myid==0) {
-		for(i=0; i<=N_STAR_DIM; i++) {
-			star_r[i] = star[i].r;
-			star_m[i] = star[i].m;
-		}
-	}
-	MPI_Bcast(star_m, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(star_r, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	mpiTimeStart();
+	mpiInitBcastGlobArrays();
+	mpiTimeEnd(fileNameParallel, funcName);
 #endif
 
 
 	//MPI2: mpi_calc_sigma_r(): Tests for precision: Biggest errors are ~ 1e-13. Might be because of catastrphic cancellation/rounding errors?. This might be due to the already imprecise but faster serial code . In a sense, the MPI version might be more precise, because for every processor, actual average is performed for the 1st local star which means errors dont carry over from the previous set of stars which are handled by another processor.
 #ifdef USE_MPI
+	mpiTimeStart();
 	mpi_calc_sigma_r();
+	mpiTimeEnd(fileNameParallel, funcName);
+#else
 	//for first step, do on all nodes. later will need scattering of particles and also some ghost particles data.
-		calc_sigma_r(); //requires data from some neighbouring particles. must be handled during data read. look inside function for more comments
+	mpiTimeStart();
+	calc_sigma_r(); //requires data from some neighbouring particles. must be handled during data read. look inside function for more comments
+	mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 
@@ -148,10 +150,13 @@ int main(int argc, char *argv[])
 	//MPI2: Split into 2 functions: part 1 can be parallelized after making m and r arrays global. Part 2 has to be done on root node.
 #ifdef USE_MPI
 	//MPI2: Tested! Errors of 1e-14.
-	mpi_central_calculate1();
-	mpi_central_calculate2();
+	mpiTimeStart();
+	mpi_central_calculate();
+	mpiTimeEnd(fileNameParallel, funcName);
 #else
+	mpiTimeStart();
 	central_calculate();
+	mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 	/*
@@ -180,14 +185,18 @@ int main(int argc, char *argv[])
 	//MPI2: Do on root node with global phi array.
 	//MPI2: Tested. Relative errors are 0. Perfect :)
 #ifdef USE_MPI
+	mpiTimeStart();
 	if(myid==0) 
 		mpi_potential_calculate();
 	MPI_Bcast(star_phi, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	mpiTimeEnd(fileNameParallel, funcName);
 #else
-		potential_calculate();
+	mpiTimeStart();
+	potential_calculate();
+	mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 	total_bisections= 0;
@@ -205,10 +214,14 @@ int main(int argc, char *argv[])
 
 	//MPI2: Tested! No errors.
 #ifdef USE_MPI
+	mpiTimeStart();
 	mpi_ComputeEnergy();
+	mpiTimeEnd(fileNameParallel, funcName);
 #else
 	//MPI2: see inline for comments
-		ComputeEnergy();
+	mpiTimeStart();
+	ComputeEnergy();
+	mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 	//MPI2: The following line has been moved after load_fits_file_data() - above
@@ -251,10 +264,13 @@ int main(int argc, char *argv[])
 	/* calculate central quantities */
 #ifdef USE_MPI
 	//MPI2: Tested! Errors of 1e-14.
-	mpi_central_calculate1();
-	mpi_central_calculate2();
+	mpiTimeStart();
+	mpi_central_calculate();
+	mpiTimeEnd(fileNameParallel, funcName);
 #else
+	mpiTimeStart();
 	central_calculate();
+	mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 	/* can skip for MPI
@@ -267,13 +283,17 @@ int main(int argc, char *argv[])
 	//Step 2: done on root node
 	//MPI2: Tested! No Errors.
 #ifdef USE_MPI
+	mpiTimeStart();
 	if(myid==0)
 		mpi_clusdyn_calculate(); //parallel reduction
 
 	//MPI2: broadcast clusdyn struct	
 	MPI_Bcast(&clusdyn, sizeof(clusdyn_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	mpiTimeEnd(fileNameParallel, funcName);
 #else
+	mpiTimeStart();
 	clusdyn_calculate(); //parallel reduction
+	mpiTimeEnd(fileNameParallel, funcName);
 #endif
 
 	/* Printing Results for initial model */
@@ -296,15 +316,19 @@ int main(int argc, char *argv[])
 		/* calculate central quantities */
 #ifdef USE_MPI
 		//MPI2: Tested! Errors of 1e-14.
-		mpi_central_calculate1();
-		mpi_central_calculate2();
+		mpiTimeStart();
+		mpi_central_calculate();
+		mpiTimeEnd(fileNameParallel, funcName);
 #else
+		mpiTimeStart();
 		central_calculate();
+		mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 		/* Get new time step */
 		//for the next step, only simul_relax needs to be done in parallel, and DTrel needs to be broadcasted. rest can be done on each node.
 		//Step 2: Do simul_relax() on all procs and others only on root. then broadcast Dt
+		mpiTimeStart();
 		Dt = GetTimeStep(rng); //reduction again. Timestep needs to be communicated to all procs.
 
 		/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
@@ -324,7 +348,10 @@ int main(int argc, char *argv[])
 
 		//MPI2: broadcast Dt		
 #ifdef USE_MPI
+		mpiTimeStart();
 		MPI_Bcast(&Dt, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		mpiTimeEnd(fileNameParallel, funcName);
+		mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 		TotalTime += Dt;
@@ -337,7 +364,10 @@ int main(int argc, char *argv[])
 
 		//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
 		if (PERTURB > 0) {
+			mpiTimeStart();
 			dynamics_apply(Dt, rng);
+			mpiTimeEnd(fileNameParallel, funcName);
+			mpiTimeEnd(fileNameSerial, funcName);
 		}
 
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
@@ -349,7 +379,10 @@ int main(int argc, char *argv[])
 
 		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
 		if (STELLAR_EVOLUTION > 0) {
+			mpiTimeStart();
 			do_stellar_evolution(rng);
+			mpiTimeEnd(fileNameParallel, funcName);
+			mpiTimeEnd(fileNameSerial, funcName);
 		}
 
 		Prev_Dt = Dt;
@@ -394,10 +427,11 @@ int main(int argc, char *argv[])
 					}	
 				}
 
-				printf("\tStart\n");
 				/* this calls get_positions() */
+				mpiTimeStart();
 				tidally_strip_stars();
-				printf("\tStop\n");
+				mpiTimeEnd(fileNameParallel, funcName);
+				mpiTimeEnd(fileNameSerial, funcName);
 
 #ifdef USE_MPI 
 				mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
@@ -420,9 +454,13 @@ int main(int argc, char *argv[])
 					 * Also transfers new positions and velocities from srnew[], 
 					 * svrnew[], svtnew[] to sr[], svr[], svt[], and saves srOld[] 
 					 */
+					mpiTimeStart();
 					ComputeIntermediateEnergy();
+					mpiTimeEnd(fileNameParallel, funcName);
+					mpiTimeEnd(fileNameSerial, funcName);
 
 #ifdef USE_MPI
+					mpiTimeStart();
 					//MPI2: Collecting the r and m arrays into the original star structure for sorting.
 					mpiFindDispAndLen( clus.N_MAX_NEW, mpiDisp, mpiLen );
 
@@ -436,8 +474,6 @@ int main(int argc, char *argv[])
 						star[i].EI = myid;
 					}
 
-					//printf("%d\tmpiBegin=%d\tmpiEnd=%d\n",myid, mpiBegin, mpiEnd);
-
 					//MPI2: To be refactored into separate function later.
 					if(myid!=0)
 		        		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
@@ -445,6 +481,7 @@ int main(int argc, char *argv[])
 						for(i=1;i<procs;i++)
 							MPI_Recv(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
 
+/*
 					if(myid==0)
 					{
 						ftest1 = fopen("test_mpi_rtest0.dat","w");
@@ -453,6 +490,7 @@ int main(int argc, char *argv[])
 						}
 						fclose(ftest1);
 					}
+*/
 #endif
 
 #ifdef USE_MPI
@@ -471,7 +509,6 @@ int main(int argc, char *argv[])
 					else
 		        		MPI_Recv(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD, &stat);
 
-					//mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
 					if(myid==0)
 						for(i=1; i<=clus.N_MAX; i++) {
 							star_r[i] = star[i].r;
@@ -480,6 +517,7 @@ int main(int argc, char *argv[])
 					MPI_Bcast(star_m, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 					MPI_Bcast(star_r, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
+/*
 					if(myid==0)
 					{
 						ftest1 = fopen("test_mpi_rtest1.dat","w");
@@ -496,21 +534,26 @@ int main(int argc, char *argv[])
 						}
 						fclose(ftest1);
 					}
+*/
+					mpiTimeEnd(fileNameParallel, funcName);
+					mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 
-				printf("\tStart\n");
 #ifdef USE_MPI
+					mpiTimeStart();
 					if(myid==0) 
 						mpi_potential_calculate();
 					MPI_Bcast(star_phi, clus.N_MAX_NEW, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 					MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 					MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 					MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					mpiTimeEnd(fileNameParallel, funcName);
 #else
+					mpiTimeStart();
 					potential_calculate();
+					mpiTimeEnd(fileNameSerial, funcName);
 #endif
-				printf("\tStop\n");
 
 					//commenting out for MPI
 					/*
@@ -528,8 +571,10 @@ int main(int argc, char *argv[])
 
 #ifdef USE_MPI
 					mpi_ComputeEnergy();
+					mpiTimeEnd(fileNameParallel, funcName);
 #else
 					ComputeEnergy();
+					mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 					/* reset interacted flag */
@@ -543,14 +588,18 @@ int main(int argc, char *argv[])
 					tcount++;
 
 #ifdef USE_MPI
+					mpiTimeStart();
 					if(myid==0)
 						mpi_clusdyn_calculate(); //parallel reduction
 
 					//MPI2: broadcast clusdyn struct	
 					MPI_Bcast(&clusdyn, sizeof(clusdyn_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+					mpiTimeEnd(fileNameParallel, funcName);
 #else
+					mpiTimeStart();
 					/* calculate dynamical quantities */
 					clusdyn_calculate();
+					mpiTimeEnd(fileNameSerial, funcName);
 #endif
 
 					//commenting out for MPI

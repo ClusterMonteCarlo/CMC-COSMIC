@@ -275,8 +275,9 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 }
 
 double GetTimeStep(gsl_rng *rng) {
+	strcpy(funcName, __FUNCTION__);
 	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs, Tse, DTse, Trejuv, DTrejuv, xcoll;
-	double temp=0, DTrel_test=0;	
+
 	/* calculate the relaxation timestep */
 	if (RELAXATION || FORCE_RLX_STEP) {
 		//Optimize simul_relax() later 
@@ -405,8 +406,10 @@ if(myid==0)
 
 /* removes tidally-stripped stars */
 void tidally_strip_stars(void) {
+	strcpy(funcName, __FUNCTION__);
 	double phi_rtidal, phi_zero, gierszalpha;
 	long i, j, k;
+	k=0;
 	
 	j = 0;
 	Etidal = 0.0;
@@ -599,7 +602,7 @@ void tidally_strip_stars(void) {
 
 void remove_star(long j, double phi_rtidal, double phi_zero) {
 	double E, J;
-	long k;
+	long k=0;
 
 	/* dprintf("removing star: i=%ld id=%ld m=%g E=%g bin=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 
@@ -710,7 +713,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #else
 #ifdef USE_MPI 
 	int mpiBegin, mpiEnd;
-	int kk=0;
 	mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
 	for (si=mpiBegin; si<=mpiEnd; si++) {
 #else
@@ -736,7 +738,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
 			destroy_obj(j);
 #ifdef USE_MPI
-			printf("%d\tindex of stripped star m = %d\t%g\n",myid, j,star_m[j]);
+			printf("%d\tindex of stripped star m = %ld\t%g\n",myid, j,star_m[j]);
 #endif
 			continue;
 		}
@@ -746,7 +748,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 			remove_star(j, phi_rtidal, phi_zero);
 #ifdef USE_MPI
-			printf("%d\tindex of stripped star E = %d\t%g\n",myid, j,star[j].E);
+			printf("%d\tindex of stripped star E = %ld\t%g\t%g\t%g\n",myid, j,star[j].E, star_r[j], star_m[j]);
 #endif
 			continue;
 		}
