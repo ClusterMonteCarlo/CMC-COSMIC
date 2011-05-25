@@ -73,12 +73,11 @@ _EXTERN_ star_t *star;
 _EXTERN_ double *star_r;
 _EXTERN_ double *star_m;
 _EXTERN_ double *star_phi;
+#endif
 _EXTERN_ double startTime, endTime; 
-_EXTERN_ FILE* fileTime;
 _EXTERN_ char funcName[64];
 _EXTERN_ char fileNameSerial[64];
 _EXTERN_ char fileNameParallel[64];
-#endif
 
 _EXTERN_ double *mass_pc, *mass_r, *ave_mass_r, *densities_r, *no_star_r;
 _EXTERN_ double *ke_rad_r, *ke_tan_r, *v2_rad_r, *v2_tan_r;

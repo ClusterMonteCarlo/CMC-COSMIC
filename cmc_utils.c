@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/times.h>
 #include <gsl/gsl_errno.h>
@@ -1399,3 +1400,39 @@ inline double function_q(long j, long double r, long double pot, long double E, 
   //if (j==3265 && r>1e6) printf("Jr=%Lg, phis= %Lg, pot=%Lg, r=%Lg, E=%Lg\n", Jr, phis, pot, r, E);
   return (res);
 };
+
+void timeStart()
+{
+#ifdef USE_MPI
+	MPI_Barrier(MPI_COMM_WORLD);
+	startTime = MPI_Wtime();
+#else
+	startTime = clock();
+#endif
+}
+
+void timeEnd(char* fileName, char *funcName)
+{
+	double temp, timeElapsed;
+	static double totTime = 0.0;
+	FILE *file;
+#ifdef USE_MPI
+	endTime = MPI_Wtime();
+	temp = endTime - startTime;
+   MPI_Reduce(&temp, &timeElapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+#else
+	endTime = clock();
+	timeElapsed = ((double) (endTime - startTime)) / CLOCKS_PER_SEC;
+#endif
+
+
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	{
+		totTime += timeElapsed;
+		file = fopen(fileName,"a");
+		fprintf(file, "%-5.8lf\t\t%-25s\t\t\t%5.8lf\n", timeElapsed, funcName, totTime);
+		fclose(file);
+	}
+}

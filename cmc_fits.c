@@ -14,6 +14,7 @@
 
 void load_fits_file_data(void)
 {
+	strcpy(funcName, __FUNCTION__);
 	long i, j;
 
 	newstarid = 0;

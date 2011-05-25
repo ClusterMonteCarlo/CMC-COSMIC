@@ -75,22 +75,3 @@ void mpiFindDispAndLen( long N, int* mpiDisp, int* mpiLen )
 	}
 }
 
-void mpiTimeStart()
-{
-	if(myid==0)
-		startTime = MPI_Wtime();
-}
-
-void mpiTimeEnd(char* fileName, char *funcName)
-{
-	if(myid==0)
-	{
-		double timeElapsed;
-		FILE *file;
-		endTime = MPI_Wtime();
-		timeElapsed = endTime - startTime;
-		file = fopen(fileName,"a");
-		fprintf(file, "%5.8g\t%s\n", timeElapsed, funcName);
-		fclose(file);
-	}
-}

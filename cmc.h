@@ -16,7 +16,6 @@
 #include "cmc_mpi.h"
 #endif
 
-
 // This automatic SVN versioning only updates the version of this file.
 //#define CMCVERSION "$Revision$"
 //#define CMCDATE "$Date$"
@@ -459,6 +458,11 @@ long potential_calculate(void);	/* calculate potential at star locations in star
 #ifdef USE_MPI
 long mpi_potential_calculate(void);
 #endif
+
+/* Bharath: Timing Functions */ 
+void timeStart();
+void timeEnd(char* fileName, char *funcName);
+/* End */
 
 void comp_mass_percent(void);
 void comp_multi_mass_percent(void);

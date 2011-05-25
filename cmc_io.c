@@ -431,6 +431,7 @@ void PrintFileOutput(void) {
 /*** Parsing of Input Parameters / Memory allocation / File I/O ***/
 void parser(int argc, char *argv[], gsl_rng *r)
 {
+	strcpy(funcName, __FUNCTION__);
 	char inputfile[1024], outfile[1024], outfilemode[5];
 	char parameter_name[1024], values[1024], dummy[1024], line[2048];
 	char *curr_mass;
