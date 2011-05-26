@@ -70,6 +70,12 @@
 
 #define MAX_STRING_LENGTH 2048
 
+/*
+struct rng_t113_state {
+	unsigned long z1, z2, z3, z4;
+};
+*/
+
 /* binaries */
 typedef struct{
 	long id1; /* unique id of star 1 */

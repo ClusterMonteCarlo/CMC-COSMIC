@@ -422,6 +422,8 @@ void mpi_ComputeEnergy(void)
 
 	int i, mpiBegin, mpiEnd;
    mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+	if(myid==1)
+		printf("%d\t%d\t%ld\t%ld\n", mpiBegin, mpiEnd, clus.N_MAX_NEW, clus.N_MAX);
 
 	for (i=mpiBegin; i<=mpiEnd; i++) {
 		star[i].E = star_phi[i] + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));

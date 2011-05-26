@@ -31,4 +31,9 @@ unsigned long rng_t113_int(void);
 double rng_t113_dbl(void);
 void reset_rng_t113(unsigned long int s);
 
+/* New rng functions without private state variable */
+unsigned long rng_t113_int_new(struct rng_t113_state *state); 
+double rng_t113_dbl_new(struct rng_t113_state *state);
+void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state);
+
 #endif /* _TAUS113_V2_H */

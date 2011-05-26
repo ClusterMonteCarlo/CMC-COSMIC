@@ -68,7 +68,12 @@ _EXTERN_ double TotalTime, Dt;
 _EXTERN_ double Sin2Beta;
 /* arrays */
 _EXTERN_ star_t *star;
+_EXTERN_ double *mass_pc, *mass_r, *ave_mass_r, *densities_r, *no_star_r;
+_EXTERN_ double *ke_rad_r, *ke_tan_r, *v2_rad_r, *v2_tan_r;
+_EXTERN_ double *mass_bins, **multi_mass_r;
+_EXTERN_ int quiet;
 
+/* mpi parallelization stuff */
 #ifdef USE_MPI
 _EXTERN_ double *star_r;
 _EXTERN_ double *star_m;
@@ -78,11 +83,8 @@ _EXTERN_ double startTime, endTime;
 _EXTERN_ char funcName[64];
 _EXTERN_ char fileNameSerial[64];
 _EXTERN_ char fileNameParallel[64];
+_EXTERN_ int PROCS, MYID; //to mimic rng for parallelization
 
-_EXTERN_ double *mass_pc, *mass_r, *ave_mass_r, *densities_r, *no_star_r;
-_EXTERN_ double *ke_rad_r, *ke_tan_r, *v2_rad_r, *v2_tan_r;
-_EXTERN_ double *mass_bins, **multi_mass_r;
-_EXTERN_ int quiet;
 /* debugging */
 _EXTERN_ int debug;
 /* units */

@@ -57,9 +57,11 @@
 #define MASK 0xffffffffUL
 #define LCG(n) ((69069UL * n) & 0xffffffffUL)
 
+
 struct rng_t113_state {
 	unsigned long z1, z2, z3, z4;
 };
+
 
 static struct rng_t113_state state;
 
@@ -113,5 +115,49 @@ void reset_rng_t113(unsigned long int s) {
 	rng_t113_int(); rng_t113_int(); rng_t113_int(); 
 	rng_t113_int(); rng_t113_int(); rng_t113_int(); 
 	rng_t113_int(); 
+	return;
+}
+
+/***************************************************/
+/***************************************************/
+/* New rng functions without private state variable */
+/***************************************************/
+/***************************************************/
+unsigned long rng_t113_int_new(struct rng_t113_state *state) {
+	unsigned long b;
+
+	b = ((((state->z1 <<  6) &MASK) ^ state->z1) >> 13);
+	state->z1 = ((((state->z1 & 4294967294UL) << 18) &MASK) ^ b);
+	b = ((((state->z2 <<  2) &MASK) ^ state->z2) >> 27);
+	state->z2 = ((((state->z2 & 4294967288UL) <<  2) &MASK) ^ b);
+	b = ((((state->z3 << 13) &MASK) ^ state->z3) >> 21);
+	state->z3 = ((((state->z3 & 4294967280UL) <<  7) &MASK) ^ b);
+	b = ((((state->z4 <<  3) &MASK) ^ state->z4) >> 12);
+	state->z4 = ((((state->z4 & 4294967168UL) << 13) &MASK) ^ b);
+  	return (state->z1 ^ state->z2 ^ state->z3 ^ state->z4);
+}
+
+double rng_t113_dbl_new(struct rng_t113_state *state) {
+	return rng_t113_int(state) / 4294967296.0 ;
+}
+
+void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state) {
+
+	if (s == 0) s = 1UL;	/* default seed is 1 */
+
+	state->z1 = LCG (s);
+	if (state->z1 < 2UL) state->z1 += 2UL;
+	state->z2 = LCG (state->z1);
+	if (state->z2 < 8UL) state->z2 += 8UL;
+	state->z3 = LCG (state->z2);
+	if (state->z3 < 16UL) state->z3 += 16UL;
+	state->z4 = LCG (state->z3);
+	if (state->z4 < 128UL) state->z4 += 128UL;
+
+	/* Calling RNG ten times to satify recurrence condition */
+	rng_t113_int_new(state); rng_t113_int_new(state); rng_t113_int_new(state); 
+	rng_t113_int_new(state); rng_t113_int_new(state); rng_t113_int_new(state); 
+	rng_t113_int_new(state); rng_t113_int_new(state); rng_t113_int_new(state); 
+	rng_t113_int_new(state); 
 	return;
 }

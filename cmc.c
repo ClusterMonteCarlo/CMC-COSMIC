@@ -9,6 +9,7 @@
 #include <sys/times.h>
 #include <unistd.h>
 #include <gsl/gsl_rng.h>
+//#include "libs/taus113-v2.c"
 #include "cmc.h"
 #define _MAIN_
 #include "cmc_vars.h"
@@ -19,6 +20,11 @@
 
 int main(int argc, char *argv[])
 {
+	struct tms tmsbuf, tmsbufref;
+	long i, j;
+	gsl_rng *rng;
+	const gsl_rng_type *rng_type=gsl_rng_mt19937;
+
 #ifdef USE_MPI
 	//int myid, procs; //Declared in cmc.h to make it available across all files
 	MPI_Init(&argc, &argv);
@@ -30,6 +36,15 @@ int main(int argc, char *argv[])
 	int *mpiDisp, *mpiLen;
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
+	static struct rng_t113_state st;
+	reset_rng_t113_new(myid, &st);
+	PROCS = procs;
+	MYID = myid;
+#else
+	//PROC = 4; //to mimic rng of the serial version to the parallel version.
+	static struct rng_t113_state st[4]; //the array length has to be changed everytime the no.of processors are changed.
+	for(i=0; i<4; i++)
+		reset_rng_t113_new(i, &st[i]);
 #endif
 
 	strcpy(fileNameParallel, "mpi_time_parallel.dat");
@@ -40,12 +55,8 @@ int main(int argc, char *argv[])
 	file = fopen(fileNameParallel,"w");
 	fprintf(file, "Time(s)\t\t\tFunction\t\t\t\t\t\t\t\t\tTotalTime\n");
 	fclose(file);
-	//FILE *ftest1;
+	FILE *ftest;
 
-	struct tms tmsbuf, tmsbufref;
-	long i, j;
-	gsl_rng *rng;
-	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
 	/* set some important global variables */
 	quiet = 0;
@@ -639,6 +650,34 @@ int main(int argc, char *argv[])
 
 				} /* End WHILE (time step iteration loop) */
 
+
+if(myid==0)
+{
+	ftest = fopen("mpi_globvar.dat","w");
+	fprintf(ftest, "clus.N_MAX_NEW=%ld\nclus.N_MAX=%ld\nTidalMassLoss=%g\nOldTidalMassLoss=%g\nPrev_Dt=%g\nEescaped=%g\nJescaped=%g\nEintescaped=%g\nEbescaped=%g\nMtotal=%g\ninitial_total_mass=%g\nDMse=%g\nDMrejuv=%g\n cenma.m=%g\ncenma.m_new=%g\ncenma.E=%g\ntcount=%ld\nStepCount=%ld\nsnap_num=%ld\nEcheck=ld\nnewstarid=%ld\n",
+						clus.N_MAX_NEW,
+						clus.N_MAX,
+						TidalMassLoss,
+						OldTidalMassLoss,
+						Prev_Dt,
+						Eescaped,
+						Jescaped,
+						Eintescaped,
+						Ebescaped, 
+						Mtotal, 
+						initial_total_mass,
+						DMse,
+						DMrejuv,
+						cenma.m,
+						cenma.m_new,
+						cenma.E,
+						tcount,
+						StepCount,
+						snap_num,
+						Echeck, 
+						newstarid);
+	fclose(ftest);
+}
 
 				//root node?
 				times(&tmsbuf);

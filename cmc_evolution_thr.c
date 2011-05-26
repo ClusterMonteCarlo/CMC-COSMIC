@@ -713,6 +713,10 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #else
 #ifdef USE_MPI 
 	int mpiBegin, mpiEnd;
+/*
+	if(myid==0)
+      printf("%d\t%d\t%ld\t%ld\n", mpiBegin, mpiEnd, clus.N_MAX_NEW, clus.N_MAX);
+*/
 	mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
 	for (si=mpiBegin; si<=mpiEnd; si++) {
 #else

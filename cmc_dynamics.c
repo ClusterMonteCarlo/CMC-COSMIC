@@ -86,7 +86,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 
 #ifdef USE_MPI	
    int mpiBegin, mpiEnd;
-   mpiFindIndices( N_LIMIT-N_LIMIT%2, &mpiBegin, &mpiEnd );
+   mpiFindIndicesEven( N_LIMIT-N_LIMIT%2, &mpiBegin, &mpiEnd ); //Check if this is correct
    //mpiFindIndicesEven( 44, &mpiBegin, &mpiEnd );
    //printf("Func\tProc %d:\tLow=%ld\tHigh=%ld\n",myid, mpiBegin, mpiEnd);
 
