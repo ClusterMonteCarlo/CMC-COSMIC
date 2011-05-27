@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
 
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
-		clus.N_MAX_NEW++;
+		//clus.N_MAX_NEW++;
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
@@ -435,6 +435,7 @@ int main(int argc, char *argv[])
 			timeEnd(fileNameParallel, funcName);
 			timeEnd(fileNameSerial, funcName);
 
+
 			/*Sourav: checking all stars for their possible extinction from old age*/
 			//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
 			DMrejuv = 0.0;
@@ -457,15 +458,16 @@ int main(int argc, char *argv[])
 
 #ifdef USE_MPI 
 				mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
-				for (i=mpiBegin; i<=mpiEnd; i++) {
+				for (i=mpiBegin; i<=mpiEnd; i++) 
 #else
 					/* more numbers necessary to implement Stodolkiewicz's
 					 * energy conservation scheme */
-					for (i = 1; i <= clus.N_MAX_NEW; i++) {
+					for (i = 1; i <= clus.N_MAX_NEW; i++) 
 #endif
 						/* the following cannot be calculated after sorting 
 						 * and calling potential_calculate() */
 #ifdef USE_MPI 
+					{
 						star[i].Uoldrnew = potential(star[i].rnew) + MPI_PHI_S(star[i].rnew, i);
 #else
 						star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);

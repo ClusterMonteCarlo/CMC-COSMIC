@@ -75,54 +75,8 @@ void mpiFindDispAndLen( long N, int* mpiDisp, int* mpiLen )
 	}
 }
 
-/*
-Random number functions modified for parallel implementation. For original, see libs/taus113-v2.c
-*/
-
-/*
-struct rng_t113_state {
-	unsigned long z1, z2, z3, z4;
-};
-
-//static struct rng_t113_state state;
-
-
-unsigned long rng_t113_int(struct rng_t113_state *st) {
-	unsigned long b;
-
-	b = ((((state.z1 <<  6) &MASK) ^ state.z1) >> 13);
-	state.z1 = ((((state.z1 & 4294967294UL) << 18) &MASK) ^ b);
-	b = ((((state.z2 <<  2) &MASK) ^ state.z2) >> 27);
-	state.z2 = ((((state.z2 & 4294967288UL) <<  2) &MASK) ^ b);
-	b = ((((state.z3 << 13) &MASK) ^ state.z3) >> 21);
-	state.z3 = ((((state.z3 & 4294967280UL) <<  7) &MASK) ^ b);
-	b = ((((state.z4 <<  3) &MASK) ^ state.z4) >> 12);
-	state.z4 = ((((state.z4 & 4294967168UL) << 13) &MASK) ^ b);
-  	return (state.z1 ^ state.z2 ^ state.z3 ^ state.z4);
-}
-
-double rng_t113_dbl(struct rng_t113_state *st) {
-	return rng_t113_int(st) / 4294967296.0 ;
-}
-
-void reset_rng_t113(unsigned long int s, struct rng_t113_state *st) {
-
-	if (s == 0) s = 1UL;	// default seed is 1 
-
-	state.z1 = LCG (s);
-	if (state.z1 < 2UL) state.z1 += 2UL;
-	state.z2 = LCG (state.z1);
-	if (state.z2 < 8UL) state.z2 += 8UL;
-	state.z3 = LCG (state.z2);
-	if (state.z3 < 16UL) state.z3 += 16UL;
-	state.z4 = LCG (state.z3);
-	if (state.z4 < 128UL) state.z4 += 128UL;
-
-	// Calling RNG ten times to satify recurrence condition 
-	rng_t113_int(); rng_t113_int(); rng_t113_int(); 
-	rng_t113_int(); rng_t113_int(); rng_t113_int(); 
-	rng_t113_int(); rng_t113_int(); rng_t113_int(); 
-	rng_t113_int(); 
-	return;
+/* Future Work
+void mpiReduceAndBcast( void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm )
+{
 }
 */

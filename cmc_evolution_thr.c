@@ -410,6 +410,7 @@ void tidally_strip_stars(void) {
 	double phi_rtidal, phi_zero, gierszalpha;
 	long i, j, k;
 	k=0;
+	double temp=0, tEescaped=0, tJescaped=0, tEintescaped=0, tEbescaped=0,DTidalMassLoss=0, tEtidal=0;
 	
 	j = 0;
 	Etidal = 0.0;
@@ -424,6 +425,7 @@ void tidally_strip_stars(void) {
 		j, OldTidalMassLoss, DTidalMassLoss);
 	fprintf(logfile, "tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 		j, OldTidalMassLoss, DTidalMassLoss);
+
 	
 	/* Iterate the removal of tidally stripped stars 
 	 * by reducing Rtidal */
@@ -433,31 +435,41 @@ void tidally_strip_stars(void) {
 		phi_rtidal = potential(Rtidal);
 		phi_zero = potential(0.0);
 		DTidalMassLoss = 0.0;
+#ifdef USE_MPI
+		if(myid==0)
+#endif
 
+//MPI2: There's a problem in this loop since Etidal needs to be checked everytime. Might need to be done sequentially. Oh wait!, cant be done sequentially yoo, since other variables for other stars after N/procs are not present on root node!
+/*
 #ifdef USE_MPI
 		int mpiBegin, mpiEnd;
 		mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
-		for (i=mpiBegin; i<=mpiEnd; i++) {
+		for (i=mpiBegin; i<=mpiEnd; i++) 
 #else
+*/
+
 		/* XXX maybe we should use clus.N_MAX_NEW below?? */
-		for (i = 1; i <= clus.N_MAX; i++) {
-#endif
+		for (i = 1; i <= clus.N_MAX; i++) 
+//#endif
+		{
+			tEtidal=0;
 			if (TIDAL_TREATMENT == 0){
 				/*radial cut off criteria*/
 
-				//printf("\n%d\t%g\tadsdadasda\n", myid, star[i].r_apo);
 				if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
 					dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
+/*
 #ifdef USE_MPI
-					Eescaped += star[i].E * star_m[i] / clus.N_STAR;
-					Jescaped += star[i].J * star_m[i] / clus.N_STAR;
+					tEescaped += star[i].E * star_m[i] / clus.N_STAR;
+					tJescaped += star[i].J * star_m[i] / clus.N_STAR;
 #else
+*/
 					Eescaped += star[i].E * star[i].m / clus.N_STAR;
 					Jescaped += star[i].J * star[i].m / clus.N_STAR;
-#endif
+//#endif
 					if (star[i].binind == 0) {
 						Eintescaped += star[i].Eint;
 					} else {
@@ -466,13 +478,15 @@ void tidally_strip_stars(void) {
 						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
 					}
 
+/*
 #ifdef USE_MPI
-					DTidalMassLoss += star_m[i] / clus.N_STAR;
-					Etidal += star[i].E * star_m[i] / clus.N_STAR;
+					tDTidalMassLoss += star_m[i] / clus.N_STAR;
+					tEtidal += star[i].E * star_m[i] / clus.N_STAR;
 #else
+*/
 					DTidalMassLoss += star[i].m / clus.N_STAR;
 					Etidal += star[i].E * star[i].m / clus.N_STAR;
-#endif
+//#endif
 
 					/* logging */
 					fprintf(escfile,
@@ -509,7 +523,14 @@ void tidally_strip_stars(void) {
 		     star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
 	     		star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star[i].phi, star[i].r);
 					destroy_obj(i);
-
+/*
+#ifdef USE_MPI
+					MPI_Reduce(&tEtidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+					if(myid==0)
+						Etidal += temp;
+					MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+*/
 					if (Etotal.K + Etotal.P - Etidal >= 0)
 						break;
 
@@ -528,13 +549,15 @@ void tidally_strip_stars(void) {
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
+/*
 #ifdef USE_MPI
-					Eescaped += star[i].E * star_m[i] / clus.N_STAR;
-					Jescaped += star[i].J * star_m[i] / clus.N_STAR;
+					tEescaped += star[i].E * star_m[i] / clus.N_STAR;
+					tJescaped += star[i].J * star_m[i] / clus.N_STAR;
 #else
+*/
 					Eescaped += star[i].E * star[i].m / clus.N_STAR;
 					Jescaped += star[i].J * star[i].m / clus.N_STAR;
-#endif
+//#endif
 					if (star[i].binind == 0) {
 						Eintescaped += star[i].Eint;
 					} else {
@@ -543,13 +566,15 @@ void tidally_strip_stars(void) {
 						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
 					}
 
+/*
 #ifdef USE_MPI
-					DTidalMassLoss += star_m[i] / clus.N_STAR;
-					Etidal += star[i].E * star_m[i] / clus.N_STAR;
+					tDTidalMassLoss += star_m[i] / clus.N_STAR;
+					tEtidal += star[i].E * star_m[i] / clus.N_STAR;
 #else
+*/
 					DTidalMassLoss += star[i].m / clus.N_STAR;
 					Etidal += star[i].E * star[i].m / clus.N_STAR;
-#endif
+//#endif
 
 					/* logging */
 					fprintf(escfile,
@@ -584,6 +609,15 @@ void tidally_strip_stars(void) {
 					   multiple times */
 					destroy_obj(i);
 
+					//MPI2: MPI Communication - Reduction
+/*
+#ifdef USE_MPI
+					MPI_Reduce(&tEtidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+					if(myid==0)
+						Etidal += temp;
+					MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+*/
 					if (Etotal.K + Etotal.P - Etidal >= 0)
 						break;
 
@@ -591,6 +625,17 @@ void tidally_strip_stars(void) {
 			}
 
 		}
+//printf("%d\tDtidal=%g\t%d\n",myid, DTidalMassLoss,TIDAL_TREATMENT);
+
+
+/*		//MPI2: MPI Communication - Reduction
+#ifdef USE_MPI
+		MPI_Reduce(&DTidalMassLoss, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0)
+			DTidalMassLoss = temp;
+		MPI_Bcast(&DTidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+*/
 		j++;
 		TidalMassLoss = TidalMassLoss + DTidalMassLoss;
 		gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
@@ -598,11 +643,44 @@ void tidally_strip_stars(void) {
 		fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 				j, TidalMassLoss, DTidalMassLoss);
 	} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
+
+	//MPI2: MPI Communication - Reduction
+/*
+#ifdef USE_MPI
+	MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Eescaped = temp;
+	MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&Jescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Jescaped = temp;
+	MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&Eintescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Eintescaped = temp;
+	MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&Ebescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Ebescaped = temp;
+	MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+*/
+
+#ifdef USE_MPI
+	MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&DTidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
 }
 
 void remove_star(long j, double phi_rtidal, double phi_zero) {
 	double E, J;
 	long k=0;
+	double temp=0;
 
 	/* dprintf("removing star: i=%ld id=%ld m=%g E=%g bin=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 
@@ -611,6 +689,7 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	star[j].rnew = SF_INFINITY;	/* tidally stripped star */
 	star[j].vrnew = 0.0;
 	star[j].vtnew = 0.0;
+
 #ifdef USE_MPI
 	Eescaped += E * star_m[j] / clus.N_STAR;
 	Jescaped += J * star_m[j] / clus.N_STAR;
@@ -618,6 +697,7 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	Eescaped += E * star[j].m / clus.N_STAR;
 	Jescaped += J * star[j].m / clus.N_STAR;
 #endif
+
 	if (star[j].binind == 0) {
 		Eintescaped += star[j].Eint;
 	} else {
@@ -664,6 +744,34 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	/* perhaps this will fix the problem wherein stars are ejected (and counted)
 	   multiple times */
 	destroy_obj(j);
+/*
+#ifdef USE_MPI
+	MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Eescaped = temp;
+	MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&Jescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Jescaped = temp;
+	MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&Eintescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Eintescaped = temp;
+	MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&Ebescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Ebescaped = temp;
+	MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&DTidalMassLoss, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		DTidalMassLoss = temp;
+	MPI_Bcast(&DTidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&Etidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0)
+		Etidal = temp;
+	MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+*/
 }
 
 void remove_star_center(long j) {
@@ -683,14 +791,7 @@ void remove_star_center(long j) {
 	from previous iteration. Returns positions and velocities in
 	srnew[], svrnew[], and svtnew[]. Returns Max r for all stars, or
 	-1 on error. */
-#ifdef USE_THREADS
-void *get_positions_loop(void *get_pos_dat_arg){
-	struct get_pos_str *get_pos_dat = (struct get_pos_str *) get_pos_dat_arg;
-	int taskid = get_pos_dat->taskid;
-	gsl_rng *thr_rng = get_pos_dat->thr_rng;
-#else
 void get_positions_loop(struct get_pos_str *get_pos_dat){
-#endif
 	long j, k, si;
 	double r=0.0, vr=0.0, vt, rmin, rmax, E, J;
 	double g1, g2, F, s0, g0, dQdr_min, dQdr_max, drds, max_rad, pot;
@@ -708,22 +809,16 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	cuCalculateKs();
 #endif
 
-#ifdef USE_THREADS
-	for (si = taskid+1; si <= clus.N_MAX_NEW; si+=NUM_THREADS) { /* Repeat for all stars */
-#else
 #ifdef USE_MPI 
 	int mpiBegin, mpiEnd;
-/*
-	if(myid==0)
-      printf("%d\t%d\t%ld\t%ld\n", mpiBegin, mpiEnd, clus.N_MAX_NEW, clus.N_MAX);
-*/
 	mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
 	for (si=mpiBegin; si<=mpiEnd; si++) {
 #else
 	for (si = 1; si <= clus.N_MAX_NEW; si++) { /* Repeat for all stars */
 #endif
-#endif
 		j = si;
+if(myid==1)
+printf("id=%d\titer=%d\n",myid,si );
 
 #ifdef USE_MPI
 		E = star[j].E + MPI_PHI_S(star_r[j], j);
@@ -756,6 +851,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
 			continue;
 		}
+if(myid==1)
+printf("orbit calc done\tid=%d\titer=%ld\ttries=%d\n",myid,si,k );
 
 
 		/* calculate peri- and apocenter of orbit */
@@ -798,18 +895,9 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		F = 1.2 * MAX(g1, g2);
 		
 		for (k = 1; k <= N_TRY; k++) {
-#ifdef USE_THREADS
-			X = gsl_rng_uniform(thr_rng);
-#else
 			X = rng_t113_dbl();
-#endif
 			s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
-#ifdef USE_THREADS
-			g0 = F * gsl_rng_uniform(thr_rng); /* random  0 < g0 < F */
-#else
 			g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
-#endif
-
 			r = 0.5 * (rmin + rmax) + 0.25 * (rmax - rmin) * (3.0 * s0 - s0 * s0 * s0);
 
 #ifdef USE_MPI
@@ -848,20 +936,15 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		MINIMUM_R = 2.0 * FB_CONST_G * cenma.m * units.mstar / fb_sqr(FB_CONST_C) / units.l;
 		if (0) {
 		/* if (r < MINIMUM_R) { */
-#ifdef USE_THREADS
-			get_pos_dat->CMincr.m += star[j].m;
-			get_pos_dat->CMincr.E += (2.0*star[j].phi + star[j].vr * star[j].vr + star[j].vt * star[j].vt) /
-				2.0 * star[j].m * madhoc;
-#else
 #ifdef USE_MPI
 			cenma.m += star_m[j];
 			cenma.E += (2.0*star_phi[j] + star[j].vr * star[j].vr + star[j].vt * star[j].vt) / 
 				2.0 * star_m[j] * madhoc;
+			//Reduction?? For now it is ok, since if(0) never runs :)
 #else
 			cenma.m += star[j].m;
 			cenma.E += (2.0*star[j].phi + star[j].vr * star[j].vr + star[j].vt * star[j].vt) / 
 				2.0 * star[j].m * madhoc;
-#endif
 #endif
 			destroy_obj(j);
 			MINIMUM_R = 2.0 * FB_CONST_G * cenma.m * units.mstar / fb_sqr(FB_CONST_C) / units.l;
@@ -873,13 +956,9 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		star[j].r_apo = rmax;
 		
 		/* pick random sign for v_r */
-#ifdef USE_THREADS
-		if (gsl_rng_uniform(thr_rng) < 0.5)
-#else
 		if (rng_t113_dbl() < 0.5)
-#endif
+			vr = -vr;
 
-		vr = -vr;
 		vt = J / r;
 
 		star[j].rnew = r;
@@ -890,11 +969,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			max_rad = r;
 	} /* Next si */
 	get_pos_dat->max_rad = max_rad;
-#ifdef USE_THREADS
-	if(get_pos_dat->taskid>0) 
-		pthread_exit(NULL);
-	return (NULL);
-#endif
 }
 
 /* return maximum stellar radius, get r_p and r_a for all objects */
@@ -975,6 +1049,7 @@ double get_positions(){
 	free(get_positions_data_array);
 #else
 	get_positions_loop(&get_positions_data);
+printf("myid=%d\n",myid);
 	max_rad = get_positions_data.max_rad;
 #endif
 	return (max_rad);
