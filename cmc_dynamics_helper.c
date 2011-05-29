@@ -260,7 +260,7 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	*W = sqrt(sqr(w[1]) + sqr(w[2]) + sqr(w[3]));
 
 	if (*W == 0.0) {
-		eprintf("W = 0!\n");
+		eprintf("W = 0! for star id = %ld\n", k);
 		exit_cleanly(1);
 	}
 

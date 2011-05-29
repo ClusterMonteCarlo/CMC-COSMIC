@@ -250,10 +250,11 @@ void ComputeIntermediateEnergy(void)
 #endif
 #ifdef USE_MPI
 		star[j].rOld = star_r[j];
+		star_r[j] = star[j].rnew;
 #else
 		star[j].rOld = star[j].r;
-#endif
 		star[j].r = star[j].rnew;
+#endif
 		star[j].vr = star[j].vrnew;
 		star[j].vt = star[j].vtnew;
 	}
@@ -421,9 +422,10 @@ void mpi_ComputeEnergy(void)
 	double phi0 = 0.0;
 
 	int i, mpiBegin, mpiEnd;
-   mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
-	if(myid==1)
-		printf("%d\t%d\t%ld\t%ld\n", mpiBegin, mpiEnd, clus.N_MAX_NEW, clus.N_MAX);
+   //mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+	//MPI2:This should be clus.N_MAX (as in previous line), but changing temporarily to get rid of increment in indices in the main loop (clus.N_MAX_NEW++) which results in stripping of last stars which is because the distribution of stars across nodes change after the increment.
+   mpiFindIndices( clus.N_MAX+1, &mpiBegin, &mpiEnd );
+	printf("%s:%d\tmpiBegin=%d\tmpiEnd=%d\n",__FUNCTION__, myid, mpiBegin, mpiEnd);
 
 	for (i=mpiBegin; i<=mpiEnd; i++) {
 		star[i].E = star_phi[i] + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
@@ -597,12 +599,12 @@ long potential_calculate(void) {
 	/* New N_MAX */
 	clus.N_MAX = k - 1;
 
-        /* update central BH mass */
-        cenma.m= cenma.m_new;
+	/* update central BH mass */
+	cenma.m= cenma.m_new;
 
 	/* New total Mass; This IS correct for multiple components */
 	Mtotal = mprev * madhoc + cenma.m * madhoc;	
-        dprintf("Mtotal is %lf, cenma.m is %lf, madhoc is %lg, mprev is %lf\n", Mtotal, cenma.m, madhoc, mprev);
+	dprintf("Mtotal is %lf, cenma.m is %lf, madhoc is %lg, mprev is %lf\n", Mtotal, cenma.m, madhoc, mprev);
 
 	/* Compute new tidal radius using new Mtotal */
 

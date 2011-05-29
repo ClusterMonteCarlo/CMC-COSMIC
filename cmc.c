@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 	reset_rng_t113_new(myid, &st);
 	PROCS = procs;
 	MYID = myid;
+	double temp;
 #else
 	//PROC = 4; //to mimic rng of the serial version to the parallel version.
 	static struct rng_t113_state st[4]; //the array length has to be changed everytime the no.of processors are changed.
@@ -204,6 +205,7 @@ int main(int argc, char *argv[])
 #ifdef USE_MPI
 	timeStart();
 	strcpy(funcName, "mpi_potential_calculate");
+	//MPI2: Does it need to be done on root, or can it be done on all nodes for all stars? Think.
 	if(myid==0) 
 		mpi_potential_calculate();
 	MPI_Bcast(star_phi, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -369,6 +371,7 @@ int main(int argc, char *argv[])
 #ifdef USE_MPI
 		MPI_Bcast(&Dt, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 		timeEnd(fileNameParallel, funcName);
+#else
 		timeEnd(fileNameSerial, funcName);
 #endif
 
@@ -390,7 +393,7 @@ int main(int argc, char *argv[])
 
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
-		//clus.N_MAX_NEW++;
+		clus.N_MAX_NEW++;
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
@@ -450,11 +453,19 @@ int main(int argc, char *argv[])
 					}	
 				}
 
-				/* this calls get_positions() */
 				timeStart();
-				tidally_strip_stars();
+#ifdef USE_MPI
+				OldTidalMassLoss = TidalMassLoss;
+				/******************************/
+				/* get new particle positions */
+				/******************************/
+				max_r = get_positions();
 				timeEnd(fileNameParallel, funcName);
+#else
+				/* this calls get_positions() */
+				tidally_strip_stars();
 				timeEnd(fileNameSerial, funcName);
+#endif
 
 #ifdef USE_MPI 
 				mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
@@ -485,6 +496,7 @@ int main(int argc, char *argv[])
 
 #ifdef USE_MPI
 					timeStart();
+					strcpy(funcName, "pre-qsorts communication");
 					//MPI2: Collecting the r and m arrays into the original star structure for sorting.
 					mpiFindDispAndLen( clus.N_MAX_NEW, mpiDisp, mpiLen );
 
@@ -495,7 +507,7 @@ int main(int argc, char *argv[])
 					for(i=mpiBegin; i<=mpiEnd; i++) {
 						star[i].r = star_r[i];
 						star[i].m = star_m[i];
-						star[i].EI = myid;
+						//star[i].EI = myid;
 					}
 
 					//MPI2: To be refactored into separate function later.
@@ -508,16 +520,51 @@ int main(int argc, char *argv[])
 /*
 					if(myid==0)
 					{
-						ftest1 = fopen("test_mpi_rtest0.dat","w");
+						ftest = fopen("test_mpi_rtest0.dat","w");
 						for(i=1; i<=clus.N_MAX; i++) {
-							fprintf( ftest1,  "%d\t%g\n",i, star[i].r);
+							fprintf( ftest,  "%d\t%g\n",i, star[i].r);
 						}
-						fclose(ftest1);
+						fclose(ftest);
 					}
 */
 #endif
 
+#ifdef USE_MPI
+					timeStart();
+					MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+					if(myid==0) Eescaped = temp;
+					MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Reduce(&Jescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+					if(myid==0) Jescaped = temp;
+					MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Reduce(&Eintescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+					if(myid==0) Eintescaped = temp;
+					MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Reduce(&Ebescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+					if(myid==0) Ebescaped = temp;
+					MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Reduce(&TidalMassLoss, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+					if(myid==0) TidalMassLoss = temp;
+					MPI_Bcast(&TidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Reduce(&Etidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+					if(myid==0) Etidal = temp;
+					MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+					if(myid==0)
+						tidally_strip_stars2();
+
+					MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(&DTidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					timeEnd(fileNameParallel, funcName);
+#endif
+
 					strcpy(funcName, "qsorts");
+					timeStart();
 #ifdef USE_MPI
 					if(myid==0)
 #endif
@@ -525,8 +572,12 @@ int main(int argc, char *argv[])
 						and (N_STAR+1)th star at SF_INFINITY are already set earlier.
 					 */
 						qsorts(star+1,clus.N_MAX_NEW); //parallel sort
+					timeEnd(fileNameParallel, funcName);
+					timeEnd(fileNameSerial, funcName);
 
 #ifdef USE_MPI
+					timeStart();
+					strcpy(funcName, "post-qsorts communication");
 					//MPI2: To be refactored into separate function later.
 					if(myid==0)
 						for(i=1;i<procs;i++)
@@ -541,6 +592,7 @@ int main(int argc, char *argv[])
 						}
 					MPI_Bcast(star_m, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 					MPI_Bcast(star_r, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					timeEnd(fileNameParallel, funcName);
 
 /*
 					if(myid==0)
@@ -551,17 +603,16 @@ int main(int argc, char *argv[])
 						}
 						fclose(ftest1);
 					}
-					if(myid==1)
+					if(myid==0)
 					{
-						ftest1 = fopen("test_mpi_rtest2.dat","w");
+						ftest = fopen("test_mpi_rtest2.dat","w");
 						for(i=1; i<=clus.N_MAX; i++) {
-							fprintf( ftest1,  "%d\t%g\n",i, star_r[i]);
+							fprintf( ftest,  "%d\t%g\n",i, star_r[i]);
 						}
-						fclose(ftest1);
+						fclose(ftest);
 					}
+
 */
-					timeEnd(fileNameParallel, funcName);
-					timeEnd(fileNameSerial, funcName);
 #endif
 
 
@@ -656,7 +707,7 @@ int main(int argc, char *argv[])
 if(myid==0)
 {
 	ftest = fopen("mpi_globvar.dat","w");
-	fprintf(ftest, "clus.N_MAX_NEW=%ld\nclus.N_MAX=%ld\nTidalMassLoss=%g\nOldTidalMassLoss=%g\nPrev_Dt=%g\nEescaped=%g\nJescaped=%g\nEintescaped=%g\nEbescaped=%g\nMtotal=%g\ninitial_total_mass=%g\nDMse=%g\nDMrejuv=%g\n cenma.m=%g\ncenma.m_new=%g\ncenma.E=%g\ntcount=%ld\nStepCount=%ld\nsnap_num=%ld\nEcheck=ld\nnewstarid=%ld\n",
+	fprintf(ftest, "clus.N_MAX_NEW=%ld\nclus.N_MAX=%ld\nTidalMassLoss=%g\nOldTidalMassLoss=%g\nPrev_Dt=%g\nEescaped=%g\nJescaped=%g\nEintescaped=%g\nEbescaped=%g\nMtotal=%g\ninitial_total_mass=%g\nDMse=%g\nDMrejuv=%g\ncenma.m=%g\ncenma.m_new=%g\ncenma.E=%g\ntcount=%ld\nStepCount=%ld\nsnap_num=%ld\nEcheck=%ld\nnewstarid=%ld\n",
 						clus.N_MAX_NEW,
 						clus.N_MAX,
 						TidalMassLoss,

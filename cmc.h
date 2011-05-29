@@ -455,6 +455,8 @@ typedef struct{
 double sqr(double x);
 double cub(double x);
 void tidally_strip_stars(void);
+void tidally_strip_stars2(void);
+
 void remove_star_center(long j);
 void print_results(void);
 void print_conversion_script(void);
