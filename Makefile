@@ -23,7 +23,7 @@ BSEOBJS = $(BSEWRAPDIR)/bse_wrap.o $(BSEDIR)/comenv.o $(BSEDIR)/corerd.o $(BSEDI
         $(BSEDIR)/zcnsts.o $(BSEDIR)/zfuncs.o
 
 # default super-target
-all: $(EXE) UTILS CONTRIBS $(CUDAOBJS) $(MPIOBJS)
+all: $(EXE) UTILS CONTRIBS  
 
 # peripheral stuff
 $(BSEWRAPDIR)/bse_wrap.o: $(BSEWRAPDIR)/bse_wrap.c $(BSEWRAPDIR)/bse_wrap.h
@@ -41,12 +41,9 @@ UTILS: libs/fitslib.o libs/taus113-v2.o
 CONTRIBS:
 	cd contrib && $(MAKE)
 
-$(CUDAOBJS):
-	cd $(CUDADIR) && $(MAKE)
-
 # the standard executable
-$(EXE): $(CUDAOBJS) $(OBJS) $(FEWBODYOBJS) $(BSEOBJS) $(MPIOBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS) $(CUDALIB)
+$(EXE): $(OBJS) $(FEWBODYOBJS) $(BSEOBJS) $(MPIOBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)
 
 $(FEWBODYDIR)/%.o: $(FEWBODYDIR)/%.c $(FEWBODYDIR)/fewbody.h Makefile
 	$(CC) $(CFLAGS) -I$(FEWBODYDIR) -c $< -o $@
@@ -68,7 +65,7 @@ clean:
 	cd utils && $(MAKE) clean
 	cd libs && $(MAKE) clean
 	cd bse_wrap && $(MAKE) clean
-	cd $(CUDADIR) && $(MAKE) clean
+	#cd $(CUDADIR) && $(MAKE) clean
 
 mrproper: clean
 	find . -name \*~ | xargs rm -f

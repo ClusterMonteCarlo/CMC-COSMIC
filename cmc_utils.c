@@ -159,8 +159,8 @@ void set_velocities3(void){
 	
 	Eexcess = 0.0;
 #ifdef USE_MPI 
-	int mpiBegin, mpiEnd;
-	mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+	//int mpiBegin, mpiEnd;
+	//mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
 	for (i=mpiBegin; i<=mpiEnd; i++) {
 #else
 	for (i = 1; i <= clus.N_MAX; i++) {
@@ -225,8 +225,9 @@ void ComputeIntermediateEnergy(void)
 	long j;
 
 #ifdef USE_MPI 
-	int mpiBegin, mpiEnd;
-	mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
+	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
+	//int mpiBegin, mpiEnd;
+	//mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
 	for (j=mpiBegin; j<=mpiEnd; j++) {
 #else
 	/* compute intermediate energies for stars due to change in pot */ 
@@ -421,11 +422,9 @@ void mpi_ComputeEnergy(void)
 	double Etotal_Eb = 0.0;
 	double phi0 = 0.0;
 
-	int i, mpiBegin, mpiEnd;
+	int i;
    //mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
-	//MPI2:This should be clus.N_MAX (as in previous line), but changing temporarily to get rid of increment in indices in the main loop (clus.N_MAX_NEW++) which results in stripping of last stars which is because the distribution of stars across nodes change after the increment.
-   mpiFindIndices( clus.N_MAX+1, &mpiBegin, &mpiEnd );
-	printf("%s:%d\tmpiBegin=%d\tmpiEnd=%d\n",__FUNCTION__, myid, mpiBegin, mpiEnd);
+	//printf("%s:%d\tmpiBegin=%d\tmpiEnd=%d\n",__FUNCTION__, myid, mpiBegin, mpiEnd);
 
 	for (i=mpiBegin; i<=mpiEnd; i++) {
 		star[i].E = star_phi[i] + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
@@ -513,7 +512,10 @@ long mpi_potential_calculate(void) {
 	/* count up all the mass and set N_MAX */
 	k = 1;
 	mprev = 0.0;
-	while (star_r[k] < SF_INFINITY && k <= clus.N_STAR_NEW) {
+	
+	//while (star_r[k] < SF_INFINITY && k <= clus.N_STAR_NEW) {
+	//MPI2: Temporarily changing this to N_MAX.
+	while (star_r[k] < SF_INFINITY && k <= clus.N_MAX) {
 		mprev += star_m[k];
 		/* I guess NaNs do happen... */
 		if(isnan(mprev)){
@@ -1009,12 +1011,12 @@ void mpi_central_calculate1(void)
 	/* allocate array for local density calculations */
 	rhoj = (double *) malloc((nave+1) * sizeof(double));
 
-	int mpiBegin, mpiEnd;
-	mpiFindIndices( nave, &mpiBegin, &mpiEnd );
+	int mpiBeginLoc, mpiEndLoc;
+	mpiFindIndices( nave, &mpiBeginLoc, &mpiEndLoc );
 	//printf("Func\tProc %d:\tnave=%ld\tLow=%d\tHigh=%d\n",myid, nave, mpiBegin, mpiEnd);
 
 	/* calculate rhoj's (Casertano & Hut 1985) */
-	for (i=mpiBegin; i<=mpiEnd; i++) {
+	for (i=mpiBeginLoc; i<=mpiEndLoc; i++) {
 		jmin = MAX(i-J/2, 1);
 		jmax = jmin + J;
 		mrho = 0.0;
@@ -1039,7 +1041,7 @@ void mpi_central_calculate1(void)
 	mpi_c_rc = 0.0;
 	mpi_c_mave = 0.0;
 
-	for (i=mpiBegin; i<=mpiEnd; i++) {
+	for (i=mpiBeginLoc; i<=mpiEndLoc; i++) {
 		mpi_rhojsum += rhoj[i];
 		mpi_rhoj2sum += sqr(rhoj[i]);
 		mpi_c_rho += sqr(rhoj[i]);
@@ -1159,10 +1161,6 @@ void mpi_central_calculate2(void) {
 	}
 
 	MPI_Bcast(&central, sizeof(central_t), MPI_BYTE, 0, MPI_COMM_WORLD);
-/*
-if(myid==1)
-printf( "----------------------\n\n%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n\n--------------------", central.N_sin, central.N_bin, central.v_sin_rms, central.w2_ave, central.R2_ave, central.mR_ave, central.a_ave, central.a2_ave, central.ma_ave);
-*/
 
 	/* set global code variables */
 	v_core = central.v_rms;

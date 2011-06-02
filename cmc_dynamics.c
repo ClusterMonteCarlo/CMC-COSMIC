@@ -85,12 +85,14 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	fprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
 
 #ifdef USE_MPI	
-   int mpiBegin, mpiEnd;
-   mpiFindIndicesEven( N_LIMIT-N_LIMIT%2, &mpiBegin, &mpiEnd ); //Check if this is correct
-   //mpiFindIndicesEven( 44, &mpiBegin, &mpiEnd );
-   //printf("Func\tProc %d:\tLow=%ld\tHigh=%ld\n",myid, mpiBegin, mpiEnd);
-
-	for (si=mpiBegin; si<=mpiEnd; si+=2) {
+   //int mpiBegin, mpiEnd;
+   //mpiFindIndicesEven( N_LIMIT-N_LIMIT%2, &mpiBegin, &mpiEnd ); //Check if this is correct
+	//int Btest,Etest;
+   //mpiFindIndicesSpecial( 99, &Btest, &Etest );
+   printf("Proc %d:\tLow=%d\tHigh=%d\tNum=%d\n",myid, mpiBegin, mpiEnd, mpiEnd-mpiBegin+1);
+	//MPI2: Changing to the more intelligent :) mpiFindIndicesSpecial.
+   //mpiFindIndicesEven( N_LIMIT, &mpiBegin, &mpiEnd ); //Check if this is correct
+	for (si=mpiBegin; si<=mpiEnd-mpiEnd%2; si+=2) {
 #else
 	/* the big loop, with limits chosen so that we omit the last star if it is not paired */
 	for (si=1; si<=N_LIMIT-N_LIMIT%2-1; si+=2) {
@@ -212,12 +214,9 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		P_enc = n_local * W * S * (dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)));
 		
 		/* warn if something went wrong with the calculation of Dt */
-#ifdef USE_MPI
-	if(myid==0)
 		if (P_enc >= 1.0) {
 			wprintf("P_enc = %g >= 1!\n", P_enc);
 		}
-#endif
 
 		/* do encounter or two-body relaxation */
 		if (rng_t113_dbl() < P_enc) {
@@ -244,7 +243,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			}
 		} else if (RELAXATION) {
 			/* do two-body relaxation */
-			Trel12 = (PI/32.0) * cub(W) / ( ((double) clus.N_STAR) * n_local * sqr((star[k].m+star[kp].m)*madhoc) ) ;
+			Trel12 = (PI/32.0) * cub(W) / ( ((double) clus.N_STAR) * n_local * sqr((mass_k+mass_kp)*madhoc) ) ;
 			beta = (PI/2.0) * sqrt(dt/Trel12);
 			
 			/* record statistics on scattering angles */
@@ -252,8 +251,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			for (i=0; i<4; i++) {
 				if (beta > relbeta[i]) {
 					Nrelbeta[i]++;
-					qaverelbeta[i] += MAX(star[k].m, star[kp].m)/MIN(star[k].m, star[kp].m);
-					maverelbeta[i] += (star[k].m + star[kp].m)/2.0 * units.mstar/MSUN;
+					qaverelbeta[i] += MAX(mass_k, mass_kp)/MIN(mass_k, mass_kp);
+					maverelbeta[i] += (mass_k + mass_kp)/2.0 * units.mstar/MSUN;
 					raverelbeta[i] += rcm;
 				}
 			}
@@ -286,8 +285,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			}
 			
 			for (j = 1; j <= 3; j++) {
-				v_new[j] = v[j] - star[kp].m / (star[k].m + star[kp].m) * (w_new[j] - w[j]);
-				vp_new[j] = vp[j] + star[k].m / (star[k].m + star[kp].m) * (w_new[j] - w[j]);
+				v_new[j] = v[j] - mass_kp / (mass_k + mass_kp) * (w_new[j] - w[j]);
+				vp_new[j] = vp[j] + mass_k / (mass_k + mass_kp) * (w_new[j] - w[j]);
 			}
 			
 			/* check to see whether stars should be eaten by central BH */
@@ -311,10 +310,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			set_star_EJ(kp);
 		}
 	}
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	{
+
 		/* print relaxation information */
 		fprintf(relaxationfile, "%g", TotalTime);
 		for (i=0; i<4; i++) {
@@ -329,8 +325,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		/* put newline on "...performing interactions..." line */
 		gprintf("\n");
 		fprintf(logfile, "\n");
-	}
 
+	//MPI2: Binaries, ignoring for now.
 	/* break pathologically wide binaries */
 	break_wide_binaries();
 }

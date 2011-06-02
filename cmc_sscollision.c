@@ -41,14 +41,9 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	if (TIDAL_CAPTURE && (star[k].se_k <= 1 || star[k].se_k >= 10) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7) && 
 	    rperi <= 1.3 * star[kp].rad) {
 
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	{
 		/* log stuff */
 		fprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
 			sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
-	}
 
 		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
 		ecoll = 0.88 - rperi/(3.0*star[kp].rad);
@@ -101,9 +96,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 				- 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt)) 
 				- 0.5 * mass_kp * madhoc * phi_kp;
 		
-#ifdef USE_MPI
-	if(myid==0)	
-#endif
 			/* log stuff */
 			fprintf(tidalcapturefile, "%s\n", sprint_star_dyn(kp, dummystring));
 
@@ -157,14 +149,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		}
 	} else if (TIDAL_CAPTURE && (star[kp].se_k <= 1 || star[kp].se_k >= 10) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7) && 
 		   rperi <= 1.3 * star[k].rad) {
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	{
+
 		/* log stuff */
 		fprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
 			sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
-	}
+
 		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
 		ecoll = 0.88 - rperi/(3.0*star[k].rad);
 		acoll = rperi/(3.3*(1.0-sqr(ecoll)));
@@ -213,9 +202,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 				- 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
 				- 0.5 * mass_k * madhoc * phi_k;
 	
-#ifdef USE_MPI
-	if(myid==0)		
-#endif
 			/* log stuff */
 			fprintf(tidalcapturefile, "%s\n", sprint_star_dyn(k, dummystring));
 

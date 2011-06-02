@@ -260,7 +260,7 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	*W = sqrt(sqr(w[1]) + sqr(w[2]) + sqr(w[3]));
 
 	if (*W == 0.0) {
-		eprintf("W = 0! for star id = %ld\n", k);
+		eprintf("W = 0! for star index = %ld\n", k);
 		exit_cleanly(1);
 	}
 
@@ -1454,8 +1454,6 @@ void mpi_calc_sigma_r(void)
 	else
 		simaxlast = mpi_siminlast - 1;
 
-	//printf("\n\nProc=%d\tDisp=%ld\tLen=%ld\n\n",myid, mpiDisp[i], mpiLen[i]);
-	
 	Mv2ave = 0.0;
 	Mave = 0.0;
 	for (si=mpi_siminlast; si<=mpi_N_LIMIT; si++) {

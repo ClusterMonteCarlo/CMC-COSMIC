@@ -39,6 +39,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		// Replaced by much more efficient bisection...
 		ktemp = FindZero_r(0, clus.N_MAX, star[si].rnew) + 1;
 	}
+
 	
 	/* Q(si) is positive for a standard object that has undergone relaxation 
 	   (see Joshi, Rasio, & Portegies Zwart 2000).  However, it can be negative
@@ -229,45 +230,45 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		}
 
 #ifdef EXPERIMENTAL
-                /* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
-                if (!orbit_rs.circular_flag) {
-                  int rmax_in_interval=0, rmin_in_interval=0, vr_rmax_positive=0, vr_rmin_positive=0;
+		/* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
+		if (!orbit_rs.circular_flag) {
+			int rmax_in_interval=0, rmin_in_interval=0, vr_rmax_positive=0, vr_rmin_positive=0;
 
-                  rmin_in_interval= orbit_rs.rp< star[kmin+1].r && orbit_rs.rp> star[kmin].r;
-                  rmax_in_interval= orbit_rs.ra< star[kmax+1].r && orbit_rs.ra> star[kmax].r;
-		  if (rmin_in_interval)
-			  vr_rmin_positive= calc_vr_in_interval(orbit_rs.rp, si, kmin, E, J)>= 0.;
-	          if (rmax_in_interval)
-			  vr_rmax_positive= calc_vr_in_interval(orbit_rs.ra, si, kmax, E, J)>= 0.;
+			rmin_in_interval= orbit_rs.rp< star[kmin+1].r && orbit_rs.rp> star[kmin].r;
+			rmax_in_interval= orbit_rs.ra< star[kmax+1].r && orbit_rs.ra> star[kmax].r;
+			if (rmin_in_interval)
+				vr_rmin_positive= calc_vr_in_interval(orbit_rs.rp, si, kmin, E, J)>= 0.;
+			if (rmax_in_interval)
+				vr_rmax_positive= calc_vr_in_interval(orbit_rs.ra, si, kmax, E, J)>= 0.;
 
-                  if (!(rmax_in_interval && vr_rmax_positive)) {
-                    rmax= find_root_vr(si, kmax, E, J);
-                    i = kmax;
-		    i1 = kmax + 1;
-		    rk = star[i].r;
-		    rk1 = star[i1].r;
-		    Uk = star[i].phi + PHI_S(rk, si);
-		    Uk1 = star[i1].phi  + PHI_S(rk1, si);		
-		    a = (Uk1 - Uk) / (1. / rk1 - 1. / rk);
-		    dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
-                    orbit_rs.ra= rmax;
-	            orbit_rs.dQdra = dQdr_max;
-                  };
+			if (!(rmax_in_interval && vr_rmax_positive)) {
+				rmax= find_root_vr(si, kmax, E, J);
+				i = kmax;
+				i1 = kmax + 1;
+				rk = star[i].r;
+				rk1 = star[i1].r;
+				Uk = star[i].phi + PHI_S(rk, si);
+				Uk1 = star[i1].phi  + PHI_S(rk1, si);		
+				a = (Uk1 - Uk) / (1. / rk1 - 1. / rk);
+				dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
+				orbit_rs.ra= rmax;
+				orbit_rs.dQdra = dQdr_max;
+			};
 
-                  if (!(rmin_in_interval && vr_rmin_positive)) {
-                    rmin= find_root_vr(si, kmin, E, J);
-                    i = kmin;
-                    i1 = kmin + 1;
-                    rk = star[i].r;
-                    rk1 = star[i1].r;
-                    Uk = star[i].phi + PHI_S(rk, si);
-                    Uk1 = star[i1].phi + PHI_S(rk1, si);
-                    a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
-                    dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
-                    orbit_rs.rp= rmin;
-                    orbit_rs.dQdrp = dQdr_min;
-                  };
-                };
+			if (!(rmin_in_interval && vr_rmin_positive)) {
+				rmin= find_root_vr(si, kmin, E, J);
+				i = kmin;
+				i1 = kmin + 1;
+				rk = star[i].r;
+				rk1 = star[i1].r;
+				Uk = star[i].phi + PHI_S(rk, si);
+				Uk1 = star[i1].phi + PHI_S(rk1, si);
+				a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
+				dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
+				orbit_rs.rp= rmin;
+				orbit_rs.dQdrp = dQdr_min;
+			};
+		};
 #endif
 	}
 	
@@ -283,8 +284,7 @@ double GetTimeStep(gsl_rng *rng) {
 		//Optimize simul_relax() later 
 		//DTrel = simul_relax(rng);
 
-//MPI2: Testing: MPI and Serial versions dont match exactly because of the way the averaging and binning are done in the MPI version. However, I think it is ok since this is only an estimate of the timestep. So, doesnt have to be exactly same.
-//MPI2: Later need to change the mpi version to exactly simulate simul_relax_new();.
+//MPI2: Testing: MPI and Serial versions dont match exactly because of the way the averaging and binning are done in the MPI version. However, I think it is ok since this is only an estimate of the timestep. So, doesnt have to be exactly same. Later might need to change the mpi version to exactly simulate simul_relax_new();.
 #ifdef USE_MPI
 		DTrel = mpi_simul_relax_new();
 #else
@@ -433,7 +433,8 @@ void tidally_strip_stars2(void)
 		DTidalMassLoss = 0.0;
 
 		/* XXX maybe we should use clus.N_MAX_NEW below?? */
-		for (i = 1; i <= clus.N_MAX_NEW; i++) 
+		//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
+		for (i = 1; i <= clus.N_MAX; i++) 
 		{
 			if (TIDAL_TREATMENT == 0){
 				/*radial cut off criteria*/
@@ -964,10 +965,14 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	cuCalculateKs();
 #endif
 
+printf("Being Loop\n");
+timeT=0.0;
+
 #ifdef USE_MPI 
-	int mpiBegin, mpiEnd;
-	mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
-	printf("%s:%d\tmpiBegin=%d\tmpiEnd=%d\n",__FUNCTION__, myid, mpiBegin, mpiEnd);
+	//int mpiBegin, mpiEnd;
+	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
+	//mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
+	//printf("%s:%d\tmpiBegin=%d\tmpiEnd=%d\n",__FUNCTION__, myid, mpiBegin, mpiEnd);
 	for (si=mpiBegin; si<=mpiEnd; si++) {
 #else
 	for (si = 1; si <= clus.N_MAX_NEW; si++) { /* Repeat for all stars */
@@ -976,7 +981,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 #ifdef USE_MPI
 		E = star[j].E + MPI_PHI_S(star_r[j], j);
-		//printf("%d\t%d\t\t star.E = %g\tmpi_phi = %g\n",myid, j, star[j].E, MPI_PHI_S(star_r[j], j));
 #else
 		E = star[j].E + PHI_S(star[j].r, j);
 #endif
@@ -1007,7 +1011,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			continue;
 		}
 
-
 		/* calculate peri- and apocenter of orbit */
 #ifdef EXPERIMENTAL
 		orbit_rs = calc_orbit_new(j, E, J);
@@ -1031,7 +1034,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			dQdr_min = orbit_rs.dQdrp;
 			dQdr_max = orbit_rs.dQdra;
 		}
-
 
 		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {

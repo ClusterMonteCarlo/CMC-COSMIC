@@ -78,6 +78,8 @@ _EXTERN_ int quiet;
 _EXTERN_ double *star_r;
 _EXTERN_ double *star_m;
 _EXTERN_ double *star_phi;
+_EXTERN_ int mpiBegin, mpiEnd;
+_EXTERN_ double timeT;
 #endif
 _EXTERN_ double startTime, endTime; 
 _EXTERN_ char funcName[64];

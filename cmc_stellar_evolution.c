@@ -203,7 +203,9 @@ void do_stellar_evolution(gsl_rng *rng){
 
 #ifdef USE_MPI 
 	int mpiBegin, mpiEnd;
-	mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
+	//mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
+	//MPI2: Doing for N_MAX for now, have to do till N_MAX new later, may be with 2 loops.
+	mpiFindIndicesSpecial( clus.N_MAX, &mpiBegin, &mpiEnd );
 	//printf("proc=%d\tbegin=%d\tend=%d\n", myid, mpiBegin, mpiEnd);
 	for (k=mpiBegin; k<=mpiEnd; k++) {
 #else

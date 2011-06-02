@@ -26,13 +26,14 @@ int main(int argc, char *argv[])
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
 #ifdef USE_MPI
+	//MPI2: At some point, change all loops to run between 2 variables: Begin to End, which will be decided based on if it is MPI or not.
 	//int myid, procs; //Declared in cmc.h to make it available across all files
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD,&procs);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 	MPI_Status stat;
 
-	int mpiBegin, mpiEnd;
+	//int mpiBegin, mpiEnd; //declared in cmc_vars.h
 	int *mpiDisp, *mpiLen;
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
@@ -200,6 +201,12 @@ int main(int argc, char *argv[])
 
 	orbit_r = R_MAX;
 
+//MPI2: Calculating indices which will be used in all loops till beginning of the main loop
+#ifdef USE_MPI
+   //mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+   mpiFindIndicesSpecial( clus.N_MAX, &mpiBegin, &mpiEnd );
+#endif
+
 	//MPI2: Do on root node with global phi array.
 	//MPI2: Tested. Relative errors are 0. Perfect :)
 #ifdef USE_MPI
@@ -334,6 +341,7 @@ int main(int argc, char *argv[])
 	/******* This is the main loop in the program *****************/
 	while (CheckStop(tmsbufref) == 0) {
 
+
 		/* calculate central quantities */
 #ifdef USE_MPI
 		//MPI2: Tested! Errors of 1e-14.
@@ -401,6 +409,7 @@ int main(int argc, char *argv[])
 		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
 		if (STELLAR_EVOLUTION > 0) {
 			timeStart();
+			//have to separate loops, N_MAX_NEW, N_MAX
 			do_stellar_evolution(rng);
 			timeEnd(fileNameParallel, funcName);
 			timeEnd(fileNameSerial, funcName);
@@ -413,359 +422,381 @@ int main(int argc, char *argv[])
 		timeStart();
 		strcpy(funcName, "energy_conservation");
 #ifdef USE_MPI 
-		mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
-		for (i=mpiBegin; i<=mpiEnd; i++) {
+		//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
+		//mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
+		for (i=mpiBegin; i<=mpiEnd; i++)
 #else
-			for (i = 1; i <= clus.N_MAX_NEW; i++) {
+		for (i = 1; i <= clus.N_MAX_NEW; i++)
 #endif
-				/* saving velocities */
-				star[i].vtold = star[i].vt;
-				star[i].vrold = star[i].vr;
+		{
+			/* saving velocities */
+			star[i].vtold = star[i].vt;
+			star[i].vrold = star[i].vr;
 
-				/* the following will get updated after sorting and
-				 * calling potential_calculate(), needs to be saved 
-				 * now */  
+			/* the following will get updated after sorting and
+			 * calling potential_calculate(), needs to be saved 
+			 * now */  
 #ifdef USE_MPI
-				star[i].Uoldrold = star_phi[i] + MPI_PHI_S(star_r[i], i);
+			star[i].Uoldrold = star_phi[i] + MPI_PHI_S(star_r[i], i);
 #else
-				star[i].Uoldrold = star[i].phi + PHI_S(star[i].r, i);
+			star[i].Uoldrold = star[i].phi + PHI_S(star[i].r, i);
 #endif
 
-				/* Unewrold will be calculated after 
-				 * potential_calculate() using [].rOld
-				 * Unewrnew is [].phi after potential_calculate() */
+			/* Unewrold will be calculated after 
+			 * potential_calculate() using [].rOld
+			 * Unewrnew is [].phi after potential_calculate() */
+		}
+		timeEnd(fileNameParallel, funcName);
+		timeEnd(fileNameSerial, funcName);
+
+
+		/*Sourav: checking all stars for their possible extinction from old age*/
+		//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
+		DMrejuv = 0.0;
+		if (STAR_AGING_SCHEME > 0) {
+#ifdef USE_MPI 
+			//mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+			for (i=mpiBegin; i<=mpiEnd; i++)
+#else
+			//MPI2: Why is this only till N_MAX?
+			for (i=1; i<=clus.N_MAX; i++)
+#endif
+				remove_old_star(TotalTime, i);
+		}
+
+		timeStart();
+#ifdef USE_MPI
+		strcpy(funcName, "get_positions");
+		OldTidalMassLoss = TidalMassLoss;
+		/******************************/
+		/* get new particle positions */
+		/******************************/
+		max_r = get_positions();
+		timeEnd(fileNameParallel, funcName);
+#else
+		/* this calls get_positions() */
+		tidally_strip_stars();
+		timeEnd(fileNameSerial, funcName);
+#endif
+
+#ifdef USE_MPI 
+		//mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
+		//MPI2: Should be changed into 2 loops later to include new stars.
+		//mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
+		for (i=mpiBegin; i<=mpiEnd; i++) 
+#else
+		/* more numbers necessary to implement Stodolkiewicz's
+		 * energy conservation scheme */
+		for (i = 1; i <= clus.N_MAX_NEW; i++) 
+#endif
+		/* the following cannot be calculated after sorting 
+		 * and calling potential_calculate() */
+		{
+#ifdef USE_MPI 
+			star[i].Uoldrnew = potential(star[i].rnew) + MPI_PHI_S(star[i].rnew, i);
+#else
+			star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);
+#endif
+		}
+
+		/* Compute Intermediate Energies of stars. 
+		 * Also transfers new positions and velocities from srnew[], 
+		 * svrnew[], svtnew[] to sr[], svr[], svt[], and saves srOld[] 
+		 */
+		timeStart();
+		ComputeIntermediateEnergy();
+		timeEnd(fileNameParallel, funcName);
+		timeEnd(fileNameSerial, funcName);
+
+#ifdef USE_MPI
+		timeStart();
+		strcpy(funcName, "pre-qsorts communication");
+		//MPI2: Collecting the r and m arrays into the original star structure for sorting.
+		//mpiFindDispAndLen( clus.N_MAX_NEW, mpiDisp, mpiLen );
+		//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
+		mpiFindDispAndLen( clus.N_MAX, mpiDisp, mpiLen );
+
+		for(i=0;i<procs;i++)
+			mpiLen[i] *= sizeof(star_t); 
+
+		//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
+		//mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
+		for(i=mpiBegin; i<=mpiEnd; i++) {
+			star[i].r = star_r[i];
+			star[i].m = star_m[i];
+		}
+
+		//MPI2: To be refactored into separate function later.
+		if(myid!=0)
+			MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+		else
+			for(i=1;i<procs;i++)
+				MPI_Recv(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+
+		//MPI2: Write a function which takes in filename, variable number of arguments, and print those parameters of stars (tab separated) into the file.
+		if(myid==0)
+		{
+			ftest = fopen("test_mpi_rtest0.dat","w");
+			for(i=1; i<=clus.N_MAX; i++) {
+				fprintf( ftest,  "%ld\t%g\t%g\t%ld\n",i, star[i].r, star[i].m, star[i].id);
 			}
-			timeEnd(fileNameParallel, funcName);
-			timeEnd(fileNameSerial, funcName);
+			fclose(ftest);
+		}
 
-
-			/*Sourav: checking all stars for their possible extinction from old age*/
-			//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
-			DMrejuv = 0.0;
-			if (STAR_AGING_SCHEME > 0) {
-#ifdef USE_MPI 
-				mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
-				for (i=mpiBegin; i<=mpiEnd; i++) {
-#else
-					for (i=1; i<=clus.N_MAX; i++) {
 #endif
-						remove_old_star(TotalTime, i);
-					}	
-				}
-
-				timeStart();
-#ifdef USE_MPI
-				OldTidalMassLoss = TidalMassLoss;
-				/******************************/
-				/* get new particle positions */
-				/******************************/
-				max_r = get_positions();
-				timeEnd(fileNameParallel, funcName);
-#else
-				/* this calls get_positions() */
-				tidally_strip_stars();
-				timeEnd(fileNameSerial, funcName);
-#endif
-
-#ifdef USE_MPI 
-				mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
-				for (i=mpiBegin; i<=mpiEnd; i++) 
-#else
-					/* more numbers necessary to implement Stodolkiewicz's
-					 * energy conservation scheme */
-					for (i = 1; i <= clus.N_MAX_NEW; i++) 
-#endif
-						/* the following cannot be calculated after sorting 
-						 * and calling potential_calculate() */
-#ifdef USE_MPI 
-					{
-						star[i].Uoldrnew = potential(star[i].rnew) + MPI_PHI_S(star[i].rnew, i);
-#else
-						star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);
-#endif
-					}
-
-					/* Compute Intermediate Energies of stars. 
-					 * Also transfers new positions and velocities from srnew[], 
-					 * svrnew[], svtnew[] to sr[], svr[], svt[], and saves srOld[] 
-					 */
-					timeStart();
-					ComputeIntermediateEnergy();
-					timeEnd(fileNameParallel, funcName);
-					timeEnd(fileNameSerial, funcName);
 
 #ifdef USE_MPI
-					timeStart();
-					strcpy(funcName, "pre-qsorts communication");
-					//MPI2: Collecting the r and m arrays into the original star structure for sorting.
-					mpiFindDispAndLen( clus.N_MAX_NEW, mpiDisp, mpiLen );
+		timeStart();
+		MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Eescaped = temp;
+		MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&Jescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Jescaped = temp;
+		MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&Eintescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Eintescaped = temp;
+		MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&Ebescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Ebescaped = temp;
+		MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&TidalMassLoss, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) TidalMassLoss = temp;
+		MPI_Bcast(&TidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&Etidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Etidal = temp;
+		MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-					for(i=0;i<procs;i++)
-						mpiLen[i] *= sizeof(star_t); 
+		if(myid==0)
+			tidally_strip_stars2();
 
-					mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
-					for(i=mpiBegin; i<=mpiEnd; i++) {
-						star[i].r = star_r[i];
-						star[i].m = star_m[i];
-						//star[i].EI = myid;
-					}
+		MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&DTidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		timeEnd(fileNameParallel, funcName);
+#endif
 
-					//MPI2: To be refactored into separate function later.
-					if(myid!=0)
-		        		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-					else
-						for(i=1;i<procs;i++)
-							MPI_Recv(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+		strcpy(funcName, "qsorts");
+		timeStart();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
+			/* Sorting stars by radius. The 0th star at radius 0 
+				and (N_STAR+1)th star at SF_INFINITY are already set earlier.
+			 */
+			//MPI2: Only running till N_MAX for now since no new stars are created, later has to be changed to N_MAX_NEW.
+			//MPI2: Changin to N_MAX+1, later change to N_MAX_NEW+1
+			qsorts(star+1,clus.N_MAX); //parallel sort
+		timeEnd(fileNameParallel, funcName);
+		timeEnd(fileNameSerial, funcName);
+
+#ifdef USE_MPI
+		timeStart();
+		strcpy(funcName, "post-qsorts communication");
+		//MPI2: To be refactored into separate function later.
+		if(myid==0)
+			for(i=1;i<procs;i++)
+				MPI_Send(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD);
+		else
+			MPI_Recv(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD, &stat);
+
+		if(myid==0)
+			for(i=1; i<=clus.N_MAX; i++) {
+				star_r[i] = star[i].r;
+				star_m[i] = star[i].m;
+			}
+		MPI_Bcast(star_m, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(star_r, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		timeEnd(fileNameParallel, funcName);
 
 /*
-					if(myid==0)
-					{
-						ftest = fopen("test_mpi_rtest0.dat","w");
-						for(i=1; i<=clus.N_MAX; i++) {
-							fprintf( ftest,  "%d\t%g\n",i, star[i].r);
-						}
-						fclose(ftest);
-					}
+		if(myid==0)
+		{
+			ftest = fopen("test_mpi_rtest1.dat","w");
+			for(i=1; i<=clus.N_MAX; i++) {
+				fprintf( ftest,  "%d\t%g\t%g\t%ld\n",i, star[i].r, star[i].m, star[i].id);
+			}
+			fclose(ftest);
+		}
 */
-#endif
+		if(myid==0)
+		{
+			ftest = fopen("test_mpi_rtest2.dat","w");
+			for(i=1; i<=clus.N_MAX; i++) {
+				fprintf( ftest,  "%ld\t%g\t%g\t%ld\n",i, star[i].r, star[i].m, star[i].id);
+			}
+			fclose(ftest);
+		}
 
-#ifdef USE_MPI
-					timeStart();
-					MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-					if(myid==0) Eescaped = temp;
-					MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Reduce(&Jescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-					if(myid==0) Jescaped = temp;
-					MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Reduce(&Eintescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-					if(myid==0) Eintescaped = temp;
-					MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Reduce(&Ebescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-					if(myid==0) Ebescaped = temp;
-					MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Reduce(&TidalMassLoss, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-					if(myid==0) TidalMassLoss = temp;
-					MPI_Bcast(&TidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Reduce(&Etidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-					if(myid==0) Etidal = temp;
-					MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-					if(myid==0)
-						tidally_strip_stars2();
-
-					MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(&DTidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					timeEnd(fileNameParallel, funcName);
-#endif
-
-					strcpy(funcName, "qsorts");
-					timeStart();
-#ifdef USE_MPI
-					if(myid==0)
-#endif
-					/* Sorting stars by radius. The 0th star at radius 0 
-						and (N_STAR+1)th star at SF_INFINITY are already set earlier.
-					 */
-						qsorts(star+1,clus.N_MAX_NEW); //parallel sort
-					timeEnd(fileNameParallel, funcName);
-					timeEnd(fileNameSerial, funcName);
-
-#ifdef USE_MPI
-					timeStart();
-					strcpy(funcName, "post-qsorts communication");
-					//MPI2: To be refactored into separate function later.
-					if(myid==0)
-						for(i=1;i<procs;i++)
-							MPI_Send(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD);
-					else
-		        		MPI_Recv(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD, &stat);
-
-					if(myid==0)
-						for(i=1; i<=clus.N_MAX; i++) {
-							star_r[i] = star[i].r;
-							star_m[i] = star[i].m;
-						}
-					MPI_Bcast(star_m, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(star_r, clus.N_MAX, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					timeEnd(fileNameParallel, funcName);
-
-/*
-					if(myid==0)
-					{
-						ftest1 = fopen("test_mpi_rtest1.dat","w");
-						for(i=1; i<=clus.N_MAX; i++) {
-							fprintf( ftest1,  "%d\t%g\n",i, star[i].r);
-						}
-						fclose(ftest1);
-					}
-					if(myid==0)
-					{
-						ftest = fopen("test_mpi_rtest2.dat","w");
-						for(i=1; i<=clus.N_MAX; i++) {
-							fprintf( ftest,  "%d\t%g\n",i, star_r[i]);
-						}
-						fclose(ftest);
-					}
-
-*/
 #endif
 
 
 #ifdef USE_MPI
-					timeStart();
-					strcpy(funcName, "mpi_potential_calculate");
-					if(myid==0) 
-						mpi_potential_calculate();
-					MPI_Bcast(star_phi, clus.N_MAX_NEW, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-					timeEnd(fileNameParallel, funcName);
+		timeStart();
+		strcpy(funcName, "mpi_potential_calculate");
+		if(myid==0) 
+			mpi_potential_calculate();
+		MPI_Bcast(star_phi, clus.N_MAX_NEW, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&clus.N_MAX, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		timeEnd(fileNameParallel, funcName);
 #else
-					timeStart();
-					potential_calculate();
-					timeEnd(fileNameSerial, funcName);
+		timeStart();
+		potential_calculate();
+		timeEnd(fileNameSerial, funcName);
 #endif
 
-					//commenting out for MPI
-					/*
-						if (SEARCH_GRID)
-						search_grid_update(r_grid);
-					 */
+//MPI2: Calculating new indices which will be used in all loops till end of next timestep (qsorts).
+#ifdef USE_MPI
+   mpiFindIndicesSpecial( clus.N_MAX, &mpiBegin, &mpiEnd );
+#endif
 
-					set_velocities3();
+	//commenting out for MPI
+	/*
+		if (SEARCH_GRID)
+		search_grid_update(r_grid);
+	 */
 
-					//MPI2: Ignoring for MPI
+	set_velocities3();
+
+	//MPI2: Ignoring for MPI
 #ifndef USE_MPI
-					comp_mass_percent();
-					comp_multi_mass_percent();
+	comp_mass_percent();
+	comp_multi_mass_percent();
 #endif
 
 #ifdef USE_MPI
-					timeStart();
-					mpi_ComputeEnergy();
-					timeEnd(fileNameParallel, funcName);
+	timeStart();
+	mpi_ComputeEnergy();
+	timeEnd(fileNameParallel, funcName);
 #else
-					timeStart();
-					ComputeEnergy();
-					timeEnd(fileNameSerial, funcName);
+	timeStart();
+	ComputeEnergy();
+	timeEnd(fileNameSerial, funcName);
 #endif
-
-					/* reset interacted flag */
-					for (i = 1; i <= clus.N_MAX; i++) {
-						star[i].interacted = 0;
-					}
-
-					//MPI2: Binaries. Ignore for now.
-					/* update variables, then print */
-					update_vars();
-					tcount++;
 
 #ifdef USE_MPI
-					timeStart();
-					strcpy(funcName, "mpi_clusdyn_calculate");
-					if(myid==0)
-						mpi_clusdyn_calculate(); //parallel reduction
-
-					//MPI2: broadcast clusdyn struct	
-					MPI_Bcast(&clusdyn, sizeof(clusdyn_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
-					timeEnd(fileNameParallel, funcName);
+	for (i=mpiBegin; i<=mpiEnd; i++)
 #else
-					timeStart();
-					/* calculate dynamical quantities */
-					clusdyn_calculate();
-					timeEnd(fileNameSerial, funcName);
+	for (i = 1; i <= clus.N_MAX; i++) 
+#endif
+	{
+		/* reset interacted flag */
+		star[i].interacted = 0;
+	}
+
+	//MPI2: Binaries. Ignore for now.
+	/* update variables, then print */
+	update_vars();
+	tcount++;
+
+#ifdef USE_MPI
+	timeStart();
+	strcpy(funcName, "mpi_clusdyn_calculate");
+	if(myid==0)
+		mpi_clusdyn_calculate(); //parallel reduction
+
+	//MPI2: broadcast clusdyn struct	
+	MPI_Bcast(&clusdyn, sizeof(clusdyn_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	timeEnd(fileNameParallel, funcName);
+#else
+	timeStart();
+	/* calculate dynamical quantities */
+	clusdyn_calculate();
+	timeEnd(fileNameSerial, funcName);
 #endif
 
-					//commenting out for MPI
-					/*
-						if (WRITE_EXTRA_CORE_INFO) {
-						no_remnants= no_remnants_core(6);
-						}
-					 */
+	//commenting out for MPI
+	/*
+		if (WRITE_EXTRA_CORE_INFO) {
+		no_remnants= no_remnants_core(6);
+		}
+	 */
 
-					//commenting out for MPI
-					//print_results();
-					/* take a snapshot, we need more accurate 
-					 * and meaningful criterion 
-					 */
-					if(tcount%SNAPSHOT_DELTACOUNT==0) {
-						print_2Dsnapshot();
-						if (WRITE_STELLAR_INFO) {
-							write_stellar_data();
-						}
-					}		
+	//commenting out for MPI
+	//print_results();
+	/* take a snapshot, we need more accurate 
+	 * and meaningful criterion 
+	 */
+	if(tcount%SNAPSHOT_DELTACOUNT==0) {
+		print_2Dsnapshot();
+		if (WRITE_STELLAR_INFO) {
+			write_stellar_data();
+		}
+	}		
 
-				} /* End WHILE (time step iteration loop) */
+	} /* End WHILE (time step iteration loop) */
 
 
-if(myid==0)
-{
-	ftest = fopen("mpi_globvar.dat","w");
-	fprintf(ftest, "clus.N_MAX_NEW=%ld\nclus.N_MAX=%ld\nTidalMassLoss=%g\nOldTidalMassLoss=%g\nPrev_Dt=%g\nEescaped=%g\nJescaped=%g\nEintescaped=%g\nEbescaped=%g\nMtotal=%g\ninitial_total_mass=%g\nDMse=%g\nDMrejuv=%g\ncenma.m=%g\ncenma.m_new=%g\ncenma.E=%g\ntcount=%ld\nStepCount=%ld\nsnap_num=%ld\nEcheck=%ld\nnewstarid=%ld\n",
-						clus.N_MAX_NEW,
-						clus.N_MAX,
-						TidalMassLoss,
-						OldTidalMassLoss,
-						Prev_Dt,
-						Eescaped,
-						Jescaped,
-						Eintescaped,
-						Ebescaped, 
-						Mtotal, 
-						initial_total_mass,
-						DMse,
-						DMrejuv,
-						cenma.m,
-						cenma.m_new,
-						cenma.E,
-						tcount,
-						StepCount,
-						snap_num,
-						Echeck, 
-						newstarid);
-	fclose(ftest);
-}
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	{
+		ftest = fopen("mpi_globvar.dat","w");
+		fprintf(ftest, "clus.N_MAX_NEW=%ld\nclus.N_MAX=%ld\nTidalMassLoss=%g\nOldTidalMassLoss=%g\nPrev_Dt=%g\nEescaped=%g\nJescaped=%g\nEintescaped=%g\nEbescaped=%g\nMtotal=%g\ninitial_total_mass=%g\nDMse=%g\nDMrejuv=%g\ncenma.m=%g\ncenma.m_new=%g\ncenma.E=%g\ntcount=%ld\nStepCount=%ld\nsnap_num=%ld\nEcheck=%ld\nnewstarid=%ld\n",
+				clus.N_MAX_NEW,
+				clus.N_MAX,
+				TidalMassLoss,
+				OldTidalMassLoss,
+				Prev_Dt,
+				Eescaped,
+				Jescaped,
+				Eintescaped,
+				Ebescaped, 
+				Mtotal, 
+				initial_total_mass,
+				DMse,
+				DMrejuv,
+				cenma.m,
+				cenma.m_new,
+				cenma.E,
+				tcount,
+				StepCount,
+				snap_num,
+				Echeck, 
+				newstarid);
+		fclose(ftest);
+	}
 
-				//root node?
-				times(&tmsbuf);
+	//root node?
+	times(&tmsbuf);
 
-				dprintf("Usr time = %.6e ", (double)
-						(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
-				dprintf("Sys time = %.6e\n", (double)
-						(tmsbuf.tms_stime-tmsbufref.tms_stime)/sysconf(_SC_CLK_TCK));
-				dprintf("Usr time (ch) = %.6e ", (double)
-						(tmsbuf.tms_cutime-tmsbufref.tms_cutime)/sysconf(_SC_CLK_TCK));
-				dprintf("Sys time (ch)= %.6e seconds\n", (double)
-						(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
+	dprintf("Usr time = %.6e ", (double)
+			(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
+	dprintf("Sys time = %.6e\n", (double)
+			(tmsbuf.tms_stime-tmsbufref.tms_stime)/sysconf(_SC_CLK_TCK));
+	dprintf("Usr time (ch) = %.6e ", (double)
+			(tmsbuf.tms_cutime-tmsbufref.tms_cutime)/sysconf(_SC_CLK_TCK));
+	dprintf("Sys time (ch)= %.6e seconds\n", (double)
+			(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
 
-				printf("The total number of bisections is %li\n", total_bisections);
-				/* free RNG */
-				gsl_rng_free(rng);
+	printf("The total number of bisections is %li\n", total_bisections);
+	/* free RNG */
+	gsl_rng_free(rng);
 
 
 #ifdef USE_CUDA
-				cuCleanUp();
+	cuCleanUp();
 #endif
 
-				/* flush buffers before returning */
-				close_buffers();
-				free_arrays();
-				if (SEARCH_GRID)
-					search_grid_free(r_grid);
+	/* flush buffers before returning */
+	close_buffers();
+	free_arrays();
+	if (SEARCH_GRID)
+		search_grid_free(r_grid);
 #ifdef DEBUGGING
-				g_hash_table_destroy(star_ids);
-				g_array_free(id_array, TRUE);
+	g_hash_table_destroy(star_ids);
+	g_array_free(id_array, TRUE);
 #endif
 
 #ifdef USE_MPI
-				MPI_Finalize();
+	MPI_Finalize();
 #endif
 
-				return(0);
-			}
+	return(0);
+}

@@ -55,6 +55,29 @@ void mpiFindIndicesEven( long N, int* mpiStart, int* mpiEnd )
    }
 }
 
+//Function specially made for our code as dynamics_apply() takes 2 stars at a time. This function divides particles in pairs if the no.of stars is even, but if the no.of stars is odd, it gives one star to the last processor (since only this will be skipped by the serial code, and hence will help comparison) and divides the rest in pairs.
+void mpiFindIndicesSpecial( long N, int* mpiStart, int* mpiEnd )
+{
+	int temp, quotP, remP, remPeven, remPrem, chunkSize;
+	quotP = N/procs;
+	remP = N%procs;
+	remPeven = remP/2;
+	remPrem = remP%2;
+
+	if(myid == procs-1)
+	{
+		chunkSize = quotP + remPrem*1;
+		*mpiStart = N - chunkSize + 1;
+		*mpiEnd = N;
+	}
+	else
+	{
+		chunkSize = quotP + (remPeven > myid) * 2;
+		*mpiStart = 1 + quotP * myid + (remPeven >= myid) * 2 * myid + (remPeven < myid) * remPeven * 2;
+		*mpiEnd = *mpiStart + chunkSize - 1;
+	}
+}
+
 //Function to find start index (displacement) and length for each processor for a loop over N.
 void mpiFindDispAndLen( long N, int* mpiDisp, int* mpiLen )
 {
