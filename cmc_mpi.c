@@ -5,6 +5,12 @@
 void mpiInitBcastGlobArrays()
 {
 	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+#ifdef USE_MPI
+	/*MPI2: Initializing and extracting global arrays that will be needed by all processors.*/
+	//MPI2: Tested
 	int i;
 	star_r = (double *) malloc(N_STAR_DIM * sizeof(double));
 	star_m = (double *) malloc(N_STAR_DIM * sizeof(double));
@@ -18,6 +24,9 @@ void mpiInitBcastGlobArrays()
 	}
 	MPI_Bcast(star_m, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(star_r, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 //Function to find start and end indices for each processor for a loop over N.
@@ -55,30 +64,62 @@ void mpiFindIndicesEven( long N, int* mpiStart, int* mpiEnd )
    }
 }
 
+//Same as mpiFindIndicesEven, but has input i instead of myid.
+void mpiFindIndicesEven2( long N, int i, int* mpiStart, int* mpiEnd )
+{
+	N = N/2;
+	int temp;
+	long chunkSize = N / procs;
+   if ( i < N % procs )
+   {
+		temp = i * chunkSize + i;
+		*mpiStart = temp * 2 + 1; //+1 since for loops go from 1 to N
+		*mpiEnd = ( temp + chunkSize + 1 ) * 2 + 1 - 1;
+   } else {
+		temp = i * chunkSize + N % procs;
+		*mpiStart = temp * 2 + 1; //+1 since for loops go from 1 to N
+		*mpiEnd =  ( temp + chunkSize ) * 2 + 1 - 1;
+   }
+}
+
 //Function specially made for our code as dynamics_apply() takes 2 stars at a time. This function divides particles in pairs if the no.of stars is even, but if the no.of stars is odd, it gives one star to the last processor (since only this will be skipped by the serial code, and hence will help comparison) and divides the rest in pairs.
 void mpiFindIndicesSpecial( long N, int* mpiStart, int* mpiEnd )
 {
-	int temp, quotP, remP, remPeven, remPrem, chunkSize;
-	quotP = N/procs;
-	remP = N%procs;
-	remPeven = remP/2;
-	remPrem = remP%2;
-
-	if(myid == procs-1)
+	if( N % 2 == 0 )
 	{
-		chunkSize = quotP + remPrem*1;
-		*mpiStart = N - chunkSize + 1;
-		*mpiEnd = N;
-	}
-	else
-	{
-		chunkSize = quotP + (remPeven > myid) * 2;
-		*mpiStart = 1 + quotP * myid + (remPeven >= myid) * 2 * myid + (remPeven < myid) * remPeven * 2;
-		*mpiEnd = *mpiStart + chunkSize - 1;
+		mpiFindIndicesEven2( N, myid, mpiStart, mpiEnd );
+	} else {
+		mpiFindIndicesEven2( N-1, myid, mpiStart, mpiEnd );
+		if(myid == procs-1)
+			*mpiEnd += 1;
 	}
 }
 
-//Function to find start index (displacement) and length for each processor for a loop over N.
+//Function specially made for our code as dynamics_apply() takes 2 stars at a time.
+void mpiFindDispAndLenSpecial( long N, int* mpiDisp, int* mpiLen )
+{
+	int i;
+	for( i = 0; i < procs; i++ )
+	{
+		mpiFindIndicesSpecial2( N, i, &mpiDisp[i], &mpiLen[i] );
+		mpiLen[i] = mpiLen[i] - mpiDisp[i] + 1; 
+	}
+}
+
+//Function specially made for our code so that the distribution of stars can be in pairs.
+void mpiFindIndicesSpecial2( long N, int i, int* mpiStart, int* mpiEnd )
+{
+	if( N % 2 == 0 )
+	{
+		mpiFindIndicesEven2( N, i, mpiStart, mpiEnd );
+	} else {
+		mpiFindIndicesEven2( N-1, i, mpiStart, mpiEnd );
+		if(i == procs-1)
+			*mpiEnd += 1;
+	}
+}
+
+//Function to find start index (displacement) and length for each processor for a loop over N. Not used anymore.
 void mpiFindDispAndLen( long N, int* mpiDisp, int* mpiLen )
 {
 	long chunkSize = N / procs;
@@ -97,6 +138,7 @@ void mpiFindDispAndLen( long N, int* mpiDisp, int* mpiLen )
 		mpiLen++;
 	}
 }
+
 
 /* Future Work
 void mpiReduceAndBcast( void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm )

@@ -30,7 +30,7 @@ double cub(double x)
 double potential(double r) {
 	long i, kmax, kmin;
 	double henon;
-        struct Interval star_interval;
+	struct Interval star_interval;
 
 	/* root finding using indexed values of sr[] & bisection */
 	if (r== 0.0) {
@@ -140,6 +140,11 @@ void free_arrays(void){
 	free(ke_rad_r); free(ke_tan_r); free(v2_rad_r); free(v2_tan_r);
 	free(ave_mass_r); free(mass_r);
 	free(star); free(binary);
+
+	/* MPI Stuff */
+#ifdef USE_MPI
+	free(star_r); free(star_m); free(star_phi);
+#endif
 }
 
 /* GSL error handler */
@@ -150,6 +155,10 @@ void sf_gsl_errhandler(const char *reason, const char *file, int line, int gsl_e
 }
 
 void set_velocities3(void){
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
 	/* set velocities a la Stodolkiewicz to be able to conserve energy */
 	double vold2, vnew2, Unewrold, Unewrnew;
 	double Eexcess, exc_ratio;
@@ -159,8 +168,6 @@ void set_velocities3(void){
 	
 	Eexcess = 0.0;
 #ifdef USE_MPI 
-	//int mpiBegin, mpiEnd;
-	//mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
 	for (i=mpiBegin; i<=mpiEnd; i++) {
 #else
 	for (i = 1; i <= clus.N_MAX; i++) {
@@ -216,18 +223,21 @@ void set_velocities3(void){
 	
 	/* keep track of the energy that's vanishing due to our negligence */
 	Eoops += -Eexcess * madhoc;
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 /* computes intermediate energies, and transfers "new" dynamical params to the standard variables */
 void ComputeIntermediateEnergy(void)
 {
 	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
 	long j;
 
 #ifdef USE_MPI 
 	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
-	//int mpiBegin, mpiEnd;
-	//mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
 	for (j=mpiBegin; j<=mpiEnd; j++) {
 #else
 	/* compute intermediate energies for stars due to change in pot */ 
@@ -259,6 +269,8 @@ void ComputeIntermediateEnergy(void)
 		star[j].vr = star[j].vrnew;
 		star[j].vt = star[j].vtnew;
 	}
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 long CheckStop(struct tms tmsbufref) {
@@ -423,9 +435,6 @@ void mpi_ComputeEnergy(void)
 	double phi0 = 0.0;
 
 	int i;
-   //mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
-	//printf("%s:%d\tmpiBegin=%d\tmpiEnd=%d\n",__FUNCTION__, myid, mpiBegin, mpiEnd);
-
 	for (i=mpiBegin; i<=mpiEnd; i++) {
 		star[i].E = star_phi[i] + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
 		star[i].J = star_r[i] * star[i].vt;		
@@ -588,6 +597,7 @@ long potential_calculate(void) {
 	/* count up all the mass and set N_MAX */
 	k = 1;
 	mprev = 0.0;
+
 	while (star[k].r < SF_INFINITY && k <= clus.N_STAR_NEW) {
 		mprev += star[k].m;
 		/* I guess NaNs do happen... */
@@ -922,6 +932,10 @@ void free_ivector(int *v, long nl, long nh)
 /* update some important global variables */
 void update_vars(void)
 {
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
 	long i, j, k;
 	
 	/* update total number, mass, and binding energy of binaries in cluster */
@@ -939,6 +953,8 @@ void update_vars(void)
 			}
 		}
 	}
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 /* set the units */
@@ -978,7 +994,6 @@ void units_set(void)
 #ifdef USE_MPI
 void mpi_central_calculate(void)
 {
-	strcpy(funcName, __FUNCTION__);
 	mpi_central_calculate1();
 	mpi_central_calculate2();
 }
@@ -1012,8 +1027,7 @@ void mpi_central_calculate1(void)
 	rhoj = (double *) malloc((nave+1) * sizeof(double));
 
 	int mpiBeginLoc, mpiEndLoc;
-	mpiFindIndices( nave, &mpiBeginLoc, &mpiEndLoc );
-	//printf("Func\tProc %d:\tnave=%ld\tLow=%d\tHigh=%d\n",myid, nave, mpiBegin, mpiEnd);
+	mpiFindIndicesSpecial( nave, &mpiBeginLoc, &mpiEndLoc );
 
 	/* calculate rhoj's (Casertano & Hut 1985) */
 	for (i=mpiBeginLoc; i<=mpiEndLoc; i++) {
@@ -1183,7 +1197,6 @@ void mpi_central_calculate2(void) {
 /* calculate central quantities */
 void central_calculate(void)
 {
-	strcpy(funcName, __FUNCTION__);
 	double m=0.0, *rhoj, mrho, Vrj, rhojsum, Msincentral, Mbincentral, Vcentral, rcentral;
 	long J=6, i, j, jmin, jmax, nave, Ncentral;
 	double rhoj2sum;
@@ -1413,28 +1426,674 @@ void timeStart()
 #endif
 }
 
-void timeEnd(char* fileName, char *funcName)
+void timeEnd(char* fileName, char *funcName, double *tTime)
 {
-	double temp, timeElapsed;
+	double temp;
 	static double totTime = 0.0;
 	FILE *file;
+
 #ifdef USE_MPI
 	endTime = MPI_Wtime();
 	temp = endTime - startTime;
-   MPI_Reduce(&temp, &timeElapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&temp, tTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 #else
 	endTime = clock();
-	timeElapsed = ((double) (endTime - startTime)) / CLOCKS_PER_SEC;
+	*tTime = ((double) (endTime - startTime)) / CLOCKS_PER_SEC;
 #endif
-
 
 #ifdef USE_MPI
 	if(myid==0)
 #endif
 	{
-		totTime += timeElapsed;
+		totTime += *tTime;
 		file = fopen(fileName,"a");
-		fprintf(file, "%-5.8lf\t\t%-25s\t\t\t%5.8lf\n", timeElapsed, funcName, totTime);
+		fprintf(file, "%-5.8lf\t\t%-25s\t\t\t%5.8lf\n", *tTime, funcName, totTime);
 		fclose(file);
 	}
+}
+
+void timeStart2(double *st)
+{
+#ifdef USE_MPI
+	MPI_Barrier(MPI_COMM_WORLD);
+	*st = MPI_Wtime();
+#else
+	*st = clock();
+#endif
+}
+
+void timeEnd2(char* fileName, char *funcName, double *st, double *end, double *tot)
+{
+	double temp;
+	FILE *file;
+#ifdef USE_MPI
+	*end = MPI_Wtime();
+	temp = *end - *st;
+   MPI_Reduce(&temp, tot, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+#else
+	*end = clock();
+	*tot = ((double) (*end - *st)) / CLOCKS_PER_SEC;
+#endif
+
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	{
+		//file = fopen(fileName,"a");
+		//fprintf(file, "%-5.8lf\t\t%-25s\t\t\t%5.8lf\n", *tot, funcName, 0.0 );
+		printf("Total time = %g\n", *tot);
+		//fclose(file);
+	}
+}
+
+void create_timing_files()
+{
+	strcpy(fileTime, "mpi_time.dat");
+	FILE *file = fopen(fileTime, "w");
+	fprintf(file, "Time(s)\t\t\tFunction\t\t\t\t\t\t\t\t\tTotalTime\n");
+	fclose(file);
+}
+
+void set_global_vars1()
+{
+	quiet = 0;
+	debug = 0;
+	initial_total_mass = 1.0;
+	newstarid = 0;
+	cenma.E = 0.0;
+}
+
+void set_global_vars2()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	TidalMassLoss = 0.0;
+	Etidal = 0.0;
+	N_bb = 0;			/* number of bin-bin interactions */
+	N_bs = 0;
+	E_bb = 0.0;
+	E_bs = 0.0;
+	Echeck = 0; 		
+	se_file_counter = 0; 	
+	snap_num = 0; 		
+	StepCount = 0; 		
+	tcount = 1;
+	TotalTime = 0.0;
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+
+void calc_sigma_new()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	//MPI2: mpi_calc_sigma_r(): Tests for precision: Biggest errors are ~ 1e-13. Might be because of catastrphic cancellation/rounding errors?. This might be due to the already imprecise but faster serial code . In a sense, the MPI version might be more precise, because for every processor, actual average is performed for the 1st local star which means errors dont carry over from the previous set of stars which are handled by another processor.
+#ifdef USE_MPI
+	mpi_calc_sigma_r();
+#else
+	calc_sigma_r(); //requires data from some neighbouring particles. must be handled during data read. look inside function for more comments
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void calc_central_new()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	//Step 2: stay on root node
+	//MPI2: Split into 2 functions: part 1 can be parallelized after making m and r arrays global. Part 2 has to be done on root node.
+#ifdef USE_MPI
+	//MPI2: Tested! Errors of 1e-14.
+	mpi_central_calculate();
+#else
+	central_calculate();
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void bin_vars_calculate()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	int i, j;
+	//MPI2: Binaries; Ignore.
+	M_b = 0.0;
+	E_b = 0.0;
+	for (i=1; i<=clus.N_STAR; i++) {
+		j = star[i].binind;
+		if (j && binary[j].inuse) {
+			M_b += star[i].m;
+			E_b += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
+		}
+	}
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void calc_potential_new()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	//MPI2: Do on root node with global phi array.
+	//MPI2: Tested. Relative errors are 0. Perfect :)
+#ifdef USE_MPI
+	//MPI2: Does it need to be done on root, or can it be done on all nodes for all stars? Think.
+	if(myid==0) 
+		mpi_potential_calculate();
+
+	MPI_Bcast(&clus.N_MAX, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+	MPI_Bcast(star_phi, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#else
+	potential_calculate();
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void calc_potential_new2()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	//MPI2: Do on root node with global phi array.
+	//MPI2: Tested. Relative errors are 0. Perfect :)
+#ifdef USE_MPI
+	//MPI2: Does it need to be done on root, or can it be done on all nodes for all stars? Think.
+	if(myid==0) 
+#endif
+		potential_calculate();
+
+#ifdef USE_MPI
+	MPI_Bcast(&clus.N_MAX, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void compute_energy_new()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	//MPI2: Tested! No errors.
+#ifdef USE_MPI
+	mpi_ComputeEnergy();
+#else
+	//MPI2: see inline for comments
+	ComputeEnergy();
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void set_energy_vars()
+{
+	/* Noting the total initial energy, in order to set termination energy. */
+	Etotal.ini = Etotal.tot;
+
+	Etotal.New = 0.0;
+	Eescaped = 0.0;
+	Jescaped = 0.0;
+	Eintescaped = 0.0;
+	Ebescaped = 0.0;
+	Eoops = 0.0;
+}
+
+void calc_clusdyn_new()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	/* calculate dynamical quantities */
+	//Step 2: done on root node
+	//MPI2: Tested! No Errors.
+#ifdef USE_MPI
+	if(myid==0)
+		mpi_clusdyn_calculate(); //parallel reduction
+
+	//MPI2: broadcast clusdyn struct	
+	MPI_Bcast(&clusdyn, sizeof(clusdyn_struct_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+#else
+	clusdyn_calculate(); //parallel reduction
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void calc_timestep(gsl_rng *rng)
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	/* Get new time step */
+	//for the next step, only simul_relax needs to be done in parallel, and DTrel needs to be broadcasted. rest can be done on each node.
+	//Step 2: Do simul_relax() on all procs and others only on root. then broadcast Dt
+	Dt = GetTimeStep(rng); //reduction again. Timestep needs to be communicated to all procs.
+
+	/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
+	//MPI2: root node
+#ifdef USE_MPI
+	if(myid==0) 
+#endif
+	{
+		if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
+			diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
+			Dt = Prev_Dt * 0.8;
+		} else if (Dt > 1.1 * Prev_Dt && Prev_Dt > 0 && (TidalMassLoss - OldTidalMassLoss) > 0.02) {
+			diaprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
+			Dt = Prev_Dt * 1.1;
+		}
+	}
+
+	//MPI2: broadcast Dt		
+#ifdef USE_MPI
+	MPI_Bcast(&Dt, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+	TotalTime += Dt;
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void energy_conservation1()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	/* some numbers necessary to implement Stodolkiewicz's
+	 * energy conservation scheme */
+	int i;
+#ifdef USE_MPI 
+	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
+	for (i=mpiBegin; i<=mpiEnd; i++)
+#else
+	for (i = 1; i <= clus.N_MAX_NEW; i++)
+#endif
+	{
+		/* saving velocities */
+		star[i].vtold = star[i].vt;
+		star[i].vrold = star[i].vr;
+
+		/* the following will get updated after sorting and
+		 * calling potential_calculate(), needs to be saved 
+		 * now */  
+#ifdef USE_MPI
+		star[i].Uoldrold = star_phi[i] + MPI_PHI_S(star_r[i], i);
+#else
+		star[i].Uoldrold = star[i].phi + PHI_S(star[i].r, i);
+#endif
+
+		/* Unewrold will be calculated after 
+		 * potential_calculate() using [].rOld
+		 * Unewrnew is [].phi after potential_calculate() */
+	}
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void toy_rejuvenation()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	/*Sourav: checking all stars for their possible extinction from old age*/
+	//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
+	int i;
+	DMrejuv = 0.0;
+	if (STAR_AGING_SCHEME > 0) {
+#ifdef USE_MPI 
+		for (i=mpiBegin; i<=mpiEnd; i++)
+#else
+		//MPI2: Why is this only till N_MAX?
+		for (i=1; i<=clus.N_MAX; i++)
+#endif
+			remove_old_star(TotalTime, i);
+	}
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void tidally_strip_stars1()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+
+#ifdef USE_MPI
+		//MPI2: The 2nd part of tidally_strip_stars() has been moved just before sort.
+		OldTidalMassLoss = TidalMassLoss;
+		/******************************/
+		/* get new particle positions */
+		/******************************/
+		max_r = get_positions();
+
+		double temp = 0.0;
+		MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Eescaped = temp;
+		MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&Jescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Jescaped = temp;
+		MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&Eintescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Eintescaped = temp;
+		MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&Ebescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Ebescaped = temp;
+		MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&TidalMassLoss, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) TidalMassLoss = temp;
+		MPI_Bcast(&TidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&Etidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+		if(myid==0) Etidal = temp;
+		MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#else
+		/* this calls get_positions() */
+		tidally_strip_stars();
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void energy_conservation2()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	int i;
+#ifdef USE_MPI 
+	//MPI2: Should be changed into 2 loops later to include new stars.
+	for (i=mpiBegin; i<=mpiEnd; i++) 
+#else
+	/* more numbers necessary to implement Stodolkiewicz's
+	 * energy conservation scheme */
+	for (i = 1; i <= clus.N_MAX_NEW; i++) 
+#endif
+	/* the following cannot be calculated after sorting 
+	 * and calling potential_calculate() */
+	{
+#ifdef USE_MPI 
+		star[i].Uoldrnew = potential(star[i].rnew) + MPI_PHI_S(star[i].rnew, i);
+#else
+		star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);
+#endif
+	}
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void tidally_strip_stars2(void)
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+#ifdef USE_MPI
+	if(myid==0)
+	{
+		double phi_rtidal, phi_zero, gierszalpha;
+		long i, j, k;
+		k=0;
+
+		j = 0;
+		Etidal = 0.0;
+		OldTidalMassLoss = TidalMassLoss;
+		DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
+
+		gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+				j, OldTidalMassLoss, DTidalMassLoss);
+		fprintf(logfile, "tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+				j, OldTidalMassLoss, DTidalMassLoss);
+
+
+		/* Iterate the removal of tidally stripped stars 
+		 * by reducing Rtidal */
+		do {
+			Rtidal = orbit_r * pow(Mtotal 
+					- (TidalMassLoss - OldTidalMassLoss), 1.0/3.0);
+			phi_rtidal = potential(Rtidal);
+			phi_zero = potential(0.0);
+			DTidalMassLoss = 0.0;
+
+			/* XXX maybe we should use clus.N_MAX_NEW below?? */
+			//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
+			for (i = 1; i <= clus.N_MAX; i++) 
+			{
+				if (TIDAL_TREATMENT == 0){
+					/*radial cut off criteria*/
+
+					if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
+						dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
+						star[i].rnew = SF_INFINITY;	/* tidally stripped star */
+						star[i].vrnew = 0.0;
+						star[i].vtnew = 0.0;
+
+						Eescaped += star[i].E * star[i].m / clus.N_STAR;
+						Jescaped += star[i].J * star[i].m / clus.N_STAR;
+
+						if (star[i].binind == 0) {
+							Eintescaped += star[i].Eint;
+						} else {
+							Ebescaped += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
+								(2.0 * binary[star[i].binind].a);
+							Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
+						}
+
+						DTidalMassLoss += star[i].m / clus.N_STAR;
+						Etidal += star[i].E * star[i].m / clus.N_STAR;
+
+						/* logging */
+						fprintf(escfile,
+								"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
+								tcount, TotalTime, star[i].m,
+								star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
+								star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
+
+						if (star[i].binind) {
+							k = star[i].binind;
+							fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+									binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
+									binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
+									binary[k].id1, binary[k].id2,
+									binary[k].a * units.l / AU, binary[k].e);
+						} else {
+							fprintf(escfile, "0 0 0 0 0 0 0 ");	
+						}
+
+						if (star[i].binind == 0) {
+							fprintf(escfile, "%d na na ", 
+									star[i].se_k);
+						} else {
+							fprintf(escfile, "na %d %d",
+									binary[k].bse_kw[0], binary[k].bse_kw[1]);
+						}
+						fprintf (escfile, "\n");
+
+
+
+						/* perhaps this will fix the problem wherein stars are ejected (and counted)
+							multiple times */
+						dprintf ("before SE: id=%ld k=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
+								star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
+								star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star[i].phi, star[i].r);
+						destroy_obj(i);
+						if (Etotal.K + Etotal.P - Etidal >= 0)
+							break;
+
+					}
+				}
+
+
+				else if (TIDAL_TREATMENT == 1){
+					/* DEBUG: Now using Giersz prescription for tidal stripping 
+						(Giersz, Heggie, & Hurley 2008; arXiv:0801.3709).
+						Note that this alpha factor behaves strangely for small N (N<~10^3) */
+
+					gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
+					if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
+						dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
+						star[i].rnew = SF_INFINITY;	/* tidally stripped star */
+						star[i].vrnew = 0.0;
+						star[i].vtnew = 0.0;
+						Eescaped += star[i].E * star[i].m / clus.N_STAR;
+						Jescaped += star[i].J * star[i].m / clus.N_STAR;
+						if (star[i].binind == 0) {
+							Eintescaped += star[i].Eint;
+						} else {
+							Ebescaped += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
+								(2.0 * binary[star[i].binind].a);
+							Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
+						}
+
+						DTidalMassLoss += star[i].m / clus.N_STAR;
+						Etidal += star[i].E * star[i].m / clus.N_STAR;
+
+						/* logging */
+						fprintf(escfile,
+								"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
+								tcount, TotalTime, star[i].m,
+								star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
+								star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
+
+						if (star[i].binind) {
+							k = star[i].binind;
+							fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+									binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
+									binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
+									binary[k].id1, binary[k].id2,
+									binary[k].a * units.l / AU, binary[k].e);
+						} else {
+							fprintf(escfile, "0 0 0 0 0 0 0 ");	
+						}
+
+						if (star[i].binind == 0) {
+							fprintf(escfile, "%d na na ", 
+									star[i].se_k);
+						} else {
+							fprintf(escfile, "na %d %d",
+									binary[k].bse_kw[0], binary[k].bse_kw[1]);
+						}
+						fprintf (escfile, "\n");
+
+						/* perhaps this will fix the problem wherein stars are ejected (and counted)
+							multiple times */
+						destroy_obj(i);
+
+						if (Etotal.K + Etotal.P - Etidal >= 0)
+							break;
+
+					}
+				}
+
+			}
+			j++;
+			TidalMassLoss = TidalMassLoss + DTidalMassLoss;
+			gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+					j, TidalMassLoss, DTidalMassLoss);
+			fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+					j, TidalMassLoss, DTidalMassLoss);
+		} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
+
+	}
+	MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&DTidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void pre_sort_comm(int* mpiDisp, int* mpiLen)
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	int i;
+#ifdef USE_MPI
+	MPI_Status stat;
+	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
+	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
+	mpiFindDispAndLenSpecial( clus.N_MAX, mpiDisp, mpiLen );
+
+	for(i=0;i<procs;i++)
+		mpiLen[i] *= sizeof(star_t); 
+
+	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
+	for(i=mpiBegin; i<=mpiEnd; i++) {
+		star[i].r = star_r[i];
+		star[i].m = star_m[i];
+	}
+
+	//MPI2: To be refactored into separate function later.
+	if(myid!=0)
+		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+	else
+		for(i=1;i<procs;i++)
+			MPI_Recv(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void post_sort_comm(int* mpiDisp, int* mpiLen)
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	int i;
+#ifdef USE_MPI
+	MPI_Status stat;
+	mpiFindDispAndLenSpecial( clus.N_MAX, mpiDisp, mpiLen );
+
+	//MPI2: To be refactored into separate function later.
+	if(myid==0)
+		for(i=1;i<procs;i++)
+			MPI_Send(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD);
+	else
+		MPI_Recv(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD, &stat);
+
+	if(myid==0)
+		for(i=1; i<=clus.N_MAX; i++) {
+			star_r[i] = star[i].r;
+			star_m[i] = star[i].m;
+			star_phi[i] = star[i].phi;
+		}
+
+	MPI_Bcast(star_m, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(star_r, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(star_phi, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
 }

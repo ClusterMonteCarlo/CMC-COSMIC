@@ -404,176 +404,6 @@ if(myid==0)
 	return (Dt);
 }
 
-
-void tidally_strip_stars2(void)
-{
-	strcpy(funcName, __FUNCTION__);
-	double phi_rtidal, phi_zero, gierszalpha;
-	long i, j, k;
-	k=0;
-	
-	j = 0;
-	Etidal = 0.0;
-	OldTidalMassLoss = TidalMassLoss;
-	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
-		
-	gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-		j, OldTidalMassLoss, DTidalMassLoss);
-	fprintf(logfile, "tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-		j, OldTidalMassLoss, DTidalMassLoss);
-
-	
-	/* Iterate the removal of tidally stripped stars 
-	 * by reducing Rtidal */
-	do {
-		Rtidal = orbit_r * pow(Mtotal 
-			- (TidalMassLoss - OldTidalMassLoss), 1.0/3.0);
-		phi_rtidal = potential(Rtidal);
-		phi_zero = potential(0.0);
-		DTidalMassLoss = 0.0;
-
-		/* XXX maybe we should use clus.N_MAX_NEW below?? */
-		//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
-		for (i = 1; i <= clus.N_MAX; i++) 
-		{
-			if (TIDAL_TREATMENT == 0){
-				/*radial cut off criteria*/
-
-				if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
-					dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
-					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
-					star[i].vrnew = 0.0;
-					star[i].vtnew = 0.0;
-
-					Eescaped += star[i].E * star[i].m / clus.N_STAR;
-					Jescaped += star[i].J * star[i].m / clus.N_STAR;
-
-					if (star[i].binind == 0) {
-						Eintescaped += star[i].Eint;
-					} else {
-						Ebescaped += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
-							(2.0 * binary[star[i].binind].a);
-						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
-					}
-
-					DTidalMassLoss += star[i].m / clus.N_STAR;
-					Etidal += star[i].E * star[i].m / clus.N_STAR;
-
-					/* logging */
-					fprintf(escfile,
-							"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
-							tcount, TotalTime, star[i].m,
-							star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
-							star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
-
-					if (star[i].binind) {
-						k = star[i].binind;
-						fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
-								binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
-								binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
-								binary[k].id1, binary[k].id2,
-								binary[k].a * units.l / AU, binary[k].e);
-					} else {
-						fprintf(escfile, "0 0 0 0 0 0 0 ");	
-					}
-
-					if (star[i].binind == 0) {
-						fprintf(escfile, "%d na na ", 
-								star[i].se_k);
-					} else {
-						fprintf(escfile, "na %d %d",
-								binary[k].bse_kw[0], binary[k].bse_kw[1]);
-					}
-					fprintf (escfile, "\n");
-
-
-
-					/* perhaps this will fix the problem wherein stars are ejected (and counted)
-					   multiple times */
-					dprintf ("before SE: id=%ld k=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
-		     star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
-	     		star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star[i].phi, star[i].r);
-					destroy_obj(i);
-					if (Etotal.K + Etotal.P - Etidal >= 0)
-						break;
-
-				}
-			}
-
-
-			else if (TIDAL_TREATMENT == 1){
-				/* DEBUG: Now using Giersz prescription for tidal stripping 
-				   (Giersz, Heggie, & Hurley 2008; arXiv:0801.3709).
-				   Note that this alpha factor behaves strangely for small N (N<~10^3) */
-
-				gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
-				if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
-					dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
-					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
-					star[i].vrnew = 0.0;
-					star[i].vtnew = 0.0;
-					Eescaped += star[i].E * star[i].m / clus.N_STAR;
-					Jescaped += star[i].J * star[i].m / clus.N_STAR;
-					if (star[i].binind == 0) {
-						Eintescaped += star[i].Eint;
-					} else {
-						Ebescaped += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
-							(2.0 * binary[star[i].binind].a);
-						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
-					}
-
-					DTidalMassLoss += star[i].m / clus.N_STAR;
-					Etidal += star[i].E * star[i].m / clus.N_STAR;
-
-					/* logging */
-					fprintf(escfile,
-							"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
-							tcount, TotalTime, star[i].m,
-							star[i].r, star[i].vr, star[i].vt, star[i].r_peri,
-							star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
-
-					if (star[i].binind) {
-						k = star[i].binind;
-						fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
-								binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
-								binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
-								binary[k].id1, binary[k].id2,
-								binary[k].a * units.l / AU, binary[k].e);
-					} else {
-						fprintf(escfile, "0 0 0 0 0 0 0 ");	
-					}
-
-					if (star[i].binind == 0) {
-						fprintf(escfile, "%d na na ", 
-								star[i].se_k);
-					} else {
-						fprintf(escfile, "na %d %d",
-								binary[k].bse_kw[0], binary[k].bse_kw[1]);
-					}
-					fprintf (escfile, "\n");
-
-					/* perhaps this will fix the problem wherein stars are ejected (and counted)
-					   multiple times */
-					destroy_obj(i);
-
-					if (Etotal.K + Etotal.P - Etidal >= 0)
-						break;
-
-				}
-			}
-
-		}
-		j++;
-		TidalMassLoss = TidalMassLoss + DTidalMassLoss;
-		gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-				j, TidalMassLoss, DTidalMassLoss);
-		fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-				j, TidalMassLoss, DTidalMassLoss);
-	} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
-
-}
-
-
 /* removes tidally-stripped stars */
 void tidally_strip_stars(void) {
 	strcpy(funcName, __FUNCTION__);
@@ -605,18 +435,10 @@ void tidally_strip_stars(void) {
 		phi_zero = potential(0.0);
 		DTidalMassLoss = 0.0;
 
-//MPI2: There's a problem in this loop since Etidal needs to be checked everytime. Might need to be done sequentially. Oh wait!, cant be done sequentially yoo, since other variables for other stars after N/procs are not present on root node!
-/*
-#ifdef USE_MPI
-		int mpiBegin, mpiEnd;
-		mpiFindIndices( clus.N_MAX, &mpiBegin, &mpiEnd );
-		for (i=mpiBegin; i<=mpiEnd; i++) 
-#else
-*/
+//MPI2: There's a problem in this loop since Etidal needs to be checked everytime. Might need to be done sequentially. Oh wait!, cant be done sequentially yoo, since other variables for other stars after N/procs are not present on root node! So, moving this just before sorting tidally_strip_stars2() and doing it on root.
 
 		/* XXX maybe we should use clus.N_MAX_NEW below?? */
 		for (i = 1; i <= clus.N_MAX; i++) 
-//#endif
 		{
 			if (TIDAL_TREATMENT == 0){
 				/*radial cut off criteria*/
@@ -626,15 +448,8 @@ void tidally_strip_stars(void) {
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
-/*
-#ifdef USE_MPI
-					tEescaped += star[i].E * star_m[i] / clus.N_STAR;
-					tJescaped += star[i].J * star_m[i] / clus.N_STAR;
-#else
-*/
 					Eescaped += star[i].E * star[i].m / clus.N_STAR;
 					Jescaped += star[i].J * star[i].m / clus.N_STAR;
-//#endif
 					if (star[i].binind == 0) {
 						Eintescaped += star[i].Eint;
 					} else {
@@ -643,15 +458,8 @@ void tidally_strip_stars(void) {
 						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
 					}
 
-/*
-#ifdef USE_MPI
-					tDTidalMassLoss += star_m[i] / clus.N_STAR;
-					tEtidal += star[i].E * star_m[i] / clus.N_STAR;
-#else
-*/
 					DTidalMassLoss += star[i].m / clus.N_STAR;
 					Etidal += star[i].E * star[i].m / clus.N_STAR;
-//#endif
 
 					/* logging */
 					fprintf(escfile,
@@ -688,14 +496,6 @@ void tidally_strip_stars(void) {
 		     star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
 	     		star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star[i].phi, star[i].r);
 					destroy_obj(i);
-/*
-#ifdef USE_MPI
-					MPI_Reduce(&tEtidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-					if(myid==0)
-						Etidal += temp;
-					MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
-*/
 					if (Etotal.K + Etotal.P - Etidal >= 0)
 						break;
 
@@ -714,15 +514,8 @@ void tidally_strip_stars(void) {
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
-/*
-#ifdef USE_MPI
-					tEescaped += star[i].E * star_m[i] / clus.N_STAR;
-					tJescaped += star[i].J * star_m[i] / clus.N_STAR;
-#else
-*/
 					Eescaped += star[i].E * star[i].m / clus.N_STAR;
 					Jescaped += star[i].J * star[i].m / clus.N_STAR;
-//#endif
 					if (star[i].binind == 0) {
 						Eintescaped += star[i].Eint;
 					} else {
@@ -731,15 +524,8 @@ void tidally_strip_stars(void) {
 						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
 					}
 
-/*
-#ifdef USE_MPI
-					tDTidalMassLoss += star_m[i] / clus.N_STAR;
-					tEtidal += star[i].E * star_m[i] / clus.N_STAR;
-#else
-*/
 					DTidalMassLoss += star[i].m / clus.N_STAR;
 					Etidal += star[i].E * star[i].m / clus.N_STAR;
-//#endif
 
 					/* logging */
 					fprintf(escfile,
@@ -774,15 +560,6 @@ void tidally_strip_stars(void) {
 					   multiple times */
 					destroy_obj(i);
 
-					//MPI2: MPI Communication - Reduction
-/*
-#ifdef USE_MPI
-					MPI_Reduce(&tEtidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-					if(myid==0)
-						Etidal += temp;
-					MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
-*/
 					if (Etotal.K + Etotal.P - Etidal >= 0)
 						break;
 
@@ -790,17 +567,7 @@ void tidally_strip_stars(void) {
 			}
 
 		}
-//printf("%d\tDtidal=%g\t%d\n",myid, DTidalMassLoss,TIDAL_TREATMENT);
 
-
-/*		//MPI2: MPI Communication - Reduction
-#ifdef USE_MPI
-		MPI_Reduce(&DTidalMassLoss, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-		if(myid==0)
-			DTidalMassLoss = temp;
-		MPI_Bcast(&DTidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
-*/
 		j++;
 		TidalMassLoss = TidalMassLoss + DTidalMassLoss;
 		gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
@@ -808,29 +575,6 @@ void tidally_strip_stars(void) {
 		fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 				j, TidalMassLoss, DTidalMassLoss);
 	} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
-
-	//MPI2: MPI Communication - Reduction
-/*
-#ifdef USE_MPI
-	MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		Eescaped = temp;
-	MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&Jescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		Jescaped = temp;
-	MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&Eintescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		Eintescaped = temp;
-	MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&Ebescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		Ebescaped = temp;
-	MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
-*/
-
 }
 
 void remove_star(long j, double phi_rtidal, double phi_zero) {
@@ -965,14 +709,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	cuCalculateKs();
 #endif
 
-printf("Being Loop\n");
-timeT=0.0;
-
 #ifdef USE_MPI 
-	//int mpiBegin, mpiEnd;
 	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
-	//mpiFindIndices( clus.N_MAX_NEW, &mpiBegin, &mpiEnd );
-	//printf("%s:%d\tmpiBegin=%d\tmpiEnd=%d\n",__FUNCTION__, myid, mpiBegin, mpiEnd);
 	for (si=mpiBegin; si<=mpiEnd; si++) {
 #else
 	for (si = 1; si <= clus.N_MAX_NEW; si++) { /* Repeat for all stars */
@@ -996,7 +734,7 @@ timeT=0.0;
 #endif
 			destroy_obj(j);
 #ifdef USE_MPI
-			printf("%d\tindex of stripped star m = %ld\t%g\n",myid, j,star_m[j]);
+			//printf("%d\tindex of stripped star = %ld\tE = %g\n",myid, j,star_m[j]);
 #endif
 			continue;
 		}
@@ -1006,7 +744,7 @@ timeT=0.0;
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 			remove_star(j, phi_rtidal, phi_zero);
 #ifdef USE_MPI
-			printf("%d\tindex of stripped star E = %ld\t%g\n",myid, j,star[j].E);
+			//printf("%d\tindex of stripped star = %ld\tE = %g\n",myid, j,star[j].E);
 #endif
 			continue;
 		}

@@ -11,7 +11,11 @@
 /* core of the code: applies relaxation, does single-single collisions and binary interactions */
 void dynamics_apply(double dt, gsl_rng *rng)
 {
+	//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
 	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
 	long j, si, p=AVEKERNEL, N_LIMIT, k, kp, ksin, kbin;
 	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
 	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi=0;
@@ -79,20 +83,10 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		fflush(stdout);
 	}
 
-#ifdef USE_MPI
-	if(myid==0) 
-#endif
 	fprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
 
 #ifdef USE_MPI	
-   //int mpiBegin, mpiEnd;
-   //mpiFindIndicesEven( N_LIMIT-N_LIMIT%2, &mpiBegin, &mpiEnd ); //Check if this is correct
-	//int Btest,Etest;
-   //mpiFindIndicesSpecial( 99, &Btest, &Etest );
-   printf("Proc %d:\tLow=%d\tHigh=%d\tNum=%d\n",myid, mpiBegin, mpiEnd, mpiEnd-mpiBegin+1);
-	//MPI2: Changing to the more intelligent :) mpiFindIndicesSpecial.
-   //mpiFindIndicesEven( N_LIMIT, &mpiBegin, &mpiEnd ); //Check if this is correct
-	for (si=mpiBegin; si<=mpiEnd-mpiEnd%2; si+=2) {
+	for (si=mpiBegin; si<=mpiEnd-mpiEnd%2-1; si+=2) {
 #else
 	/* the big loop, with limits chosen so that we omit the last star if it is not paired */
 	for (si=1; si<=N_LIMIT-N_LIMIT%2-1; si+=2) {
@@ -323,10 +317,12 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		fprintf(relaxationfile, "\n");
 
 		/* put newline on "...performing interactions..." line */
-		gprintf("\n");
+		//gprintf("\n");
 		fprintf(logfile, "\n");
 
 	//MPI2: Binaries, ignoring for now.
 	/* break pathologically wide binaries */
 	break_wide_binaries();
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
 }

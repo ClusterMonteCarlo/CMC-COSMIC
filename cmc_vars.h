@@ -83,8 +83,7 @@ _EXTERN_ double timeT;
 #endif
 _EXTERN_ double startTime, endTime; 
 _EXTERN_ char funcName[64];
-_EXTERN_ char fileNameSerial[64];
-_EXTERN_ char fileNameParallel[64];
+_EXTERN_ char fileTime[64];
 _EXTERN_ int PROCS, MYID; //to mimic rng for parallelization
 
 /* debugging */

@@ -431,7 +431,6 @@ void PrintFileOutput(void) {
 /*** Parsing of Input Parameters / Memory allocation / File I/O ***/
 void parser(int argc, char *argv[], gsl_rng *r)
 {
-	strcpy(funcName, __FUNCTION__);
 	char inputfile[1024], outfile[1024], outfilemode[5];
 	char parameter_name[1024], values[1024], dummy[1024], line[2048];
 	char *curr_mass;
@@ -1492,4 +1491,59 @@ void write_snapshot(char *filename) {
   }
 
   gzclose(snapfile);
+}
+
+void get_star_data(int argc, char *argv[], gsl_rng *rng)
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+	//Currently doing on all nodes to avoid broadcasting of global variables. Later, might have to be split into 2 or more functions, and store all global variables into a structure for easy broadcast.
+	/* parse input */
+	parser(argc, argv, rng); //to do parallel i/o
+
+	/* print version information to log file */
+	//commenting out print_version temporarily for basic mpi
+	//print_version(logfile);
+
+	/* initialize the Search_Grid r_grid */
+	//If we use the GPU code, we dont need the SEARCH_GRID. So commenting it out
+	/*        if (SEARCH_GRID) { //Parallelize Search Grid
+				 r_grid= search_grid_initialize(SG_POWER_LAW_EXPONENT, \
+				 SG_MATCH_AT_FRACTION, SG_STARSPERBIN, SG_PARTICLE_FRACTION);
+				 };
+	 */
+	/* initialize the root finder algorithm */
+	/*	Commenting out for MPI
+		q_root = gsl_root_fsolver_alloc (gsl_root_fsolver_brent);
+	 */
+
+	/* Commenting out for MPI
+#ifdef DEBUGGING
+	// create a new hash table for the star ids 
+	star_ids= g_hash_table_new(g_int_hash, g_int_equal);
+	// load a trace list 
+	//load_id_table(star_ids, "trace_list");
+#endif
+	 */
+
+	/* Set up initial conditions */
+	//MPI2: can be done on all nodes? which means no need to broadcast star structure.
+	//MPI2: This fn populates the star array with the the data obtained after parsing
+	load_fits_file_data(); 
+
+	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
+
+	/* set some important global variables */
+	set_global_vars2();
+
+	//Step 2:currently do on all nodes. But all procs will use same random numbers. So, comparing with host code might be a problem
+	reset_rng_t113(IDUM);
+
+	/* binary remainders */
+	clus.N_MAX = clus.N_STAR;
+	N_b = clus.N_BINARY;
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
 }

@@ -455,7 +455,6 @@ typedef struct{
 double sqr(double x);
 double cub(double x);
 void tidally_strip_stars(void);
-void tidally_strip_stars2(void);
 
 void remove_star_center(long j);
 void print_results(void);
@@ -469,7 +468,32 @@ long mpi_potential_calculate(void);
 
 /* Bharath: Timing Functions */ 
 void timeStart();
-void timeEnd(char* fileName, char *funcName);
+void timeEnd(char* fileName, char *funcName, double *tTime);
+void timeStart2(double *st);
+void timeEnd2(char* fileName, char *funcName, double *st, double *end, double *tot);
+void create_timing_files();
+void calc_potential_new();
+void calc_potential_new2();
+void compute_energy_new();
+void set_energy_vars();
+void calc_clusdyn_new();
+void calc_timestep(gsl_rng *rng);
+void energy_conservation1();
+void energy_conservation2();
+void tidally_strip_stars1();
+void tidally_strip_stars2();
+void toy_rejuvenation();
+void pre_sort_comm(int* mpiDisp, int* mpiLen);
+void post_sort_comm(int* mpiDisp, int* mpiLen);
+/* End */
+
+/* Bharath: Other refactored functions */
+void set_global_vars1();
+void set_global_vars2();
+void get_star_data(int argc, char *argv[], gsl_rng *rng);
+void calc_sigma_new();
+void calc_central_new();
+void bin_vars_calculate();
 /* End */
 
 void comp_mass_percent(void);

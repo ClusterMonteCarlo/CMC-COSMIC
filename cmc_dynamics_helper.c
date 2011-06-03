@@ -1230,7 +1230,7 @@ double mpi_simul_relax_new(void)
 	p = 10; //For this value, the results are very close to the original simul_relax() function.
 
    int mpi_begin, mpi_end;
-   mpiFindIndices(N_LIMIT, &mpi_begin, &mpi_end);
+   mpiFindIndicesSpecial(N_LIMIT, &mpi_begin, &mpi_end);
 
 	for (si=mpi_begin+p+1; si<mpi_end-p; si+=2*p) {
 		simin = si - p;
@@ -1435,8 +1435,6 @@ void break_wide_binaries(void)
 #ifdef USE_MPI
 void mpi_calc_sigma_r(void)
 {
-	strcpy(funcName, __FUNCTION__);
-
 	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
 	double Mv2ave, Mave;
 	
@@ -1446,7 +1444,7 @@ void mpi_calc_sigma_r(void)
 	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
 
 	int mpi_siminlast, mpi_N_LIMIT;
-	mpiFindIndices(N_LIMIT, &mpi_siminlast, &mpi_N_LIMIT);
+	mpiFindIndicesSpecial(N_LIMIT, &mpi_siminlast, &mpi_N_LIMIT);
 	siminlast = mpi_siminlast;//set to min index
 
 	if (myid!=0)
@@ -1495,7 +1493,6 @@ void mpi_calc_sigma_r(void)
 /* calculate and store the velocity dispersion profile */
 void calc_sigma_r(void)
 {
-	strcpy(funcName, __FUNCTION__);
 	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
 	double Mv2ave, Mave;
 	
