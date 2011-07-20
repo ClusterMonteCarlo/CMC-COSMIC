@@ -2,32 +2,6 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-void mpiInitBcastGlobArrays()
-{
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
-#ifdef USE_MPI
-	/*MPI2: Initializing and extracting global arrays that will be needed by all processors.*/
-	//MPI2: Tested
-	int i;
-	star_r = (double *) malloc(N_STAR_DIM * sizeof(double));
-	star_m = (double *) malloc(N_STAR_DIM * sizeof(double));
-	star_phi = (double *) malloc(N_STAR_DIM * sizeof(double));
-
-	if(myid==0) {
-		for(i=0; i<=N_STAR_DIM; i++) {
-			star_r[i] = star[i].r;
-			star_m[i] = star[i].m;
-		}
-	}
-	MPI_Bcast(star_m, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(star_r, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
-}
 
 //Function to find start and end indices for each processor for a loop over N.
 //There are problems if 2nd and 3rd arguments are long ints instead of ints. Be careful.
@@ -95,17 +69,6 @@ void mpiFindIndicesSpecial( long N, int* mpiStart, int* mpiEnd )
 	}
 }
 
-//Function specially made for our code as dynamics_apply() takes 2 stars at a time.
-void mpiFindDispAndLenSpecial( long N, int* mpiDisp, int* mpiLen )
-{
-	int i;
-	for( i = 0; i < procs; i++ )
-	{
-		mpiFindIndicesSpecial2( N, i, &mpiDisp[i], &mpiLen[i] );
-		mpiLen[i] = mpiLen[i] - mpiDisp[i] + 1; 
-	}
-}
-
 //Function specially made for our code so that the distribution of stars can be in pairs.
 void mpiFindIndicesSpecial2( long N, int i, int* mpiStart, int* mpiEnd )
 {
@@ -119,7 +82,21 @@ void mpiFindIndicesSpecial2( long N, int i, int* mpiStart, int* mpiEnd )
 	}
 }
 
+//Function specially made for our code as dynamics_apply() takes 2 stars at a time.
+void mpiFindDispAndLenSpecial( long N, int* mpiDisp, int* mpiLen )
+{
+	int i;
+	for( i = 0; i < procs; i++ )
+	{
+		mpiFindIndicesSpecial2( N, i, &mpiDisp[i], &mpiLen[i] );
+		mpiLen[i] = mpiLen[i] - mpiDisp[i] + 1; 
+	}
+}
+
+
+
 //Function to find start index (displacement) and length for each processor for a loop over N. Not used anymore.
+/*
 void mpiFindDispAndLen( long N, int* mpiDisp, int* mpiLen )
 {
 	long chunkSize = N / procs;
@@ -138,7 +115,7 @@ void mpiFindDispAndLen( long N, int* mpiDisp, int* mpiLen )
 		mpiLen++;
 	}
 }
-
+*/
 
 /* Future Work
 void mpiReduceAndBcast( void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm )

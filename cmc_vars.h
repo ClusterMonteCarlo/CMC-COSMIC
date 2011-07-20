@@ -79,12 +79,16 @@ _EXTERN_ double *star_r;
 _EXTERN_ double *star_m;
 _EXTERN_ double *star_phi;
 _EXTERN_ int mpiBegin, mpiEnd;
-_EXTERN_ double timeT;
+_EXTERN_ int *mpiDisp, *mpiLen;
 #endif
-_EXTERN_ double startTime, endTime; 
+_EXTERN_ int myid, procs;
+_EXTERN_ double timeT, startTime, endTime; 
 _EXTERN_ char funcName[64];
 _EXTERN_ char fileTime[64];
-_EXTERN_ int PROCS, MYID; //to mimic rng for parallelization
+/* to mimic parallel rng */
+_EXTERN_ int *Start, *End; 
+_EXTERN_ struct rng_t113_state *curr_st;
+_EXTERN_ struct rng_t113_state *st;
 
 /* debugging */
 _EXTERN_ int debug;

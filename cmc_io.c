@@ -1547,3 +1547,30 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 
 	timeEnd(fileTime, funcName, &timeTotLoc);
 }
+
+void mpiInitBcastGlobArrays()
+{
+	strcpy(funcName, __FUNCTION__);
+	static double timeTotLoc;
+	timeStart();
+
+#ifdef USE_MPI
+	/*MPI2: Initializing and extracting global arrays that will be needed by all processors.*/
+	//MPI2: Tested
+	int i;
+	star_r = (double *) malloc(N_STAR_DIM * sizeof(double));
+	star_m = (double *) malloc(N_STAR_DIM * sizeof(double));
+	star_phi = (double *) malloc(N_STAR_DIM * sizeof(double));
+
+	if(myid==0) {
+		for(i=0; i<=N_STAR_DIM; i++) {
+			star_r[i] = star[i].r;
+			star_m[i] = star[i].m;
+		}
+	}
+	MPI_Bcast(star_m, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(star_r, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}

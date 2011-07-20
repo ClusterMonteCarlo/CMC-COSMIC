@@ -8,10 +8,6 @@
 #include <mpi.h>
 #include <stdio.h>
 
-/* Global variables required for any code using MPI */
-int myid, procs;
-
-void mpiInitBcastGlobArrays();
 void mpiFindIndices( long N, int* mpiOff, int* mpiLen );
 void mpiFindIndicesSpecial( long N, int* mpiOff, int* mpiLen );
 void mpiFindIndicesSpecial2( long N, int i, int* mpiStart, int* mpiEnd );

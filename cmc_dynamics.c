@@ -105,11 +105,11 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		n_local = calc_n_local(k, p, N_LIMIT);
 	
 #ifdef USE_MPI
-	mass_k = star_m[k];
-	mass_kp = star_m[kp];
+		mass_k = star_m[k];
+		mass_kp = star_m[kp];
 #else
-	mass_k = star[k].m;
-	mass_kp = star[kp].m;
+		mass_k = star[k].m;
+		mass_kp = star[kp].m;
 #endif
 	
 		if (star[k].binind > 0 && star[kp].binind > 0) {
@@ -212,8 +212,13 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			wprintf("P_enc = %g >= 1!\n", P_enc);
 		}
 
+
 		/* do encounter or two-body relaxation */
-		if (rng_t113_dbl() < P_enc) {
+		//if (rng_t113_dbl() < P_enc) {
+#ifndef USE_MPI
+		curr_st = &st[findProcForIndex(k)];
+#endif
+		if(rng_t113_dbl_new(curr_st) < P_enc) { 
 			/* do encounter */
 			if (star[k].binind > 0 && star[kp].binind > 0) {
 				/* binary--binary */
@@ -224,13 +229,13 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			} else if (star[k].binind > 0 || star[kp].binind > 0) {
 				/* binary--single */
 				print_interaction_status("BS");
-				
+
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "BS %g %g\n", TotalTime, rcm); */
 			} else {
 				/* single--single */
 				print_interaction_status("SS");
-				
+
 				/* do collision */
 				sscollision_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "SS %g %g\n", TotalTime, rcm); */
@@ -239,7 +244,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			/* do two-body relaxation */
 			Trel12 = (PI/32.0) * cub(W) / ( ((double) clus.N_STAR) * n_local * sqr((mass_k+mass_kp)*madhoc) ) ;
 			beta = (PI/2.0) * sqrt(dt/Trel12);
-			
+
 			/* record statistics on scattering angles */
 			Nrel++;
 			for (i=0; i<4; i++) {
@@ -273,7 +278,9 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			w2[2] = -w[2] * w[3] / wp;
 			w2[3] = wp;
 			
-			psi = rng_t113_dbl() * 2 * PI;
+			//psi = rng_t113_dbl() * 2 * PI;
+			psi = rng_t113_dbl_new(curr_st) * 2 * PI;
+
 			for (j = 1; j <= 3; j++) {
 				w_new[j] = w[j] * cos(beta) + w1[j] * sin(beta) * cos(psi) + w2[j] * sin(beta) * sin(psi);
 			}
@@ -298,6 +305,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			star[k].vt = sqrt(sqr(v_new[1]) + sqr(v_new[2]));
 			star[kp].vr = vp_new[3];
 			star[kp].vt = sqrt(sqr(vp_new[1]) + sqr(vp_new[2]));
+			if(star[k].vr == 0 || star[k].vt == 0 || star[kp].vr == 0 || star[kp].vt == 0)
+				printf("star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
 			
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
@@ -305,20 +314,20 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		}
 	}
 
-		/* print relaxation information */
-		fprintf(relaxationfile, "%g", TotalTime);
-		for (i=0; i<4; i++) {
-			fprintf(relaxationfile, " %g %g %g %g", 
-					((double) Nrelbeta[i])/((double) Nrel), 
-					qaverelbeta[i]/((double) Nrelbeta[i]),
-					maverelbeta[i]/((double) Nrelbeta[i]),
-					raverelbeta[i]/((double) Nrelbeta[i]));
-		}
-		fprintf(relaxationfile, "\n");
+	/* print relaxation information */
+	fprintf(relaxationfile, "%g", TotalTime);
+	for (i=0; i<4; i++) {
+		fprintf(relaxationfile, " %g %g %g %g", 
+				((double) Nrelbeta[i])/((double) Nrel), 
+				qaverelbeta[i]/((double) Nrelbeta[i]),
+				maverelbeta[i]/((double) Nrelbeta[i]),
+				raverelbeta[i]/((double) Nrelbeta[i]));
+	}
+	fprintf(relaxationfile, "\n");
 
-		/* put newline on "...performing interactions..." line */
-		//gprintf("\n");
-		fprintf(logfile, "\n");
+	/* put newline on "...performing interactions..." line */
+	//gprintf("\n");
+	fprintf(logfile, "\n");
 
 	//MPI2: Binaries, ignoring for now.
 	/* break pathologically wide binaries */

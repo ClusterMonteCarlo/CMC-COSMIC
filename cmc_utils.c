@@ -176,7 +176,7 @@ void set_velocities3(void){
 		if (star[i].interacted == 0) {
 #ifdef USE_MPI
 			Unewrold = potential(star[i].rOld) + MPI_PHI_S(star[i].rOld, i);
-			Unewrnew = star_phi[i] + MPI_PHI_S(star[i].r, i);
+			Unewrnew = star_phi[i] + MPI_PHI_S(star_r[i], i);
 #else
 			Unewrold = potential(star[i].rOld) + PHI_S(star[i].rOld, i);
 			Unewrnew = star[i].phi + PHI_S(star[i].r, i);
@@ -199,7 +199,6 @@ void set_velocities3(void){
 				alpha = sqrt(vnew2/(sqr(star[i].vr)+sqr(star[i].vt)));
 				star[i].vr *= alpha;
 				star[i].vt *= alpha;
-				
 				/* if there is excess energy added, try to remove at 
 				   least part of it from this star */
 #ifdef USE_MPI
@@ -1465,7 +1464,7 @@ void timeStart2(double *st)
 void timeEnd2(char* fileName, char *funcName, double *st, double *end, double *tot)
 {
 	double temp;
-	FILE *file;
+	//FILE *file;
 #ifdef USE_MPI
 	*end = MPI_Wtime();
 	temp = *end - *st;
@@ -2032,7 +2031,7 @@ void tidally_strip_stars2(void)
 	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
-void pre_sort_comm(int* mpiDisp, int* mpiLen)
+void pre_sort_comm()
 {
 	strcpy(funcName, __FUNCTION__);
 	static double timeTotLoc;
@@ -2065,7 +2064,7 @@ void pre_sort_comm(int* mpiDisp, int* mpiLen)
 	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
-void post_sort_comm(int* mpiDisp, int* mpiLen)
+void post_sort_comm()
 {
 	strcpy(funcName, __FUNCTION__);
 	static double timeTotLoc;
@@ -2076,6 +2075,9 @@ void post_sort_comm(int* mpiDisp, int* mpiLen)
 	MPI_Status stat;
 	mpiFindDispAndLenSpecial( clus.N_MAX, mpiDisp, mpiLen );
 
+	for(i=0;i<procs;i++)
+		mpiLen[i] *= sizeof(star_t); 
+
 	//MPI2: To be refactored into separate function later.
 	if(myid==0)
 		for(i=1;i<procs;i++)
@@ -2084,16 +2086,59 @@ void post_sort_comm(int* mpiDisp, int* mpiLen)
 		MPI_Recv(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD, &stat);
 
 	if(myid==0)
-		for(i=1; i<=clus.N_MAX; i++) {
+		for(i=1; i<=clus.N_MAX+1; i++) {
 			star_r[i] = star[i].r;
 			star_m[i] = star[i].m;
 			star_phi[i] = star[i].phi;
 		}
 
-	MPI_Bcast(star_m, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(star_r, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(star_phi, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(star_m, clus.N_MAX+2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(star_r, clus.N_MAX+2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(star_phi, clus.N_MAX+2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
 	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
+void findIndicesEven( long N, int i, int* begin, int* end )
+{
+	N = N/2;
+	int temp;
+	long chunkSize = N / procs;
+   if ( i < N % procs )
+   {
+		temp = i * chunkSize + i;
+		*begin = temp * 2 + 1; //+1 since for loops go from 1 to N
+		*end = ( temp + chunkSize + 1 ) * 2 + 1 - 1;
+   } else {
+		temp = i * chunkSize + N % procs;
+		*begin = temp * 2 + 1; //+1 since for loops go from 1 to N
+		*end =  ( temp + chunkSize ) * 2 + 1 - 1;
+   }
+}
+
+void findLimits( long N )
+{
+	int i;
+	for( i = 0; i < procs; i++ )
+	{
+		if( N % 2 == 0 )
+		{
+			findIndicesEven( N, i, &Start[i], &End[i] );
+		} else {
+			findIndicesEven( N-1, i, &Start[i], &End[i] );
+			if(i == procs-1)
+				End[i] += 1;
+		}
+	}
+}
+
+int findProcForIndex( int j )
+{
+	int i;
+	for( i = 0; i < procs; i++ )
+		if( j >= Start[i] && j <= End[i] )
+			break;
+
+	return i;
 }

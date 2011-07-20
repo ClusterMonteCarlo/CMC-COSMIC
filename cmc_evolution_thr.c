@@ -40,7 +40,6 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		ktemp = FindZero_r(0, clus.N_MAX, star[si].rnew) + 1;
 	}
 
-	
 	/* Q(si) is positive for a standard object that has undergone relaxation 
 	   (see Joshi, Rasio, & Portegies Zwart 2000).  However, it can be negative
 	   for newly created stars.  We ignore this for now and hope for the best. */
@@ -291,6 +290,7 @@ double GetTimeStep(gsl_rng *rng) {
 		//Optimized version of simul_relax()
 		DTrel = simul_relax_new();
 #endif
+
 
 // Testing
 //This is for testing the timestep variation over a number of timesteps, and see if the old and the new versions are at least nearly same.
@@ -717,13 +717,18 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
 		j = si;
 
+
 #ifdef USE_MPI
 		E = star[j].E + MPI_PHI_S(star_r[j], j);
 #else
 		E = star[j].E + PHI_S(star[j].r, j);
 #endif
 		J = star[j].J;
-		
+
+/*
+		if(isnan(star[j].E))
+			printf("**************si = %ld\t id = %ld*****************\n", si, star[si].id);
+*/		
 		/* remove massless stars (boundary stars or stellar evolution victims) */
 		/* note that energy lost due to stellar evolution is subtracted
 		   at the time of mass loss in DoStellarEvolution */
@@ -787,10 +792,19 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		F = 1.2 * MAX(g1, g2);
 		
+#ifndef USE_MPI
+		curr_st = &st[findProcForIndex(j)];
+#endif
+
 		for (k = 1; k <= N_TRY; k++) {
-			X = rng_t113_dbl();
+			//X = rng_t113_dbl();
+			X = rng_t113_dbl_new(curr_st);
+
 			s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
-			g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
+
+			//g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
+			g0 = F * rng_t113_dbl_new(curr_st);
+
 			r = 0.5 * (rmin + rmax) + 0.25 * (rmax - rmin) * (3.0 * s0 - s0 * s0 * s0);
 
 #ifdef USE_MPI
@@ -807,7 +821,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			} else {
 				dprintf("circular orbit: vr^2<0: setting vr=0: si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g\n", si, r, rmin, rmax, Q, X, E, J);
 				if (isnan(Q)) {
-					eprintf("fatal error: Q=vr^2==nan!\n");
+					printf("E=%g\tpot=%g\tJ=%g\tr=%g\t\n", E, pot, J, r);
+					eprintf("si = %ld \tfatal error: Q=vr^2==nan!\n",si);
 					exit_cleanly(-1);
 				}
 				vr = 0;
@@ -849,7 +864,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		star[j].r_apo = rmax;
 		
 		/* pick random sign for v_r */
-		if (rng_t113_dbl() < 0.5)
+		//if(rng_t113_dbl() < 0.5)
+		if(rng_t113_dbl_new(curr_st) < 0.5)
 			vr = -vr;
 
 		vt = J / r;
@@ -918,8 +934,7 @@ double get_positions(){
 	get_positions_data_array[0] = get_positions_data;
 	get_positions_data_array[0].taskid = 0;
 	get_positions_data_array[0].thr_rng = gsl_rng_alloc(gsl_rng_taus2);
-	gsl_rng_set(get_positions_data_array[0].thr_rng,
-			rng_t113_int());
+	gsl_rng_set(get_positions_data_array[0].thr_rng, rng_t113_int());
 	get_positions_loop(&get_positions_data_array[0]);
 	/* Free attribute and wait for the other threads */
 	/* Update variables when threads join */

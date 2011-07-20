@@ -12,187 +12,215 @@ void stellar_evolution_init(void){
 	static double timeTotLoc;
 	timeStart();
 
-  double tphysf, dtp, vs[12];
-  int i;
-  long k, kb;
-  binary_t tempbinary;
-  
-  /* SSE */
-  /* bse_set_hewind(0.5); */
-  
-  /* BSE */
-  bse_set_neta(BSE_NETA);
-  bse_set_bwind(BSE_BWIND);
-  bse_set_hewind(BSE_HEWIND);
-  bse_set_windflag(BSE_WINDFLAG);
-  bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
-  bse_set_lambda(BSE_LAMBDA);
-  bse_set_ceflag(BSE_CEFLAG);
-  bse_set_tflag(BSE_TFLAG);
-  bse_set_ifflag(BSE_IFFLAG);
-  bse_set_wdflag(BSE_WDFLAG);
-  bse_set_bhflag(BSE_BHFLAG);
-  bse_set_nsflag(BSE_NSFLAG);
-  bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
-  bse_set_idum(BSE_IDUM);
-  bse_set_pts1(0.05);
-  bse_set_pts2(0.01);
-  bse_set_pts3(0.02);
-  bse_set_sigma(BSE_SIGMA);
-  bse_set_beta(BSE_BETA);
-  bse_set_xi(1.0);
-  bse_set_acc2(1.5);
-  bse_set_epsnov(0.001);
-  bse_set_eddfac(BSE_EDDFAC); /* (normally 1.0) */
-  bse_set_gamma(BSE_GAMMA);
-  
-  /* set parameters relating to metallicity */
-  zpars = (double *) malloc(20 * sizeof(double));
-  bse_zcnsts(&METALLICITY, zpars);
-  
-  /* set collisions matrix */
-  bse_instar();
-  dprintf("se_init: %g %g %g %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
-  
-  /* set initial properties of stars */
-  for (k=1; k<=clus.N_MAX; k++) {
-    if (star[k].binind == 0) { /* single star */
-      star[k].se_mass = star[k].m * units.mstar / MSUN;
-      /* setting the type */
-      if(star[k].se_mass <= 0.7){
-	star[k].se_k = 0;
-      } else {
-	star[k].se_k = 1;
-      }
-      star[k].se_mt = star[k].se_mass;
-      star[k].se_ospin = 0.0;
-      star[k].se_epoch = 0.0;
-      star[k].se_tphys = 0.0;
-      
-      /* evolve slightly (1 year) for initial radii */
-      tphysf = 1.0e-6;
-      dtp = tphysf - star[k].se_tphys;
-      dtp = 0.0;
-      DMse += star[k].m * madhoc;
-  /* Update star id for pass through. */
-      bse_set_id1_pass(star[k].id);
-      bse_set_id2_pass(0);
-      tempbinary.bse_mass0[0] = star[k].se_mass;
-      tempbinary.bse_mass0[1] = 0.0;
-      tempbinary.bse_kw[0] = star[k].se_k;
-      tempbinary.bse_kw[1] = 15;
-      tempbinary.bse_mass[0] = star[k].se_mt;
-      tempbinary.bse_mass[1] = 0.0;
-      tempbinary.bse_radius[0] = star[k].se_radius;
-      tempbinary.bse_radius[1] = 0.0;
-      tempbinary.bse_lum[0] = star[k].se_lum;
-      tempbinary.bse_lum[1] = 0.0;
-      tempbinary.bse_massc[0] = star[k].se_mc;
-      tempbinary.bse_massc[1] = 0.0;
-      tempbinary.bse_radc[0] = star[k].se_rc;
-      tempbinary.bse_radc[1] = 0.0;
-      tempbinary.bse_menv[0] = star[k].se_menv;
-      tempbinary.bse_menv[1] = 0.0;
-      tempbinary.bse_renv[0] = star[k].se_renv;
-      tempbinary.bse_renv[1] = 0.0;
-      tempbinary.bse_ospin[0] = star[k].se_ospin;
-      tempbinary.bse_ospin[1] = 0.0;
-      /*
-      tempbinary.bse_B_0[0] = star[k].se_B_0;
-      tempbinary.bse_B_0[1] = 0.0;
-      tempbinary.bse_bacc[0] = star[k].se_bacc;
-      tempbinary.bse_bacc[1] = 0.0;
-      tempbinary.bse_tacc[0] = star[k].se_tacc;
-      tempbinary.bse_tacc[1] = 0.0;
-      */
-      tempbinary.bse_epoch[0] = star[k].se_epoch;
-      tempbinary.bse_epoch[1] = 0.0;
-      tempbinary.bse_tms[0] = star[k].se_tms;
-      tempbinary.bse_tms[1] = 0.0;
-      tempbinary.bse_tb = 0.0;
-      tempbinary.e = 0.0;
-      /*
-      bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
-		 &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
-		 &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
-		 &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
-      */
-      bse_evolv2(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
-			&(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
-			&(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
-			&(tempbinary.bse_ospin[0]),
-			&(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
-			&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-			&(tempbinary.bse_tb), &(tempbinary.e), vs);
+	double tphysf, dtp, vs[12];
+	int i;
+	long k, kb;
+	binary_t tempbinary;
 
-      star[k].se_mass = tempbinary.bse_mass0[0];
-      star[k].se_k = tempbinary.bse_kw[0];
-      star[k].se_mt = tempbinary.bse_mass[0];
-      star[k].se_radius = tempbinary.bse_radius[0];
-      star[k].se_lum = tempbinary.bse_lum[0];
-      star[k].se_mc = tempbinary.bse_massc[0];
-      star[k].se_rc = tempbinary.bse_radc[0];
-      star[k].se_menv = tempbinary.bse_menv[0];
-      star[k].se_renv = tempbinary.bse_renv[0];
-      star[k].se_ospin = tempbinary.bse_ospin[0];
-      /*
-      star[k].se_B_0 = tempbinary.bse_B_0[0];
-      star[k].se_bacc = tempbinary.bse_bacc[0];
-      star[k].se_tacc = tempbinary.bse_tacc[0];
-      */
-      star[k].se_epoch = tempbinary.bse_epoch[0];
-      star[k].se_tms = tempbinary.bse_tms[0];
+	/* SSE */
+	/* bse_set_hewind(0.5); */
 
-      star[k].rad = star[k].se_radius * RSUN / units.l;
-      star[k].m = star[k].se_mt * MSUN / units.mstar;
-      DMse -= star[k].m * madhoc;
-      /* birth kicks */
-      if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[2]*vs[2]) != 0.0) {
-	//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
-      }
-      star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
-      vt_add_kick(&(star[k].vt),vs[1],vs[2]);
-      //star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
-      set_star_EJ(k);
-    } else if (star[k].binind > 0) { /* binary */
-      star[k].se_k = NOT_A_STAR; /* just for safety */
-      kb = star[k].binind;
-      binary[kb].bse_mass0[0] = binary[kb].m1 * units.mstar / MSUN;
-      binary[kb].bse_mass0[1] = binary[kb].m2 * units.mstar / MSUN;
-      for (i=0; i<=1; i++) {
-	if(binary[kb].bse_mass0[i] <= 0.7){
-	  binary[kb].bse_kw[i] = 0;
-	} else {
-	  binary[kb].bse_kw[i] = 1;
+	/* BSE */
+	bse_set_neta(BSE_NETA);
+	bse_set_bwind(BSE_BWIND);
+	bse_set_hewind(BSE_HEWIND);
+	bse_set_windflag(BSE_WINDFLAG);
+	bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
+	bse_set_lambda(BSE_LAMBDA);
+	bse_set_ceflag(BSE_CEFLAG);
+	bse_set_tflag(BSE_TFLAG);
+	bse_set_ifflag(BSE_IFFLAG);
+	bse_set_wdflag(BSE_WDFLAG);
+	bse_set_bhflag(BSE_BHFLAG);
+	bse_set_nsflag(BSE_NSFLAG);
+	bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
+	bse_set_idum(BSE_IDUM);
+	bse_set_pts1(0.05);
+	bse_set_pts2(0.01);
+	bse_set_pts3(0.02);
+	bse_set_sigma(BSE_SIGMA);
+	bse_set_beta(BSE_BETA);
+	bse_set_xi(1.0);
+	bse_set_acc2(1.5);
+	bse_set_epsnov(0.001);
+	bse_set_eddfac(BSE_EDDFAC); /* (normally 1.0) */
+	bse_set_gamma(BSE_GAMMA);
+
+	/* set parameters relating to metallicity */
+	zpars = (double *) malloc(20 * sizeof(double));
+	bse_zcnsts(&METALLICITY, zpars);
+
+	/* set collisions matrix */
+	bse_instar();
+	dprintf("se_init: %g %g %g %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
+
+#ifdef USE_MPI 
+	for (k=mpiBegin; k<=mpiEnd; k++) {
+#else
+	/* set initial properties of stars */
+	for (k=1; k<=clus.N_MAX; k++) {
+#endif
+		if (star[k].binind == 0) { /* single star */
+#ifdef USE_MPI
+			star[k].se_mass = star_m[k] * units.mstar / MSUN;
+#else
+			star[k].se_mass = star[k].m * units.mstar / MSUN;
+#endif
+			/* setting the type */
+			if(star[k].se_mass <= 0.7){
+				star[k].se_k = 0;
+			} else {
+				star[k].se_k = 1;
+			}
+			star[k].se_mt = star[k].se_mass;
+			star[k].se_ospin = 0.0;
+			star[k].se_epoch = 0.0;
+			star[k].se_tphys = 0.0;
+
+			/* evolve slightly (1 year) for initial radii */
+			tphysf = 1.0e-6;
+			dtp = tphysf - star[k].se_tphys;
+			dtp = 0.0;
+#ifdef USE_MPI
+			DMse += star_m[k] * madhoc;
+#else
+			DMse += star[k].m * madhoc;
+#endif
+			/* Update star id for pass through. */
+			bse_set_id1_pass(star[k].id);
+			bse_set_id2_pass(0);
+			tempbinary.bse_mass0[0] = star[k].se_mass;
+			tempbinary.bse_mass0[1] = 0.0;
+			tempbinary.bse_kw[0] = star[k].se_k;
+			tempbinary.bse_kw[1] = 15;
+			tempbinary.bse_mass[0] = star[k].se_mt;
+			tempbinary.bse_mass[1] = 0.0;
+			tempbinary.bse_radius[0] = star[k].se_radius;
+			tempbinary.bse_radius[1] = 0.0;
+			tempbinary.bse_lum[0] = star[k].se_lum;
+			tempbinary.bse_lum[1] = 0.0;
+			tempbinary.bse_massc[0] = star[k].se_mc;
+			tempbinary.bse_massc[1] = 0.0;
+			tempbinary.bse_radc[0] = star[k].se_rc;
+			tempbinary.bse_radc[1] = 0.0;
+			tempbinary.bse_menv[0] = star[k].se_menv;
+			tempbinary.bse_menv[1] = 0.0;
+			tempbinary.bse_renv[0] = star[k].se_renv;
+			tempbinary.bse_renv[1] = 0.0;
+			tempbinary.bse_ospin[0] = star[k].se_ospin;
+			tempbinary.bse_ospin[1] = 0.0;
+			/*
+				tempbinary.bse_B_0[0] = star[k].se_B_0;
+				tempbinary.bse_B_0[1] = 0.0;
+				tempbinary.bse_bacc[0] = star[k].se_bacc;
+				tempbinary.bse_bacc[1] = 0.0;
+				tempbinary.bse_tacc[0] = star[k].se_tacc;
+				tempbinary.bse_tacc[1] = 0.0;
+			 */
+			tempbinary.bse_epoch[0] = star[k].se_epoch;
+			tempbinary.bse_epoch[1] = 0.0;
+			tempbinary.bse_tms[0] = star[k].se_tms;
+			tempbinary.bse_tms[1] = 0.0;
+			tempbinary.bse_tb = 0.0;
+			tempbinary.e = 0.0;
+			/*
+				bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
+				&(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
+				&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
+				&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+			 */
+			bse_evolv2(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
+					&(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
+					&(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
+					&(tempbinary.bse_ospin[0]),
+					&(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
+					&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+					&(tempbinary.bse_tb), &(tempbinary.e), vs);
+
+			star[k].se_mass = tempbinary.bse_mass0[0];
+			star[k].se_k = tempbinary.bse_kw[0];
+			star[k].se_mt = tempbinary.bse_mass[0];
+			star[k].se_radius = tempbinary.bse_radius[0];
+			star[k].se_lum = tempbinary.bse_lum[0];
+			star[k].se_mc = tempbinary.bse_massc[0];
+			star[k].se_rc = tempbinary.bse_radc[0];
+			star[k].se_menv = tempbinary.bse_menv[0];
+			star[k].se_renv = tempbinary.bse_renv[0];
+			star[k].se_ospin = tempbinary.bse_ospin[0];
+			/*
+				star[k].se_B_0 = tempbinary.bse_B_0[0];
+				star[k].se_bacc = tempbinary.bse_bacc[0];
+				star[k].se_tacc = tempbinary.bse_tacc[0];
+			 */
+			star[k].se_epoch = tempbinary.bse_epoch[0];
+			star[k].se_tms = tempbinary.bse_tms[0];
+
+			star[k].rad = star[k].se_radius * RSUN / units.l;
+#ifdef USE_MPI
+			star_m[k] = star[k].se_mt * MSUN / units.mstar;
+			DMse -= star_m[k] * madhoc;
+#else
+			star[k].m = star[k].se_mt * MSUN / units.mstar;
+			DMse -= star[k].m * madhoc;
+#endif
+			/* birth kicks */
+			if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[2]*vs[2]) != 0.0) {
+				//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
+			}
+			star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
+#ifndef USE_MPI
+			curr_st = &st[findProcForIndex(k)];
+#endif
+			vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
+			//star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+			set_star_EJ(k);
+		} else if (star[k].binind > 0) { /* binary */
+			star[k].se_k = NOT_A_STAR; /* just for safety */
+			kb = star[k].binind;
+			binary[kb].bse_mass0[0] = binary[kb].m1 * units.mstar / MSUN;
+			binary[kb].bse_mass0[1] = binary[kb].m2 * units.mstar / MSUN;
+			for (i=0; i<=1; i++) {
+				if(binary[kb].bse_mass0[i] <= 0.7){
+					binary[kb].bse_kw[i] = 0;
+				} else {
+					binary[kb].bse_kw[i] = 1;
+				}
+				binary[kb].bse_mass[i] = binary[kb].bse_mass0[i];
+				binary[kb].bse_ospin[i] = 0.0;
+				binary[kb].bse_epoch[i] = 0.0;
+			}
+			binary[kb].bse_tphys = 0.0;
+
+			/* set binary orbital period (in days) from a */
+			binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
+
+			/* evolve slightly (1 year) for initial radii */
+			tphysf = 1.0e-6;
+			dtp = tphysf - binary[kb].bse_tphys;
+			dtp = 0.0;
+			DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
+			/* Update star id for pass through. */
+			bse_set_id1_pass(binary[kb].id1);
+			bse_set_id2_pass(binary[kb].id2);
+			bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
+					&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
+					&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
+					&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+					&(binary[kb].bse_tb), &(binary[kb].e), vs);
+			handle_bse_outcome(k, kb, vs, tphysf);
+		} else {
+			eprintf("totally confused!\n");
+			exit_cleanly(-1);
+		}
 	}
-	binary[kb].bse_mass[i] = binary[kb].bse_mass0[i];
-	binary[kb].bse_ospin[i] = 0.0;
-	binary[kb].bse_epoch[i] = 0.0;
-      }
-      binary[kb].bse_tphys = 0.0;
-      
-      /* set binary orbital period (in days) from a */
-      binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
-      
-      /* evolve slightly (1 year) for initial radii */
-      tphysf = 1.0e-6;
-      dtp = tphysf - binary[kb].bse_tphys;
-      dtp = 0.0;
-      DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
-  /* Update star id for pass through. */
-      bse_set_id1_pass(binary[kb].id1);
-      bse_set_id2_pass(binary[kb].id2);
-      bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
-		 &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
-		 &(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
-		 &(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-		 &(binary[kb].bse_tb), &(binary[kb].e), vs);
-      handle_bse_outcome(k, kb, vs, tphysf);
-    } else {
-      eprintf("totally confused!\n");
-      exit_cleanly(-1);
-    }
-  }
+
+#ifdef USE_MPI
+	double temp = 0.0;
+	MPI_Reduce(&DMse, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0) DMse = temp;
+	MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
 	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
@@ -208,18 +236,14 @@ void do_stellar_evolution(gsl_rng *rng)
 	double dtp, tphysf, vs[12], VKO;
 	binary_t tempbinary;
 	/* double vk, theta; */
-//static int tst=0;
 
 #ifdef USE_MPI 
-	//MPI2: Doing for N_MAX for now, have to do till N_MAX new later, may be with 2 loops.
+	//MPI2: Doing for N_MAX for now, have to do till N_MAX_NEW later, may be with 2 loops.
 	for (k=mpiBegin; k<=mpiEnd; k++) {
 #else
-	//for(k=1; k<=clus.N_MAX; k++){
 	for(k=1; k<=clus.N_MAX_NEW; k++){ 
 #endif
 		if (star[k].binind == 0) { /* single star */
-			//tst++;
-			//printf("\nprod=%d\ttest=%d\n",myid, tst);
 			tphysf = TotalTime / MEGA_YEAR;
 			dtp = tphysf;
 			dtp = 0.0;
@@ -235,7 +259,11 @@ void do_stellar_evolution(gsl_rng *rng)
 					dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star[k].m, star[k].r, star[k].phi, star[k].vr, star[k].vt, star[k].E, star[k].J);	
 #endif
 			} else {
+#ifdef USE_MPI
+				DMse += star_m[k] * madhoc;
+#else
 				DMse += star[k].m * madhoc;
+#endif
 				/* Update star id for pass through. */
 				bse_set_id1_pass(star[k].id);
 				bse_set_id2_pass(0);
@@ -319,7 +347,10 @@ void do_stellar_evolution(gsl_rng *rng)
 					//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
 				}
 				star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
-				vt_add_kick(&(star[k].vt),vs[1],vs[2]);
+#ifndef USE_MPI
+				curr_st = &st[findProcForIndex(k)];
+#endif
+				vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
 				//star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 				set_star_EJ(k);
 				VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
@@ -338,53 +369,60 @@ void do_stellar_evolution(gsl_rng *rng)
 				/* 	set_star_EJ(k); */
 				/* } */
 			}
-			} else { /* binary */
-				tphysf = TotalTime / MEGA_YEAR;
-				kb = star[k].binind;
-				dtp = tphysf - binary[kb].bse_tphys;
-				dtp = 0.0;
+		} else { /* binary */
+			tphysf = TotalTime / MEGA_YEAR;
+			kb = star[k].binind;
+			dtp = tphysf - binary[kb].bse_tphys;
+			dtp = 0.0;
 #ifdef USE_MPI
-				if (star_m[k]<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
-					if(myid==0) {
-						dprintf ("zeroed out star: skipping SE:\n");	
-						dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[k], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
-					}
+			if (star_m[k]<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
+				if(myid==0) {
+					dprintf ("zeroed out star: skipping SE:\n");	
+					dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[k], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
+				}
 #else
-				if (star[k].m<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
+			if (star[k].m<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
 						dprintf ("zeroed out star: skipping SE:\n");	
 						dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star[k].m, binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
 #endif
-				} else {
-					/* set binary orbital period (in days) from a */
-					binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
-					DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
-					/* Update star id for pass through. */
-					bse_set_id1_pass(binary[kb].id1);
-					bse_set_id2_pass(binary[kb].id2);
-					bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
-							&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
-							&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
-							&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-							&(binary[kb].bse_tb), &(binary[kb].e), vs);
-					if(isnan(binary[kb].bse_radius[0])){
-						fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
-						fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1], binary[kb].bse_tb);
-						fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
-						exit(1);
-					} 
-					if(isnan(binary[kb].bse_radius[1])){
-						fprintf(stderr, "An isnan occured for r2 cmc_stellar_evolution.c\n");
-						fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1]);
-						fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
-						exit(1);
-					}
-					handle_bse_outcome(k, kb, vs, tphysf);
+			} else {
+				/* set binary orbital period (in days) from a */
+				binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
+				DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
+				/* Update star id for pass through. */
+				bse_set_id1_pass(binary[kb].id1);
+				bse_set_id2_pass(binary[kb].id2);
+				bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
+						&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
+						&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
+						&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+						&(binary[kb].bse_tb), &(binary[kb].e), vs);
+				if(isnan(binary[kb].bse_radius[0])){
+					fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
+					fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1], binary[kb].bse_tb);
+					fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
+					exit(1);
+				} 
+				if(isnan(binary[kb].bse_radius[1])){
+					fprintf(stderr, "An isnan occured for r2 cmc_stellar_evolution.c\n");
+					fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1]);
+					fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
+					exit(1);
 				}
-				}
+				handle_bse_outcome(k, kb, vs, tphysf);
 			}
+		}
+	}
+
+#ifdef USE_MPI
+	double temp = 0.0;
+	MPI_Reduce(&DMse, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0) DMse = temp;
+	MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
 
 	timeEnd(fileTime, funcName, &timeTotLoc);
-		}
+}
 
 void write_stellar_data(void){
 	strcpy(funcName, __FUNCTION__);
@@ -464,6 +502,9 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
   long knew, knewp;
   double dtp, VKO;
   
+#ifndef USE_MPI
+  curr_st = &st[findProcForIndex(k)];
+#endif
   if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] != 0.0 && binary[kb].bse_tb > 0.0) {
     /* normal evolution */
     binary[kb].rad1 = binary[kb].bse_radius[0] * RSUN / units.l;
@@ -485,15 +526,15 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     } else if (vs[4] <= 0.0) {
     /* If one kick */
        star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
-       vt_add_kick(&(star[k].vt),vs[1],vs[2]);
+       vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
        //star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(k);
        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
     } else {
     /* Two kicks */
        star[k].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[7] * 1.0e5 / (units.l/units.t);
-       vt_add_kick(&(star[k].vt),vs[1],vs[2]);
-       vt_add_kick(&(star[k].vt),vs[5],vs[6]);//will mean a different angle for each kick, should be ok as this is a randomised process...
+       vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
+       vt_add_kick(&(star[k].vt),vs[5],vs[6], curr_st);//will mean a different angle for each kick, should be ok as this is a randomised process...
        //star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(k);
        VKO = sqrt(vs[1]*vs[1] + vs[2]*vs[2] + vs[3]*vs[3]) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]+vs[7]*vs[7]);
@@ -552,22 +593,23 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       /* Star knew went SN */
             star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
             //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+
+            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
             set_star_EJ(knew);
-	    VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+				VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
             star[knewp].vr += vs[7] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knewp].vt),vs[5],vs[6]);
+            vt_add_kick(&(star[knewp].vt),vs[5],vs[6], curr_st);
             //star[knewp].vt += sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t); 
             set_star_EJ(knewp);
         } else {
        /* Star knewp went SN */
             star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knewp].vt),vs[1],vs[2]);
+            vt_add_kick(&(star[knewp].vt),vs[1],vs[2], curr_st);
             //star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knewp);
-	    VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+				VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
             star[knew].vr += vs[7] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knew].vt),vs[5],vs[6]);
+            vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
             //star[knew].vt += sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t); //minus at front?
             set_star_EJ(knew);
         }
@@ -576,27 +618,27 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
          Thus the primary receives vs[1-3] and vs[9-11] secondary receives vs[1-3] and vs[5-7] */
         if (vs[0]==1) {
             star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[11] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
             star[knewp].vt = star[knew].vt; //update, now seperate companion tangent velocity, after first SN when still part of binary here.
-            vt_add_kick(&(star[knew].vt),vs[9],vs[10]);
+            vt_add_kick(&(star[knew].vt),vs[9],vs[10], curr_st);
             //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[9]*vs[9]+vs[10]*vs[10]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knew);
-	    VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[9]*vs[9]+vs[10]*vs[10]+vs[11]*vs[11]);
+				VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[9]*vs[9]+vs[10]*vs[10]+vs[11]*vs[11]);
             star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[7] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knewp].vt),vs[5],vs[6]);//finalise companion vt...
+            vt_add_kick(&(star[knewp].vt),vs[5],vs[6], curr_st);//finalise companion vt...
 
             //star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knewp);
         } else {
             star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[11] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knewp].vt),vs[1],vs[2]);
+            vt_add_kick(&(star[knewp].vt),vs[1],vs[2], curr_st);
             star[knew].vt = star[knewp].vt;
-            vt_add_kick(&(star[knewp].vt),vs[9],vs[10]);
+            vt_add_kick(&(star[knewp].vt),vs[9],vs[10], curr_st);
             //star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[9]*vs[9]+vs[10]*vs[10]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knewp);
-	    VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[9]*vs[9]+vs[10]*vs[10]+vs[11]*vs[11]);
+				VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[9]*vs[9]+vs[10]*vs[10]+vs[11]*vs[11]);
             star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[7] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knew].vt),vs[5],vs[6]);
+            vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
             //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knew);
         }
@@ -606,23 +648,23 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
         if (vs[0]==1) {
             star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
             //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
             set_star_EJ(knew);
-	    VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+				VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
             star[knewp].vr += vs[7] * 1.0e5 / (units.l/units.t) + vs[11] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knewp].vt),vs[5],vs[6]);
-            vt_add_kick(&(star[knewp].vt),vs[9],vs[10]);
+            vt_add_kick(&(star[knewp].vt),vs[5],vs[6], curr_st);
+            vt_add_kick(&(star[knewp].vt),vs[9],vs[10], curr_st);
             //star[knewp].vt += sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t) + sqrt(vs[9]*vs[9]+vs[10]*vs[10]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knewp);
         } else {
             star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knewp].vt),vs[1],vs[2]);
+            vt_add_kick(&(star[knewp].vt),vs[1],vs[2], curr_st);
             //star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knewp);
-	    VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+				VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
             star[knew].vr += vs[7] * 1.0e5 / (units.l/units.t) + vs[11] * 1.0e5 / (units.l/units.t);
-            vt_add_kick(&(star[knew].vt),vs[5],vs[6]);
-            vt_add_kick(&(star[knew].vt),vs[9],vs[10]);
+            vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
+            vt_add_kick(&(star[knew].vt),vs[9],vs[10], curr_st);
             //star[knew].vt += sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t) + sqrt(vs[9]*vs[9]+vs[10]*vs[10]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knew);
         }
@@ -657,6 +699,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
     }
+
 /*    star[knew].vr += vs[2] * 1.0e5 / (units.l/units.t);
     star[knew].vt += sqrt(vs[0]*vs[0]+vs[1]*vs[1]) * 1.0e5 / (units.l/units.t);
     set_star_EJ(knew); */
@@ -664,7 +707,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     if (vs[0]>0.0 && vs[4]<=0.0 ) {
        /* One SN occured */
        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-       vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+       vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
@@ -672,7 +715,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
        /* 1 SN occured disrupted system then one star killed itself */
        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
-       vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+       vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
        set_star_EJ(knew);
        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
     } else if (vs[0]>0.0 && vs[4]>0.0 && vs[8]<=0.0 && (vs[0]!=vs[4])) {
@@ -680,8 +723,8 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
        /* NOTE: merger remnants of double compact (NS or BH) binaries do not receive kicks in BSE as of yet!
                 When it is introduced may have to put new else if statement in here collecting all (different) vs[]'s. */
        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[7] * 1.0e5 / (units.l/units.t);
-       vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
-       vt_add_kick(&(star[knew].vt),vs[5],vs[6]);
+       vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+       vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[5]*vs[5]+vs[6]*vs[6]+vs[7]*vs[7]);
@@ -752,14 +795,14 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     if (vs[0]>0.0 && vs[4]<=0.0 ) {
        /* One SN occured */
        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-       vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+       vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
     } else if (vs[0]>0.0 && vs[4]>0.0 && vs[8]<=0.0 && (vs[0]==vs[4])) {
        /* 1 SN occured disrupted system then one star killed itself */
        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-       vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+       vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
@@ -768,8 +811,8 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
        /* NOTE: merger remnants of double compact (NS or BH) binaries do not receive kicks in BSE as of yet!
                 When it is introduced may have to put new else if statement in here collecting all (different) vs[]'s. */
        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[7] * 1.0e5 / (units.l/units.t);
-       vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
-       vt_add_kick(&(star[knew].vt),vs[5],vs[6]);
+       vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+       vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[5]*vs[5]+vs[6]*vs[6]+vs[7]*vs[7]);

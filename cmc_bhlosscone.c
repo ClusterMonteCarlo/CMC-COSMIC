@@ -107,7 +107,14 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 			delta = MAX(deltabeta_orb, MIN(deltamax, MIN(deltasafe, sqrt(L2)))); 
 			//if (delta>sqrt(L2)) delta=sqrt(L2);
 			//delta = MAX(deltabeta_orb, MIN(deltamax, sqrt(L2)));
-			dbeta = 2.0 * PI * rng_t113_dbl(); 
+
+
+#ifndef USE_MPI
+			curr_st = &st[findProcForIndex(index)];
+#endif
+			dbeta = 2.0 * PI * rng_t113_dbl_new(st); 
+			//dbeta = 2.0 * PI * rng_t113_dbl(); 
+
 			do_random_step(w, dbeta, delta); 
 #ifdef EXPERIMENTAL
 			if (is_in_ids) {
@@ -129,6 +136,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 void get_3d_velocities(double *w, double vr, double vt) {
    double phi;
 
+	//MPI2: Dont know how what to do with this rng call, but this function itself is not used anywhere! So, we can safely ignore this as of now.
    phi= rng_t113_dbl()*2.*FB_CONST_PI;
    w[0]= vt* cos(phi);
    w[1]= vt* sin(phi);

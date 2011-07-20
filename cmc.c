@@ -12,18 +12,26 @@
 #include "cmc.h"
 #define _MAIN_
 #include "cmc_vars.h"
+#include <string.h>
 
 #ifdef USE_CUDA
 #include "cuda/cmc_cuda.h"
 #endif
 
+#define PROC 4 //to mimic rng of the serial version to the parallel version.
+
 int main(int argc, char *argv[])
 {
 	struct tms tmsbuf, tmsbufref;
-	long i;
+	long i, j;
 	gsl_rng *rng;
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
+	//MPI2: Time variables to compute total time.
+	double timeS, timeE;
+	//Temp file handle for debugging
+	FILE *ftest;
+	char num[5],filename[20], tempstr[20];
 
 #ifdef USE_MPI
 	//MPI2: Some code from the main branch might have been removed in the MPI version. Please check.
@@ -32,27 +40,29 @@ int main(int argc, char *argv[])
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD,&procs);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-	FILE *ftest;
-
-	//MPI2: Time variables to compute total time.
-	double timeS, timeE;
 
 	//int mpiBegin, mpiEnd; //declared in cmc_vars.h
-	int *mpiDisp, *mpiLen;
+	//int *mpiDisp, *mpiLen; //declared in cmc_vars.h
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
 
 	//MPI2: For parallel version of rng.
-	static struct rng_t113_state st;
-	reset_rng_t113_new(myid, &st);
-	PROCS = procs;
-	MYID = myid;
+	curr_st = (struct rng_t113_state*) malloc(sizeof(struct rng_t113_state));
+	reset_rng_t113_new(myid+1, curr_st);
 #else
-	//PROC = 4; //to mimic rng of the serial version to the parallel version.
-	static struct rng_t113_state st[4]; //the array length has to be changed everytime the no.of processors are changed.
-	for(i=0; i<4; i++)
-		reset_rng_t113_new(i, &st[i]);
+	//the array length PROC has to be changed everytime the no.of processors are changed.
+	procs = PROC;
+	st = (struct rng_t113_state*) malloc(procs * sizeof(struct rng_t113_state));
+	for(i=0; i<procs; i++)
+	{
+		reset_rng_t113_new(i+1, &st[i]);
+		//printf("i=%d\trng = %g\n", i, rng_t113_dbl_new(&st[i]));
+	}
+	//MPI2: Compared random numbers of serial and parallel. Seem to match perfectly.
 #endif
+
+	Start = (int *) malloc(procs * sizeof(int));
+	End = (int *) malloc(procs * sizeof(int));
 
 	create_timing_files();
 
@@ -67,7 +77,7 @@ int main(int argc, char *argv[])
 	rng = gsl_rng_alloc(rng_type);
 
 	//MPI2: Storing time to compute total time.
-	timeStart2(&timeS);
+	//timeStart2(&timeS);
 
 	get_star_data(argc, argv, rng);
 
@@ -92,6 +102,9 @@ int main(int argc, char *argv[])
 #endif
 
 	calc_potential_new();
+
+	//Calculating disp and len for mimcking parallel rng.
+	findLimits( clus.N_MAX );
 
 	total_bisections= 0;
 
@@ -158,6 +171,7 @@ int main(int argc, char *argv[])
 	cuInitialize();
 #endif
 
+	timeStart2(&timeS);
 
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
@@ -167,6 +181,8 @@ int main(int argc, char *argv[])
 		calc_central_new();
 
 		calc_timestep(rng);
+		//MPI2: Setting the timestep (hardcoding) for testing.
+		//Dt = 0.000562794;
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
@@ -180,7 +196,6 @@ int main(int argc, char *argv[])
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
 		clus.N_MAX_NEW++;
-
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
@@ -212,23 +227,12 @@ int main(int argc, char *argv[])
 		 */
 		ComputeIntermediateEnergy();
 
-		pre_sort_comm(mpiDisp, mpiLen);
-
-		//MPI2: Write a function which takes in filename, variable number of arguments, and print those parameters of stars (tab separated) into the file.
-		if(myid==0)
-		{
-			ftest = fopen("test_mpi_rtest0.dat","w");
-			for(i=1; i<=clus.N_MAX; i++) {
-				fprintf( ftest,  "%ld\t%g\t%g\t%ld\n",i, star[i].r, star[i].m, star[i].id);
-			}
-			fclose(ftest);
-		}
-
-		tidally_strip_stars2();
+		pre_sort_comm();
 
 		strcpy(funcName, "qsorts");
 		static double timeTotLoc;
 		timeStart();
+
 #ifdef USE_MPI
 		if(myid==0)
 #endif
@@ -241,15 +245,6 @@ int main(int argc, char *argv[])
 
 		timeEnd(fileTime, funcName, &timeTotLoc);
 
-		if(myid==0)
-		{
-			ftest = fopen("test_mpi_rtest2.dat","w");
-			for(i=1; i<=clus.N_MAX; i++) {
-				fprintf( ftest,  "%ld\t%g\t%g\t%ld\n",i, star[i].r, star[i].m, star[i].id);
-			}
-			fclose(ftest);
-		}
-
 		calc_potential_new2();
 
 #ifdef USE_MPI
@@ -257,7 +252,10 @@ int main(int argc, char *argv[])
 		mpiFindIndicesSpecial( clus.N_MAX, &mpiBegin, &mpiEnd );
 #endif
 
-		post_sort_comm(mpiDisp, mpiLen);
+		//Calculating Start and End values for each processor for mimcking parallel rng.
+		findLimits( clus.N_MAX );
+
+		post_sort_comm();
 
 		//commenting out for MPI
 		/*
@@ -299,6 +297,40 @@ comp_multi_mass_percent();
 			no_remnants= no_remnants_core(6);
 			}
 		 */
+
+#ifdef USE_MPI	
+	printf("id = %d\trng = %li\n", myid, rng_t113_int_new(curr_st));
+#else
+	for(i=0; i<procs; i++)
+		printf("i = %d\trng = %li\n", i, rng_t113_int_new(&st[i]));
+#endif
+
+#ifdef USE_MPI
+		strcpy(filename, "test_rng_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+					fprintf(ftest, "%ld\t%g\n", j, star_r[j] );
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+#else
+		strcpy(tempstr, "test_rng_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%g\n", i, star[i].r );
+		fclose(ftest);
+#endif
 
 		//commenting out for MPI
 		//print_results();
@@ -360,9 +392,9 @@ comp_multi_mass_percent();
 			(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
 
 	printf("The total number of bisections is %li\n", total_bisections);
+
 	/* free RNG */
 	gsl_rng_free(rng);
-
 
 #ifdef USE_CUDA
 	cuCleanUp();
@@ -371,9 +403,16 @@ comp_multi_mass_percent();
 	/* flush buffers before returning */
 	close_buffers();
 	free_arrays();
+
 #ifdef USE_MPI
-	free(mpiDisp); free(mpiLen);
+	free(mpiDisp);
+	free(mpiLen);
+	free(curr_st);
+#else
+	free(st);
 #endif
+	free(Start);
+	free(End);
 
 	if (SEARCH_GRID)
 		search_grid_free(r_grid);

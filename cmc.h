@@ -472,6 +472,16 @@ void timeEnd(char* fileName, char *funcName, double *tTime);
 void timeStart2(double *st);
 void timeEnd2(char* fileName, char *funcName, double *st, double *end, double *tot);
 void create_timing_files();
+/* End */
+
+/* Bharath: Other refactored functions */
+void mpiInitBcastGlobArrays();
+void set_global_vars1();
+void set_global_vars2();
+void get_star_data(int argc, char *argv[], gsl_rng *rng);
+void calc_sigma_new();
+void calc_central_new();
+void bin_vars_calculate();
 void calc_potential_new();
 void calc_potential_new2();
 void compute_energy_new();
@@ -483,17 +493,11 @@ void energy_conservation2();
 void tidally_strip_stars1();
 void tidally_strip_stars2();
 void toy_rejuvenation();
-void pre_sort_comm(int* mpiDisp, int* mpiLen);
-void post_sort_comm(int* mpiDisp, int* mpiLen);
-/* End */
-
-/* Bharath: Other refactored functions */
-void set_global_vars1();
-void set_global_vars2();
-void get_star_data(int argc, char *argv[], gsl_rng *rng);
-void calc_sigma_new();
-void calc_central_new();
-void bin_vars_calculate();
+void pre_sort_comm();
+void post_sort_comm();
+void findIndicesEven( long N, int i, int* begin, int* end );
+void findLimits( long N );
+int findProcForIndex( int j );
 /* End */
 
 void comp_mass_percent(void);
@@ -593,7 +597,7 @@ void zero_star(long j);
 void zero_binary(long j);
 
 void sscollision_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng);
-void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs);
+void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s);
 double coll_CE(double Mrg, double Mint, double Mwd, double Rrg, double vinf);
 
 void print_initial_binaries(void);
@@ -729,7 +733,7 @@ double find_root_vr(long index, long k, double E, double J);
 double calc_pot_in_interval(double r, long k);
 void remove_star(long j, double phi_rtidal, double phi_zero);
 inline double function_q(long j, long double r, long double pot, long double E, long double J);
-void vt_add_kick(double *vt, double vs1, double vs2);
+void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_st);
 
 void parse_snapshot_windows(char *option_string);
 void print_snapshot_windows(void);

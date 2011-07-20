@@ -242,7 +242,12 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	/* set random angle between vt's */
 	/* first store random variable */
 	if (setY) {
-		star[k].Y = rng_t113_dbl();
+		//star[k].Y = rng_t113_dbl();
+#ifndef USE_MPI
+	curr_st = &st[findProcForIndex(k)];
+#endif
+		star[k].Y = rng_t113_dbl_new(curr_st);
+
 		star[kp].Y = star[k].Y;
 	}
 	phi = star[k].Y * 2.0 * PI;
@@ -258,9 +263,11 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	}
 
 	*W = sqrt(sqr(w[1]) + sqr(w[2]) + sqr(w[3]));
+	//if(star[k].vr == 0 || star[k].vt == 0 || star[kp].vr == 0 || star[kp].vt == 0)
+		//printf("star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
 
 	if (*W == 0.0) {
-		eprintf("W = 0! for star index = %ld\n", k);
+		eprintf("W = 0! for star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
 		exit_cleanly(1);
 	}
 
@@ -830,6 +837,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				star[knewp].interacted = 1;
 			}
 			
+#ifndef USE_MPI
+			curr_st = &st[findProcForIndex(k)];
+#endif
 			/* properties specific to single/binary/triple stars */
 			if (hier.obj[i]->n == 1) {
 				/* single star */
@@ -853,10 +863,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
-						merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs);
+						merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs, curr_st);
                                                 /* Owing to merger only useful vs's are v[1-3] */
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
 						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
@@ -909,7 +920,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
 						/* FIXME: really we're supposed to add the kick to each binary
 						   member separately, then calculate the systemic kick to the binary,
 						   but hopefully this doesn't happen too much. */
@@ -919,7 +930,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
 						}
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
 						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
@@ -963,7 +974,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
 						/* FIXME: really we're supposed to add the kick to each binary
 						   member separately, then calculate the systemic kick to the binary,
 						   but hopefully this doesn't happen too much. */
@@ -972,7 +983,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
 						}
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
 						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
@@ -1060,9 +1071,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
-						merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs);
+						merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs, curr_st);
 						star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						vt_add_kick(&(star[knewp].vt),vs[1],vs[2]);
+
+						//MPI2: parallel rng mimicking removed due to parent function which takes k as parameter?
+						vt_add_kick(&(star[knewp].vt),vs[1],vs[2], curr_st);
 						//star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knewp);
@@ -1114,7 +1127,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
 						/* FIXME: really we're supposed to add the kick to each binary
 						   member separately, then calculate the systemic kick to the binary,
 						   but hopefully this doesn't happen too much. */
@@ -1123,7 +1136,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
 						}
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
 						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
@@ -1159,7 +1172,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs);
+						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
 						/* FIXME: really we're supposed to add the kick to each binary
 						   member separately, then calculate the systemic kick to the binary,
 						   but hopefully this doesn't happen too much. */
@@ -1168,7 +1181,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
 						}
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
 						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knew);
@@ -1693,10 +1706,11 @@ double Etide(double rperi, double Mosc, double Rosc, double nosc, double Mpert)
 }
 
 /* Add kicks to vt */
- void vt_add_kick(double *vt, double vs1, double vs2)
+void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_st)
 {
 	double X, theta, vtx, vty;
-	X = rng_t113_dbl();
+	//X = rng_t113_dbl();
+	X = rng_t113_dbl_new(rng_st);
 	theta = 2.0 * PI * X;
 	vtx = *vt*sin(theta);
 	vty = *vt*cos(theta);

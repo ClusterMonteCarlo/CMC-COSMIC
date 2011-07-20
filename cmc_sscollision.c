@@ -32,7 +32,12 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 #endif
 
 	bmax = rperimax * sqrt(1.0 + 2.0 * ((mass_k + mass_kp) * madhoc) / (rperimax * sqr(W)));
-	b = sqrt(rng_t113_dbl()) * bmax;
+#ifndef USE_MPI
+	 curr_st = &st[findProcForIndex(k)];
+#endif
+	//b = sqrt(rng_t113_dbl()) * bmax;
+	b = sqrt(rng_t113_dbl_new(curr_st)) * bmax;
+
 	rperi = madhoc*(mass_k+mass_kp)/sqr(W) * (-1.0+sqrt(1.0+sqr(b*W*W/(madhoc*mass_k+madhoc*mass_kp))));
 
 	/* fprintf(stderr, "\n *** sscollision: rperimax=%g (%g RSUN) bmax=%g (%g RSUN) b=%g (%g RSUN) rperi=%g (%g RSUN)\n", 
@@ -261,13 +266,13 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		knew = create_star();
 		
 		/* merge parent stars, setting mass, stellar radius, and SE params */
-		merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs);
+		merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
 	
 		star[knew].r = rcm;
 		star[knew].vr = vcm[3];
 		star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 		star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-		vt_add_kick(&(star[knew].vt),vs[1],vs[2]);
+		vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
 		//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 		star[knew].phi = potential(star[knew].r);
 		set_star_EJ(knew);
@@ -405,7 +410,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 }
 
 /* merge two stars using stellar evolution if it's enabled */
-void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs) {
+void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s) {
 	double tphysf, dtp, age, temp_rad, bseaj[2];
 	//double vsaddl[12], 
 	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
@@ -761,7 +766,8 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		/*Sourav: this is arbitrary lifetime for the collision products.  They are 
 		uniformly chosen between 10^6 years to 10^8 years.  Reference: Sills et.al. 2007, 
 		Sills et.al. 1997; all other stars have infinite lifetime*/
-			merged_star->lifetime = 1.0e6*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR + rng_t113_dbl() * (1.0e8-1.0e6)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			//merged_star->lifetime = 1.0e6*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR + rng_t113_dbl() * (1.0e8-1.0e6)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			merged_star->lifetime = 1.0e6*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR + rng_t113_dbl_new(curr_st) * (1.0e8-1.0e6)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 			merged_star->createtime = TotalTime;
 		}
 	} else {

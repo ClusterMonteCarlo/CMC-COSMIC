@@ -57,11 +57,9 @@
 #define MASK 0xffffffffUL
 #define LCG(n) ((69069UL * n) & 0xffffffffUL)
 
-
 struct rng_t113_state {
 	unsigned long z1, z2, z3, z4;
 };
-
 
 static struct rng_t113_state state;
 
@@ -118,11 +116,11 @@ void reset_rng_t113(unsigned long int s) {
 	return;
 }
 
-/***************************************************/
-/***************************************************/
-/* New rng functions without private state variable */
-/***************************************************/
-/***************************************************/
+/*************************************************************/
+/*************************************************************/
+/* New rng functions without implicit private state variable */
+/*************************************************************/
+/*************************************************************/
 unsigned long rng_t113_int_new(struct rng_t113_state *state) {
 	unsigned long b;
 
@@ -138,7 +136,7 @@ unsigned long rng_t113_int_new(struct rng_t113_state *state) {
 }
 
 double rng_t113_dbl_new(struct rng_t113_state *state) {
-	return rng_t113_int(state) / 4294967296.0 ;
+	return rng_t113_int_new(state) / 4294967296.0 ;
 }
 
 void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state) {

@@ -172,4 +172,3 @@ MPIOBJS = cmc_mpi.o
 CFLAGS := `mpicc -showme:compile` $(CFLAGS)
 LIBFLAGS := $(LIBFLAGS) `mpicc -showme:link`
 endif
-
