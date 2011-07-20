@@ -59,6 +59,17 @@ int main(int argc, char *argv[])
 		//printf("i=%d\trng = %g\n", i, rng_t113_dbl_new(&st[i]));
 	}
 	//MPI2: Compared random numbers of serial and parallel. Seem to match perfectly.
+	struct rng_t113_state test_st;
+	test_st = rng_t113_jump( st[0] );
+
+	printf("rng_jump = %ld\n##########", rng_t113_int_new(&test_st));
+
+	for(i=0; i<2^80; i++)
+		st[0] = rng_t113_next_state(st[0]);
+
+	printf("rng_normal = %ld\n##########", rng_t113_int_new(&st[0]));
+
+	return;
 #endif
 
 	Start = (int *) malloc(procs * sizeof(int));

@@ -159,3 +159,93 @@ void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state) {
 	rng_t113_int_new(state); 
 	return;
 }
+
+//========================================================================
+// Functions for jump polynomials
+//========================================================================
+struct rng_113_state rng_t113_next_state( struct rng_t113_state s )
+{
+	s.z1  = ((s.z1 & 0xfffffffe) << 18) ^ (((s.z1 << 6) ^ s.z1) >>  13);
+	s.z2  = ((s.z2 & 0xfffffff8) << 2) ^ (((s.z2 << 2) ^ s.z2) >>   27);
+	s.z3  = ((s.z3 & 0xfffffff0) << 7) ^ (((s.z3 << 13) ^ s.z3) >>  21);
+	s.z4  = ((s.z4 & 0xffffff80) << 13) ^ (((s.z4 << 3) ^ s.z4) >>  12);
+	return s;
+}
+
+/*
+struct state taus113_initialize( unsigned int seed )
+{ 
+	struct state s;
+	s.z[0] = seed * 69069;
+	if ( s.z[0] < 2 ) s.z[0] += 2U;
+	s.z[1] = s.z[0] * 69069;
+	if ( s.z[1] < 8 ) s.z[1] += 8U;
+	s.z[2] = s.z[1] * 69069;
+	if ( s.z[2] < 16 ) s.z[2] += 16U;
+	s.z[3] = s.z[2] * 69069;
+	if ( s.z[3] < 128 ) s.z[3] += 128U;
+	return taus113_next_state( s );
+}
+*/
+
+//struct rng_t113_state 
+struct rng_t113_state rng_t113_jump( struct rng_t113_state s )
+{
+	unsigned int Jump_P[1][4] = 		// jump polynomial coefficients
+	{
+		{
+			// 2^20
+			0x0c382e31 , 0x1b040425 , 0x0b49a509 , 0x0173f6b0
+			// 2^80
+			//0x487cf69c , 0x00be6310 , 0x04bfe2bb , 0x000824f9
+		}
+	};
+
+	char JP[32*4];	//Equivalent of bitset<32> used in original code for Jump Polynomials
+	unsigned int i, j, test;
+
+	for( i = 0; i < 4; i++ ) 
+	{
+		test = Jump_P[0][i];
+		for( j = 0; j < 32; j++ )
+		{
+			*( JP + 32 * i + j ) = ( test % 2 ) ? '1' : '0';
+			test = test / 2;
+		}
+	}
+	//*(JP + 128) = '\0'; //gives error 'subscript out of range'
+
+	struct rng_t113_state temp_state;
+	memset( temp_state.z1 , 0 , sizeof(temp_state.z1) );
+	memset( temp_state.z2 , 0 , sizeof(temp_state.z2) );
+	memset( temp_state.z3 , 0 , sizeof(temp_state.z3) );
+	memset( temp_state.z4 , 0 , sizeof(temp_state.z4) );
+	for ( i = 0 ; i < 32 ; i++ ) {
+		for ( j = 0 ; j < 4 ; j++ ){
+			if( *( JP + 32 * j + i ) == '1' )
+			{
+				//temp_state.z[j] ^= s.z[j];
+				if( j == 0 )
+					temp_state.z1 ^= s.z1;
+				else if ( j == 1)
+					temp_state.z2 ^= s.z2;
+				else if ( j == 2)
+					temp_state.z3 ^= s.z3;
+				else
+					temp_state.z4 ^= s.z4;
+				
+		}
+		s = rng_t113_next_state( s );
+	}
+	return temp_state;
+}
+
+/*
+void rng_states_generate( struct state *h_states, unsigned int seed )
+{
+	seed += (seed == 0) * 1UL;
+	h_states[0] = taus113_initialize( seed );
+	for(long i = 1; i < THREADS; i++)
+		h_states[i] = taus113_jump( h_states[i - 1] );
+}
+*/

@@ -36,4 +36,9 @@ unsigned long rng_t113_int_new(struct rng_t113_state *state);
 double rng_t113_dbl_new(struct rng_t113_state *state);
 void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state);
 
+/* Jump Polynomials Stuff */
+struct state rng_t113_jump( struct rng_t113_state s );
+struct rng_113_state rng_t113_next_state( struct rng_t113_state s );
+//void rng_states_generate( struct state *h_states, unsigned int seed );
+
 #endif /* _TAUS113_V2_H */
