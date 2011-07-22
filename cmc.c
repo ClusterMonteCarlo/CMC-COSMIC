@@ -18,7 +18,7 @@
 #include "cuda/cmc_cuda.h"
 #endif
 
-#define PROC 4 //to mimic rng of the serial version to the parallel version.
+#define PROC 4 //to mimic rng of the serial version to the parallel version. This has to be changed every time the no.of processors you want to simulate is changed.
 
 int main(int argc, char *argv[])
 {
@@ -45,31 +45,10 @@ int main(int argc, char *argv[])
 	//int *mpiDisp, *mpiLen; //declared in cmc_vars.h
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
-
-	//MPI2: For parallel version of rng.
-	curr_st = (struct rng_t113_state*) malloc(sizeof(struct rng_t113_state));
-	reset_rng_t113_new(myid+1, curr_st);
 #else
-	//the array length PROC has to be changed everytime the no.of processors are changed.
+	//the variable(Macro) PROC has to be changed everytime the no.of processors are changed.
 	procs = PROC;
-	st = (struct rng_t113_state*) malloc(procs * sizeof(struct rng_t113_state));
-	for(i=0; i<procs; i++)
-	{
-		reset_rng_t113_new(i+1, &st[i]);
-		//printf("i=%d\trng = %g\n", i, rng_t113_dbl_new(&st[i]));
-	}
 	//MPI2: Compared random numbers of serial and parallel. Seem to match perfectly.
-	struct rng_t113_state test_st;
-	test_st = rng_t113_jump( st[0] );
-
-	printf("rng_jump = %ld\n##########", rng_t113_int_new(&test_st));
-
-	for(i=0; i<2^80; i++)
-		st[0] = rng_t113_next_state(st[0]);
-
-	printf("rng_normal = %ld\n##########", rng_t113_int_new(&st[0]));
-
-	return;
 #endif
 
 	Start = (int *) malloc(procs * sizeof(int));
@@ -91,6 +70,8 @@ int main(int argc, char *argv[])
 	//timeStart2(&timeS);
 
 	get_star_data(argc, argv, rng);
+
+	set_rng_states();
 
 	mpiInitBcastGlobArrays();
 
@@ -309,12 +290,6 @@ comp_multi_mass_percent();
 			}
 		 */
 
-#ifdef USE_MPI	
-	printf("id = %d\trng = %li\n", myid, rng_t113_int_new(curr_st));
-#else
-	for(i=0; i<procs; i++)
-		printf("i = %d\trng = %li\n", i, rng_t113_int_new(&st[i]));
-#endif
 
 #ifdef USE_MPI
 		strcpy(filename, "test_rng_par");

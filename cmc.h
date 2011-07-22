@@ -495,6 +495,7 @@ void post_sort_comm();
 void findIndicesEven( long N, int i, int* begin, int* end );
 void findLimits( long N );
 int findProcForIndex( int j );
+void set_rng_states();
 /* End */
 
 void comp_mass_percent(void);

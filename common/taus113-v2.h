@@ -22,8 +22,11 @@
 #define _TAUS113_V2_H 1
 
 struct rng_t113_state {
-	unsigned long z1, z2, z3, z4;
+	unsigned long z[4];
 };
+
+extern unsigned int JPoly_2_20[4];
+extern unsigned int JPoly_2_80[4];
 
 void set_rng_t113(struct rng_t113_state st);
 void get_rng_t113(struct rng_t113_state *st);
@@ -36,9 +39,21 @@ unsigned long rng_t113_int_new(struct rng_t113_state *state);
 double rng_t113_dbl_new(struct rng_t113_state *state);
 void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state);
 
+// Function to jump to the next state without changing the current state.
+struct rng_t113_state rng_t113_next_state( struct rng_t113_state s );
+
 /* Jump Polynomials Stuff */
-struct state rng_t113_jump( struct rng_t113_state s );
-struct rng_113_state rng_t113_next_state( struct rng_t113_state s );
-//void rng_states_generate( struct state *h_states, unsigned int seed );
+/*
+ * Jumps to a new state with the jump distance encoded in the
+ * jump polynomial. Jump polynomials are given below for a number of
+ * distances, where 2_n in the variable name stands for 2**n.
+ */
+struct rng_t113_state rng_t113_jump( struct rng_t113_state s, unsigned int *jpoly );
+
+/*
+ * Tests the jump polynomials by executing a jump and comparing the
+ * result with the one obtained from succesive drawings.
+ */
+void testjumping(void);
 
 #endif /* _TAUS113_V2_H */

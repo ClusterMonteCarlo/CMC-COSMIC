@@ -53,42 +53,43 @@
    the online version of the latter contains corrections to the print version.
 */
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "../common/taus113-v2.h"
 
 #define MASK 0xffffffffUL
 #define LCG(n) ((69069UL * n) & 0xffffffffUL)
 
-struct rng_t113_state {
-	unsigned long z1, z2, z3, z4;
-};
-
 static struct rng_t113_state state;
+unsigned int JPoly_2_20[4] = {0x0c382e31, 0x1b040425, 0x0b49a509, 0x0173f6b0};
+unsigned int JPoly_2_80[4] = {0x487cf69c, 0x00be6310, 0x04bfe2bb, 0x000824f9};
 
 void set_rng_t113(struct rng_t113_state st){
-	state.z1 = st.z1;
-	state.z2 = st.z2;
-	state.z3 = st.z3;
-	state.z4 = st.z4;
+	state.z[0] = st.z[0];
+	state.z[1] = st.z[1];
+	state.z[2] = st.z[2];
+	state.z[3] = st.z[3];
 }
 
 void get_rng_t113(struct rng_t113_state *st){
-	st->z1 = state.z1;
-	st->z2 = state.z2;
-	st->z3 = state.z3;
-	st->z4 = state.z4;
+	st->z[0] = state.z[0];
+	st->z[1] = state.z[1];
+	st->z[2] = state.z[2];
+	st->z[3] = state.z[3];
 }
 
 unsigned long rng_t113_int() {
 	unsigned long b;
 
-	b = ((((state.z1 <<  6) &MASK) ^ state.z1) >> 13);
-	state.z1 = ((((state.z1 & 4294967294UL) << 18) &MASK) ^ b);
-	b = ((((state.z2 <<  2) &MASK) ^ state.z2) >> 27);
-	state.z2 = ((((state.z2 & 4294967288UL) <<  2) &MASK) ^ b);
-	b = ((((state.z3 << 13) &MASK) ^ state.z3) >> 21);
-	state.z3 = ((((state.z3 & 4294967280UL) <<  7) &MASK) ^ b);
-	b = ((((state.z4 <<  3) &MASK) ^ state.z4) >> 12);
-	state.z4 = ((((state.z4 & 4294967168UL) << 13) &MASK) ^ b);
-  	return (state.z1 ^ state.z2 ^ state.z3 ^ state.z4);
+	b = ((((state.z[0] <<  6) &MASK) ^ state.z[0]) >> 13);
+	state.z[0] = ((((state.z[0] & 4294967294UL) << 18) &MASK) ^ b);
+	b = ((((state.z[1] <<  2) &MASK) ^ state.z[1]) >> 27);
+	state.z[1] = ((((state.z[1] & 4294967288UL) <<  2) &MASK) ^ b);
+	b = ((((state.z[2] << 13) &MASK) ^ state.z[2]) >> 21);
+	state.z[2] = ((((state.z[2] & 4294967280UL) <<  7) &MASK) ^ b);
+	b = ((((state.z[3] <<  3) &MASK) ^ state.z[3]) >> 12);
+	state.z[3] = ((((state.z[3] & 4294967168UL) << 13) &MASK) ^ b);
+  	return (state.z[0] ^ state.z[1] ^ state.z[2] ^ state.z[3]);
 }
 
 double rng_t113_dbl() {
@@ -99,14 +100,14 @@ void reset_rng_t113(unsigned long int s) {
 
 	if (s == 0) s = 1UL;	/* default seed is 1 */
 
-	state.z1 = LCG (s);
-	if (state.z1 < 2UL) state.z1 += 2UL;
-	state.z2 = LCG (state.z1);
-	if (state.z2 < 8UL) state.z2 += 8UL;
-	state.z3 = LCG (state.z2);
-	if (state.z3 < 16UL) state.z3 += 16UL;
-	state.z4 = LCG (state.z3);
-	if (state.z4 < 128UL) state.z4 += 128UL;
+	state.z[0] = LCG (s);
+	if (state.z[0] < 2UL) state.z[0] += 2UL;
+	state.z[1] = LCG (state.z[0]);
+	if (state.z[1] < 8UL) state.z[1] += 8UL;
+	state.z[2] = LCG (state.z[1]);
+	if (state.z[2] < 16UL) state.z[2] += 16UL;
+	state.z[3] = LCG (state.z[2]);
+	if (state.z[3] < 128UL) state.z[3] += 128UL;
 
 	/* Calling RNG ten times to satify recurrence condition */
 	rng_t113_int(); rng_t113_int(); rng_t113_int(); 
@@ -124,15 +125,15 @@ void reset_rng_t113(unsigned long int s) {
 unsigned long rng_t113_int_new(struct rng_t113_state *state) {
 	unsigned long b;
 
-	b = ((((state->z1 <<  6) &MASK) ^ state->z1) >> 13);
-	state->z1 = ((((state->z1 & 4294967294UL) << 18) &MASK) ^ b);
-	b = ((((state->z2 <<  2) &MASK) ^ state->z2) >> 27);
-	state->z2 = ((((state->z2 & 4294967288UL) <<  2) &MASK) ^ b);
-	b = ((((state->z3 << 13) &MASK) ^ state->z3) >> 21);
-	state->z3 = ((((state->z3 & 4294967280UL) <<  7) &MASK) ^ b);
-	b = ((((state->z4 <<  3) &MASK) ^ state->z4) >> 12);
-	state->z4 = ((((state->z4 & 4294967168UL) << 13) &MASK) ^ b);
-  	return (state->z1 ^ state->z2 ^ state->z3 ^ state->z4);
+	b = ((((state->z[0] <<  6) &MASK) ^ state->z[0]) >> 13);
+	state->z[0] = ((((state->z[0] & 4294967294UL) << 18) &MASK) ^ b);
+	b = ((((state->z[1] <<  2) &MASK) ^ state->z[1]) >> 27);
+	state->z[1] = ((((state->z[1] & 4294967288UL) <<  2) &MASK) ^ b);
+	b = ((((state->z[2] << 13) &MASK) ^ state->z[2]) >> 21);
+	state->z[2] = ((((state->z[2] & 4294967280UL) <<  7) &MASK) ^ b);
+	b = ((((state->z[3] <<  3) &MASK) ^ state->z[3]) >> 12);
+	state->z[3] = ((((state->z[3] & 4294967168UL) << 13) &MASK) ^ b);
+  	return (state->z[0] ^ state->z[1] ^ state->z[2] ^ state->z[3]);
 }
 
 double rng_t113_dbl_new(struct rng_t113_state *state) {
@@ -143,14 +144,14 @@ void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state) {
 
 	if (s == 0) s = 1UL;	/* default seed is 1 */
 
-	state->z1 = LCG (s);
-	if (state->z1 < 2UL) state->z1 += 2UL;
-	state->z2 = LCG (state->z1);
-	if (state->z2 < 8UL) state->z2 += 8UL;
-	state->z3 = LCG (state->z2);
-	if (state->z3 < 16UL) state->z3 += 16UL;
-	state->z4 = LCG (state->z3);
-	if (state->z4 < 128UL) state->z4 += 128UL;
+	state->z[0] = LCG (s);
+	if (state->z[0] < 2UL) state->z[0] += 2UL;
+	state->z[1] = LCG (state->z[0]);
+	if (state->z[1] < 8UL) state->z[1] += 8UL;
+	state->z[2] = LCG (state->z[1]);
+	if (state->z[2] < 16UL) state->z[2] += 16UL;
+	state->z[3] = LCG (state->z[2]);
+	if (state->z[3] < 128UL) state->z[3] += 128UL;
 
 	/* Calling RNG ten times to satify recurrence condition */
 	rng_t113_int_new(state); rng_t113_int_new(state); rng_t113_int_new(state); 
@@ -163,89 +164,62 @@ void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state) {
 //========================================================================
 // Functions for jump polynomials
 //========================================================================
-struct rng_113_state rng_t113_next_state( struct rng_t113_state s )
-{
-	s.z1  = ((s.z1 & 0xfffffffe) << 18) ^ (((s.z1 << 6) ^ s.z1) >>  13);
-	s.z2  = ((s.z2 & 0xfffffff8) << 2) ^ (((s.z2 << 2) ^ s.z2) >>   27);
-	s.z3  = ((s.z3 & 0xfffffff0) << 7) ^ (((s.z3 << 13) ^ s.z3) >>  21);
-	s.z4  = ((s.z4 & 0xffffff80) << 13) ^ (((s.z4 << 3) ^ s.z4) >>  12);
-	return s;
+struct rng_t113_state
+rng_t113_next_state(struct rng_t113_state state) {
+  unsigned long b;
+
+  b = ((((state.z[0] <<  6) &MASK) ^ state.z[0]) >> 13);
+  state.z[0] = ((((state.z[0] & 4294967294UL) << 18) &MASK) ^ b);
+  b = ((((state.z[1] <<  2) &MASK) ^ state.z[1]) >> 27);
+  state.z[1] = ((((state.z[1] & 4294967288UL) <<  2) &MASK) ^ b);
+  b = ((((state.z[2] << 13) &MASK) ^ state.z[2]) >> 21);
+  state.z[2] = ((((state.z[2] & 4294967280UL) <<  7) &MASK) ^ b);
+  b = ((((state.z[3] <<  3) &MASK) ^ state.z[3]) >> 12);
+  state.z[3] = ((((state.z[3] & 4294967168UL) << 13) &MASK) ^ b);
+
+  return (state);
 }
 
 /*
-struct state taus113_initialize( unsigned int seed )
-{ 
-	struct state s;
-	s.z[0] = seed * 69069;
-	if ( s.z[0] < 2 ) s.z[0] += 2U;
-	s.z[1] = s.z[0] * 69069;
-	if ( s.z[1] < 8 ) s.z[1] += 8U;
-	s.z[2] = s.z[1] * 69069;
-	if ( s.z[2] < 16 ) s.z[2] += 16U;
-	s.z[3] = s.z[2] * 69069;
-	if ( s.z[3] < 128 ) s.z[3] += 128U;
-	return taus113_next_state( s );
-}
+Implementation from "Testing, Selection, and Implementation of Random Number Generators" by Joseph C. Collins, Army Research Laboratory.
 */
+struct rng_t113_state
+rng_t113_jump(struct rng_t113_state st, unsigned int *jpoly) {
+  unsigned int testbit;
+  int i, j;
+  struct rng_t113_state jumpstate= {{0, 0, 0, 0}};
 
-//struct rng_t113_state 
-struct rng_t113_state rng_t113_jump( struct rng_t113_state s )
-{
-	unsigned int Jump_P[1][4] = 		// jump polynomial coefficients
-	{
-		{
-			// 2^20
-			0x0c382e31 , 0x1b040425 , 0x0b49a509 , 0x0173f6b0
-			// 2^80
-			//0x487cf69c , 0x00be6310 , 0x04bfe2bb , 0x000824f9
-		}
-	};
-
-	char JP[32*4];	//Equivalent of bitset<32> used in original code for Jump Polynomials
-	unsigned int i, j, test;
-
-	for( i = 0; i < 4; i++ ) 
-	{
-		test = Jump_P[0][i];
-		for( j = 0; j < 32; j++ )
-		{
-			*( JP + 32 * i + j ) = ( test % 2 ) ? '1' : '0';
-			test = test / 2;
-		}
-	}
-	//*(JP + 128) = '\0'; //gives error 'subscript out of range'
-
-	struct rng_t113_state temp_state;
-	memset( temp_state.z1 , 0 , sizeof(temp_state.z1) );
-	memset( temp_state.z2 , 0 , sizeof(temp_state.z2) );
-	memset( temp_state.z3 , 0 , sizeof(temp_state.z3) );
-	memset( temp_state.z4 , 0 , sizeof(temp_state.z4) );
-	for ( i = 0 ; i < 32 ; i++ ) {
-		for ( j = 0 ; j < 4 ; j++ ){
-			if( *( JP + 32 * j + i ) == '1' )
-			{
-				//temp_state.z[j] ^= s.z[j];
-				if( j == 0 )
-					temp_state.z1 ^= s.z1;
-				else if ( j == 1)
-					temp_state.z2 ^= s.z2;
-				else if ( j == 2)
-					temp_state.z3 ^= s.z3;
-				else
-					temp_state.z4 ^= s.z4;
-				
-		}
-		s = rng_t113_next_state( s );
-	}
-	return temp_state;
+  testbit=1;
+  for (i=0; i< 32; i++) {
+    for (j=0; j<4; j++) {
+      if (jpoly[j]&testbit) {
+        jumpstate.z[j]^=st.z[j];
+      }
+    }
+    testbit= testbit<<1;
+    st= rng_t113_next_state(st);
+  }
+  return (jumpstate);
 }
 
-/*
-void rng_states_generate( struct state *h_states, unsigned int seed )
-{
-	seed += (seed == 0) * 1UL;
-	h_states[0] = taus113_initialize( seed );
-	for(long i = 1; i < THREADS; i++)
-		h_states[i] = taus113_jump( h_states[i - 1] );
+void testjumping(void) {
+  struct rng_t113_state s, jumps;
+  unsigned int i;
+
+  reset_rng_t113_new( 123456, &s );
+  for (i=0; i<4; i++) {
+    printf("z[%i]= %li\n", i,s.z[i]);
+  }
+  jumps= s;
+  for (i=0; i<4; i++) {
+    printf("jz[%i]= %li\n", i,jumps.z[i]);
+  }
+  for (i=0; i< 1048576; i++) {
+    jumps= rng_t113_next_state(jumps);
+  }
+  printf("The random number after 2^20 iterations: %li\n", rng_t113_int_new(&jumps));
+
+  jumps= rng_t113_jump(s, JPoly_2_20);
+  printf("The random number after a jump: %li\n", rng_t113_int_new(&jumps));
+  printf("Compare for yourself ... :)\n");
 }
-*/
