@@ -1481,13 +1481,13 @@ void mpi_calc_sigma_r(void)
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
 			/*MPI2: Using the global mass array*/
-			Mv2ave -= star_m[k] * madhoc; //* (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave -= star_m[k] * madhoc; * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave -= star_m[k] * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
 			/*MPI2: Using the global mass array*/
-			Mv2ave += star_m[k] * madhoc; //* (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave += star_m[k] * madhoc; * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += star_m[k] * madhoc;
 		}
 		
@@ -1533,12 +1533,12 @@ void calc_sigma_r(void)
 
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
-			Mv2ave -= star[k].m * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave -= star[k].m * madhoc; * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave -= star[k].m * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
-			Mv2ave += star[k].m * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave += star[k].m * madhoc; * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += star[k].m * madhoc;
 		}
 		// don't need to average since one gets divided by the other
