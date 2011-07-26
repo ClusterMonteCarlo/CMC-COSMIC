@@ -492,8 +492,8 @@ void tidally_strip_stars2();
 void toy_rejuvenation();
 void pre_sort_comm();
 void post_sort_comm();
-void findIndicesEven( long N, int i, int* begin, int* end );
-void findLimits( long N );
+void findIndices( long N, int blkSize, int i, int* begin, int* end );
+void findLimits( long N, int blkSize );
 int findProcForIndex( int j );
 void set_rng_states();
 /* End */

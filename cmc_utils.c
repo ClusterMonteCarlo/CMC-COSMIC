@@ -1025,11 +1025,12 @@ void mpi_central_calculate1(void)
 	/* allocate array for local density calculations */
 	rhoj = (double *) malloc((nave+1) * sizeof(double));
 
-	int mpiBeginLoc, mpiEndLoc;
-	mpiFindIndicesSpecial( nave, &mpiBeginLoc, &mpiEndLoc );
+	int mpiBeginLocal, mpiEndLocal;
+	mpiFindIndicesCustom( nave, 20, myid, &mpiBeginLocal, &mpiEndLocal );
+	//mpiFindIndicesSpecial( nave, &mpiBeginLocal, &mpiEndLocal );
 
 	/* calculate rhoj's (Casertano & Hut 1985) */
-	for (i=mpiBeginLoc; i<=mpiEndLoc; i++) {
+	for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
 		jmin = MAX(i-J/2, 1);
 		jmax = jmin + J;
 		mrho = 0.0;
@@ -1054,7 +1055,7 @@ void mpi_central_calculate1(void)
 	mpi_c_rc = 0.0;
 	mpi_c_mave = 0.0;
 
-	for (i=mpiBeginLoc; i<=mpiEndLoc; i++) {
+	for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
 		mpi_rhojsum += rhoj[i];
 		mpi_rhoj2sum += sqr(rhoj[i]);
 		mpi_c_rho += sqr(rhoj[i]);
@@ -2042,7 +2043,7 @@ void pre_sort_comm()
 	MPI_Status stat;
 	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
 	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
-	mpiFindDispAndLenSpecial( clus.N_MAX, mpiDisp, mpiLen );
+	mpiFindDispAndLenSpecial( clus.N_MAX, 20, mpiDisp, mpiLen );
 
 	for(i=0;i<procs;i++)
 		mpiLen[i] *= sizeof(star_t); 
@@ -2073,7 +2074,7 @@ void post_sort_comm()
 	int i;
 #ifdef USE_MPI
 	MPI_Status stat;
-	mpiFindDispAndLenSpecial( clus.N_MAX, mpiDisp, mpiLen );
+	mpiFindDispAndLenSpecial( clus.N_MAX, 20, mpiDisp, mpiLen );
 
 	for(i=0;i<procs;i++)
 		mpiLen[i] *= sizeof(star_t); 
@@ -2100,6 +2101,7 @@ void post_sort_comm()
 	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
+/*
 void findIndicesEven( long N, int i, int* begin, int* end )
 {
 	N = N/2;
@@ -2131,6 +2133,33 @@ void findLimits( long N )
 				End[i] += 1;
 		}
 	}
+}
+*/
+
+void findIndices( long N, int blkSize, int i, int* begin, int* end )
+{
+	long chunkSize =  ( N / procs ) * blkSize;
+   if ( i < N % procs )
+   {
+      *begin = i * chunkSize + i * blkSize + 1; //+1 since for loops go from 1 to N
+      *end = *begin + chunkSize + 1 * blkSize - 1;
+   } else {
+      *begin = i * chunkSize + ( N % procs ) * blkSize + 1; //+1 since for loops go from 1 to N
+      *end =  *begin + chunkSize - 1;
+   }
+}
+
+void findLimits( long N, int blkSize )
+{
+	int i, blocks, remain;
+
+   blocks = N / blkSize;
+   remain = N % blkSize;
+
+	for( i = 0; i < procs; i++ )
+		findIndices( blocks, blkSize, i, &Start[i], &End[i] );
+
+	End[procs-1] += remain;
 }
 
 int findProcForIndex( int j )

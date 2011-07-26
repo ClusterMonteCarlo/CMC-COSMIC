@@ -1242,10 +1242,8 @@ double mpi_simul_relax_new(void)
 	N_LIMIT = clus.N_MAX;
 	p = 10; //For this value, the results are very close to the original simul_relax() function.
 
-   int mpi_begin, mpi_end;
-   mpiFindIndicesSpecial(N_LIMIT, &mpi_begin, &mpi_end);
-
-	for (si=mpi_begin+p+1; si<mpi_end-p; si+=2*p) {
+	//MPI2: Earlier the divion of stars among processors for this part was different, and the one for the main code was different to achieve maximum load balancing. But, in that case this function required communication with neighbors. So, it was changed such that both the main code and this function use the same kind of division of stars among processors. Now, stars are divided in sets of 20 to avoid communication caused due to this function.
+	for (si=mpiBegin+p; si<mpiEnd-p; si+=2*p) {
 		simin = si - p;
 		simax = simin + (2 * p - 1);
 
@@ -1457,7 +1455,8 @@ void mpi_calc_sigma_r(void)
 	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
 
 	int mpi_siminlast, mpi_N_LIMIT;
-	mpiFindIndicesSpecial(N_LIMIT, &mpi_siminlast, &mpi_N_LIMIT);
+	//mpiFindIndicesSpecial(N_LIMIT, &mpi_siminlast, &mpi_N_LIMIT);
+	mpiFindIndicesCustom( N_LIMIT, 20, myid, &mpi_siminlast, &mpi_N_LIMIT );
 	siminlast = mpi_siminlast;//set to min index
 
 	if (myid!=0)
@@ -1482,13 +1481,13 @@ void mpi_calc_sigma_r(void)
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
 			/*MPI2: Using the global mass array*/
-			Mv2ave -= star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave -= star_m[k] * madhoc; //* (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave -= star_m[k] * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
 			/*MPI2: Using the global mass array*/
-			Mv2ave += star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave += star_m[k] * madhoc; //* (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += star_m[k] * madhoc;
 		}
 		
@@ -1534,12 +1533,12 @@ void calc_sigma_r(void)
 
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
-			Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave -= star[k].m * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave -= star[k].m * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
-			Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave += star[k].m * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += star[k].m * madhoc;
 		}
 		// don't need to average since one gets divided by the other

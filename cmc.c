@@ -89,14 +89,14 @@ int main(int argc, char *argv[])
 	orbit_r = R_MAX;
 
 #ifdef USE_MPI
-	//MPI2: Calculating indices which will be used in all loops till beginning of the main loop
-   mpiFindIndicesSpecial( clus.N_MAX, &mpiBegin, &mpiEnd );
+	//MPI2: Calculating indices which will be used in all loops till beginning of the main loop. The value 20 depends on the p value used in calc_sigma_new()
+   mpiFindIndicesCustom( clus.N_MAX, 20, myid, &mpiBegin, &mpiEnd );
 #endif
 
 	calc_potential_new();
 
 	//Calculating disp and len for mimcking parallel rng.
-	findLimits( clus.N_MAX );
+	findLimits( clus.N_MAX, 20 );
 
 	total_bisections= 0;
 
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 
 		calc_timestep(rng);
 		//MPI2: Setting the timestep (hardcoding) for testing.
-		//Dt = 0.000562794;
+		printf("Dt = %.14g\n", Dt);
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
@@ -241,11 +241,11 @@ int main(int argc, char *argv[])
 
 #ifdef USE_MPI
 		//MPI2: Calculating new indices which will be used in all loops till end of next timestep (qsorts).
-		mpiFindIndicesSpecial( clus.N_MAX, &mpiBegin, &mpiEnd );
+		mpiFindIndicesCustom( clus.N_MAX, 20, myid, &mpiBegin, &mpiEnd );
 #endif
 
 		//Calculating Start and End values for each processor for mimcking parallel rng.
-		findLimits( clus.N_MAX );
+		findLimits( clus.N_MAX, 20 );
 
 		post_sort_comm();
 
@@ -257,6 +257,32 @@ int main(int argc, char *argv[])
 
 		set_velocities3();
 
+#ifdef USE_MPI
+		strcpy(filename, "test_rng_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+					fprintf(ftest, "%ld\t%.15g\n", j, star_r[j] );
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+#else
+		strcpy(tempstr, "test_rng_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.15g\n", i, star[i].r );
+		fclose(ftest);
+#endif
 		/*
 		//MPI2: Ignoring for MPI
 #ifndef USE_MPI
@@ -291,32 +317,6 @@ comp_multi_mass_percent();
 		 */
 
 
-#ifdef USE_MPI
-		strcpy(filename, "test_rng_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-					fprintf(ftest, "%ld\t%g\n", j, star_r[j] );
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-#else
-		strcpy(tempstr, "test_rng_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%g\n", i, star[i].r );
-		fclose(ftest);
-#endif
 
 		//commenting out for MPI
 		//print_results();

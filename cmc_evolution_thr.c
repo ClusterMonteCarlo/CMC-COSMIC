@@ -291,7 +291,6 @@ double GetTimeStep(gsl_rng *rng) {
 		DTrel = simul_relax_new();
 #endif
 
-
 // Testing
 //This is for testing the timestep variation over a number of timesteps, and see if the old and the new versions are at least nearly same.
 //if(myid==0){
