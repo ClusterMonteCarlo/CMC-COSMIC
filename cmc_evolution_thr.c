@@ -723,9 +723,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
 		J = star[j].J;
 
-if(si == 38573)
-	printf("1: vr = %.10g\n", star[si].vr);
-
 /*
 		if(isnan(star[j].E))
 			printf("**************si = %ld\t id = %ld*****************\n", si, star[si].id);
@@ -758,9 +755,6 @@ if(si == 38573)
 		orbit_rs = calc_orbit_rs(j, E, J);
 #endif		
 
-if(si == 38573)
-	printf("2: vr = %.10g\n", star[si].vr);
-
 		/* skip the rest if the star is on a nearly circular orbit */
 		if (orbit_rs.circular_flag == 1) {
 #ifdef USE_MPI
@@ -777,6 +771,9 @@ if(si == 38573)
 			dQdr_min = orbit_rs.dQdrp;
 			dQdr_max = orbit_rs.dQdra;
 		}
+
+if(si==4439)
+	printf("1: vrnew = %.18g\n\n", star[si].vrnew);
 
 		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {
@@ -816,6 +813,9 @@ if(si == 38573)
 			drds = 0.25 * (rmax - rmin) * (3.0 - 3.0 * s0 * s0);
 			Q = 2.0 * E - 2.0 * pot - J * J / r / r;
 
+if(si==4439)
+	printf("2: Q = %.18g\tE = %.18g\tJ = %.18g\tr = %.18g\tpot = %.18g\n\n", Q, E, J, r, pot);
+
 			if (Q >= 0.0) {
 				vr = sqrt(Q);
 			} else {
@@ -835,6 +835,8 @@ if(si == 38573)
 			eprintf("N_TRY exceeded\n");
 			exit_cleanly(-1);
 		}
+if(si==4439)
+	printf("3: vrnew = %.18g\n\n", vr);
 
 		/* remove stars if they are too close to center,
 		 * ie. r < MINIMUM_R.

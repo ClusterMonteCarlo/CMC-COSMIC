@@ -1825,14 +1825,12 @@ void tidally_strip_stars1()
 	static double timeTotLoc;
 	timeStart();
 
-
 #ifdef USE_MPI
 		//MPI2: The 2nd part of tidally_strip_stars() has been moved just before sort.
 		OldTidalMassLoss = TidalMassLoss;
 		/******************************/
 		/* get new particle positions */
 		/******************************/
-
 		max_r = get_positions();
 
 		double temp = 0.0;
@@ -2089,11 +2087,8 @@ void pre_sort_comm()
 	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
 	for(i=0;i<procs;i++)
-	{
-		if(myid==0)
-			printf("i=%d\tDisp=%d\tLen=%d\n", i, mpiDisp[i], mpiLen[i]);
 		mpiLen[i] *= sizeof(star_t); 
-	}
+
 	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
 	for(i=mpiBegin; i<=mpiEnd; i++) {
 		star[i].r = star_r[i];

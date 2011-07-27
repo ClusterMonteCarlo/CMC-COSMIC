@@ -174,7 +174,8 @@ int main(int argc, char *argv[])
 
 		calc_timestep(rng);
 		//MPI2: Setting the timestep (hardcoding) for testing.
-		printf("Dt = %.14g\n", Dt);
+		if(myid==0)
+			printf("Dt = %.14g\n", Dt);
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
@@ -185,12 +186,6 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 
-#ifdef USE_MPI
-	printf("myid = %d\trn = %ld\n",myid, rng_t113_int_new(curr_st)) ;
-#else
-	for(i=0; i<procs; i++)
-		printf("i = %d\trn = %ld\n",i, rng_t113_int_new(&st[i])) ;
-#endif
 
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
@@ -216,6 +211,33 @@ int main(int argc, char *argv[])
 		/* this calls get_positions() */
 		tidally_strip_stars1();
 
+#ifdef USE_MPI
+		strcpy(filename, "test_rng_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+					fprintf(ftest, "%ld\t%.18g\n", j, star[j].vrnew );
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+#else
+		strcpy(tempstr, "test_rng_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].vrnew );
+		fclose(ftest);
+#endif
+
 		/* more numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
 		energy_conservation2();
@@ -230,32 +252,14 @@ int main(int argc, char *argv[])
 
 		tidally_strip_stars2();
 
+/*
 #ifdef USE_MPI
-		strcpy(filename, "test_rng_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", j, star_r[j] );
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
+	printf("myid = %d\trn = %ld\n",myid, rng_t113_int_new(curr_st)) ;
 #else
-		strcpy(tempstr, "test_rng_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r );
-		fclose(ftest);
+	for(i=0; i<procs; i++)
+		printf("i = %d\trn = %ld\n",i, rng_t113_int_new(&st[i])) ;
 #endif
+*/
 		strcpy(funcName, "qsorts");
 		static double timeTotLoc;
 		timeStart();
@@ -325,7 +329,6 @@ comp_multi_mass_percent();
 			no_remnants= no_remnants_core(6);
 			}
 		 */
-
 
 		//commenting out for MPI
 		//print_results();

@@ -203,6 +203,9 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			}
 		}
 		
+if(k == 1)
+	printf("S = %g\n\n\n", S);
+
 		/* calculate encounter probability */
 		/* should it be n_local here even for binaries? */
 		P_enc = n_local * W * S * (dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)));
@@ -280,6 +283,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			
 			//psi = rng_t113_dbl() * 2 * PI;
 			psi = rng_t113_dbl_new(curr_st) * 2 * PI;
+			if(k==1)
+				printf("psi = .18%g\t wp = %.18g\t Trel12 = %.18g\tbeta = %.18g\n\n", psi, wp, Trel12, beta);
 
 			for (j = 1; j <= 3; j++) {
 				w_new[j] = w[j] * cos(beta) + w1[j] * sin(beta) * cos(psi) + w2[j] * sin(beta) * sin(psi);
@@ -308,6 +313,9 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			if(star[k].vr == 0 || star[k].vt == 0 || star[kp].vr == 0 || star[kp].vt == 0)
 				printf("star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
 			
+if(k==1)
+	printf("2: vr = %.18g\t vt = %.18g\t vnew1 = %.18g\t vnew2 = %.18g\t vnew3 = %.18g\t vnew4 = %.18g\n\n", star[k].vr, star[k].vt, v_new[1], v_new[2], v_new[3], v_new[4]);
+
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
 			set_star_EJ(kp);
