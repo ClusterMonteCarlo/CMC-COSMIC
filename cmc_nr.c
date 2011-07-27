@@ -8,6 +8,35 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
+long FindZero_r_serial(long kmin, long kmax, double r){
+	/* binary search:
+	 * given the array star[].r and the two indices kmin and kmax,
+	 * with the conditions 
+	 * 1) array is monotonic in its indices,
+	 * 2) kmin<kmax,
+	 * find and return the index k, such that star[k].r<r<star[k+1].r */
+	long ktry;
+
+	if ((star[kmin].r>r && kmin>1) || star[kmax].r<r) {
+		dprintf("r is outside kmin kmax!!\n");
+		dprintf("star[kmin].r= %lf, star[kmax].r= %lf, kmin= %li, kmax= %li, r=%lf\n", 
+				star[kmin].r, star[kmax].r, kmin, kmax, r);
+	};
+
+	do {
+		ktry = (kmin+kmax+1)/2;
+		//printf("ktry=%ld\n",ktry);
+		if (star[ktry].r<r)
+		{
+			kmin = ktry;
+		} else {
+			kmax = ktry-1;
+		}
+	} while (kmax!=kmin);
+
+	return kmin;
+}
+
 long FindZero_r(long kmin, long kmax, double r){
 	/* binary search:
 	 * given the array star[].r and the two indices kmin and kmax,

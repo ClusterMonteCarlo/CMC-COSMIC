@@ -185,6 +185,13 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 
+#ifdef USE_MPI
+	printf("myid = %d\trn = %ld\n",myid, rng_t113_int_new(curr_st)) ;
+#else
+	for(i=0; i<procs; i++)
+		printf("i = %d\trn = %ld\n",i, rng_t113_int_new(&st[i])) ;
+#endif
+
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
 		clus.N_MAX_NEW++;
@@ -221,6 +228,34 @@ int main(int argc, char *argv[])
 
 		pre_sort_comm();
 
+		tidally_strip_stars2();
+
+#ifdef USE_MPI
+		strcpy(filename, "test_rng_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+					fprintf(ftest, "%ld\t%.18g\n", j, star_r[j] );
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+#else
+		strcpy(tempstr, "test_rng_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r );
+		fclose(ftest);
+#endif
 		strcpy(funcName, "qsorts");
 		static double timeTotLoc;
 		timeStart();
@@ -247,6 +282,8 @@ int main(int argc, char *argv[])
 		//Calculating Start and End values for each processor for mimcking parallel rng.
 		findLimits( clus.N_MAX, 20 );
 
+		set_velocities3();
+
 		post_sort_comm();
 
 		//commenting out for MPI
@@ -255,34 +292,7 @@ int main(int argc, char *argv[])
 			search_grid_update(r_grid);
 		 */
 
-		set_velocities3();
 
-#ifdef USE_MPI
-		strcpy(filename, "test_rng_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-					fprintf(ftest, "%ld\t%.15g\n", j, star_r[j] );
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-#else
-		strcpy(tempstr, "test_rng_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.15g\n", i, star[i].r );
-		fclose(ftest);
-#endif
 		/*
 		//MPI2: Ignoring for MPI
 #ifndef USE_MPI
@@ -315,7 +325,6 @@ comp_multi_mass_percent();
 			no_remnants= no_remnants_core(6);
 			}
 		 */
-
 
 
 		//commenting out for MPI

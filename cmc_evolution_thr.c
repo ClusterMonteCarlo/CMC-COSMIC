@@ -716,13 +716,15 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
 		j = si;
 
-
 #ifdef USE_MPI
 		E = star[j].E + MPI_PHI_S(star_r[j], j);
 #else
 		E = star[j].E + PHI_S(star[j].r, j);
 #endif
 		J = star[j].J;
+
+if(si == 38573)
+	printf("1: vr = %.10g\n", star[si].vr);
 
 /*
 		if(isnan(star[j].E))
@@ -737,9 +739,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (star[j].m < ZERO) {
 #endif
 			destroy_obj(j);
-#ifdef USE_MPI
-			//printf("%d\tindex of stripped star = %ld\tE = %g\n",myid, j,star_m[j]);
-#endif
+			printf("index of stripped star = %ld\n", j);
 			continue;
 		}
 
@@ -747,9 +747,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (E >= 0.0) {
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 			remove_star(j, phi_rtidal, phi_zero);
-#ifdef USE_MPI
-			//printf("%d\tindex of stripped star = %ld\tE = %g\n",myid, j,star[j].E);
-#endif
+			printf("index of stripped star = %ld\tE = %g\n",j,star[j].E);
 			continue;
 		}
 
@@ -759,6 +757,9 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #else
 		orbit_rs = calc_orbit_rs(j, E, J);
 #endif		
+
+if(si == 38573)
+	printf("2: vr = %.10g\n", star[si].vr);
 
 		/* skip the rest if the star is on a nearly circular orbit */
 		if (orbit_rs.circular_flag == 1) {

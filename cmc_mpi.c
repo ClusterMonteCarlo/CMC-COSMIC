@@ -77,7 +77,7 @@ void mpiFindIndicesCustom( long N, int blkSize, int i, int* mpiStart, int* mpiEn
 		*mpiEnd += remain;
 }
 
-void mpiFindDispAndLenSpecial( long N, int blkSize, int* mpiDisp, int* mpiLen )
+void mpiFindDispAndLenCustom( long N, int blkSize, int* mpiDisp, int* mpiLen )
 {
 	int i;
 	for( i = 0; i < procs; i++ )

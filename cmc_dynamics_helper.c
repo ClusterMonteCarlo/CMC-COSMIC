@@ -1451,22 +1451,77 @@ void mpi_calc_sigma_r(void)
 	
 	N_LIMIT = clus.N_MAX;
 	sigma_array.n = N_LIMIT;
+	double* buf_v = (double *) malloc(2 * p * sizeof(double));
+	//double* buf_vt = (double *) malloc(p * sizeof(double));
+
 
 	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
 
-	int mpi_siminlast, mpi_N_LIMIT;
-	//mpiFindIndicesSpecial(N_LIMIT, &mpi_siminlast, &mpi_N_LIMIT);
-	mpiFindIndicesCustom( N_LIMIT, 20, myid, &mpi_siminlast, &mpi_N_LIMIT );
-	siminlast = mpi_siminlast;//set to min index
+	MPI_Status stat;
+	int mpiBeginLocal, mpiEndLocal;
+	//mpiFindIndicesSpecial(N_LIMIT, &mpiBeginLocal, &mpiEndLocal);
+	mpiFindIndicesCustom( N_LIMIT, 20, myid, &mpiBeginLocal, &mpiEndLocal );
+	siminlast = mpiBeginLocal;//set to min index
+
+	/* MPI2: COmmunicating ghost particles */
+/*
+	for(k=0; k<2*p; k++)
+	{
+		if( k < p )
+			buf_v[k] = star[mpiBeginLocal + k].vr;
+		else
+			buf_v[k] = star[mpiBeginLocal + k - p].vt;
+	}
+
+	MPI_Send(buf_v, 2 * p, MPI_DOUBLE, ( myid + procs - 1 ) % procs, 0, MPI_COMM_WORLD);
+	MPI_Recv(buf_v, 2 * p, MPI_DOUBLE, ( myid + 1) % procs, 0, MPI_COMM_WORLD, &stat);
+
+	for(k=0; k<2*p; k++)
+	{
+		if(myid != procs-1)
+		{
+			if( k < p )
+				star[mpiEndLocal + k + 1].vr = buf_v[k];
+			else
+				star[mpiEndLocal + k - p + 1].vt = buf_v[k];
+		}
+	}
+*/
+	/*****************/
+/*
+	for(k=0; k<2*p; k++)
+	{
+		if( k < p )
+			buf_v[k] = star[mpiEndLocal - p + k + 1].vr;
+		else
+			buf_v[k] = star[mpiEndLocal - p + k + 1 - p].vt;
+	}
+
+	MPI_Send(buf_v, 2 * p, MPI_DOUBLE, ( myid + 1 ) % procs, 0, MPI_COMM_WORLD);
+	MPI_Recv(buf_v, 2 * p, MPI_DOUBLE, ( myid + procs - 1) % procs, 0, MPI_COMM_WORLD, &stat);
+
+	for(k=0; k<2*p; k++)
+	{
+		if( myid != 0 )
+		{
+		if( k < p )
+			 star[mpiBeginLocal - p + k].vr = buf_v[k];
+		else
+			 star[mpiBeginLocal - p + k - p].vt = buf_v[k];
+		}
+	}
+*/
+free(buf_v);
+	/* End of communication */
 
 	if (myid!=0)
-		simaxlast = mpi_siminlast - 1 - p;
+		simaxlast = mpiBeginLocal - 1 - p;
 	else
-		simaxlast = mpi_siminlast - 1;
+		simaxlast = mpiBeginLocal - 1;
 
 	Mv2ave = 0.0;
 	Mave = 0.0;
-	for (si=mpi_siminlast; si<=mpi_N_LIMIT; si++) {
+	for (si=mpiBeginLocal; si<=mpiEndLocal; si++) {
 		simin = si - p;
 		simax = simin + (2 * p - 1);
 		if (simin < 1) {
@@ -1481,13 +1536,13 @@ void mpi_calc_sigma_r(void)
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
 			/*MPI2: Using the global mass array*/
-			Mv2ave -= star_m[k] * madhoc; * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave -= star_m[k] * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave -= star_m[k] * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
 			/*MPI2: Using the global mass array*/
-			Mv2ave += star_m[k] * madhoc; * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave += star_m[k] * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += star_m[k] * madhoc;
 		}
 		
@@ -1533,12 +1588,12 @@ void calc_sigma_r(void)
 
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
-			Mv2ave -= star[k].m * madhoc; * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave -= star[k].m * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave -= star[k].m * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
-			Mv2ave += star[k].m * madhoc; * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave += star[k].m * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += star[k].m * madhoc;
 		}
 		// don't need to average since one gets divided by the other

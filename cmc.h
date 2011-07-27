@@ -457,6 +457,7 @@ void remove_star_center(long j);
 void print_results(void);
 void print_conversion_script(void);
 double potential(double r);	       /* get potential using star.phi */
+double potential_serial(double r);
 double fastpotential(double r, long kmin, long kmax);
 long potential_calculate(void);	/* calculate potential at star locations in star.phi */
 #ifdef USE_MPI
@@ -503,6 +504,7 @@ void comp_multi_mass_percent(void);
 orbit_rs_t calc_orbit_rs(long si, double E, double J);
 double get_positions(void);	/* get positions and velocities */
 void perturb_stars(double Dt);	/* take a time step (perturb E,J) */
+long FindZero_r_serial(long kmin, long kmax, double r);
 long FindZero_r(long x1, long x2, double r);
 long FindZero_Q(long j, long x1, long x2, double E, double J);
 double potentialDifference(int particleIndex);

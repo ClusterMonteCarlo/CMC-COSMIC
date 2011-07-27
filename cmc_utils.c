@@ -27,6 +27,61 @@ double cub(double x)
 
 /* The potential computed using the star[].phi computed at the star 
    locations in star[].r sorted by increasing r. */
+double potential_serial(double r) {
+	long i, kmax, kmin;
+	double henon;
+	struct Interval star_interval;
+
+	/* root finding using indexed values of sr[] & bisection */
+	if (r== 0.0) {
+		return (star[0].phi);
+	};
+
+	if (r < star[1].r) {
+	     return (star[0].phi-(star[0].phi-star[1].phi)*star[1].r/r);
+	};
+   //i = check_if_r_around_last_index(last_index, r);
+   i=-1;
+   if (i== -1) {
+           if (SEARCH_GRID) {
+             star_interval= search_grid_get_interval(r_grid, r);
+             kmax= star_interval.max;
+             kmin= star_interval.min;
+           } else {
+             kmax= clus.N_MAX+1;
+             kmin= 1;
+           };
+           if (kmin==kmax-1) {
+             i= kmin;
+           } else {
+             i =  FindZero_r_serial(kmin, kmax, r);
+           };
+	   last_index= i;
+   };
+
+	if(star[i].r > r || star[i+1].r < r){
+		eprintf("binary search (FindZero_r) failed!!\n");
+		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
+				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
+		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
+			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
+		exit_cleanly(-2);
+	}
+
+	/* Henon's method of computing the potential using star[].phi */ 
+	if (i == 0){ /* I think this is impossible, due to early return earlier,
+			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
+		henon = (star[1].phi);
+	} else {
+		henon = (star[i].phi + (star[i + 1].phi - star[i].phi) 
+			 * (1.0/star[i].r - 1.0/r) /
+			 (1.0/star[i].r - 1.0/star[i + 1].r));
+	}
+	
+	return (henon);
+}
+/* The potential computed using the star[].phi computed at the star 
+   locations in star[].r sorted by increasing r. */
 double potential(double r) {
 	long i, kmax, kmin;
 	double henon;
@@ -75,6 +130,7 @@ double potential(double r) {
 #else
 	if(star[i].r > r || star[i+1].r < r){
 #endif
+
 #ifdef USE_MPI
 		//MPI2: Need to be changed to global arrays later. Ignoring for now since this is only for debugging.
 		eprintf("binary search (FindZero_r) failed!!\n");
@@ -165,63 +221,49 @@ void set_velocities3(void){
 	double q=0.5; /* q=0.5 -> Stodolkiewicz, q=0 -> Delta U all from rnew */
 	double alpha;
 	long i;
-	
+
 	Eexcess = 0.0;
-#ifdef USE_MPI 
-	for (i=mpiBegin; i<=mpiEnd; i++) {
-#else
-	for (i = 1; i <= clus.N_MAX; i++) {
-#endif
-		/* modify velocities of stars that have only undergone relaxation */
-		if (star[i].interacted == 0) {
 #ifdef USE_MPI
-			Unewrold = potential(star[i].rOld) + MPI_PHI_S(star[i].rOld, i);
-			Unewrnew = star_phi[i] + MPI_PHI_S(star_r[i], i);
-#else
-			Unewrold = potential(star[i].rOld) + PHI_S(star[i].rOld, i);
-			Unewrnew = star[i].phi + PHI_S(star[i].r, i);
+	if(myid==0)
 #endif
-			vold2 = star[i].vtold*star[i].vtold + 
-				star[i].vrold*star[i].vrold;
-			/* predict new velocity */
-			vnew2 = vold2 + 2.0*(1.0-q)*(star[i].Uoldrold - star[i].Uoldrnew)
-				+ 2.0*q*(Unewrold - Unewrnew);
-			/* new velocity can be unphysical, so just use value predicted by old potential
-			   (this is already set in .vr and .vt) */
-			if (vnew2 <= 0.0) {
-#ifdef USE_MPI
-				Eexcess += 0.5*(sqr(star[i].vr)+sqr(star[i].vt)-vnew2)*star_m[i];
-#else
-				Eexcess += 0.5*(sqr(star[i].vr)+sqr(star[i].vt)-vnew2)*star[i].m;
-#endif
-			} else {
-				/* scale velocity, preserving v_t/v_r */
-				alpha = sqrt(vnew2/(sqr(star[i].vr)+sqr(star[i].vt)));
-				star[i].vr *= alpha;
-				star[i].vt *= alpha;
-				/* if there is excess energy added, try to remove at 
-				   least part of it from this star */
-#ifdef USE_MPI
-				if(Eexcess > 0 && Eexcess < 0.5*(sqr(star[i].vt)+sqr(star[i].vr))*star_m[i]){
-					exc_ratio = 
-						sqrt( (sqr(star[i].vt)+sqr(star[i].vr)-2*Eexcess/star_m[i])/
-						      (sqr(star[i].vt)+sqr(star[i].vr)) );
-#else		
-				if(Eexcess > 0 && Eexcess < 0.5*(sqr(star[i].vt)+sqr(star[i].vr))*star[i].m){
-					exc_ratio = 
-						sqrt( (sqr(star[i].vt)+sqr(star[i].vr)-2*Eexcess/star[i].m)/
-						      (sqr(star[i].vt)+sqr(star[i].vr)) );
-#endif
-					star[i].vr *= exc_ratio;
-					star[i].vt *= exc_ratio;
-					Eexcess = 0.0;
+	{
+		for (i = 1; i <= clus.N_MAX; i++) {
+			/* modify velocities of stars that have only undergone relaxation */
+			if (star[i].interacted == 0) {
+				Unewrold = potential_serial(star[i].rOld) + PHI_S(star[i].rOld, i);
+				Unewrnew = star[i].phi + PHI_S(star[i].r, i);
+				vold2 = star[i].vtold*star[i].vtold + 
+					star[i].vrold*star[i].vrold;
+				/* predict new velocity */
+				vnew2 = vold2 + 2.0*(1.0-q)*(star[i].Uoldrold - star[i].Uoldrnew)
+					+ 2.0*q*(Unewrold - Unewrnew);
+				/* new velocity can be unphysical, so just use value predicted by old potential
+					(this is already set in .vr and .vt) */
+				if (vnew2 <= 0.0) {
+					Eexcess += 0.5*(sqr(star[i].vr)+sqr(star[i].vt)-vnew2)*star[i].m;
+				} else {
+					/* scale velocity, preserving v_t/v_r */
+					alpha = sqrt(vnew2/(sqr(star[i].vr)+sqr(star[i].vt)));
+					star[i].vr *= alpha;
+					star[i].vt *= alpha;
+					/* if there is excess energy added, try to remove at 
+						least part of it from this star */
+
+					if(Eexcess > 0 && Eexcess < 0.5*(sqr(star[i].vt)+sqr(star[i].vr))*star[i].m){
+						exc_ratio = 
+							sqrt( (sqr(star[i].vt)+sqr(star[i].vr)-2*Eexcess/star[i].m)/
+									(sqr(star[i].vt)+sqr(star[i].vr)) );
+						star[i].vr *= exc_ratio;
+						star[i].vt *= exc_ratio;
+						Eexcess = 0.0;
+					}
 				}
 			}
 		}
+
+		/* keep track of the energy that's vanishing due to our negligence */
+		Eoops += -Eexcess * madhoc;
 	}
-	
-	/* keep track of the energy that's vanishing due to our negligence */
-	Eoops += -Eexcess * madhoc;
 
 	timeEnd(fileTime, funcName, &timeTotLoc);
 }
@@ -1790,6 +1832,7 @@ void tidally_strip_stars1()
 		/******************************/
 		/* get new particle positions */
 		/******************************/
+
 		max_r = get_positions();
 
 		double temp = 0.0;
@@ -2043,11 +2086,14 @@ void pre_sort_comm()
 	MPI_Status stat;
 	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
 	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
-	mpiFindDispAndLenSpecial( clus.N_MAX, 20, mpiDisp, mpiLen );
+	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
 	for(i=0;i<procs;i++)
+	{
+		if(myid==0)
+			printf("i=%d\tDisp=%d\tLen=%d\n", i, mpiDisp[i], mpiLen[i]);
 		mpiLen[i] *= sizeof(star_t); 
-
+	}
 	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
 	for(i=mpiBegin; i<=mpiEnd; i++) {
 		star[i].r = star_r[i];
@@ -2074,7 +2120,7 @@ void post_sort_comm()
 	int i;
 #ifdef USE_MPI
 	MPI_Status stat;
-	mpiFindDispAndLenSpecial( clus.N_MAX, 20, mpiDisp, mpiLen );
+	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
 	for(i=0;i<procs;i++)
 		mpiLen[i] *= sizeof(star_t); 
