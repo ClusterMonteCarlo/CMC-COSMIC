@@ -80,6 +80,7 @@ double potential_serial(double r) {
 	
 	return (henon);
 }
+
 /* The potential computed using the star[].phi computed at the star 
    locations in star[].r sorted by increasing r. */
 double potential(double r) {
@@ -131,14 +132,12 @@ double potential(double r) {
 	if(star[i].r > r || star[i+1].r < r){
 #endif
 
-#ifdef USE_MPI
 		//MPI2: Need to be changed to global arrays later. Ignoring for now since this is only for debugging.
 		eprintf("binary search (FindZero_r) failed!!\n");
 		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
 				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
 		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
 			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
-#endif
 		exit_cleanly(-2);
 	}
 
@@ -328,24 +327,36 @@ long CheckStop(struct tms tmsbufref) {
 
 	if (tspent >= MAX_WCLOCK_TIME) {
 		print_2Dsnapshot();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
 		diaprintf("MAX_WCLOCK_TIME exceeded ... Terminating.\n");
 		return (1);
 	}
 	
 	if (tcount >= T_MAX_COUNT) {
 		print_2Dsnapshot();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
 		diaprintf("No. of timesteps > T_MAX_COUNT ... Terminating.\n");
 		return (1);
 	}
 
 	if (TotalTime >= T_MAX) {
 		print_2Dsnapshot();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
 		diaprintf("TotalTime > T_MAX ... Terminating.\n");
 		return (1);
 	}
 
 	if (TotalTime / (1.0e3*MEGA_YEAR) >= T_MAX_PHYS) {
 		print_2Dsnapshot();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
 		diaprintf("TotalTime > T_MAX_PHYS ... Terminating.\n");
 		return (1);
 	}
@@ -354,6 +365,9 @@ long CheckStop(struct tms tmsbufref) {
 	/* if (clus.N_MAX < (0.02 * clus.N_STAR)) { */
 	if (clus.N_MAX < (0.005 * clus.N_STAR)) {
 		print_2Dsnapshot();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
 		diaprintf("N_MAX < 0.005 * N_STAR ... Terminating.\n");
 		return (1);
 	}
@@ -361,6 +375,9 @@ long CheckStop(struct tms tmsbufref) {
 	/* Stop if Etotal > 0 */
 	if (Etotal.K + Etotal.P > 0.0) {
 		print_2Dsnapshot();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
 		diaprintf("Etotal > 0 ... Terminating.\n");
 		return (1);
 	}
@@ -373,6 +390,9 @@ long CheckStop(struct tms tmsbufref) {
 	if (STOPATCORECOLLAPSE) {
 		if (N_core <= 100.0) {
 			print_2Dsnapshot();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
 			diaprintf("N_core < 100.0; terminating.\n");
 			return (1);
 		}
@@ -457,6 +477,9 @@ long CheckStop(struct tms tmsbufref) {
 	/* If total Energy has diminished by TERMINAL_ENERGY_DISPLACEMENT, then stop */
 	if (Etotal.tot < Etotal.ini - TERMINAL_ENERGY_DISPLACEMENT) {
 		print_2Dsnapshot();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
 		diaprintf("Terminal Energy reached... Terminating.\n");
 		return (1);
 	}
@@ -1020,16 +1043,21 @@ void units_set(void)
 	madhoc = 1.0/((double) clus.N_STAR);
 
 	/* print out diagnostic information */
-	diaprintf("METALLICITY= %g\n",METALLICITY);
-	diaprintf("MEGA_YEAR=%g\n", MEGA_YEAR);
-	diaprintf("SOLAR_MASS_DYN=%g\n", SOLAR_MASS_DYN);
-	diaprintf("initial_total_mass=%g\n", initial_total_mass);
-	diaprintf("units.t=%g YEAR\n", units.t/YEAR);
-	diaprintf("units.m=%g MSUN\n", units.m/MSUN);
-	diaprintf("units.mstar=%g MSUN\n", units.mstar/MSUN);
-	diaprintf("units.l=%g PARSEC\n", units.l/PARSEC);
-	diaprintf("units.E=%g erg\n", units.E);
-	diaprintf("t_rel=%g YEAR\n", units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / YEAR);
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	{
+		diaprintf("METALLICITY= %g\n",METALLICITY);
+		diaprintf("MEGA_YEAR=%g\n", MEGA_YEAR);
+		diaprintf("SOLAR_MASS_DYN=%g\n", SOLAR_MASS_DYN);
+		diaprintf("initial_total_mass=%g\n", initial_total_mass);
+		diaprintf("units.t=%g YEAR\n", units.t/YEAR);
+		diaprintf("units.m=%g MSUN\n", units.m/MSUN);
+		diaprintf("units.mstar=%g MSUN\n", units.mstar/MSUN);
+		diaprintf("units.l=%g PARSEC\n", units.l/PARSEC);
+		diaprintf("units.E=%g erg\n", units.E);
+		diaprintf("t_rel=%g YEAR\n", units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / YEAR);
+	}
 }
 
 #ifdef USE_MPI
@@ -1641,6 +1669,9 @@ void calc_potential_new()
 	MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	//MPI2: Calculating indices which will be used in all loops till beginning of the main loop. The value 20 depends on the p value used in calc_sigma_new()
+   mpiFindIndicesCustom( clus.N_MAX, 20, myid, &mpiBegin, &mpiEnd );
 #else
 	potential_calculate();
 #endif
@@ -1667,6 +1698,9 @@ void calc_potential_new2()
 	MPI_Bcast(&Mtotal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&cenma.m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	//MPI2: Calculating new indices which will be used in all loops till end of next timestep (qsorts).
+	mpiFindIndicesCustom( clus.N_MAX, 20, myid, &mpiBegin, &mpiEnd );
 #endif
 
 	timeEnd(fileTime, funcName, &timeTotLoc);
@@ -1700,6 +1734,18 @@ void set_energy_vars()
 	Eintescaped = 0.0;
 	Ebescaped = 0.0;
 	Eoops = 0.0;
+}
+
+void reset_interaction_flags()
+{
+	int i;
+#ifdef USE_MPI
+		for (i=mpiBegin; i<=mpiEnd; i++)
+#else
+		for (i = 1; i <= clus.N_MAX; i++) 
+#endif
+			/* reset interacted flag */
+			star[i].interacted = 0;
 }
 
 void calc_clusdyn_new()
@@ -2106,6 +2152,25 @@ void pre_sort_comm()
 	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
+void qsorts_new(void)
+{
+	strcpy(funcName, "qsorts_new");
+	static double timeTotLoc;
+	timeStart();
+
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+		/* Sorting stars by radius. The 0th star at radius 0 
+			and (N_STAR+1)th star at SF_INFINITY are already set earlier.
+		 */
+		//MPI2: Only running till N_MAX for now since no new stars are created, later has to be changed to N_MAX_NEW.
+		//MPI2: Changin to N_MAX+1, later change to N_MAX_NEW+1
+		qsorts(star+1,clus.N_MAX);
+
+	timeEnd(fileTime, funcName, &timeTotLoc);
+}
+
 void post_sort_comm()
 {
 	strcpy(funcName, __FUNCTION__);
@@ -2128,7 +2193,7 @@ void post_sort_comm()
 		MPI_Recv(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD, &stat);
 
 	if(myid==0)
-		for(i=1; i<=clus.N_MAX+1; i++) {
+		for(i=0; i<=clus.N_MAX+1; i++) {
 			star_r[i] = star[i].r;
 			star_m[i] = star[i].m;
 			star_phi[i] = star[i].phi;
@@ -2141,41 +2206,6 @@ void post_sort_comm()
 
 	timeEnd(fileTime, funcName, &timeTotLoc);
 }
-
-/*
-void findIndicesEven( long N, int i, int* begin, int* end )
-{
-	N = N/2;
-	int temp;
-	long chunkSize = N / procs;
-   if ( i < N % procs )
-   {
-		temp = i * chunkSize + i;
-		*begin = temp * 2 + 1; //+1 since for loops go from 1 to N
-		*end = ( temp + chunkSize + 1 ) * 2 + 1 - 1;
-   } else {
-		temp = i * chunkSize + N % procs;
-		*begin = temp * 2 + 1; //+1 since for loops go from 1 to N
-		*end =  ( temp + chunkSize ) * 2 + 1 - 1;
-   }
-}
-
-void findLimits( long N )
-{
-	int i;
-	for( i = 0; i < procs; i++ )
-	{
-		if( N % 2 == 0 )
-		{
-			findIndicesEven( N, i, &Start[i], &End[i] );
-		} else {
-			findIndicesEven( N-1, i, &Start[i], &End[i] );
-			if(i == procs-1)
-				End[i] += 1;
-		}
-	}
-}
-*/
 
 void findIndices( long N, int blkSize, int i, int* begin, int* end )
 {
@@ -2230,3 +2260,4 @@ void set_rng_states()
 		st[i] = rng_t113_jump( st[i-1] , JPoly_2_20);
 #endif
 }
+

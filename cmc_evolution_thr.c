@@ -736,7 +736,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (star[j].m < ZERO) {
 #endif
 			destroy_obj(j);
-			printf("index of stripped star = %ld\n", j);
+			//printf("index of stripped star = %ld\n", j);
 			continue;
 		}
 
@@ -744,7 +744,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (E >= 0.0) {
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 			remove_star(j, phi_rtidal, phi_zero);
-			printf("index of stripped star = %ld\tE = %g\n",j,star[j].E);
+			//printf("index of stripped star = %ld\tE = %g\n",j,star[j].E);
 			continue;
 		}
 
@@ -772,9 +772,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			dQdr_max = orbit_rs.dQdra;
 		}
 
-if(si==4439)
-	printf("1: vrnew = %.18g\n\n", star[si].vrnew);
-
 		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {
 			/* dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
@@ -788,7 +785,7 @@ if(si==4439)
 		g2 = sqrt(-3.0 * (rmax - rmin) / dQdr_max);	/* g(+1) */
 
 		F = 1.2 * MAX(g1, g2);
-		
+
 #ifndef USE_MPI
 		curr_st = &st[findProcForIndex(j)];
 #endif
@@ -813,9 +810,6 @@ if(si==4439)
 			drds = 0.25 * (rmax - rmin) * (3.0 - 3.0 * s0 * s0);
 			Q = 2.0 * E - 2.0 * pot - J * J / r / r;
 
-if(si==4439)
-	printf("2: Q = %.18g\tE = %.18g\tJ = %.18g\tr = %.18g\tpot = %.18g\n\n", Q, E, J, r, pot);
-
 			if (Q >= 0.0) {
 				vr = sqrt(Q);
 			} else {
@@ -835,8 +829,6 @@ if(si==4439)
 			eprintf("N_TRY exceeded\n");
 			exit_cleanly(-1);
 		}
-if(si==4439)
-	printf("3: vrnew = %.18g\n\n", vr);
 
 		/* remove stars if they are too close to center,
 		 * ie. r < MINIMUM_R.

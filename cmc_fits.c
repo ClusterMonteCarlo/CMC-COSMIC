@@ -101,6 +101,9 @@ void load_fits_file_data(void)
         cenma.m_new= star[0].m;
 	star[0].m = 0.0;
 
+#ifdef USE_MPI
+	if(myid==0)
+#endif
 	if (BH_R_DISRUPT_NB> 0) {
           diaprintf("R_disrupt in NB-units for all stars, Rdisr=%lg\n", BH_R_DISRUPT_NB);
         } else {

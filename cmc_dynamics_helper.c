@@ -1452,19 +1452,15 @@ void mpi_calc_sigma_r(void)
 	N_LIMIT = clus.N_MAX;
 	sigma_array.n = N_LIMIT;
 	double* buf_v = (double *) malloc(2 * p * sizeof(double));
-	//double* buf_vt = (double *) malloc(p * sizeof(double));
-
-
-	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
 
 	MPI_Status stat;
 	int mpiBeginLocal, mpiEndLocal;
-	//mpiFindIndicesSpecial(N_LIMIT, &mpiBeginLocal, &mpiEndLocal);
 	mpiFindIndicesCustom( N_LIMIT, 20, myid, &mpiBeginLocal, &mpiEndLocal );
 	siminlast = mpiBeginLocal;//set to min index
 
-	/* MPI2: COmmunicating ghost particles */
-/*
+	/* MPI2: Communicating ghost particles */
+	/* Testing has been done. The parallel version is more accurate than the serial one since there are less round off errors because at nproc points among N_MAX, the actual sliding sum is calculated freshly rather than the way it is done in the serial version - adding and subtracting the extreme neighbors. Differences between serial and parallel version starts at N_MAX/nproc +1 th star and increases as expected.
+*/
 	for(k=0; k<2*p; k++)
 	{
 		if( k < p )
@@ -1486,9 +1482,9 @@ void mpi_calc_sigma_r(void)
 				star[mpiEndLocal + k - p + 1].vt = buf_v[k];
 		}
 	}
-*/
+
 	/*****************/
-/*
+
 	for(k=0; k<2*p; k++)
 	{
 		if( k < p )
@@ -1510,8 +1506,8 @@ void mpi_calc_sigma_r(void)
 			 star[mpiBeginLocal - p + k - p].vt = buf_v[k];
 		}
 	}
-*/
-free(buf_v);
+
+	free(buf_v);
 	/* End of communication */
 
 	if (myid!=0)
@@ -1531,18 +1527,17 @@ free(buf_v);
 			simax = N_LIMIT;
 			simin = simax - (2 * p - 1);
 		}
-		//printf("\n\nProc=%d\tmpi_siminlast=%ld\tmpi_simaxlast=%ld\tsimin=%ld\tsimax=%ld\tmpi_NLIMIT=%ld\t\n\n",myid, siminlast, simaxlast, simin, simax, mpi_N_LIMIT);
 
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
 			/*MPI2: Using the global mass array*/
-			Mv2ave -= star_m[k] * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave -= star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave -= star_m[k] * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
 			/*MPI2: Using the global mass array*/
-			Mv2ave += star_m[k] * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave += star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += star_m[k] * madhoc;
 		}
 		
@@ -1588,12 +1583,12 @@ void calc_sigma_r(void)
 
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
-			Mv2ave -= star[k].m * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave -= star[k].m * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
-			Mv2ave += star[k].m * madhoc;// * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += star[k].m * madhoc;
 		}
 		// don't need to average since one gets divided by the other
