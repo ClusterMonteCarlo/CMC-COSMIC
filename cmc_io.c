@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <time.h>
 #include <signal.h>
@@ -446,12 +447,13 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	int allparsed=1;
 	/* int *ip; */
 	FILE *in, *parsedfp;
-	const char *short_opts = "qdVh";
+	const char *short_opts = "qdVhs:";
 	const struct option long_opts[] = {
 		{"quiet", no_argument, NULL, 'q'},
 		{"debug", no_argument, NULL, 'd'},
 		{"version", no_argument, NULL, 'V'},
 		{"help", no_argument, NULL, 'h'},
+		{"streams", required_argument, NULL, 's'}, //Run with multiple random streams. To mimic the parallel version with the given number of processors
 		{NULL, 0, NULL, 0}
 	};
 	
@@ -459,7 +461,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	quiet = 0;
 	debug = 0;
 	NO_MASS_BINS = 0;
-        snapshot_window_count=0;
+	snapshot_window_count=0;
 	/* DEFAULT PARAMETER VALUES */
 	
 	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
@@ -473,6 +475,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		case 'V':
 			print_version(stdout);
 			exit(0);
+		case 's':
+			procs = atoi(optarg);
+			break;
 		case 'h':
 			print_version(stdout);
 			fprintf(stdout, "\n");
@@ -482,6 +487,8 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			break;
 		}
 	}
+
+	//printf("procs = %d\t%d\t%d\n", procs,argc, optind);
 
 	/* check to make sure there was nothing crazy on the command line */
 	if (argc - optind != 2) {
@@ -556,6 +563,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_BINSINGLE);
 				sscanf(values, "%d", &BINSINGLE);
 				parsed.BINSINGLE = 1;
+			} else if (strcmp(parameter_name, "STREAMS") == 0) {
+				PRINT_PARSED(PARAMDOC_STREAMS);
+				sscanf(values, "%d", &procs);
+				parsed.STREAMS = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOTTING") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOTTING);
 				sscanf(values, "%d", &SNAPSHOTTING);
@@ -922,6 +933,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(PREAGING, 0, PARAMDOC_PREAGING);
 	CHECK_PARSED(BINBIN, 1, PARAMDOC_BINBIN);
 	CHECK_PARSED(BINSINGLE, 1, PARAMDOC_BINSINGLE);
+	CHECK_PARSED(STREAMS, 1, PARAMDOC_STREAMS);
 	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);
 	CHECK_PARSED(MINIMUM_R, 0.0, PARAMDOC_MINIMUM_R);
 	CHECK_PARSED(BH_R_DISRUPT_NB, 0., PARAMDOC_BH_R_DISRUPT_NB);

@@ -172,3 +172,12 @@ MPIOBJS = cmc_mpi.o
 CFLAGS := `mpicc -showme:compile` $(CFLAGS)
 LIBFLAGS := $(LIBFLAGS) `mpicc -showme:link`
 endif
+
+##############################################################################
+#----------- MPI suppport ----------------#
+##############################################################################
+simul=0
+
+ifneq ($(simul), 0)
+CFLAGS   += -DSIMUL=$(simul)
+endif

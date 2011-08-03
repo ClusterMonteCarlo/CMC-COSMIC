@@ -18,7 +18,11 @@
 #include "cuda/cmc_cuda.h"
 #endif
 
-#define PROC 4 //to mimic rng of the serial version to the parallel version. This has to be changed every time the no.of processors you want to simulate is changed.
+/*
+#ifndef SIMUL
+#define SIMUL 1 //to mimic rng of the serial version to the parallel version. This has to be given by "make simul=<PROCS>" while compiing.
+#endif
+*/
 
 int main(int argc, char *argv[])
 {
@@ -32,7 +36,7 @@ int main(int argc, char *argv[])
 	//Temp file handle for debugging
 	FILE *ftest;
 	//MPI2: Some variables to assist debugging
-	//char num[5],filename[20], tempstr[20];
+	char num[5],filename[20], tempstr[20];
 
 #ifdef USE_MPI
 	//MPI2: Some code from the main branch might have been removed in the MPI version. Please check.
@@ -44,9 +48,7 @@ int main(int argc, char *argv[])
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
 #else
-	//the variable(Macro) PROC has to be changed everytime the no.of processors are changed.
-	procs = PROC;
-	//MPI2: Compared random numbers of serial and parallel. Seem to match perfectly.
+	procs = 1;
 #endif
 
 	Start = (int *) malloc(procs * sizeof(int));
@@ -247,6 +249,33 @@ int main(int argc, char *argv[])
 			no_remnants= no_remnants_core(6);
 			}
 		 */
+
+#ifdef USE_MPI
+		strcpy(filename, "test_rng_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+					fprintf(ftest, "%ld\t%.18g\n", j, star_r[j] );
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+#else
+		strcpy(tempstr, "test_rng_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r );
+		fclose(ftest);
+#endif
 
 		//MPI2: Commenting out for MPI
 		print_results();

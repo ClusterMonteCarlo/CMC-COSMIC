@@ -186,6 +186,8 @@ typedef struct{
 	int BINBIN;
 #define PARAMDOC_BINSINGLE "toggles binary--single interactions (0=off, 1=on)"
 	int BINSINGLE;
+#define PARAMDOC_STREAMS "to run the serial version with the given number of random streams - primarily used to mimic the parallel version running with the same no.of processors"
+	int STREAMS;
 #define PARAMDOC_SNAPSHOTTING "toggles output snapshotting (0=off, 1=on)"
 	int SNAPSHOTTING;
 #define PARAMDOC_SNAPSHOT_DELTAT "snapshotting time interval (FP units)"
@@ -589,6 +591,7 @@ void mpi_clusdyn_calculate(void);
 void print_interaction_status(char status_text[]);
 void print_interaction_error(void);
 long star_get_id_new(void);
+long star_get_merger_id_new(long id1, long id2);
 double calc_n_local(long k, long p, long N_LIMIT);
 double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT);
 void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4], double *W, double *rcm, double vcm[4], gsl_rng *rng, int setY);

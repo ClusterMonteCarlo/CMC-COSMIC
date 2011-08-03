@@ -192,6 +192,12 @@ long star_get_id_new(void)
 	return(newstarid);
 }
 
+/* generate unique star id's */
+long star_get_merger_id_new(long id1, long id2)
+{
+	return (MIN(id1%newstarid, id2%newstarid) + id1/newstarid + id2/newstarid + newstarid);
+}
+
 /* calculate local density by averaging */
 double calc_n_local(long k, long p, long N_LIMIT)
 {
@@ -873,6 +879,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					set_star_EJ(knew);
 					
 					star[knew].id = star_get_id_new();
+					//star[knew].id = star_get_id_new( (star[k].binind == 0) ? star[k].id :  binary[star[k].binind].id1
+
 					if(vs[1]!=0.0){
 						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
 						dprintf("dynhelp_merge1: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,star[knew].id);
