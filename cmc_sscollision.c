@@ -280,7 +280,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		set_star_olds(knew);
 	
 		/* mark stars as interacted so they don't undergo E_CONS mode stuff */
-		star[knew].id = star_get_id_new();
+		//star[knew].id = star_get_id_new();
+		star[knew].id = star_get_merger_id_new(star[k].id, star[kp].id);
 		star[knew].interacted = 1;
 		star[knew].Eint = star[k].Eint + star[kp].Eint 
 			+ 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 

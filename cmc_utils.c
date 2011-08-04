@@ -2260,4 +2260,3 @@ void set_rng_states()
 		st[i] = rng_t113_jump( st[i-1] , JPoly_2_20);
 #endif
 }
-

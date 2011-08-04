@@ -863,7 +863,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, hier.obj[i]->id[0], &bi);
 					cp_SEvars_to_newstar(oldk, bi, knew);
 					cp_m_to_newstar(oldk, bi, knew);
+					star[knew].id = hier.obj[i]->id[0];
 					nmerged = 1;
+
 					while (nmerged < hier.obj[i]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->id[nmerged], &bi);
 						nmerged++;
@@ -871,6 +873,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_m_to_star(oldk, bi, &tempstar);
 						merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs, curr_st);
                                                 /* Owing to merger only useful vs's are v[1-3] */
+						star[knew].id = star_get_merger_id_new(star[knew].id, hier.obj[i]->id[nmerged]);
 						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
 
 						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
@@ -878,8 +881,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					}
 					set_star_EJ(knew);
 					
-					star[knew].id = star_get_id_new();
-					//star[knew].id = star_get_id_new( (star[k].binind == 0) ? star[k].id :  binary[star[k].binind].id1
+					//star[knew].id = star_get_id_new();
 
 					if(vs[1]!=0.0){
 						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
@@ -922,6 +924,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[0]->id[0], &bi);
 					cp_SEvars_to_star(oldk, bi, &tempstar);
 					cp_m_to_star(oldk, bi, &tempstar);
+					tempstar.id = hier.obj[i]->obj[0]->id[0];
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[0]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[0]->id[nmerged], &bi);
@@ -929,6 +932,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
 						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[0]->id[nmerged]);
 						/* FIXME: really we're supposed to add the kick to each binary
 						   member separately, then calculate the systemic kick to the binary,
 						   but hopefully this doesn't happen too much. */
@@ -946,7 +950,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 0);
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 0);
 
-					binary[star[knew].binind].id1 = star_get_id_new();
+					//binary[star[knew].binind].id1 = star_get_id_new();
+					binary[star[knew].binind].id1 = tempstar.id;
+
 					if(vs[1]!=0.0){
 						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
 						dprintf("dynhelp_merge2: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id1);
@@ -976,6 +982,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[1]->id[0], &bi);
 					cp_SEvars_to_star(oldk, bi, &tempstar);
 					cp_m_to_star(oldk, bi, &tempstar);
+					tempstar.id = hier.obj[i]->obj[1]->id[0];
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[1]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[1]->id[nmerged], &bi);
@@ -983,6 +990,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
 						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[1]->id[nmerged]);
 						/* FIXME: really we're supposed to add the kick to each binary
 						   member separately, then calculate the systemic kick to the binary,
 						   but hopefully this doesn't happen too much. */
@@ -999,7 +1007,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 1);
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 1);
 
-					binary[star[knew].binind].id2 = star_get_id_new();
+					//binary[star[knew].binind].id2 = star_get_id_new();
+					binary[star[knew].binind].id2 = tempstar.id;
+
 					if(vs[1]!=0.0){
 						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
 						dprintf("dynhelp_merge3: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id2);
@@ -1073,6 +1083,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[sid]->id[0], &bi);
 					cp_SEvars_to_newstar(oldk, bi, knewp);
 					cp_m_to_newstar(oldk, bi, knewp);
+					star[knew].id = hier.obj[i]->obj[sid]->id[0];
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[sid]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[sid]->id[nmerged], &bi);
@@ -1080,6 +1091,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
 						merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs, curr_st);
+						star[knew].id = star_get_merger_id_new(star[knew].id, hier.obj[i]->obj[sid]->id[nmerged]);
 						star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
 
 						//MPI2: parallel rng mimicking removed due to parent function which takes k as parameter?
@@ -1087,8 +1099,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						//star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 					}
 					set_star_EJ(knewp);
-					
-					star[knewp].id = star_get_id_new();
+
+					//star[knewp].id = star_get_id_new();
 					if(vs[1]!=0.0){
 						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
 						dprintf("dynhelp_merge4: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,star[knewp].id);
@@ -1129,6 +1141,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[0], &bi);
 					cp_SEvars_to_star(oldk, bi, &tempstar);
 					cp_m_to_star(oldk, bi, &tempstar);
+					tempstar.id = hier.obj[i]->obj[bid]->obj[0]->id[0];
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[bid]->obj[0]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged], &bi);
@@ -1136,6 +1149,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
 						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]);
 						/* FIXME: really we're supposed to add the kick to each binary
 						   member separately, then calculate the systemic kick to the binary,
 						   but hopefully this doesn't happen too much. */
@@ -1152,7 +1166,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 0);
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 0);
 
-					binary[star[knew].binind].id1 = star_get_id_new();
+					binary[star[knew].binind].id1 = tempstar.id;
+					//binary[star[knew].binind].id1 = star_get_id_new();
 					if(vs[1]!=0.0){
 						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
 						dprintf("dynhelp_merge5: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id1);
@@ -1174,6 +1189,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[0], &bi);
 					cp_SEvars_to_star(oldk, bi, &tempstar);
 					cp_m_to_star(oldk, bi, &tempstar);
+					tempstar.id = hier.obj[i]->obj[bid]->obj[1]->id[0];
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[bid]->obj[1]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged], &bi);
@@ -1181,6 +1197,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
 						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]);
 						/* FIXME: really we're supposed to add the kick to each binary
 						   member separately, then calculate the systemic kick to the binary,
 						   but hopefully this doesn't happen too much. */
@@ -1197,7 +1214,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					cp_starSEvars_to_binmember(tempstar, star[knew].binind, 1);
 					cp_starmass_to_binmember(tempstar, star[knew].binind, 1);
 
-					binary[star[knew].binind].id2 = star_get_id_new();
+					binary[star[knew].binind].id2 = tempstar.id;
+					//binary[star[knew].binind].id2 = star_get_id_new();
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id2,
