@@ -90,6 +90,10 @@ _EXTERN_ char fileTime[64];
 _EXTERN_ int *Start, *End; 
 _EXTERN_ struct rng_t113_state *curr_st;
 _EXTERN_ struct rng_t113_state *st;
+/* to handle binaries */
+_EXTERN_ binary_t *binary_buf;
+_EXTERN_ int *num_bin_buf;
+_EXTERN_ int size_bin_buf;
 
 /* debugging */
 _EXTERN_ int debug;

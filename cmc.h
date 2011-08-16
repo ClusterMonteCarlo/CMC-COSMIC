@@ -502,6 +502,12 @@ int findProcForIndex( int j );
 void set_rng_states();
 /* End */
 
+/* Bharath: Functions for handling of binaries for parallel version */
+void distr_bin_data();
+void collect_bin_data();
+void alloc_bin_buf();
+/* End */
+
 void comp_mass_percent(void);
 void comp_multi_mass_percent(void);
 orbit_rs_t calc_orbit_rs(long si, double E, double J);

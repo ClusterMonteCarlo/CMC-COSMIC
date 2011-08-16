@@ -1006,7 +1006,12 @@ void update_vars(void)
 	N_b = 0;
 	M_b = 0.0;
 	E_b = 0.0;
-	for (i=1; i<=clus.N_MAX; i++) {
+#ifdef USE_MPI
+	for (i=mpiBegin; i<=mpiEnd; i++) 
+#else
+	for (i=1; i<=clus.N_MAX; i++)
+#endif
+	{
 		j = i;
 		k = star[j].binind;
 		if (k != 0) {
@@ -1488,16 +1493,19 @@ inline double function_q(long j, long double r, long double pot, long double E, 
 
 void timeStart()
 {
+/*
 #ifdef USE_MPI
 	MPI_Barrier(MPI_COMM_WORLD);
 	startTime = MPI_Wtime();
 #else
 	startTime = clock();
 #endif
+*/
 }
 
 void timeEnd(char* fileName, char *funcName, double *tTime)
 {
+/*
 	double temp;
 	static double totTime = 0.0;
 	FILE *file;
@@ -1520,6 +1528,7 @@ void timeEnd(char* fileName, char *funcName, double *tTime)
 		fprintf(file, "%-5.8lf\t\t%-25s\t\t\t%5.8lf\n", *tTime, funcName, totTime);
 		fclose(file);
 	}
+*/
 }
 
 void timeStart2(double *st)
@@ -1640,7 +1649,12 @@ void bin_vars_calculate()
 	//MPI2: Binaries; Ignore.
 	M_b = 0.0;
 	E_b = 0.0;
-	for (i=1; i<=clus.N_STAR; i++) {
+#ifdef USE_MPI
+	for (i=mpiBegin; i<=mpiEnd; i++)
+#else
+	for (i=1; i<=clus.N_STAR; i++)
+#endif
+	{
 		j = star[i].binind;
 		if (j && binary[j].inuse) {
 			M_b += star[i].m;

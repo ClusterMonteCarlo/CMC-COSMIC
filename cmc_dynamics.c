@@ -49,6 +49,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			fprintf(relaxationfile, "\n");
 		}
 
+		// MPI2: This hopefully does not execute, so dont have to worry abt binaries here.
 		/* DEBUG: print out binary information every N steps */
 		if (0) {
 			/* if (tcount%50==0 || tcount==1) { */

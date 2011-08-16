@@ -80,8 +80,6 @@ int main(int argc, char *argv[])
 	/* calculate central quantities */
 	calc_central_new();
 
-	bin_vars_calculate();
-
 	/* print out binary properties to a file */
 	//MPI2: skipping outputs for initial steps of MPI
 	//print_initial_binaries();
@@ -92,6 +90,12 @@ int main(int argc, char *argv[])
 
 	/* MPI2: Calculating disp and len for mimcking parallel rng */
 	findLimits( clus.N_MAX, 20 );
+
+	alloc_bin_buf();
+
+	distr_bin_data();
+
+	bin_vars_calculate();
 
 	total_bisections= 0;
 
@@ -105,6 +109,8 @@ int main(int argc, char *argv[])
 	star[0].E = star[0].J = 0.0;
 
 	compute_energy_new();
+
+	set_energy_vars();
 
 	/*
 	//MPI2: ignore for now
@@ -172,6 +178,33 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 
+#ifdef USE_MPI
+		strcpy(filename, "test_rng_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+					fprintf(ftest, "%ld\t%.18g\n", j, star[j].E );
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+#else
+		strcpy(tempstr, "test_rng_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].E );
+		fclose(ftest);
+#endif
+
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
 		clus.N_MAX_NEW++;
@@ -208,6 +241,8 @@ int main(int argc, char *argv[])
 
 		pre_sort_comm();
 
+		collect_bin_data();
+
 		tidally_strip_stars2();
 
 		qsorts_new();
@@ -220,6 +255,8 @@ int main(int argc, char *argv[])
 		set_velocities3();
 
 		post_sort_comm();
+
+		distr_bin_data();
 
 		//commenting out for MPI
 		/*
@@ -249,33 +286,6 @@ int main(int argc, char *argv[])
 			no_remnants= no_remnants_core(6);
 			}
 		 */
-
-#ifdef USE_MPI
-		strcpy(filename, "test_rng_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", j, star_r[j] );
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-#else
-		strcpy(tempstr, "test_rng_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r );
-		fclose(ftest);
-#endif
 
 		//MPI2: Commenting out for MPI
 		print_results();
@@ -321,12 +331,15 @@ int main(int argc, char *argv[])
 	close_buffers();
 	free_arrays();
 
+
 #ifdef USE_MPI
 	free(mpiDisp);
 	free(mpiLen);
 	free(curr_st);
+	free(binary_buf);
+	free(num_bin_buf);
 #else
-	free(st);
+	free(st); //commenting because it throws some error
 #endif
 	free(Start);
 	free(End);

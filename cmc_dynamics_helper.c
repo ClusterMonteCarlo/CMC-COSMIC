@@ -1417,7 +1417,13 @@ void break_wide_binaries(void)
 	long j, k, knew, knewp;
 	double W, vorb, Eexcess=0.0, exc_ratio, nlocal, llocal;
 	
-	for (k=1; k<=clus.N_MAX_NEW; k++) {
+	//MPI2: Might have to change this later to handle N_MAX_NEW
+#ifdef USE_MPI
+	for (k=mpiBegin; k<=mpiEnd; k++)
+#else
+	for (k=1; k<=clus.N_MAX_NEW; k++)
+#endif
+	{
 		if (star[k].binind) {
 			/* binary index */
 			j = star[k].binind;

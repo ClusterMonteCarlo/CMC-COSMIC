@@ -1592,3 +1592,109 @@ void mpiInitBcastGlobArrays()
 
 	timeEnd(fileTime, funcName, &timeTotLoc);
 }
+
+void alloc_bin_buf()
+{
+#ifdef USE_MPI
+	size_bin_buf = N_BIN_DIM / procs; //this is much more than what would be practically reqd. worst case scenario is N_BIN_DIM.
+
+	/* the local binary array */
+	binary_buf = (binary_t *) calloc( size_bin_buf, sizeof(binary_t) );
+
+	/* array to store the indices of the local binary members in the original binary array */
+	num_bin_buf = (int *) calloc( size_bin_buf, sizeof(int) );
+#endif
+}
+
+void collect_bin_data()
+{
+#ifdef USE_MPI
+	int i, j;
+	MPI_Status stat;
+
+	if(myid!=0)
+	{
+		i=0;
+		while(num_bin_buf[i] != -1)
+		{
+			binary_buf[i] = binary[num_bin_buf[i]];
+			i++;
+		}
+
+		MPI_Send(num_bin_buf, size_bin_buf, MPI_INT, 0, 0, MPI_COMM_WORLD);
+		MPI_Send(binary_buf, size_bin_buf * sizeof(binary_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+	}
+	else
+		for(i=1; i<procs; i++)
+		{
+			MPI_Recv(num_bin_buf, size_bin_buf, MPI_INT, i, 0, MPI_COMM_WORLD, &stat);
+			MPI_Recv(binary_buf, size_bin_buf * sizeof(binary_t), MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+		
+			j = 0;	
+			while(num_bin_buf[j] != -1)
+			{
+				binary[num_bin_buf[j]] = binary_buf[j];
+				j++;
+			}
+		}
+#endif
+}
+
+void distr_bin_data()
+{
+#ifdef USE_MPI
+	int i, j, k;
+	MPI_Status stat;
+
+	if(myid==0)
+	{
+		for(i=1; i<procs; i++)
+		{
+			k=0;
+			for(j=0; j<=clus.N_MAX; j++)
+				if(star[j].binind > 0 && j >= Start[i] && j <= End[i])
+				{
+					num_bin_buf[k] = star[j].binind;
+					k++;
+				}
+			num_bin_buf[k] = -1;
+
+			MPI_Send(num_bin_buf, size_bin_buf, MPI_INT, i, 0, MPI_COMM_WORLD);
+		}
+	}
+	else
+		MPI_Recv(num_bin_buf, size_bin_buf, MPI_INT, 0, 0, MPI_COMM_WORLD, &stat);
+
+	MPI_Bcast(binary,/*clus.N_BINARY*/ N_BIN_DIM * sizeof(binary_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+#endif
+}
+
+/*
+void distr_bin_data()
+{
+	int i, j, k;
+	MPI_Status stat;
+
+	for(i=0; i<procs; i++)
+	{
+		k=0;
+		for(j=1; j<=clus.N_MAX; j++)
+		{
+			if(star[j].binind > 0 && j >= Start[i] && j <= End[i])
+			{
+				if(myid==0)
+				{
+					binary_buf[k] = binary[star[j].binind];
+					num_bin_buf[k] = star[j].binind;
+				}
+				k++;
+			}
+
+			MPI_Send(binary_buf, k * sizeof(binary_t), MPI_BYTE, i, 0, MPI_COMM_WORLD);
+		}
+		else
+			if(myid==i)
+				MPI_Recv(binary_buf, k * sizeof(binary_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD, &stat);
+	}
+}
+*/
