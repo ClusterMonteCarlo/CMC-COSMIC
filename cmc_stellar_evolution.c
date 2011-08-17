@@ -20,6 +20,7 @@ void stellar_evolution_init(void){
   bse_set_neta(BSE_NETA);
   bse_set_bwind(BSE_BWIND);
   bse_set_hewind(BSE_HEWIND);
+  bse_set_windflag(BSE_WINDFLAG);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambda(BSE_LAMBDA);
   bse_set_ceflag(BSE_CEFLAG);
@@ -40,6 +41,7 @@ void stellar_evolution_init(void){
   bse_set_epsnov(0.001);
   bse_set_eddfac(BSE_EDDFAC); /* (normally 1.0) */
   bse_set_gamma(BSE_GAMMA);
+  bse_set_merger(-1.0);
   
   /* set parameters relating to metallicity */
   zpars = (double *) malloc(20 * sizeof(double));
@@ -47,7 +49,7 @@ void stellar_evolution_init(void){
   
   /* set collisions matrix */
   bse_instar();
-  dprintf("se_init: %g %g %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
+  dprintf("se_init: %g %g %g %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
   
   /* set initial properties of stars */
   for (k=1; k<=clus.N_MAX; k++) {
@@ -196,6 +198,7 @@ void do_stellar_evolution(gsl_rng *rng){
   int kprev,i;
   double dtp, tphysf, vs[12], VKO;
   binary_t tempbinary;
+  bse_set_merger(-1.0);
   /* double vk, theta; */
   
   //for(k=1; k<=clus.N_MAX; k++){

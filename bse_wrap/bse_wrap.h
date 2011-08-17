@@ -107,7 +107,7 @@ extern struct { int idum; } value3_;
 extern struct { int idum2, iy, ir[32]; } rand3_;
 extern struct { int ktype[15][15]; } types_;
 extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
-extern struct { double neta, bwind, hewind, mxns; } value1_;
+extern struct { double neta, bwind, hewind, mxns; int windflag; } value1_;
 extern struct { double alpha1, lambda; } value2_;
 extern struct { double sigma; int bhflag; } value4_;
 extern struct { double beta, xi, acc2, epsnov, eddfac, gamma; } value5_;
@@ -115,13 +115,14 @@ extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
 extern struct { float scm[14][50000], spp[3][20]; } single_;
 extern struct { float bcm[34][50000], bpp[10][80]; } binary_;
-extern struct { long int id1_pass, id2_pass; } cmcpass_;
+extern struct { double merger; long int id1_pass; long int id2_pass; } cmcpass_;
 
 /* setters */
 void bse_set_idum(int idum); /* RNG seed (for NS birth kicks) */
 void bse_set_neta(double neta); /* Reimers mass-loss coefficent (neta*4x10^-13; 0.5 normally) */
 void bse_set_bwind(double bwind); /* binary enhanced mass loss parameter (inactive for single) */
 void bse_set_hewind(double hewind); /* helium star mass loss factor (1.0 normally) */
+void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
 void bse_set_sigma(double sigma); /* dispersion in the Maxwellian for the SN kick speed (190 km/s) */
 void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0) */
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */
@@ -141,6 +142,7 @@ void bse_set_acc2(double acc2); /* Bondi-Hoyle wind accretion factor (3/2) */
 void bse_set_epsnov(double epsnov); /* fraction of accreted matter retained in nova eruption (0.001) */
 void bse_set_eddfac(double eddfac); /* Eddington limit factor for mass transfer (1.0) */
 void bse_set_gamma(double gamma); /* angular momentum factor for mass lost during Roche (-1.0) */
+void bse_set_merger(double merger); /* pass through a value signifying a merger (>0.d0), evolv2.f will then do the appropriate kick and/or initial spin*/
 void bse_set_id1_pass(long int id1_pass); /* pass through cmc star id into bse to help in debugging, this is used for iso star and star 1 in binary */
 void bse_set_id2_pass(long int id2_pass); /* pass through cmc star id into bse to help in debugging, this is used for star 2 in binary */
 

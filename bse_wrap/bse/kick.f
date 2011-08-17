@@ -62,8 +62,9 @@
 *      COMMON /VKICK/ bkick
       real ran3,xx
       external ran3
-      integer id1_pass,id2_pass
-      COMMON /cmcpass/ id1_pass,id2_pass
+      integer*8 id1_pass,id2_pass
+      real*8 merger
+      COMMON /cmcpass/ merger,id1_pass,id2_pass
 *
       output = .true. !useful for debugging...
       v1out = 0.d0

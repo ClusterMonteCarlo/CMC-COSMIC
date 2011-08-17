@@ -93,7 +93,7 @@
 *
       OPEN(22,file='binary.in', status='old')
       READ(22,*)mass0(1),mass0(2),tphysf,tb,kstar(1),kstar(2),z,ecc
-      READ(22,*)neta,bwind,hewind,alpha1,lambda
+      READ(22,*)neta,bwind,hewind,alpha1,lambda,windflag
       READ(22,*)ceflag,tflag,ifflag,wdflag,bhflag,nsflag,mxns,idum
       READ(22,*)pts1,pts2,pts3
       READ(22,*)sigma,beta,xi,acc2,epsnov,eddfac,gamma

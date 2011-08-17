@@ -494,6 +494,7 @@ void bse_set_idum(int idum) { value3_.idum = idum; }
 void bse_set_neta(double neta) { value1_.neta = neta; }
 void bse_set_bwind(double bwind) { value1_.bwind = bwind; }
 void bse_set_hewind(double hewind) { value1_.hewind = hewind; }
+void bse_set_windflag(int windflag) { value1_.windflag = windflag; }
 void bse_set_sigma(double sigma) { value4_.sigma = sigma; }
 void bse_set_ifflag(int ifflag) { flags_.ifflag = ifflag; }
 void bse_set_wdflag(int wdflag) { flags_.wdflag = wdflag; }
@@ -513,6 +514,7 @@ void bse_set_acc2(double acc2) { value5_.acc2 = acc2; }
 void bse_set_epsnov(double epsnov) { value5_.epsnov = epsnov; }
 void bse_set_eddfac(double eddfac) { value5_.eddfac = eddfac; }
 void bse_set_gamma(double gamma) { value5_.gamma = gamma; }
+void bse_set_merger(double merger) {cmcpass_.merger = merger; }
 void bse_set_id1_pass(long int id1_pass) { cmcpass_.id1_pass = id1_pass; }
 void bse_set_id2_pass(long int id2_pass) { cmcpass_.id2_pass = id2_pass; }
 
