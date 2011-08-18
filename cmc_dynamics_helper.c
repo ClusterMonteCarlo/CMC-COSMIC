@@ -248,11 +248,13 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	/* set random angle between vt's */
 	/* first store random variable */
 	if (setY) {
-		//star[k].Y = rng_t113_dbl();
+		star[k].Y = rng_t113_dbl();
+/*
 #ifndef USE_MPI
 	curr_st = &st[findProcForIndex(k)];
 #endif
 		star[k].Y = rng_t113_dbl_new(curr_st);
+*/
 
 		star[kp].Y = star[k].Y;
 	}
@@ -843,9 +845,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				star[knewp].interacted = 1;
 			}
 			
+/*
 #ifndef USE_MPI
 			curr_st = &st[findProcForIndex(k)];
 #endif
+*/
 			/* properties specific to single/binary/triple stars */
 			if (hier.obj[i]->n == 1) {
 				/* single star */
@@ -1790,8 +1794,8 @@ double Etide(double rperi, double Mosc, double Rosc, double nosc, double Mpert)
 void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_st)
 {
 	double X, theta, vtx, vty;
-	//X = rng_t113_dbl();
-	X = rng_t113_dbl_new(rng_st);
+	X = rng_t113_dbl();
+	//X = rng_t113_dbl_new(rng_st);
 	theta = 2.0 * PI * X;
 	vtx = *vt*sin(theta);
 	vty = *vt*cos(theta);

@@ -275,7 +275,6 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 }
 
 double GetTimeStep(gsl_rng *rng) {
-	strcpy(funcName, __FUNCTION__);
 	double DTrel, Tcoll, DTcoll, Tbb, DTbb, Tbs, DTbs, Tse, DTse, Trejuv, DTrejuv, xcoll;
 
 	/* calculate the relaxation timestep */
@@ -405,7 +404,6 @@ if(myid==0)
 
 /* removes tidally-stripped stars */
 void tidally_strip_stars(void) {
-	strcpy(funcName, __FUNCTION__);
 	double phi_rtidal, phi_zero, gierszalpha;
 	long i, j, k;
 	k=0;
@@ -786,18 +784,19 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		F = 1.2 * MAX(g1, g2);
 
+/*
 #ifndef USE_MPI
 		curr_st = &st[findProcForIndex(j)];
 #endif
-
+*/
 		for (k = 1; k <= N_TRY; k++) {
-			//X = rng_t113_dbl();
-			X = rng_t113_dbl_new(curr_st);
+			X = rng_t113_dbl();
+			//X = rng_t113_dbl_new(curr_st);
 
 			s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
 
-			//g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
-			g0 = F * rng_t113_dbl_new(curr_st);
+			g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
+			//g0 = F * rng_t113_dbl_new(curr_st);
 
 			r = 0.5 * (rmin + rmax) + 0.25 * (rmax - rmin) * (3.0 * s0 - s0 * s0 * s0);
 
@@ -858,8 +857,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		star[j].r_apo = rmax;
 		
 		/* pick random sign for v_r */
-		//if(rng_t113_dbl() < 0.5)
-		if(rng_t113_dbl_new(curr_st) < 0.5)
+		if(rng_t113_dbl() < 0.5)
+		//if(rng_t113_dbl_new(curr_st) < 0.5)
 			vr = -vr;
 
 		vt = J / r;

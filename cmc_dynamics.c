@@ -12,10 +12,6 @@
 void dynamics_apply(double dt, gsl_rng *rng)
 {
 	//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	long j, si, p=AVEKERNEL, N_LIMIT, k, kp, ksin, kbin;
 	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
 	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi=0;
@@ -218,11 +214,13 @@ void dynamics_apply(double dt, gsl_rng *rng)
 
 
 		/* do encounter or two-body relaxation */
-		//if (rng_t113_dbl() < P_enc) {
+		if (rng_t113_dbl() < P_enc) {
+/*
 #ifndef USE_MPI
 		curr_st = &st[findProcForIndex(k)];
 #endif
 		if(rng_t113_dbl_new(curr_st) < P_enc) { 
+*/
 			/* do encounter */
 			if (star[k].binind > 0 && star[kp].binind > 0) {
 				/* binary--binary */
@@ -282,8 +280,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			w2[2] = -w[2] * w[3] / wp;
 			w2[3] = wp;
 			
-			//psi = rng_t113_dbl() * 2 * PI;
-			psi = rng_t113_dbl_new(curr_st) * 2 * PI;
+			psi = rng_t113_dbl() * 2 * PI;
+			//psi = rng_t113_dbl_new(curr_st) * 2 * PI;
 
 			for (j = 1; j <= 3; j++) {
 				w_new[j] = w[j] * cos(beta) + w1[j] * sin(beta) * cos(psi) + w2[j] * sin(beta) * sin(psi);
@@ -336,6 +334,4 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	//MPI2: Binaries, ignoring for now.
 	/* break pathologically wide binaries */
 	break_wide_binaries();
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }

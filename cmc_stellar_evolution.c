@@ -8,10 +8,6 @@
 #include "bse_wrap/bse_wrap.h"
 
 void stellar_evolution_init(void){  
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	double tphysf, dtp, vs[12];
 	int i;
 	long k, kb;
@@ -168,9 +164,11 @@ void stellar_evolution_init(void){
 				//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
 			}
 			star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
+/*
 #ifndef USE_MPI
 			curr_st = &st[findProcForIndex(k)];
 #endif
+*/
 			vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
 			//star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 			set_star_EJ(k);
@@ -220,17 +218,11 @@ void stellar_evolution_init(void){
 	if(myid==0) DMse = temp;
 	MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 /* note that this routine is called after perturb_stars() and get_positions() */
 void do_stellar_evolution(gsl_rng *rng)
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	long k, kb;
 	int kprev;
 	double dtp, tphysf, vs[12], VKO;
@@ -347,9 +339,12 @@ void do_stellar_evolution(gsl_rng *rng)
 					//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
 				}
 				star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
+
+/*
 #ifndef USE_MPI
 				curr_st = &st[findProcForIndex(k)];
 #endif
+*/
 				vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
 				//star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 				set_star_EJ(k);
@@ -420,15 +415,9 @@ void do_stellar_evolution(gsl_rng *rng)
 	if(myid==0) DMse = temp;
 	MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void write_stellar_data(void){
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
   long k, kb;
   FILE *stel_file;
   char filename[1024];
@@ -492,8 +481,6 @@ void write_stellar_data(void){
     }
   }
   fclose(stel_file);
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
@@ -502,9 +489,11 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
   long knew, knewp;
   double dtp, VKO;
   
+/*
 #ifndef USE_MPI
   curr_st = &st[findProcForIndex(k)];
 #endif
+*/
   if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] != 0.0 && binary[kb].bse_tb > 0.0) {
     /* normal evolution */
     binary[kb].rad1 = binary[kb].bse_radius[0] * RSUN / units.l;

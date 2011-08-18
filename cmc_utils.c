@@ -210,10 +210,6 @@ void sf_gsl_errhandler(const char *reason, const char *file, int line, int gsl_e
 }
 
 void set_velocities3(void){
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	/* set velocities a la Stodolkiewicz to be able to conserve energy */
 	double vold2, vnew2, Unewrold, Unewrnew;
 	double Eexcess, exc_ratio;
@@ -263,17 +259,11 @@ void set_velocities3(void){
 		/* keep track of the energy that's vanishing due to our negligence */
 		Eoops += -Eexcess * madhoc;
 	}
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 /* computes intermediate energies, and transfers "new" dynamical params to the standard variables */
 void ComputeIntermediateEnergy(void)
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	long j;
 
 #ifdef USE_MPI 
@@ -309,8 +299,6 @@ void ComputeIntermediateEnergy(void)
 		star[j].vr = star[j].vrnew;
 		star[j].vt = star[j].vtnew;
 	}
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 long CheckStop(struct tms tmsbufref) {
@@ -490,7 +478,6 @@ long CheckStop(struct tms tmsbufref) {
 #ifdef USE_MPI
 void mpi_ComputeEnergy(void)
 {
-	strcpy(funcName, __FUNCTION__);
 	double Etotal_tot = 0.0;
 	double Etotal_K = 0.0;
 	double Etotal_P = 0.0;
@@ -543,7 +530,6 @@ void mpi_ComputeEnergy(void)
 
 void ComputeEnergy(void)
 {
-	strcpy(funcName, __FUNCTION__);
 	long i;
 	
 	Etotal.tot = 0.0;
@@ -578,7 +564,6 @@ void ComputeEnergy(void)
 
 #ifdef USE_MPI
 long mpi_potential_calculate(void) {
-	strcpy(funcName, __FUNCTION__);
 	long k;
 	double mprev;
 
@@ -654,7 +639,6 @@ long mpi_potential_calculate(void) {
    double precision. Returns N_MAX. Potential given in star[].phi
 */
 long potential_calculate(void) {
-	strcpy(funcName, __FUNCTION__);
 	long k;
 	double mprev;
 
@@ -996,10 +980,6 @@ void free_ivector(int *v, long nl, long nh)
 /* update some important global variables */
 void update_vars(void)
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	long i, j, k;
 	
 	/* update total number, mass, and binding energy of binaries in cluster */
@@ -1022,8 +1002,6 @@ void update_vars(void)
 			}
 		}
 	}
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 /* set the units */
@@ -1436,7 +1414,6 @@ void central_calculate(void)
 #ifdef USE_MPI
 void mpi_clusdyn_calculate(void)
 {
-	strcpy(funcName, __FUNCTION__);
 	double m=0.0;
 	long k=1;
 	
@@ -1451,7 +1428,6 @@ void mpi_clusdyn_calculate(void)
 /* calculate cluster dynamical quantities */
 void clusdyn_calculate(void)
 {
-	strcpy(funcName, __FUNCTION__);
 	double m=0.0;
 	long k=1;
 	
@@ -1507,7 +1483,7 @@ void timeEnd(char* fileName, char *funcName, double *tTime)
 {
 /*
 	double temp;
-	static double totTime = 0.0;
+	double totTime = 0.0;
 	FILE *file;
 
 #ifdef USE_MPI
@@ -1584,9 +1560,6 @@ void set_global_vars1()
 
 void set_global_vars2()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
 
 	TidalMassLoss = 0.0;
 	Etidal = 0.0;
@@ -1600,16 +1573,11 @@ void set_global_vars2()
 	StepCount = 0; 		
 	tcount = 1;
 	TotalTime = 0.0;
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 
 void calc_sigma_new()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
 
 	//MPI2: mpi_calc_sigma_r(): Tests for precision: Biggest errors are ~ 1e-13. Might be because of catastrphic cancellation/rounding errors?. This might be due to the already imprecise but faster serial code . In a sense, the MPI version might be more precise, because for every processor, actual average is performed for the 1st local star which means errors dont carry over from the previous set of stars which are handled by another processor.
 #ifdef USE_MPI
@@ -1617,16 +1585,10 @@ void calc_sigma_new()
 #else
 	calc_sigma_r(); //requires data from some neighbouring particles. must be handled during data read. look inside function for more comments
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void calc_central_new()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	//Step 2: stay on root node
 	//MPI2: Split into 2 functions: part 1 can be parallelized after making m and r arrays global. Part 2 has to be done on root node.
 #ifdef USE_MPI
@@ -1635,16 +1597,10 @@ void calc_central_new()
 #else
 	central_calculate();
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void bin_vars_calculate()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	int i, j;
 	//MPI2: Binaries; Ignore.
 	M_b = 0.0;
@@ -1661,16 +1617,10 @@ void bin_vars_calculate()
 			E_b += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 		}
 	}
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void calc_potential_new()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	//MPI2: Do on root node with global phi array.
 	//MPI2: Tested. Relative errors are 0. Perfect :)
 #ifdef USE_MPI
@@ -1689,16 +1639,10 @@ void calc_potential_new()
 #else
 	potential_calculate();
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void calc_potential_new2()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	//MPI2: Do on root node with global phi array.
 	//MPI2: Tested. Relative errors are 0. Perfect :)
 #ifdef USE_MPI
@@ -1716,16 +1660,10 @@ void calc_potential_new2()
 	//MPI2: Calculating new indices which will be used in all loops till end of next timestep (qsorts).
 	mpiFindIndicesCustom( clus.N_MAX, 20, myid, &mpiBegin, &mpiEnd );
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void compute_energy_new()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	//MPI2: Tested! No errors.
 #ifdef USE_MPI
 	mpi_ComputeEnergy();
@@ -1733,8 +1671,6 @@ void compute_energy_new()
 	//MPI2: see inline for comments
 	ComputeEnergy();
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void set_energy_vars()
@@ -1764,10 +1700,6 @@ void reset_interaction_flags()
 
 void calc_clusdyn_new()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	/* calculate dynamical quantities */
 	//Step 2: done on root node
 	//MPI2: Tested! No Errors.
@@ -1780,16 +1712,10 @@ void calc_clusdyn_new()
 #else
 	clusdyn_calculate(); //parallel reduction
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void calc_timestep(gsl_rng *rng)
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	/* Get new time step */
 	//for the next step, only simul_relax needs to be done in parallel, and DTrel needs to be broadcasted. rest can be done on each node.
 	//Step 2: Do simul_relax() on all procs and others only on root. then broadcast Dt
@@ -1816,16 +1742,10 @@ void calc_timestep(gsl_rng *rng)
 #endif
 
 	TotalTime += Dt;
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void energy_conservation1()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	/* some numbers necessary to implement Stodolkiewicz's
 	 * energy conservation scheme */
 	int i;
@@ -1853,15 +1773,10 @@ void energy_conservation1()
 		 * potential_calculate() using [].rOld
 		 * Unewrnew is [].phi after potential_calculate() */
 	}
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void toy_rejuvenation()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	/*Sourav: checking all stars for their possible extinction from old age*/
 	//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
 	int i;
@@ -1875,16 +1790,10 @@ void toy_rejuvenation()
 #endif
 			remove_old_star(TotalTime, i);
 	}
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void tidally_strip_stars1()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 #ifdef USE_MPI
 		//MPI2: The 2nd part of tidally_strip_stars() has been moved just before sort.
 		OldTidalMassLoss = TidalMassLoss;
@@ -1916,16 +1825,10 @@ void tidally_strip_stars1()
 		/* this calls get_positions() */
 		tidally_strip_stars();
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void energy_conservation2()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	int i;
 #ifdef USE_MPI 
 	//MPI2: Should be changed into 2 loops later to include new stars.
@@ -1944,16 +1847,10 @@ void energy_conservation2()
 		star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);
 #endif
 	}
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void tidally_strip_stars2(void)
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 #ifdef USE_MPI
 	if(myid==0)
 	{
@@ -2129,16 +2026,10 @@ void tidally_strip_stars2(void)
 	MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&Rtidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void pre_sort_comm()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	int i;
 #ifdef USE_MPI
 	MPI_Status stat;
@@ -2162,16 +2053,10 @@ void pre_sort_comm()
 		for(i=1;i<procs;i++)
 			MPI_Recv(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void qsorts_new(void)
 {
-	strcpy(funcName, "qsorts_new");
-	static double timeTotLoc;
-	timeStart();
-
 #ifdef USE_MPI
 	if(myid==0)
 #endif
@@ -2181,16 +2066,10 @@ void qsorts_new(void)
 		//MPI2: Only running till N_MAX for now since no new stars are created, later has to be changed to N_MAX_NEW.
 		//MPI2: Changin to N_MAX+1, later change to N_MAX_NEW+1
 		qsorts(star+1,clus.N_MAX);
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void post_sort_comm()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	int i;
 #ifdef USE_MPI
 	MPI_Status stat;
@@ -2217,8 +2096,6 @@ void post_sort_comm()
 	MPI_Bcast(star_r, clus.N_MAX+2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Bcast(star_phi, clus.N_MAX+2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void findIndices( long N, int blkSize, int i, int* begin, int* end )
@@ -2260,6 +2137,7 @@ int findProcForIndex( int j )
 void set_rng_states()
 {
 	int i;
+/*
 #ifdef USE_MPI
 	curr_st = (struct rng_t113_state*) malloc(sizeof(struct rng_t113_state));
 	reset_rng_t113_new(IDUM, curr_st);
@@ -2273,4 +2151,5 @@ void set_rng_states()
 	for(i = 1; i < procs; i++)
 		st[i] = rng_t113_jump( st[i-1] , JPoly_2_20);
 #endif
+*/
 }

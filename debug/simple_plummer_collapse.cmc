@@ -3,9 +3,46 @@ GAMMA = 0.1
 INPUT_FILE = simple_plummer_collapse.fits
 MASS_PC = 0.00001,0.00003,0.0001,0.0002,0.0003,0.0004,0.0005,0.0008,0.001,0.0012,0.0014,0.0016,0.0018,0.002,0.0022,0.0024,0.0026,0.0028,0.003,0.0035,0.004,0.005,0.008,0.01,0.013,0.015,0.018,0.02,0.05,0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95,0.99
 MASS_BINS = 0.1,1.0,10.0,100.0,1000.0
+<<<<<<< .mine
+<<<<<<< .mine
+<<<<<<< .mine
+<<<<<<< .mine
+<<<<<<< .mine
+STELLAR_EVOLUTION = 0
+<<<<<<< .mine
+<<<<<<< .mine
+T_MAX_COUNT = 10
+#STREAMS = 4
+=======
 STELLAR_EVOLUTION = 1
+<<<<<<< .mine
+=======
+STELLAR_EVOLUTION = 0
+>>>>>>> .r869
+T_MAX_COUNT = 3
+=======
+STELLAR_EVOLUTION = 1
+T_MAX_COUNT = 2
+=======
 T_MAX_COUNT = 3
 #STREAMS = 4
+>>>>>>> .r881
+>>>>>>> .r870
+=======
+T_MAX_COUNT = 3
+=======
+STELLAR_EVOLUTION = 1
+T_MAX_COUNT = 2
+>>>>>>> .r871
+>>>>>>> .r866
+=======
+STELLAR_EVOLUTION = 0
+T_MAX_COUNT = 3
+=======
+T_MAX_COUNT = 2
+>>>>>>> .r864
+>>>>>>> .r869
+>>>>>>> .r871
 #SNAPSHOTTING=1
 #SNAPSHOT_WINDOWS= 1e-2,1e-2,1.0e-1;1.5e-1,1.0e-2,2e-1
 #SNAPSHOT_WINDOW_UNITS= Gyr

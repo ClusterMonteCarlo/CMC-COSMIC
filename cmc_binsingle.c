@@ -33,12 +33,14 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	vc = sqrt(binary[jbin].m1 * binary[jbin].m2 * (star[kbin].m + star[ksin].m) / \
 		  (binary[jbin].a * star[kbin].m * star[ksin].m * ((double) clus.N_STAR)));
 
+/*
 #ifndef USE_MPI
 	curr_st = &st[findProcForIndex(ksin)];
 #endif
 	b = sqrt(rng_t113_dbl_new(curr_st)) * bmax / binary[jbin].a;
+*/
 	/* b should be in units of a */
-	//b = sqrt(rng_t113_dbl()) * bmax / binary[jbin].a;
+	b = sqrt(rng_t113_dbl()) * bmax / binary[jbin].a;
 				
 	/* set parameters */
 	input.ks = 0;

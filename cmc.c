@@ -31,8 +31,6 @@ int main(int argc, char *argv[])
 	gsl_rng *rng;
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
-	//MPI2: Time variables to compute total time.
-	double timeS, timeE;
 	//Temp file handle for debugging
 	FILE *ftest;
 	//MPI2: Some variables to assist debugging
@@ -54,7 +52,7 @@ int main(int argc, char *argv[])
 	Start = (int *) malloc(procs * sizeof(int));
 	End = (int *) malloc(procs * sizeof(int));
 
-	create_timing_files();
+	//create_timing_files();
 
 	/* set some important global variables */
 	set_global_vars1();
@@ -66,12 +64,9 @@ int main(int argc, char *argv[])
 	gsl_rng_env_setup();
 	rng = gsl_rng_alloc(rng_type);
 
-	//MPI2: Storing time to compute total time.
-	//timeStart2(&timeS);
-
 	get_star_data(argc, argv, rng);
 
-	set_rng_states();
+	//set_rng_states();
 
 	mpiInitBcastGlobArrays();
 
@@ -91,9 +86,9 @@ int main(int argc, char *argv[])
 	/* MPI2: Calculating disp and len for mimcking parallel rng */
 	findLimits( clus.N_MAX, 20 );
 
-	alloc_bin_buf();
+	//alloc_bin_buf();
 
-	distr_bin_data();
+	//distr_bin_data();
 
 	bin_vars_calculate();
 
@@ -158,14 +153,12 @@ int main(int argc, char *argv[])
 	cuInitialize();
 #endif
 
-	timeStart2(&timeS);
-
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
 	while (CheckStop(tmsbufref) == 0) 
 	{
 		/* calculate central quantities */
-		calc_central_new();
+		//calc_central_new();
 
 		calc_timestep(rng);
 
@@ -178,6 +171,7 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 
+/*
 #ifdef USE_MPI
 		strcpy(filename, "test_rng_par");
 		strcpy(tempstr, filename);
@@ -204,6 +198,7 @@ int main(int argc, char *argv[])
 			fprintf(ftest, "%ld\t%.18g\n", i, star[i].E );
 		fclose(ftest);
 #endif
+*/
 
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
@@ -241,7 +236,7 @@ int main(int argc, char *argv[])
 
 		pre_sort_comm();
 
-		collect_bin_data();
+		//collect_bin_data();
 
 		tidally_strip_stars2();
 
@@ -302,8 +297,6 @@ int main(int argc, char *argv[])
 
 	} /* End WHILE (time step iteration loop) */
 
-	timeEnd2(fileTime, "TotalTime", &timeS, &timeE, &timeT);
-
 	times(&tmsbuf);
 
 	dprintf("Usr time = %.6e ", (double)
@@ -339,13 +332,29 @@ int main(int argc, char *argv[])
 	free(binary_buf);
 	free(num_bin_buf);
 #else
-	free(st); //commenting because it throws some error
+	//free(st); //commenting because it throws some error
 #endif
 	free(Start);
 	free(End);
 
+	free(multi_mass_r[i]);
+	free(multi_mass_r);
+	free(sigma_array.r);
+	free(sigma_array.sigma);
+	free(mass_bins);
+
+	if(SNAPSHOT_WINDOWS)
+		free(SNAPSHOT_WINDOWS);
+/*
+	if(SNAPSHOT_WINDOW_UNITS)
+		free(SNAPSHOT_WINDOW_UNITS);
+*/
 	if (SEARCH_GRID)
 		search_grid_free(r_grid);
+
+	if(zpars)
+		free(zpars);
+
 #ifdef DEBUGGING
 	g_hash_table_destroy(star_ids);
 	g_array_free(id_array, TRUE);

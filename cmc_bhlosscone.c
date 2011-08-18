@@ -108,12 +108,13 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 			//if (delta>sqrt(L2)) delta=sqrt(L2);
 			//delta = MAX(deltabeta_orb, MIN(deltamax, sqrt(L2)));
 
-
+/*
 #ifndef USE_MPI
 			curr_st = &st[findProcForIndex(index)];
 #endif
 			dbeta = 2.0 * PI * rng_t113_dbl_new(st); 
-			//dbeta = 2.0 * PI * rng_t113_dbl(); 
+*/
+			dbeta = 2.0 * PI * rng_t113_dbl(); 
 
 			do_random_step(w, dbeta, delta); 
 #ifdef EXPERIMENTAL

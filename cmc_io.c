@@ -432,7 +432,8 @@ void PrintFileOutput(void) {
 		}
 	}
 
-        print_snapshot_windows();
+	print_snapshot_windows();
+	free(multimassr_empty);
 }
 
 /*** Parsing of Input Parameters / Memory allocation / File I/O ***/
@@ -1513,10 +1514,6 @@ void write_snapshot(char *filename) {
 
 void get_star_data(int argc, char *argv[], gsl_rng *rng)
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 	//Currently doing on all nodes to avoid broadcasting of global variables. Later, might have to be split into 2 or more functions, and store all global variables into a structure for easy broadcast.
 	/* parse input */
 	parser(argc, argv, rng); //to do parallel i/o
@@ -1562,16 +1559,10 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 	/* binary remainders */
 	clus.N_MAX = clus.N_STAR;
 	N_b = clus.N_BINARY;
-
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void mpiInitBcastGlobArrays()
 {
-	strcpy(funcName, __FUNCTION__);
-	static double timeTotLoc;
-	timeStart();
-
 #ifdef USE_MPI
 	/*MPI2: Initializing and extracting global arrays that will be needed by all processors.*/
 	//MPI2: Tested
@@ -1590,7 +1581,6 @@ void mpiInitBcastGlobArrays()
 	MPI_Bcast(star_r, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
-	timeEnd(fileTime, funcName, &timeTotLoc);
 }
 
 void alloc_bin_buf()

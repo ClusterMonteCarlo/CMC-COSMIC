@@ -32,11 +32,13 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 #endif
 
 	bmax = rperimax * sqrt(1.0 + 2.0 * ((mass_k + mass_kp) * madhoc) / (rperimax * sqr(W)));
+/*
 #ifndef USE_MPI
 	 curr_st = &st[findProcForIndex(k)];
 #endif
-	//b = sqrt(rng_t113_dbl()) * bmax;
-	b = sqrt(rng_t113_dbl_new(curr_st)) * bmax;
+*/
+	b = sqrt(rng_t113_dbl()) * bmax;
+	//b = sqrt(rng_t113_dbl_new(curr_st)) * bmax;
 
 	rperi = madhoc*(mass_k+mass_kp)/sqr(W) * (-1.0+sqrt(1.0+sqr(b*W*W/(madhoc*mass_k+madhoc*mass_kp))));
 
@@ -767,8 +769,8 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		/*Sourav: this is arbitrary lifetime for the collision products.  They are 
 		uniformly chosen between 10^6 years to 10^8 years.  Reference: Sills et.al. 2007, 
 		Sills et.al. 1997; all other stars have infinite lifetime*/
-			//merged_star->lifetime = 1.0e6*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR + rng_t113_dbl() * (1.0e8-1.0e6)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-			merged_star->lifetime = 1.0e6*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR + rng_t113_dbl_new(curr_st) * (1.0e8-1.0e6)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			merged_star->lifetime = 1.0e6*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR + rng_t113_dbl() * (1.0e8-1.0e6)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			//merged_star->lifetime = 1.0e6*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR + rng_t113_dbl_new(curr_st) * (1.0e8-1.0e6)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 			merged_star->createtime = TotalTime;
 		}
 	} else {
