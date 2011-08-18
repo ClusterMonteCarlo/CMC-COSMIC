@@ -60,36 +60,36 @@
 #define MASK 0xffffffffUL
 #define LCG(n) ((69069UL * n) & 0xffffffffUL)
 
-static struct rng_t113_state state;
+static struct rng_t113_state state_static;
 unsigned int JPoly_2_20[4] = {0x0c382e31, 0x1b040425, 0x0b49a509, 0x0173f6b0};
 unsigned int JPoly_2_80[4] = {0x487cf69c, 0x00be6310, 0x04bfe2bb, 0x000824f9};
 
 void set_rng_t113(struct rng_t113_state st){
-	state.z[0] = st.z[0];
-	state.z[1] = st.z[1];
-	state.z[2] = st.z[2];
-	state.z[3] = st.z[3];
+	state_static.z[0] = st.z[0];
+	state_static.z[1] = st.z[1];
+	state_static.z[2] = st.z[2];
+	state_static.z[3] = st.z[3];
 }
 
 void get_rng_t113(struct rng_t113_state *st){
-	st->z[0] = state.z[0];
-	st->z[1] = state.z[1];
-	st->z[2] = state.z[2];
-	st->z[3] = state.z[3];
+	st->z[0] = state_static.z[0];
+	st->z[1] = state_static.z[1];
+	st->z[2] = state_static.z[2];
+	st->z[3] = state_static.z[3];
 }
 
 unsigned long rng_t113_int() {
 	unsigned long b;
 
-	b = ((((state.z[0] <<  6) &MASK) ^ state.z[0]) >> 13);
-	state.z[0] = ((((state.z[0] & 4294967294UL) << 18) &MASK) ^ b);
-	b = ((((state.z[1] <<  2) &MASK) ^ state.z[1]) >> 27);
-	state.z[1] = ((((state.z[1] & 4294967288UL) <<  2) &MASK) ^ b);
-	b = ((((state.z[2] << 13) &MASK) ^ state.z[2]) >> 21);
-	state.z[2] = ((((state.z[2] & 4294967280UL) <<  7) &MASK) ^ b);
-	b = ((((state.z[3] <<  3) &MASK) ^ state.z[3]) >> 12);
-	state.z[3] = ((((state.z[3] & 4294967168UL) << 13) &MASK) ^ b);
-  	return (state.z[0] ^ state.z[1] ^ state.z[2] ^ state.z[3]);
+	b = ((((state_static.z[0] <<  6) &MASK) ^ state_static.z[0]) >> 13);
+	state_static.z[0] = ((((state_static.z[0] & 4294967294UL) << 18) &MASK) ^ b);
+	b = ((((state_static.z[1] <<  2) &MASK) ^ state_static.z[1]) >> 27);
+	state_static.z[1] = ((((state_static.z[1] & 4294967288UL) <<  2) &MASK) ^ b);
+	b = ((((state_static.z[2] << 13) &MASK) ^ state_static.z[2]) >> 21);
+	state_static.z[2] = ((((state_static.z[2] & 4294967280UL) <<  7) &MASK) ^ b);
+	b = ((((state_static.z[3] <<  3) &MASK) ^ state_static.z[3]) >> 12);
+	state_static.z[3] = ((((state_static.z[3] & 4294967168UL) << 13) &MASK) ^ b);
+  	return (state_static.z[0] ^ state_static.z[1] ^ state_static.z[2] ^ state_static.z[3]);
 }
 
 double rng_t113_dbl() {
@@ -100,14 +100,14 @@ void reset_rng_t113(unsigned long int s) {
 
 	if (s == 0) s = 1UL;	/* default seed is 1 */
 
-	state.z[0] = LCG (s);
-	if (state.z[0] < 2UL) state.z[0] += 2UL;
-	state.z[1] = LCG (state.z[0]);
-	if (state.z[1] < 8UL) state.z[1] += 8UL;
-	state.z[2] = LCG (state.z[1]);
-	if (state.z[2] < 16UL) state.z[2] += 16UL;
-	state.z[3] = LCG (state.z[2]);
-	if (state.z[3] < 128UL) state.z[3] += 128UL;
+	state_static.z[0] = LCG (s);
+	if (state_static.z[0] < 2UL) state_static.z[0] += 2UL;
+	state_static.z[1] = LCG (state_static.z[0]);
+	if (state_static.z[1] < 8UL) state_static.z[1] += 8UL;
+	state_static.z[2] = LCG (state_static.z[1]);
+	if (state_static.z[2] < 16UL) state_static.z[2] += 16UL;
+	state_static.z[3] = LCG (state_static.z[2]);
+	if (state_static.z[3] < 128UL) state_static.z[3] += 128UL;
 
 	/* Calling RNG ten times to satify recurrence condition */
 	rng_t113_int(); rng_t113_int(); rng_t113_int(); 

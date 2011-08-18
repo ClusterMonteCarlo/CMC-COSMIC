@@ -2131,13 +2131,19 @@ int findProcForIndex( int j )
 		if( j >= Start[i] && j <= End[i] )
 			break;
 
+	if(i >= procs)
+	{
+		eprintf("Star id out of bounds!\n");
+		exit_cleanly(-2);
+	}
+
 	return i;
 }
 
 void set_rng_states()
 {
 	int i;
-/*
+
 #ifdef USE_MPI
 	curr_st = (struct rng_t113_state*) malloc(sizeof(struct rng_t113_state));
 	reset_rng_t113_new(IDUM, curr_st);
@@ -2148,8 +2154,9 @@ void set_rng_states()
 	st = (struct rng_t113_state*) malloc(procs * sizeof(struct rng_t113_state));
 	reset_rng_t113_new(IDUM, &st[0]);
 
-	for(i = 1; i < procs; i++)
-		st[i] = rng_t113_jump( st[i-1] , JPoly_2_20);
+	//Not necessary, but just to make sure.
+	if(procs > 1)
+		for(i = 1; i < procs; i++)
+			st[i] = rng_t113_jump( st[i-1] , JPoly_2_20);
 #endif
-*/
 }

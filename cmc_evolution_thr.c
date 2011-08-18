@@ -710,7 +710,9 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
 	for (si=mpiBegin; si<=mpiEnd; si++) {
 #else
-	for (si = 1; si <= clus.N_MAX_NEW; si++) { /* Repeat for all stars */
+	//MPI2: Running till N_MAX since findProcForIndex will cause a problem since currently start creation is not handled properly.
+	//for (si = 1; si <= clus.N_MAX_NEW; si++) { /* Repeat for all stars */
+	for (si = 1; si <= clus.N_MAX; si++) { /* Repeat for all stars */
 #endif
 		j = si;
 
@@ -784,14 +786,15 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		F = 1.2 * MAX(g1, g2);
 
-/*
+
 #ifndef USE_MPI
 		curr_st = &st[findProcForIndex(j)];
 #endif
-*/
+
 		for (k = 1; k <= N_TRY; k++) {
-			X = rng_t113_dbl();
-			//X = rng_t113_dbl_new(curr_st);
+			//printf("id=%d\tk=%d\t0=%ld\t1=%ld\t2=%ld\t3=%ld\n",si,k, curr_st->z[0],curr_st->z[1],curr_st->z[2],curr_st->z[3]);
+			//X = rng_t113_dbl();
+			X = rng_t113_dbl_new(curr_st);
 
 			s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
 

@@ -1425,6 +1425,8 @@ void break_wide_binaries(void)
 #ifdef USE_MPI
 	for (k=mpiBegin; k<=mpiEnd; k++)
 #else
+	//MPI2: Running till N_MAX since findProcForIndex will cause a problem since currently start creation is not handled properly.
+	//for (k=1; k<=clus.N_MAX_NEW; k++)
 	for (k=1; k<=clus.N_MAX_NEW; k++)
 #endif
 	{

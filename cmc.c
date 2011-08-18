@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
 	get_star_data(argc, argv, rng);
 
-	//set_rng_states();
+	set_rng_states();
 
 	mpiInitBcastGlobArrays();
 
@@ -221,6 +221,7 @@ int main(int argc, char *argv[])
 		//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
 		toy_rejuvenation();
 
+
 		/* this calls get_positions() */
 		tidally_strip_stars1();
 
@@ -332,7 +333,7 @@ int main(int argc, char *argv[])
 	free(binary_buf);
 	free(num_bin_buf);
 #else
-	//free(st); //commenting because it throws some error
+	free(st); //commenting because it throws some error
 #endif
 	free(Start);
 	free(End);
