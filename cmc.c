@@ -86,9 +86,9 @@ int main(int argc, char *argv[])
 	/* MPI2: Calculating disp and len for mimcking parallel rng */
 	findLimits( clus.N_MAX, 20 );
 
-	//alloc_bin_buf();
+	alloc_bin_buf();
 
-	//distr_bin_data();
+	distr_bin_data();
 
 	bin_vars_calculate();
 
@@ -171,35 +171,6 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 
-/*
-#ifdef USE_MPI
-		strcpy(filename, "test_rng_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", j, star[j].E );
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-#else
-		strcpy(tempstr, "test_rng_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].E );
-		fclose(ftest);
-#endif
-*/
-
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
 		clus.N_MAX_NEW++;
@@ -237,7 +208,7 @@ int main(int argc, char *argv[])
 
 		pre_sort_comm();
 
-		//collect_bin_data();
+		collect_bin_data();
 
 		tidally_strip_stars2();
 
@@ -275,6 +246,33 @@ int main(int argc, char *argv[])
 		tcount++;
 
 		calc_clusdyn_new();
+
+#ifdef USE_MPI
+		strcpy(filename, "test_rng_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+					fprintf(ftest, "%ld\t%.18g\n", j, star_r[j] );
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+#else
+		strcpy(tempstr, "test_rng_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r );
+		fclose(ftest);
+#endif
 
 		//MPI2: Commenting out for MPI
 		/*
@@ -338,7 +336,7 @@ int main(int argc, char *argv[])
 	free(Start);
 	free(End);
 
-	free(multi_mass_r[i]);
+	//free(multi_mass_r[i]);
 	free(multi_mass_r);
 	free(sigma_array.r);
 	free(sigma_array.sigma);

@@ -213,14 +213,12 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		}
 
 
-		/* do encounter or two-body relaxation */
-		if (rng_t113_dbl() < P_enc) {
-/*
 #ifndef USE_MPI
 		curr_st = &st[findProcForIndex(k)];
 #endif
+		/* do encounter or two-body relaxation */
+		//if (rng_t113_dbl() < P_enc) {
 		if(rng_t113_dbl_new(curr_st) < P_enc) { 
-*/
 			/* do encounter */
 			if (star[k].binind > 0 && star[kp].binind > 0) {
 				/* binary--binary */
@@ -280,8 +278,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			w2[2] = -w[2] * w[3] / wp;
 			w2[3] = wp;
 			
-			psi = rng_t113_dbl() * 2 * PI;
-			//psi = rng_t113_dbl_new(curr_st) * 2 * PI;
+			//psi = rng_t113_dbl() * 2 * PI;
+			psi = rng_t113_dbl_new(curr_st) * 2 * PI;
 
 			for (j = 1; j <= 3; j++) {
 				w_new[j] = w[j] * cos(beta) + w1[j] * sin(beta) * cos(psi) + w2[j] * sin(beta) * sin(psi);

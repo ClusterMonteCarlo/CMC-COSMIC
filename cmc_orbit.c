@@ -224,19 +224,17 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
 
     F = 1.2 * MAX(g1, g2);
 
-/*
 #ifndef USE_MPI
 	 curr_st = &st[findProcForIndex(index)];
 #endif
-*/
     for (k = 1; k <= N_TRY; k++) {
-      X = rng_t113_dbl();
-		//X = rng_t113_dbl_new(curr_st); 
+		X = rng_t113_dbl_new(curr_st); 
+      //X = rng_t113_dbl();
 
       s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
 
-      g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
-		//g0 = F * rng_t113_dbl_new(curr_st); 
+		g0 = F * rng_t113_dbl_new(curr_st); 
+      //g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
 
       r = 0.5 * (rmin + rmax) + 0.25 * (rmax - rmin) * (3.0 * s0 - s0 * s0 * s0);
 

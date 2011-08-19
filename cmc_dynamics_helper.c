@@ -248,13 +248,11 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	/* set random angle between vt's */
 	/* first store random variable */
 	if (setY) {
-		star[k].Y = rng_t113_dbl();
-/*
 #ifndef USE_MPI
 	curr_st = &st[findProcForIndex(k)];
 #endif
 		star[k].Y = rng_t113_dbl_new(curr_st);
-*/
+		//star[k].Y = rng_t113_dbl();
 
 		star[kp].Y = star[k].Y;
 	}
@@ -845,11 +843,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				star[knewp].interacted = 1;
 			}
 			
-/*
 #ifndef USE_MPI
 			curr_st = &st[findProcForIndex(k)];
 #endif
-*/
 			/* properties specific to single/binary/triple stars */
 			if (hier.obj[i]->n == 1) {
 				/* single star */

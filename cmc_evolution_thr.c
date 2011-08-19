@@ -792,14 +792,13 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
 
 		for (k = 1; k <= N_TRY; k++) {
-			//printf("id=%d\tk=%d\t0=%ld\t1=%ld\t2=%ld\t3=%ld\n",si,k, curr_st->z[0],curr_st->z[1],curr_st->z[2],curr_st->z[3]);
-			//X = rng_t113_dbl();
 			X = rng_t113_dbl_new(curr_st);
+			//X = rng_t113_dbl();
 
 			s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
 
-			g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
-			//g0 = F * rng_t113_dbl_new(curr_st);
+			g0 = F * rng_t113_dbl_new(curr_st);
+			//g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
 
 			r = 0.5 * (rmin + rmax) + 0.25 * (rmax - rmin) * (3.0 * s0 - s0 * s0 * s0);
 
@@ -860,8 +859,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		star[j].r_apo = rmax;
 		
 		/* pick random sign for v_r */
-		if(rng_t113_dbl() < 0.5)
-		//if(rng_t113_dbl_new(curr_st) < 0.5)
+		//if(rng_t113_dbl() < 0.5)
+		if(rng_t113_dbl_new(curr_st) < 0.5)
 			vr = -vr;
 
 		vt = J / r;
