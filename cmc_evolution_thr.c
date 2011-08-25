@@ -710,9 +710,11 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
 	for (si=mpiBegin; si<=mpiEnd; si++) {
 #else
+		printf("N_MAX_NEW=%ld\n", clus.N_MAX_NEW);
 	//MPI2: Running till N_MAX since findProcForIndex will cause a problem since currently start creation is not handled properly.
-	//for (si = 1; si <= clus.N_MAX_NEW; si++) { /* Repeat for all stars */
-	for (si = 1; si <= clus.N_MAX; si++) { /* Repeat for all stars */
+	for (si = 1; si <= clus.N_MAX_NEW; si++) { /* Repeat for all stars */
+	//for (si = 1; si <= clus.N_MAX; si++) { /* Repeat for all stars */
+
 #endif
 		j = si;
 

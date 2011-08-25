@@ -140,6 +140,7 @@ void destroy_binary(long i)
 long create_star(void)
 {
 	long i;
+	printf("created!!!!!\n");
 	
 	/* account for new star */
 	clus.N_STAR_NEW++;

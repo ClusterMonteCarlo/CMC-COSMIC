@@ -676,6 +676,8 @@ long potential_calculate(void) {
 	star[clus.N_MAX + 1].r = SF_INFINITY;
 	star[clus.N_MAX + 1].phi = 0.0;
 
+	printf("STARS = %ld\n", clus.N_MAX);
+
 	mprev = Mtotal;
 	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute potential at each r */
 		star[k].phi = star[k + 1].phi - mprev * (1.0 / star[k].r - 1.0 / star[k + 1].r);
@@ -684,7 +686,7 @@ long potential_calculate(void) {
 		  eprintf("NaN in phi[%li] detected\n", k);
 		  eprintf("phi[k+1]=%g mprev=%g, r[k]=%g, r[k+1]=%g, m[k]=%g, clus.N_STAR=%li\n", 
 		  	star[k + 1].phi, mprev, star[k].r, star[k + 1].r, star[k].m, clus.N_STAR);
-		  //exit_cleanly(-1);
+		  exit_cleanly(-1);
 		}
 	}
 
@@ -2133,6 +2135,7 @@ int findProcForIndex( int j )
 
 	if(i >= procs)
 	{
+		i = 0;
 		eprintf("Star id out of bounds!\n");
 		exit_cleanly(-2);
 	}

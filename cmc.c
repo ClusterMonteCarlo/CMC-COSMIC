@@ -164,6 +164,7 @@ int main(int argc, char *argv[])
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
+		//clus.N_MAX_NEW = mpiEnd+1;
 
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
