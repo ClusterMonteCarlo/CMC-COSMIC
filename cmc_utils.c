@@ -678,6 +678,8 @@ long potential_calculate(void) {
 
 	printf("STARS = %ld\n", clus.N_MAX);
 
+	printf("STARS = %ld\n", clus.N_MAX);
+
 	mprev = Mtotal;
 	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute potential at each r */
 		star[k].phi = star[k + 1].phi - mprev * (1.0 / star[k].r - 1.0 / star[k + 1].r);
