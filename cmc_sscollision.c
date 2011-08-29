@@ -108,7 +108,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		} else {
 			/* form compact binary with stripped RG core*/
 			/* put new binary together and destroy original stars */
-			knew = create_binary();
+			knew = create_binary(k, 0);
 			star[knew].m = mass_k + mass_kp;
 			star[knew].r = rcm;
 			star[knew].vr = vcm[3];
@@ -214,7 +214,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		} else {
 			/* form compact binary with stripped RG core*/
 			/* put new binary together and destroy original stars */
-			knew = create_binary();
+			knew = create_binary(k, 0);
 			star[knew].m = mass_k + mass_kp;
 			star[knew].r = rcm;
 			star[knew].vr = vcm[3];
@@ -263,7 +263,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		   so the next clause should never be entered. */
 
 		/* create new star */
-		knew = create_star();
+		knew = create_star(k, 0);
 		
 		/* merge parent stars, setting mass, stellar radius, and SE params */
 		merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
@@ -336,7 +336,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			}
 
 			/* put new binary together and destroy original stars */
-			knew = create_binary();
+			knew = create_binary(k, 0);
 			star[knew].m = mass_k + mass_kp;
 			star[knew].r = rcm;
 			star[knew].vr = vcm[3];

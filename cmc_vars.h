@@ -83,8 +83,8 @@ _EXTERN_ int mpiBegin, mpiEnd;
 _EXTERN_ int *mpiDisp, *mpiLen;
 #endif
 _EXTERN_ int myid, procs;
-//_EXTERN_ double timeT, startTime, endTime; 
-//_EXTERN_ char funcName[64];
+_EXTERN_ double timeT, startTime, endTime; 
+_EXTERN_ char funcName[64];
 _EXTERN_ char fileTime[64];
 /* to mimic parallel rng */
 _EXTERN_ int *Start, *End; 
@@ -94,6 +94,10 @@ _EXTERN_ struct rng_t113_state *st;
 _EXTERN_ binary_t *binary_buf;
 _EXTERN_ int *num_bin_buf;
 _EXTERN_ int size_bin_buf;
+/* for newly created stars - mimicking rng */
+_EXTERN_ int *created_star_dyn_node;
+_EXTERN_ int *created_star_se_node;
+_EXTERN_ int *new_size;
 
 /* debugging */
 _EXTERN_ int debug;

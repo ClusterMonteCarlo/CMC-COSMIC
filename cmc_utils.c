@@ -676,10 +676,6 @@ long potential_calculate(void) {
 	star[clus.N_MAX + 1].r = SF_INFINITY;
 	star[clus.N_MAX + 1].phi = 0.0;
 
-	printf("STARS = %ld\n", clus.N_MAX);
-
-	printf("STARS = %ld\n", clus.N_MAX);
-
 	mprev = Mtotal;
 	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute potential at each r */
 		star[k].phi = star[k + 1].phi - mprev * (1.0 / star[k].r - 1.0 / star[k + 1].r);
@@ -2050,6 +2046,14 @@ void pre_sort_comm()
 		star[i].m = star_m[i];
 	}
 
+   MPI_Gather( &(clus.N_MAX_NEW), 1, MPI_INT, new_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	if(myid==0){
+		for(i=0; i<procs; i++)
+			printf("new end %d = %d\t", i, new_size[i]);
+		printf("\n");
+	}
+
 	//MPI2: To be refactored into separate function later.
 	if(myid!=0)
 		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
@@ -2130,19 +2134,33 @@ void findLimits( long N, int blkSize )
 
 int findProcForIndex( int j )
 {
-	int i;
+	int i, up_bound;
+
+	if(procs == 1)
+		return 0;
+
 	for( i = 0; i < procs; i++ )
 		if( j >= Start[i] && j <= End[i] )
-			break;
+			return i;
 
-	if(i >= procs)
+	up_bound = clus.N_MAX;
+	for( i=0; i<procs; i++ )
 	{
-		i = 0;
-		eprintf("Star id out of bounds!\n");
-		exit_cleanly(-2);
+		if( j <= up_bound + created_star_dyn_node[i] )
+			return i;
+		up_bound += created_star_dyn_node[i];
 	}
 
-	return i;
+	for( i=0; i<procs; i++ )
+	{
+		if( j <= up_bound + created_star_se_node[i] )
+			return i;
+		up_bound += created_star_se_node[i];
+	}
+
+	eprintf("Star id out of bounds!\n");
+	exit_cleanly(-2);
+	return -1;
 }
 
 void set_rng_states()

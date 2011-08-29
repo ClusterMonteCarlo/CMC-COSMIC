@@ -574,8 +574,8 @@ void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, 
 /* Fewbody stuff */
 void destroy_obj(long i);
 void destroy_binary(long i);
-long create_star(void);
-long create_binary(void);
+long create_star(int idx, int dyn_0_se_1);
+long create_binary(int idx, int dyn_0_se_1);
 void dynamics_apply(double dt, gsl_rng *rng);
 void perturb_stars_fewbody(double dt, gsl_rng *rng);
 void qsorts_new(void);

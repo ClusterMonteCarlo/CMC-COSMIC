@@ -67,7 +67,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	/* the +1 was put there so newly created stars wouldn't disappear, but it causes
 	   tidally stripped stars to be removed multiple times... */
 	/* clus.N_MAX_NEW = clus.N_MAX+1; */
-	clus.N_MAX_NEW = clus.N_MAX;
+	//clus.N_MAX_NEW = clus.N_MAX;
 	/* binding energy information */
 	DE_bb = 0.0;
 	DE_bs = 0.0;

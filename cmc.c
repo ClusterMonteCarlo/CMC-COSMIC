@@ -45,14 +45,19 @@ int main(int argc, char *argv[])
 
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
+
+	if(myid==0)
+		new_size = (int *)calloc(procs, sizeof(int)); 
 #else
 	procs = 1;
+	created_star_dyn_node = (int *) calloc(procs, sizeof(int));
+	created_star_se_node = (int *) calloc(procs, sizeof(int));
 #endif
 
-	Start = (int *) malloc(procs * sizeof(int));
-	End = (int *) malloc(procs * sizeof(int));
+	Start = (int *) calloc(procs, sizeof(int));
+	End = (int *) calloc(procs, sizeof(int));
 
-	//create_timing_files();
+	create_timing_files();
 
 	/* set some important global variables */
 	set_global_vars1();
@@ -125,6 +130,9 @@ int main(int argc, char *argv[])
 		stellar_evolution_init(); //whole stellar evol. part does not need any data from other particles
 	}
 
+	for(i=0; i<procs; i++)
+		created_star_se_node[i] = 0;
+
 	//MPI2: Binaries. Ignoring for now.
 	update_vars(); //might need communication for bin. index array. needs cum.sum.
 
@@ -157,14 +165,25 @@ int main(int argc, char *argv[])
 	/******* This is the main loop in the program *****************/
 	while (CheckStop(tmsbufref) == 0) 
 	{
+
+#ifndef USE_MPI
+		for(i=0; i<procs; i++)
+		{
+			created_star_dyn_node[i] = 0;
+			created_star_se_node[i] = 0;
+		}
+#endif
+
 		/* calculate central quantities */
-		//calc_central_new();
+		calc_central_new();
 
 		calc_timestep(rng);
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
-		//clus.N_MAX_NEW = mpiEnd+1;
+#ifdef USE_MPI
+		clus.N_MAX_NEW = mpiEnd+1;
+#endif
 
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
@@ -172,9 +191,18 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 
+#ifndef USE_MPI
+		for(i=0; i<procs; i++)
+			printf("node %d=%d, %d\t", i, created_star_dyn_node[i], created_star_se_node[i]);
+		printf("\n");
+#endif
+
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
-		clus.N_MAX_NEW++;
+		if(procs == 1)
+			clus.N_MAX_NEW++;
+
+		printf("N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
@@ -192,7 +220,6 @@ int main(int argc, char *argv[])
 		/*Sourav: checking all stars for their possible extinction from old age*/
 		//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
 		toy_rejuvenation();
-
 
 		/* this calls get_positions() */
 		tidally_strip_stars1();

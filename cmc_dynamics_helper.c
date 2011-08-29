@@ -137,15 +137,34 @@ void destroy_binary(long i)
 }
 
 /* create a new star, returning its index */
-long create_star(void)
+long create_star(int idx, int dyn_0_se_1)
 {
 	long i;
-	printf("created!!!!!\n");
-	
+	printf("\nidx=%d\tnode=%d\tdyn_or_se=%d\tstar created!!!!!\n", idx, findProcForIndex(idx), dyn_0_se_1);
+
 	/* account for new star */
 	clus.N_STAR_NEW++;
 	clus.N_MAX_NEW++;
 	
+#ifndef USE_MPI
+	//MPI2: To mimic parallel rng and draw rand. nums from the correct stream.
+	if(procs > 1)
+	{
+		//MPI2: This assumes that SE will create stars only after dynamics. If this is violated at some point, there are going to be problems :)
+		if(dyn_0_se_1 == 0)
+			//if star is created by dynamics
+			created_star_dyn_node[findProcForIndex(idx)]++;
+		else if(dyn_0_se_1 ==1)
+			//if star is created by stellar evolution
+			created_star_se_node[findProcForIndex(idx)]++;
+		else
+		{
+			eprintf("Invalid argument to create_star()");
+			exit_cleanly(-2);
+		}
+	}
+#endif
+
 	/* put new star at end; the +1 is to not overwrite the boundary star */
 	i = clus.N_MAX_NEW + 1;
 
@@ -156,7 +175,7 @@ long create_star(void)
 }
 
 /* create a new binary, returning its index */
-long create_binary(void)
+long create_binary(int idx, int dyn_0_se_1)
 {
 	long i, j;
 	
@@ -179,7 +198,7 @@ long create_binary(void)
 	binary[i].inuse = 1;
 
 	/* create the star that points to the binary */
-	j = create_star();
+	j = create_star(idx, dyn_0_se_1);
 	
 	star[j].binind = i;
 	
@@ -762,14 +781,14 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			/* single/binary/triple stars */
 			istriple = 0;
 			if (hier.obj[i]->n == 1) {
-				knew = create_star();
+				knew = create_star(k, 0);
 			} else if (hier.obj[i]->n == 2) {
-				knew = create_binary();
+				knew = create_binary(k, 0);
 			} else if (hier.obj[i]->n == 3) {
 				istriple = 1;
 				/* break triple for now */
-				knew = create_binary();
-				knewp = create_star();
+				knew = create_binary(k, 0);
+				knewp = create_star(k, 0);
 				
 				if (hier.obj[i]->obj[0]->n == 1) {
 					sid = 0;
@@ -1450,8 +1469,8 @@ void break_wide_binaries(void)
 				Eexcess += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 
 				/* create two stars for the binary components */
-				knew = create_star();
-				knewp = create_star();
+				knew = create_star(k, 0);
+				knewp = create_star(k, 0);
 				
 				cp_binmemb_to_star(k, 0, knew);
 				cp_binmemb_to_star(k, 1, knewp);

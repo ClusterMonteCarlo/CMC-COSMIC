@@ -554,8 +554,8 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
   } else if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] != 0.0) {
     /* disruption with both stars "intact" */
     //dprintf("binary disrupted via BSE with both stars intact\n");
-    knew = create_star();
-    knewp = create_star();
+    knew = create_star(k, 1);
+    knewp = create_star(k, 1);
     cp_binmemb_to_star(k, 0, knew);
     cp_binmemb_to_star(k, 1, knewp);
     DMse -= (star[knew].m + star[knewp].m) * madhoc;
@@ -674,7 +674,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
   } else if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] == 0.0) {
     /* secondary star gone */
     //dprintf("binary disrupted via BSE with first star intact\n");
-    knew = create_star();
+    knew = create_star(k, 1);
     cp_binmemb_to_star(k, 0, knew);
 
     fprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
@@ -763,7 +763,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
   } else if (binary[kb].bse_mass[0] == 0.0 && binary[kb].bse_mass[1] != 0.0) {
     /* primary star gone */
     //dprintf("binary disrupted via BSE with second star intact\n");
-    knew = create_star();
+    knew = create_star(k, 1);
     cp_binmemb_to_star(k, 1, knew);
 
     fprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 

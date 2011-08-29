@@ -20,7 +20,7 @@ int remove_old_star(double time, long k)
 		if ((time-binary[star[k].binind].createtime_m1)>binary[star[k].binind].lifetime_m1){
 			fprintf (removestarfile, "In the first loop:star[k].binind= %ld star[k].id= %ld\n", star[k].binind, star[k].id);
 			/* create two stars for the binary components */
-			knew = create_star();
+			knew = create_star(k, 0);
 			/*knewp = create_star();*/
 			
 #ifdef USE_MPI
@@ -114,7 +114,7 @@ int remove_old_star(double time, long k)
 		else if ((time-binary[star[k].binind].createtime_m2)>binary[star[k].binind].lifetime_m2){
 			fprintf (removestarfile, "In the second loop:star[k].binind= %ld star[k].id= %ld\n", star[k].binind, star[k].id);
 			/* create two stars for the binary components */
-			knew = create_star();
+			knew = create_star(k, 0);
 			
 #ifdef USE_MPI
 			star_r[knew] = star[k].r;
