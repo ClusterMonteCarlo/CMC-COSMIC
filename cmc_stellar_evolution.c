@@ -233,7 +233,8 @@ void do_stellar_evolution(gsl_rng *rng)
 	//MPI2: Doing for N_MAX for now, have to do till N_MAX_NEW later, may be with 2 loops.
 	for (k=mpiBegin; k<=mpiEnd; k++) {
 #else
-	for(k=1; k<=clus.N_MAX_NEW; k++){ 
+	//MPI2: Running till N_MAX_NEW+1 following the bugfix of incrementing N_MAX_NEW after SE.
+	for(k=1; k<=clus.N_MAX_NEW+1; k++){ 
 #endif
 		if (star[k].binind == 0) { /* single star */
 			tphysf = TotalTime / MEGA_YEAR;

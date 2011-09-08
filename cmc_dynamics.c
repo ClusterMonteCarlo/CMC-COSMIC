@@ -202,7 +202,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				S = 0.0;
 			}
 		}
-		
+
 		/* calculate encounter probability */
 		/* should it be n_local here even for binaries? */
 		P_enc = n_local * W * S * (dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)));
@@ -222,13 +222,13 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			/* do encounter */
 			if (star[k].binind > 0 && star[kp].binind > 0) {
 				/* binary--binary */
-				print_interaction_status("BB");
+				print_interaction_status("BB\n");
 
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "BB %g %g\n", TotalTime, rcm); */
 			} else if (star[k].binind > 0 || star[kp].binind > 0) {
 				/* binary--single */
-				print_interaction_status("BS");
+				print_interaction_status("BS\n");
 
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "BS %g %g\n", TotalTime, rcm); */
@@ -308,6 +308,11 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			if(star[k].vr == 0 || star[k].vt == 0 || star[kp].vr == 0 || star[kp].vt == 0)
 				printf("star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
 			
+/*
+	if(k==24981)
+		printf("***********\n\nE=%g\tJ = %g\tid=%d\t\tphi=%g\tvr=%g\tvt=%g\tmass_k=%g\tmass_kp=%g\tw_new[3]=%g\tv_new[3]=%g\tvp_new[3]=%g\tbeta=%g\tW=%gTrel12=%g\tn_local=%g\n",star[24981].E,star[24981].J,star[24981].id, star_phi[24981], star[24981].vr, star[24981].vt, mass_k, mass_kp, w_new[3], v_new[3], vp_new[3], beta, W, Trel12, n_local);
+*/		
+
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
 			set_star_EJ(kp);

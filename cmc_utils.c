@@ -2143,7 +2143,7 @@ int findProcForIndex( int j )
 		if( j >= Start[i] && j <= End[i] )
 			return i;
 
-	up_bound = clus.N_MAX;
+	up_bound = clus.N_MAX + 1;
 	for( i=0; i<procs; i++ )
 	{
 		if( j <= up_bound + created_star_dyn_node[i] )
@@ -2158,7 +2158,7 @@ int findProcForIndex( int j )
 		up_bound += created_star_se_node[i];
 	}
 
-	eprintf("Star id out of bounds!\n");
+	eprintf("Star id out of bounds! for id = %d\n", j);
 	exit_cleanly(-2);
 	return -1;
 }

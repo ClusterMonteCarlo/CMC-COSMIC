@@ -13,9 +13,11 @@
 void zero_star(long j)
 {
 #ifdef USE_MPI
+/*
 	star_r[j] = 0.0;
 	star_m[j] = 0.0;
 	star_phi[j] = 0.0;
+*/
 #endif
 	star[j].r = 0.0;
 	star[j].vr = 0.0;
@@ -140,7 +142,6 @@ void destroy_binary(long i)
 long create_star(int idx, int dyn_0_se_1)
 {
 	long i;
-	printf("\nidx=%d\tnode=%d\tdyn_or_se=%d\tstar created!!!!!\n", idx, findProcForIndex(idx), dyn_0_se_1);
 
 	/* account for new star */
 	clus.N_STAR_NEW++;
@@ -167,6 +168,7 @@ long create_star(int idx, int dyn_0_se_1)
 
 	/* put new star at end; the +1 is to not overwrite the boundary star */
 	i = clus.N_MAX_NEW + 1;
+	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
 
 	/* initialize to zero for safety */
 	zero_star(i);
@@ -235,6 +237,12 @@ double calc_n_local(long k, long p, long N_LIMIT)
 		kmax = N_LIMIT;
 		kmin = N_LIMIT - 2 * p - 1;
 	}
+
+/*
+if(k==24981)
+	printf("kmax=%d\tkmin=%d\tstar_r[kmax]=%g\t star_r[kmin]=%g\n", kmax, kmin, star_r[kmax], star_r[kmin]);
+*/
+
 #ifdef USE_MPI
 	return((2.0 * ((double) p)) * 3.0 / (4.0 * PI * (cub(star_r[kmax]) - cub(star_r[kmin]))));
 #else	
@@ -257,7 +265,11 @@ double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT)
 		kmin = N_LIMIT - 2 * p - 1;
 	}
 
+#ifdef USE_MPI
+	return(3.0 * ((double) p) * sqr(star[k].m + star[kp].m) / (cub(W) * (cub(star_r[kmax]) - cub(star_r[kmin]))));
+#else
 	return(3.0 * ((double) p) * sqr(star[k].m + star[kp].m) / (cub(W) * (cub(star[kmax].r) - cub(star[kmin].r))));
+#endif
 }
 
 void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4], double *W, double *rcm, double vcm[4], gsl_rng *rng, int setY)
@@ -782,8 +794,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			istriple = 0;
 			if (hier.obj[i]->n == 1) {
 				knew = create_star(k, 0);
+				printf("knew for new single=%ld\tk = %ld\n", knew, k);
 			} else if (hier.obj[i]->n == 2) {
 				knew = create_binary(k, 0);
+				printf("knew for new binary=%ld\tk = %ld\n", knew, k);
 			} else if (hier.obj[i]->n == 3) {
 				istriple = 1;
 				/* break triple for now */
@@ -806,10 +820,17 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			
 			/* generic properties */
 			/* set radial position */
+#ifdef USE_MPI
+			star_r[knew] = rcm;
+			if (istriple) {
+				star_r[knewp] = rcm;
+			}
+#else
 			star[knew].r = rcm;
 			if (istriple) {
 				star[knewp].r = rcm;
 			}
+#endif
 
 			/* figure out new velocities */
 			for (j=1; j<=3; j++) {
@@ -826,19 +847,35 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			}
 			
 			/* set mass; this gets overwritten later for collisions */
+#ifdef USE_MPI
 			if (istriple) {
 				star[knew].m = hier.obj[i]->obj[bid]->m * cmc_units.m / madhoc;
 				star[knewp].m = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
 			} else {
 				star[knew].m = hier.obj[i]->m * cmc_units.m / madhoc;
 			}
+#else
+			if (istriple) {
+				star[knew].m = hier.obj[i]->obj[bid]->m * cmc_units.m / madhoc;
+				star[knewp].m = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
+			} else {
+				star[knew].m = hier.obj[i]->m * cmc_units.m / madhoc;
+			}
+#endif
 
 			/* set potential */
+#ifdef USE_MPI
 			star[knew].phi = potential(star[knew].r);
 			if (istriple) {
 				star[knewp].phi = potential(star[knewp].r);
-			}
-			
+			}			
+#else
+			star[knew].phi = potential(star[knew].r);
+			if (istriple) {
+				star[knewp].phi = potential(star[knewp].r);
+			}			
+#endif
+
 			/* Calculate new energies by recomputing E = PE + KE using new velocity */
 			set_star_EJ(knew);
 			if (istriple) {
@@ -1045,8 +1082,13 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                                               knew, star[knew].binind, binary[star[knew].binind].bse_kw[0], 
                                               binary[star[knew].binind].bse_kw[1]);
 				}
+				printf("knew = %ld\t id1=%ld\tid2=%ld\n", knew, binary[star[knew].binind].id1, binary[star[knew].binind].id2);
 				
+#ifdef USE_MPI
+				star_m[knew] = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
+#else
 				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
+#endif
 
 				/* radii, and tb */
 				binary[star[knew].binind].rad1 = binary[star[knew].binind].bse_radius[0] * RSUN / units.l;
@@ -1451,10 +1493,18 @@ void break_wide_binaries(void)
 			j = star[k].binind;
 			
 			/* get relative velocity from velocity dispersion at binary's radial position */
+#ifdef USE_MPI
 			W = 4.0 * sigma_r(star[k].r) / sqrt(3.0 * PI);
-			
+#else
+			W = 4.0 * sigma_r(star[k].r) / sqrt(3.0 * PI);
+#endif	
+		
 			/* this is an order of magnitude estimate for the orbital speed */
+#ifdef USE_MPI
 			vorb = sqrt(star[k].m * madhoc / binary[j].a);
+#else
+			vorb = sqrt(star[k].m * madhoc / binary[j].a);
+#endif
 
 			nlocal = calc_n_local(k, AVEKERNEL, clus.N_MAX);
 			llocal = 0.1 * pow(nlocal, -1.0/3.0);

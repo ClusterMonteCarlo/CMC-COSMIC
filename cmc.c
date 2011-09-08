@@ -130,8 +130,10 @@ int main(int argc, char *argv[])
 		stellar_evolution_init(); //whole stellar evol. part does not need any data from other particles
 	}
 
+#ifndef USE_MPI
 	for(i=0; i<procs; i++)
 		created_star_se_node[i] = 0;
+#endif
 
 	//MPI2: Binaries. Ignoring for now.
 	update_vars(); //might need communication for bin. index array. needs cum.sum.
@@ -182,9 +184,10 @@ int main(int argc, char *argv[])
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
 #ifdef USE_MPI
-		clus.N_MAX_NEW = mpiEnd+1;
+		clus.N_MAX_NEW = mpiEnd;
 #endif
 
+		printf("Before dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
 		//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
@@ -193,16 +196,11 @@ int main(int argc, char *argv[])
 
 #ifndef USE_MPI
 		for(i=0; i<procs; i++)
-			printf("node %d=%d, %d\t", i, created_star_dyn_node[i], created_star_se_node[i]);
+			printf("node %ld=%d, %d\t", i, created_star_dyn_node[i], created_star_se_node[i]);
 		printf("\n");
 #endif
 
-		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
-			will disappear! */
-		if(procs == 1)
-			clus.N_MAX_NEW++;
-
-		printf("N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
+		printf("After dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
@@ -213,6 +211,10 @@ int main(int argc, char *argv[])
 
 		Prev_Dt = Dt;
 
+		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
+			will disappear! */
+		clus.N_MAX_NEW++;
+
 		/* some numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
 		energy_conservation1();
@@ -220,6 +222,13 @@ int main(int argc, char *argv[])
 		/*Sourav: checking all stars for their possible extinction from old age*/
 		//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
 		toy_rejuvenation();
+
+#ifndef USE_MPI
+		for(i=0; i<procs; i++)
+			printf("node %ld=%d, %d\t", i, created_star_dyn_node[i], created_star_se_node[i]);
+		printf("\n");
+#endif
+		printf("After SE N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
 
 		/* this calls get_positions() */
 		tidally_strip_stars1();

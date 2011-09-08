@@ -26,7 +26,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	orbit_rs_t orbit_rs;
 	long ktemp=si, kmin, kmax, i, i1, fevals;
 	double Qtemp, rk, rk1, Uk, Uk1, a, b, rmin, dQdr_min, rmax, dQdr_max;
-        double dQdr_min_num, dQdr_max_num, inside_sqrt, actual_rmin, actual_rmax;
+	double dQdr_min_num, dQdr_max_num, inside_sqrt, actual_rmin, actual_rmax;
 
 	/* for newly created stars, position si is not ordered */
         //dprintf("clus.N_MAX= %li\n", clus.N_MAX);
@@ -738,6 +738,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #endif
 			destroy_obj(j);
 			//printf("index of stripped star = %ld\n", j);
+			if(j==99865)
+				printf("hi m=%g\t se_k=%d\t id=%ld\n", star[j].m, star[j].se_k, star[j].id);
 			continue;
 		}
 
@@ -746,6 +748,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 			remove_star(j, phi_rtidal, phi_zero);
 			//printf("index of stripped star = %ld\tE = %g\n",j,star[j].E);
+			if(j==99865)
+				printf("hi E\n");
 			continue;
 		}
 
@@ -819,7 +823,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			} else {
 				dprintf("circular orbit: vr^2<0: setting vr=0: si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g\n", si, r, rmin, rmax, Q, X, E, J);
 				if (isnan(Q)) {
-					printf("E=%g\tpot=%g\tJ=%g\tr=%g\t\n", E, pot, J, r);
+					//printf("E=%g\tpot=%g\tJ=%g\tr=%g\trmin=%g\trmax=%g\tkmin=%d\tkmax=%d\tstar_r[25000]=%g\tstar_m[25000]=%g\tstar_phi[25000]=%g\t\n", E, pot, J, r, rmin, rmax, orbit_rs.kmin, orbit_rs.kmax,star_r[25000],star_m[25000],star_phi[25000]);
 					eprintf("si = %ld \tfatal error: Q=vr^2==nan!\n",si);
 					exit_cleanly(-1);
 				}
