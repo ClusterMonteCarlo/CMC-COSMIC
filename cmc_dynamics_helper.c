@@ -1485,6 +1485,11 @@ void break_wide_binaries(void)
 	for (k=1; k<=clus.N_MAX_NEW; k++)
 #endif
 	{
+#ifdef USE_MPI
+		if( ! ( (k>=mpiBegin && k<=mpiEnd) || (k > clus.N_MAX+1) ) )
+			continue;
+#endif
+
 		if (star[k].binind) {
 			/* binary index */
 			j = star[k].binind;

@@ -265,14 +265,19 @@ void set_velocities3(void){
 void ComputeIntermediateEnergy(void)
 {
 	long j;
-
+/*
 #ifdef USE_MPI 
 	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
 	for (j=mpiBegin; j<=mpiEnd; j++) {
 #else
+*/
 	/* compute intermediate energies for stars due to change in pot */ 
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
+#ifdef USE_MPI
+		if( ! ( (j>=mpiBegin && j<=mpiEnd) || (j > clus.N_MAX+1) ) )
+			continue;
 #endif
+
 		/* but do only for NON-Escaped stars */
 		if (star[j].rnew < 1.0e6) {
 #ifdef USE_MPI
@@ -282,13 +287,19 @@ void ComputeIntermediateEnergy(void)
 #endif
 		}
 	}
-	
+
+/*	
 #ifdef USE_MPI
 	for (j=mpiBegin; j<=mpiEnd; j++) {
 #else
+*/
 	/* Transferring new positions to .r, .vr, and .vt from .rnew, .vrnew, and .vtnew */
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
+#ifdef USE_MPI
+		if( ! ( (j>=mpiBegin && j<=mpiEnd) || (j > clus.N_MAX+1) ) )
+			continue;
 #endif
+
 #ifdef USE_MPI
 		star[j].rOld = star_r[j];
 		star_r[j] = star[j].rnew;
@@ -1749,13 +1760,19 @@ void energy_conservation1()
 	/* some numbers necessary to implement Stodolkiewicz's
 	 * energy conservation scheme */
 	int i;
+/*
 #ifdef USE_MPI 
 	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
 	for (i=mpiBegin; i<=mpiEnd; i++)
 #else
+*/
 	for (i = 1; i <= clus.N_MAX_NEW; i++)
-#endif
 	{
+#ifdef USE_MPI
+		if( ! ( (i>=mpiBegin && i<=mpiEnd) || (i > clus.N_MAX+1) ) )
+			continue;
+#endif
+
 		/* saving velocities */
 		star[i].vtold = star[i].vt;
 		star[i].vrold = star[i].vr;
@@ -1830,17 +1847,22 @@ void tidally_strip_stars1()
 void energy_conservation2()
 {
 	int i;
+/*
 #ifdef USE_MPI 
 	//MPI2: Should be changed into 2 loops later to include new stars.
 	for (i=mpiBegin; i<=mpiEnd; i++) 
 #else
+*/
 	/* more numbers necessary to implement Stodolkiewicz's
 	 * energy conservation scheme */
 	for (i = 1; i <= clus.N_MAX_NEW; i++) 
+	{
+#ifdef USE_MPI
+     if( ! ( (i>=mpiBegin && i<=mpiEnd) || (i > clus.N_MAX+1) ) )
+        continue;
 #endif
 	/* the following cannot be calculated after sorting 
 	 * and calling potential_calculate() */
-	{
 #ifdef USE_MPI 
 		star[i].Uoldrnew = potential(star[i].rnew) + MPI_PHI_S(star[i].rnew, i);
 #else
@@ -2060,11 +2082,10 @@ void pre_sort_comm()
 
 	if(myid==0){
 		for(i=0; i<procs; i++)
-			printf("pre_sort_comm(): new stars from proc %d = %ld\t", i, new_size[i]);// - clus.N_MAX - 1);
+			printf("pre_sort_comm(): new stars from proc %d = %d\t", i, new_size[i]);// - clus.N_MAX - 1);
 		printf("\n");
 	}
 
-	//MPI2: To be refactored into separate function later.
 	if(myid!=0)
 	{
 		if(clus.N_MAX_NEW - clus.N_MAX - 1 > 0)
