@@ -168,7 +168,12 @@ long create_star(int idx, int dyn_0_se_1)
 
 	/* put new star at end; the +1 is to not overwrite the boundary star */
 	i = clus.N_MAX_NEW + 1;
+
+#ifdef USE_MPI
+	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
+#else
 	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
+#endif
 
 	/* initialize to zero for safety */
 	zero_star(i);
@@ -237,11 +242,6 @@ double calc_n_local(long k, long p, long N_LIMIT)
 		kmax = N_LIMIT;
 		kmin = N_LIMIT - 2 * p - 1;
 	}
-
-/*
-if(k==24981)
-	printf("kmax=%d\tkmin=%d\tstar_r[kmax]=%g\t star_r[kmin]=%g\n", kmax, kmin, star_r[kmax], star_r[kmin]);
-*/
 
 #ifdef USE_MPI
 	return((2.0 * ((double) p)) * 3.0 / (4.0 * PI * (cub(star_r[kmax]) - cub(star_r[kmin]))));
@@ -794,10 +794,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			istriple = 0;
 			if (hier.obj[i]->n == 1) {
 				knew = create_star(k, 0);
-				printf("knew for new single=%ld\tk = %ld\n", knew, k);
 			} else if (hier.obj[i]->n == 2) {
 				knew = create_binary(k, 0);
-				printf("knew for new binary=%ld\tk = %ld\n", knew, k);
 			} else if (hier.obj[i]->n == 3) {
 				istriple = 1;
 				/* break triple for now */
@@ -1082,7 +1080,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                                               knew, star[knew].binind, binary[star[knew].binind].bse_kw[0], 
                                               binary[star[knew].binind].bse_kw[1]);
 				}
-				printf("knew = %ld\t id1=%ld\tid2=%ld\n", knew, binary[star[knew].binind].id1, binary[star[knew].binind].id2);
 				
 #ifdef USE_MPI
 				star_m[knew] = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
@@ -1862,8 +1859,8 @@ double Etide(double rperi, double Mosc, double Rosc, double nosc, double Mpert)
 void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_st)
 {
 	double X, theta, vtx, vty;
-	X = rng_t113_dbl();
-	//X = rng_t113_dbl_new(rng_st);
+	//X = rng_t113_dbl();
+	X = rng_t113_dbl_new(rng_st);
 	theta = 2.0 * PI * X;
 	vtx = *vt*sin(theta);
 	vty = *vt*cos(theta);

@@ -737,9 +737,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (star[j].m < ZERO) {
 #endif
 			destroy_obj(j);
-			//printf("index of stripped star = %ld\n", j);
-			if(j==99865)
-				printf("hi m=%g\t se_k=%d\t id=%ld\n", star[j].m, star[j].se_k, star[j].id);
+			printf("index of stripped star = %ld\n", j);
 			continue;
 		}
 
@@ -747,9 +745,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (E >= 0.0) {
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 			remove_star(j, phi_rtidal, phi_zero);
-			//printf("index of stripped star = %ld\tE = %g\n",j,star[j].E);
-			if(j==99865)
-				printf("hi E\n");
+			printf("index of stripped star = %ld\tE = %g\n",j,star[j].E);
 			continue;
 		}
 

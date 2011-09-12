@@ -263,14 +263,13 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
     };
 
     /* pick random sign for v_r */
-    if (rng_t113_dbl() < 0.5)
-/*
+    //if (rng_t113_dbl() < 0.5)
 #ifdef USE_MPI
 		if(rng_t113_dbl_new(st) < 0.5)
 #else
 		if(rng_t113_dbl_new(&st[findProcForIndex(index)]) < 0.5)
 #endif
-*/
+
       vr = -vr;
 
     new_pos.r  = r;

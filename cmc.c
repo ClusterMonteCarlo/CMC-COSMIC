@@ -167,7 +167,6 @@ int main(int argc, char *argv[])
 	/******* This is the main loop in the program *****************/
 	while (CheckStop(tmsbufref) == 0) 
 	{
-
 #ifndef USE_MPI
 		for(i=0; i<procs; i++)
 		{
@@ -183,11 +182,13 @@ int main(int argc, char *argv[])
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
+
 #ifdef USE_MPI
-		clus.N_MAX_NEW = mpiEnd;
+		printf("id = %d\tBefore dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n",myid, clus.N_MAX, clus.N_MAX_NEW);
+#else
+		printf("Before dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
 #endif
 
-		printf("Before dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
 		//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
@@ -200,7 +201,11 @@ int main(int argc, char *argv[])
 		printf("\n");
 #endif
 
+#ifdef USE_MPI
+		printf("id = %d\tAfter dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n",myid, clus.N_MAX, clus.N_MAX_NEW);
+#else
 		printf("After dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
+#endif
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
@@ -228,7 +233,12 @@ int main(int argc, char *argv[])
 			printf("node %ld=%d, %d\t", i, created_star_dyn_node[i], created_star_se_node[i]);
 		printf("\n");
 #endif
+
+#ifdef USE_MPI
+		printf("id = %d\tAfter SE N_MAX = %ld\tN_MAX_NEW = %ld\n",myid, clus.N_MAX, clus.N_MAX_NEW);
+#else
 		printf("After SE N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
+#endif
 
 		/* this calls get_positions() */
 		tidally_strip_stars1();

@@ -2030,7 +2030,7 @@ void tidally_strip_stars2(void)
 
 void pre_sort_comm()
 {
-	int i;
+	int i, j, counter_new;
 #ifdef USE_MPI
 	MPI_Status stat;
 	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
@@ -2046,20 +2046,48 @@ void pre_sort_comm()
 		star[i].m = star_m[i];
 	}
 
-   MPI_Gather( &(clus.N_MAX_NEW), 1, MPI_INT, new_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-	if(myid==0){
-		for(i=0; i<procs; i++)
-			printf("new end %d = %d\t", i, new_size[i]);
-		printf("\n");
-	}
-
 	//MPI2: To be refactored into separate function later.
 	if(myid!=0)
 		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
 	else
 		for(i=1;i<procs;i++)
 			MPI_Recv(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+
+	//MPI2: Collection of new stars.
+	MPI_Gather( &(clus.N_MAX_NEW), 1, MPI_INT, new_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	star_t *new_stars_recv_buf;
+
+	if(myid==0){
+		for(i=0; i<procs; i++)
+			printf("pre_sort_comm(): new stars from proc %d = %ld\t", i, new_size[i]);// - clus.N_MAX - 1);
+		printf("\n");
+	}
+
+	//MPI2: To be refactored into separate function later.
+	if(myid!=0)
+	{
+		if(clus.N_MAX_NEW - clus.N_MAX - 1 > 0)
+			//MPI2: +2 to account for the sentinel.
+			MPI_Send(&star[clus.N_MAX+2], sizeof(star_t) * (clus.N_MAX_NEW - clus.N_MAX - 1), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+	}
+	else
+	{
+		counter_new = clus.N_MAX + 2;
+		for(i=1; i<procs; i++)
+		{
+			new_size[i] = new_size[i] - clus.N_MAX - 1;
+			if(new_size[i] > 0)
+			{
+				new_stars_recv_buf = (star_t *) calloc(new_size[i], sizeof(star_t));
+				MPI_Recv(new_stars_recv_buf, sizeof(star_t) * new_size[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+				for(j=0; j<new_size[i]; j++)
+					star[counter_new + j] = new_stars_recv_buf[j];
+				counter_new += new_size[i];
+				free(new_stars_recv_buf);
+			}
+		}
+	}
 #endif
 }
 
@@ -2144,6 +2172,7 @@ int findProcForIndex( int j )
 			return i;
 
 	up_bound = clus.N_MAX + 1;
+#ifndef USE_MPI
 	for( i=0; i<procs; i++ )
 	{
 		if( j <= up_bound + created_star_dyn_node[i] )
@@ -2157,6 +2186,7 @@ int findProcForIndex( int j )
 			return i;
 		up_bound += created_star_se_node[i];
 	}
+#endif
 
 	eprintf("Star id out of bounds! for id = %d\n", j);
 	exit_cleanly(-2);

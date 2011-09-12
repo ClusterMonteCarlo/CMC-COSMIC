@@ -164,11 +164,11 @@ void stellar_evolution_init(void){
 				//dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
 			}
 			star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
-/*
+
 #ifndef USE_MPI
 			curr_st = &st[findProcForIndex(k)];
 #endif
-*/
+
 			vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
 			//star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 			set_star_EJ(k);
@@ -341,11 +341,11 @@ void do_stellar_evolution(gsl_rng *rng)
 				}
 				star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
 
-/*
+
 #ifndef USE_MPI
 				curr_st = &st[findProcForIndex(k)];
 #endif
-*/
+
 				vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
 				//star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 				set_star_EJ(k);
@@ -490,11 +490,11 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
   long knew, knewp;
   double dtp, VKO;
   
-/*
+
 #ifndef USE_MPI
   curr_st = &st[findProcForIndex(k)];
 #endif
-*/
+
   if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] != 0.0 && binary[kb].bse_tb > 0.0) {
     /* normal evolution */
     binary[kb].rad1 = binary[kb].bse_radius[0] * RSUN / units.l;
