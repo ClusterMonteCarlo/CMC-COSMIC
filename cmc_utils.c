@@ -101,7 +101,6 @@ double potential(double r) {
 	if (r < star_r[1]) {
 	     return (star_phi[0]-(star_phi[0]-star_phi[1])*star_r[1]/r);
 	};
-
 #else
 	if (r < star[1].r) {
 	     return (star[0].phi-(star[0].phi-star[1].phi)*star[1].r/r);
@@ -893,12 +892,21 @@ double fastpotential(double r, long kmin, long kmax) {
 	double henon;
 
 	/* root finding using indexed values of sr[] & bisection */
+#ifdef USE_MPI
+	if (r < star_r[1])
+		return (star_phi[1]);
+#else
 	if (r < star[1].r)
 		return (star[1].phi);
+#endif
 
-	i =  FindZero_r(kmin, kmax, r);
+	i = FindZero_r(kmin, kmax, r);
 	
+#ifdef USE_MPI
+	if(star_r[i] > r || star_r[i+1] < r){
+#else
 	if(star[i].r > r || star[i+1].r < r){
+#endif
 		eprintf("binary search (FindZero_r) failed!!\n");
 		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
 				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
@@ -908,6 +916,16 @@ double fastpotential(double r, long kmin, long kmax) {
 	}
 
 	/* Henon's method of computing the potential using star[].phi */ 
+#ifdef USE_MPI
+	if (i == 0){ /* I think this is impossible, due to early return earlier,
+			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
+		henon = (star_phi[1]);
+	} else {
+		henon = (star_phi[i] + (star_phi[i + 1] - star_phi[i]) 
+			 * (1.0/star_r[i] - 1.0/r) /
+			 (1.0/star_r[i] - 1.0/star_r[i + 1]));
+	}
+#else
 	if (i == 0){ /* I think this is impossible, due to early return earlier,
 			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
 		henon = (star[1].phi);
@@ -916,7 +934,8 @@ double fastpotential(double r, long kmin, long kmax) {
 			 * (1.0/star[i].r - 1.0/r) /
 			 (1.0/star[i].r - 1.0/star[i + 1].r));
 	}
-	
+#endif
+
 	return (henon);
 }
 
@@ -1007,7 +1026,11 @@ void update_vars(void)
 		k = star[j].binind;
 		if (k != 0) {
 			N_b++;
+#ifdef USE_MPI
+			M_b += star_m[j];
+#else
 			M_b += star[j].m;
+#endif
 			if (binary[k].inuse){
 				E_b += (binary[k].m1/clus.N_STAR) * (binary[k].m2/clus.N_STAR) / (2.0 * binary[k].a);
 			}
@@ -1472,7 +1495,11 @@ inline double function_q(long j, long double r, long double pot, long double E, 
   long double Jr, phis;
 
   Jr= SQR((J)/(r));
+#ifdef USE_MPI
+  phis= MPI_PHI_S(r, j);
+#else
   phis= PHI_S(r, j);
+#endif
   res= (2.0 * ((E) - (pot + phis)) - Jr);
   //if (j==3265 && r>1e6) printf("Jr=%Lg, phis= %Lg, pot=%Lg, r=%Lg, E=%Lg\n", Jr, phis, pot, r, E);
   return (res);
@@ -1624,7 +1651,11 @@ void bin_vars_calculate()
 	{
 		j = star[i].binind;
 		if (j && binary[j].inuse) {
+#ifdef USE_MPI
+			M_b += star_m[i];
+#else
 			M_b += star[i].m;
+#endif
 			E_b += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 		}
 	}
@@ -2080,11 +2111,13 @@ void pre_sort_comm()
 
 	star_t *new_stars_recv_buf;
 
+/*
 	if(myid==0){
 		for(i=0; i<procs; i++)
 			printf("pre_sort_comm(): new stars from proc %d = %d\t", i, new_size[i]);// - clus.N_MAX - 1);
 		printf("\n");
 	}
+*/
 
 	if(myid!=0)
 	{

@@ -251,7 +251,7 @@ void do_stellar_evolution(gsl_rng *rng)
 #ifdef USE_MPI
 			if (star_m[k]<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
 				dprintf ("zeroed out star: skipping SE:\n"); 
-				dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star_m[k], star[k].r, star[k].phi, star[k].vr, star[k].vt, star[k].E, star[k].J);	
+				dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star_m[k], star_r[k], star_phi[k], star[k].vr, star[k].vt, star[k].E, star[k].J);	
 #else
 			if (star[k].m<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
 					dprintf ("zeroed out star: skipping SE:\n"); 
@@ -380,7 +380,7 @@ void do_stellar_evolution(gsl_rng *rng)
 			if (star_m[k]<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
 				if(myid==0) {
 					dprintf ("zeroed out star: skipping SE:\n");	
-					dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[k], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
+					dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[k], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star_r[k]);
 				}
 #else
 			if (star[k].m<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
@@ -507,8 +507,13 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     binary[kb].rad2 = binary[kb].bse_radius[1] * RSUN / units.l;
     binary[kb].m1 = binary[kb].bse_mass[0] * MSUN / units.mstar;
     binary[kb].m2 = binary[kb].bse_mass[1] * MSUN / units.mstar;
+#ifdef USE_MPI
+    star_m[k] = binary[kb].m1 + binary[kb].m2;
+    DMse -= star_m[k] * madhoc;
+#else
     star[k].m = binary[kb].m1 + binary[kb].m2;
     DMse -= star[k].m * madhoc;
+#endif
     binary[kb].a = pow((binary[kb].bse_mass[0]+binary[kb].bse_mass[1])*sqr(binary[kb].bse_tb/365.25), 1.0/3.0)
       * AU / units.l;
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
@@ -565,7 +570,11 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     knewp = create_star(k, 1);
     cp_binmemb_to_star(k, 0, knew);
     cp_binmemb_to_star(k, 1, knewp);
+#ifdef USE_MPI
+    DMse -= (star_m[knew] + star_m[knewp]) * madhoc;
+#else
     DMse -= (star[knew].m + star[knewp].m) * madhoc;
+#endif
 
     fprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g)\n", 
 	    TotalTime, 
@@ -749,8 +758,13 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     */
     
     star[knew].rad = star[knew].se_radius * RSUN / units.l;
+#ifdef USE_MPI
+    star_m[knew] = star[knew].se_mt * MSUN / units.mstar;
+    DMse -= star_m[knew] * madhoc;
+#else
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
     DMse -= star[knew].m * madhoc;
+#endif
 
     /* birth kicks */
     /* ALSO REMOVE BELOW AS WE NOW WONT PRODUCE ANOTHER KICK
@@ -838,8 +852,13 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     */
     
     star[knew].rad = star[knew].se_radius * RSUN / units.l;
+#ifdef USE_MPI
+    star_m[knew] = star[knew].se_mt * MSUN / units.mstar;
+    DMse -= star_m[knew] * madhoc; 
+#else
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
     DMse -= star[knew].m * madhoc; 
+#endif
 
     /* birth kicks */
     /* REMOVED AGAIN NOT TO ADD KICK AGAIN
@@ -982,12 +1001,22 @@ void cp_m_to_newstar(long oldk, int kbi, long knew)
   kb = star[oldk].binind;
   
   if (kbi == -1) { /* star comes from input single star */
+#ifdef USE_MPI
+    star_m[knew] = star_m[oldk];
+#else
     star[knew].m = star[oldk].m;
+#endif
   } else { /* star comes from input binary */
     if (kbi == 0) {
+#ifdef USE_MPI
+      star_m[knew] = binary[kb].m1; //should this be multiplied by MSUN/units.mstar ?
+    } else {
+      star_m[knew] = binary[kb].m2;//should this be multiplied by MSUN/units.mstar ?
+#else
       star[knew].m = binary[kb].m1; //should this be multiplied by MSUN/units.mstar ?
     } else {
       star[knew].m = binary[kb].m2;//should this be multiplied by MSUN/units.mstar ?
+#endif
     }
   }
 }
@@ -1053,7 +1082,11 @@ void cp_m_to_star(long oldk, int kbi, star_t *target_star)
   kb = star[oldk].binind;
   
   if (kbi == -1) { /* star comes from input single star */
+#ifdef USE_MPI
+    target_star->m = star_m[oldk];
+#else
     target_star->m = star[oldk].m;
+#endif
   } else { /* star comes from input binary */
     if (kbi == 0) {
       target_star->m = binary[kb].m1;//should this be multiplied by MSUN/units.mstar ?

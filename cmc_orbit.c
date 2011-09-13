@@ -28,13 +28,22 @@ long get_positive_Q_index(long index, double E, double J) {
     ktemp = FindZero_r(0, clus.N_MAX, star[index].rnew) + 1;
   };
 
+#ifdef USE_MPI
+  Qtemp = function_q(index, star_r[ktemp], star_phi[ktemp], E, J);
+#else
   Qtemp = function_q(index, star[ktemp].r, star[ktemp].phi, E, J);
+#endif
+
   /* check for nearly circular orbit and do linear search */
   if (Qtemp <= 0.0) {
     ktemp = -1;
     do {
       ktemp++; fevals++;
+#ifdef USE_MPI
+      Qtemp = function_q(index, star_r[ktemp], star_phi[ktemp], E, J);
+#else
       Qtemp = function_q(index, star[ktemp].r, star[ktemp].phi, E, J);
+#endif
     } while (Qtemp <= 0.0 && ktemp <= clus.N_MAX);		
     if (ktemp >= clus.N_MAX) {
       dprintf("There is no positive Q index for index=%li, star.id=%li!\n", index, 
@@ -197,11 +206,19 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
   new_pos.J= J;
   new_pos.field_index= index;
 
+#ifdef USE_MPI
+  E+= MPI_PHI_S(old_r, index);
+#else
   E+= PHI_S(old_r, index);
+#endif
   /* remove massless stars (boundary stars or stellar evolution victims) */
   /* note that energy lost due to stellar evolution is subtracted
      at the time of mass loss in DoStellarEvolution */
+#ifdef USE_MPI
+  if (star_m[index] < ZERO) {
+#else
   if (star[index].m < ZERO) {
+#endif
     eprintf("Star has zero mass! Should have been already removed! Bail out.");
     exit_cleanly(-1);
   }
@@ -238,7 +255,11 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
 
       r = 0.5 * (rmin + rmax) + 0.25 * (rmax - rmin) * (3.0 * s0 - s0 * s0 * s0);
 
+#ifdef USE_MPI
+      pot = potential(r) + MPI_PHI_S(r, index);
+#else
       pot = potential(r) + PHI_S(r, index);
+#endif
 
       drds = 0.25 * (rmax - rmin) * (3.0 - 3.0 * s0 * s0);
       Q = 2.0 * E - 2.0 * pot - J * J / r / r;
@@ -275,8 +296,11 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
     new_pos.r  = r;
     new_pos.vr = vr;
     new_pos.vt = J/r;
+#ifdef USE_MPI
+    new_pos.pot= pot- MPI_PHI_S(r, index);
+#else
     new_pos.pot= pot- PHI_S(r, index);
-
+#endif
   } else { /* for a circular orbit */
     new_pos.r = orbit.rp;
     new_pos.vr= 0.;
@@ -306,8 +330,13 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
     dprintf("Did not find a single positive Q value! index= %li\n", index);
     dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
         index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E);
+#ifdef USE_MPI
+    orbit_rs.rp = star_r[index];
+    orbit_rs.ra = star_r[index];
+#else
     orbit_rs.rp = star[index].r;
     orbit_rs.ra = star[index].r;
+#endif
     orbit_rs.kmin = index;
     orbit_rs.kmax = index;
     orbit_rs.dQdrp = 0.0;
@@ -347,7 +376,11 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
     }
 
     dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
+#ifdef USE_MPI
+    dQdr_min_num = (function_Q(index, kmin+1, E, J)-function_Q(index, kmin, E, J))/(star_r[kmin+1]-star_r[kmin]);
+#else
     dQdr_min_num = (function_Q(index, kmin+1, E, J)-function_Q(index, kmin, E, J))/(star[kmin+1].r-star[kmin].r);
+#endif
 
     set_a_b(index, kmax, &a, &b);
     inside_sqrt= a * a - 2.0 * J * J * (b - E);
@@ -366,11 +399,20 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
     }
     
     dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
+#ifdef USE_MPI
+    dQdr_max_num = (function_Q(index, kmax+1, E, J)- function_Q(index, kmax, E, J))/(star_r[kmax+1]-star_r[kmax]);
+#else
     dQdr_max_num = (function_Q(index, kmax+1, E, J)- function_Q(index, kmax, E, J))/(star[kmax+1].r-star[kmax].r);
-    
+#endif
+
     /* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
+#ifdef USE_MPI
+    rmin_in_interval= rmin < star_r[kmin+1] && rmin > star_r[kmin];
+    rmax_in_interval= rmax < star_r[kmax+1] && rmax > star_r[kmax];
+#else
     rmin_in_interval= rmin < star[kmin+1].r && rmin > star[kmin].r;
     rmax_in_interval= rmax < star[kmax+1].r && rmax > star[kmax].r;
+#endif
     if (rmin_in_interval) 
       vr_rmin_positive= calc_vr_in_interval(rmin, index, kmin, E, J)>= 0.;
     if (rmax_in_interval) 
@@ -411,8 +453,13 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   if (circular) {
     dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
         index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E);
+#ifdef USE_MPI
+    orbit_rs.rp = star_r[index];
+    orbit_rs.ra = star_r[index];
+#else
     orbit_rs.rp = star[index].r;
     orbit_rs.ra = star[index].r;
+#endif
     orbit_rs.kmin = index;
     orbit_rs.kmax = index;
     orbit_rs.dQdrp = 0.0;
@@ -597,15 +644,26 @@ void set_a_b(long index, long k, double *a, double *b) {
 
   if (k==0) {
     *a= -cenma.m*madhoc;
+#ifdef USE_MPI
+    *b= star_phi[1]+ cenma.m*madhoc/star_r[1]+ star_m[index]*madhoc/star_r[index];
+#else
     *b= star[1].phi+ cenma.m*madhoc/star[1].r+ star[index].m*madhoc/star[index].r;
+#endif
     dprintf("Inner Henon coefficient: a= %g, b= %g\n", *a, *b);
   } else {
     i = k;
     i1 = k + 1;
+#ifdef USE_MPI
+    rk = star_r[i];
+    rk1 = star_r[i1];
+    Uk = star_phi[i] + MPI_PHI_S(rk, index);
+    Uk1 = star_phi[i1]  + MPI_PHI_S(rk1, index);
+#else
     rk = star[i].r;
     rk1 = star[i1].r;
     Uk = star[i].phi + PHI_S(rk, index);
     Uk1 = star[i1].phi  + PHI_S(rk1, index);
+#endif
 
     *a = (Uk1 - Uk) / (1. / rk1 - 1. / rk);
     *b = (Uk / rk1 - Uk1 / rk) / (1. / rk1 - 1. / rk);

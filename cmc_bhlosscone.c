@@ -201,7 +201,7 @@ double calc_P_orb(long index)
         star_interval.max= clus.N_MAX+1;
 
 #ifdef USE_MPI
-	E = star[index].E + PHI_S(star_r[index], index);
+	E = star[index].E + MPI_PHI_S(star_r[index], index);
 #else
 	E = star[index].E + PHI_S(star[index].r, index);
 #endif
@@ -372,8 +372,8 @@ double calc_p_orb_gc(double x, void *params) {
 #endif
 		//dprintf("regularizing near rp...\n");
 #ifdef USE_MPI
-		phik = star_phi[kmin] + PHI_S(star_r[kmin], index);
-		phik1 = star_phi[kmin+1] + PHI_S(star_r[kmin+1], index);
+		phik = star_phi[kmin] + MPI_PHI_S(star_r[kmin], index);
+		phik1 = star_phi[kmin+1] + MPI_PHI_S(star_r[kmin+1], index);
 		rk = star_r[kmin];
 		rk1 = star_r[kmin+1];
 #else
@@ -430,8 +430,8 @@ double calc_p_orb_gc(double x, void *params) {
 #endif
 		//dprintf("regularizing near ra...\n");
 #ifdef USE_MPI
-		phik = star_phi[kmax-1] + PHI_S(star_r[kmax-1], index);
-		phik1 = star_phi[kmax] + PHI_S(star_r[kmax], index);
+		phik = star_phi[kmax-1] + MPI_PHI_S(star_r[kmax-1], index);
+		phik1 = star_phi[kmax] + MPI_PHI_S(star_r[kmax], index);
 		rk = star_r[kmax-1];
 		rk1 = star_r[kmax];
 #else
@@ -483,7 +483,11 @@ double calc_p_orb_gc(double x, void *params) {
 			return(2.0*x*sqrt((x-rp)/((2.0*phi0-2.0*E)*(x-rplus))));
 		}
 	} else {
+#ifdef USE_MPI
+		radicand = 2.0 * (E - (potential(x) + MPI_PHI_S(x, index)))- fb_sqr(J/x);
+#else
 		radicand = 2.0 * (E - (potential(x) + PHI_S(x, index)))- fb_sqr(J/x);
+#endif
 		if (radicand < 0.0) {
 			dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, index);
 			dprintf("kmin= %li, kmax= %li, rp=%g, ra=%g, Id: %li\n",

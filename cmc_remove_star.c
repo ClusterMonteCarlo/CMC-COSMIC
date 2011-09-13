@@ -24,7 +24,7 @@ int remove_old_star(double time, long k)
 			/*knewp = create_star();*/
 			
 #ifdef USE_MPI
-			star_r[knew] = star[k].r;
+			star_r[knew] = star_r[k];
 #else
 			/* and set the stars' properties */
 			star[knew].r = star[k].r;
@@ -117,7 +117,7 @@ int remove_old_star(double time, long k)
 			knew = create_star(k, 0);
 			
 #ifdef USE_MPI
-			star_r[knew] = star[k].r;
+			star_r[knew] = star_r[k];
 #else
 			/* and set the stars' properties */
 			star[knew].r = star[k].r;

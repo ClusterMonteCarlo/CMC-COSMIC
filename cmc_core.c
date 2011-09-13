@@ -42,7 +42,11 @@ struct densities density_estimators(int n_points, int *startypes, int len) {
   m_tot= 0.;
   for (i=1; i< clus.N_MAX+1; i++) {
     if (is_member(star[i].se_k, startypes, len)) {
+#ifdef USE_MPI
+      m_tot+= star_m[i]*madhoc;
+#else
       m_tot+= star[i].m*madhoc;
+#endif
     }
   }
 
@@ -52,7 +56,11 @@ struct densities density_estimators(int n_points, int *startypes, int len) {
   nave= 0; m= 0; i=1; ibuf=0;
   while (m< 0.5*m_tot) {
     if (is_member(star[i].se_k, startypes, len)) {
+#ifdef USE_MPI
+      m+= star_m[i]*madhoc;
+#else
       m+= star[i].m*madhoc;
+#endif
       rhoj.idx[nave]= i;
       nave++;
       ibuf++;
@@ -74,9 +82,17 @@ struct densities density_estimators(int n_points, int *startypes, int len) {
     /* this is equivalent to their J-1 factor for the case of equal masses,
        and seems like a good generalization for unequal masses */
     for (j=jmin+1; j<= jmax-1; j++) {
+#ifdef USE_MPI
+      mrho+= star_m[rhoj.idx[j]] * madhoc;
+#else
       mrho+= star[rhoj.idx[j]].m * madhoc;
+#endif
     }
+#ifdef USE_MPI
+    Vrj = 4.0/3.0  * PI * (fb_cub(star_r[rhoj.idx[jmax]]) - fb_cub(star_r[rhoj.idx[jmin]]));
+#else
     Vrj = 4.0/3.0  * PI * (fb_cub(star[rhoj.idx[jmax]].r) - fb_cub(star[rhoj.idx[jmin]].r));
+#endif
 
     rhoj.rho[i]= mrho/Vrj;
   }
@@ -105,7 +121,11 @@ struct core_t core_properties(struct densities rhoj) {
     core.rho += sqr(rhoj.rho[i]);
     core.v_rms += rhoj.rho[i] * (sqr(star[idx].vr) + sqr(star[idx].vt));
     core.r += rhoj.rho[i] * star[idx].r;
+#ifdef USE_MPI
     core.m_ave += rhoj.rho[i] * star[idx].m * madhoc;
+#else
+    core.m_ave += rhoj.rho[i] * star[idx].m * madhoc;
+#endif
   }
   core.rho /= rhojsum;
   /* correction for inherent bias in estimator */

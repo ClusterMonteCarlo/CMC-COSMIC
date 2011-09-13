@@ -33,9 +33,15 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hi
 	jbinp = star[kp].binind;
 
 	/* v_inf should be in units of v_crit */
+#ifdef USE_MPI
+	vc = sqrt((star_m[k]+star_m[kp])/(star_m[k]*star_m[kp])*
+		  (binary[jbin].m1*binary[jbin].m2/binary[jbin].a + 
+		   binary[jbinp].m1*binary[jbinp].m2/binary[jbinp].a)/((double) clus.N_STAR));
+#else
 	vc = sqrt((star[k].m+star[kp].m)/(star[k].m*star[kp].m)*
 		  (binary[jbin].m1*binary[jbin].m2/binary[jbin].a + 
 		   binary[jbinp].m1*binary[jbinp].m2/binary[jbinp].a)/((double) clus.N_STAR));
+#endif
 
 #ifndef USE_MPI
 	curr_st = &st[findProcForIndex(k)];

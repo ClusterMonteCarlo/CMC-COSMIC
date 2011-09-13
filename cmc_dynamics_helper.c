@@ -264,7 +264,7 @@ double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT)
 	}
 
 #ifdef USE_MPI
-	return(3.0 * ((double) p) * sqr(star[k].m + star[kp].m) / (cub(W) * (cub(star_r[kmax]) - cub(star_r[kmin]))));
+	return(3.0 * ((double) p) * sqr(star_m[k] + star_m[kp]) / (cub(W) * (cub(star_r[kmax]) - cub(star_r[kmin]))));
 #else
 	return(3.0 * ((double) p) * sqr(star[k].m + star[kp].m) / (cub(W) * (cub(star[kmax].r) - cub(star[kmin].r))));
 #endif
@@ -362,7 +362,11 @@ double binint_get_mass(long k, long kp, long id)
 	/* first look at k */
 	if (star[k].binind == 0) {
 		if (star[k].id == id) {
+#ifdef USE_MPI
+			return(star_m[k]);
+#else
 			return(star[k].m);
+#endif
 		}
 	} else {
 		if (binary[star[k].binind].id1 == id) {
@@ -375,7 +379,11 @@ double binint_get_mass(long k, long kp, long id)
 	/* then at kp */
 	if (star[kp].binind == 0) {
 		if (star[kp].id == id) {
+#ifdef USE_MPI
+			return(star_m[kp]);
+#else
 			return(star[kp].m);
+#endif
 		}
 	} else {
 		if (binary[star[kp].binind].id1 == id) {
@@ -675,9 +683,15 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			- binary[jbin].Eint1 - binary[jbin].Eint2
 			- binary[jbinp].Eint1 - binary[jbinp].Eint2;
 		
+#ifdef USE_MPi
+		cmc_units.v = sqrt((star_m[k]+star_m[kp])/(star_m[k]*star_m[kp]) * 
+				   (binary[jbin].m1*binary[jbin].m2/binary[jbin].a + 
+				    binary[jbinp].m1*binary[jbinp].m2/binary[jbinp].a) * madhoc);
+#else
 		cmc_units.v = sqrt((star[k].m+star[kp].m)/(star[k].m*star[kp].m) * 
 				   (binary[jbin].m1*binary[jbin].m2/binary[jbin].a + 
 				    binary[jbinp].m1*binary[jbinp].m2/binary[jbinp].a) * madhoc);
+#endif
 		cmc_units.l = binary[jbin].a + binary[jbinp].a;
 		cmc_units.t = cmc_units.l / cmc_units.v;
 		cmc_units.m = cmc_units.l * sqr(cmc_units.v);
@@ -702,8 +716,13 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 		BEi = binary[jbin].m1 * binary[jbin].m2 * sqr(madhoc) / (2.0 * binary[jbin].a)
 			- binary[jbin].Eint1 - binary[jbin].Eint2 - star[ksin].Eint;
 
+#ifdef USE_MPI
+		cmc_units.v = sqrt((star_m[ksin]+star_m[kbin])/(star_m[ksin]*star_m[kbin]) * 
+				   (binary[jbin].m1 * binary[jbin].m2 / binary[jbin].a) * madhoc);
+#else
 		cmc_units.v = sqrt((star[ksin].m+star[kbin].m)/(star[ksin].m*star[kbin].m) * 
 				   (binary[jbin].m1 * binary[jbin].m2 / binary[jbin].a) * madhoc);
+#endif
 		cmc_units.l = binary[jbin].a;
 		cmc_units.t = cmc_units.l / cmc_units.v;
 		cmc_units.m = cmc_units.l * sqr(cmc_units.v);
@@ -717,8 +736,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	/* malloc hier (based on value of hier.nstarinit) */
 	fb_malloc_hier(&hier);
 
+#ifdef USE_MPI
+	bmax = rperi * sqrt(1.0 + 2.0 * ((star_m[k] + star_m[kp]) * madhoc) / (rperi * sqr(W)));
+#else
 	bmax = rperi * sqrt(1.0 + 2.0 * ((star[k].m + star[kp].m) * madhoc) / (rperi * sqr(W)));
-	
+#endif
+
 	/* call fewbody! */
 	if (isbinbin) {
 		retval = binbin(&t, k, kp, W, bmax, &hier, rng);
@@ -1505,14 +1528,14 @@ void break_wide_binaries(void)
 			
 			/* get relative velocity from velocity dispersion at binary's radial position */
 #ifdef USE_MPI
-			W = 4.0 * sigma_r(star[k].r) / sqrt(3.0 * PI);
+			W = 4.0 * sigma_r(star_r[k]) / sqrt(3.0 * PI);
 #else
 			W = 4.0 * sigma_r(star[k].r) / sqrt(3.0 * PI);
 #endif	
 		
 			/* this is an order of magnitude estimate for the orbital speed */
 #ifdef USE_MPI
-			vorb = sqrt(star[k].m * madhoc / binary[j].a);
+			vorb = sqrt(star_m[k] * madhoc / binary[j].a);
 #else
 			vorb = sqrt(star[k].m * madhoc / binary[j].a);
 #endif
@@ -1539,10 +1562,17 @@ void break_wide_binaries(void)
 				destroy_obj(k);
 			} else {
 				/* take excess energy from nearby field star (single or binary) */
+#ifdef USE_MPI
+				if(Eexcess > 0 && star[k].interacted == 0 && Eexcess < 0.5*(sqr(star[k].vt)+sqr(star[k].vr))*star_m[k]*madhoc) {
+					exc_ratio = 
+						sqrt( (sqr(star[k].vt)+sqr(star[k].vr)-2.0*Eexcess/(star_m[k]*madhoc))/
+						      (sqr(star[k].vt)+sqr(star[k].vr)) );
+#else
 				if(Eexcess > 0 && star[k].interacted == 0 && Eexcess < 0.5*(sqr(star[k].vt)+sqr(star[k].vr))*star[k].m*madhoc) {
 					exc_ratio = 
 						sqrt( (sqr(star[k].vt)+sqr(star[k].vr)-2.0*Eexcess/(star[k].m*madhoc))/
 						      (sqr(star[k].vt)+sqr(star[k].vr)) );
+#endif
 					star[k].vr *= exc_ratio;
 					star[k].vt *= exc_ratio;
 					set_star_EJ(k);
