@@ -13,11 +13,9 @@
 void zero_star(long j)
 {
 #ifdef USE_MPI
-/*
 	star_r[j] = 0.0;
 	star_m[j] = 0.0;
 	star_phi[j] = 0.0;
-*/
 #endif
 	star[j].r = 0.0;
 	star[j].vr = 0.0;
@@ -847,10 +845,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			/* set mass; this gets overwritten later for collisions */
 #ifdef USE_MPI
 			if (istriple) {
-				star[knew].m = hier.obj[i]->obj[bid]->m * cmc_units.m / madhoc;
-				star[knewp].m = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
+				star_m[knew] = hier.obj[i]->obj[bid]->m * cmc_units.m / madhoc;
+				star_m[knewp] = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
 			} else {
-				star[knew].m = hier.obj[i]->m * cmc_units.m / madhoc;
+				star_m[knew] = hier.obj[i]->m * cmc_units.m / madhoc;
 			}
 #else
 			if (istriple) {
@@ -863,9 +861,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 			/* set potential */
 #ifdef USE_MPI
-			star[knew].phi = potential(star[knew].r);
+			star_phi[knew] = potential(star_r[knew]);
 			if (istriple) {
-				star[knewp].phi = potential(star[knewp].r);
+				star_phi[knewp] = potential(star_r[knewp]);
 			}			
 #else
 			star[knew].phi = potential(star[knew].r);
@@ -1020,12 +1018,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						star[knew].r,
 						*(hier.obj[i]->obj[0]), k, kp, binary[star[knew].binind].bse_kw[0]);
 
-                                        if (binary[star[knew].binind].m1==0.) {
-                                          dprintf("Zero mass remnant! Parameters: knew=%li, binind=%li, kw[0]=%i, kw[1]=%i\n",
-                                              knew, star[knew].binind, binary[star[knew].binind].bse_kw[0], 
-                                              binary[star[knew].binind].bse_kw[1]);
-                                        }
-                                        
+					if (binary[star[knew].binind].m1==0.) {
+						dprintf("Zero mass remnant! Parameters: knew=%li, binind=%li, kw[0]=%i, kw[1]=%i\n",
+								knew, star[knew].binind, binary[star[knew].binind].bse_kw[0], 
+								binary[star[knew].binind].bse_kw[1]);
+					}
+
 				}
 				if (hier.obj[i]->obj[1]->ncoll == 1) {
 					binary[star[knew].binind].id2 = hier.obj[i]->obj[1]->id[0];
@@ -1283,7 +1281,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						*(hier.obj[i]->obj[bid]->obj[1]), k, kp, binary[star[knew].binind].bse_kw[1]);
 				}
 				
+#ifdef USE_MPI
+				star_m[knew] = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
+#else
 				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
+#endif
 
 				/* radii and tb */
 				binary[star[knew].binind].rad1 = binary[star[knew].binind].bse_radius[0] * RSUN / units.l;
@@ -1530,7 +1532,6 @@ void break_wide_binaries(void)
 				/* create two stars for the binary components */
 				knew = create_star(k, 0);
 				knewp = create_star(k, 0);
-				
 				cp_binmemb_to_star(k, 0, knew);
 				cp_binmemb_to_star(k, 1, knewp);
 				

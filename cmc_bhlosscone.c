@@ -85,10 +85,18 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		Rss= 4.24e-06*cenma.m/SOLAR_MASS_DYN*RSUN/units.l;
 		Rdisr= MAX(Rdisr, Rss);
 	} else {
+#ifdef USE_MPI
+		Rdisr= pow(2.*cenma.m/star_m[index], 1./3.)*star[index].rad;
+#else
 		Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad;
+#endif
 	};
 	Jlc= sqrt(2.*cenma.m*madhoc*Rdisr);
+#ifdef USE_MPI
+	vlc= Jlc/star_r[index];
+#else
 	vlc= Jlc/star[index].r;
+#endif
 	for (i=0; i<3; i++) {
 		w[i]= v[i+1]- vcm[i+1];
 	}
@@ -98,7 +106,11 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		L2 -= fb_sqr(delta); 
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
 			dprintf("index=%ld, id=%ld: star eaten by BH\n", index, star[index].id);
+#ifdef USE_MPI
+			cenma.m_new += star_m[index]; 
+#else
 			cenma.m_new += star[index].m; 
+#endif
 			destroy_obj(index);
 			L2 = 0.0; 
 		} else { 
@@ -188,7 +200,11 @@ double calc_P_orb(long index)
 	star_interval.min= 1;
         star_interval.max= clus.N_MAX+1;
 
+#ifdef USE_MPI
+	E = star[index].E + PHI_S(star_r[index], index);
+#else
 	E = star[index].E + PHI_S(star[index].r, index);
+#endif
 	J = star[index].J;
 	
 	//dprintf("index=%ld ", index);
@@ -221,7 +237,11 @@ double calc_P_orb(long index)
 		/* We're returning the azimuthal period here, which is not the same as the
 		   radial period for the general cluster potential.  This shouldn't make
 		   any difference for the BH loss cone stuff, since the orbit is circular. */
+#ifdef USE_MPI
 		return(2.0 * PI * star[index].r / star[index].vt);		
+#else
+		return(2.0 * PI * star[index].r / star[index].vt);		
+#endif
 	} else {
 		w = gsl_integration_workspace_alloc(1000);
 		tab = gsl_integration_qaws_table_alloc(-0.5, -0.5, 0.0, 0.0);
@@ -345,12 +365,23 @@ double calc_p_orb_gc(double x, void *params) {
 	rp = myparams.rp;
 	ra = myparams.ra;
         
+#ifdef USE_MPI
+	if (x <= star_r[kmin+1]) { /* return integrand regularized at r=rp */
+#else
 	if (x <= star[kmin+1].r) { /* return integrand regularized at r=rp */
+#endif
 		//dprintf("regularizing near rp...\n");
+#ifdef USE_MPI
+		phik = star_phi[kmin] + PHI_S(star_r[kmin], index);
+		phik1 = star_phi[kmin+1] + PHI_S(star_r[kmin+1], index);
+		rk = star_r[kmin];
+		rk1 = star_r[kmin+1];
+#else
 		phik = star[kmin].phi + PHI_S(star[kmin].r, index);
 		phik1 = star[kmin+1].phi + PHI_S(star[kmin+1].r, index);
 		rk = star[kmin].r;
 		rk1 = star[kmin+1].r;
+#endif 
 		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1);
 		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1);
 		/* rplus = rperi, rminus = rapo-primed */
@@ -392,12 +423,23 @@ double calc_p_orb_gc(double x, void *params) {
 			};
 			return(2.0*x*sqrt((ra-x)/((2.0*phi0-2.0*E)*(rminus-x))));
 		}
+#ifdef USE_MPI
+	} else if (x >= star_r[kmax-1]) { /* return integrand regularized at r=ra*/
+#else
 	} else if (x >= star[kmax-1].r) { /* return integrand regularized at r=ra*/
+#endif
 		//dprintf("regularizing near ra...\n");
+#ifdef USE_MPI
+		phik = star_phi[kmax-1] + PHI_S(star_r[kmax-1], index);
+		phik1 = star_phi[kmax] + PHI_S(star_r[kmax], index);
+		rk = star_r[kmax-1];
+		rk1 = star_r[kmax];
+#else
 		phik = star[kmax-1].phi + PHI_S(star[kmax-1].r, index);
 		phik1 = star[kmax].phi + PHI_S(star[kmax].r, index);
 		rk = star[kmax-1].r;
 		rk1 = star[kmax].r;
+#endif
 		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1);
 		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1);
 		/* rplus = rperi-primed, rminus = rapo */

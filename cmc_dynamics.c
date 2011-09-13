@@ -117,7 +117,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			rperi = XBB * (binary[star[k].binind].a + binary[star[kp].binind].a);
 
 			if (BINBIN) {
-				S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+				S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 			} else {
 				S = 0.0;
 			}
@@ -134,7 +134,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			rperi = XBS * binary[star[kbin].binind].a;
 
 			if (BINSINGLE) {
-				S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(star[k].m+star[kp].m)/(rperi*sqr(W)));
+				S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 			} else {
 				S = 0.0;
 			}

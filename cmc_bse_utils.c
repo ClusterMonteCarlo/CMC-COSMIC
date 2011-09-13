@@ -128,6 +128,9 @@ void compress_binary(star_t *bincom, binary_t *bin) {
   sse_t sse_vars;
   long rem_idx, rem_id;
   double rem_lifetime, rem_createtime, rem_Eint;
+  
+  if(!STELLAR_EVOLUTION)
+    return;
 
   if (bin->bse_mass[0]==0) {
     rem_idx= 1;

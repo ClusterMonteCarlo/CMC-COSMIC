@@ -741,16 +741,24 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #else
 		if (star[j].m < ZERO) {
 #endif
+#ifdef USE_MPI
+			printf("id = %d\tindex of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid, j,star[j].E,star_m[j],star_r[j],star[j].vr,star[j].vt);
+#else
+			printf("index of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n", j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
+#endif
 			destroy_obj(j);
-			printf("index of stripped star by mass = %ld\n", j);
 			continue;
 		}
 
 		/* remove unbound stars */
 		if (E >= 0.0) {
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
+#ifdef USE_MPI
+			printf("id = %d\tindex of stripped star by energy = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid,j,star[j].E,star_m[j],star_r[j],star[j].vr,star[j].vt);
+#else
+			printf("index of stripped star by E = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
+#endif
 			remove_star(j, phi_rtidal, phi_zero);
-			printf("index of stripped star by E = %ld\tE = %g\n",j,star[j].E);
 			continue;
 		}
 
@@ -879,6 +887,15 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		if (r > max_rad)
 			max_rad = r;
+
+/*
+		if(si > clus.N_MAX+1)
+#ifdef USE_MPI
+			printf("myid = %d\tid = %d \t r = %g\n",myid, si, star[si].rnew);
+#else
+			printf("id = %d \t r = %g\n", si, star[si].rnew);
+#endif
+*/
 	} /* Next si */
 	get_pos_dat->max_rad = max_rad;
 }

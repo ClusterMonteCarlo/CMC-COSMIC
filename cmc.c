@@ -179,6 +179,8 @@ int main(int argc, char *argv[])
 		calc_central_new();
 
 		calc_timestep(rng);
+		//printf("TIMESTEP = %.14g\n", Dt);
+		Dt = 0.0001465233252096;
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
@@ -194,6 +196,36 @@ int main(int argc, char *argv[])
 		//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
+
+//j=100003;
+//printf("id=%d\tm=%g\tE=%g\tvr=%g\tvt=%g\tJ=%g\n", j,star[j].m,star[j].E, star[j].vr, star[j].vt, star[j].J);
+
+#ifdef USE_MPI
+		strcpy(filename, "test_rng_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+					fprintf(ftest, "%ld\t%.18g\n", j, star[j].E );
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+#else
+		strcpy(tempstr, "test_rng_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].E );
+		fclose(ftest);
+#endif
 
 #ifndef USE_MPI
 		for(i=0; i<procs; i++)
@@ -284,6 +316,8 @@ int main(int argc, char *argv[])
 
 		compute_energy_new();
 
+printf("ETOTAL = %.14g\n\n", Etotal.tot);
+
 		reset_interaction_flags();
 
 		//MPI2: Binaries. Ignore for now.
@@ -293,33 +327,6 @@ int main(int argc, char *argv[])
 		tcount++;
 
 		calc_clusdyn_new();
-
-#ifdef USE_MPI
-		strcpy(filename, "test_rng_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", j, star_r[j] );
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-#else
-		strcpy(tempstr, "test_rng_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r );
-		fclose(ftest);
-#endif
 
 		//MPI2: Commenting out for MPI
 		/*
