@@ -1010,18 +1010,18 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	cmc_read_fits_file(INPUT_FILE, &cfd);
 	clus.N_STAR = cfd.NOBJ;
 	clus.N_BINARY = cfd.NBINARY;
-        if (OVERWRITE_RVIR>0.) {
-          cfd.Rvir= OVERWRITE_RVIR;
-        }
-        if (OVERWRITE_RTID>0.) {
-          cfd.Rtid= OVERWRITE_RTID;
-        }
-        if (OVERWRITE_Z>0.) {
-          cfd.Z= OVERWRITE_Z;
-        }
-        if (OVERWRITE_MCLUS>0.) {
-          cfd.Mclus= OVERWRITE_MCLUS;
-        }
+	if (OVERWRITE_RVIR>0.) {
+		cfd.Rvir= OVERWRITE_RVIR;
+	}
+	if (OVERWRITE_RTID>0.) {
+		cfd.Rtid= OVERWRITE_RTID;
+	}
+	if (OVERWRITE_Z>0.) {
+		cfd.Z= OVERWRITE_Z;
+	}
+	if (OVERWRITE_MCLUS>0.) {
+		cfd.Mclus= OVERWRITE_MCLUS;
+	}
 
 	R_MAX = cfd.Rtid;
 	METALLICITY = cfd.Z;
@@ -1599,7 +1599,7 @@ void alloc_bin_buf()
 void collect_bin_data()
 {
 #ifdef USE_MPI
-	int i, j;
+	int i, j, counter_new, cntr, last_hole_idx=1, pass=0;
 	MPI_Status stat;
 
 	if(myid!=0)
@@ -1627,6 +1627,93 @@ void collect_bin_data()
 				j++;
 			}
 		}
+
+	//MPI2: Gathering new stars.
+	MPI_Gather( &N_b_NEW, 1, MPI_LONG, new_size, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+	binary_t *recv_buf;
+
+	if(myid!=0)
+	{
+		if(N_b_NEW - N_b_OLD > 0)
+			MPI_Send(&binary[N_b_OLD + 1], sizeof(binary_t) * (N_b_NEW - N_b_OLD), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+	}
+	else
+	{
+/*
+		cntr = 0;
+		if(N_b_NEW > N_b_OLD)
+		{
+			while (last_hole_idx <= N_b_OLD && cntr < N_b_NEW - N_b_OLD)
+			{
+				while (last_hole_idx <= N_b_OLD && binary[last_hole_idx].inuse)
+					last_hole_idx++;
+
+				if (last_hole_idx > N_b_OLD)
+					break;
+
+				binary[last_hole_idx] = binary[N_b_OLD + 1 + cntr];
+				zero_binary(N_b_OLD + 1 + cntr);
+				for(j=clus.N_MAX+2; j <= clus.N_MAX_NEW; j++)
+					if(star[j].binind == N_b_OLD + 1 + cntr)
+					{
+						star[j].binind = last_hole_idx;
+						printf("ID = %d \tHOLE FOUND!!! at %d\t INSERTING STAR %d\n", myid, last_hole_idx, j);
+						pass = 1;
+					}
+				if(pass == 0)
+					eprintf("Failed!!!");
+				pass = 0;
+				cntr++;
+			}
+		}
+*/
+		counter_new = N_b_NEW + 1;
+		for(i=1; i<procs; i++)
+		{
+			new_size[i] -= N_b_OLD;
+			//printf("i=%d\tnewsize=%d\tnmaxnew=%ld\n", i, new_size[i], clus.N_MAX_NEW);
+			//N_b_NEW += new_size[i];
+			if(new_size[i] > 0)
+			{
+				recv_buf = (binary_t *) calloc(new_size[i], sizeof(binary_t));
+				MPI_Recv(recv_buf, sizeof(binary_t) * new_size[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+//MPI_Get_count( &stat, MPI_BYTE, &count );
+//printf("RECD from %d\t%d stars\n", i, count/sizeof(star_t));
+
+				cntr = 0;
+				while (last_hole_idx <= N_b_OLD && cntr < new_size[i])
+				{
+					while (last_hole_idx <= N_b_OLD && binary[last_hole_idx].inuse)
+						last_hole_idx++;
+
+					if (last_hole_idx > N_b_OLD)
+						break;
+
+					binary[last_hole_idx] = recv_buf[cntr];
+					//zero_binary(cntr);
+					for(j=clus.N_MAX+2; j <= clus.N_MAX_NEW; j++)
+						if(star[j].binind == N_b_OLD + 1 + cntr)
+						{
+							star[j].binind = last_hole_idx;
+							printf("ID = %d \tHOLE FOUND!!! at %d\tINSERTING STAR %d\n", i, last_hole_idx, j);
+							pass = 1;
+						}
+					if(pass == 0)
+						eprintf("FAILED!!!\n");
+					pass = 0;
+					cntr++;
+				}
+
+				for(j=0; j<new_size[i]-cntr; j++)
+					binary[counter_new + j] = recv_buf[j+cntr];
+				counter_new += new_size[i] - cntr;
+				free(recv_buf);
+			}
+		}
+		N_b_OLD = counter_new;
+		N_b_NEW = N_b_OLD;
+		printf("new value of N_b_OLD = %d\n", N_b_OLD);
+	}
 #endif
 }
 

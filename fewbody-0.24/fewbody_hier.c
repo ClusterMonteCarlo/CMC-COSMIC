@@ -277,16 +277,24 @@ void fb_upsync(fb_obj_t *obj, double t)
 }
 
 /* randomly orient binary */
-void fb_randorient(fb_obj_t *obj, gsl_rng *rng)
+void fb_randorient(fb_obj_t *obj, gsl_rng *rng, struct rng_t113_state *curr_st)
 {
 	int i;
 	double theta, phi, omega, xp[3], yp[3], zp[3];
-	
+
 	/* random angles */
+/*
 	theta = acos(2.0 * gsl_rng_uniform(rng) - 1.0);
 	phi = 2.0 * FB_CONST_PI * gsl_rng_uniform(rng);
 	omega = 2.0 * FB_CONST_PI * gsl_rng_uniform(rng);
 	obj->mean_anom = 2.0 * FB_CONST_PI * gsl_rng_uniform(rng);
+*/
+
+	//MPI2: Changing this temporarily? to use global random state.
+	theta = acos(2.0 * rng_t113_dbl_new(curr_st) - 1.0);
+	phi = 2.0 * FB_CONST_PI * rng_t113_dbl_new(curr_st);
+	omega = 2.0 * FB_CONST_PI * rng_t113_dbl_new(curr_st);
+	obj->mean_anom = 2.0 * FB_CONST_PI * rng_t113_dbl_new(curr_st);
 
 	/* set up coordinate transformations */
 	zp[0] = -sin(theta) * sin(phi);

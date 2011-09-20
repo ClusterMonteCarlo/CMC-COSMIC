@@ -506,7 +506,6 @@ void mpi_ComputeEnergy(void)
 	for (i=mpiBegin; i<=mpiEnd; i++) {
 		Etotal_K += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star_m[i] / clus.N_STAR;
 		Etotal_P += star_phi[i] * star_m[i] / clus.N_STAR;
-		//change this so that star[0] is not accesses by all procs. do on root node
 		Etotal_P += phi0 * cenma.m*madhoc/ clus.N_STAR;
 
 		//MPI2: Binary indices are involved. Ignore.
@@ -535,6 +534,7 @@ void mpi_ComputeEnergy(void)
 	MPI_Bcast(&Etotal.tot, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	Etotal.tot += cenma.E + Eescaped + Ebescaped + Eintescaped;
+//printf("id=%d\ncenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", myid, cenma.E, Eescaped, Ebescaped, Eintescaped );
 }
 #endif
 
@@ -570,6 +570,7 @@ void ComputeEnergy(void)
 	
 	Etotal.P *= 0.5;
 	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
+//printf("cenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", cenma.E, Eescaped, Ebescaped, Eintescaped );
 }
 
 #ifdef USE_MPI
@@ -1708,6 +1709,13 @@ void compute_energy_new()
 {
 	//MPI2: Tested! No errors.
 #ifdef USE_MPI
+	Eescaped += Eescaped_old;
+	Jescaped += Jescaped_old;
+	Eintescaped += Eintescaped_old;
+	Ebescaped += Ebescaped_old;
+	TidalMassLoss += TidalMassLoss_old;
+	Etidal += Etidal_old;
+
 	mpi_ComputeEnergy();
 #else
 	//MPI2: see inline for comments
@@ -2083,8 +2091,8 @@ void tidally_strip_stars2(void)
 
 void pre_sort_comm()
 {
-	int i, j, counter_new;
 #ifdef USE_MPI
+	int i, j, counter_new, count;
 	MPI_Status stat;
 	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
 	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
@@ -2099,6 +2107,12 @@ void pre_sort_comm()
 		star[i].m = star_m[i];
 	}
 
+	for(i=clus.N_MAX+1; i<=clus.N_MAX_NEW; i++) {
+		star[i].r = star_r[i];
+		star[i].m = star_m[i];
+	}
+
+
 	//MPI2: To be refactored into separate function later.
 	if(myid!=0)
 		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
@@ -2107,34 +2121,43 @@ void pre_sort_comm()
 			MPI_Recv(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
 
 	//MPI2: Collection of new stars.
-	MPI_Gather( &(clus.N_MAX_NEW), 1, MPI_INT, new_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Gather( &(clus.N_MAX_NEW), 1, MPI_LONG, new_size, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 
 	star_t *new_stars_recv_buf;
 
 /*
 	if(myid==0){
+		printf("\n");
 		for(i=0; i<procs; i++)
-			printf("pre_sort_comm(): new stars from proc %d = %d\t", i, new_size[i]);// - clus.N_MAX - 1);
+			printf("pre_sort_comm(): new stars from proc %d = %ld\n", i, new_size[i] - clus.N_MAX - 1);
+		printf("\n");
 		printf("\n");
 	}
 */
-
 	if(myid!=0)
 	{
 		if(clus.N_MAX_NEW - clus.N_MAX - 1 > 0)
 			//MPI2: +2 to account for the sentinel.
 			MPI_Send(&star[clus.N_MAX+2], sizeof(star_t) * (clus.N_MAX_NEW - clus.N_MAX - 1), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+
+		//for(i=clus.N_MAX+2; i<=clus.N_MAX_NEW; i++) 
+		//	printf("id = %d\tr at %d = %.18g\n",myid, i, star_r[i]);
+
 	}
 	else
 	{
-		counter_new = clus.N_MAX + 2;
+		counter_new = clus.N_MAX_NEW + 1;
 		for(i=1; i<procs; i++)
 		{
 			new_size[i] = new_size[i] - clus.N_MAX - 1;
+			//printf("i=%d\tnewsize=%d\tnmaxnew=%ld\n", i, new_size[i], clus.N_MAX_NEW);
+			clus.N_MAX_NEW += new_size[i];
 			if(new_size[i] > 0)
 			{
 				new_stars_recv_buf = (star_t *) calloc(new_size[i], sizeof(star_t));
 				MPI_Recv(new_stars_recv_buf, sizeof(star_t) * new_size[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+//MPI_Get_count( &stat, MPI_BYTE, &count );
+//printf("RECD from %d\t%d stars\n", i, count/sizeof(star_t));
 				for(j=0; j<new_size[i]; j++)
 					star[counter_new + j] = new_stars_recv_buf[j];
 				counter_new += new_size[i];
@@ -2155,7 +2178,7 @@ void qsorts_new(void)
 		 */
 		//MPI2: Only running till N_MAX for now since no new stars are created, later has to be changed to N_MAX_NEW.
 		//MPI2: Changin to N_MAX+1, later change to N_MAX_NEW+1
-		qsorts(star+1,clus.N_MAX);
+		qsorts(star+1,clus.N_MAX_NEW);
 }
 
 void post_sort_comm()

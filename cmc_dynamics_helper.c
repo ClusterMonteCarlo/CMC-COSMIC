@@ -184,17 +184,32 @@ long create_binary(int idx, int dyn_0_se_1)
 {
 	long i, j;
 	
+#ifdef USE_MPI
+if(myid==0)
+#endif
+{
 	/* find first free binary */
 	i = 1;
 	while (i <= N_BIN_DIM && binary[i].inuse) {
 		i++;
 	}
-	
+
+	if(i > N_b_OLD)
+		N_b_NEW = i;
+
 	/* problem! */
 	if (i > N_BIN_DIM) {
 		eprintf("cannot find unused binary.\n");
 		exit_cleanly(1);
 	}
+
+	printf("HOLE FOUND at %d\t INSERTING STAR %d\n", i, idx);
+}
+#ifdef USE_MPI
+else
+	/* account for new binary */
+	i = ++N_b_NEW;
+#endif
 	
 	/* initialize to zero for safety */
 	zero_binary(i);
@@ -736,6 +751,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	/* malloc hier (based on value of hier.nstarinit) */
 	fb_malloc_hier(&hier);
 
+	t=0;
 #ifdef USE_MPI
 	bmax = rperi * sqrt(1.0 + 2.0 * ((star_m[k] + star_m[kp]) * madhoc) / (rperi * sqr(W)));
 #else
@@ -747,7 +763,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 		retval = binbin(&t, k, kp, W, bmax, &hier, rng);
 	} else {
 		retval = binsingle(&t, ksin, kbin, W, bmax, &hier, rng);
+		//printf("myid = %d\t%ld\t%ld\t%.18g\t%.18g\t%.18g\n", myid, ksin, kbin, t, W, bmax, hier->a );
 	}
+
+	for (i=0; i<hier.nobj; i++)
+		if (hier.obj[i]->n == 2)
+			printf("\n%.18g\n", hier.obj[i]->a );
 	
 	/* set up axes */
 	wp = sqrt(sqr(w[1]) + sqr(w[2]));
@@ -980,7 +1001,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				/* semimajor axis and eccentricity */
 				binary[star[knew].binind].a = hier.obj[i]->a * cmc_units.l;
 				binary[star[knew].binind].e = hier.obj[i]->e;
-				
+
+				if(knew > clus.N_MAX)
+					printf("myid = %d\t%ld\t%.18g\t%.18g\t%.18g\n", myid, knew, binary[star[knew].binind].a,hier.obj[i]->a,cmc_units.l );
+
 				/* masses */
 				binary[star[knew].binind].m1 = hier.obj[i]->obj[0]->m * cmc_units.m / madhoc;
 				binary[star[knew].binind].m2 = hier.obj[i]->obj[1]->m * cmc_units.m / madhoc;
@@ -1348,7 +1372,7 @@ double mpi_simul_relax_new(void)
 	long si, k, p, N_LIMIT, simin, simax;
 	double dt, dtmin=GSL_POSINF, DTrel=0.0, W, n_local;
 	double Mv2ave, Mave, M2ave, sigma;
-	
+
 	N_LIMIT = clus.N_MAX;
 	p = 10; //For this value, the results are very close to the original simul_relax() function.
 

@@ -94,6 +94,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 		hier->hier[hier->hi[1]+1].R = 0.0;
 		hier->hier[hier->hi[1]+2].R = 0.0;
 	}
+//printf("b=%.18g\t%d\t%d\t%d\n",vc, hier->hier[hier->hi[1]+2].id[0], hier->hier[hier->hi[1]+1].id[0], hier->hier[hier->hi[1]+0].id[0]);
 
 #ifdef USE_MPI
 	hier->hier[hier->hi[1]+0].m = star_m[ksin] * units.mstar;
@@ -143,10 +144,15 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 
 	fb_init_scattering(hier->obj, W/vc, b, rtid);
 	
+#ifndef USE_MPI
+	curr_st = &st[findProcForIndex(ksin)];
+#endif
+
 	/* trickle down the binary properties, then back up */
-	fb_randorient(&(hier->hier[hier->hi[2]+0]), rng);
+	fb_randorient(&(hier->hier[hier->hi[2]+0]), rng, curr_st);
 	fb_downsync(&(hier->hier[hier->hi[2]+0]), *t);
 	fb_upsync(&(hier->hier[hier->hi[2]+0]), *t);
+//printf("hier->hier[hier->hi[1]+2].m=%.18g\t%.18g\t\n", hier->hier[hier->hi[2]+0], *t);
 	
 	/* call fewbody! */
 	retval = fewbody(input, hier, t);

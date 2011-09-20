@@ -1,4 +1,3 @@
-/* -*- linux-c -*- */
 
 /* "extern" should be uncommented here when compiling with g++ */
 #ifndef _MAIN_
@@ -48,7 +47,7 @@ _EXTERN_ int BININITKT, STOPATCORECOLLAPSE;
 _EXTERN_ int BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_IDUM, BSE_WINDFLAG;
 _EXTERN_ double BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_MXNS, BSE_BCONST, BSE_CK, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA;
 /* binary stuff */
-_EXTERN_ long N_b, N_bb, N_bs;
+_EXTERN_ long N_b, N_bb, N_bs, N_b_OLD, N_b_NEW, last_hole;
 _EXTERN_ double M_b, E_b;
 _EXTERN_ binary_t *binary;
 /* file pointers */
@@ -81,6 +80,7 @@ _EXTERN_ double *star_m;
 _EXTERN_ double *star_phi;
 _EXTERN_ int mpiBegin, mpiEnd;
 _EXTERN_ int *mpiDisp, *mpiLen;
+_EXTERN_ double Eescaped_old, Jescaped_old, Eintescaped_old, Ebescaped_old, TidalMassLoss_old, Etidal_old;
 #endif
 _EXTERN_ int myid, procs;
 _EXTERN_ double timeT, startTime, endTime; 
@@ -99,7 +99,9 @@ _EXTERN_ int size_bin_buf;
 _EXTERN_ int *created_star_dyn_node;
 _EXTERN_ int *created_star_se_node;
 #endif
-_EXTERN_ int *new_size;
+_EXTERN_ FILE* ftest2;
+_EXTERN_ char num2[5],filename2[20], tempstr2[20];
+_EXTERN_ long *new_size;
 
 /* debugging */
 _EXTERN_ int debug;

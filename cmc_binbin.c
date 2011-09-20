@@ -163,7 +163,7 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hi
 	
 	/* trickle down the binary properties, then back up */
 	for (j=0; j<2; j++) {
-		fb_randorient(&(hier->hier[hier->hi[2]+j]), rng);
+		fb_randorient(&(hier->hier[hier->hi[2]+j]), rng, curr_st);
 		fb_downsync(&(hier->hier[hier->hi[2]+j]), *t);
 		fb_upsync(&(hier->hier[hier->hi[2]+j]), *t);
 	}

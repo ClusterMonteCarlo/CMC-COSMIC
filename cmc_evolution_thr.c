@@ -289,6 +289,7 @@ double GetTimeStep(gsl_rng *rng) {
 		//Optimized version of simul_relax()
 		DTrel = simul_relax_new();
 #endif
+		//printf("RELAXATION TIMESTEP = %.14g\n", DTrel);
 
 // Testing
 //This is for testing the timestep variation over a number of timesteps, and see if the old and the new versions are at least nearly same.
@@ -447,6 +448,7 @@ void tidally_strip_stars(void) {
 					star[i].vtnew = 0.0;
 					Eescaped += star[i].E * star[i].m / clus.N_STAR;
 					Jescaped += star[i].J * star[i].m / clus.N_STAR;
+
 					if (star[i].binind == 0) {
 						Eintescaped += star[i].Eint;
 					} else {
@@ -513,6 +515,7 @@ void tidally_strip_stars(void) {
 					star[i].vtnew = 0.0;
 					Eescaped += star[i].E * star[i].m / clus.N_STAR;
 					Jescaped += star[i].J * star[i].m / clus.N_STAR;
+
 					if (star[i].binind == 0) {
 						Eintescaped += star[i].Eint;
 					} else {
@@ -587,12 +590,15 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	star[j].vrnew = 0.0;
 	star[j].vtnew = 0.0;
 
+
 #ifdef USE_MPI
 	Eescaped += E * star_m[j] / clus.N_STAR;
 	Jescaped += J * star_m[j] / clus.N_STAR;
+	//printf("id=%d\tEescaped added = %.18g\tm = %.18g\n",myid,E * star_m[j] / clus.N_STAR, star_m[j]);
 #else
 	Eescaped += E * star[j].m / clus.N_STAR;
 	Jescaped += J * star[j].m / clus.N_STAR;
+	//printf("Eescaped added = %.18g\tm = %.18g\n",E * star[j].m / clus.N_STAR, star[j].m);
 #endif
 
 	if (star[j].binind == 0) {
@@ -602,6 +608,14 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 			(2.0 * binary[star[j].binind].a);
 		Eintescaped += binary[star[j].binind].Eint1 + binary[star[j].binind].Eint2;
 	}
+
+/*
+#ifdef USE_MPI
+	fprintf(ftest2, "%d\t%.18g\t%.18g\t%.18g\t%d\n",tcount, E * star_m[j] / clus.N_STAR,star[j].binind?-(binary[star[j].binind].m1/clus.N_STAR) * (binary[star[j].binind].m2/clus.N_STAR) / (2.0 * binary[star[j].binind].a):0, star_m[j], j );
+#else
+	fprintf(ftest2, "%d\t%.18g\t%.18g\t%.18g\t%d\n",tcount, E * star[j].m / clus.N_STAR,star[j].binind?-(binary[star[j].binind].m1/clus.N_STAR) * (binary[star[j].binind].m2/clus.N_STAR) / (2.0 * binary[star[j].binind].a):0, star[j].m, j );
+#endif
+*/
 
 #ifdef USE_MPI
 	TidalMassLoss += star_m[j] / clus.N_STAR;
@@ -789,9 +803,11 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {
 			/* dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
+			dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind);
 			star[j].r_apo= rmax;
 			star[j].r_peri= rmin;
 			remove_star(j, phi_rtidal, phi_zero);
+			//printf("%d\tTIDAL STRIPPING\n\n", j);
 			continue;
 		}
 
@@ -803,8 +819,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 #ifndef USE_MPI
 		curr_st = &st[findProcForIndex(j)];
-		if(j > clus.N_MAX)
-			printf("id = %ld\tDrawing rand. num from node %d \tN_MAX=%ld\n", j, findProcForIndex(j), clus.N_MAX);
+		//if(j > clus.N_MAX)
+			//printf("id = %ld\tDrawing rand. num from node %d \tN_MAX=%ld\n", j, findProcForIndex(j), clus.N_MAX);
 #endif
 
 		for (k = 1; k <= N_TRY; k++) {

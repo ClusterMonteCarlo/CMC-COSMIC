@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <gsl/gsl_nan.h>
 #include <gsl/gsl_rng.h>
+#include "../common/taus113-v2.h"
 
 /* version information */
 #define FB_VERSION "0.24"
@@ -169,7 +170,7 @@ int fb_n_hier(fb_obj_t *obj);
 char *fb_sprint_hier(fb_hier_t hier, char string[FB_MAX_STRING_LENGTH]);
 char *fb_sprint_hier_hr(fb_hier_t hier, char string[FB_MAX_STRING_LENGTH]);
 void fb_upsync(fb_obj_t *obj, double t);
-void fb_randorient(fb_obj_t *obj, gsl_rng *rng);
+void fb_randorient(fb_obj_t *obj, gsl_rng *rng, struct rng_t113_state *curr_st);
 void fb_downsync(fb_obj_t *obj, double t);
 void fb_objcpy(fb_obj_t *obj1, fb_obj_t *obj2);
 
