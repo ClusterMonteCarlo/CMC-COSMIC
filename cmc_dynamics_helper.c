@@ -104,9 +104,10 @@ void destroy_obj(long i)
 	double r, phi;
 
 	if (star[i].binind) {
+		printf("###########> Star %d destryped, binary %d!\n", i, star[i].binind);
 		destroy_binary(star[i].binind);
 	}
-	
+
 	/* need to zero out E's, J, but can't zero out potential---this is the easiest way */
 #ifdef USE_MPI
 	r = star_r[i];
@@ -129,11 +130,36 @@ void destroy_obj(long i)
 	remove_star_center(i);
 }
 
+/* destroy an object (can be star or binary) - pure serial version */
+void destroy_obj_new(long i)
+{
+	double r, phi;
+
+	if (star[i].binind) {
+		printf("###########> Star %d destryped, binary %d!\n", i, star[i].binind);
+		destroy_binary(star[i].binind);
+	}
+
+	/* need to zero out E's, J, but can't zero out potential---this is the easiest way */
+	//r = star[i].r;
+	//phi = star[i].phi;
+
+	zero_star(i);
+
+	//star[i].r = r;
+	//star[i].phi = phi;
+	star[i].r = SF_INFINITY;	/* send star to infinity */
+	star[i].m = DBL_MIN;		/* set mass to very small number */
+	star[i].vrnew = 0.0;		/* setup vr and vt for           */
+	star[i].vtnew = 0.0;		/*		future calculations  */
+}
+
 /* destroy a binary */
 void destroy_binary(long i)
 {
 	/* set inuse flag to zero, and zero out all other properties for safety */
 	zero_binary(i);
+	printf("-------------> Binary %d destryped!\n", i);
 }
 
 /* create a new star, returning its index */

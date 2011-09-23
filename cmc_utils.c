@@ -707,6 +707,7 @@ long potential_calculate(void) {
 		}
 	}*/
 	
+	printf("star1.r=%g\n", star[1].r);
 	star[0].phi = star[1].phi+ cenma.m*madhoc/star[1].r; /* U(r=0) is U_1 */
 	if (isnan(star[0].phi)) {
 		eprintf("NaN in phi[0] detected\n");
@@ -1117,8 +1118,12 @@ void mpi_central_calculate1(void)
 	mpiFindIndicesCustom( nave, 20, myid, &mpiBeginLocal, &mpiEndLocal );
 	//mpiFindIndicesSpecial( nave, &mpiBeginLocal, &mpiEndLocal );
 
+	//printf("myid=%d begin=%d end=%d\n", myid, mpiBeginLocal, mpiEndLocal);
 	/* calculate rhoj's (Casertano & Hut 1985) */
-	for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
+	//for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
+	for (i=1; i<=nave; i++) {
+		if( ! (i>=mpiBegin && i<=mpiEnd) )
+			continue;
 		jmin = MAX(i-J/2, 1);
 		jmax = jmin + J;
 		mrho = 0.0;
@@ -1127,13 +1132,16 @@ void mpi_central_calculate1(void)
 		for (j=jmin+1; j<=jmax-1; j++) {
 			mrho += star_m[j] * madhoc;
 		}
+
 		Vrj = 4.0/3.0 * PI * (fb_cub(star_r[jmax]) - fb_cub(star_r[jmin]));
 		rhoj[i] = mrho / Vrj;
+		
 	}
+	//printf("check %d %.18g %.18g %.18g\n\n",myid, mrho, Vrj, rhoj[mpiEndLocal]);
+
 
 	/* calculate core quantities using density weighted averages (note that in 
 	   Casertano & Hut (1985) only rho and rc are analyzed and tested) */
-
 	double mpi_rhojsum, mpi_rhoj2sum, mpi_rc_nb, mpi_c_rho, mpi_c_vrms, mpi_c_rc, mpi_c_mave;
 	mpi_rhojsum = 0.0;
 	mpi_rhoj2sum = 0.0;
@@ -1143,7 +1151,10 @@ void mpi_central_calculate1(void)
 	mpi_c_rc = 0.0;
 	mpi_c_mave = 0.0;
 
-	for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
+	//for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
+	for (i=1; i<=nave; i++) {
+		if( ! (i>=mpiBegin && i<=mpiEnd) )
+			continue;
 		mpi_rhojsum += rhoj[i];
 		mpi_rhoj2sum += sqr(rhoj[i]);
 		mpi_c_rho += sqr(rhoj[i]);
@@ -1152,7 +1163,27 @@ void mpi_central_calculate1(void)
 		mpi_rc_nb += sqr(rhoj[i] * star_r[i]);
 		mpi_c_mave += rhoj[i] * star_m[i] * madhoc;
 	}
+	//printf("nave = %d\n", nave);
 
+
+/*
+	double temp, temp1;
+	MPI_Status stat;
+	if(myid==0)
+	{
+	printf("id=0 v_rms=%.18g\n", mpi_c_vrms);
+	temp1=mpi_c_vrms;
+	}
+	if(myid!=0)
+		MPI_Send(&mpi_c_vrms, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+	else
+		for(i=1;i<procs;i++)
+		{
+			MPI_Recv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &stat);
+			temp1 += temp;
+			printf("id=%d v_rms=%.18g\n",i,  temp1);
+		}
+*/
 	MPI_Reduce(&mpi_rhojsum, &rhojsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&mpi_rhoj2sum, &rhoj2sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&mpi_c_rho, &central.rho, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
@@ -1707,15 +1738,15 @@ void calc_potential_new2()
 
 void compute_energy_new()
 {
-	//MPI2: Tested! No errors.
 #ifdef USE_MPI
 	Eescaped += Eescaped_old;
 	Jescaped += Jescaped_old;
 	Eintescaped += Eintescaped_old;
 	Ebescaped += Ebescaped_old;
-	TidalMassLoss += TidalMassLoss_old;
+	//TidalMassLoss += TidalMassLoss_old;
 	Etidal += Etidal_old;
 
+	//MPI2: Tested! No errors.
 	mpi_ComputeEnergy();
 #else
 	//MPI2: see inline for comments
@@ -1779,9 +1810,11 @@ void calc_timestep(gsl_rng *rng)
 	{
 		if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
 			diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
+			printf("TIMESTEP CHANGED!!!\n\n");
 			Dt = Prev_Dt * 0.8;
 		} else if (Dt > 1.1 * Prev_Dt && Prev_Dt > 0 && (TidalMassLoss - OldTidalMassLoss) > 0.02) {
 			diaprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
+			printf("TIMESTEP CHANGED!!!\n\n");
 			Dt = Prev_Dt * 1.1;
 		}
 	}
@@ -1852,7 +1885,8 @@ void tidally_strip_stars1()
 {
 #ifdef USE_MPI
 		//MPI2: The 2nd part of tidally_strip_stars() has been moved just before sort.
-		OldTidalMassLoss = TidalMassLoss;
+		OldTidalMassLoss = TidalMassLoss_old;
+		printf("$$$$$$$$$$ %d OldTML = %g\n", myid, OldTidalMassLoss);
 		/******************************/
 		/* get new particle positions */
 		/******************************/
@@ -1912,6 +1946,11 @@ void energy_conservation2()
 
 void tidally_strip_stars2(void)
 {
+
+
+	//printf("myid = %d OldTidalMassLoss=%.6g TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+	///		myid, OldTidalMassLoss, TidalMassLoss, DTidalMassLoss);
+
 #ifdef USE_MPI
 	if(myid==0)
 	{
@@ -1921,7 +1960,8 @@ void tidally_strip_stars2(void)
 
 		j = 0;
 		Etidal = 0.0;
-		OldTidalMassLoss = TidalMassLoss;
+		TidalMassLoss += TidalMassLoss_old;
+		//OldTidalMassLoss = TidalMassLoss;
 		DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 
 		gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
@@ -1946,6 +1986,8 @@ void tidally_strip_stars2(void)
 				if (TIDAL_TREATMENT == 0){
 					/*radial cut off criteria*/
 
+					if(i==17769)
+						printf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld r_apo=%g rnew=%g Rtidal=%g m=%g E=%g binind=%ld\n", i, star[i].id, star[i].r_apo, star[i].rnew, Rtidal, star_m[i], star[i].E, star[i].binind);
 					if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
 						dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
 						star[i].rnew = SF_INFINITY;	/* tidally stripped star */
@@ -2000,7 +2042,8 @@ void tidally_strip_stars2(void)
 						dprintf ("before SE: id=%ld k=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
 								star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
 								star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star[i].phi, star[i].r);
-						destroy_obj(i);
+						destroy_obj_new(i);
+
 						if (Etotal.K + Etotal.P - Etidal >= 0)
 							break;
 
@@ -2016,6 +2059,7 @@ void tidally_strip_stars2(void)
 					gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
 					if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
 						dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
+						printf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star_m[i], star[i].E, star[i].binind); 
 						star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 						star[i].vrnew = 0.0;
 						star[i].vtnew = 0.0;
@@ -2061,14 +2105,12 @@ void tidally_strip_stars2(void)
 
 						/* perhaps this will fix the problem wherein stars are ejected (and counted)
 							multiple times */
-						destroy_obj(i);
+						destroy_obj_new(i);
 
 						if (Etotal.K + Etotal.P - Etidal >= 0)
 							break;
-
 					}
 				}
-
 			}
 			j++;
 			TidalMassLoss = TidalMassLoss + DTidalMassLoss;

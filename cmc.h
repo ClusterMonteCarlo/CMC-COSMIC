@@ -573,6 +573,7 @@ void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, 
 
 /* Fewbody stuff */
 void destroy_obj(long i);
+void destroy_obj_new(long i);
 void destroy_binary(long i);
 long create_star(int idx, int dyn_0_se_1);
 long create_binary(int idx, int dyn_0_se_1);

@@ -290,116 +290,107 @@ double GetTimeStep(gsl_rng *rng) {
 		DTrel = simul_relax_new();
 #endif
 		//printf("RELAXATION TIMESTEP = %.14g\n", DTrel);
-
-// Testing
-//This is for testing the timestep variation over a number of timesteps, and see if the old and the new versions are at least nearly same.
-//if(myid==0){
-/*
-		static int a = 0;
-		a++;
-		FILE *fTest;
-		fTest = fopen("simul_relax_test.dat", "a");
-		fprintf(fTest, "%d\t%g\t%g\n",a ,DTrel, temp);
-		fclose(fTest);
-*/
-
 	} else {
 		DTrel = GSL_POSINF;
 	}
 	Dt = DTrel;
 
 #ifdef USE_MPI
-if(myid==0)
+	if(myid==0)
 #endif
-{
-	/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
-	if (central.N_sin != 0 && SS_COLLISION) {
-		/* X defines pericenter needed for collision: r_p = X (R_1+R_2) */
-		if (TIDAL_CAPTURE) {
-			xcoll = XCOLLTC;
+	{
+		/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
+		if (central.N_sin != 0 && SS_COLLISION) {
+			/* X defines pericenter needed for collision: r_p = X (R_1+R_2) */
+			if (TIDAL_CAPTURE) {
+				xcoll = XCOLLTC;
+			} else {
+				xcoll = XCOLLSS;
+			}
+			Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(xcoll) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
+					(1.0 + central.mR_ave/(2.0*xcoll*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
+				log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+			fprintf (stdout, "Time = %f Gyr Tcoll = %f Gyr\n", 
+					TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09,
+					Tcoll*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09);
 		} else {
-			xcoll = XCOLLSS;
+			Tcoll = GSL_POSINF;
 		}
-		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(xcoll) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
-			       (1.0 + central.mR_ave/(2.0*xcoll*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
-			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-		fprintf (stdout, "Time = %f Gyr Tcoll = %f Gyr\n", 
-			TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09,
-			Tcoll*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09);
-	} else {
-		Tcoll = GSL_POSINF;
-	}
-	DTcoll = 5.0e-3 * Tcoll;
-	Dt = MIN(Dt, DTcoll);
+		DTcoll = 5.0e-3 * Tcoll;
+		Dt = MIN(Dt, DTcoll);
 
-	/* calculate DTbb, using a generalization of the expression for Tcoll */
-	if (central.N_bin != 0 && BINBIN) {
-		/* X defines pericenter needed for "strong" interaction: r_p = X (a_1+a_2) */	
-		Tbb = 1.0 / (16.0 * sqrt(PI) * central.n_bin * sqr(XBB) * (central.v_bin_rms/sqrt(3.0)) * central.a2_ave * 
-			     (1.0 + central.ma_ave/(2.0*XBB*sqr(central.v_bin_rms/sqrt(3.0))*central.a2_ave))) * 
-			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-	} else {
-		Tbb = GSL_POSINF;
-	}
-	DTbb = 5.0e-3 * Tbb;
-	Dt = MIN(Dt, DTbb);
-
-	/* calculate DTbs, using a generalization of the expression for Tcoll */
-	if (central.N_bin != 0 && central.N_sin != 0 && BINSINGLE) {
-		/* X defines pericenter needed for "strong" interaction: r_p = X a */
-		Tbs = 1.0 / (4.0 * sqrt(PI) * central.n_sin * sqr(XBS) * (central.v_rms/sqrt(3.0)) * central.a2_ave * 
-			     (1.0 + central.m_ave*central.a_ave/(XBS*sqr(central.v_rms/sqrt(3.0))*central.a2_ave))) * 
-			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-	} else {
-		Tbs = GSL_POSINF;
-	}
-	DTbs = 5.0e-3 * Tbs;
-	Dt = MIN(Dt, DTbs);
-
-	/* calculate DTse, for now using the SE mass loss from the previous step as an indicator
-	   for this step; in the future perhaps we can get an estimate of the mass loss rate
-	   from SSE/BSE */
-	if (!STELLAR_EVOLUTION || DMse == 0.0 || tcount == 1) {
-		DTse = GSL_POSINF;
-	} else {
-		/* DMse can be negative due to round-off error.  Give up if |DMse| is statistically
-		   significantly larger than the round-off error. */
-		if (DMse < -1.0e-10 * ((double) clus.N_STAR)) {
-			eprintf("DMse = %g < -1.0e-10 * ((double) clus.N_STAR)!\n", DMse);
-			exit_cleanly(-1);
+		/* calculate DTbb, using a generalization of the expression for Tcoll */
+		if (central.N_bin != 0 && BINBIN) {
+			/* X defines pericenter needed for "strong" interaction: r_p = X (a_1+a_2) */	
+			Tbb = 1.0 / (16.0 * sqrt(PI) * central.n_bin * sqr(XBB) * (central.v_bin_rms/sqrt(3.0)) * central.a2_ave * 
+					(1.0 + central.ma_ave/(2.0*XBB*sqr(central.v_bin_rms/sqrt(3.0))*central.a2_ave))) * 
+				log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+		} else {
+			Tbb = GSL_POSINF;
 		}
-		/* get timescale for 1% mass loss from cluster */
-		Tse = 0.01 * Mtotal / (fabs(DMse) / Prev_Dt);
-		/* and take a fraction of that for the timestep */
-		DTse = 0.1 * Tse;
-	}
-	Dt = MIN(Dt, DTse);
+		DTbb = 5.0e-3 * Tbb;
+		Dt = MIN(Dt, DTbb);
 
-	//Sourav: Toy rejuvenation prescription, early mass loss indication for timestep
-	if (!STAR_AGING_SCHEME || DMrejuv == 0.0){
-		DTrejuv = GSL_POSINF;
-	} else {
-		if (DMrejuv<0.0) {
-			eprintf("DMrejuv = %g < 0.0!\n", DMrejuv);
-			exit_cleanly(-1);
+		/* calculate DTbs, using a generalization of the expression for Tcoll */
+		if (central.N_bin != 0 && central.N_sin != 0 && BINSINGLE) {
+			/* X defines pericenter needed for "strong" interaction: r_p = X a */
+			Tbs = 1.0 / (4.0 * sqrt(PI) * central.n_sin * sqr(XBS) * (central.v_rms/sqrt(3.0)) * central.a2_ave * 
+					(1.0 + central.m_ave*central.a_ave/(XBS*sqr(central.v_rms/sqrt(3.0))*central.a2_ave))) * 
+				log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+		} else {
+			Tbs = GSL_POSINF;
 		}
-		/* get timescale for 0.1% mass loss from cluster */
-		Trejuv = 0.01 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
-		DTrejuv = 0.01 * Trejuv; //Check if this fraction can make virial ratio better
-		printf ("THIS IS WHERE THE TIMESCALE GOT SET: T= %f DT=%f DM=%f\n", Trejuv, DTrejuv, DMrejuv);
-		printf ("*****************************\n"); //checking what's going on
-	}	
-	Dt = MIN(Dt, DTrejuv);
-	
-	/* take a reasonable timestep if all physics is turned off */
-	if (Dt == GSL_POSINF) {
-		Dt = 0.001;
+		DTbs = 5.0e-3 * Tbs;
+		Dt = MIN(Dt, DTbs);
+
+		/* calculate DTse, for now using the SE mass loss from the previous step as an indicator
+			for this step; in the future perhaps we can get an estimate of the mass loss rate
+			from SSE/BSE */
+		if (!STELLAR_EVOLUTION || DMse == 0.0 || tcount == 1) {
+			DTse = GSL_POSINF;
+		} else {
+			/* DMse can be negative due to round-off error.  Give up if |DMse| is statistically
+				significantly larger than the round-off error. */
+			if (DMse < -1.0e-10 * ((double) clus.N_STAR)) {
+				eprintf("DMse = %g < -1.0e-10 * ((double) clus.N_STAR)!\n", DMse);
+				exit_cleanly(-1);
+			}
+			/* get timescale for 1% mass loss from cluster */
+			Tse = 0.01 * Mtotal / (fabs(DMse) / Prev_Dt);
+			/* and take a fraction of that for the timestep */
+			DTse = 0.1 * Tse;
+		}
+		Dt = MIN(Dt, DTse);
+
+		//Sourav: Toy rejuvenation prescription, early mass loss indication for timestep
+		if (!STAR_AGING_SCHEME || DMrejuv == 0.0){
+			DTrejuv = GSL_POSINF;
+		} else {
+			if (DMrejuv<0.0) {
+				eprintf("DMrejuv = %g < 0.0!\n", DMrejuv);
+				exit_cleanly(-1);
+			}
+			/* get timescale for 0.1% mass loss from cluster */
+			Trejuv = 0.01 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
+			DTrejuv = 0.01 * Trejuv; //Check if this fraction can make virial ratio better
+			printf ("THIS IS WHERE THE TIMESCALE GOT SET: T= %f DT=%f DM=%f\n", Trejuv, DTrejuv, DMrejuv);
+			printf ("*****************************\n"); //checking what's going on
+		}	
+		Dt = MIN(Dt, DTrejuv);
+
+		/* take a reasonable timestep if all physics is turned off */
+		if (Dt == GSL_POSINF) {
+			Dt = 0.001;
+		}
+
+		/* debugging */
+		dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
+		printf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
+		printf("central.n_sin=%g XBS=%g central.v_rms=%g central.a2_ave =%g central.m_ave=%g central.a_ave=%g\n",central.n_sin, XBS, central.v_rms, central.a2_ave, central.m_ave, central.a_ave);
 	}
+	//For testing. To be REMOVED later.
+	//Dt = DTrel;
 
-	/* debugging */
-	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
-
-}
 	return (Dt);
 }
 
@@ -418,6 +409,10 @@ void tidally_strip_stars(void) {
 	max_r = get_positions();
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 		
+
+	printf("OldTidalMassLoss=%.6g TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+			OldTidalMassLoss, TidalMassLoss, DTidalMassLoss);
+	
 	gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 		j, OldTidalMassLoss, DTidalMassLoss);
 	fprintf(logfile, "tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
@@ -443,6 +438,7 @@ void tidally_strip_stars(void) {
 
 				if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
 					dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
+					printf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld r_apo=%g rnew=%g Rtidal=%g m=%g E=%g binind=%ld\n", i, star[i].id, star[i].r_apo, star[i].rnew, Rtidal, star[i].m, star[i].E, star[i].binind);
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
@@ -510,6 +506,7 @@ void tidally_strip_stars(void) {
 				gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
 				if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
 					dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
+					printf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
@@ -686,7 +683,7 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 }
 
 void remove_star_center(long j) {
-	star[j].rnew = SF_INFINITY;	/* send star to infinity         */
+	star[j].rnew = SF_INFINITY;	/* send star to infinity */
 #ifdef USE_MPI
 	star_m[j] = DBL_MIN;		/* set mass to very small number */
 #else

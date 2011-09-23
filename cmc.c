@@ -214,7 +214,20 @@ int main(int argc, char *argv[])
 		calc_central_new();
 
 		calc_timestep(rng);
-		Dt = 0.0001465233252096;
+#ifdef USE_MPI
+		if(myid==0){
+			strcpy(tempstr, "test_dt_par.dat");
+			ftest = fopen( tempstr, "a" );
+			fprintf(ftest, "%ld\t%.18g\n", tcount, Dt );
+			fclose(ftest);
+		}
+#else
+		strcpy(tempstr, "test_dt_ser.dat");
+		ftest = fopen( tempstr, "a" );
+		fprintf(ftest, "%ld\t%.18g\n", tcount, Dt );
+		fclose(ftest);
+#endif
+		//Dt = 0.0001065233252096;
 #ifdef USE_MPI
 if(myid==0)
 #endif
@@ -223,7 +236,6 @@ if(myid==0)
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
 
-		printf("nmax = %ld\n", clus.N_MAX);
 /*
 #ifdef USE_MPI
 		printf("id = %d\tBefore dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n",myid, clus.N_MAX, clus.N_MAX_NEW);
@@ -238,35 +250,6 @@ if(myid==0)
 		//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
-
-/*
-#ifdef USE_MPI
-		strcpy(filename, "test_rng_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", j, star[j].E );
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-#else
-		strcpy(tempstr, "test_rng_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].E );
-		fclose(ftest);
-#endif
-*/
 
 /*
 #ifndef USE_MPI
@@ -345,57 +328,61 @@ if(myid==0)
 		collect_bin_data();		
 
 #ifdef USE_MPI
-if(myid==0)
-	//printf("Nmax = %ld\tNmaxnew = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
 	if(myid==0){
 		strcpy(tempstr, "test_var_par.dat");
 		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX_NEW; i++ )
-			if(star[i].binind>0)
-				fprintf(ftest, "%ld\t%.18g\n", i, binary[star[i].binind].a );
+		for( i = 1; i <= N_b_NEW+5; i++ )
+			//if(star[i].binind>0)
+				fprintf(ftest, "%ld\t%.18g\n", i, binary[i].a );
 		fclose(ftest);
 	}
 #else
 	//printf("Nmaxnew = %ld\n", clus.N_MAX_NEW);
 	strcpy(tempstr, "test_var_ser.dat");
 	ftest = fopen( tempstr, "w" );
-	for( i = 1; i <= clus.N_MAX_NEW; i++ )
-		if(star[i].binind>0)
-			fprintf(ftest, "%ld\t%.18g\n", i, binary[star[i].binind].a );
+	for( i = 1; i <= N_b_NEW+5; i++ )
+		//if(star[i].binind>0)
+			fprintf(ftest, "%ld\t%.18g\n", i, binary[i].a );
 	fclose(ftest);
-#endif
-
-#ifdef USE_MPI
-		strcpy(filename, "test_rng_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-					fprintf(ftest, "%ld\t%d\n", j, star[j].binind );
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-#else
-		strcpy(tempstr, "test_rng_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%d\n", i, star[i].binind );
-		fclose(ftest);
 #endif
 
 		tidally_strip_stars2();
 
+
+	if(myid==0){
+		strcpy(tempstr, "test_rng_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX_NEW; i++ )
+			//if(star[i].binind>0)
+				fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
+		fclose(ftest);
+	}
+
+		for( i = 1; i <= clus.N_MAX_NEW; i++ )
+			if(star[i].r==0)
+				printf("######## FOUND BUG!!!!!!! %d\n\n", i);
+
 //printf("3\ncenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", cenma.E, Eescaped, Ebescaped, Eintescaped );
 		qsorts_new();
+
+#ifdef USE_MPI
+	if(myid==0){
+		strcpy(tempstr, "test_rng_par.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			//if(star[i].binind>0)
+				fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
+		fclose(ftest);
+	}
+#else
+	//printf("Nmaxnew = %ld\n", clus.N_MAX_NEW);
+	strcpy(tempstr, "test_rng_ser.dat");
+	ftest = fopen( tempstr, "w" );
+	for( i = 1; i <= clus.N_MAX; i++ )
+		//if(star[i].binind>0)
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r );
+	fclose(ftest);
+#endif
 
 		calc_potential_new2();
 
@@ -433,12 +420,48 @@ if(myid==0)
 
 		calc_clusdyn_new();
 
+#ifdef USE_MPI
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+					//if(star[j].binind>0)
+						//fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
+					fprintf(ftest, "%ld\t%.18g\n", j, star_r[j]);
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process2.sh");
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			//if(star[i].binind>0)
+				//fprintf(ftest, "%ld\t%.18g\n", i, binary[star[i].binind].a);
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
+		fclose(ftest);
+#endif
+
 		//MPI2: Commenting out for MPI
 		/*
 			if (WRITE_EXTRA_CORE_INFO) {
 			no_remnants= no_remnants_core(6);
 			}
 		 */
+
+#ifdef USE_MPI
+if(myid==0)
+#endif
+	printf("========> N_MAX =  %ld\n", clus.N_MAX);
 
 		//MPI2: Commenting out for MPI
 		print_results();
@@ -452,6 +475,36 @@ if(myid==0)
 				write_stellar_data();
 			}
 		}		
+
+#ifdef USE_MPI
+		if(myid==0)
+#endif
+		{
+			ftest = fopen("mpi_globvar.dat","w");
+			fprintf(ftest, "clus.N_MAX_NEW=%ld\nclus.N_MAX=%ld\nTidalMassLoss=%g\nOldTidalMassLoss=%g\nPrev_Dt=%g\nEescaped=%g\nJescaped=%g\nEintescaped=%g\nEbescaped=%g\nMtotal=%g\ninitial_total_mass=%g\nDMse=%g\nDMrejuv=%g\ncenma.m=%g\ncenma.m_new=%g\ncenma.E=%g\ntcount=%ld\nStepCount=%ld\nsnap_num=%ld\nEcheck=%ld\nnewstarid=%ld\n",
+					clus.N_MAX_NEW,
+					clus.N_MAX,
+					TidalMassLoss,
+					OldTidalMassLoss,
+					Prev_Dt,
+					Eescaped,
+					Jescaped,
+					Eintescaped,
+					Ebescaped,
+					Mtotal,
+					initial_total_mass,
+					DMse,
+					DMrejuv,
+					cenma.m,
+					cenma.m_new,
+					cenma.E,
+					tcount,
+					StepCount,
+					snap_num,
+					Echeck,
+					newstarid);
+			fclose(ftest);
+		}
 
 	} /* End WHILE (time step iteration loop) */
 
