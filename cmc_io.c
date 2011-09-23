@@ -571,8 +571,12 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
                         } else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
                                 PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
-                                SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
-                                parse_snapshot_windows(values);
+                                if (strncmp(values, "NULL", 4) == 0) {
+                                  SNAPSHOT_WINDOWS=NULL;
+                                } else {
+                                  SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
+                                  strncpy(SNAPSHOT_WINDOWS, values, 300);
+                                }
 				parsed.SNAPSHOT_WINDOWS = 1;
                         } else if (strcmp(parameter_name, "SNAPSHOT_WINDOW_UNITS") == 0) {
                                 PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOW_UNITS);
@@ -933,7 +937,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 0, PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
         CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 0, PARAMDOC_SNAPSHOT_CORE_BOUNCE);
         CHECK_PARSED(SNAPSHOT_WINDOWS, NULL, PARAMDOC_SNAPSHOT_WINDOWS);
-        CHECK_PARSED(SNAPSHOT_WINDOW_UNITS, "Trel", PARAMDOC_SNAPSHOT_WINDOW_UNITS);
+        CHECK_PARSED(SNAPSHOT_WINDOW_UNITS, Trel, PARAMDOC_SNAPSHOT_WINDOW_UNITS);
 
 	CHECK_PARSED(NUM_CENTRAL_STARS, 300, PARAMDOC_NUM_CENTRAL_STARS);
 	CHECK_PARSED(IDUM, 0, PARAMDOC_IDUM);
@@ -986,6 +990,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	
 	fclose(parsedfp);
 	
+        /* set-up snapshot window variables */
+        parse_snapshot_windows(SNAPSHOT_WINDOWS);
+
 	/* read the number of stars and possibly other parameters */
 	cmc_read_fits_file(INPUT_FILE, &cfd);
 	clus.N_STAR = cfd.NOBJ;
@@ -1363,7 +1370,10 @@ void parse_snapshot_windows(char *param_string) {
   char *cur_window, *intern_window=NULL, *intern_param=NULL;
   char *cur_wstring, *cur_pstring;
   int j;
-  strcpy(SNAPSHOT_WINDOWS, param_string);
+
+  if (param_string==NULL) {
+    return;
+  }
   snapshot_window_count= 0;
   snapshot_windows= NULL;
   cur_wstring= param_string;
@@ -1422,7 +1432,7 @@ void print_snapshot_windows(void) {
       sprintf(outfile, "%s.w%02i_snap%04d.dat.gz", outprefix, i+1, step_counter+1);
       write_snapshot(outfile);
       snapshot_window_counters[i]++;
-      dprintf("Wrote snapshot #%i for time window %i (%s) at time %g %s.", step_counter+1, i+1, outfile, 
+      dprintf("Wrote snapshot #%i for time window %i (%s) at time %g %s.\n", step_counter+1, i+1, outfile, 
           total_time, SNAPSHOT_WINDOW_UNITS);
     }
   }
