@@ -217,18 +217,17 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		curr_st = &st[findProcForIndex(k)];
 #endif
 		/* do encounter or two-body relaxation */
-		//if (rng_t113_dbl() < P_enc) {
 		if(rng_t113_dbl_new(curr_st) < P_enc) { 
 			/* do encounter */
 			if (star[k].binind > 0 && star[kp].binind > 0) {
 				/* binary--binary */
-				print_interaction_status("BB\n");
+				print_interaction_status("BB");
 
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "BB %g %g\n", TotalTime, rcm); */
 			} else if (star[k].binind > 0 || star[kp].binind > 0) {
 				/* binary--single */
-				print_interaction_status("BS\n");
+				print_interaction_status("BS");
 
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "BS %g %g\n", TotalTime, rcm); */
@@ -278,7 +277,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			w2[2] = -w[2] * w[3] / wp;
 			w2[3] = wp;
 			
-			//psi = rng_t113_dbl() * 2 * PI;
 			psi = rng_t113_dbl_new(curr_st) * 2 * PI;
 
 			for (j = 1; j <= 3; j++) {
@@ -306,13 +304,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			star[kp].vr = vp_new[3];
 			star[kp].vt = sqrt(sqr(vp_new[1]) + sqr(vp_new[2]));
 			if(star[k].vr == 0 || star[k].vt == 0 || star[kp].vr == 0 || star[kp].vt == 0)
-				printf("star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
 			
-/*
-	if(k==24981)
-		printf("***********\n\nE=%g\tJ = %g\tid=%d\t\tphi=%g\tvr=%g\tvt=%g\tmass_k=%g\tmass_kp=%g\tw_new[3]=%g\tv_new[3]=%g\tvp_new[3]=%g\tbeta=%g\tW=%gTrel12=%g\tn_local=%g\n",star[24981].E,star[24981].J,star[24981].id, star_phi[24981], star[24981].vr, star[24981].vt, mass_k, mass_kp, w_new[3], v_new[3], vp_new[3], beta, W, Trel12, n_local);
-*/		
-
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
 			set_star_EJ(kp);
@@ -331,7 +323,10 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	fprintf(relaxationfile, "\n");
 
 	/* put newline on "...performing interactions..." line */
-	//gprintf("\n");
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	gprintf("\n");
 	fprintf(logfile, "\n");
 
 	//MPI2: Binaries, ignoring for now.

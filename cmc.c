@@ -18,12 +18,6 @@
 #include "cuda/cmc_cuda.h"
 #endif
 
-/*
-#ifndef SIMUL
-#define SIMUL 1 //to mimic rng of the serial version to the parallel version. This has to be given by "make simul=<PROCS>" while compiing.
-#endif
-*/
-
 int main(int argc, char *argv[])
 {
 	struct tms tmsbuf, tmsbufref;
@@ -63,7 +57,7 @@ int main(int argc, char *argv[])
 	set_global_vars1();
 
 	/* trap signals */
-	trap_sigs(); // captures i/o signals to close
+	trap_sigs(); //captures i/o signals to close
 
 	/* initialize GSL RNG */
 	gsl_rng_env_setup();
@@ -84,7 +78,7 @@ int main(int argc, char *argv[])
 	calc_central_new();
 
 	/* print out binary properties to a file */
-	//MPI2: skipping outputs for initial steps of MPI
+	//MPI2: skipping  file outputs for now.
 	//print_initial_binaries();
 
 	orbit_r = R_MAX;
@@ -133,8 +127,7 @@ int main(int argc, char *argv[])
 	DMse = 0.0;
 
 	if (STELLAR_EVOLUTION > 0) {
-		//MPI2: Ignore binaries. For binaries, there is going to be a problem shuffling binary array. To be thought about later.
-		stellar_evolution_init(); //whole stellar evol. part does not need any data from other particles
+		stellar_evolution_init();
 	}
 
 #ifndef USE_MPI
@@ -142,8 +135,7 @@ int main(int argc, char *argv[])
 		created_star_se_node[i] = 0;
 #endif
 
-	//MPI2: Binaries. Ignoring for now.
-	update_vars(); //might need communication for bin. index array. needs cum.sum.
+	update_vars();
 
 	times(&tmsbufref);
 
@@ -159,29 +151,16 @@ int main(int argc, char *argv[])
 	calc_clusdyn_new();
 
 	/* Printing Results for initial model */
-	// MPI2: Not file outputs for MPI
 	print_results();
 
 	/* print handy script for converting output files to physical units */
 	//skip outputs for MPI
 	//print_conversion_script();
 
-/*
 #ifdef USE_CUDA
 	cuInitialize();
 #endif
 
-#ifdef USE_MPI
-		strcpy(filename2, "test_E_par");
-		strcpy(tempstr2, filename2);
-		sprintf(num2, "%d", myid);
-		strcat(tempstr2, num2);
-		strcat(tempstr2, ".dat");
-#else
-		strcpy(tempstr2, "test_E_ser.dat");
-#endif
-		ftest2 = fopen( tempstr2, "w" );
-*/
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
 	while (CheckStop(tmsbufref) == 0) 
@@ -214,56 +193,15 @@ int main(int argc, char *argv[])
 		calc_central_new();
 
 		calc_timestep(rng);
-#ifdef USE_MPI
-		if(myid==0){
-			strcpy(tempstr, "test_dt_par.dat");
-			ftest = fopen( tempstr, "a" );
-			fprintf(ftest, "%ld\t%.18g\n", tcount, Dt );
-			fclose(ftest);
-		}
-#else
-		strcpy(tempstr, "test_dt_ser.dat");
-		ftest = fopen( tempstr, "a" );
-		fprintf(ftest, "%ld\t%.18g\n", tcount, Dt );
-		fclose(ftest);
-#endif
-		//Dt = 0.0001065233252096;
-#ifdef USE_MPI
-if(myid==0)
-#endif
-		printf("FINAL TIMESTEP = %.14g\n", Dt);
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		clus.N_MAX_NEW = clus.N_MAX;
 
-/*
-#ifdef USE_MPI
-		printf("id = %d\tBefore dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n",myid, clus.N_MAX, clus.N_MAX_NEW);
-#else
-		printf("Before dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
-#endif
-*/
-
-//printf("0\ncenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", cenma.E, Eescaped, Ebescaped, Eintescaped );
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
 		//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
-
-/*
-#ifndef USE_MPI
-		for(i=0; i<procs; i++)
-			printf("node %ld=%d, %d\t", i, created_star_dyn_node[i], created_star_se_node[i]);
-		printf("\n");
-#endif
-
-#ifdef USE_MPI
-		printf("id = %d\tAfter dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n",myid, clus.N_MAX, clus.N_MAX_NEW);
-#else
-		printf("After dyn_apply N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
-#endif
-*/
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
@@ -286,25 +224,8 @@ if(myid==0)
 		//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
 		toy_rejuvenation();
 
-/*
-#ifndef USE_MPI
-		for(i=0; i<procs; i++)
-			printf("node %ld=%d, %d\t", i, created_star_dyn_node[i], created_star_se_node[i]);
-		printf("\n");
-#endif
-
-#ifdef USE_MPI
-		printf("id = %d\tAfter SE N_MAX = %ld\tN_MAX_NEW = %ld\n",myid, clus.N_MAX, clus.N_MAX_NEW);
-#else
-		printf("After SE N_MAX = %ld\tN_MAX_NEW = %ld\n", clus.N_MAX, clus.N_MAX_NEW);
-#endif
-*/
-
-//printf("1\ncenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", cenma.E, Eescaped, Ebescaped, Eintescaped );
 		/* this calls get_positions() */
 		tidally_strip_stars1();
-
-//printf("rmax = %.18g\n",rmax);
 
 		/* more numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
@@ -315,74 +236,14 @@ if(myid==0)
 		 * svrnew[], svtnew[] to sr[], svr[], svt[], and saves srOld[] 
 		 */
 		ComputeIntermediateEnergy();
-//printf("2\ncenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", cenma.E, Eescaped, Ebescaped, Eintescaped );
-
-/*
-		for(i=clus.N_MAX+2; i<=clus.N_MAX_NEW; i++) 
-			if(star[i].binind>0)
-				printf("myid = %d\t%ld\t%.18g\n", myid, i, binary[star[i].binind].a );
-*/
 
 		pre_sort_comm();
 
 		collect_bin_data();		
 
-#ifdef USE_MPI
-	if(myid==0){
-		strcpy(tempstr, "test_var_par.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= N_b_NEW+5; i++ )
-			//if(star[i].binind>0)
-				fprintf(ftest, "%ld\t%.18g\n", i, binary[i].a );
-		fclose(ftest);
-	}
-#else
-	//printf("Nmaxnew = %ld\n", clus.N_MAX_NEW);
-	strcpy(tempstr, "test_var_ser.dat");
-	ftest = fopen( tempstr, "w" );
-	for( i = 1; i <= N_b_NEW+5; i++ )
-		//if(star[i].binind>0)
-			fprintf(ftest, "%ld\t%.18g\n", i, binary[i].a );
-	fclose(ftest);
-#endif
-
 		tidally_strip_stars2();
 
-
-	if(myid==0){
-		strcpy(tempstr, "test_rng_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX_NEW; i++ )
-			//if(star[i].binind>0)
-				fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
-		fclose(ftest);
-	}
-
-		for( i = 1; i <= clus.N_MAX_NEW; i++ )
-			if(star[i].r==0)
-				printf("######## FOUND BUG!!!!!!! %d\n\n", i);
-
-//printf("3\ncenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", cenma.E, Eescaped, Ebescaped, Eintescaped );
 		qsorts_new();
-
-#ifdef USE_MPI
-	if(myid==0){
-		strcpy(tempstr, "test_rng_par.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			//if(star[i].binind>0)
-				fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
-		fclose(ftest);
-	}
-#else
-	//printf("Nmaxnew = %ld\n", clus.N_MAX_NEW);
-	strcpy(tempstr, "test_rng_ser.dat");
-	ftest = fopen( tempstr, "w" );
-	for( i = 1; i <= clus.N_MAX; i++ )
-		//if(star[i].binind>0)
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r );
-	fclose(ftest);
-#endif
 
 		calc_potential_new2();
 
@@ -394,7 +255,6 @@ if(myid==0)
 		post_sort_comm();
 
 		distr_bin_data();
-//printf("4\ncenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", cenma.E, Eescaped, Ebescaped, Eintescaped );
 
 		//commenting out for MPI
 		/*
@@ -408,11 +268,8 @@ if(myid==0)
 
 		compute_energy_new();
 
-//printf("ETOTAL = %.14g\n\n", Etotal.tot);
-
 		reset_interaction_flags();
 
-		//MPI2: Binaries. Ignore for now.
 		/* update variables, then print */
 		update_vars();
 
@@ -440,7 +297,7 @@ if(myid==0)
 			}
 		}
 		if(myid==0)
-			system("./process2.sh");
+			system("./process.sh");
 #else
 		strcpy(tempstr, "test_out_ser.dat");
 		ftest = fopen( tempstr, "w" );
@@ -458,12 +315,6 @@ if(myid==0)
 			}
 		 */
 
-#ifdef USE_MPI
-if(myid==0)
-#endif
-	printf("========> N_MAX =  %ld\n", clus.N_MAX);
-
-		//MPI2: Commenting out for MPI
 		print_results();
 
 		/* take a snapshot, we need more accurate 
@@ -475,37 +326,6 @@ if(myid==0)
 				write_stellar_data();
 			}
 		}		
-
-#ifdef USE_MPI
-		if(myid==0)
-#endif
-		{
-			ftest = fopen("mpi_globvar.dat","w");
-			fprintf(ftest, "clus.N_MAX_NEW=%ld\nclus.N_MAX=%ld\nTidalMassLoss=%g\nOldTidalMassLoss=%g\nPrev_Dt=%g\nEescaped=%g\nJescaped=%g\nEintescaped=%g\nEbescaped=%g\nMtotal=%g\ninitial_total_mass=%g\nDMse=%g\nDMrejuv=%g\ncenma.m=%g\ncenma.m_new=%g\ncenma.E=%g\ntcount=%ld\nStepCount=%ld\nsnap_num=%ld\nEcheck=%ld\nnewstarid=%ld\n",
-					clus.N_MAX_NEW,
-					clus.N_MAX,
-					TidalMassLoss,
-					OldTidalMassLoss,
-					Prev_Dt,
-					Eescaped,
-					Jescaped,
-					Eintescaped,
-					Ebescaped,
-					Mtotal,
-					initial_total_mass,
-					DMse,
-					DMrejuv,
-					cenma.m,
-					cenma.m_new,
-					cenma.E,
-					tcount,
-					StepCount,
-					snap_num,
-					Echeck,
-					newstarid);
-			fclose(ftest);
-		}
-
 	} /* End WHILE (time step iteration loop) */
 
 	times(&tmsbuf);
@@ -535,14 +355,6 @@ if(myid==0)
 	close_buffers();
 	free_arrays();
 
-/*
-#ifdef USE_MPI
-	if(myid==0)
-		system("./process2.sh");
-#endif
-	//fclose(ftest2);
-*/
-
 #ifdef USE_MPI
 	free(mpiDisp);
 	free(mpiLen);
@@ -556,20 +368,6 @@ if(myid==0)
 	//free(Start);
 	//free(End);
 
-
-	//free(multi_mass_r[i]);
-/*
-	free(multi_mass_r);
-	free(sigma_array.r);
-	free(sigma_array.sigma);
-	free(mass_bins);
-*/
-	if(SNAPSHOT_WINDOWS)
-		free(SNAPSHOT_WINDOWS);
-/*
-	if(SNAPSHOT_WINDOW_UNITS)
-		free(SNAPSHOT_WINDOW_UNITS);
-*/
 	if (SEARCH_GRID)
 		search_grid_free(r_grid);
 

@@ -289,7 +289,6 @@ double GetTimeStep(gsl_rng *rng) {
 		//Optimized version of simul_relax()
 		DTrel = simul_relax_new();
 #endif
-		//printf("RELAXATION TIMESTEP = %.14g\n", DTrel);
 	} else {
 		DTrel = GSL_POSINF;
 	}
@@ -385,11 +384,8 @@ double GetTimeStep(gsl_rng *rng) {
 
 		/* debugging */
 		dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
-		printf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
-		printf("central.n_sin=%g XBS=%g central.v_rms=%g central.a2_ave =%g central.m_ave=%g central.a_ave=%g\n",central.n_sin, XBS, central.v_rms, central.a2_ave, central.m_ave, central.a_ave);
+		printf("Dt=%g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
 	}
-	//For testing. To be REMOVED later.
-	//Dt = DTrel;
 
 	return (Dt);
 }
@@ -408,10 +404,6 @@ void tidally_strip_stars(void) {
 	/******************************/
 	max_r = get_positions();
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
-		
-
-	printf("OldTidalMassLoss=%.6g TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-			OldTidalMassLoss, TidalMassLoss, DTidalMassLoss);
 	
 	gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 		j, OldTidalMassLoss, DTidalMassLoss);
@@ -438,7 +430,6 @@ void tidally_strip_stars(void) {
 
 				if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
 					dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
-					printf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld r_apo=%g rnew=%g Rtidal=%g m=%g E=%g binind=%ld\n", i, star[i].id, star[i].r_apo, star[i].rnew, Rtidal, star[i].m, star[i].E, star[i].binind);
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
@@ -506,7 +497,6 @@ void tidally_strip_stars(void) {
 				gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
 				if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
 					dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
-					printf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
@@ -591,11 +581,9 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 #ifdef USE_MPI
 	Eescaped += E * star_m[j] / clus.N_STAR;
 	Jescaped += J * star_m[j] / clus.N_STAR;
-	//printf("id=%d\tEescaped added = %.18g\tm = %.18g\n",myid,E * star_m[j] / clus.N_STAR, star_m[j]);
 #else
 	Eescaped += E * star[j].m / clus.N_STAR;
 	Jescaped += J * star[j].m / clus.N_STAR;
-	//printf("Eescaped added = %.18g\tm = %.18g\n",E * star[j].m / clus.N_STAR, star[j].m);
 #endif
 
 	if (star[j].binind == 0) {
@@ -605,14 +593,6 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 			(2.0 * binary[star[j].binind].a);
 		Eintescaped += binary[star[j].binind].Eint1 + binary[star[j].binind].Eint2;
 	}
-
-/*
-#ifdef USE_MPI
-	fprintf(ftest2, "%d\t%.18g\t%.18g\t%.18g\t%d\n",tcount, E * star_m[j] / clus.N_STAR,star[j].binind?-(binary[star[j].binind].m1/clus.N_STAR) * (binary[star[j].binind].m2/clus.N_STAR) / (2.0 * binary[star[j].binind].a):0, star_m[j], j );
-#else
-	fprintf(ftest2, "%d\t%.18g\t%.18g\t%.18g\t%d\n",tcount, E * star[j].m / clus.N_STAR,star[j].binind?-(binary[star[j].binind].m1/clus.N_STAR) * (binary[star[j].binind].m2/clus.N_STAR) / (2.0 * binary[star[j].binind].a):0, star[j].m, j );
-#endif
-*/
 
 #ifdef USE_MPI
 	TidalMassLoss += star_m[j] / clus.N_STAR;
@@ -652,34 +632,6 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	/* perhaps this will fix the problem wherein stars are ejected (and counted)
 	   multiple times */
 	destroy_obj(j);
-/*
-#ifdef USE_MPI
-	MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		Eescaped = temp;
-	MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&Jescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		Jescaped = temp;
-	MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&Eintescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		Eintescaped = temp;
-	MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&Ebescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		Ebescaped = temp;
-	MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&TidalMassLoss, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		TidalMassLoss R temp;
-	MPI_Bcast(&TidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&Etidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0)
-		Etidal = temp;
-	MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
-*/
 }
 
 void remove_star_center(long j) {
@@ -749,13 +701,10 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		   at the time of mass loss in DoStellarEvolution */
 #ifdef USE_MPI
 		if (star_m[j] < ZERO) {
+			dprintf("id = %d\tindex of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid, j,star[j].E,star_m[j],star_r[j],star[j].vr,star[j].vt);
 #else
 		if (star[j].m < ZERO) {
-#endif
-#ifdef USE_MPI
-			printf("id = %d\tindex of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid, j,star[j].E,star_m[j],star_r[j],star[j].vr,star[j].vt);
-#else
-			printf("index of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n", j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
+			dprintf("index of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n", j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
 #endif
 			destroy_obj(j);
 			continue;
@@ -765,9 +714,9 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (E >= 0.0) {
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 #ifdef USE_MPI
-			printf("id = %d\tindex of stripped star by energy = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid,j,star[j].E,star_m[j],star_r[j],star[j].vr,star[j].vt);
+			dprintf("id = %d\tindex of stripped star by energy = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid,j,star[j].E,star_m[j],star_r[j],star[j].vr,star[j].vt);
 #else
-			printf("index of stripped star by E = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
+			dprintf("index of stripped star by E = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
 #endif
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
@@ -804,7 +753,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			star[j].r_apo= rmax;
 			star[j].r_peri= rmin;
 			remove_star(j, phi_rtidal, phi_zero);
-			//printf("%d\tTIDAL STRIPPING\n\n", j);
 			continue;
 		}
 
@@ -816,18 +764,16 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 #ifndef USE_MPI
 		curr_st = &st[findProcForIndex(j)];
-		//if(j > clus.N_MAX)
-			//printf("id = %ld\tDrawing rand. num from node %d \tN_MAX=%ld\n", j, findProcForIndex(j), clus.N_MAX);
+		if(j > clus.N_MAX)
+			dprintf("id = %ld\tDrawing rand. num from node %d \tN_MAX=%ld\n", j, findProcForIndex(j), clus.N_MAX);
 #endif
 
 		for (k = 1; k <= N_TRY; k++) {
 			X = rng_t113_dbl_new(curr_st);
-			//X = rng_t113_dbl();
 
 			s0 = 2.0 * X - 1.0;	 /* random -1 < s0 < 1 */
 
 			g0 = F * rng_t113_dbl_new(curr_st);
-			//g0 = F * rng_t113_dbl(); /* random  0 < g0 < F */
 
 			r = 0.5 * (rmin + rmax) + 0.25 * (rmax - rmin) * (3.0 * s0 - s0 * s0 * s0);
 
@@ -845,7 +791,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			} else {
 				dprintf("circular orbit: vr^2<0: setting vr=0: si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g\n", si, r, rmin, rmax, Q, X, E, J);
 				if (isnan(Q)) {
-					//printf("E=%g\tpot=%g\tJ=%g\tr=%g\trmin=%g\trmax=%g\tkmin=%d\tkmax=%d\tstar_r[25000]=%g\tstar_m[25000]=%g\tstar_phi[25000]=%g\t\n", E, pot, J, r, rmin, rmax, orbit_rs.kmin, orbit_rs.kmax,star_r[25000],star_m[25000],star_phi[25000]);
 					eprintf("si = %ld \tfatal error: Q=vr^2==nan!\n",si);
 					exit_cleanly(-1);
 				}
@@ -888,7 +833,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		star[j].r_apo = rmax;
 		
 		/* pick random sign for v_r */
-		//if(rng_t113_dbl() < 0.5)
 		if(rng_t113_dbl_new(curr_st) < 0.5)
 			vr = -vr;
 
@@ -900,15 +844,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		if (r > max_rad)
 			max_rad = r;
-
-/*
-		if(si > clus.N_MAX+1)
-#ifdef USE_MPI
-			printf("myid = %d\tid = %d \t r = %g\n",myid, si, star[si].rnew);
-#else
-			printf("id = %d \t r = %g\n", si, star[si].rnew);
-#endif
-*/
 	} /* Next si */
 	get_pos_dat->max_rad = max_rad;
 }

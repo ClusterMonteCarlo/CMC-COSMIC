@@ -104,7 +104,7 @@ void destroy_obj(long i)
 	double r, phi;
 
 	if (star[i].binind) {
-		printf("###########> Star %d destryped, binary %d!\n", i, star[i].binind);
+		dprintf("Star %ld destroyed, binary %ld!\n", i, star[i].binind);
 		destroy_binary(star[i].binind);
 	}
 
@@ -133,21 +133,13 @@ void destroy_obj(long i)
 /* destroy an object (can be star or binary) - pure serial version */
 void destroy_obj_new(long i)
 {
-	double r, phi;
-
 	if (star[i].binind) {
-		printf("###########> Star %d destryped, binary %d!\n", i, star[i].binind);
+		dprintf("Star %ld destroyed, binary %ld!\n", i, star[i].binind);
 		destroy_binary(star[i].binind);
 	}
 
-	/* need to zero out E's, J, but can't zero out potential---this is the easiest way */
-	//r = star[i].r;
-	//phi = star[i].phi;
-
 	zero_star(i);
 
-	//star[i].r = r;
-	//star[i].phi = phi;
 	star[i].r = SF_INFINITY;	/* send star to infinity */
 	star[i].m = DBL_MIN;		/* set mass to very small number */
 	star[i].vrnew = 0.0;		/* setup vr and vt for           */
@@ -159,7 +151,7 @@ void destroy_binary(long i)
 {
 	/* set inuse flag to zero, and zero out all other properties for safety */
 	zero_binary(i);
-	printf("-------------> Binary %d destryped!\n", i);
+	dprintf("Binary %ld destroyed!\n", i);
 }
 
 /* create a new star, returning its index */
@@ -194,9 +186,9 @@ long create_star(int idx, int dyn_0_se_1)
 	i = clus.N_MAX_NEW + 1;
 
 #ifdef USE_MPI
-	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
+	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
 #else
-	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
+	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
 #endif
 
 	/* initialize to zero for safety */
@@ -229,7 +221,7 @@ if(myid==0)
 		exit_cleanly(1);
 	}
 
-	printf("HOLE FOUND at %d\t INSERTING STAR %d\n", i, idx);
+	dprintf("HOLE FOUND at %ld\t INSERTING STAR %d\n", i, idx);
 }
 #ifdef USE_MPI
 else
@@ -789,13 +781,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 		retval = binbin(&t, k, kp, W, bmax, &hier, rng);
 	} else {
 		retval = binsingle(&t, ksin, kbin, W, bmax, &hier, rng);
-		//printf("myid = %d\t%ld\t%ld\t%.18g\t%.18g\t%.18g\n", myid, ksin, kbin, t, W, bmax, hier->a );
 	}
 
-	for (i=0; i<hier.nobj; i++)
-		if (hier.obj[i]->n == 2)
-			printf("\n%.18g\n", hier.obj[i]->a );
-	
 	/* set up axes */
 	wp = sqrt(sqr(w[1]) + sqr(w[2]));
 	if (wp == 0.0) {
@@ -1027,9 +1014,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				/* semimajor axis and eccentricity */
 				binary[star[knew].binind].a = hier.obj[i]->a * cmc_units.l;
 				binary[star[knew].binind].e = hier.obj[i]->e;
-
-				if(knew > clus.N_MAX)
-					printf("myid = %d\t%ld\t%.18g\t%.18g\t%.18g\n", myid, knew, binary[star[knew].binind].a,hier.obj[i]->a,cmc_units.l );
 
 				/* masses */
 				binary[star[knew].binind].m1 = hier.obj[i]->obj[0]->m * cmc_units.m / madhoc;

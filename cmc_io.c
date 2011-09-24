@@ -112,6 +112,28 @@ void PrintLogOutput(void)
 	rh_binary = rh_single = m_binary = m_single = 0.0;
 	for (ih=1; ih<=clus.N_MAX; ih++) {
 		k = ih;
+#ifdef USE_MPI
+		m += star_m[k] / clus.N_STAR;
+		
+		if (star[k].binind > 0) {
+			m_binary += star_m[k] / clus.N_STAR;
+		} else {
+			m_single += star_m[k] / clus.N_STAR;
+		}
+		
+		if (m/Mtotal <= 0.5) {
+			rh = star_r[k];
+		}
+		if (m_single / (Mtotal - (M_b / clus.N_STAR)) <= 0.5) {
+			rh_single = star_r[k];
+		}
+		/* avoid dividing by zero if there are no binaries */
+		if (M_b > 0) {
+			if (m_binary / M_b * clus.N_STAR <= 0.5) {
+				rh_binary = star_r[k];
+			}
+		}
+#else
 		m += star[k].m / clus.N_STAR;
 		
 		if (star[k].binind > 0) {
@@ -132,6 +154,7 @@ void PrintLogOutput(void)
 				rh_binary = star[k].r;
 			}
 		}
+#endif
 	}
 	
 	/* t_rh calculated using r_h */
@@ -488,8 +511,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			break;
 		}
 	}
-
-	//printf("procs = %d\t%d\t%d\n", procs,argc, optind);
 
 	/* check to make sure there was nothing crazy on the command line */
 	if (argc - optind != 2) {
@@ -1599,7 +1620,7 @@ void alloc_bin_buf()
 void collect_bin_data()
 {
 #ifdef USE_MPI
-	int i, j, k, counter_new, cntr, last_hole_idx=1, pass=0, count;
+	int i, j, k, counter_new, cntr, last_hole_idx=1, pass=0;
 	MPI_Status stat;
 
 	if(myid!=0)
@@ -1643,16 +1664,11 @@ void collect_bin_data()
 		for(i=1; i<procs; i++)
 		{
 			new_size[i] -= N_b_OLD;
-			//printf("i=%d\tnewsize=%d\n", i, new_size[i]);
 			if(new_size[i] > 0)
 			{
 				recv_buf = (binary_t *) calloc(new_size[i], sizeof(binary_t));
 				MPI_Recv(recv_buf, sizeof(binary_t) * new_size[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
-				MPI_Get_count( &stat, MPI_BYTE, &count );
-				printf("RECD from %d\t%ld stars\n", i, count/sizeof(binary_t));
 
-				//cntr = 0;
-				//while (last_hole_idx <= N_b_OLD && cntr < new_size[i])
 				for(cntr=0; cntr<new_size[i]; cntr++)
 				{
 					while (last_hole_idx <= N_b_OLD && binary[last_hole_idx].inuse)
@@ -1666,7 +1682,7 @@ void collect_bin_data()
 						if(star[j].binind == N_b_OLD + 1 + cntr)
 						{
 							star[j].binind = last_hole_idx;
-							printf("ID = %d \tHOLE FOUND!!! at %d\tINSERTING STAR %d\n", i, last_hole_idx, j);
+							dprintf("ID = %d \tHOLE FOUND!!! at %d\tINSERTING STAR %d\n", i, last_hole_idx, j);
 							pass = 1;
 							break;
 						}
@@ -1676,7 +1692,6 @@ void collect_bin_data()
 						exit_cleanly(-1);
 					}
 					pass = 0;
-					//cntr++;
 				}
 
 				for(j=0; j<new_size[i]-cntr; j++)
@@ -1687,7 +1702,7 @@ void collect_bin_data()
 						if(star[k].binind == N_b_OLD + 1 + cntr + j)
 						{
 							star[k].binind = last_hole_idx;
-							printf("ID = %d \tHOLE FOUND!!! at %d\tINSERTING STAR %d\n", i, last_hole_idx, k);
+							dprintf("ID = %d \tHOLE FOUND!!! at %d\tINSERTING STAR %d\n", i, last_hole_idx, k);
 							pass = 1;
 							break;
 						}
@@ -1702,7 +1717,6 @@ void collect_bin_data()
 			}
 		}
 		N_b_OLD = counter_new - 1;
-		printf("new value of N_b_OLD = %ld\n", N_b_OLD);
 	}
 	MPI_Bcast(&N_b_OLD, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 	N_b_NEW = N_b_OLD;

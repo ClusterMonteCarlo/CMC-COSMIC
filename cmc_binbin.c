@@ -46,9 +46,8 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hi
 #ifndef USE_MPI
 	curr_st = &st[findProcForIndex(k)];
 #endif
-	b = sqrt(rng_t113_dbl_new(curr_st)) * bmax / (binary[jbin].a + binary[jbinp].a);
 	/* b should be in units of a */
-	//b = sqrt(rng_t113_dbl()) * bmax / (binary[jbin].a + binary[jbinp].a);
+	b = sqrt(rng_t113_dbl_new(curr_st)) * bmax / (binary[jbin].a + binary[jbinp].a);
 
 	/* set parameters */
 	input.ks = 0;

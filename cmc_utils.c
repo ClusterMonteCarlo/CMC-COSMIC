@@ -179,12 +179,13 @@ void toggle_debugging(int signal)
 /* close buffers, then exit */
 void exit_cleanly(int signal)
 {
-#ifdef USE_MPI
-	MPI_Finalize();
-#endif
 
 	close_buffers();
 	free_arrays();
+
+#ifdef USE_MPI
+	MPI_Finalize();
+#endif
 
 	exit(signal);
 }
@@ -534,7 +535,6 @@ void mpi_ComputeEnergy(void)
 	MPI_Bcast(&Etotal.tot, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	Etotal.tot += cenma.E + Eescaped + Ebescaped + Eintescaped;
-//printf("id=%d\ncenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", myid, cenma.E, Eescaped, Ebescaped, Eintescaped );
 }
 #endif
 
@@ -548,15 +548,12 @@ void ComputeEnergy(void)
 	Etotal.Eint = 0.0;
 	Etotal.Eb = 0.0;
 
-	//split into 2 parts. till next comment can be done on all nodes
 	for (i=1; i<=clus.N_MAX; i++) {
 		star[i].E = star[i].phi + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
 		star[i].J = star[i].r * star[i].vt;
 		
-	//MPI2:this is a reduce - write as new function
 		Etotal.K += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star[i].m / clus.N_STAR;
 		Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
-		//change this so that star[0] is not accesses by all procs. do on root node
 		Etotal.P += star[0].phi * cenma.m*madhoc/ clus.N_STAR;
 		
 		if (star[i].binind == 0) {
@@ -570,7 +567,6 @@ void ComputeEnergy(void)
 	
 	Etotal.P *= 0.5;
 	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
-//printf("cenma.E=%.18g\nEescaped=%.18g\nEbescaped=%.18g\nEintescaped=%.18g\n", cenma.E, Eescaped, Ebescaped, Eintescaped );
 }
 
 #ifdef USE_MPI
@@ -707,7 +703,6 @@ long potential_calculate(void) {
 		}
 	}*/
 	
-	printf("star1.r=%g\n", star[1].r);
 	star[0].phi = star[1].phi+ cenma.m*madhoc/star[1].r; /* U(r=0) is U_1 */
 	if (isnan(star[0].phi)) {
 		eprintf("NaN in phi[0] detected\n");
@@ -944,12 +939,10 @@ double fastpotential(double r, long kmin, long kmax) {
 long check_if_r_around_last_index(long last_index, double r) {
    long index_found, i;
 
-   //printf("Entering the routine. Last index is %li", last_index);
    index_found= -1;
    for (i=-1; i<2; i++) {
       if (((last_index+i) >= 0) && ((last_index+i+1) <= clus.N_STAR)) {
          if ((star[last_index+i].r < r) && (star[last_index+i+1].r > r)) {
-	 	//printf("found it!");
             index_found= last_index+ i;
             break;
          };
@@ -1013,6 +1006,8 @@ void free_ivector(int *v, long nl, long nh)
 void update_vars(void)
 {
 	long i, j, k;
+	double temp_dbl;
+	long temp_long;
 	
 	/* update total number, mass, and binding energy of binaries in cluster */
 	N_b = 0;
@@ -1038,6 +1033,18 @@ void update_vars(void)
 			}
 		}
 	}
+#ifdef USE_MPI
+	//MPI2: Since these variables will be used only be the root node, hopefully the Bcast wont be reqd.
+	MPI_Reduce(&M_b, &temp_dbl, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0) M_b = temp_dbl;
+	//MPI_Bcast(&M_b, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&E_b, &temp_dbl, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0) E_b = temp_dbl;
+	//MPI_Bcast(&E_b, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&N_b, &temp_long, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);		
+	if(myid==0) N_b = temp_long;
+	//MPI_Bcast(&N_b, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+#endif
 }
 
 /* set the units */
@@ -1114,11 +1121,10 @@ void mpi_central_calculate1(void)
 	/* allocate array for local density calculations */
 	rhoj = (double *) malloc((nave+1) * sizeof(double));
 
-	int mpiBeginLocal, mpiEndLocal;
-	mpiFindIndicesCustom( nave, 20, myid, &mpiBeginLocal, &mpiEndLocal );
+	//int mpiBeginLocal, mpiEndLocal;
+	//mpiFindIndicesCustom( nave, 20, myid, &mpiBeginLocal, &mpiEndLocal );
 	//mpiFindIndicesSpecial( nave, &mpiBeginLocal, &mpiEndLocal );
 
-	//printf("myid=%d begin=%d end=%d\n", myid, mpiBeginLocal, mpiEndLocal);
 	/* calculate rhoj's (Casertano & Hut 1985) */
 	//for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
 	for (i=1; i<=nave; i++) {
@@ -1137,8 +1143,6 @@ void mpi_central_calculate1(void)
 		rhoj[i] = mrho / Vrj;
 		
 	}
-	//printf("check %d %.18g %.18g %.18g\n\n",myid, mrho, Vrj, rhoj[mpiEndLocal]);
-
 
 	/* calculate core quantities using density weighted averages (note that in 
 	   Casertano & Hut (1985) only rho and rc are analyzed and tested) */
@@ -1163,27 +1167,7 @@ void mpi_central_calculate1(void)
 		mpi_rc_nb += sqr(rhoj[i] * star_r[i]);
 		mpi_c_mave += rhoj[i] * star_m[i] * madhoc;
 	}
-	//printf("nave = %d\n", nave);
 
-
-/*
-	double temp, temp1;
-	MPI_Status stat;
-	if(myid==0)
-	{
-	printf("id=0 v_rms=%.18g\n", mpi_c_vrms);
-	temp1=mpi_c_vrms;
-	}
-	if(myid!=0)
-		MPI_Send(&mpi_c_vrms, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-	else
-		for(i=1;i<procs;i++)
-		{
-			MPI_Recv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &stat);
-			temp1 += temp;
-			printf("id=%d v_rms=%.18g\n",i,  temp1);
-		}
-*/
 	MPI_Reduce(&mpi_rhojsum, &rhojsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&mpi_rhoj2sum, &rhoj2sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&mpi_c_rho, &central.rho, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
@@ -1533,7 +1517,6 @@ inline double function_q(long j, long double r, long double pot, long double E, 
   phis= PHI_S(r, j);
 #endif
   res= (2.0 * ((E) - (pot + phis)) - Jr);
-  //if (j==3265 && r>1e6) printf("Jr=%Lg, phis= %Lg, pot=%Lg, r=%Lg, E=%Lg\n", Jr, phis, pot, r, E);
   return (res);
 };
 
@@ -1810,11 +1793,9 @@ void calc_timestep(gsl_rng *rng)
 	{
 		if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
 			diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
-			printf("TIMESTEP CHANGED!!!\n\n");
 			Dt = Prev_Dt * 0.8;
 		} else if (Dt > 1.1 * Prev_Dt && Prev_Dt > 0 && (TidalMassLoss - OldTidalMassLoss) > 0.02) {
 			diaprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
-			printf("TIMESTEP CHANGED!!!\n\n");
 			Dt = Prev_Dt * 1.1;
 		}
 	}
@@ -1885,14 +1866,19 @@ void tidally_strip_stars1()
 {
 #ifdef USE_MPI
 		//MPI2: The 2nd part of tidally_strip_stars() has been moved just before sort.
+		double temp = 0.0;
 		OldTidalMassLoss = TidalMassLoss_old;
-		printf("$$$$$$$$$$ %d OldTML = %g\n", myid, OldTidalMassLoss);
+
 		/******************************/
 		/* get new particle positions */
 		/******************************/
 		max_r = get_positions();
 
-		double temp = 0.0;
+		//MPI2: Since max_r will be used only be the root node, hopefully the Bcast wont be reqd.
+		MPI_Reduce(&max_r, &temp, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);		
+		if(myid==0) max_r = temp;
+		//MPI_Bcast(&max_r, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
 		MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 		if(myid==0) Eescaped = temp;
 		MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -1946,11 +1932,6 @@ void energy_conservation2()
 
 void tidally_strip_stars2(void)
 {
-
-
-	//printf("myid = %d OldTidalMassLoss=%.6g TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-	///		myid, OldTidalMassLoss, TidalMassLoss, DTidalMassLoss);
-
 #ifdef USE_MPI
 	if(myid==0)
 	{
@@ -1961,7 +1942,6 @@ void tidally_strip_stars2(void)
 		j = 0;
 		Etidal = 0.0;
 		TidalMassLoss += TidalMassLoss_old;
-		//OldTidalMassLoss = TidalMassLoss;
 		DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 
 		gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
@@ -1985,9 +1965,6 @@ void tidally_strip_stars2(void)
 			{
 				if (TIDAL_TREATMENT == 0){
 					/*radial cut off criteria*/
-
-					if(i==17769)
-						printf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld r_apo=%g rnew=%g Rtidal=%g m=%g E=%g binind=%ld\n", i, star[i].id, star[i].r_apo, star[i].rnew, Rtidal, star_m[i], star[i].E, star[i].binind);
 					if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
 						dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind);
 						star[i].rnew = SF_INFINITY;	/* tidally stripped star */
@@ -2059,7 +2036,6 @@ void tidally_strip_stars2(void)
 					gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
 					if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
 						dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
-						printf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star_m[i], star[i].E, star[i].binind); 
 						star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 						star[i].vrnew = 0.0;
 						star[i].vtnew = 0.0;
@@ -2134,7 +2110,7 @@ void tidally_strip_stars2(void)
 void pre_sort_comm()
 {
 #ifdef USE_MPI
-	int i, j, counter_new, count;
+	int i, j, counter_new;
 	MPI_Status stat;
 	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
 	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
@@ -2154,7 +2130,6 @@ void pre_sort_comm()
 		star[i].m = star_m[i];
 	}
 
-
 	//MPI2: To be refactored into separate function later.
 	if(myid!=0)
 		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
@@ -2167,24 +2142,11 @@ void pre_sort_comm()
 
 	star_t *new_stars_recv_buf;
 
-/*
-	if(myid==0){
-		printf("\n");
-		for(i=0; i<procs; i++)
-			printf("pre_sort_comm(): new stars from proc %d = %ld\n", i, new_size[i] - clus.N_MAX - 1);
-		printf("\n");
-		printf("\n");
-	}
-*/
 	if(myid!=0)
 	{
 		if(clus.N_MAX_NEW - clus.N_MAX - 1 > 0)
 			//MPI2: +2 to account for the sentinel.
 			MPI_Send(&star[clus.N_MAX+2], sizeof(star_t) * (clus.N_MAX_NEW - clus.N_MAX - 1), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-
-		//for(i=clus.N_MAX+2; i<=clus.N_MAX_NEW; i++) 
-		//	printf("id = %d\tr at %d = %.18g\n",myid, i, star_r[i]);
-
 	}
 	else
 	{
@@ -2192,14 +2154,11 @@ void pre_sort_comm()
 		for(i=1; i<procs; i++)
 		{
 			new_size[i] = new_size[i] - clus.N_MAX - 1;
-			//printf("i=%d\tnewsize=%d\tnmaxnew=%ld\n", i, new_size[i], clus.N_MAX_NEW);
 			clus.N_MAX_NEW += new_size[i];
 			if(new_size[i] > 0)
 			{
 				new_stars_recv_buf = (star_t *) calloc(new_size[i], sizeof(star_t));
 				MPI_Recv(new_stars_recv_buf, sizeof(star_t) * new_size[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
-//MPI_Get_count( &stat, MPI_BYTE, &count );
-//printf("RECD from %d\t%d stars\n", i, count/sizeof(star_t));
 				for(j=0; j<new_size[i]; j++)
 					star[counter_new + j] = new_stars_recv_buf[j];
 				counter_new += new_size[i];
