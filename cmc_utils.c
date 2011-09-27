@@ -393,7 +393,7 @@ long CheckStop(struct tms tmsbufref) {
 		if(myid==0)
 #endif
 			diaprintf("N_core < 100.0; terminating.\n");
-			return (1);
+			//return (1);
 		}
 	}
 
@@ -521,7 +521,6 @@ void mpi_ComputeEnergy(void)
 	
 	Etotal_P *= 0.5;
 	Etotal_tot = Etotal_K + Etotal_P + Etotal_Eint + Etotal_Eb;
-
 	MPI_Reduce(&Etotal_K, &Etotal.K, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&Etotal_P, &Etotal.P, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&Etotal_Eint, &Etotal.Eint, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
@@ -535,6 +534,8 @@ void mpi_ComputeEnergy(void)
 	MPI_Bcast(&Etotal.tot, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	Etotal.tot += cenma.E + Eescaped + Ebescaped + Eintescaped;
+if(myid==0)
+printf("Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
 }
 #endif
 
@@ -567,6 +568,7 @@ void ComputeEnergy(void)
 	
 	Etotal.P *= 0.5;
 	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
+printf("Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
 }
 
 #ifdef USE_MPI
@@ -1121,9 +1123,33 @@ void mpi_central_calculate1(void)
 	/* allocate array for local density calculations */
 	rhoj = (double *) malloc((nave+1) * sizeof(double));
 
+	//MPI2: Communicating ghost particles
+/*
+	MPI_Status stat;
+	if(myid != 0)
+		MPI_Send(&star_m[mpiBegin], J/2, MPI_DOUBLE, ( myid + procs - 1 ) % procs, 0, MPI_COMM_WORLD);
+	if(myid != procs-1)
+		MPI_Recv(&star_m[mpiEnd + 1], J/2, MPI_DOUBLE, ( myid + 1 ) % procs, 0, MPI_COMM_WORLD, &stat);
+MPI_Barrier(MPI_COMM_WORLD);
+	if(myid != procs-1)
+		MPI_Send(&star_m[mpiEnd - J/2 + 1], J/2, MPI_DOUBLE, ( myid + 1 ) % procs, 0, MPI_COMM_WORLD);
+	if(myid != 0)
+		MPI_Recv(&star_m[mpiBegin - J/2], J/2, MPI_DOUBLE, ( myid + procs - 1) % procs, 0, MPI_COMM_WORLD, &stat);
+MPI_Barrier(MPI_COMM_WORLD);
+*/
 	//int mpiBeginLocal, mpiEndLocal;
 	//mpiFindIndicesCustom( nave, 20, myid, &mpiBeginLocal, &mpiEndLocal );
 	//mpiFindIndicesSpecial( nave, &mpiBeginLocal, &mpiEndLocal );
+
+	printf("id=%d begin=%d end=%d\n",myid, mpiBegin, mpiEnd);
+	FILE *ftest;
+	char num[20], filename[20], tempstr3[20];
+	strcpy(filename, "test_a_par");
+	strcpy(tempstr3, filename);
+	sprintf(num, "%d", myid);
+	strcat(tempstr3, num);
+	strcat(tempstr3, ".dat");
+	ftest = fopen( tempstr3, "w" );
 
 	/* calculate rhoj's (Casertano & Hut 1985) */
 	//for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
@@ -1141,7 +1167,6 @@ void mpi_central_calculate1(void)
 
 		Vrj = 4.0/3.0 * PI * (fb_cub(star_r[jmax]) - fb_cub(star_r[jmin]));
 		rhoj[i] = mrho / Vrj;
-		
 	}
 
 	/* calculate core quantities using density weighted averages (note that in 
@@ -1163,10 +1188,14 @@ void mpi_central_calculate1(void)
 		mpi_rhoj2sum += sqr(rhoj[i]);
 		mpi_c_rho += sqr(rhoj[i]);
 		mpi_c_vrms += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
+		fprintf(ftest, "%ld\t%.18g\n", i, mpi_c_vrms);
 		mpi_c_rc += rhoj[i] * star_r[i];
 		mpi_rc_nb += sqr(rhoj[i] * star_r[i]);
 		mpi_c_mave += rhoj[i] * star_m[i] * madhoc;
 	}
+	fclose(ftest);
+	if(myid==0)
+		system("./process2.sh");
 
 	MPI_Reduce(&mpi_rhojsum, &rhojsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&mpi_rhoj2sum, &rhoj2sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
@@ -1218,7 +1247,6 @@ void mpi_central_calculate2(void) {
 		central.ma_ave = 0.0;
 
 		for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
-			/* for (i=1; i<=MIN((long) N_core, clus.N_STAR); i++) { */
 			Ncentral++;
 			/* use only code units here, so always divide star[].m by clus.N_STAR */
 			central.w2_ave += 2.0 * star_m[i] / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
@@ -1307,7 +1335,11 @@ void central_calculate(void)
 	/* average over all stars out to half-mass radius */
 	nave = 1;
 	while (m < 0.5 * Mtotal) {
+#ifdef USE_MPI
+		m += star_m[nave] / clus.N_STAR;
+#else
 		m += star[nave].m / clus.N_STAR;
+#endif
 		nave++;
 	}
 	
@@ -1324,6 +1356,10 @@ void central_calculate(void)
 	/* allocate array for local density calculations */
 	rhoj = (double *) malloc((nave+1) * sizeof(double));
 
+	FILE *ftest;
+	char tempstr3[20];
+	strcpy(tempstr3, "test_a_ser.dat");
+	ftest = fopen( tempstr3, "w" );
 	/* calculate rhoj's (Casertano & Hut 1985) */
 	for (i=1; i<=nave; i++) {
 		jmin = MAX(i-J/2, 1);
@@ -1332,11 +1368,38 @@ void central_calculate(void)
 		/* this is equivalent to their J-1 factor for the case of equal masses,
 		   and seems like a good generalization for unequal masses */
 		for (j=jmin+1; j<=jmax-1; j++) {
+#ifdef USE_MPI
+			mrho += star_m[j] * madhoc;
+		}
+		Vrj = 4.0/3.0 * PI * (fb_cub(star_r[jmax]) - fb_cub(star_r[jmin]));
+		rhoj[i] = mrho / Vrj;
+#else
 			mrho += star[j].m * madhoc;
 		}
 		Vrj = 4.0/3.0 * PI * (fb_cub(star[jmax].r) - fb_cub(star[jmin].r));
 		rhoj[i] = mrho / Vrj;
+#endif
+	fprintf(ftest, "%ld\t%.18g\n", i, rhoj[i]);
 	}
+	fclose(ftest);
+
+/*
+	FILE *ftest;
+	char tempstr3[20];
+#ifdef USE_MPI
+	strcpy(tempstr3, "test_cen_par.dat");
+#else
+	strcpy(tempstr3, "test_cen_ser.dat");
+#endif
+	ftest = fopen( tempstr3, "w" );
+	for( i = 1; i <= clus.N_MAX; i++ )
+#ifdef USE_MPI
+	fprintf(ftest, "%ld\t%.18g\n", i, star_m[i]);
+#else
+	fprintf(ftest, "%ld\t%.18g\n", i, star[i].m);
+#endif
+	fclose(ftest);
+*/
 
 	/* calculate core quantities using density weighted averages (note that in 
 	   Casertano & Hut (1985) only rho and rc are analyzed and tested) */
@@ -1352,9 +1415,15 @@ void central_calculate(void)
 		rhoj2sum += sqr(rhoj[i]);
 		central.rho += sqr(rhoj[i]);
 		central.v_rms += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
+#ifdef USE_MPI
+		central.rc += rhoj[i] * star_r[i];
+		rc_nb += sqr(rhoj[i] * star_r[i]);
+		central.m_ave += rhoj[i] * star_m[i] * madhoc;
+#else
 		central.rc += rhoj[i] * star[i].r;
 		rc_nb += sqr(rhoj[i] * star[i].r);
 		central.m_ave += rhoj[i] * star[i].m * madhoc;
+#endif
 	}
 	central.rho /= rhojsum;
 	/* correction for inherent bias in estimator */
@@ -1400,25 +1469,50 @@ void central_calculate(void)
 	/* for (i=1; i<=MIN((long) N_core, clus.N_STAR); i++) { */
 		Ncentral++;
 		/* use only code units here, so always divide star[].m by clus.N_STAR */
+#ifdef USE_MPI
+		central.w2_ave += 2.0 * star_m[i] / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
+#else
 		central.w2_ave += 2.0 * star[i].m / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
+#endif
 
 		if (star[i].binind == 0) {
 			central.N_sin++;
+#ifdef USE_MPI
+			Msincentral += star_m[i] / ((double) clus.N_STAR);
+#else
 			Msincentral += star[i].m / ((double) clus.N_STAR);
+#endif
 			central.v_sin_rms += sqr(star[i].vr) + sqr(star[i].vt);
 			central.R2_ave += sqr(star[i].rad);
+#ifdef USE_MPI
+			central.mR_ave += star_m[i] / ((double) clus.N_STAR) * star[i].rad;
+#else
 			central.mR_ave += star[i].m / ((double) clus.N_STAR) * star[i].rad;
+#endif
 		} else {
 			central.N_bin++;
+
+#ifdef USE_MPI
+			Mbincentral += star_m[i] / ((double) clus.N_STAR);
+#else
 			Mbincentral += star[i].m / ((double) clus.N_STAR);
+#endif
 			central.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
 			central.a_ave += binary[star[i].binind].a;
 			central.a2_ave += sqr(binary[star[i].binind].a);
+#ifdef USE_MPI
+			central.ma_ave += star_m[i] / ((double) clus.N_STAR) * binary[star[i].binind].a;
+#else
 			central.ma_ave += star[i].m / ((double) clus.N_STAR) * binary[star[i].binind].a;
+#endif
 		}
 	}
 	/* object quantities */
+#ifdef USE_MPI
+	rcentral = star_r[Ncentral + 1];
+#else
 	rcentral = star[Ncentral + 1].r;
+#endif
 	Vcentral = 4.0/3.0 * PI * cub(rcentral);
 	central.w2_ave /= central.m_ave * ((double) Ncentral);
 	
@@ -1646,7 +1740,21 @@ void calc_central_new()
 	//MPI2: Split into 2 functions: part 1 can be parallelized after making m and r arrays global. Part 2 has to be done on root node.
 #ifdef USE_MPI
 	//MPI2: Tested! Errors of 1e-14.
-	mpi_central_calculate();
+	//mpi_central_calculate();
+
+	if(myid==0)
+		central_calculate();
+
+	MPI_Bcast(&central, sizeof(central_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+	v_core = central.v_rms;
+	rho_core = central.rho;
+	core_radius = central.rc;
+	N_core = 4.0 / 3.0 * PI * cub(core_radius) * (central.n / 2.0);
+	N_core_nb = 4.0 / 3.0 * PI * cub(rc_nb) * (central.n / 2.0);
+	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.m_ave);
+	rho_core_single = central.rho_sin;
+	rho_core_bin = central.rho_bin;
+
 #else
 	central_calculate();
 #endif

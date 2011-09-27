@@ -7,6 +7,13 @@
 #include "cmc_vars.h"
 #include "bse_wrap/bse_wrap.h"
 
+void zero_out_array(double* ptr, int size)
+{
+	int i;
+	for( i=0; i<size; i++)
+		ptr[i] = 0.0;
+}
+
 void stellar_evolution_init(void){  
 	double tphysf, dtp, vs[12];
 	int i;
@@ -80,7 +87,7 @@ void stellar_evolution_init(void){
 #ifdef USE_MPI
 			DMse += star_m[k] * madhoc;
 #else
-			DMse += star[k].m * madhoc;
+			DMse_mimic[findProcForIndex(k)] += star[k].m * madhoc;
 #endif
 			/* Update star id for pass through. */
 			bse_set_id1_pass(star[k].id);
@@ -133,6 +140,9 @@ void stellar_evolution_init(void){
 					&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 					&(tempbinary.bse_tb), &(tempbinary.e), vs);
 
+			//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
+			zero_out_array(vs, 12);
+
 			star[k].se_mass = tempbinary.bse_mass0[0];
 			star[k].se_k = tempbinary.bse_kw[0];
 			star[k].se_mt = tempbinary.bse_mass[0];
@@ -157,7 +167,7 @@ void stellar_evolution_init(void){
 			DMse -= star_m[k] * madhoc;
 #else
 			star[k].m = star[k].se_mt * MSUN / units.mstar;
-			DMse -= star[k].m * madhoc;
+			DMse_mimic[findProcForIndex(k)] -= star[k].m * madhoc;
 #endif
 			/* birth kicks */
 			if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[2]*vs[2]) != 0.0) {
@@ -196,7 +206,11 @@ void stellar_evolution_init(void){
 			tphysf = 1.0e-6;
 			dtp = tphysf - binary[kb].bse_tphys;
 			dtp = 0.0;
+#ifdef USE_MPI
 			DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
+#else
+			DMse_mimic[findProcForIndex(k)] += (binary[kb].m1 + binary[kb].m2) * madhoc;
+#endif
 			/* Update star id for pass through. */
 			bse_set_id1_pass(binary[kb].id1);
 			bse_set_id2_pass(binary[kb].id2);
@@ -205,6 +219,9 @@ void stellar_evolution_init(void){
 					&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
 					&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 					&(binary[kb].bse_tb), &(binary[kb].e), vs);
+			//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
+			zero_out_array(vs, 12);
+
 			handle_bse_outcome(k, kb, vs, tphysf);
 		} else {
 			eprintf("totally confused!\n");
@@ -217,6 +234,9 @@ void stellar_evolution_init(void){
 	MPI_Reduce(&DMse, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	if(myid==0) DMse = temp;
 	MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#else
+	for(i=0; i<procs; i++)
+		DMse += DMse_mimic[i];
 #endif
 }
 
@@ -261,7 +281,7 @@ void do_stellar_evolution(gsl_rng *rng)
 #ifdef USE_MPI
 				DMse += star_m[k] * madhoc;
 #else
-				DMse += star[k].m * madhoc;
+				DMse_mimic[findProcForIndex(k)] += star[k].m * madhoc;
 #endif
 				/* Update star id for pass through. */
 				bse_set_id1_pass(star[k].id);
@@ -306,6 +326,12 @@ void do_stellar_evolution(gsl_rng *rng)
 					&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 					&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
 				 */
+	if(binary[star[k].binind].id1 == 2259 || binary[star[k].binind].id2 == 2259)
+#ifdef USE_MPI
+		printf("vr=%.18g vt=%.18g m=%.18g\n", star[k].vr, star[k].vt, star_m[k]);
+#else
+		printf("vr=%.18g vt=%.18g m=%.18g\n", star[k].vr, star[k].vt, star[k].m);
+#endif
 				bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 						&(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 						&(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -313,6 +339,9 @@ void do_stellar_evolution(gsl_rng *rng)
 						&(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
 						&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 						&(tempbinary.bse_tb), &(tempbinary.e), vs);
+
+				//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
+				zero_out_array(vs, 12);
 
 				star[k].se_mass = tempbinary.bse_mass0[0];
 				star[k].se_k = tempbinary.bse_kw[0];
@@ -338,7 +367,7 @@ void do_stellar_evolution(gsl_rng *rng)
 				DMse -= star_m[k] * madhoc;
 #else
 				star[k].m = star[k].se_mt * MSUN / units.mstar;
-				DMse -= star[k].m * madhoc;
+				DMse_mimic[findProcForIndex(k)] -= star[k].m * madhoc;
 #endif     
 
 				/* birth kicks */
@@ -390,7 +419,11 @@ void do_stellar_evolution(gsl_rng *rng)
 			} else {
 				/* set binary orbital period (in days) from a */
 				binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
+#ifdef USE_MPI
 				DMse += (binary[kb].m1 + binary[kb].m2) * madhoc;
+#else
+				DMse_mimic[findProcForIndex(k)] += (binary[kb].m1 + binary[kb].m2) * madhoc;
+#endif
 				/* Update star id for pass through. */
 				bse_set_id1_pass(binary[kb].id1);
 				bse_set_id2_pass(binary[kb].id2);
@@ -399,6 +432,24 @@ void do_stellar_evolution(gsl_rng *rng)
 						&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
 						&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 						&(binary[kb].bse_tb), &(binary[kb].e), vs);
+
+	if(binary[star[k].binind].id1 == 2259 || binary[star[k].binind].id2 == 2259)
+#ifdef USE_MPI
+		printf("vr=%.18g vt=%.18g m=%.18g\n", star[k].vr, star[k].vt, star_m[k]);
+#else
+		printf("vr=%.18g vt=%.18g m=%.18g\n", star[k].vr, star[k].vt, star[k].m);
+#endif
+				//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
+				zero_out_array(vs, 12);
+
+	if(binary[star[k].binind].id1 == 2259 || binary[star[k].binind].id2 == 2259)
+	{
+		int j;
+		for(j=0; j<11; j++)
+			printf("vs[%d]=%.18g\t", j, vs[j]);
+		printf("\n");
+	}
+
 				if(isnan(binary[kb].bse_radius[0])){
 					fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
 					fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1], binary[kb].bse_tb);
@@ -418,9 +469,27 @@ void do_stellar_evolution(gsl_rng *rng)
 
 #ifdef USE_MPI
 	double temp = 0.0;
+
+	MPI_Status stat;
+	int i;
+	if(myid!=0)
+		MPI_Send(&DMse, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+	else
+		for(i=1;i<procs;i++)
+		{
+			MPI_Recv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &stat);
+			DMse += temp;
+		}
+
+/*
 	MPI_Reduce(&DMse, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	if(myid==0) DMse = temp;
 	MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+*/
+#else
+	int i;
+	for(i=0; i<procs; i++)
+		DMse += DMse_mimic[i];
 #endif
 }
 
@@ -512,7 +581,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     DMse -= star_m[k] * madhoc;
 #else
     star[k].m = binary[kb].m1 + binary[kb].m2;
-    DMse -= star[k].m * madhoc;
+    DMse_mimic[findProcForIndex(k)] -= star[k].m * madhoc;
 #endif
     binary[kb].a = pow((binary[kb].bse_mass[0]+binary[kb].bse_mass[1])*sqr(binary[kb].bse_tb/365.25), 1.0/3.0)
       * AU / units.l;
@@ -573,7 +642,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
 #ifdef USE_MPI
     DMse -= (star_m[knew] + star_m[knewp]) * madhoc;
 #else
-    DMse -= (star[knew].m + star[knewp].m) * madhoc;
+    DMse_mimic[findProcForIndex(k)] -= (star[knew].m + star[knewp].m) * madhoc;
 #endif
 
     fprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g)\n", 
@@ -763,7 +832,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     DMse -= star_m[knew] * madhoc;
 #else
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
-    DMse -= star[knew].m * madhoc;
+    DMse_mimic[findProcForIndex(k)] -= star[knew].m * madhoc;
 #endif
 
     /* birth kicks */
@@ -857,7 +926,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     DMse -= star_m[knew] * madhoc; 
 #else
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
-    DMse -= star[knew].m * madhoc; 
+    DMse_mimic[findProcForIndex(k)] -= star[knew].m * madhoc; 
 #endif
 
     /* birth kicks */

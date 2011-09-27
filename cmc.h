@@ -637,6 +637,7 @@ double mpi_simul_relax_new(void);
 void break_wide_binaries(void);
 void calc_sigma_r(void);
 void mpi_calc_sigma_r(void);
+void zero_out_array(double* ptr, int size);
 
 double sigma_r(double r);
 

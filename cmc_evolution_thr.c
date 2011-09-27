@@ -356,6 +356,7 @@ double GetTimeStep(gsl_rng *rng) {
 			}
 			/* get timescale for 1% mass loss from cluster */
 			Tse = 0.01 * Mtotal / (fabs(DMse) / Prev_Dt);
+			printf("Mtotal=%.18g DMse=%.18g\n", Mtotal, DMse);
 			/* and take a fraction of that for the timestep */
 			DTse = 0.1 * Tse;
 		}

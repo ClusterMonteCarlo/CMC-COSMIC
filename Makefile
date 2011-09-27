@@ -2,6 +2,10 @@ include common/common.mk
 
 # standard executable
 EXE = cmc
+ifeq ($(use_mpi), 1)
+EXE = cmc_mpi
+endif
+
 OBJS = cmc_binbin.o cmc_binsingle.o cmc_dynamics.o \
 	cmc_dynamics_helper.o cmc_evolution_thr.o cmc_funcs.o \
 	cmc_init.o cmc_io.o cmc.o cmc_nr.o \

@@ -98,6 +98,7 @@ _EXTERN_ int size_bin_buf;
 #ifndef USE_MPI
 _EXTERN_ int *created_star_dyn_node;
 _EXTERN_ int *created_star_se_node;
+_EXTERN_ double *DMse_mimic;
 #endif
 _EXTERN_ FILE* ftest2;
 _EXTERN_ char num2[5],filename2[20], tempstr2[20];

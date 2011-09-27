@@ -41,11 +41,12 @@ int main(int argc, char *argv[])
 	mpiLen = (int *) malloc(procs * sizeof(int));
 
 	if(myid==0)
-		new_size = (int *)calloc(procs, sizeof(int)); 
+		new_size = (long *)calloc(procs, sizeof(long)); 
 #else
 	procs = 1;
 	created_star_dyn_node = (int *) calloc(procs, sizeof(int));
 	created_star_se_node = (int *) calloc(procs, sizeof(int));
+	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
 
 	Start = (int *) calloc(procs, sizeof(int));
@@ -89,7 +90,7 @@ int main(int argc, char *argv[])
 	star[clus.N_MAX + 1].r = SF_INFINITY;
 	star[clus.N_MAX + 1].phi = 0.0;
 
-	/* MPI2: Calculating disp and len for mimcking parallel rng */
+	/* MPI2: Calculating Start and End for mimcking parallel rng */
 	findLimits( clus.N_MAX, 20 );
 
 	alloc_bin_buf();
@@ -125,6 +126,10 @@ int main(int argc, char *argv[])
 	clus.N_MAX_NEW = clus.N_MAX;
 	/* initialize stellar evolution things */
 	DMse = 0.0;
+#ifndef USE_MPI
+	for(i=0; i<procs; i++)
+		DMse_mimic[i] = 0.0;
+#endif
 
 	if (STELLAR_EVOLUTION > 0) {
 		stellar_evolution_init();
@@ -159,6 +164,23 @@ int main(int argc, char *argv[])
 
 #ifdef USE_CUDA
 	cuInitialize();
+#endif
+
+#ifdef USE_MPI
+	MPI_Status stat;
+	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
+	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
+	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
+
+	for(i=0;i<procs;i++)
+		mpiLen[i] *= sizeof(double); 
+
+	if(myid!=0)
+		MPI_Send(&star_m[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+	else
+		for(i=1;i<procs;i++)
+			MPI_Recv(&star_m[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+	MPI_Bcast(star_m, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
 	/*******          Starting evolution               ************/
@@ -203,13 +225,41 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 
+#ifdef USE_MPI
+		for( i = mpiBegin; i <= mpiEnd; i++ )
+#else
+		for(i=0; i<clus.N_MAX_NEW; i++)
+#endif
+			if(binary[star[i].binind].id1 == 2259 || binary[star[i].binind].id2 == 2259)
+#ifdef USE_MPI
+				printf("vr=%.18g vt=%.18g m=%.18g\n", star[i].vr, star[i].vt, star_m[i]);
+#else
+		printf("vr=%.18g vt=%.18g m=%.18g\n", star[i].vr, star[i].vt, star[i].m);
+#endif
+
+
 		/* evolve stars up to new time */
 		DMse = 0.0;
+#ifndef USE_MPI
+	for(i=0; i<procs; i++)
+		DMse_mimic[i] = 0.0;
+#endif
 
 		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
 		if (STELLAR_EVOLUTION > 0)
 			do_stellar_evolution(rng);
 
+#ifdef USE_MPI
+		for( i = mpiBegin; i <= mpiEnd; i++ )
+#else
+		for(i=0; i<clus.N_MAX_NEW; i++)
+#endif
+	if(binary[star[i].binind].id1 == 2259 || binary[star[i].binind].id2 == 2259)
+#ifdef USE_MPI
+		printf("vr=%.18g vt=%.18g m=%.18g\n", star[i].vr, star[i].vt, star_m[i]);
+#else
+		printf("vr=%.18g vt=%.18g m=%.18g\n", star[i].vr, star[i].vt, star[i].m);
+#endif
 		Prev_Dt = Dt;
 
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
@@ -277,6 +327,13 @@ int main(int argc, char *argv[])
 
 		calc_clusdyn_new();
 
+		//MPI2: Commenting out for MPI
+		/*
+			if (WRITE_EXTRA_CORE_INFO) {
+			no_remnants= no_remnants_core(6);
+			}
+		 */
+
 #ifdef USE_MPI
 		strcpy(filename, "test_out_par");
 		strcpy(tempstr, filename);
@@ -290,9 +347,14 @@ int main(int argc, char *argv[])
 				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
 				ftest = fopen( tempstr, "w" );
 				for( j = Start[i]; j <= End[i]; j++ )
+				{
 					//if(star[j].binind>0)
 						//fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
-					fprintf(ftest, "%ld\t%.18g\n", j, star_r[j]);
+				if(star[j].id <= 0)
+					fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", j, star_r[j], star[j].id, binary[star[j].binind].id1, binary[star[j].binind].id2);
+				else
+					fprintf(ftest, "%ld\t%.18g\t%ld\n", j, star_r[j], star[j].id);
+				}
 				fclose(ftest);
 			}
 		}
@@ -302,18 +364,16 @@ int main(int argc, char *argv[])
 		strcpy(tempstr, "test_out_ser.dat");
 		ftest = fopen( tempstr, "w" );
 		for( i = 1; i <= clus.N_MAX; i++ )
+		{
 			//if(star[i].binind>0)
 				//fprintf(ftest, "%ld\t%.18g\n", i, binary[star[i].binind].a);
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
+		if(star[i].id <= 0)
+			fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", j, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
+		else
+			fprintf(ftest, "%ld\t%.18g\t%ld\n", i, star[i].r, star[i].id);
+		}
 		fclose(ftest);
 #endif
-
-		//MPI2: Commenting out for MPI
-		/*
-			if (WRITE_EXTRA_CORE_INFO) {
-			no_remnants= no_remnants_core(6);
-			}
-		 */
 
 		print_results();
 
