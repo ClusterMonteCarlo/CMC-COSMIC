@@ -184,7 +184,7 @@
 *
       INTEGER aic
       REAL*8 fallback,sigmahold,sigmadiv,ecsnp,ecsn_mlow
-      REAL*8 vk
+      REAL*8 vk,betahold
 *
       REAL*8 neta,bwind,hewind,mxns
       COMMON /VALUE1/ neta,bwind,hewind,mxns
@@ -230,6 +230,7 @@
       sigmahold = sigma !Captures original sigma so after ECSN we can reset it.
       sigmadiv = -20.d0! negative sets ECSN sigma, positive devides into old sigma.
       aic = 1 !set to 1 for inclusion of AIC low kicks (even if ecsnp = 0)
+      betahold = beta !memory for wind mass loss factor.
       formation(1) = 0 !helps determine formation channel of interesting systems.
       formation(2) = 0
       output = .false.  ! .true. turns on, .false. turns off.
@@ -427,11 +428,34 @@
 * Calculate how much of wind mass loss from companion will be
 * accreted (Boffin & Jorissen, A&A 1988, 205, 155).
 *
+               if(beta.lt.0.d0)then !PK. following startrack
+                  beta = 0.125
+                  if(kstar(k).le.1)then
+                     if(mass(k).gt.120.d0)then
+                        beta = 7.d0
+                     elseif(mass(k).le.1.4d0)then
+                        beta = 0.5
+                     else
+                        beta = 7.d0*((mass(k)-1.4d0)/(120.d0-1.4d0))
+     &                         + 0.5d0
+                     endif
+                  elseif(kstar(k).ge.7.and.kstar(k).le.9)then
+                     if(mass(k).gt.120.d0)then
+                        beta = 7.d0
+                     elseif(mass(k).le.10.d0)then
+                        beta = 0.125
+                     else
+                        beta = 7.d0*((mass(k)-10.d0)/(120.d0-10.d0))
+     &                               + 0.125d0
+                     endif
+                  endif
+               endif
                vwind2 = 2.d0*beta*acc1*mass(k)/rad(k)
                omv2 = (1.d0 + vorb2/vwind2)**(3.d0/2.d0)
                dmt(3-k) = ivsqm*acc2*dmr(k)*((acc1*mass(3-k)/vwind2)**2)
      &                    /(2.d0*sep*sep*omv2)
                dmt(3-k) = MIN(dmt(3-k),0.8d0*dmr(k))
+               beta = betahold
                if(output) write(*,*)'wind1:',k,dmt(3-k),dmr(k),beta,
      & ivsqm,acc1,acc2,vwind2
             else
@@ -1663,6 +1687,28 @@
          ivsqm = 1.d0/SQRT(1.d0-ecc*ecc)
          do 14 , k = 1,2
             if(neta.gt.tiny)then
+               if(beta.lt.0.d0)then !PK. following startrack
+                  beta = 0.125
+                  if(kstar(k).le.1)then
+                     if(mass(k).gt.120.d0)then
+                        beta = 7.d0
+                     elseif(mass(k).le.1.4d0)then
+                        beta = 0.5
+                     else
+                        beta = 7.d0*((mass(k)-1.4d0)/(120.d0-1.4d0))
+     &                         + 0.5d0
+                     endif
+                  elseif(kstar(k).ge.7.and.kstar(k).le.9)then
+                     if(mass(k).gt.120.d0)then
+                        beta = 7.d0
+                     elseif(mass(k).le.10.d0)then
+                        beta = 0.125
+                     else
+                        beta = 7.d0*((mass(k)-10.d0)/(120.d0-10.d0))
+     &                               + 0.125d0
+                     endif
+                  endif
+               endif
                rlperi = rol(k)*(1.d0-ecc)
                dmr(k) = mlwind(kstar(k),lumin(k),radx(k),
      &                         mass(k),massc(k),rlperi,z)
@@ -1671,6 +1717,7 @@
                dmt(3-k) = ivsqm*acc2*dmr(k)*((acc1*mass(3-k)/vwind2)**2)
      &                    /(2.d0*sep*sep*omv2)
                dmt(3-k) = MIN(dmt(3-k),dmr(k))
+               beta = betahold
             else
                dmr(k) = 0.d0
                dmt(3-k) = 0.d0

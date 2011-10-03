@@ -35,7 +35,7 @@ void stellar_evolution_init(void){
   bse_set_pts2(0.01);
   bse_set_pts3(0.02);
   bse_set_sigma(BSE_SIGMA);
-  bse_set_beta(BSE_BETA);
+  bse_set_beta(BSE_BETA); //set -0.125 if variable beta (following startrack), otherwise 0.125 for bse.
   bse_set_xi(1.0);
   bse_set_acc2(1.5);
   bse_set_epsnov(0.001);
