@@ -13,6 +13,10 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	double vs[12], bmax, b, rperi, Eorbnew, acoll, ecoll, ace, ece, anew, enew, efinal, afinal;
 	double aj, tm, tn, tscls[20], lums[10], GB[10], k2;
 	double Einit;
+        double ecsnp,ecsn_mlow; //PDK additino for hrdiag.
+
+	ecsnp = 2.5;
+        ecsn_mlow = 1.6;
 
 	bmax = rperimax * sqrt(1.0 + 2.0 * ((star[k].m + star[kp].m) * madhoc) / (rperimax * sqr(W)));
 	b = sqrt(rng_t113_dbl()) * bmax;
@@ -52,7 +56,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		bse_star(&(star[kp].se_k), &(star[kp].se_mass), &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars);
 		bse_hrdiag(&(star[kp].se_mass), &aj, &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars,
 			   &(star[kp].se_radius), &(star[kp].se_lum), &(star[kp].se_k), &(star[kp].se_mc), &(star[kp].se_rc), 
-			   &(star[kp].se_menv), &(star[kp].se_renv), &k2);
+			   &(star[kp].se_menv), &(star[kp].se_renv), &k2, &ecsnp, &ecsn_mlow);
 		star[kp].se_epoch = star[kp].se_tphys - aj;
 		star[kp].rad = star[kp].se_radius * RSUN / units.l;
 		star[kp].m = star[kp].se_mt * MSUN / units.mstar;
@@ -156,7 +160,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		bse_star(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars);
 		bse_hrdiag(&(star[k].se_mass), &aj, &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars,
 			   &(star[k].se_radius), &(star[k].se_lum), &(star[k].se_k), &(star[k].se_mc), &(star[k].se_rc), 
-			   &(star[k].se_menv), &(star[k].se_renv), &k2);
+			   &(star[k].se_menv), &(star[k].se_renv), &k2, &ecsnp, &ecsn_mlow);
 		star[k].se_epoch = star[k].se_tphys - aj;
 		star[k].rad = star[k].se_radius * RSUN / units.l;
 		star[k].m = star[k].se_mt * MSUN / units.mstar;
@@ -368,10 +372,13 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 /* merge two stars using stellar evolution if it's enabled */
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs) {
-	double tphysf, dtp, vsaddl[12], age, temp_rad, bseaj[2];
+	double tphysf, dtp, vsaddl[12], age, temp_rad, bseaj[2], ecsnp, ecsn_mlow;
 	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
 	binary_t tempbinary, tbcopy;
 	int tbi=-1, j, ktry, i, fb, icase;
+	ecsnp = 2.5;
+	ecsn_mlow = 1.6;
+	fb = 1;
 
 	for(i=0;i<=11;i++) {
 	  vs[i] = 0.0;
@@ -448,13 +455,13 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    //aj = star[kp].se_tphys - star[kp].se_epoch;
 		    bseaj[0] = tempbinary.bse_tphys - tempbinary.bse_epoch[0];
 		    bseaj[1] = tempbinary.bse_tphys - tempbinary.bse_epoch[1];
-		    bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars);
+		    bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars, &ecsnp);
 		    
 		    bse_star(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars);
 		    
 		    bse_hrdiag(&(tempbinary.bse_mass0[0]), &(bseaj[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
 			       &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_kw[0]), &(tempbinary.bse_massc[0]), &(tempbinary.bse_radc[0]), 
-			       &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), &k2);
+			       &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), &k2, &ecsnp, &ecsn_mlow);
 		    tempbinary.bse_epoch[0] = tempbinary.bse_tphys - bseaj[0];
 		    tempbinary.bse_mass0[1] = 0.0;
 		    //tempbinary.bse_mass[1] = 0.0;
@@ -526,7 +533,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		      }
 		      //CALL comenv routine...
 		      cmc_bse_comenv(&(tempbinary), units.l, RSUN, zpars, 
-				     vs, &fb);
+				     vs, &fb, &ecsnp, &ecsn_mlow);
 		      dprintf("after ce merge1: tb=%g a=%g m1=%g m2=%g e=%g kw1=%d kw2=%d r1=%g r2=%g\n",tempbinary.bse_tb,tempbinary.a,tempbinary.bse_mass[0],tempbinary.bse_mass[1],tempbinary.e,tempbinary.bse_kw[0],tempbinary.bse_kw[1],tempbinary.bse_radius[0],tempbinary.bse_radius[1]);
 		      ktry++;
 		    }
@@ -581,13 +588,13 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		      //aj = star[kp].se_tphys - star[kp].se_epoch;
 		      bseaj[0] = tempbinary.bse_tphys - tempbinary.bse_epoch[0];
 		      bseaj[1] = tempbinary.bse_tphys - tempbinary.bse_epoch[1];
-		      bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars);
+		      bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars, &ecsnp);
 		      
 		      bse_star(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars);
 		      
 		      bse_hrdiag(&(tempbinary.bse_mass0[0]), &(bseaj[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
 				 &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_kw[0]), &(tempbinary.bse_massc[0]), &(tempbinary.bse_radc[0]), 
-				 &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), &k2);
+				 &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), &k2, &ecsnp, &ecsn_mlow);
 		      tempbinary.bse_epoch[0] = tempbinary.bse_tphys - bseaj[0];
 		      tempbinary.bse_mass0[1] = 0.0;
 		      //tempbinary.bse_mass[1] = 0.0;

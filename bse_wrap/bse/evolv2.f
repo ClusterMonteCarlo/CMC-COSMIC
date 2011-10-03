@@ -152,7 +152,7 @@
 ***
 *
       INTEGER loop,iter,intpol,k,ip,jp,j1,j2
-      INTEGER fb,kcomp1,kcomp2 !PDK
+      INTEGER fb,kcomp1,kcomp2,formation(2) !PDK
       PARAMETER(loop=20000)
       INTEGER kstar(2),kw,kst,kw1,kw2,kmin,kmax
       INTEGER ktype(0:14,0:14)
@@ -182,7 +182,8 @@
       REAL*8 delet,delet1,dspint(2),djspint(2),djtx(2)
       REAL*8 dtj,djorb,djgr,djmb,djt,djtt,rmin,rdisk
 *
-      REAL*8 fallback
+      INTEGER aic
+      REAL*8 fallback,sigmahold,sigmadiv,ecsnp,ecsn_mlow
       REAL*8 vk
 *
       REAL*8 neta,bwind,hewind,mxns
@@ -201,7 +202,7 @@
       LOGICAL isave,iplot
       REAL*8 rl,mlwind,vrotf,corerd
       EXTERNAL rl,mlwind,vrotf,corerd
-      REAL bcm(50000,34),bpp(80,10)
+      REAL bcm(50000,36),bpp(80,10)
       COMMON /BINARY/ bcm,bpp
 *
       REAL*8 kw3,wsun,wx
@@ -224,6 +225,13 @@
       twopi = 2.d0*ACOS(-1.d0)
 * PDK
       fb = 1
+      ecsnp = 2.5d0 !>0 turns on ECSN and also sets maximum ECSN kick mass range (mass at SN, bse=st=2.25, pod=2.5)
+      ecsn_mlow = 1.6d0 ! low end of ECSN mass range, BSE=1.6, Pod=1.4, StarTrack=1.85.
+      sigmahold = sigma !Captures original sigma so after ECSN we can reset it.
+      sigmadiv = -20.d0! negative sets ECSN sigma, positive devides into old sigma.
+      aic = 1 !set to 1 for inclusion of AIC low kicks (even if ecsnp = 0)
+      formation(1) = 0 !helps determine formation channel of interesting systems.
+      formation(2) = 0
       output = .false.  ! .true. turns on, .false. turns off.
 *                       WARNING: can fill up the output file very quickly. 
 *                       With N=2e6 .stdout was 3.2 GB in 6 mins. If needed you can
@@ -307,7 +315,8 @@
          rc = radc(k)
          CALL star(kstar(k),mass0(k),mass(k),tm,tn,tscls,lums,GB,zpars)
          CALL hrdiag(mass0(k),age,mass(k),tm,tn,tscls,lums,GB,zpars,
-     &               rm,lum,kstar(k),mc,rc,me,re,k2)
+     &               rm,lum,kstar(k),mc,rc,me,re,k2,
+     &               ecsnp,ecsn_mlow)
          aj(k) = age
          epoch(k) = tphys - age
          rad(k) = rm
@@ -796,7 +805,8 @@
             endif
          endif
          CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
-     &               rm,lum,kw,mc,rc,me,re,k2)
+     &               rm,lum,kw,mc,rc,me,re,k2,
+     &               ecsnp,ecsn_mlow)
 *
          if(kw.ne.15)then
             ospin(k) = jspin(k)/(k2*(mt-mc)*rm*rm+k3*mc*rc*rc)
@@ -806,16 +816,101 @@
 *
          if((kw.ne.kstar(k).and.kstar(k).le.12.and.
      &      (kw.eq.13.or.kw.eq.14)).or.(ABS(merger).ge.20.d0))then
-            if(ABS(merger).ge.20.d0)then
+            if(formation(k).ne.11) formation(k) = 4
+            if(kw.eq.13.and.ecsnp.gt.0.d0)then
+               if(kstar(k).le.6)then
+                  if(mass0(k).le.zpars(5))then
+                     if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                        sigma = sigmahold/sigmadiv
+                        sigma = -sigma
+                     else
+                        sigma = -1.d0*sigmadiv
+                     endif
+                     formation(k) = 5
+                  endif
+               elseif(kstar(k).ge.7.and.kstar(k).le.9)then
+                  if(mass(k).gt.ecsn_mlow.and.mass(k).le.ecsnp)then
+* BSE orgi: 1.6-2.25, Pod: 1.4-2.5, StarTrack: 1.83-2.25 (all in Msun)
+                     if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                        sigma = sigmahold/sigmadiv
+                        sigma = -sigma
+                     else
+                        sigma = -1.d0*sigmadiv
+                     endif
+                     formation(k) = 5
+                  endif
+               elseif(formation(k).eq.11)then
+* MIC
+                  if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                     sigma = sigmahold/sigmadiv
+                     sigma = -sigma
+                  else
+                     sigma = -1.d0*sigmadiv
+                  endif
+                  formation(k) = 7
+               elseif(kstar(k).ge.10.or.kstar(k).eq.12)then
+* AIC formation, will never happen here but...
+                  if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                     sigma = sigmahold/sigmadiv
+                     sigma = -sigma
+                  else
+                     sigma = -1.d0*sigmadiv
+                  endif
+                  formation(k) = 6
+               elseif(merger.ge.20.d0)then
+                  sigma = merger
+                  fallback = 0.d0
+                  if(merger.ge.200.d0)then!estimate CC SN
+                     formation(k) = 4
+                  else
+                     formation(k) = 7
+                  endif
+               elseif(merger.le.-20.d0)then
+                  sigma = ABS(merger)
+                  fallback = 0.d0
+                  if(merger.ge.200.d0)then!estimate CC SN
+                     formation(k) = 4
+                  else
+                     formation(k) = 7
+                  endif
+               endif
+            elseif(kw.eq.13.and.aic.gt.0)then
+               if(formation(k).eq.11)then
+* MIC
+                  if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                     sigma = sigmahold/sigmadiv
+                     sigma = -sigma
+                  else
+                     sigma = -1.d0*sigmadiv
+                  endif
+                  formation(k) = 7
+               elseif(kstar(k).ge.10.or.kstar(k).eq.12)then
+* AIC formation, will never happen here but...
+                  if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                     sigma = sigmahold/sigmadiv
+                     sigma = -sigma
+                  else
+                     sigma = -1.d0*sigmadiv
+                  endif
+                  formation(k) = 6
+               endif
+            elseif(ABS(merger).ge.20.d0)then
                sigma = ABS(merger)
                fallback = 0.d0
+               if(merger.ge.200.d0)then!estimate CC SN
+                  formation(k) = 4
+               else
+                  formation(k) = 7
+               endif
             endif
             if(sgl)then
                CALL kick(kw,mass(k),mt,0.d0,0.d0,-1.d0,0.d0,vk,k,
      &                   0.d0,fallback,bkick)
+               sigma = sigmahold !reset sigma after possible ECSN kick dist. Remove this if u want some kick link to the intial pulsar values...
             else
                CALL kick(kw,mass(k),mt,mass(3-k),ecc,sep,jorb,vk,k,
      &                   rad(k-3),fallback,bkick)
+               sigma = sigmahold !reset sigma after possible ECSN kick dist. Remove this if u want some kick link to the intial pulsar values...
                if(mass(3-k).lt.0.d0)then
                   if(kstar(3-k).lt.0.d0) mt = mt-mass(3-k) !ignore TZ object
                   if(kw.eq.13.and.mt.gt.mxns) kw = 14
@@ -1001,6 +1096,8 @@
             bcm(ip,30) = tb
             bcm(ip,31) = sep
             bcm(ip,32) = ecc
+            bcm(ip,35) = float(formation(1))
+            bcm(ip,36) = float(formation(2))
             if(isave) tsave = tsave + dtp
             if(output) write(*,*)'bcm1',kstar(1),kstar(2),mass(1),
      & mass(2),rad(1),rad(2),ospin(1),ospin(2),jspin(1)
@@ -1205,6 +1302,8 @@
          bcm(ip,30) = tb
          bcm(ip,31) = sep
          bcm(ip,32) = ecc
+         bcm(ip,35) = float(formation(1))
+         bcm(ip,36) = float(formation(2))
          if(output) write(*,*)'bcm2:',kstar(1),kstar(2),mass(1),
      & mass(2),rad(1),rad(2),ospin(1),ospin(2),jspin(1)
 *     & mass(2),rad(1),rad(2),ospin(1),ospin(2),B(1),B(2),jspin(1)
@@ -1355,15 +1454,18 @@
          CALL comenv(mass0(j1),mass(j1),massc(j1),aj(j1),jspin(j1),
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
      &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
-     &               vk,fb,bkick)
+     &               vk,fb,bkick,ecsnp,ecsn_mlow,
+     &               formation(j1),formation(j2))
          if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
      &      kstar(j1).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
+            formation(j1) = formation(j2)
             bkick(1) = 3-bkick(1)
          endif
          if(j1.eq.1.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
      &      kstar(j1).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
+            formation(j1) = formation(j2)
             bkick(1) = 3-bkick(1)
          endif
 *
@@ -1451,6 +1553,15 @@
 *
                kstar(j2) = 12
             endif
+            if(kstar(j1).eq.11.and.kstar(j2).eq.11)then !PK.
+*
+* Following Startrack of merger of two CO will result in an ONe or NS product
+* (depending upon mass, if kstar = 12 and mass > Mecsn then hrdiag will update 
+* accordingly). 
+*
+               kstar(j2) = 12
+            endif
+            formation(j2) = 11
          endif
          kstar(j1) = 15
          mass(j1) = 0.d0
@@ -1527,6 +1638,11 @@
 *
             m1ce = mass(j1)
             m2ce = mass(j2)
+            if((kstar(1).ge.10.and.kstar(1).le.12).and.
+     &         (kstar(2).ge.10.and.kstar(2).le.12))then
+               formation(1) = 11
+               formation(2) = 11
+            endif
             CALL mix(mass0,mass,aj,kstar,zpars)
             dm1 = m1ce - mass(j1)
             dm2 = mass(j2) - m2ce
@@ -2063,15 +2179,58 @@
             endif
          endif
          CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
-     &               rm,lum,kw,mc,rc,me,re,k2)
+     &               rm,lum,kw,mc,rc,me,re,k2,ecsnp,ecsn_mlow)
 *
 * Check for a supernova and correct the semi-major axis if so.
 *
          if(kw.ne.kstar(k).and.kstar(k).le.12.and.
      &      (kw.eq.13.or.kw.eq.14))then
             dms(k) = mass(k) - mt
+            if(formation(k).ne.11) formation(k) = 4
+            if(kw.eq.13.and.ecsnp.gt.0.d0)then
+               if(kstar(k).le.6)then
+                  if(mass0(k).le.zpars(5))then
+                     if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                        sigma = sigmahold/sigmadiv
+                        sigma = -sigma
+                     else
+                        sigma = -1.d0*sigmadiv
+                     endif
+                     formation(k) = 5
+                  endif
+               elseif(kstar(k).ge.7.and.kstar(k).le.9)then
+                  if(mass(k).gt.ecsn_mlow.and.mass(k).le.ecsnp)then
+* BSE orgi: 1.6-2.25, Pod: 1.4-2.5, StarTrack: 1.83-2.25 (all in Msun)
+                     if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                        sigma = sigmahold/sigmadiv
+                        sigma = -sigma
+                     else
+                        sigma = -1.d0*sigmadiv
+                     endif
+                     formation(k) = 5
+                  endif
+               elseif(formation(k).eq.11)then
+                  if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                     sigma = sigmahold/sigmadiv
+                     sigma = -sigma
+                  else
+                     sigma = -1.d0*sigmadiv
+                  endif
+                  formation(k) = 7
+               elseif(kstar(k).ge.10.or.kstar(k).eq.12)then
+* AIC formation, will never happen here but...
+                  if(sigma.gt.0.d0.and.sigmadiv.gt.0.d0)then
+                     sigma = sigmahold/sigmadiv
+                     sigma = -sigma
+                  else
+                     sigma = -1.d0*sigmadiv
+                  endif
+                  formation(k) = 6
+               endif
+            endif
             CALL kick(kw,mass(k),mt,mass(3-k),ecc,sep,jorb,vk,k,
      &                rad(3-k),fallback,bkick)
+            sigma = sigmahold !reset sigma after possible ECSN kick dist. Remove this if u want some kick link to the intial pulsar values...
             if(mass(3-k).lt.0.d0)then
                if(kstar(3-k).lt.0.d0) mt = mt-mass(3-k)
                if(kw.eq.13.and.mt.gt.mxns) kw = 14
@@ -2205,6 +2364,8 @@
             bcm(ip,14) = (dm2 - dms(1))/dt
             bcm(ip,28) = (-1.0*dm1 - dms(2))/dt
          endif
+         bcm(ip,35) = float(formation(1))
+         bcm(ip,36) = float(formation(2))
          if(isave) tsave = tsave + dtp
          if(output) write(*,*)'bcm3:',kstar(1),kstar(2),mass(1),
      & mass(2),rad(1),rad(2),ospin(1),ospin(2),jspin(1)
@@ -2288,17 +2449,20 @@
          CALL comenv(mass0(j1),mass(j1),massc(j1),aj(j1),jspin(j1),
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
      &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
-     &               vk,fb,bkick)
+     &               vk,fb,bkick,ecsnp,ecsn_mlow,
+     &               formation(j1),formation(j2))
          if(output) write(*,*)'coal1:',tphys,kstar(j1),kstar(j2),coel,
      & mass(j1),mass(j2)
          if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
      &      kstar(j1).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
+            formation(j1) = formation(j2)
             bkick(1) = 3-bkick(1)
          endif
          if(j1.eq.1.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
      &      kstar(j1).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
+            formation(j1) = formation(j2)
             bkick(1) = 3-bkick(1)
          endif
          com = .true.
@@ -2306,17 +2470,20 @@
          CALL comenv(mass0(j2),mass(j2),massc(j2),aj(j2),jspin(j2),
      &               kstar(j2),mass0(j1),mass(j1),massc(j1),aj(j1),
      &               jspin(j1),kstar(j1),zpars,ecc,sep,jorb,coel,j1,j2,
-     &               vk,fb,bkick)
+     &               vk,fb,bkick,ecsnp,ecsn_mlow,
+     &               formation(j1),formation(j2))
          if(output) write(*,*)'coal2:',tphys,kstar(j1),kstar(j2),coel,
      & mass(j1),mass(j2)
          if(j2.eq.2.and.kcomp1.eq.13.and.kstar(j1).eq.15.and.
      &      kstar(j2).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
+            formation(j2) = formation(j1)
             bkick(1) = 3-bkick(1)
          endif
          if(j2.eq.1.and.kcomp1.eq.13.and.kstar(j1).eq.15.and.
      &      kstar(j2).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
+            formation(j2) = formation(j1)
             bkick(1) = 3-bkick(1)
          endif
          com = .true.
@@ -2498,6 +2665,8 @@
             bcm(ip,14) = (dm2 - dms(1))/dt
             bcm(ip,28) = (-1.0*dm1 - dms(2))/dt
          endif
+         bcm(ip,35) = float(formation(1))
+         bcm(ip,36) = float(formation(2))
          if(output) write(*,*)'bcm4:',kstar(1),kstar(2),mass(1),
      & mass(2),rad(1),rad(2),ospin(1),ospin(2),jspin(1),
      & tphys,tphysf
