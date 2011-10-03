@@ -169,7 +169,7 @@ void compress_binary(star_t *bincom, binary_t *bin) {
 }
 
 
-void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow)
+void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide)
 		//double *M0, double *M, double *MC, double *AJ, double *OSPIN, int *KW, 
 		//                double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2,
                 //double *ZPARS, double *ECC, double *SEP, double *PORB,  
@@ -269,7 +269,7 @@ void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, 
   //binary.bse_bcm_formation[0] = tempbinary->bse_bcm_formation[0];
   //binary.bse_bcm_formation[1] = tempbinary->bse_bcm_formation[1];
   //
-  bse_comenv(&(binary), zpars, vs, fb, ecsnp, ecsn_mlow);
+  bse_comenv(&(binary), zpars, vs, fb, ecsnp, ecsn_mlow, ST_tide);
   //
   tempbinary->a = binary.a * RSUN/cmc_l_unit;
   tempbinary->bse_tb = binary.bse_tb;

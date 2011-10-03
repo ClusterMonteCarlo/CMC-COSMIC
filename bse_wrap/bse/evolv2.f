@@ -182,9 +182,9 @@
       REAL*8 delet,delet1,dspint(2),djspint(2),djtx(2)
       REAL*8 dtj,djorb,djgr,djmb,djt,djtt,rmin,rdisk
 *
-      INTEGER aic
+      INTEGER aic,htpmb,ST_cr,ST_tide
       REAL*8 fallback,sigmahold,sigmadiv,ecsnp,ecsn_mlow
-      REAL*8 vk,betahold
+      REAL*8 vk,betahold,convradcomp(2),teff(2)
 *
       REAL*8 neta,bwind,hewind,mxns
       COMMON /VALUE1/ neta,bwind,hewind,mxns
@@ -231,6 +231,12 @@
       sigmadiv = -20.d0! negative sets ECSN sigma, positive devides into old sigma.
       aic = 1 !set to 1 for inclusion of AIC low kicks (even if ecsnp = 0)
       betahold = beta !memory for wind mass loss factor.
+      htpmb = 1 !zero = htpmb, 1 = Ivanova & Taam 2002 method which kicks in later than the standard
+      ST_cr = 1 !sets which convective/radiative boundary to use, 0=old, 1=startrack.
+      ST_tide = 0 !sets which tidal method to use. 0=old, 1=startrack
+* Note, here startrack method does not use a better integration scheme (yet) but simply
+* follows similar set up to startrack (including initial vrot, using roche-lobe check
+* at periastron, and circularisation and synchronisation at start of MT).
       formation(1) = 0 !helps determine formation channel of interesting systems.
       formation(2) = 0
       output = .false.  ! .true. turns on, .false. turns off.
@@ -316,12 +322,14 @@
          rc = radc(k)
          CALL star(kstar(k),mass0(k),mass(k),tm,tn,tscls,lums,GB,zpars)
          CALL hrdiag(mass0(k),age,mass(k),tm,tn,tscls,lums,GB,zpars,
-     &               rm,lum,kstar(k),mc,rc,me,re,k2,
+     &               rm,lum,kstar(k),mc,rc,me,re,k2,ST_tide,
      &               ecsnp,ecsn_mlow)
          aj(k) = age
          epoch(k) = tphys - age
          rad(k) = rm
          lumin(k) = lum
+         teff(k) = 1000.d0*((1130.d0*lumin(k)/
+     &                    (rad(k)**2.d0))**(1.d0/4.d0))
          massc(k) = mc
          radc(k) = rc
          menv(k) = me
@@ -331,12 +339,13 @@
          tbgb(k) = tscls(1)
 *
          if(tphys.lt.tiny.and.ospin(k).le.0.001d0)then
-            ospin(k) = 45.35d0*vrotf(mass(k))/rm
+            ospin(k) = 45.35d0*vrotf(mass(k),ST_tide)/rm
          endif
          jspin(k) = ospin(k)*(k2*rm*rm*(mass(k)-mc)+k3*rc*rc*mc)
          if(.not.sgl)then
             q(k) = mass(k)/mass(3-k)
             rol(k) = rl(q(k))*sep
+            if(ST_tide.gt.0) rol(k) = rl(q(k))*sep*(1.d0-ecc)
          endif
          rol0(k) = rol(k)
          dmr(k) = 0.d0
@@ -422,6 +431,7 @@
 *
             if(neta.gt.tiny)then
                rlperi = rol(k)*(1.d0-ecc)
+               if(ST_tide.gt.1) rlperi = rol(k)
                dmr(k) = mlwind(kstar(k),lumin(k),rad(k),mass(k),
      &                         massc(k),rlperi,z)
 *
@@ -518,6 +528,42 @@
          endif
 *
          do 502 , k = 1,2
+
+* Evaluate convective/radiative limits for a variety of stars as based
+* on the work of Belczynski et al. (2008). As option.
+* Note only certain stars of type k = 0, 1, 2, 4, 5, 6, 9 **double check
+* 0, 1 have range of 0.35-Mms,conv. Mms,conv is function of metalicity.
+* 2 & 4 have a temperature dependence. Convective if Teff < 10**3.73
+* 3, 5 & 6 are giants and have no radiative envelopes.
+* 9's envelope is convective when M < Mhe,conv, Mhe,conv = 3.0Msun.
+*
+            if(ST_cr.le.0)then
+               if(kstar(k).le.1)then
+                  convradcomp(k) = 1.25d0
+               else
+                  convradcomp(k) = 99999999.d0
+               endif
+            else
+               if(kstar(k).le.1)then
+*                 Main sequence mass limit varying with metallicity
+                  convradcomp(k) = 1.25d0
+                  if(z.gt.0.001d0.and.z.lt.0.02d0)then
+                     convradcomp(k) = 0.747d0 + 55.73d0*z - 1532*z*z
+                  elseif(z.le.0.001d0)then
+                     convradcomp(k) = 0.8d0
+                  endif
+               elseif(kstar(k).eq.2.or.kstar(k).eq.4)then
+*                 H-rich HG and CHeB temperature limit
+                  convradcomp(k) = 10.d0**3.73d0
+               elseif(kstar(k).le.6)then
+*                 No limit or all other giant stars 
+*                 (compare this large value to mass).
+                  convradcomp(k) = 99999999.d0
+               elseif(kstar(k).eq.9)then
+*                 Mass limit for evolved He star
+                  convradcomp(k) = 3.d0
+               endif
+            endif
 *
 * Calculate change in the intrinsic spin of the star.
 *
@@ -533,24 +579,54 @@
 *               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
 *               djspint(k) = djspint(k) + djmb
 *
-            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
-     &              menv(k).gt.0.0d0)then
-              if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
-     &              (ospin(k)/wsun)**3.0d0
-              if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
-     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
-              djspint(k) = djspint(k) + djmb
-
+*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+*     &              menv(k).gt.0.0d0)then
+*              if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &              (ospin(k)/wsun)**3.0d0
+*              if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+*              djspint(k) = djspint(k) + djmb
+            djmb = 0.d0
+            if(htpmb.eq.0)then
+* HTP02 method
+               if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
+                  djmb = 5.83d-16*menv(k)*
+     &                   (rad(k)*ospin(k))**3/mass(k)
+                  djspint(k) = djspint(k) + djmb
+               endif
+            else
+               if(ST_cr.le.0.and.mass(k).gt.0.35d0.and.
+     &            kstar(k).lt.10.and.menv(k).gt.0.0d0)then
+* Ivanova & Taam (2002) method
+                  if(ospin(k).le.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &                (ospin(k)/wsun)**3.0d0
+                  if(ospin(k).gt.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &                (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+                  djspint(k) = djspint(k) + djmb
+               elseif(ST_cr.gt.0.and.menv(k).gt.0.d0.and.
+     &            ((kstar(k).le.1.and.mass(k).gt.0.35d0.and.
+     &              mass(k).le.convradcomp(k)).or.
+     &              (kstar(k).eq.2.and.teff(k).le.convradcomp(k)).or.
+     &              (kstar(k).eq.4.and.teff(k).le.convradcomp(k)).or.
+     &              ((kstar(k).eq.3).or.(kstar(k).eq.5).or.
+     &              (kstar(k).eq.6))))then
+* Ivanova & Taam (2002) method
+                  if(ospin(k).le.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &               (ospin(k)/wsun)**3.0d0
+                  if(ospin(k).gt.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &               (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+                  djspint(k) = djspint(k) + djmb
+               endif
+            endif
 * Limit to a 3% angular momentum change for the star owing to MB. 
 * This is found to work best with the maximum iteration of 20000, 
 * i.e. does not create an excessive number of iterations, while not 
 * affecting the evolution outcome when compared with a 2% restriction.  
 *
-               if(djmb.gt.tiny)then
-                  dtj = 0.03d0*jspin(k)/ABS(djmb)
-                  dt = MIN(dt,dtj)
-                  if(output) write(*,*)'mb1:',tphys,dt,djmb,djt
-               endif
+            if(djmb.gt.tiny)then
+               dtj = 0.03d0*jspin(k)/ABS(djmb)
+               dt = MIN(dt,dtj)
+               if(output) write(*,*)'mb1:',tphys,dt,djmb,djt
             endif
 *
 * Calculate circularization, orbital shrinkage and spin up.
@@ -571,8 +647,9 @@
                f1 = 1.d0+ecc2*(15.5d0+ecc2*(31.875d0+ecc2*(11.5625d0
      &                  +ecc2*0.390625d0)))
 *
-               if((kstar(k).eq.1.and.mass(k).ge.1.25d0).or.
-     &            kstar(k).eq.4.or.kstar(k).eq.7)then
+               if(ST_cr.le.0.and.
+     &            ((kstar(k).eq.1.and.mass(k).ge.1.25d0).or.
+     &            kstar(k).eq.4.or.kstar(k).eq.7))then
 *
 * Radiative damping (Zahn, 1977, A&A, 57, 383 and 1975, A&A, 41, 329).
 *
@@ -581,6 +658,20 @@
      &                tc*(1.d0+q(3-k))**(5.d0/6.d0)
                   tcqr = f*q(3-k)*raa6
                   rg2 = k2str(k)
+               elseif(ST_cr.gt.0.and.
+     &                ((kstar(k).le.1.and.mass(k).gt.convradcomp(k)).or.
+     &           (kstar(k).eq.2.and.teff(k).gt.convradcomp(k)).or.
+     &           (kstar(k).eq.4.and.teff(k).gt.convradcomp(k)).or.
+     &           (kstar(k).eq.9.and.mass(k).gt.convradcomp(k)).or.
+     &           (kstar(k).eq.7).or.(kstar(k).eq.8)))then
+*
+* Radiative damping (Zahn, 1977, A&A, 57, 383 and 1975, A&A, 41, 329).
+*
+                  tc = 1.592d-09*(mass(k)**2.84d0)
+                  f = 1.9782d+04*SQRT((mass(k)*rad(k)*rad(k))/sep**5)*
+     &                tc*(1.d0+q(3-k))**(5.d0/6.d0)
+                  tcqr = f*q(3-k)*raa6
+                  rg2 = k2str(k) !for startrack comparison this should be =0.31622777d0 (sqrt(0.1)).
                elseif(kstar(k).le.9)then
 *
 * Convective damping (Hut, 1981, A&A, 99, 126).
@@ -588,10 +679,10 @@
                   tc = mr23yr*(menv(k)*renv(k)*(rad(k)-0.5d0*renv(k))/
      &                 (3.d0*lumin(k)))**(1.d0/3.d0)
                   ttid = twopi/(1.0d-10 + ABS(oorb - ospin(k)))
-                  f = MIN(1.d0,(ttid/(2.d0*tc)**2))
+                  f = MIN(1.d0,(ttid/(2.d0*tc))**2)
                   tcqr = 2.d0*f*q(3-k)*raa6*menv(k)/(21.d0*tc*mass(k))
                   rg2 = (k2str(k)*(mass(k)-massc(k)))/mass(k)
-               else
+               elseif(ST_tide.le.0)then
 *
 * Degenerate damping (Campbell, 1984, MNRAS, 207, 433)
 *
@@ -651,22 +742,94 @@
             dmt(k) = 0.d0
             djspint(k) = (2.d0/3.d0)*dmr(k)*rad(k)*rad(k)*ospin(k)
             if(output) write(*,*)'503 1:',k,djspint(k)
+*
+* Evaluate convective/radiative limits for a variety of stars as based
+* on the work of Belczynski et al. (2008). As option.
+* Note only certain stars of type k = 0, 1, 2, 4, 5, 6, 9 **double check
+* 0, 1 have range of 0.35-Mms,conv. Mms,conv is function of metalicity.
+* 2 & 4 have a temperature dependence. Convective if Teff < 10**3.73
+* 3, 5 & 6 are giants and have no radiative envelopes.
+* 9's envelope is convective when M < Mhe,conv, Mhe,conv = 3.0Msun.
+*
+            if(ST_cr.le.0)then
+               if(kstar(k).le.1)then
+                  convradcomp(k) = 1.25d0
+               else
+                  convradcomp(k) = 99999999.d0
+               endif
+            else
+               if(kstar(k).le.1)then
+*                 Main sequence mass limit varying with metallicity
+                  convradcomp(k) = 1.25d0
+                  if(z.gt.0.001d0.and.z.lt.0.02d0)then
+                     convradcomp(k) = 0.747d0 + 55.73d0*z - 1532*z*z
+                  elseif(z.le.0.001d0)then
+                     convradcomp(k) = 0.8d0
+                  endif
+               elseif(kstar(k).eq.2.or.kstar(k).eq.4)then
+*                 H-rich HG and CHeB temperature limit
+                  convradcomp(k) = 10.d0**3.73d0
+               elseif(kstar(k).le.6)then
+*                 No limit or all other giant stars 
+*                 (compare this large value to mass).
+                  convradcomp(k) = 99999999.d0
+               elseif(kstar(k).eq.9)then
+*                 Mass limit for evolved He star
+                  convradcomp(k) = 3.d0
+               endif
+            endif
 *            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
 *               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
 *               djspint(k) = djspint(k) + djmb
-             if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
-     &              menv(k).gt.0.0d0)then
-                if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
-     &              (ospin(k)/wsun)**3.0d0
-                if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*             if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+*     &              menv(k).gt.0.0d0)then
+*                if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &              (ospin(k)/wsun)**3.0d0
+*                if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+*                djspint(k) = djspint(k) + djmb
+*
+*MB
+            djmb = 0.d0
+            if(htpmb.eq.0)then
+               if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
+                  djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
+                  djspint(k) = djspint(k) + djmb
+               endif
+            else
+               if(ST_cr.le.0.and.
+     &            mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+     &            menv(k).gt.0.0d0)then
+* Old BSE convective/radiative divide...
+                   if(ospin(k).le.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &                 (ospin(k)/wsun)**3.0d0
+                   if(ospin(k).gt.wx) djmb = kw3 * rad(k)**4.0d0 *
      &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
-                djspint(k) = djspint(k) + djmb
-                if(output) write(*,*)'503 2:',k,djspint(k),djmb
-                if(djmb.gt.tiny)then
-                  dtj = 0.03d0*jspin(k)/ABS(djmb)
-                  dt = MIN(dt,dtj)
+                   djspint(k) = djspint(k) + djmb
+               elseif(ST_cr.gt.0.and.(menv(k).gt.0.d0.and.
+     &            ((kstar(k).le.1.and.mass(k).gt.0.35d0.and.
+     &              mass(k).le.convradcomp(k)).or.
+     &              (kstar(k).eq.2.and.teff(k).le.convradcomp(k)).or.
+     &              (kstar(k).eq.4.and.teff(k).le.convradcomp(k)).or.
+     &              ((kstar(k).eq.3).or.(kstar(k).eq.5).or.
+     &              (kstar(k).eq.6)))))then
+* MB given in Ivanova & Taam (2002)
+*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+*     &              menv(k).gt.0.0d0)then
+                  if(ospin(k).le.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &                (ospin(k)/wsun)**3.0d0
+                  if(ospin(k).gt.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &               (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+                  djspint(k) = djspint(k) + djmb
                endif
             endif
+
+*                if(output) write(*,*)'503 2:',k,djspint(k),djmb
+            if(djmb.gt.tiny)then
+               dtj = 0.03d0*jspin(k)/ABS(djmb)
+               dt = MIN(dt,dtj)
+            endif
+*            endif
  503     continue
          dtm = dt/1.0d+06
       endif
@@ -829,7 +992,7 @@
             endif
          endif
          CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
-     &               rm,lum,kw,mc,rc,me,re,k2,
+     &               rm,lum,kw,mc,rc,me,re,k2,ST_tide,
      &               ecsnp,ecsn_mlow)
 *
          if(kw.ne.15)then
@@ -1010,6 +1173,8 @@
          kstar(k) = kw
          rad(k) = rm
          lumin(k) = lum
+         teff(k) = 1000.d0*((1130.d0*lumin(k)/
+     &                    (rad(k)**2.d0))**(1.d0/4.d0))
          massc(k) = mc
          radc(k) = rc
          menv(k) = me
@@ -1049,6 +1214,7 @@
 *
          do 507 , k = 1,2
             rol(k) = rl(q(k))*sep
+            if(ST_tide.gt.0) rol(k) = rl(q(k))*sep*(1.d0-ecc)
             if(ABS(dtm).gt.tiny)then
                rdot(k) = rdot(k) + (rol(k) - rol0(k))/dtm
                rol0(k) = rol(k)
@@ -1270,6 +1436,29 @@
 *    &                k3*radc(j1)*radc(j1)*massc(j1))*ospin(j1)
 *     endif
 *
+      if(ST_tide.gt.0)then
+         sep = sep*(1-ecc)
+         ecc = 0.d0
+         tb = (sep/aursun)*SQRT(sep/(aursun*(mass(1)+mass(2))))
+         oorb = twopi/tb
+         jorb = (mass(1)*mass(2)/(mass(1)+mass(2)))*
+     &          sqrt(1.d0-ecc*ecc)*sep*sep*oorb
+* Note: this will modify pulsar spin period
+         if(kstar(1).lt.13)then
+            ospin(1) = oorb
+            jspin(1) = (k2str(1)*rad(1)*rad(1)*(mass(1)-massc(1))+
+     &                   k3*radc(1)*radc(1)*massc(1))*ospin(1)
+         endif
+         if(kstar(2).lt.13)then
+            ospin(2) = oorb
+            jspin(2) = (k2str(2)*rad(2)*rad(2)*(mass(2)-massc(2))+
+     &                   k3*radc(2)*radc(2)*massc(2))*ospin(2)
+         endif
+         km0 = dtm0*1.0d+03/tb
+         if(km0.lt.tiny) km0 = 0.5d0
+         rol(1) = rl(q(1))*sep !okay like this 'cos sep is peri. dist.
+         rol(2) = rl(q(2))*sep
+      endif
       iter = 0
       coel = .false.
       change = .false.
@@ -1479,7 +1668,7 @@
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
      &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick,ecsnp,ecsn_mlow,
-     &               formation(j1),formation(j2))
+     &               formation(j1),formation(j2),ST_tide)
          if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
      &      kstar(j1).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
@@ -1984,16 +2173,87 @@
      &                   xi*dmt(k)*radx(3-k)*radx(3-k)*ospin(3-k))
             djspint(k) = djspint(k)*dt
 *
+* Evaluate convective/radiative limits for a variety of stars as based
+* on the work of Belczynski et al. (2008). As option.
+* Note only certain stars of type k = 0, 1, 2, 4, 5, 6, 9 **double check
+* 0, 1 have range of 0.35-Mms,conv. Mms,conv is function of metalicity.
+* 2 & 4 have a temperature dependence. Convective if Teff < 10**3.73
+* 3, 5 & 6 are giants and have no radiative envelopes.
+* 9's envelope is convective when M < Mhe,conv, Mhe,conv = 3.0Msun.
+*
+            if(ST_cr.le.0)then
+               if(kstar(k).le.1)then
+                  convradcomp(k) = 1.25d0
+               else
+                  convradcomp(k) = 9999999999.d0 !doesn't work well with startrack_tide = .false.
+               endif
+            else
+               if(kstar(k).le.1)then
+*                 Main sequence mass limit varying with metallicity
+                  convradcomp(k) = 1.25d0
+                  if(z.gt.0.001d0.and.z.lt.0.02d0)then
+                     convradcomp(k) = 0.747d0 + 55.73d0*z - 1532*z*z
+                  elseif(z.le.0.001d0)then
+                     convradcomp(k) = 0.8d0
+                  endif
+               elseif(kstar(k).eq.2.or.kstar(k).eq.4)then
+*                 H-rich HG and CHeB temperature limit
+                  convradcomp(k) = 10.d0**3.73d0
+               elseif(kstar(k).le.6)then
+*                 No limit or all other giant stars 
+*                 (compare this large value to mass).
+                  convradcomp(k) = 9999999999.d0
+               elseif(kstar(k).eq.9)then
+*                 Mass limit for evolved He star
+                  convradcomp(k) = 3.d0
+               endif
+            endif
+*
 *            if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
 *               djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
 *               djspint(k) = djspint(k) + djmb*dt
-            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
-     &              menv(k).gt.0.0d0)then
-                if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
-     &              (ospin(k)/wsun)**3.0d0
-                if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
-     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
-                djspint(k) = djspint(k) + djmb               
+*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+*     &              menv(k).gt.0.0d0)then
+*                if (ospin(k) .le. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &              (ospin(k)/wsun)**3.0d0
+*                if (ospin(k) .gt. wx) djmb = kw3 * rad(k)**4.0d0 * 
+*     &             (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+*                djspint(k) = djspint(k) + djmb               
+*            endif
+* MB
+            djmb = 0.d0
+            if(htpmb.eq.0)then
+* HTP02 method
+               if(mass(k).gt.0.35d0.and.kstar(k).lt.10)then
+                  djmb = 5.83d-16*menv(k)*(rad(k)*ospin(k))**3/mass(k)
+                  djspint(k) = djspint(k) + djmb*dt
+               endif
+            else
+               if(ST_cr.le.0.and.
+     &            (mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+     &            menv(k).gt.0.0d0))then
+* Ivanova & Taam (2003)
+                   if (ospin(k).le.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &                 (ospin(k)/wsun)**3.0d0
+                   if (ospin(k).gt.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &                (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+                   djspint(k) = djspint(k) + djmb
+               elseif(ST_cr.gt.0.and.(menv(k).gt.0.d0.and.
+     &            ((kstar(k).le.1.and.mass(k).gt.0.35d0.and.
+     &              mass(k).le.convradcomp(k)).or.
+     &              (kstar(k).eq.2.and.teff(k).le.convradcomp(k)).or.
+     &              (kstar(k).eq.4.and.teff(k).le.convradcomp(k)).or.
+     &              ((kstar(k).eq.3).or.(kstar(k).eq.5).or.
+     &              (kstar(k).eq.6)))))then
+* MB given in Ivanova & Taam (2003)
+*            if(mass(k).gt.0.35d0.and.kstar(k).lt.10.and.
+*     &              menv(k).gt.0.0d0)then
+                  if(ospin(k).le.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &                (ospin(k)/wsun)**3.0d0
+                  if(ospin(k).gt.wx) djmb = kw3 * rad(k)**4.0d0 *
+     &               (ospin(k)/wsun)**1.3d0 * (wx/wsun)**1.7d0
+                  djspint(k) = djspint(k) + djmb
+               endif
             endif
 *
  602     continue
@@ -2041,6 +2301,42 @@
 *
          do 603 , k = 1,2
 *
+* Evaluate convective/radiative limits for a variety of stars as based
+* on the work of Belczynski et al. (2008). As option.
+* Note only certain stars of type k = 0, 1, 2, 4, 5, 6, 9 **double check
+* 0, 1 have range of 0.35-Mms,conv. Mms,conv is function of metalicity.
+* 2 & 4 have a temperature dependence. Convective if Teff < 10**3.73
+* 3, 5 & 6 are giants and have no radiative envelopes.
+* 9's envelope is convective when M < Mhe,conv, Mhe,conv = 3.0Msun.
+*
+            if(ST_cr.le.0)then
+               if(kstar(k).le.1)then
+                  convradcomp(k) = 1.25d0
+               else
+                  convradcomp(k) = 99999999.d0
+               endif
+            else
+               if(kstar(k).le.1)then
+*                 Main sequence mass limit varying with metallicity
+                  convradcomp(k) = 1.25d0
+                  if(z.gt.0.001d0.and.z.lt.0.02d0)then
+                     convradcomp(k) = 0.747d0 + 55.73d0*z - 1532*z*z
+                  elseif(z.le.0.001d0)then
+                     convradcomp(k) = 0.8d0
+                  endif
+               elseif(kstar(k).eq.2.or.kstar(k).eq.4)then
+*                 H-rich HG and CHeB temperature limit
+                  convradcomp(k) = 10.d0**3.73d0
+               elseif(kstar(k).le.6)then
+*                 No limit or all other giant stars 
+*                 (compare this large value to mass).
+                  convradcomp(k) = 99999999.d0
+               elseif(kstar(k).eq.9)then
+*                 Mass limit for evolved He star
+                  convradcomp(k) = 3.d0
+               endif
+            endif
+*
             dspint(k) = 0.d0
             if(((kstar(k).le.9.and.rad(k).ge.0.01d0*rol(k)).or.
      &         (kstar(k).ge.10.and.k.eq.j1)).and.tflag.gt.0)then
@@ -2055,14 +2351,33 @@
                f1 = 1.d0+ecc2*(15.5d0+ecc2*(31.875d0+ecc2*(11.5625d0
      &                  +ecc2*0.390625d0)))
 *
-               if((kstar(k).eq.1.and.mass(k).ge.1.25d0).or.
-     &            kstar(k).eq.4.or.kstar(k).eq.7)then
+               if(ST_cr.le.0.and.
+     &            ((kstar(k).eq.1.and.mass(k).ge.1.25d0).or.
+     &            kstar(k).eq.4.or.kstar(k).eq.7))then
+*
+* Radiative damping (Zahn, 1977, A&A, 57, 383 and 1975, A&A, 41, 329).
+*
                   tc = 1.592d-09*(mass(k)**2.84d0)
                   f = 1.9782d+04*SQRT((mass(k)*radx(k)*radx(k))/sep**5)*
      &                tc*(1.d0+q(3-k))**(5.d0/6.d0)
                   tcqr = f*q(3-k)*raa6
                   rg2 = k2str(k)
+               elseif(ST_cr.gt.0.and.
+     &                ((kstar(k).le.1.and.mass(k).gt.convradcomp(k)).or.
+     &           (kstar(k).eq.2.and.teff(k).gt.convradcomp(k)).or.
+     &           (kstar(k).eq.4.and.teff(k).gt.convradcomp(k)).or.
+     &           (kstar(k).eq.9.and.mass(k).gt.convradcomp(k)).or.
+     &           (kstar(k).eq.7).or.(kstar(k).eq.8)))then
+*
+* Radiative damping (Zahn, 1977, A&A, 57, 383 and 1975, A&A, 41, 329).
+*
+                  tc = 1.592d-09*(mass(k)**2.84d0)
+                  f = 1.9782d+04*SQRT((mass(k)*rad(k)*rad(k))/sep**5)*
+     &                tc*(1.d0+q(3-k))**(5.d0/6.d0)
+                  tcqr = f*q(3-k)*raa6
+                  rg2 = k2str(k)
                elseif(kstar(k).le.9)then
+* Convective damping
                   renv(k) = MIN(renv(k),radx(k)-radc(k))
                   renv(k) = MAX(renv(k),1.0d-10)
                   tc = mr23yr*(menv(k)*renv(k)*(radx(k)-0.5d0*renv(k))/
@@ -2071,7 +2386,8 @@
                   f = MIN(1.d0,(ttid/(2.d0*tc)**2))
                   tcqr = 2.d0*f*q(3-k)*raa6*menv(k)/(21.d0*tc*mass(k))
                   rg2 = (k2str(k)*(mass(k)-massc(k)))/mass(k)
-               else
+               elseif(ST_tide.le.0)then
+*Degenerate damping
                   f = 7.33d-09*(lumin(k)/mass(k))**(5.d0/7.d0)
                   tcqr = f*q(3-k)*q(3-k)*raa2*raa2/(1.d0+q(3-k))
                   rg2 = k3
@@ -2226,7 +2542,7 @@
             endif
          endif
          CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
-     &               rm,lum,kw,mc,rc,me,re,k2,ecsnp,ecsn_mlow)
+     &               rm,lum,kw,mc,rc,me,re,k2,ST_tide,ecsnp,ecsn_mlow)
 *
 * Check for a supernova and correct the semi-major axis if so.
 *
@@ -2330,6 +2646,8 @@
          rad(k) = rm
          radx(k) = rm
          lumin(k) = lum
+         teff(k) = 1000.d0*((1130.d0*lumin(k)/
+     &                    (rad(k)**2.d0))**(1.d0/4.d0))
          massc(k) = mc
          radc(k) = rc
          menv(k) = me
@@ -2360,6 +2678,7 @@
       do 100 , k = 1,2
          q(k) = mass(k)/mass(3-k)
          rol(k) = rl(q(k))*sep
+         if(ST_tide.gt.0) rol(k) = rl(q(k))*sep*(1.d0-ecc)
  100  continue
       if(rad(j1).gt.rol(j1)) radx(j1) = MAX(radc(j1),rol(j1))
       do 110 , k = 1,2
@@ -2497,7 +2816,7 @@
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
      &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick,ecsnp,ecsn_mlow,
-     &               formation(j1),formation(j2))
+     &               formation(j1),formation(j2),ST_tide)
          if(output) write(*,*)'coal1:',tphys,kstar(j1),kstar(j2),coel,
      & mass(j1),mass(j2)
          if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
@@ -2518,7 +2837,7 @@
      &               kstar(j2),mass0(j1),mass(j1),massc(j1),aj(j1),
      &               jspin(j1),kstar(j1),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick,ecsnp,ecsn_mlow,
-     &               formation(j1),formation(j2))
+     &               formation(j1),formation(j2),ST_tide)
          if(output) write(*,*)'coal2:',tphys,kstar(j1),kstar(j2),coel,
      & mass(j1),mass(j2)
          if(j2.eq.2.and.kcomp1.eq.13.and.kstar(j1).eq.15.and.

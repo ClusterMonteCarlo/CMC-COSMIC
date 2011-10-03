@@ -505,7 +505,7 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew);
 void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid);
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid);
 double r_of_m(double M);
-void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow);
+void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide);
 
 /* Fewbody stuff */
 void destroy_obj(long i);
