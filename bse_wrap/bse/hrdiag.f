@@ -1,6 +1,6 @@
 ***
       SUBROUTINE hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
-     &                  r,lum,kw,mc,rc,menv,renv,k2,
+     &                  r,lum,kw,mc,rc,menv,renv,k2,ST_tide,
      &                  ecsnp,ecsn_mlow)
 *
 *
@@ -23,7 +23,7 @@
       implicit none
 *
       integer kw,kwp
-      INTEGER ceflag,tflag,ifflag,nsflag,wdflag
+      INTEGER ceflag,tflag,ifflag,nsflag,wdflag,ST_tide
       COMMON /FLAGS/ ceflag,tflag,ifflag,nsflag,wdflag
 *
       real*8 mass,aj,mt,tm,tn,tscls(20),lums(10),GB(10),zpars(20)
@@ -875,6 +875,18 @@ C      if(mt0.gt.100.d0) mt = 100.d0
       if(kw.lt.10)then
          CALL mrenv(kw,mass,mt,mc,lum,r,rc,aj,tm,lums(2),lums(3),
      &              lums(4),rzams,rtms,rg,menv,renv,k2)
+      endif
+*
+      if(ST_tide.gt.0)then
+         if(kw.le.2.or.kw.eq.7.or.kw.ge.10)then
+            if(mt.le.1.d0)then
+               k2 = 0.205d0
+            else
+               k2 = 0.075d0
+            endif
+         else
+           k2 = 0.1d0
+         endif
       endif
 *
 C      if(mass.gt.99.99d0)then

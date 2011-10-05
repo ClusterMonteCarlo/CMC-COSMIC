@@ -26,7 +26,7 @@ int main(void)
 {
   int i, kw;
   double mass, mt, rad, lum, mc, rc;
-  double menv, renv, ospin, epoch, tms, tphys;
+  double menv, renv, ospin, B_0, bacc, tacc, epoch, tms, tphys;
   double tphysf, dtp, z=0.001, *zpars;
   double vs[12];
 
@@ -42,6 +42,8 @@ int main(void)
   bse_set_bhflag(0);
   bse_set_nsflag(1);
   bse_set_mxns(3.0);
+  bse_set_bconst(-3000.0);
+  bse_set_CK(-1000.0);
   bse_set_pts1(0.05);
   bse_set_pts2(0.01);
   bse_set_pts3(0.02);
@@ -53,6 +55,9 @@ int main(void)
   mt = mass;
   kw = 1;
   ospin = 0.0;
+  B_0 = 0.0;
+  bacc = 0.0;
+  tacc = 0.0;
   epoch = 0.0;
   tphys = 0.0;
   tphysf = 100.0;

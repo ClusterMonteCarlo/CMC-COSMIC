@@ -56,6 +56,7 @@ void evolv1_(int *kw, double *mass, double *mt, double *r, double *lum,
 	     double *dtp, double *z, double *zpars, double *vs);
 void evolv2_(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 	     double *massc, double *radc, double *menv, double *renv, double *ospin,
+             double *B_0, double *bacc, double *tacc,
 	     double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 	     double *z, double *zpars, double *tb, double *ecc, double *vs);
 void instar_(void);
@@ -83,10 +84,12 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
 		       double *dtp, double *z, double *zpars, double *vs);
 void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
+                double *B_0, double *bacc, double *tacc,
 		double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		double *z, double *zpars, double *tb, double *ecc, double *vs);
 void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		       double *massc, double *radc, double *menv, double *renv, double *ospin,
+                       double *B_0, double *bacc, double *tacc,
 		       double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		       double *z, double *zpars, double *tb, double *ecc, double *vs);
 void bse_instar(void);
@@ -109,7 +112,7 @@ extern struct { int ktype[15][15]; } types_;
 extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
 extern struct { double neta, bwind, hewind, mxns; int windflag; } value1_;
 extern struct { double alpha1, lambda; } value2_;
-extern struct { double sigma; int bhflag; } value4_;
+extern struct { double sigma; double bconst; double CK; int bhflag; } value4_;
 extern struct { double beta, xi, acc2, epsnov, eddfac, gamma; } value5_;
 extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
@@ -129,6 +132,8 @@ void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for 
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
 void bse_set_nsflag(int nsflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_mxns(double mxns); /* maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1) */
+void bse_set_bconst(double bconst); /* isolated pulsar field decay timescale */
+void bse_set_CK(double CK); /* Pulsar mass accretion field decay factor */
 void bse_set_pts1(double pts1); /* timestep taken in MS phase (0.05) */
 void bse_set_pts2(double pts2); /* timestep taken in GB, CHeB, AGB, HeGB phases (0.01) */
 void bse_set_pts3(double pts3); /* timestep taken in HG, HeMS phases (0.02) */

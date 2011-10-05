@@ -88,12 +88,17 @@ typedef struct{
 	double bse_menv[2];
 	double bse_renv[2];
 	double bse_ospin[2]; /* original spin */
+        double bse_B_0[2]; /* Pulsar magnetic field */
+        double bse_bacc[2]; /* Amount of mass pulsar has accreted */
+        double bse_tacc[2]; /* Amount of time pulsar has spent accreting */
 	double bse_epoch[2];
 	double bse_tms[2];
 	double bse_tphys; /* physical time */
 	double bse_tb; /* binary orbital period */
 	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
 	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
+        double bse_bcm_B[2]; /* Pulsar magnetic field strength at surface */
+        double bse_bcm_formation[2]; /* provides formation pathway of NS */
 	//Sourav:toy rejuvenation variables
 	double lifetime_m1; /*Sourav: lifetime of star1*/
 	double lifetime_m2; /*Sourav: lifetime of star2*/
@@ -142,6 +147,9 @@ typedef struct{
 	int se_k;
 	double se_mt;
 	double se_ospin;
+        double se_B_0; /* Pulsar initial magentif field */
+        double se_bacc;
+        double se_tacc;
 	double se_epoch;
 	double se_tphys;
 	double se_radius;
@@ -151,6 +159,8 @@ typedef struct{
 	double se_menv;
 	double se_renv;
 	double se_tms;
+        double se_scm_B; /* Pulsar surface magnetic field */
+        double se_scm_formation; /* formation pathway of NS */
 	//Sourav: toy rejuvenation variables
 	double createtime, createtimenew, createtimeold;
 	double lifetime, lifetimeold, lifetimenew;

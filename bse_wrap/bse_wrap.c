@@ -118,6 +118,7 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
 /* evolve a binary */
 void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
+                double *B_0, double *bacc, double *tacc,
 		double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		double *z, double *zpars, double *tb, double *ecc, double *vs)
 {
@@ -129,7 +130,7 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
   for(i=0;i<=11;i++) {
       vs[i] = 0.0;
   }
-  evolv2_(kstar, mass0, mass, rad, lum, massc, radc, menv, renv, ospin,
+  evolv2_(kstar, mass0, mass, rad, lum, massc, radc, menv, renv, ospin, B_0, bacc, tacc,
 	  epoch, tms, tphys, tphysf, dtp, z, zpars, tb, ecc, vs);
 }
 
@@ -137,11 +138,12 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
 /* leading to crazy things like NaN radii---this is the easiest way to get around that problem */
 void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		       double *massc, double *radc, double *menv, double *renv, double *ospin,
+                       double *B_0, double *bacc, double *tacc,
 		       double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		       double *z, double *zpars, double *tb, double *ecc, double *vs)
 {
   int mykstar[2], kattempt=-1, j, i;
-  double mymass0[2], mymass[2], myrad[2], mylum[2], mymassc[2], myradc[2], mymenv[2], myrenv[2], myospin[2], myepoch[2];
+  double mymass0[2], mymass[2], myrad[2], mylum[2], mymassc[2], myradc[2], mymenv[2], myrenv[2], myospin[2], myB_0[2], mybacc[2], mytacc[2], myepoch[2];
   double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[12];
 
   //  do {
@@ -157,6 +159,9 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
       mymenv[j] = menv[j];
       myrenv[j] = renv[j];
       myospin[j] = ospin[j];
+      myB_0[j] = B_0[j]; /* PK */
+      mybacc[j] = bacc[j];
+      mytacc[j] = tacc[j];
       myepoch[j] = epoch[j];
       mytms[j] = tms[j];
     }
@@ -171,7 +176,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
     }
     mytb = *tb;
     myecc = *ecc;
-    bse_evolv2(mykstar, mymass0, mymass, myrad, mylum, mymassc, myradc, mymenv, myrenv, myospin,
+    bse_evolv2(mykstar, mymass0, mymass, myrad, mylum, mymassc, myradc, mymenv, myrenv, myospin, myB_0, mybacc, mytacc,
 	       myepoch, mytms, &mytphys, &mytphysf, &mydtp, z, zpars, &mytb, &myecc, myvs);
     /*
   } while ((isnan(myrad[0]) || mymassc[0] < 0.0 || mymass[0] < 0.0 || mymass0[0] < 0.0 || mylum[0] < 0.0 || 
@@ -233,6 +238,9 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
       menv[j] = mymenv[j];
       renv[j] = myrenv[j];
       ospin[j] = myospin[j];
+      B_0[j] = myB_0[j];
+      bacc[j] = mybacc[j];
+      tacc[j] = mytacc[j];
       epoch[j] = myepoch[j];
       tms[j] = mytms[j];
     }
@@ -506,7 +514,9 @@ void bse_set_ifflag(int ifflag) { flags_.ifflag = ifflag; }
 void bse_set_wdflag(int wdflag) { flags_.wdflag = wdflag; }
 void bse_set_bhflag(int bhflag) { value4_.bhflag = bhflag; }
 void bse_set_nsflag(int nsflag) { flags_.nsflag = nsflag; }
-void bse_set_mxns(double mxns) { value1_.mxns = mxns; }
+void bse_set_mxns(double mxns) { value1_.mxns = mxns;} 
+void bse_set_bconst(double bconst) { value4_.bconst = bconst; }
+void bse_set_CK(double CK) {value4_.CK = CK;}
 void bse_set_pts1(double pts1) { points_.pts1 = pts1; }
 void bse_set_pts2(double pts2) { points_.pts2 = pts2; }
 void bse_set_pts3(double pts3) { points_.pts3 = pts3; }
