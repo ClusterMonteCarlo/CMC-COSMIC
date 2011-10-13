@@ -141,7 +141,7 @@ void stellar_evolution_init(void){
 					&(tempbinary.bse_tb), &(tempbinary.e), vs);
 
 			//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
-			zero_out_array(vs, 12);
+			//zero_out_array(vs, 12);
 
 			star[k].se_mass = tempbinary.bse_mass0[0];
 			star[k].se_k = tempbinary.bse_kw[0];
@@ -220,7 +220,7 @@ void stellar_evolution_init(void){
 					&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 					&(binary[kb].bse_tb), &(binary[kb].e), vs);
 			//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
-			zero_out_array(vs, 12);
+			//zero_out_array(vs, 12);
 
 			handle_bse_outcome(k, kb, vs, tphysf);
 		} else {
@@ -326,12 +326,6 @@ void do_stellar_evolution(gsl_rng *rng)
 					&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 					&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
 				 */
-	if(binary[star[k].binind].id1 == 2259 || binary[star[k].binind].id2 == 2259)
-#ifdef USE_MPI
-		printf("vr=%.18g vt=%.18g m=%.18g\n", star[k].vr, star[k].vt, star_m[k]);
-#else
-		printf("vr=%.18g vt=%.18g m=%.18g\n", star[k].vr, star[k].vt, star[k].m);
-#endif
 				bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 						&(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 						&(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -341,7 +335,7 @@ void do_stellar_evolution(gsl_rng *rng)
 						&(tempbinary.bse_tb), &(tempbinary.e), vs);
 
 				//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
-				zero_out_array(vs, 12);
+				//zero_out_array(vs, 12);
 
 				star[k].se_mass = tempbinary.bse_mass0[0];
 				star[k].se_k = tempbinary.bse_kw[0];
@@ -433,22 +427,8 @@ void do_stellar_evolution(gsl_rng *rng)
 						&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 						&(binary[kb].bse_tb), &(binary[kb].e), vs);
 
-	if(binary[star[k].binind].id1 == 2259 || binary[star[k].binind].id2 == 2259)
-#ifdef USE_MPI
-		printf("vr=%.18g vt=%.18g m=%.18g\n", star[k].vr, star[k].vt, star_m[k]);
-#else
-		printf("vr=%.18g vt=%.18g m=%.18g\n", star[k].vr, star[k].vt, star[k].m);
-#endif
 				//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
-				zero_out_array(vs, 12);
-
-	if(binary[star[k].binind].id1 == 2259 || binary[star[k].binind].id2 == 2259)
-	{
-		int j;
-		for(j=0; j<11; j++)
-			printf("vs[%d]=%.18g\t", j, vs[j]);
-		printf("\n");
-	}
+				//zero_out_array(vs, 12);
 
 				if(isnan(binary[kb].bse_radius[0])){
 					fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");

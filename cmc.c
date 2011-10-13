@@ -30,6 +30,8 @@ int main(int argc, char *argv[])
 	//MPI2: Some variables to assist debugging
 	char num[5],filename[20], tempstr[20];
 
+	clock_t t1=clock();
+
 #ifdef USE_MPI
 	//MPI2: Some code from the main branch might have been removed in the MPI version. Please check.
 	//MPI2: At some point, change all loops to run between 2 variables: Begin to End, which will be decided based on if it is MPI or not.
@@ -225,19 +227,6 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 
-#ifdef USE_MPI
-		for( i = mpiBegin; i <= mpiEnd; i++ )
-#else
-		for(i=0; i<clus.N_MAX_NEW; i++)
-#endif
-			if(binary[star[i].binind].id1 == 2259 || binary[star[i].binind].id2 == 2259)
-#ifdef USE_MPI
-				printf("vr=%.18g vt=%.18g m=%.18g\n", star[i].vr, star[i].vt, star_m[i]);
-#else
-		printf("vr=%.18g vt=%.18g m=%.18g\n", star[i].vr, star[i].vt, star[i].m);
-#endif
-
-
 		/* evolve stars up to new time */
 		DMse = 0.0;
 #ifndef USE_MPI
@@ -249,17 +238,6 @@ int main(int argc, char *argv[])
 		if (STELLAR_EVOLUTION > 0)
 			do_stellar_evolution(rng);
 
-#ifdef USE_MPI
-		for( i = mpiBegin; i <= mpiEnd; i++ )
-#else
-		for(i=0; i<clus.N_MAX_NEW; i++)
-#endif
-	if(binary[star[i].binind].id1 == 2259 || binary[star[i].binind].id2 == 2259)
-#ifdef USE_MPI
-		printf("vr=%.18g vt=%.18g m=%.18g\n", star[i].vr, star[i].vt, star_m[i]);
-#else
-		printf("vr=%.18g vt=%.18g m=%.18g\n", star[i].vr, star[i].vt, star[i].m);
-#endif
 		Prev_Dt = Dt;
 
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
@@ -388,7 +366,17 @@ int main(int argc, char *argv[])
 		}		
 	} /* End WHILE (time step iteration loop) */
 
+	mpi_files_merge();
+
 	times(&tmsbuf);
+
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	{
+		clock_t t2=clock();
+		printf("%.4lf seconds of processing\n", (t2-t1)/(double)CLOCKS_PER_SEC);
+	}
 
 	dprintf("Usr time = %.6e ", (double)
 			(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));

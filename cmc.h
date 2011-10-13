@@ -508,6 +508,11 @@ void collect_bin_data();
 void alloc_bin_buf();
 /* End */
 
+/* Function to handle I/O in parallel version */
+void cat_and_rm_files(char* file_ext);
+void mpi_files_merge();
+/* End */
+
 void comp_mass_percent(void);
 void comp_multi_mass_percent(void);
 orbit_rs_t calc_orbit_rs(long si, double E, double J);

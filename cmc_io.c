@@ -41,9 +41,9 @@ void print_results(void){
 #endif
 	PrintLogOutput();
 	//MPI2: Commenting out for MPI
-#ifndef USE_MPI
+//#ifndef USE_MPI
 	PrintFileOutput();
-#endif
+//#endif
 	fflush(NULL);
 }
 
@@ -517,10 +517,14 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		cmc_print_usage(stdout, argv);
 		exit(0);
 	}
-	
+
 	/* set inputfile and outprefix now that the options have been parsed */
 	sprintf(inputfile, "%s", argv[optind]);
 	sprintf(outprefix, "%s", argv[optind+1]);
+#ifdef USE_MPI
+	strcpy(outprefix_bak, outprefix);
+	sprintf(outprefix, "%s%d", outprefix, myid);
+#endif
 	dprintf("inputfile=%s outprefix=%s\n", inputfile, outprefix);
 
 	/*======= Opening of input & output files =======*/
@@ -1230,7 +1234,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	fprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 	fprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 
-
 	/* Relaxation data file */
 	sprintf(outfile, "%s.relaxation.dat", outprefix);
 	if ((relaxationfile = fopen(outfile, outfilemode)) == NULL) {
@@ -1250,18 +1253,18 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		}
 	}
         
-        /* File that contains data for various definitions of core radii */
-        if (WRITE_EXTRA_CORE_INFO) {
-          sprintf(outfile, "%s.core.dat", outprefix);
-          if ((corefile = fopen(outfile, outfilemode)) == NULL) {
-            eprintf("cannot create output file \"%s\".\n", outfile);
-            exit(1);
-          }
+	/* File that contains data for various definitions of core radii */
+	if (WRITE_EXTRA_CORE_INFO) {
+		sprintf(outfile, "%s.core.dat", outprefix);
+		if ((corefile = fopen(outfile, outfilemode)) == NULL) {
+			eprintf("cannot create output file \"%s\".\n", outfile);
+			exit(1);
+		}
 
-          /* the core that contains no remnants */
-          append_core_header(corefile, "norem", 0);
-          fprintf(corefile, "\n");
-        }
+		/* the core that contains no remnants */
+		append_core_header(corefile, "norem", 0);
+		fprintf(corefile, "\n");
+	}
 }
 
 /* close buffers */
@@ -1752,32 +1755,61 @@ void distr_bin_data()
 #endif
 }
 
-/*
-void distr_bin_data()
+void mpi_files_merge(void)
 {
-	int i, j, k;
-	MPI_Status stat;
-
-	for(i=0; i<procs; i++)
+#ifdef USE_MPI
+	long i;
+	if(myid==0)
 	{
-		k=0;
-		for(j=1; j<=clus.N_MAX; j++)
-		{
-			if(star[j].binind > 0 && j >= Start[i] && j <= End[i])
-			{
-				if(myid==0)
-				{
-					binary_buf[k] = binary[star[j].binind];
-					num_bin_buf[k] = star[j].binind;
-				}
-				k++;
-			}
-
-			MPI_Send(binary_buf, k * sizeof(binary_t), MPI_BYTE, i, 0, MPI_COMM_WORLD);
+		char file_ext[64];
+		cat_and_rm_files("cmc.parsed");
+		cat_and_rm_files("lagrad.dat");
+		cat_and_rm_files("dyn.dat");
+		cat_and_rm_files("lagrad_10_info.dat");
+		cat_and_rm_files("avemass_lagrad.dat");
+		cat_and_rm_files("nostar_lagrad.dat");
+		cat_and_rm_files("rho_lagrad.dat");
+		cat_and_rm_files("ke_rad_lagrad.dat");
+		cat_and_rm_files("ke_tan_lagrad.dat");
+		cat_and_rm_files("v2_rad_lagrad.dat");
+		cat_and_rm_files("v2_tan_lagrad.dat");
+		cat_and_rm_files("centmass.dat");
+		cat_and_rm_files("log");
+		cat_and_rm_files("bin.dat");
+		cat_and_rm_files("binint.log");
+		cat_and_rm_files("esc.dat");
+		cat_and_rm_files("collision.log");
+		cat_and_rm_files("tidalcapture.log");
+		cat_and_rm_files("semergedisrupt.log");
+		cat_and_rm_files("removestar.log");
+		cat_and_rm_files("relaxation.dat");
+		for(i=0; i<NO_MASS_BINS-1; i++){
+			sprintf(file_ext, "lagrad%ld-%g-%g.dat", i, mass_bins[i], mass_bins[i+1]);
+			cat_and_rm_files(file_ext);
 		}
-		else
-			if(myid==i)
-				MPI_Recv(binary_buf, k * sizeof(binary_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD, &stat);
+		if (WRITE_EXTRA_CORE_INFO)
+			cat_and_rm_files("core.dat");
 	}
+	//MPI2: Is barrier needed? Probably not.
+	//MPI_Barrier(MPI_COMM_WORLD);
+#endif
 }
-*/
+
+void cat_and_rm_files(char* file_ext)
+{
+	char file_buffer[150], temp[150];
+	int i;
+	sprintf(file_buffer, "%s0.%s ", outprefix_bak, file_ext);
+	for( i = 1; i < procs; ++i )
+		sprintf( file_buffer, "%s%s%d.%s ", file_buffer, outprefix_bak, i, file_ext );
+	strcpy(temp, file_buffer);
+	sprintf( file_buffer, "cat %s> %s.%s", temp, outprefix_bak, file_ext);
+	system( file_buffer );
+	dprintf("MPI Files merging: lag file = %s\n", file_buffer);
+
+	for( i = 0; i < procs; ++i )
+	{
+		sprintf( file_buffer, "rm %s%d.%s", outprefix_bak, i, file_ext);
+		system( file_buffer );
+	}	
+}

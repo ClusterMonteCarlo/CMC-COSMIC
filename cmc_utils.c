@@ -521,6 +521,8 @@ void mpi_ComputeEnergy(void)
 	
 	Etotal_P *= 0.5;
 	Etotal_tot = Etotal_K + Etotal_P + Etotal_Eint + Etotal_Eb;
+
+	//OPT: Replace with AllReduce. Pack it and send together.
 	MPI_Reduce(&Etotal_K, &Etotal.K, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&Etotal_P, &Etotal.P, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&Etotal_Eint, &Etotal.Eint, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
@@ -1987,6 +1989,7 @@ void tidally_strip_stars1()
 		if(myid==0) max_r = temp;
 		//MPI_Bcast(&max_r, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
+		//OPT: Pack into array and send.
 		MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 		if(myid==0) Eescaped = temp;
 		MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -2238,6 +2241,7 @@ void pre_sort_comm()
 		star[i].m = star_m[i];
 	}
 
+	//OPT: Try MPI_Gatherv
 	//MPI2: To be refactored into separate function later.
 	if(myid!=0)
 		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);

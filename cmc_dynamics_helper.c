@@ -1639,6 +1639,8 @@ void mpi_calc_sigma_r(void)
 	/* MPI2: Communicating ghost particles */
 	/* Testing has been done. The parallel version is more accurate than the serial one since there are less round off errors because at nproc points among N_MAX, the actual sliding sum is calculated freshly rather than the way it is done in the serial version - adding and subtracting the extreme neighbors. Differences between serial and parallel version starts at N_MAX/nproc +1 th star and increases as expected.
 */
+
+
 	for(k=0; k<2*p; k++)
 	{
 		if( k < p )
@@ -1647,6 +1649,7 @@ void mpi_calc_sigma_r(void)
 			buf_v[k] = star[mpiBeginLocal + k - p].vt;
 	}
 
+	//Replace with MPI_Sendrecv. Does not optimize, but just code becomes compact.
 	MPI_Send(buf_v, 2 * p, MPI_DOUBLE, ( myid + procs - 1 ) % procs, 0, MPI_COMM_WORLD);
 	MPI_Recv(buf_v, 2 * p, MPI_DOUBLE, ( myid + 1) % procs, 0, MPI_COMM_WORLD, &stat);
 

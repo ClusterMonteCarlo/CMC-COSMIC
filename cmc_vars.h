@@ -56,7 +56,7 @@ _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
 _EXTERN_ FILE *binaryfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
 /* everything else except arrays */
-_EXTERN_ char outprefix[100];
+_EXTERN_ char outprefix[100], outprefix_bak[100];
 _EXTERN_ char dummystring[MAX_STRING_LENGTH], dummystring2[MAX_STRING_LENGTH], dummystring3[MAX_STRING_LENGTH], dummystring4[MAX_STRING_LENGTH];
 _EXTERN_ int se_file_counter;
 _EXTERN_ long tcount;

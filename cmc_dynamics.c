@@ -24,6 +24,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	char filename[1024];
 	double mass_k, mass_kp; //Bharath: MPI
 
+//OPT:Check if removing this changes results. If not, get rid of it.
 #ifdef USE_MPI
 	mpi_calc_sigma_r();
 #else
@@ -83,6 +84,9 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		fflush(stdout);
 	}
 
+#ifdef USE_MPI
+	if(myid==0)
+#endif
 	fprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
 
 #ifdef USE_MPI	
