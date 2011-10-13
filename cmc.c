@@ -358,6 +358,9 @@ int main(int argc, char *argv[])
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
 		 */
+#ifdef USE_MPI
+	if(myid==0)
+#endif
 		if(tcount%SNAPSHOT_DELTACOUNT==0) {
 			print_2Dsnapshot();
 			if (WRITE_STELLAR_INFO) {

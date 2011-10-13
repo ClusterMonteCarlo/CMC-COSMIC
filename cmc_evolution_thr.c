@@ -604,10 +604,17 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 #endif
 
 	/* logging */
+#ifdef USE_MPI
+	fprintf(escfile, "%ld %.8g %.8g ",
+		tcount, TotalTime, star_m[j]);
+	fprintf(escfile, "%.8g %.8g %.8g ",
+		star_r[j], star[j].vr, star[j].vt);
+#else
 	fprintf(escfile, "%ld %.8g %.8g ",
 		tcount, TotalTime, star[j].m);
 	fprintf(escfile, "%.8g %.8g %.8g ",
 		star[j].r, star[j].vr, star[j].vt);
+#endif
 	fprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
 	        star[j].r_peri, star[j].r_apo, Rtidal, phi_rtidal, phi_zero, E, J, star[j].id);
 	if (star[j].binind) {
