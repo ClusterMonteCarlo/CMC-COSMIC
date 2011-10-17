@@ -103,6 +103,7 @@ _EXTERN_ double *DMse_mimic;
 _EXTERN_ FILE* ftest2;
 _EXTERN_ char num2[5],filename2[20], tempstr2[20];
 _EXTERN_ long *new_size;
+_EXTERN_ int *disp, *len;
 
 /* debugging */
 _EXTERN_ int debug;

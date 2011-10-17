@@ -522,7 +522,7 @@ void mpi_ComputeEnergy(void)
 	Etotal_P *= 0.5;
 	Etotal_tot = Etotal_K + Etotal_P + Etotal_Eint + Etotal_Eb;
 
-	//OPT: Replace with AllReduce. Pack it and send together.
+	//OPT: Replace with AllReduce. Is it worth packing it and sending together? Depends on the overhead.
 	MPI_Reduce(&Etotal_K, &Etotal.K, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&Etotal_P, &Etotal.P, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 	MPI_Reduce(&Etotal_Eint, &Etotal.Eint, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
@@ -536,8 +536,9 @@ void mpi_ComputeEnergy(void)
 	MPI_Bcast(&Etotal.tot, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	Etotal.tot += cenma.E + Eescaped + Ebescaped + Eintescaped;
-if(myid==0)
-printf("Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
+
+//if(myid==0)
+//printf("Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
 }
 #endif
 
@@ -2221,16 +2222,15 @@ void tidally_strip_stars2(void)
 void pre_sort_comm()
 {
 #ifdef USE_MPI
-	int i, j, counter_new;
-	MPI_Status stat;
-	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
-	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
+	int i, j;
+
 	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
-	for(i=0;i<procs;i++)
-		mpiLen[i] *= sizeof(star_t); 
-
-	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
+	MPI_Datatype startype;
+	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
+	MPI_Type_commit( &startype );
+	
+	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
 	for(i=mpiBegin; i<=mpiEnd; i++) {
 		star[i].r = star_r[i];
 		star[i].m = star_m[i];
@@ -2241,43 +2241,31 @@ void pre_sort_comm()
 		star[i].m = star_m[i];
 	}
 
-	//OPT: Try MPI_Gatherv
-	//MPI2: To be refactored into separate function later.
-	if(myid!=0)
-		MPI_Send(&star[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+	//MPI2: Collection of old stars.
+	if(myid == 0)
+		MPI_Gatherv(MPI_IN_PLACE, mpiLen[myid], startype, star, mpiLen, mpiDisp , startype , 0, MPI_COMM_WORLD);
 	else
-		for(i=1;i<procs;i++)
-			MPI_Recv(&star[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+		MPI_Gatherv(&star[mpiDisp[myid]], mpiLen[myid], startype, star, mpiLen, mpiDisp , startype , 0, MPI_COMM_WORLD);
+
 
 	//MPI2: Collection of new stars.
-	MPI_Gather( &(clus.N_MAX_NEW), 1, MPI_LONG, new_size, 1, MPI_LONG, 0, MPI_COMM_WORLD);
-
-	star_t *new_stars_recv_buf;
-
-	if(myid!=0)
+	MPI_Gather( &(clus.N_MAX_NEW), 1, MPI_INT, disp, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	if(myid==0)
 	{
-		if(clus.N_MAX_NEW - clus.N_MAX - 1 > 0)
-			//MPI2: +2 to account for the sentinel.
-			MPI_Send(&star[clus.N_MAX+2], sizeof(star_t) * (clus.N_MAX_NEW - clus.N_MAX - 1), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-	}
-	else
-	{
-		counter_new = clus.N_MAX_NEW + 1;
+		disp[0] = clus.N_MAX + 2;
+		len[0] = clus.N_MAX_NEW - clus.N_MAX - 1;
 		for(i=1; i<procs; i++)
 		{
-			new_size[i] = new_size[i] - clus.N_MAX - 1;
-			clus.N_MAX_NEW += new_size[i];
-			if(new_size[i] > 0)
-			{
-				new_stars_recv_buf = (star_t *) calloc(new_size[i], sizeof(star_t));
-				MPI_Recv(new_stars_recv_buf, sizeof(star_t) * new_size[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
-				for(j=0; j<new_size[i]; j++)
-					star[counter_new + j] = new_stars_recv_buf[j];
-				counter_new += new_size[i];
-				free(new_stars_recv_buf);
-			}
+			len[i] = disp[i] - clus.N_MAX - 1;
+			disp[i] = disp[i-1] + len[i-1];
 		}
+		clus.N_MAX_NEW = disp[procs-1] + len[procs-1] - 1;
 	}
+
+	if(myid == 0)
+		MPI_Gatherv(MPI_IN_PLACE, len[0], startype, star, len, disp , startype , 0, MPI_COMM_WORLD);
+	else
+		MPI_Gatherv(&star[clus.N_MAX+2], clus.N_MAX_NEW - clus.N_MAX - 1, startype, star, len, disp , startype , 0, MPI_COMM_WORLD);
 #endif
 }
 

@@ -1,4 +1,4 @@
-cmc_mkking -w 5 -N 1000000 -o /tmp/test.fits
+cmc_mkking -w 5 -N 100000 -o /tmp/test.fits
 cmc_setimf -i /tmp/test.fits -o /tmp/test2.fits -I 0 -m 0.3 -M 15 && rm /tmp/test.fits
 cmc_setunits -i /tmp/test2.fits -o /tmp/test3a.fits -R 3.5 && rm /tmp/test2.fits
 cmc_setstellar -i /tmp/test3a.fits -o /tmp/test4.fits && rm /tmp/test3a.fits

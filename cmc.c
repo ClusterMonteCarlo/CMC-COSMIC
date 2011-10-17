@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 	//MPI2: Some variables to assist debugging
 	char num[5],filename[20], tempstr[20];
 
+	//MPI2: The clock here is inaccurate since there might be overhead before this due to MPI initialization etc.
 	clock_t t1=clock();
 
 #ifdef USE_MPI
@@ -39,11 +40,17 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(MPI_COMM_WORLD,&procs);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 
+	//MPI2: Used for Gathering particles on root node before sorting
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
 
 	if(myid==0)
-		new_size = (long *)calloc(procs, sizeof(long)); 
+	{
+		disp = (int*) malloc(procs * sizeof(int));
+		len = (int*) malloc(procs * sizeof(int));
+		new_size = (long*) malloc(procs * sizeof(long));
+	}
+
 #else
 	procs = 1;
 	created_star_dyn_node = (int *) calloc(procs, sizeof(int));
