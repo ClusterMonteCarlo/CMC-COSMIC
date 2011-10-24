@@ -40,10 +40,7 @@ void print_results(void){
 	if(myid==0)
 #endif
 	PrintLogOutput();
-	//MPI2: Commenting out for MPI
-//#ifndef USE_MPI
 	PrintFileOutput();
-//#endif
 	fflush(NULL);
 }
 
@@ -1612,6 +1609,7 @@ void alloc_bin_buf()
 #ifdef USE_MPI
 	size_bin_buf = N_BIN_DIM / procs; //this is much more than what would be practically reqd. worst case scenario is N_BIN_DIM.
 
+	//OPT: Modularize by declaring variables in main fn, and pass as argument to reqd functions.
 	/* the local binary array */
 	binary_buf = (binary_t *) calloc( size_bin_buf, sizeof(binary_t) );
 
@@ -1623,7 +1621,7 @@ void alloc_bin_buf()
 void collect_bin_data()
 {
 #ifdef USE_MPI
-	int i, j, k, counter_new, cntr, last_hole_idx=1, pass=0;
+	int i, j, k, counter_new, cntr, destroyed_binaries, last_hole_idx=1, pass=0;
 	MPI_Status stat;
 
 	if(myid!=0)
@@ -1669,11 +1667,18 @@ void collect_bin_data()
 			new_size[i] -= N_b_OLD;
 			if(new_size[i] > 0)
 			{
+				destroyed_binaries = 0;
 				recv_buf = (binary_t *) calloc(new_size[i], sizeof(binary_t));
 				MPI_Recv(recv_buf, sizeof(binary_t) * new_size[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
 
 				for(cntr=0; cntr<new_size[i]; cntr++)
 				{
+					if(recv_buf[cntr].inuse == 0)
+					{
+						continue;
+						destroyed_binaries++;
+					}
+
 					while (last_hole_idx <= N_b_OLD && binary[last_hole_idx].inuse)
 						last_hole_idx++;
 
@@ -1682,6 +1687,8 @@ void collect_bin_data()
 
 					binary[last_hole_idx] = recv_buf[cntr];
 					for(j=clus.N_MAX+2; j <= clus.N_MAX_NEW; j++)
+					{
+						dprintf("binind of star %d is %ld\n", j, star[j].binind);
 						if(star[j].binind == N_b_OLD + 1 + cntr)
 						{
 							star[j].binind = last_hole_idx;
@@ -1689,8 +1696,10 @@ void collect_bin_data()
 							pass = 1;
 							break;
 						}
+					}
 					if(pass == 0)
 					{
+						dprintf("Cant find single star correspoding to binary in node %d: local_idx=%ld nmax=%ld nmaxnew=%ld\n", myid, N_b_OLD + 1 + cntr, clus.N_MAX, clus.N_MAX_NEW);
 						eprintf("FAILED!!!\n");
 						exit_cleanly(-1);
 					}
@@ -1699,23 +1708,31 @@ void collect_bin_data()
 
 				for(j=0; j<new_size[i]-cntr; j++)
 				{
+					if(recv_buf[j+cntr].inuse == 0)
+					{
+						continue;
+						destroyed_binaries++;
+					}
+
 					binary[counter_new + j] = recv_buf[j+cntr];
 
 					for(k=clus.N_MAX+2; k <= clus.N_MAX_NEW; k++)
 						if(star[k].binind == N_b_OLD + 1 + cntr + j)
 						{
-							star[k].binind = last_hole_idx;
-							dprintf("ID = %d \tHOLE FOUND!!! at %d\tINSERTING STAR %d\n", i, last_hole_idx, k);
+							star[k].binind = counter_new + j;
+							dprintf("ID = %d \tHOLE FOUND!!! at %d\tINSERTING STAR %d\n", i, counter_new + j, k);
 							pass = 1;
 							break;
 						}
 					if(pass == 0)
 					{
+						dprintf("Cant find single star correspoding to binary in node %d: local_idx=%ld nmax=%ld nmaxnew=%ld\n", myid, N_b_OLD + 1 + cntr + j, clus.N_MAX, clus.N_MAX_NEW);
 						eprintf("FAILED!!!\n");
 						exit_cleanly(-1);
 					}
+					pass = 0;
 				}
-				counter_new += new_size[i] - cntr;
+				counter_new += new_size[i] - cntr - destroyed_binaries;
 				free(recv_buf);
 			}
 		}

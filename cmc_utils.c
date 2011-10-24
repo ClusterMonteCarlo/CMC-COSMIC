@@ -184,7 +184,8 @@ void exit_cleanly(int signal)
 	free_arrays();
 
 #ifdef USE_MPI
-	MPI_Finalize();
+	//OPT: Another way would be to use assert at all error checks
+	MPI_Abort(MPI_COMM_WORLD, signal);
 #endif
 
 	exit(signal);
@@ -199,6 +200,7 @@ void free_arrays(void){
 	/* MPI Stuff */
 #ifdef USE_MPI
 	free(star_r); free(star_m); free(star_phi);
+	free(new_size); free(disp); free(len);
 #endif
 }
 
@@ -265,12 +267,6 @@ void set_velocities3(void){
 void ComputeIntermediateEnergy(void)
 {
 	long j;
-/*
-#ifdef USE_MPI 
-	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
-	for (j=mpiBegin; j<=mpiEnd; j++) {
-#else
-*/
 	/* compute intermediate energies for stars due to change in pot */ 
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
 #ifdef USE_MPI
@@ -288,11 +284,6 @@ void ComputeIntermediateEnergy(void)
 		}
 	}
 
-/*	
-#ifdef USE_MPI
-	for (j=mpiBegin; j<=mpiEnd; j++) {
-#else
-*/
 	/* Transferring new positions to .r, .vr, and .vt from .rnew, .vrnew, and .vtnew */
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
 #ifdef USE_MPI
@@ -302,7 +293,9 @@ void ComputeIntermediateEnergy(void)
 
 #ifdef USE_MPI
 		star[j].rOld = star_r[j];
-		star_r[j] = star[j].rnew;
+		star[j].r = star[j].rnew;
+		//star_r[j] = star[j].rnew;
+		star[j].m = star_m[j];
 #else
 		star[j].rOld = star[j].r;
 		star[j].r = star[j].rnew;
@@ -489,14 +482,12 @@ long CheckStop(struct tms tmsbufref) {
 #ifdef USE_MPI
 void mpi_ComputeEnergy(void)
 {
-	double Etotal_tot = 0.0;
-	double Etotal_K = 0.0;
-	double Etotal_P = 0.0;
-	double Etotal_Eint = 0.0;
-	double Etotal_Eb = 0.0;
-	double phi0 = 0.0;
-
+/* Calculates E,J for every star. Also, calculates, global eneryg variabies. */
+	double buf_reduce[5], phi0 = 0.0;
 	int i;
+	for(i=0; i<5; i++)
+		buf_reduce[i] = 0.0;
+
 	for (i=mpiBegin; i<=mpiEnd; i++) {
 		star[i].E = star_phi[i] + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
 		star[i].J = star_r[i] * star[i].vt;		
@@ -505,40 +496,35 @@ void mpi_ComputeEnergy(void)
 	phi0 = star_phi[0];
 
 	for (i=mpiBegin; i<=mpiEnd; i++) {
-		Etotal_K += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star_m[i] / clus.N_STAR;
-		Etotal_P += star_phi[i] * star_m[i] / clus.N_STAR;
-		Etotal_P += phi0 * cenma.m*madhoc/ clus.N_STAR;
+		buf_reduce[1] += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star_m[i] / clus.N_STAR;
+		buf_reduce[2] += star_phi[i] * star_m[i] / clus.N_STAR;
+		buf_reduce[2] += phi0 * cenma.m*madhoc/ clus.N_STAR;
 
-		//MPI2: Binary indices are involved. Ignore.
 		if (star[i].binind == 0) {
-			Etotal_Eint += star[i].Eint;
+			buf_reduce[3] += star[i].Eint;
 		} else if (binary[star[i].binind].inuse) {
-			Etotal_Eb += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
+			buf_reduce[4] += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
 				(2.0 * binary[star[i].binind].a);
-			Etotal_Eint += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
+			buf_reduce[3] += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
 		}
 	}
 	
-	Etotal_P *= 0.5;
-	Etotal_tot = Etotal_K + Etotal_P + Etotal_Eint + Etotal_Eb;
+	buf_reduce[2] *= 0.5;
+	buf_reduce[0] = buf_reduce[1] + buf_reduce[2] + buf_reduce[3] + buf_reduce[4];
 
-	//OPT: Replace with AllReduce. Is it worth packing it and sending together? Depends on the overhead.
-	MPI_Reduce(&Etotal_K, &Etotal.K, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	MPI_Reduce(&Etotal_P, &Etotal.P, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	MPI_Reduce(&Etotal_Eint, &Etotal.Eint, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	MPI_Reduce(&Etotal_Eb, &Etotal.Eb, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);	
-	MPI_Reduce(&Etotal_tot, &Etotal.tot, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 
-	MPI_Bcast(&Etotal.K, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&Etotal.P, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&Etotal.Eint, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&Etotal.Eb, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&Etotal.tot, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 5, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+
+	Etotal.tot = buf_reduce[0];
+	Etotal.K = buf_reduce[1];
+	Etotal.P = buf_reduce[2];
+	Etotal.Eint = buf_reduce[3];
+	Etotal.Eb = buf_reduce[4];
 
 	Etotal.tot += cenma.E + Eescaped + Ebescaped + Eintescaped;
 
-//if(myid==0)
-//printf("Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
+	if(myid==0)
+		dprintf("Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
 }
 #endif
 
@@ -571,7 +557,8 @@ void ComputeEnergy(void)
 	
 	Etotal.P *= 0.5;
 	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
-printf("Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
+
+	dprintf("Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
 }
 
 #ifdef USE_MPI
@@ -585,6 +572,7 @@ long mpi_potential_calculate(void) {
 	
 	//while (star_r[k] < SF_INFINITY && k <= clus.N_STAR_NEW) {
 	//MPI2: Temporarily changing this to N_MAX.
+	//MPI3: Do on all nodes. This can be totally parallelized, reduce k and mprev ath the end.
 	while (star_r[k] < SF_INFINITY && k <= clus.N_MAX) {
 		mprev += star_m[k];
 		/* I guess NaNs do happen... */
@@ -616,6 +604,7 @@ long mpi_potential_calculate(void) {
 	star_r[clus.N_MAX + 1] = SF_INFINITY;
 	star_phi[clus.N_MAX + 1] = 0.0;
 
+	//MPI3: In future consider parallelization. For now, keep on root.
 	mprev = Mtotal;
 	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute potential at each r */
 		star_phi[k] = star_phi[k + 1] - mprev * (1.0 / star_r[k] - 1.0 / star_r[k + 1]);
@@ -1011,8 +1000,6 @@ void free_ivector(int *v, long nl, long nh)
 void update_vars(void)
 {
 	long i, j, k;
-	double temp_dbl;
-	long temp_long;
 	
 	/* update total number, mass, and binding energy of binaries in cluster */
 	N_b = 0;
@@ -1039,16 +1026,21 @@ void update_vars(void)
 		}
 	}
 #ifdef USE_MPI
-	//MPI2: Since these variables will be used only be the root node, hopefully the Bcast wont be reqd.
-	MPI_Reduce(&M_b, &temp_dbl, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0) M_b = temp_dbl;
-	//MPI_Bcast(&M_b, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&E_b, &temp_dbl, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0) E_b = temp_dbl;
-	//MPI_Bcast(&E_b, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Reduce(&N_b, &temp_long, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0) N_b = temp_long;
-	//MPI_Bcast(&N_b, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+	//MPI2: Since these variables will be used only be the root node, hopefully the Bcast wont be reqd. Also, only 2 calls, and difference data types. So, forget the packing and unpacking.
+	if (myid==0)
+		MPI_Reduce(MPI_IN_PLACE, &M_b, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	else
+		MPI_Reduce(&M_b, &M_b, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+
+	if(myid==0)
+		MPI_Reduce(MPI_IN_PLACE, &E_b, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	else
+		MPI_Reduce(&E_b, &E_b, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+
+	if(myid==0)
+		MPI_Reduce(MPI_IN_PLACE, &N_b, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);		
+	else
+		MPI_Reduce(&N_b, &N_b, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);		
 #endif
 }
 
@@ -1107,6 +1099,7 @@ void mpi_central_calculate1(void)
 	long J=6, i, j, jmin, jmax, nave;
 
 	/* average over all stars out to half-mass radius */
+	//MPI3: Do on all nodes. That can avoid Bcast.
 	if(myid==0) {
 		nave = 1;
 		while (m < 0.5 * Mtotal) {
@@ -1144,24 +1137,18 @@ MPI_Barrier(MPI_COMM_WORLD);
 	//mpiFindIndicesCustom( nave, 20, myid, &mpiBeginLocal, &mpiEndLocal );
 	//mpiFindIndicesSpecial( nave, &mpiBeginLocal, &mpiEndLocal );
 
-	printf("id=%d begin=%d end=%d\n",myid, mpiBegin, mpiEnd);
-	FILE *ftest;
-	char num[20], filename[20], tempstr3[20];
-	strcpy(filename, "test_a_par");
-	strcpy(tempstr3, filename);
-	sprintf(num, "%d", myid);
-	strcat(tempstr3, num);
-	strcat(tempstr3, ".dat");
-	ftest = fopen( tempstr3, "w" );
-
 	/* calculate rhoj's (Casertano & Hut 1985) */
 	//for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
 	for (i=1; i<=nave; i++) {
+		// Change so that the rest of the nodes dont have to continue for nave times.
 		if( ! (i>=mpiBegin && i<=mpiEnd) )
 			continue;
+
+		//MPI3: J is a constant = 6 here.
 		jmin = MAX(i-J/2, 1);
 		jmax = jmin + J;
 		mrho = 0.0;
+		//OPT: Loop could be optimized by using sliding window, but at the loss of accuracy and comparability with serial code.
 		/* this is equivalent to their J-1 factor for the case of equal masses,
 		   and seems like a good generalization for unequal masses */
 		for (j=jmin+1; j<=jmax-1; j++) {
@@ -1174,39 +1161,36 @@ MPI_Barrier(MPI_COMM_WORLD);
 
 	/* calculate core quantities using density weighted averages (note that in 
 	   Casertano & Hut (1985) only rho and rc are analyzed and tested) */
-	double mpi_rhojsum, mpi_rhoj2sum, mpi_rc_nb, mpi_c_rho, mpi_c_vrms, mpi_c_rc, mpi_c_mave;
-	mpi_rhojsum = 0.0;
-	mpi_rhoj2sum = 0.0;
-	mpi_rc_nb = 0.0;
-	mpi_c_rho = 0.0;
-	mpi_c_vrms = 0.0;
-	mpi_c_rc = 0.0;
-	mpi_c_mave = 0.0;
+	double buf_reduce[7];
+	for(i=0; i<7; i++)
+		buf_reduce[i] = 0.0;
 
-	//for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
 	for (i=1; i<=nave; i++) {
 		if( ! (i>=mpiBegin && i<=mpiEnd) )
 			continue;
-		mpi_rhojsum += rhoj[i];
-		mpi_rhoj2sum += sqr(rhoj[i]);
-		mpi_c_rho += sqr(rhoj[i]);
-		mpi_c_vrms += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
-		fprintf(ftest, "%ld\t%.18g\n", i, mpi_c_vrms);
-		mpi_c_rc += rhoj[i] * star_r[i];
-		mpi_rc_nb += sqr(rhoj[i] * star_r[i]);
-		mpi_c_mave += rhoj[i] * star_m[i] * madhoc;
+		buf_reduce[0] += rhoj[i];
+		buf_reduce[1] += sqr(rhoj[i]);
+		buf_reduce[2] += sqr(rhoj[i]);
+		buf_reduce[3] += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
+		buf_reduce[4] += rhoj[i] * star_r[i];
+		buf_reduce[5] += sqr(rhoj[i] * star_r[i]);
+		buf_reduce[6] += rhoj[i] * star_m[i] * madhoc;
 	}
-	fclose(ftest);
+
 	if(myid==0)
-		system("./process2.sh");
+		MPI_Reduce(MPI_IN_PLACE, buf_reduce, 7, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	else
+		MPI_Reduce(buf_reduce, buf_reduce, 7, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
 
-	MPI_Reduce(&mpi_rhojsum, &rhojsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	MPI_Reduce(&mpi_rhoj2sum, &rhoj2sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	MPI_Reduce(&mpi_c_rho, &central.rho, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	MPI_Reduce(&mpi_c_vrms, &central.v_rms, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	MPI_Reduce(&mpi_c_rc, &central.rc, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	MPI_Reduce(&mpi_c_mave, &central.m_ave, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
+	rhojsum = buf_reduce[0];
+	rhoj2sum = buf_reduce[1];
+	central.rho = buf_reduce[2];
+	central.v_rms = buf_reduce[3];
+	central.rc = buf_reduce[4];
+	rc_nb = buf_reduce[5];
+	central.m_ave = buf_reduce[6];
 
+	//MPI3: Do on all nodes.
 	if(myid==0) {
 		central.rho /= rhojsum;
 		/* correction for inherent bias in estimator */
@@ -1249,6 +1233,7 @@ void mpi_central_calculate2(void) {
 		central.a2_ave = 0.0;
 		central.ma_ave = 0.0;
 
+		//MPI3: Can be totally parallel. Might need reduce- but for those values that impact timestep calculation, have to be done using send and recv in a particular order to avoid round-off errors.
 		for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
 			Ncentral++;
 			/* use only code units here, so always divide star[].m by clus.N_STAR */
@@ -1359,10 +1344,6 @@ void central_calculate(void)
 	/* allocate array for local density calculations */
 	rhoj = (double *) malloc((nave+1) * sizeof(double));
 
-	FILE *ftest;
-	char tempstr3[20];
-	strcpy(tempstr3, "test_a_ser.dat");
-	ftest = fopen( tempstr3, "w" );
 	/* calculate rhoj's (Casertano & Hut 1985) */
 	for (i=1; i<=nave; i++) {
 		jmin = MAX(i-J/2, 1);
@@ -1382,27 +1363,7 @@ void central_calculate(void)
 		Vrj = 4.0/3.0 * PI * (fb_cub(star[jmax].r) - fb_cub(star[jmin].r));
 		rhoj[i] = mrho / Vrj;
 #endif
-	fprintf(ftest, "%ld\t%.18g\n", i, rhoj[i]);
 	}
-	fclose(ftest);
-
-/*
-	FILE *ftest;
-	char tempstr3[20];
-#ifdef USE_MPI
-	strcpy(tempstr3, "test_cen_par.dat");
-#else
-	strcpy(tempstr3, "test_cen_ser.dat");
-#endif
-	ftest = fopen( tempstr3, "w" );
-	for( i = 1; i <= clus.N_MAX; i++ )
-#ifdef USE_MPI
-	fprintf(ftest, "%ld\t%.18g\n", i, star_m[i]);
-#else
-	fprintf(ftest, "%ld\t%.18g\n", i, star[i].m);
-#endif
-	fclose(ftest);
-*/
 
 	/* calculate core quantities using density weighted averages (note that in 
 	   Casertano & Hut (1985) only rho and rc are analyzed and tested) */
@@ -1563,7 +1524,8 @@ void mpi_clusdyn_calculate(void)
 {
 	double m=0.0;
 	long k=1;
-	
+
+	//MPI3: Potential parallelization possibolity for large N.
 	while (m < 0.5 * Mtotal) {
 		m += star_m[k] / clus.N_STAR;
 		k++;
@@ -1765,8 +1727,10 @@ void calc_central_new()
 
 void bin_vars_calculate()
 {
+/* Calculates some global binary variables - total binary mass,and E. */
 	int i, j;
 	//MPI2: Binaries; Ignore.
+	//MPI3: Can be totally parallel.
 	M_b = 0.0;
 	E_b = 0.0;
 #ifdef USE_MPI
@@ -1892,29 +1856,20 @@ void calc_clusdyn_new()
 void calc_timestep(gsl_rng *rng)
 {
 	/* Get new time step */
+	//MPI3: Do on all nodes, and remove Bcast
 	//for the next step, only simul_relax needs to be done in parallel, and DTrel needs to be broadcasted. rest can be done on each node.
 	//Step 2: Do simul_relax() on all procs and others only on root. then broadcast Dt
 	Dt = GetTimeStep(rng); //reduction again. Timestep needs to be communicated to all procs.
 
 	/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
 	//MPI2: root node
-#ifdef USE_MPI
-	if(myid==0) 
-#endif
-	{
-		if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
-			diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
-			Dt = Prev_Dt * 0.8;
-		} else if (Dt > 1.1 * Prev_Dt && Prev_Dt > 0 && (TidalMassLoss - OldTidalMassLoss) > 0.02) {
-			diaprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
-			Dt = Prev_Dt * 1.1;
-		}
+	if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
+		diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
+		Dt = Prev_Dt * 0.8;
+	} else if (Dt > 1.1 * Prev_Dt && Prev_Dt > 0 && (TidalMassLoss - OldTidalMassLoss) > 0.02) {
+		diaprintf("Dt=%g: increasing Dt by 10%%\n", Dt);
+		Dt = Prev_Dt * 1.1;
 	}
-
-	//MPI2: broadcast Dt		
-#ifdef USE_MPI
-	MPI_Bcast(&Dt, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
 
 	TotalTime += Dt;
 }
@@ -1977,7 +1932,6 @@ void tidally_strip_stars1()
 {
 #ifdef USE_MPI
 		//MPI2: The 2nd part of tidally_strip_stars() has been moved just before sort.
-		double temp = 0.0;
 		OldTidalMassLoss = TidalMassLoss_old;
 
 		/******************************/
@@ -1986,29 +1940,28 @@ void tidally_strip_stars1()
 		max_r = get_positions();
 
 		//MPI2: Since max_r will be used only be the root node, hopefully the Bcast wont be reqd.
-		MPI_Reduce(&max_r, &temp, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);		
-		if(myid==0) max_r = temp;
-		//MPI_Bcast(&max_r, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		if(myid==0)
+			MPI_Reduce(MPI_IN_PLACE, &max_r, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);		
+		else
+			MPI_Reduce(&max_r, &max_r, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);		
 
-		//OPT: Pack into array and send.
-		MPI_Reduce(&Eescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-		if(myid==0) Eescaped = temp;
-		MPI_Bcast(&Eescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-		MPI_Reduce(&Jescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-		if(myid==0) Jescaped = temp;
-		MPI_Bcast(&Jescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-		MPI_Reduce(&Eintescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-		if(myid==0) Eintescaped = temp;
-		MPI_Bcast(&Eintescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-		MPI_Reduce(&Ebescaped, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-		if(myid==0) Ebescaped = temp;
-		MPI_Bcast(&Ebescaped, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-		MPI_Reduce(&TidalMassLoss, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-		if(myid==0) TidalMassLoss = temp;
-		MPI_Bcast(&TidalMassLoss, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-		MPI_Reduce(&Etidal, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-		if(myid==0) Etidal = temp;
-		MPI_Bcast(&Etidal, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		//MPI2: Packing into array to optimize communication.
+		double buf_reduce[6];
+		buf_reduce[0] = Eescaped;
+		buf_reduce[1] = Jescaped;
+		buf_reduce[2] = Eintescaped;
+		buf_reduce[3] = Ebescaped;
+		buf_reduce[4] = TidalMassLoss;
+		buf_reduce[5] = Etidal;
+
+		MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 6, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+
+		Eescaped = buf_reduce[0];
+		Jescaped = buf_reduce[1];
+		Eintescaped = buf_reduce[2];
+		Ebescaped = buf_reduce[3];
+		TidalMassLoss = buf_reduce[4];
+		Etidal = buf_reduce[5];
 #else
 		/* this calls get_positions() */
 		tidally_strip_stars();
@@ -2018,12 +1971,6 @@ void tidally_strip_stars1()
 void energy_conservation2()
 {
 	int i;
-/*
-#ifdef USE_MPI 
-	//MPI2: Should be changed into 2 loops later to include new stars.
-	for (i=mpiBegin; i<=mpiEnd; i++) 
-#else
-*/
 	/* more numbers necessary to implement Stodolkiewicz's
 	 * energy conservation scheme */
 	for (i = 1; i <= clus.N_MAX_NEW; i++) 
@@ -2222,7 +2169,7 @@ void tidally_strip_stars2(void)
 void pre_sort_comm()
 {
 #ifdef USE_MPI
-	int i, j;
+	int i;
 
 	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
@@ -2231,15 +2178,16 @@ void pre_sort_comm()
 	MPI_Type_commit( &startype );
 	
 	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
+/*
 	for(i=mpiBegin; i<=mpiEnd; i++) {
 		star[i].r = star_r[i];
 		star[i].m = star_m[i];
 	}
-
-	for(i=clus.N_MAX+1; i<=clus.N_MAX_NEW; i++) {
+	for(i=clus.N_MAX+2; i<=clus.N_MAX_NEW; i++) {
 		star[i].r = star_r[i];
 		star[i].m = star_m[i];
 	}
+*/
 
 	//MPI2: Collection of old stars.
 	if(myid == 0)
@@ -2312,6 +2260,7 @@ void post_sort_comm()
 #endif
 }
 
+//OPT: Comment in detail so can be understandable in future
 void findIndices( long N, int blkSize, int i, int* begin, int* end )
 {
 	long chunkSize =  ( N / procs ) * blkSize;

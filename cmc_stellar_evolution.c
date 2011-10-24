@@ -230,10 +230,10 @@ void stellar_evolution_init(void){
 	}
 
 #ifdef USE_MPI
-	double temp = 0.0;
-	MPI_Reduce(&DMse, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0) DMse = temp;
-	MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	if(myid==0)
+		MPI_Allreduce(MPI_IN_PLACE, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	else
+		MPI_Allreduce(&DMse, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
 	for(i=0; i<procs; i++)
 		DMse += DMse_mimic[i];
@@ -452,6 +452,8 @@ void do_stellar_evolution(gsl_rng *rng)
 
 	MPI_Status stat;
 	int i;
+	
+	//MPI2: Avoiding reduce to improve accuracy.
 	if(myid!=0)
 		MPI_Send(&DMse, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 	else
@@ -460,12 +462,6 @@ void do_stellar_evolution(gsl_rng *rng)
 			MPI_Recv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &stat);
 			DMse += temp;
 		}
-
-/*
-	MPI_Reduce(&DMse, &temp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	if(myid==0) DMse = temp;
-	MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-*/
 #else
 	int i;
 	for(i=0; i<procs; i++)

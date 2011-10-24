@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
 	gsl_rng_env_setup();
 	rng = gsl_rng_alloc(rng_type);
 
+	//MPI3: Allocate N/procs + 10% for each node. Also allocate a separate buffer array for receiving ghost particles. File I/O, each process takes its slice of data. Also, assemble the global arrays - _m, and _r.
 	get_star_data(argc, argv, rng);
 
 	N_b_OLD = N_b;
@@ -82,6 +83,7 @@ int main(int argc, char *argv[])
 
 	mpiInitBcastGlobArrays();
 
+	//MPI3: Need to check if this function and the sigma variable is reqd at all! Use the buffer for collecting ghost particles.
 	calc_sigma_new();
 
 	/* calculate central quantities */
@@ -149,10 +151,12 @@ int main(int argc, char *argv[])
 		created_star_se_node[i] = 0;
 #endif
 
+	//OPT: M_b E_b calculated twice? Check for redundancy.
 	update_vars();
 
 	times(&tmsbufref);
 
+	//OPT: Check for redundancy. Ask Stefan
 	/* calculate central quantities */
 	calc_central_new();
 
@@ -175,15 +179,15 @@ int main(int argc, char *argv[])
 	cuInitialize();
 #endif
 
+// FINISHED OVERVIEW TILL HERE> CONTINUE NEXT TIME.
 #ifdef USE_MPI
-	MPI_Status stat;
-	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
-	//MPI2: Only running till N_MAX for now as no new stars are created,later this has to changed to include the new stars somehow. Note that N_MAX_NEW will be different for different processors.
 	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
 	for(i=0;i<procs;i++)
 		mpiLen[i] *= sizeof(double); 
 
+	//MPI3: Can be replaced by AllGatherv. For now, keep it the way it is. The same problem will reappear after sorting, where we need to do the same for the 3 global arrays, r, phi, and m. Have to think abt a novel solution.
+	MPI_Status stat;
 	if(myid!=0)
 		MPI_Send(&star_m[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
 	else
@@ -319,6 +323,7 @@ int main(int argc, char *argv[])
 			}
 		 */
 
+/*
 #ifdef USE_MPI
 		strcpy(filename, "test_out_par");
 		strcpy(tempstr, filename);
@@ -353,13 +358,13 @@ int main(int argc, char *argv[])
 			//if(star[i].binind>0)
 				//fprintf(ftest, "%ld\t%.18g\n", i, binary[star[i].binind].a);
 		if(star[i].id <= 0)
-			fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", j, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
+			fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
 		else
 			fprintf(ftest, "%ld\t%.18g\t%ld\n", i, star[i].r, star[i].id);
 		}
 		fclose(ftest);
 #endif
-
+*/
 		print_results();
 
 		/* take a snapshot, we need more accurate 

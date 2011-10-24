@@ -490,6 +490,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb)
 }
 
 /* setters */
+//OPT: Use inline before void -> makes it macro
 void bse_set_idum(int idum) { value3_.idum = idum; }
 void bse_set_neta(double neta) { value1_.neta = neta; }
 void bse_set_bwind(double bwind) { value1_.bwind = bwind; }

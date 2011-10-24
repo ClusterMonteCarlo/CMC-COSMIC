@@ -17,6 +17,7 @@ void zero_star(long j)
 	star_m[j] = 0.0;
 	star_phi[j] = 0.0;
 #endif
+	//OPT: Try using memset or bzero for better readable code.
 	star[j].r = 0.0;
 	star[j].vr = 0.0;
 	star[j].vt = 0.0;
@@ -186,7 +187,7 @@ long create_star(int idx, int dyn_0_se_1)
 	i = clus.N_MAX_NEW + 1;
 
 #ifdef USE_MPI
-	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
+	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
 #else
 	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
 #endif
@@ -240,6 +241,12 @@ else
 	
 	star[j].binind = i;
 	
+#ifdef USE_MPI
+	dprintf("Binary Created on node %d!! single star idx = %ld binind = %ld\n", myid, j, i);
+#else
+	dprintf("Binary Created!! single star idx = %ld binind = %ld\n", j, i);
+#endif	
+
 	return(j);
 }
 
@@ -1395,10 +1402,13 @@ double mpi_simul_relax_new(void)
 		Mave = 0.0;
 		M2ave = 0.0;
 		for (k=simin; k<=simax; k++) {
-			Mv2ave += star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-			Mave += star_m[k] * madhoc;
-			M2ave += sqr(star_m[k] * madhoc);
+			//OPT use variable for star_m[k] * madhoc
+			double tmp = star_m[k] * madhoc;
+			Mv2ave += tmp * (sqr(star[k].vr) + sqr(star[k].vt));
+			Mave += tmp;
+			M2ave += sqr(tmp);
 		}
+		//OPT: Remove double?
 		Mv2ave /= (double) (2 * p);
 		Mave /= (double) (2 * p);
 		M2ave /= (double) (2 * p);
@@ -1421,7 +1431,7 @@ double mpi_simul_relax_new(void)
 		dtmin = MIN(dtmin, dt);
 	}
 
-	MPI_Reduce(&dtmin, &DTrel, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);     
+	MPI_Allreduce(&dtmin, &DTrel, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);     
 
 	return(DTrel);
 }

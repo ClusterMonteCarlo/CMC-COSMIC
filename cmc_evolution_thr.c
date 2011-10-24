@@ -294,99 +294,92 @@ double GetTimeStep(gsl_rng *rng) {
 	}
 	Dt = DTrel;
 
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	{
-		/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
-		if (central.N_sin != 0 && SS_COLLISION) {
-			/* X defines pericenter needed for collision: r_p = X (R_1+R_2) */
-			if (TIDAL_CAPTURE) {
-				xcoll = XCOLLTC;
-			} else {
-				xcoll = XCOLLSS;
-			}
-			Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(xcoll) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
-					(1.0 + central.mR_ave/(2.0*xcoll*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
-				log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-			fprintf (stdout, "Time = %f Gyr Tcoll = %f Gyr\n", 
-					TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09,
-					Tcoll*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09);
+	/* calculate DTcoll, using the expression from Freitag & Benz (2002) (their paper II) */
+	if (central.N_sin != 0 && SS_COLLISION) {
+		/* X defines pericenter needed for collision: r_p = X (R_1+R_2) */
+		if (TIDAL_CAPTURE) {
+			xcoll = XCOLLTC;
 		} else {
-			Tcoll = GSL_POSINF;
+			xcoll = XCOLLSS;
 		}
-		DTcoll = 5.0e-3 * Tcoll;
-		Dt = MIN(Dt, DTcoll);
-
-		/* calculate DTbb, using a generalization of the expression for Tcoll */
-		if (central.N_bin != 0 && BINBIN) {
-			/* X defines pericenter needed for "strong" interaction: r_p = X (a_1+a_2) */	
-			Tbb = 1.0 / (16.0 * sqrt(PI) * central.n_bin * sqr(XBB) * (central.v_bin_rms/sqrt(3.0)) * central.a2_ave * 
-					(1.0 + central.ma_ave/(2.0*XBB*sqr(central.v_bin_rms/sqrt(3.0))*central.a2_ave))) * 
-				log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-		} else {
-			Tbb = GSL_POSINF;
-		}
-		DTbb = 5.0e-3 * Tbb;
-		Dt = MIN(Dt, DTbb);
-
-		/* calculate DTbs, using a generalization of the expression for Tcoll */
-		if (central.N_bin != 0 && central.N_sin != 0 && BINSINGLE) {
-			/* X defines pericenter needed for "strong" interaction: r_p = X a */
-			Tbs = 1.0 / (4.0 * sqrt(PI) * central.n_sin * sqr(XBS) * (central.v_rms/sqrt(3.0)) * central.a2_ave * 
-					(1.0 + central.m_ave*central.a_ave/(XBS*sqr(central.v_rms/sqrt(3.0))*central.a2_ave))) * 
-				log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-		} else {
-			Tbs = GSL_POSINF;
-		}
-		DTbs = 5.0e-3 * Tbs;
-		Dt = MIN(Dt, DTbs);
-
-		/* calculate DTse, for now using the SE mass loss from the previous step as an indicator
-			for this step; in the future perhaps we can get an estimate of the mass loss rate
-			from SSE/BSE */
-		if (!STELLAR_EVOLUTION || DMse == 0.0 || tcount == 1) {
-			DTse = GSL_POSINF;
-		} else {
-			/* DMse can be negative due to round-off error.  Give up if |DMse| is statistically
-				significantly larger than the round-off error. */
-			if (DMse < -1.0e-10 * ((double) clus.N_STAR)) {
-				eprintf("DMse = %g < -1.0e-10 * ((double) clus.N_STAR)!\n", DMse);
-				exit_cleanly(-1);
-			}
-			/* get timescale for 1% mass loss from cluster */
-			Tse = 0.01 * Mtotal / (fabs(DMse) / Prev_Dt);
-			printf("Mtotal=%.18g DMse=%.18g\n", Mtotal, DMse);
-			/* and take a fraction of that for the timestep */
-			DTse = 0.1 * Tse;
-		}
-		Dt = MIN(Dt, DTse);
-
-		//Sourav: Toy rejuvenation prescription, early mass loss indication for timestep
-		if (!STAR_AGING_SCHEME || DMrejuv == 0.0){
-			DTrejuv = GSL_POSINF;
-		} else {
-			if (DMrejuv<0.0) {
-				eprintf("DMrejuv = %g < 0.0!\n", DMrejuv);
-				exit_cleanly(-1);
-			}
-			/* get timescale for 0.1% mass loss from cluster */
-			Trejuv = 0.01 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
-			DTrejuv = 0.01 * Trejuv; //Check if this fraction can make virial ratio better
-			printf ("THIS IS WHERE THE TIMESCALE GOT SET: T= %f DT=%f DM=%f\n", Trejuv, DTrejuv, DMrejuv);
-			printf ("*****************************\n"); //checking what's going on
-		}	
-		Dt = MIN(Dt, DTrejuv);
-
-		/* take a reasonable timestep if all physics is turned off */
-		if (Dt == GSL_POSINF) {
-			Dt = 0.001;
-		}
-
-		/* debugging */
-		dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
-		printf("Dt=%g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
+		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(xcoll) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
+				(1.0 + central.mR_ave/(2.0*xcoll*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
+			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+		fprintf (stdout, "Time = %f Gyr Tcoll = %f Gyr\n", 
+				TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09,
+				Tcoll*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09);
+	} else {
+		Tcoll = GSL_POSINF;
 	}
+	DTcoll = 5.0e-3 * Tcoll;
+	Dt = MIN(Dt, DTcoll);
+
+	/* calculate DTbb, using a generalization of the expression for Tcoll */
+	if (central.N_bin != 0 && BINBIN) {
+		/* X defines pericenter needed for "strong" interaction: r_p = X (a_1+a_2) */	
+		Tbb = 1.0 / (16.0 * sqrt(PI) * central.n_bin * sqr(XBB) * (central.v_bin_rms/sqrt(3.0)) * central.a2_ave * 
+				(1.0 + central.ma_ave/(2.0*XBB*sqr(central.v_bin_rms/sqrt(3.0))*central.a2_ave))) * 
+			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+	} else {
+		Tbb = GSL_POSINF;
+	}
+	DTbb = 5.0e-3 * Tbb;
+	Dt = MIN(Dt, DTbb);
+
+	/* calculate DTbs, using a generalization of the expression for Tcoll */
+	if (central.N_bin != 0 && central.N_sin != 0 && BINSINGLE) {
+		/* X defines pericenter needed for "strong" interaction: r_p = X a */
+		Tbs = 1.0 / (4.0 * sqrt(PI) * central.n_sin * sqr(XBS) * (central.v_rms/sqrt(3.0)) * central.a2_ave * 
+				(1.0 + central.m_ave*central.a_ave/(XBS*sqr(central.v_rms/sqrt(3.0))*central.a2_ave))) * 
+			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+	} else {
+		Tbs = GSL_POSINF;
+	}
+	DTbs = 5.0e-3 * Tbs;
+	Dt = MIN(Dt, DTbs);
+
+	/* calculate DTse, for now using the SE mass loss from the previous step as an indicator
+		for this step; in the future perhaps we can get an estimate of the mass loss rate
+		from SSE/BSE */
+	if (!STELLAR_EVOLUTION || DMse == 0.0 || tcount == 1) {
+		DTse = GSL_POSINF;
+	} else {
+		/* DMse can be negative due to round-off error.  Give up if |DMse| is statistically
+			significantly larger than the round-off error. */
+		if (DMse < -1.0e-10 * ((double) clus.N_STAR)) {
+			eprintf("DMse = %g < -1.0e-10 * ((double) clus.N_STAR)!\n", DMse);
+			exit_cleanly(-1);
+		}
+		/* get timescale for 1% mass loss from cluster */
+		Tse = 0.01 * Mtotal / (fabs(DMse) / Prev_Dt);
+		/* and take a fraction of that for the timestep */
+		DTse = 0.1 * Tse;
+	}
+	Dt = MIN(Dt, DTse);
+
+	//Sourav: Toy rejuvenation prescription, early mass loss indication for timestep
+	if (!STAR_AGING_SCHEME || DMrejuv == 0.0){
+		DTrejuv = GSL_POSINF;
+	} else {
+		if (DMrejuv<0.0) {
+			eprintf("DMrejuv = %g < 0.0!\n", DMrejuv);
+			exit_cleanly(-1);
+		}
+		/* get timescale for 0.1% mass loss from cluster */
+		Trejuv = 0.01 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
+		DTrejuv = 0.01 * Trejuv; //Check if this fraction can make virial ratio better
+		dprintf ("THIS IS WHERE THE TIMESCALE GOT SET: T= %f DT=%f DM=%f\n", Trejuv, DTrejuv, DMrejuv);
+		dprintf ("*****************************\n"); //checking what's going on
+	}	
+	Dt = MIN(Dt, DTrejuv);
+
+	/* take a reasonable timestep if all physics is turned off */
+	if (Dt == GSL_POSINF) {
+		Dt = 0.001;
+	}
+
+	/* debugging */
+	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
 
 	return (Dt);
 }
