@@ -55,7 +55,8 @@
       real*8 v1out,v2out,v3out,vkout
       logical output
 *
-      COMMON /VALUE4/ sigma,bhflag
+      real*8 bconst,CK
+      COMMON /VALUE4/ sigma,bconst,CK,bhflag
       real*8 mxns,neta,bwind,hewind
       COMMON /VALUE1/ neta,bwind,hewind,mxns
       real*8 bkick(12)
