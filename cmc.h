@@ -99,6 +99,8 @@ typedef struct{
 	double lifetime_m2; /*Sourav: lifetime of star2*/
 	double createtime_m1; /*Sourav: createtime of star1*/
 	double createtime_m2; /*Sourav: createtime of star2*/
+	// Meagan: to keep track of three-body binaries
+	//int threebodybinary; /* whether binary was formed via three-body encounter */
 } binary_t;
 
 struct star_coords {
@@ -132,6 +134,7 @@ typedef struct{
 	double r_apo; /* apocenter distance */
 	double phi; /* value of potential at position of star (only updated at end of timestep) */
 	long   interacted; /* whether or not the star has undergone a strong interaction (i.e., not relaxation) */
+	long   threebb_interacted;/*whether or not object was involved in three-body binary formation*/
 	long   binind; /* index to the binary */
 	long   id; 	/* the star's unique identifier */
 	double rad; /* radius */
@@ -178,6 +181,13 @@ typedef struct{
 	int BINBIN;
 #define PARAMDOC_BINSINGLE "toggles binary--single interactions (0=off, 1=on)"
 	int BINSINGLE;
+// Meagan - three-body binary formation
+#define PARAMDOC_THREEBODYBINARIES "toggles three-body binary formation (0=off, 1=on)"
+	int THREEBODYBINARIES;
+#define PARAMDOC_MIN_BINARY_HARDNESS "minimum hardness for newly formed three-body binaries"
+	int MIN_BINARY_HARDNESS;
+#define PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES "allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)"
+	int ONLY_FORM_BH_THREEBODYBINARIES;
 #define PARAMDOC_SNAPSHOTTING "toggles output snapshotting (0=off, 1=on)"
 	int SNAPSHOTTING;
 #define PARAMDOC_SNAPSHOT_DELTAT "snapshotting time interval (FP units)"
@@ -512,10 +522,11 @@ double sigma_r(double r);
 
 // Meagan
 /* three-body binary formation */
-double get_eta(void);
-void calc_3bb_encounter_dyns(long k1, long k2, long k3, double angle1, double angle2, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel13[4], double vrel3[4], double vrel2[4], double vcm12[4], double vcm13[4], gsl_rng *rng);
-void make_threebodybinary(long k1, long k2, long k3, long knew, double sigma_local, double v1[4], double v2[4], double v3[4], gsl_rng *rng);
-
+void sort_three_masses(long sq, long *k1, long *k2, long *k3);
+double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], double vrel3[4]);
+void calc_3bb_encounter_dyns(long k1, long k2, long k3, double angle1, double angle2, double v1[4], double v2[4], double v3[4], double (*vrel12)[4], double (*vrel3)[4], gsl_rng *rng);
+void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_running, gsl_rng *rng);
+void calc_sigma_local(long k1, long p, long N_LIMIT, double *ave_local_mass, double *sigma_local);
 int remove_old_star(double time, long k);
 
 /* signal/GSL error handling stuff */

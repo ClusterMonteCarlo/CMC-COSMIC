@@ -41,6 +41,11 @@ _EXTERN_ char MASS_PC[1000], MASS_BINS[1000], INPUT_FILE[1000];
 _EXTERN_ int MASS_PC_BH_INCLUDE;
 _EXTERN_ int BINSINGLE, BINBIN;
 _EXTERN_ int BININITKT, STOPATCORECOLLAPSE;
+/* Meagan: for turning on/off three-body binary formation */
+_EXTERN_ int THREEBODYBINARIES, ONLY_FORM_BH_THREEBODYBINARIES;;
+_EXTERN_ double MIN_BINARY_HARDNESS;
+_EXTERN_ long N3bbformed;
+_EXTERN_ double delta_E_3bb;
 /* binary stuff */
 _EXTERN_ long N_b, N_bb, N_bs;
 _EXTERN_ double M_b, E_b;
@@ -48,8 +53,11 @@ _EXTERN_ binary_t *binary;
 /* file pointers */
 _EXTERN_ FILE *lagradfile, *dynfile, *lagrad10file, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
-_EXTERN_ FILE *binaryfile, *threebbfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
+_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
+// Meagan: file for tracking potential fluctuations for innermost 1000 stars
+_EXTERN_ FILE *phi_variation;
+
 /* everything else except arrays */
 _EXTERN_ char outprefix[100];
 _EXTERN_ char dummystring[MAX_STRING_LENGTH], dummystring2[MAX_STRING_LENGTH], dummystring3[MAX_STRING_LENGTH], dummystring4[MAX_STRING_LENGTH];
