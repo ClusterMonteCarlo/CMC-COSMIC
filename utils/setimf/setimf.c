@@ -199,7 +199,7 @@ void parse_options(struct imf_param *param, int argc, char *argv[]){
 		write_usage();
 		exit(EXIT_FAILURE);
 	}
-	if (param->imf<0 || param->imf>16){
+	if (param->imf<0 || param->imf>18){
 		printf("Invalid IMF model value\n");
 		write_usage();
 		exit(EXIT_FAILURE);
@@ -537,7 +537,7 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
             double *m1, *m2, m;
             char str_imf[1024]="";
             
-            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.04)3.0(1.01)15(1.72)", 1024);
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.04)3.0(0.99)15(1.72)", 1024);
             m1= generateIMF(str_imf, 
                 cfd->NOBJ+1, param.mmin, param.mmax);
 
@@ -629,6 +629,47 @@ double set_masses(struct imf_param param, cmc_fits_data_t *cfd){
               total_mass += m;
             } 
           }
+	  else if (param.imf==17) { //three PL another try
+            double *m1, *m2, m;
+            char str_imf[1024]="";
+            
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(3.22)3.6(1.37)13.0(1.87154)", 1024);
+            m1= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            strncpy(str_imf, "0.1(1.3)0.5(2.3)1.0(2.3)3.0(2.3)", 1024);
+            m2= generateIMF(str_imf, 
+                cfd->NOBJ+1, param.mmin, param.mmax);
+
+            for(i=1; i<=cfd->NOBJ; i++){
+              X = rng_t113_dbl();
+              X2 = rng_t113_dbl();
+              if (X2<0.5 && cfd->obj_r[i]<param.rcr){
+                m= m1[i];
+              } else {
+                m= m2[i];
+              }
+              cfd->obj_m[i] = m;
+              total_mass += m;
+            } 
+          }
+	else if (param.imf==18) { //two mass:total mass in each bin is equal
+	     for(i=1; i<=cfd->NOBJ; i++){
+		     X = rng_t113_dbl();
+		     double fraction = param.mmin/param.mmax;
+		     if (X < fraction){
+			m = param.mmax;
+		     } else {
+			m = param.mmin;
+		     }	
+		     if (isnan(m)) {
+		       fprintf(stderr, "Oops!  m=NaN.  Please make coefficients more precise.\n");
+		          exit(-127);
+			}
+		     cfd->obj_m[i] = m;
+		     total_mass += m;
+	     }
+	}
 	else {
 		printf("This can't happen!\n");
 		exit(EXIT_FAILURE);

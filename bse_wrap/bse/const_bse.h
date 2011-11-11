@@ -17,6 +17,8 @@
       COMMON /VALUE2/ alpha1,lambda
       COMMON /VALUE4/ sigma,bhflag
       COMMON /VALUE5/ beta,xi,acc2,epsnov,eddfac,gamma
+      INTEGER id1_pass,id2_pass
+      COMMON /cmcpass/ id1_pass,id2_pass
       REAL*8 pts1,pts2,pts3
       COMMON /POINTS/ pts1,pts2,pts3
       REAL*8 dmmax,drmax

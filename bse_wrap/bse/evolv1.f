@@ -199,6 +199,7 @@ c-------------------------------------------------------------c
                if(it.eq.20.and.kw.eq.4) goto 30
                if(it.gt.30)then
                   WRITE(99,*)' DANGER1! ',it,kw,mass,dr,rm0
+                  FLUSH(99)
                   WRITE(*,*)' STOP: EVOLV1 FATAL ERROR '
                   CALL exit(0)
                   STOP 
@@ -253,7 +254,7 @@ c-------------------------------------------------------------c
 *
 * Force new NS or BH to have a one second period. 
 * 
-            if(kw.eq.13.or.kw.eq.14)then
+            if((kw.eq.13.or.kw.eq.14).and.kw.ne.kwold)then
                ospin = 2.0d+08
                jspin = k3*rc*rc*mc*ospin
                CALL kick(kw,mass,mt,0.d0,0.d0,-1.d0,0.d0,vk,1,
@@ -350,6 +351,7 @@ c-------------------------------------------------------------c
          if(it.eq.20.and.kw.eq.4) goto 50
          if(it.gt.30)then
             WRITE(99,*)' DANGER2! ',it,kw,mass,dr,rm0
+            FLUSH(99)
             WRITE(*,*)' STOP: EVOLV1 FATAL ERROR '
             CALL exit(0)
             STOP 
