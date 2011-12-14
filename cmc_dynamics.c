@@ -25,7 +25,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 /* Meagan: added these variables for three-body binary formation */
 	long sq, k1, k2, k3, form_binary;
 	double n_threshold, triplet_count, num_triplets_averaged=200;
-	double ave_local_mass, sigma_local, vrel_ave, v1[4], v2[4], v3[4], vrel12[4], vrel3[4];
+	double ave_local_mass, sigma_local, vrel_ave, v1[4], v2[4], v3[4], vrel12[4], vrel3[4]; 
 	double angle1, angle2, angle3, angle4; 
 	double eta_min=MIN_BINARY_HARDNESS, Y1, rate_3bb, rate_ave, P_3bb, P_ave;
 
@@ -116,19 +116,16 @@ void dynamics_apply(double dt, gsl_rng *rng)
 					// Quantities needed for encounter
 					calc_3bb_encounter_dyns(k1, k2, k3, angle1, angle2, v1, v2, v3, &vrel12, &vrel3, rng);
 
-
 					//====================================================================
 					//  Calculate probability of binary formation between stars 1 and 2  |
 					//====================================================================
 					/* units in rate are 1/T_cross  */
 
+					// Below is rate_3bb with only the velocity term "vrel_12^-10" replaced with "vrel_ave^-10" - but not all vrel_12 terms replaced with vrel_ave
+					//rate_3bb = sqrt(2) * sqr(PI) * sqr(n_local) *  pow(vrel_ave, -9) * pow(((star[k1].m + star[k2].m) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m)) * sqr(vrel12[0]/vrel3[0]) * eta_min);
 					//rate_3bb = sqrt(2) * sqr(PI)* sqr(n_local) * vrel3[0] * pow(vrel12[0], -10) * pow(((star[k1].m + star[k2].m) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m)) * sqr(vrel12[0]/vrel3[0]) * eta_min);
 
 					// Calculate RATE of binary formation
-
-					// Below is rate_3bb with only the velocity term "vrel_12^-10" replaced with "vrel_ave^-10" - but not all vrel_12 terms replaced with vrel_ave
-					//rate_3bb = sqrt(2) * sqr(PI) * sqr(n_local) *  pow(vrel_ave, -9) * pow(((star[k1].m + star[k2].m) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m)) * sqr(vrel12[0]/vrel3[0]) * eta_min);
-
 
 					// Below is rate_3bb with all the velocity terms vrel_3 and vrel_12 replaced with the averaged local relative velocity, vrel_ave
 					rate_3bb = sqrt(2) * sqr(PI) * sqr(n_local) *  pow(vrel_ave, -9) * pow(((star[k1].m + star[k2].m) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m)) * eta_min);
@@ -138,7 +135,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				//	P_3bb = 0.0001;
 
 					//fprintf(threebbprobabilityfile, "%g %g %ld %ld %ld %g %g %g %d %d %d %g %g %g %g %g %g\n", TotalTime, P_12, k1, k2, k3, star[k1].m, star[k2].m, star[k3].m, star[k1].se_k, star[k2].se_k, star[k3].se_k, star[k1].vr, star[k1].vt, star[k2].vr, star[k2].vt, star[k3].vr, star[k3].vt);
-					
+
 					// print info on probability calculation, for innermost 200 triplets, in each timestep
 					if (triplet_count <= num_triplets_averaged) {
 						P_ave += P_3bb;

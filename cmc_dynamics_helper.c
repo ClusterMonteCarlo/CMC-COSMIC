@@ -231,7 +231,8 @@ void calc_3bb_encounter_dyns(long k1, long k2, long k3, double angle1, double an
 	angle2 = rng_t113_dbl() * 2.0 * PI;
 
 //	phi = star[k].Y * 2.0 * PI;
-
+	
+	// Set velocities of three stars
 	// Set velocities of three stars
 	v1[1] = star[k1].vt;
 	v1[2] = 0.0;
@@ -248,6 +249,7 @@ void calc_3bb_encounter_dyns(long k1, long k2, long k3, double angle1, double an
 	v3[0] = sqrt(sqr(v3[1]) + sqr(v3[2]) + sqr(v3[3]));
 
 	for (j=1; j<=3; j++) {
+
 		// Quantities needed for calculating 3bb formation rate:
 		// relative veloc between the two candidates stars for binary
 		// COM velocity of candidate binary pair
@@ -399,6 +401,7 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 	vs_cmf[1] = vs_cmf[0] * sin(angle3) * cos(angle4);
 	vs_cmf[2] = vs_cmf[0] * sin(angle3) * sin(angle4);
 	vs_cmf[3] = vs_cmf[0] * cos(angle3);
+
 	// Fix direction of velocity of binary to be opposite to that of single - add Pi to each of the angles (polar angle and azimuthal) that were used to orient the velocity of the single
 	vb_cmf[1] = vb_cmf[0] * sin(PI - angle3) * cos(angle4 + PI);
 	vb_cmf[2] = vb_cmf[0] * sin(PI - angle3) * sin(angle4 + PI);

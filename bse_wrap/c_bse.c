@@ -45,7 +45,7 @@ int main(void)
   bse_set_tflag(1);
   bse_set_ifflag(0);
   bse_set_wdflag(1);
-  bse_set_bhflag(0);
+  bse_set_bhflag(1);
   bse_set_nsflag(1);
   bse_set_mxns(3.0);
   bse_set_idum(29769);
