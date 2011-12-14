@@ -75,7 +75,11 @@ int main(int argc, char *argv[])
 	tcount = 1;
 	TotalTime = 0.0;
 	reset_rng_t113(IDUM);
-	
+
+	/* Meagan - 3bb */
+	N3bbformed = 0;
+	delta_E_3bb = 0.0;
+
 	/* binary remainders */
 	clus.N_MAX = clus.N_STAR;
 	N_b = clus.N_BINARY;
@@ -273,6 +277,9 @@ int main(int argc, char *argv[])
 		/* reset interacted flag */
 		for (i = 1; i <= clus.N_MAX; i++) {
 			star[i].interacted = 0;
+			/* Meagan - 3bb */
+			star[i].threebb_interacted = 0;
+
 		}
 		
 		/* update variables, then print */

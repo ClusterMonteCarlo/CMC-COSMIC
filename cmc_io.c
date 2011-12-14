@@ -549,6 +549,19 @@ void parser(int argc, char *argv[], gsl_rng *r)
 				PRINT_PARSED(PARAMDOC_BINSINGLE);
 				sscanf(values, "%d", &BINSINGLE);
 				parsed.BINSINGLE = 1;
+	/* Meagan: new parameters for three-body binaries: THREEBODYBINARIES, MIN_BINARY_HARDNESS, ONLY_FORM_BH_THREEBODYBINARIES */
+			} else if (strcmp(parameter_name, "THREEBODYBINARIES") == 0) {
+				PRINT_PARSED(PARAMDOC_THREEBODYBINARIES);
+				sscanf(values, "%d", &THREEBODYBINARIES);
+				parsed.THREEBODYBINARIES = 1;
+			} else if (strcmp(parameter_name, "MIN_BINARY_HARDNESS") == 0) {
+				PRINT_PARSED(PARAMDOC_MIN_BINARY_HARDNESS);
+				sscanf(values, "%lf", &MIN_BINARY_HARDNESS);
+				parsed.MIN_BINARY_HARDNESS = 1;
+			} else if (strcmp(parameter_name, "ONLY_FORM_BH_THREEBODYBINARIES") == 0) {
+				PRINT_PARSED(PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES);
+				sscanf(values, "%d", &ONLY_FORM_BH_THREEBODYBINARIES);
+				parsed.ONLY_FORM_BH_THREEBODYBINARIES = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOTTING") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOTTING);
 				sscanf(values, "%d", &SNAPSHOTTING);
@@ -911,6 +924,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(PREAGING, 0, PARAMDOC_PREAGING);
 	CHECK_PARSED(BINBIN, 1, PARAMDOC_BINBIN);
 	CHECK_PARSED(BINSINGLE, 1, PARAMDOC_BINSINGLE);
+	/*Meagan: new parameters for 3-body binary formation*/
+	CHECK_PARSED(THREEBODYBINARIES, 0, PARAMDOC_THREEBODYBINARIES);
+	CHECK_PARSED(MIN_BINARY_HARDNESS, 5.0, PARAMDOC_MIN_BINARY_HARDNESS);
+	CHECK_PARSED(ONLY_FORM_BH_THREEBODYBINARIES, 1, PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES);
+	// default - 1: three-body binary formation only allowed for black holes
 	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);
 	CHECK_PARSED(MINIMUM_R, 0.0, PARAMDOC_MINIMUM_R);
 	CHECK_PARSED(BH_R_DISRUPT_NB, 0., PARAMDOC_BH_R_DISRUPT_NB);
@@ -1131,6 +1149,29 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 
+	// print header
+	fprintf(threebbfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:ave_local_mass #12:sigma_local #13:eta #14:Eb #15:ecc #16:a[AU] #17:r_peri[AU] #18:r(bin) #19:r(single) #20:vr(bin) #21:vt(bin) #22:vr(single) #23:vt(single) #24:phi(bin) #25:phi(single) #26:delta_PE #27:delta_KE #28:delta_E(interaction) #29:delta_E(cumulative) #30:N_3bb\n");
+
+	sprintf(outfile, "%s.3bbprobability.log", outprefix);
+	if ((threebbprobabilityfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create three-body formation probability log output file \"%s\".\n", outfile);
+		exit(1);
+	}
+	fprintf(threebbprobabilityfile, "#1:time #2:dt #3:dt*N/log(gamma*N) #3:Rate_3bb #4:P_3bb #5:r\n### average rate and probability of three-body binary formation in the timestep; calculated from the innermost 300 triplets of single stars considered for three-body binary formation\n");
+
+	sprintf(outfile, "%s.lightcollision.log", outprefix);
+	if ((lightcollisionfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create light collision log output file \"%s\".\n", outfile);
+		exit(1);
+	}
+
+	sprintf(outfile, "%s.3bbdebug.log", outprefix);
+	if ((threebbdebugfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create 3bb debug output file \"%s\".\n", outfile);
+		exit(1);
+	}
+	// print header
+	fprintf(threebbdebugfile, "#1:k1 #2:k2 #3:k3 #4:id1 #5:id2 #6:id3 #7:r1 #8:r2 #9:r3 #10:m1 #11:m2 #12:m3 #13:v1 #14:v1[1] #15:v1[2] #16:v1[2] #17:v2 #18:v2[1] #19:v2[2] #20:v2[3] #21:v3 #22:v3[1] #23:v3[2] #24:v3[3] #25:v1_cmf #26:v1_cmf[1] #27:v1_cmf[2] #28:v1_cmf[3] #29:v2_cmf #30:v2_cmf[1] #31:v2_cmf[2] #32:v2_cmf[3] #33:v3_cmf #34:v3_cmf[1] #35:v3_cmf[2] #36:v3_cmf[3] #37:knew #38:bin_id #39:bin_r #40:bin_m #41:vs_cmf #42:vs_cmf[1] #43:vs_cmf[2] #44:vs_cmf[3] #45:vb_cmf #46:vb_cmf[1] #47:vb_cmf[2] #48:vb_cmf[3] #49:vs #50:vs[1] #51:vs[2] #52:vs[3] #53:vb #55:vb[1] #56:vb[2] #57:vb[3] #58:ave_local_m #59:sigma #60:eta #61:Eb #62:ecc #63:rp #64:a #65:PE_i #66:PE_f #67:KE_cmf_i #68:KE_cmf_f #69:KE_i #70:KE_f #71:delta_PE #72:delta_KE #73:delta_E\n");
 	/* output files for binaries */
 	/* general binary information */
 	sprintf(outfile, "%s.bin.dat", outprefix);
@@ -1249,6 +1290,9 @@ void close_buffers(void)
 	fclose(relaxationfile);
 	/* Meagan: close 3bb log file */
 	fclose(threebbfile);
+	fclose(threebbprobabilityfile);
+	fclose(lightcollisionfile);
+	fclose(threebbdebugfile);
 	/*Sourav: closing the file I opened*/
 	fclose(removestarfile);
 	fclose(binaryfile);
