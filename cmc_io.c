@@ -1062,13 +1062,25 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	/* allocation of memory for global variables */
 	/*********************************************/
 	
-	/* the main star array containing all star parameters */
-	star = (star_t *) calloc(N_STAR_DIM, sizeof(star_t));
 	
+	//MPI3: Allocating only enough memory per processor.
+	N_STAR_DIM_OPT = 2 + clus.N_STAR / procs + 2 * clus.N_BINARY / procs;
+	N_STAR_DIM_OPT = (long) floor(1.1 * ((double) N_STAR_DIM_OPT));
+
 	/* allocate memory for velocity dispersion array */
 	sigma_array.n = 0;
+
+	/* the main star array containing all star parameters */
+#ifdef USE_MPI
+	star = (star_t *) calloc(N_STAR_DIM_OPT, sizeof(star_t));
+	sigma_array.r = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
+	sigma_array.sigma = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
+#else
+	star = (star_t *) calloc(N_STAR_DIM, sizeof(star_t));
 	sigma_array.r = (double *) calloc(N_STAR_DIM, sizeof(double));
 	sigma_array.sigma = (double *) calloc(N_STAR_DIM, sizeof(double));
+#endif
+
 	
 	/* the main binary array containing all binary parameters */
 	binary = (binary_t *) calloc(N_BIN_DIM, sizeof(binary_t));
@@ -1564,12 +1576,14 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 #endif
 	 */
 
+	/* MPI2: Calculating Start and End for mimcking parallel rng */
+	findLimits( cfd.NOBJ, 20 );
+
+	mpiInitGlobArrays();
 	/* Set up initial conditions */
 	//MPI2: can be done on all nodes? which means no need to broadcast star structure.
 	//MPI2: This fn populates the star array with the the data obtained after parsing
 	load_fits_file_data(); 
-
-	star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
 
 	/* set some important global variables */
 	set_global_vars2();
@@ -1580,28 +1594,20 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 	/* binary remainders */
 	clus.N_MAX = clus.N_STAR;
 	N_b = clus.N_BINARY;
+
+	//MPI3: Check with Stefan if the sentinel is reqd.
+	//star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
 }
 
-void mpiInitBcastGlobArrays()
+void mpiInitGlobArrays()
 {
 #ifdef USE_MPI
 	/*MPI2: Initializing and extracting global arrays that will be needed by all processors.*/
 	//MPI2: Tested
-	int i;
 	star_r = (double *) malloc(N_STAR_DIM * sizeof(double));
 	star_m = (double *) malloc(N_STAR_DIM * sizeof(double));
 	star_phi = (double *) malloc(N_STAR_DIM * sizeof(double));
-
-	if(myid==0) {
-		for(i=0; i<=N_STAR_DIM; i++) {
-			star_r[i] = star[i].r;
-			star_m[i] = star[i].m;
-		}
-	}
-	MPI_Bcast(star_m, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(star_r, N_STAR_DIM, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
-
 }
 
 void alloc_bin_buf()

@@ -25,11 +25,6 @@ int main(int argc, char *argv[])
 	gsl_rng *rng;
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
-	//Temp file handle for debugging
-	FILE *ftest;
-	//MPI2: Some variables to assist debugging
-	char num[5],filename[20], tempstr[20];
-
 	//MPI2: The clock here is inaccurate since there might be overhead before this due to MPI initialization etc.
 	clock_t t1=clock();
 
@@ -57,7 +52,6 @@ int main(int argc, char *argv[])
 	created_star_se_node = (int *) calloc(procs, sizeof(int));
 	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
-
 	Start = (int *) calloc(procs, sizeof(int));
 	End = (int *) calloc(procs, sizeof(int));
 
@@ -81,10 +75,9 @@ int main(int argc, char *argv[])
 
 	set_rng_states();
 
-	mpiInitBcastGlobArrays();
-
 	//MPI3: Need to check if this function and the sigma variable is reqd at all! Use the buffer for collecting ghost particles.
-	calc_sigma_new();
+	//MPI3: Ignoring for now. Parallelize after verifying if the variable is reqd at all.
+	//calc_sigma_new();
 
 	/* calculate central quantities */
 	calc_central_new();
@@ -98,17 +91,20 @@ int main(int argc, char *argv[])
 	calc_potential_new();
 
 	//MPI2: Setting this because in the MPI version only _r is set, and will create problem while sorting.
+#ifndef USE_MPI
 	star[clus.N_MAX + 1].r = SF_INFINITY;
 	star[clus.N_MAX + 1].phi = 0.0;
+#endif
 
-	/* MPI2: Calculating Start and End for mimcking parallel rng */
-	findLimits( clus.N_MAX, 20 );
+	//MPI3: Temporarily avoiding binary stuff.
+	if(N_b !=0)
+	{
+		alloc_bin_buf();
 
-	alloc_bin_buf();
+		distr_bin_data();
 
-	distr_bin_data();
-
-	bin_vars_calculate();
+		bin_vars_calculate();
+	}
 
 	total_bisections= 0;
 
@@ -152,7 +148,8 @@ int main(int argc, char *argv[])
 #endif
 
 	//OPT: M_b E_b calculated twice? Check for redundancy.
-	update_vars();
+	if(N_b!=0)
+		update_vars();
 
 	times(&tmsbufref);
 
@@ -168,8 +165,9 @@ int main(int argc, char *argv[])
 
 	calc_clusdyn_new();
 
+	//MPI3: Commenting out outputs for now.
 	/* Printing Results for initial model */
-	print_results();
+	//print_results();
 
 	/* print handy script for converting output files to physical units */
 	//skip outputs for MPI
@@ -179,21 +177,23 @@ int main(int argc, char *argv[])
 	cuInitialize();
 #endif
 
-// FINISHED OVERVIEW TILL HERE> CONTINUE NEXT TIME.
 #ifdef USE_MPI
-	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
+	if (STELLAR_EVOLUTION > 0) {
+		mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
-	for(i=0;i<procs;i++)
-		mpiLen[i] *= sizeof(double); 
+		for(i=0;i<procs;i++)
+			mpiLen[i] *= sizeof(double); 
 
-	//MPI3: Can be replaced by AllGatherv. For now, keep it the way it is. The same problem will reappear after sorting, where we need to do the same for the 3 global arrays, r, phi, and m. Have to think abt a novel solution.
-	MPI_Status stat;
-	if(myid!=0)
-		MPI_Send(&star_m[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-	else
-		for(i=1;i<procs;i++)
-			MPI_Recv(&star_m[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
-	MPI_Bcast(star_m, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		//MPI3: THis needs to be done only if SE is on? If yes, put a condition.
+		//MPI3: Can be replaced by AllGatherv. For now, keep it the way it is. The same problem will reappear after sorting, where we need to do the same for the 3 global arrays, r, phi, and m. Have to think abt a novel solution.
+		MPI_Status stat;
+		if(myid!=0)
+			MPI_Send(&star_m[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+		else
+			for(i=1;i<procs;i++)
+				MPI_Recv(&star_m[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+		MPI_Bcast(star_m, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	}
 #endif
 
 	/*******          Starting evolution               ************/
@@ -227,10 +227,23 @@ int main(int argc, char *argv[])
 		/* calculate central quantities */
 		calc_central_new();
 
+		//=========================================
+		//MPI3: COMPLETED PARALLELIZATION TILL HERE>
+		//=========================================
+		/*if(myid==1)
+			for(i=0; i<procs; i++)
+				printf("%ld %d %d\n", i, Start[i], End[i]);
+		*/
+		//=========================================
+
 		calc_timestep(rng);
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
+#ifdef USE_MPI
+		clus.N_MAX_NEW = mpiEnd-mpiBegin+1;
+#else
 		clus.N_MAX_NEW = clus.N_MAX;
+#endif
 
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
@@ -241,8 +254,8 @@ int main(int argc, char *argv[])
 		/* evolve stars up to new time */
 		DMse = 0.0;
 #ifndef USE_MPI
-	for(i=0; i<procs; i++)
-		DMse_mimic[i] = 0.0;
+		for(i=0; i<procs; i++)
+			DMse_mimic[i] = 0.0;
 #endif
 
 		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
@@ -253,7 +266,9 @@ int main(int argc, char *argv[])
 
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
+#ifndef USE_MPI
 		clus.N_MAX_NEW++;
+#endif
 
 		/* some numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
@@ -266,6 +281,7 @@ int main(int argc, char *argv[])
 		/* this calls get_positions() */
 		tidally_strip_stars1();
 
+
 		/* more numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
 		energy_conservation2();
@@ -276,13 +292,56 @@ int main(int argc, char *argv[])
 		 */
 		ComputeIntermediateEnergy();
 
-		pre_sort_comm();
+		//pre_sort_comm();
 
-		collect_bin_data();		
+		//collect_bin_data();		
 
-		tidally_strip_stars2();
+		//MPI3: Commenting out this for now as there are problems with this - refer to email discussions with Stefan.
+		//tidally_strip_stars2();
 
 		qsorts_new();
+
+#ifdef USE_MPI 
+   printf("id = %d\trng = %li\n", myid, rng_t113_int_new(curr_st));
+#else
+   for(i=0; i<procs; i++)
+      printf("i = %d\trng = %li\n", i, rng_t113_int_new(&st[i]));
+#endif
+
+#ifdef USE_MPI
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = 1; j <= End[i]-Start[i]+1; j++ )
+				//for( j = mpiBegin; j <= mpiEnd; j++ )
+				//for( j = 1; j <= clus.N_MAX; j++ )
+					fprintf(ftest, "%ld\t%.18g\t\n", mpiBegin+j-1, star[j].r);
+					//fprintf(ftest, "%ld\t%ld\t\n", mpiBegin+j-1, star[j].id);
+					//fprintf(ftest, "%ld\t%.18g\t\n", j, star_m[j]);
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+MPI_Barrier(MPI_COMM_WORLD);
+printf("%d %d HIIIIIIIII\n", myid, (mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%2-1);
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+		fclose(ftest);
+#endif
+return;
 
 		calc_potential_new2();
 

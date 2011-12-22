@@ -14,26 +14,34 @@
 
 void load_fits_file_data(void)
 {
-	long i, j;
+	long i, j=0;
 
 	newstarid = 0;
 
 	/* set units */
 	units_set();
 
+#ifdef USE_MPI
+	//MPI3: Copying only the data each process needs.
+	for (i=0; i<=End[myid] - Start[myid]+1; i++) {
+		//MPI3: Getting global index to read only stars that belong to this processor.
+		j = get_global_idx(i);
+#else
 	/* copy everything over from cfd */
 	for (i=0; i<=cfd.NOBJ+1; i++) {
-		star[i].id = cfd.obj_id[i];
+		j = i;
+#endif
+		star[i].id = cfd.obj_id[j];
 		if (star[i].id > newstarid) {
-			newstarid = star[i].id;
+			newstarid = star[j].id;
 		}
-		star[i].se_k = cfd.obj_k[i];
-		star[i].m = cfd.obj_m[i] * ((double) clus.N_STAR);
-		star[i].rad = cfd.obj_Reff[i];
-		star[i].r = cfd.obj_r[i];
-		star[i].vr = cfd.obj_vr[i];
-		star[i].vt = cfd.obj_vt[i];
-		star[i].binind = cfd.obj_binind[i];
+		star[i].se_k = cfd.obj_k[j];
+		star[i].rad = cfd.obj_Reff[j];
+		star[i].vr = cfd.obj_vr[j];
+		star[i].vt = cfd.obj_vt[j];
+		star[i].binind = cfd.obj_binind[j];
+		star[i].m = cfd.obj_m[j] * ((double) clus.N_STAR);
+		star[i].r = cfd.obj_r[j];
 		/*Sourav: putting creation time and lifetime as a variable*/
 		/*Sourav: this is ongoing changes*/
 		if (!star[i].binind){
@@ -50,9 +58,17 @@ void load_fits_file_data(void)
 				star[i].lifetime = GSL_POSINF;
 			}
 		}
-
 	}
 
+#ifdef USE_MPI
+	//MPI3: All procs read data for global arrays.
+	for (i=0; i<=cfd.NOBJ+1; i++) {
+		star_m[i] = cfd.obj_m[i] * ((double) clus.N_STAR);
+		star_r[i] = cfd.obj_r[i];
+	}
+#endif
+
+	//MPI3: Ignoring binaries distribution for now.
 	for (i=0; i<=cfd.NBINARY; i++) {
 		j = cfd.bs_index[i];
 		binary[j].id1 = cfd.bs_id1[i];
@@ -91,15 +107,26 @@ void load_fits_file_data(void)
 	}
 
 	/* some assignments so the code won't break */
+#ifdef USE_MPI
+	star_r[0] = ZERO; 
+	star_r[clus.N_STAR + 1] = SF_INFINITY;
+#else
 	star[0].r = ZERO; 
 	star[clus.N_STAR + 1].r = SF_INFINITY;
+#endif
 	Mtotal = 1.0;
 
 	// central mass business, read in from file
 	// I believe the normalization should be correct, from above
+#ifdef USE_MPI
+	cenma.m = star_m[0];
+	cenma.m_new= star_m[0];
+	star_m[0] = 0.0;
+#else
 	cenma.m = star[0].m;
-        cenma.m_new= star[0].m;
+	cenma.m_new= star[0].m;
 	star[0].m = 0.0;
+#endif
 
 	if (BH_R_DISRUPT_NB> 0) {
 		diaprintf("R_disrupt in NB-units for all stars, Rdisr=%lg\n", BH_R_DISRUPT_NB);

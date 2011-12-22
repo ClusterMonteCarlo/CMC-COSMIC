@@ -25,16 +25,20 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	double mass_k, mass_kp; //Bharath: MPI
 
 //OPT:Check if removing this changes results. If not, get rid of it.
+//MPI3: Removing calc_sigma as per Stefan's suggestion.
+/*
 #ifdef USE_MPI
 	mpi_calc_sigma_r();
 #else
-	/* Calculate and store velocity dispersion profile for use with breaking binaries later.
-	   This can't be calculated later since the properties of the cluster members are changing with time. */
+	//Calculate and store velocity dispersion profile for use with breaking binaries later. This can't be calculated later since the properties of the cluster members are changing with time.
 	calc_sigma_r();
 #endif
+*/
+
 
 #ifdef USE_MPI
-	if(myid==0) 
+	//if(myid==0) 
+	if(0) 
 #endif
 	{
 		/* useful debugging and file headers */
@@ -90,27 +94,36 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	fprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
 
 #ifdef USE_MPI	
-	for (si=mpiBegin; si<=mpiEnd-mpiEnd%2-1; si+=2) {
+	for (si=1; si<=(mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%2-1; si+=2) {
 #else
 	/* the big loop, with limits chosen so that we omit the last star if it is not paired */
 	for (si=1; si<=N_LIMIT-N_LIMIT%2-1; si+=2) {
 #endif 
+		int g_k, g_kp;
 		dt = SaveDt;
 		
 		k = si;
 		kp = si + 1;
-	
+
+#ifdef USE_MPI
+		g_k = get_global_idx(k);
+		g_kp = get_global_idx(kp);
+#else
+		g_k = k;
+		g_kp = kp;
+#endif
+
 		//MPI2: Involves rng. To be handled later.	
 		/* set dynamical params for this pair */
 		calc_encounter_dyns(k, kp, v, vp, w, &W, &rcm, vcm, rng, 1);
 
 		//MPI: Makes use of r values of stars outside range. Assuming r array is global, no change needed for MPI version.
 		/* Compute local density */
-		n_local = calc_n_local(k, p, N_LIMIT);
+		n_local = calc_n_local(g_k, p, N_LIMIT);
 	
 #ifdef USE_MPI
-		mass_k = star_m[k];
-		mass_kp = star_m[kp];
+		mass_k = star_m[g_k];
+		mass_kp = star_m[g_kp];
 #else
 		mass_k = star[k].m;
 		mass_kp = star[kp].m;
@@ -218,7 +231,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 
 
 #ifndef USE_MPI
-		curr_st = &st[findProcForIndex(k)];
+		curr_st = &st[findProcForIndex(g_k)];
 #endif
 		/* do encounter or two-body relaxation */
 		if(rng_t113_dbl_new(curr_st) < P_enc) { 
@@ -308,7 +321,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			star[kp].vr = vp_new[3];
 			star[kp].vt = sqrt(sqr(vp_new[1]) + sqr(vp_new[2]));
 			if(star[k].vr == 0 || star[k].vt == 0 || star[kp].vr == 0 || star[kp].vt == 0)
-			
+
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
 			set_star_EJ(kp);

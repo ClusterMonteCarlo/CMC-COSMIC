@@ -23,7 +23,7 @@ _EXTERN_ double initial_total_mass, Mtotal;
 /* mass lost due to stellar evolution */
 _EXTERN_ double DMse, DMrejuv;
 /******************* Input file parameters *************************/
-_EXTERN_ long N_STAR_DIM, N_BIN_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, TIDAL_TREATMENT, SS_COLLISION, TIDAL_CAPTURE, STAR_AGING_SCHEME, PREAGING, NO_MASS_BINS;
+_EXTERN_ long N_STAR_DIM, N_BIN_DIM, N_STAR_DIM_OPT, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, TIDAL_TREATMENT, SS_COLLISION, TIDAL_CAPTURE, STAR_AGING_SCHEME, PREAGING, NO_MASS_BINS;
 _EXTERN_ long SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME;
 _EXTERN_ int SNAPSHOTTING, SNAPSHOT_CORE_COLLAPSE, SNAPSHOT_CORE_BOUNCE;
 _EXTERN_ long IDUM, PERTURB, RELAXATION;
@@ -104,6 +104,11 @@ _EXTERN_ FILE* ftest2;
 _EXTERN_ char num2[5],filename2[20], tempstr2[20];
 _EXTERN_ long *new_size;
 _EXTERN_ int *disp, *len;
+	//Temp file handle for debugging
+	FILE *ftest;
+	//MPI2: Some variables to assist debugging
+	char num[5],filename[20], tempstr[20];
+
 
 /* debugging */
 _EXTERN_ int debug;

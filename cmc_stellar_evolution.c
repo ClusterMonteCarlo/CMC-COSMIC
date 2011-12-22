@@ -16,7 +16,7 @@ void zero_out_array(double* ptr, int size)
 
 void stellar_evolution_init(void){  
 	double tphysf, dtp, vs[12];
-	int i;
+	int i, j=0;
 	long k, kb;
 	binary_t tempbinary;
 
@@ -58,14 +58,16 @@ void stellar_evolution_init(void){
 	dprintf("se_init: %g %g %g %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
 
 #ifdef USE_MPI 
-	for (k=mpiBegin; k<=mpiEnd; k++) {
+	for (k=1; k<=mpiEnd-mpiBegin+1; k++) {
+		j = get_global_idx(k);
 #else
 	/* set initial properties of stars */
 	for (k=1; k<=clus.N_MAX; k++) {
 #endif
+
 		if (star[k].binind == 0) { /* single star */
 #ifdef USE_MPI
-			star[k].se_mass = star_m[k] * units.mstar / MSUN;
+			star[k].se_mass = star_m[j] * units.mstar / MSUN;
 #else
 			star[k].se_mass = star[k].m * units.mstar / MSUN;
 #endif
@@ -85,7 +87,7 @@ void stellar_evolution_init(void){
 			dtp = tphysf - star[k].se_tphys;
 			dtp = 0.0;
 #ifdef USE_MPI
-			DMse += star_m[k] * madhoc;
+			DMse += star_m[j] * madhoc;
 #else
 			DMse_mimic[findProcForIndex(k)] += star[k].m * madhoc;
 #endif
@@ -163,8 +165,8 @@ void stellar_evolution_init(void){
 
 			star[k].rad = star[k].se_radius * RSUN / units.l;
 #ifdef USE_MPI
-			star_m[k] = star[k].se_mt * MSUN / units.mstar;
-			DMse -= star_m[k] * madhoc;
+			star_m[j] = star[k].se_mt * MSUN / units.mstar;
+			DMse -= star_m[j] * madhoc;
 #else
 			star[k].m = star[k].se_mt * MSUN / units.mstar;
 			DMse_mimic[findProcForIndex(k)] -= star[k].m * madhoc;
@@ -244,24 +246,20 @@ void stellar_evolution_init(void){
 void do_stellar_evolution(gsl_rng *rng)
 {
 	long k, kb;
+	int g_k;
 	int kprev;
 	double dtp, tphysf, vs[12], VKO;
 	binary_t tempbinary;
 	/* double vk, theta; */
 
-/*
-#ifdef USE_MPI 
-	//MPI2: Doing for N_MAX for now, have to do till N_MAX_NEW later, may be with 2 loops.
-	for (k=mpiBegin; k<=mpiEnd; k++) {
-#else
-*/
 	//MPI2: Running till N_MAX_NEW+1 following the bugfix of incrementing N_MAX_NEW after SE.
-	for(k=1; k<=clus.N_MAX_NEW+1; k++){ 
+	//MPI3: Why to run till N_MAX_NEW+1?! I guess it is to account for the sentinel. But now, we have no sentinel.
 #ifdef USE_MPI
-		if( ! ( (k>=mpiBegin && k<=mpiEnd) || (k > clus.N_MAX+1) ) )
-			continue;
+	for(k=1; k<=clus.N_MAX_NEW; k++){ 
+		g_k = get_global_idx(k);
+#else
+	for(k=1; k<=clus.N_MAX_NEW+1; k++){ 
 #endif
-
 		if (star[k].binind == 0) { /* single star */
 			tphysf = TotalTime / MEGA_YEAR;
 			dtp = tphysf;
@@ -269,7 +267,7 @@ void do_stellar_evolution(gsl_rng *rng)
 			kprev = star[k].se_k;	  
 
 #ifdef USE_MPI
-			if (star_m[k]<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
+			if (star_m[get_global_idx(k)]<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
 				dprintf ("zeroed out star: skipping SE:\n"); 
 				dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star_m[k], star_r[k], star_phi[k], star[k].vr, star[k].vt, star[k].E, star[k].J);	
 #else
@@ -279,7 +277,7 @@ void do_stellar_evolution(gsl_rng *rng)
 #endif
 			} else {
 #ifdef USE_MPI
-				DMse += star_m[k] * madhoc;
+				DMse += star_m[g_k] * madhoc;
 #else
 				DMse_mimic[findProcForIndex(k)] += star[k].m * madhoc;
 #endif
@@ -357,8 +355,8 @@ void do_stellar_evolution(gsl_rng *rng)
 
 				star[k].rad = star[k].se_radius * RSUN / units.l;
 #ifdef USE_MPI
-				star_m[k] = star[k].se_mt * MSUN / units.mstar;
-				DMse -= star_m[k] * madhoc;
+				star_m[g_k] = star[k].se_mt * MSUN / units.mstar;
+				DMse -= star_m[g_k] * madhoc;
 #else
 				star[k].m = star[k].se_mt * MSUN / units.mstar;
 				DMse_mimic[findProcForIndex(k)] -= star[k].m * madhoc;
@@ -400,7 +398,7 @@ void do_stellar_evolution(gsl_rng *rng)
 			dtp = tphysf - binary[kb].bse_tphys;
 			dtp = 0.0;
 #ifdef USE_MPI
-			if (star_m[k]<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
+			if (star_m[g_k]<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
 				if(myid==0) {
 					dprintf ("zeroed out star: skipping SE:\n");	
 					dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[k], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star_r[k]);
@@ -537,11 +535,10 @@ void write_stellar_data(void){
 
 void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
 {
-  int j;
+  int j, g_k;
   long knew, knewp;
   double dtp, VKO;
   
-
 #ifndef USE_MPI
   curr_st = &st[findProcForIndex(k)];
 #endif
@@ -553,8 +550,9 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     binary[kb].m1 = binary[kb].bse_mass[0] * MSUN / units.mstar;
     binary[kb].m2 = binary[kb].bse_mass[1] * MSUN / units.mstar;
 #ifdef USE_MPI
-    star_m[k] = binary[kb].m1 + binary[kb].m2;
-    DMse -= star_m[k] * madhoc;
+	 g_k = get_global_idx(k);
+    star_m[g_k] = binary[kb].m1 + binary[kb].m2;
+    DMse -= star_m[g_k] * madhoc;
 #else
     star[k].m = binary[kb].m1 + binary[kb].m2;
     DMse_mimic[findProcForIndex(k)] -= star[k].m * madhoc;
@@ -616,6 +614,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     cp_binmemb_to_star(k, 0, knew);
     cp_binmemb_to_star(k, 1, knewp);
 #ifdef USE_MPI
+	 //MPI3: There are going to be problems when new stars are created! _m refers to global array, what index should be used?
     DMse -= (star_m[knew] + star_m[knewp]) * madhoc;
 #else
     DMse_mimic[findProcForIndex(k)] -= (star[knew].m + star[knewp].m) * madhoc;
@@ -939,10 +938,12 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   
   kb = star[k].binind;
 #ifdef USE_MPI
-  star_r[knew] = star_r[k];
+  int g_k = get_global_idx(k);
+  star_r[knew] = star_r[g_k];
   star_m[knew] = binary[kb].bse_mass[kbi] * MSUN / units.mstar;
-  star_phi[knew] = star_phi[k];
+  star_phi[knew] = star_phi[g_k];
 #else
+  int g_k = k;
   /* and set the stars' dynamical properties */
   star[knew].r = star[k].r;
   star[knew].m = binary[kb].bse_mass[kbi] * MSUN / units.mstar;
@@ -1145,73 +1146,73 @@ void cp_m_to_star(long oldk, int kbi, star_t *target_star)
 /* set everything except tb */
 void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
 {
-  long kbold, kbnew;
-  
-  kbold = star[oldk].binind;
-  kbnew = star[knew].binind;
+	long kbold, kbnew;
 
-  if (oldkbi == -1) { /* star comes from input single star */
-    binary[kbnew].bse_mass0[kbinew] = star[oldk].se_mass;
-    binary[kbnew].bse_kw[kbinew] = star[oldk].se_k;
-    binary[kbnew].bse_mass[kbinew] = star[oldk].se_mt;
-    binary[kbnew].bse_ospin[kbinew] = star[oldk].se_ospin;
-    binary[kbnew].bse_epoch[kbinew] = star[oldk].se_epoch;
-    binary[kbnew].bse_tphys = star[oldk].se_tphys; /* tphys should be the same for both input stars so this should be OK */
-    binary[kbnew].bse_radius[kbinew] = star[oldk].se_radius;
-    binary[kbnew].bse_lum[kbinew] = star[oldk].se_lum;
-    binary[kbnew].bse_massc[kbinew] = star[oldk].se_mc;
-    binary[kbnew].bse_radc[kbinew] = star[oldk].se_rc;
-    binary[kbnew].bse_menv[kbinew] = star[oldk].se_menv;
-    binary[kbnew].bse_renv[kbinew] = star[oldk].se_renv;
-    binary[kbnew].bse_tms[kbinew] = star[oldk].se_tms;
-    //Sourav: toy rejuv- updating rejuv variables to the binary member from the single star
-    if (kbinew==0){
-      binary[kbnew].createtime_m1 = star[oldk].createtime;
-      binary[kbnew].lifetime_m1 = star[oldk].lifetime;
-      binary[kbnew].rad1 = star[oldk].rad; // PDK addition
-    } else {
-      binary[kbnew].createtime_m2 = star[oldk].createtime;
-      binary[kbnew].lifetime_m2 = star[oldk].lifetime;
-      binary[kbnew].rad2 = star[oldk].rad; // PDK addition
-    }
-  } else { /* star comes from input binary */
-    binary[kbnew].bse_mass0[kbinew] = binary[kbold].bse_mass0[oldkbi];
-    binary[kbnew].bse_kw[kbinew] = binary[kbold].bse_kw[oldkbi];
-    binary[kbnew].bse_mass[kbinew] = binary[kbold].bse_mass[oldkbi];
-    binary[kbnew].bse_ospin[kbinew] = binary[kbold].bse_ospin[oldkbi];
-    binary[kbnew].bse_epoch[kbinew] = binary[kbold].bse_epoch[oldkbi];
-    binary[kbnew].bse_tphys = binary[kbold].bse_tphys;
-    binary[kbnew].bse_radius[kbinew] = binary[kbold].bse_radius[oldkbi];
-    binary[kbnew].bse_lum[kbinew] = binary[kbold].bse_lum[oldkbi];
-    binary[kbnew].bse_massc[kbinew] = binary[kbold].bse_massc[oldkbi];
-    binary[kbnew].bse_radc[kbinew] = binary[kbold].bse_radc[oldkbi];
-    binary[kbnew].bse_menv[kbinew] = binary[kbold].bse_menv[oldkbi];
-    binary[kbnew].bse_renv[kbinew] = binary[kbold].bse_renv[oldkbi];
-    binary[kbnew].bse_tms[kbinew] = binary[kbold].bse_tms[oldkbi];
-    //Sourav: toy rejuv- updating rejuv variables to binary members from binary members
-    //There can be four cases. m1,2(old)->m1,2(new) 
-    if(kbinew==0){
-      if (oldkbi==0){
-	binary[kbnew].createtime_m1 = binary[kbold].createtime_m1;
-	binary[kbnew].lifetime_m1 = binary[kbold].lifetime_m1;
-        binary[kbnew].rad1 = binary[kbold].rad1; // PDK addition
-      } else {
-	binary[kbnew].createtime_m1 = binary[kbold].createtime_m2;
-	binary[kbnew].lifetime_m1 = binary[kbold].lifetime_m2;
-        binary[kbnew].rad1 = binary[kbold].rad2; // PDK addition
-      }
-    } else {
-      if (oldkbi==0){
-	binary[kbnew].createtime_m2 = binary[kbold].createtime_m1;
-	binary[kbnew].lifetime_m2 = binary[kbold].lifetime_m1;
-        binary[kbnew].rad2 = binary[kbold].rad1; // PDK addition
-      } else {
-	binary[kbnew].createtime_m2 = binary[kbold].createtime_m2;
-	binary[kbnew].lifetime_m2 = binary[kbold].lifetime_m2;
-        binary[kbnew].rad2 = binary[kbold].rad2; // PDK addition
-      }
-    }
-  }
+	kbold = star[oldk].binind;
+	kbnew = star[knew].binind;
+
+	if (oldkbi == -1) { /* star comes from input single star */
+		binary[kbnew].bse_mass0[kbinew] = star[oldk].se_mass;
+		binary[kbnew].bse_kw[kbinew] = star[oldk].se_k;
+		binary[kbnew].bse_mass[kbinew] = star[oldk].se_mt;
+		binary[kbnew].bse_ospin[kbinew] = star[oldk].se_ospin;
+		binary[kbnew].bse_epoch[kbinew] = star[oldk].se_epoch;
+		binary[kbnew].bse_tphys = star[oldk].se_tphys; /* tphys should be the same for both input stars so this should be OK */
+		binary[kbnew].bse_radius[kbinew] = star[oldk].se_radius;
+		binary[kbnew].bse_lum[kbinew] = star[oldk].se_lum;
+		binary[kbnew].bse_massc[kbinew] = star[oldk].se_mc;
+		binary[kbnew].bse_radc[kbinew] = star[oldk].se_rc;
+		binary[kbnew].bse_menv[kbinew] = star[oldk].se_menv;
+		binary[kbnew].bse_renv[kbinew] = star[oldk].se_renv;
+		binary[kbnew].bse_tms[kbinew] = star[oldk].se_tms;
+		//Sourav: toy rejuv- updating rejuv variables to the binary member from the single star
+		if (kbinew==0){
+			binary[kbnew].createtime_m1 = star[oldk].createtime;
+			binary[kbnew].lifetime_m1 = star[oldk].lifetime;
+			binary[kbnew].rad1 = star[oldk].rad; // PDK addition
+		} else {
+			binary[kbnew].createtime_m2 = star[oldk].createtime;
+			binary[kbnew].lifetime_m2 = star[oldk].lifetime;
+			binary[kbnew].rad2 = star[oldk].rad; // PDK addition
+		}
+	} else { /* star comes from input binary */
+		binary[kbnew].bse_mass0[kbinew] = binary[kbold].bse_mass0[oldkbi];
+		binary[kbnew].bse_kw[kbinew] = binary[kbold].bse_kw[oldkbi];
+		binary[kbnew].bse_mass[kbinew] = binary[kbold].bse_mass[oldkbi];
+		binary[kbnew].bse_ospin[kbinew] = binary[kbold].bse_ospin[oldkbi];
+		binary[kbnew].bse_epoch[kbinew] = binary[kbold].bse_epoch[oldkbi];
+		binary[kbnew].bse_tphys = binary[kbold].bse_tphys;
+		binary[kbnew].bse_radius[kbinew] = binary[kbold].bse_radius[oldkbi];
+		binary[kbnew].bse_lum[kbinew] = binary[kbold].bse_lum[oldkbi];
+		binary[kbnew].bse_massc[kbinew] = binary[kbold].bse_massc[oldkbi];
+		binary[kbnew].bse_radc[kbinew] = binary[kbold].bse_radc[oldkbi];
+		binary[kbnew].bse_menv[kbinew] = binary[kbold].bse_menv[oldkbi];
+		binary[kbnew].bse_renv[kbinew] = binary[kbold].bse_renv[oldkbi];
+		binary[kbnew].bse_tms[kbinew] = binary[kbold].bse_tms[oldkbi];
+		//Sourav: toy rejuv- updating rejuv variables to binary members from binary members
+		//There can be four cases. m1,2(old)->m1,2(new) 
+		if(kbinew==0){
+			if (oldkbi==0){
+				binary[kbnew].createtime_m1 = binary[kbold].createtime_m1;
+				binary[kbnew].lifetime_m1 = binary[kbold].lifetime_m1;
+				binary[kbnew].rad1 = binary[kbold].rad1; // PDK addition
+			} else {
+				binary[kbnew].createtime_m1 = binary[kbold].createtime_m2;
+				binary[kbnew].lifetime_m1 = binary[kbold].lifetime_m2;
+				binary[kbnew].rad1 = binary[kbold].rad2; // PDK addition
+			}
+		} else {
+			if (oldkbi==0){
+				binary[kbnew].createtime_m2 = binary[kbold].createtime_m1;
+				binary[kbnew].lifetime_m2 = binary[kbold].lifetime_m1;
+				binary[kbnew].rad2 = binary[kbold].rad1; // PDK addition
+			} else {
+				binary[kbnew].createtime_m2 = binary[kbold].createtime_m2;
+				binary[kbnew].lifetime_m2 = binary[kbold].lifetime_m2;
+				binary[kbnew].rad2 = binary[kbold].rad2; // PDK addition
+			}
+		}
+	}
 }
 
 

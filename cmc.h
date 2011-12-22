@@ -475,7 +475,8 @@ void create_timing_files();
 /* End */
 
 /* Bharath: Other refactored functions */
-void mpiInitBcastGlobArrays();
+void mpiBcastGlobArrays();
+void mpiInitGlobArrays();
 void set_global_vars1();
 void set_global_vars2();
 void get_star_data(int argc, char *argv[], gsl_rng *rng);
@@ -500,6 +501,8 @@ void findIndices( long N, int blkSize, int i, int* begin, int* end );
 void findLimits( long N, int blkSize );
 int findProcForIndex( int j );
 void set_rng_states();
+int get_global_idx(int i);
+int get_local_idx(int i);
 /* End */
 
 /* Bharath: Functions for handling of binaries for parallel version */
@@ -593,6 +596,12 @@ void central_calculate(void);
 void mpi_central_calculate(void);
 void mpi_central_calculate1(void);
 void mpi_central_calculate2(void);
+void bucket_sort( star_t         *starData,
+                  long          *local_N,
+                  MPI_Datatype  eType,
+                  MPI_Comm      commgroup,
+                  int           num_buckets,
+                  int           num_samples );
 #endif
 
 void clusdyn_calculate(void);

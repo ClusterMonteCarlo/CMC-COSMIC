@@ -39,6 +39,10 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	double deltamax, deltasafe, delta, dbeta;
 	double w_mag, l2_scale;
 	int i;
+#ifdef USE_MPI
+	int g_index = get_global_idx(index);
+#endif
+
 #ifdef EXPERIMENTAL
 	char fname[80];
 	long is_in_ids;
@@ -81,19 +85,23 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	} else if (STELLAR_EVOLUTION){
 		double Rss;
 		//dprintf("cenma.m= %g, star[%li].m= %g\n", cenma.m, index, star[index].m);
+#ifdef USE_MPI
+		Rdisr= pow(2.*cenma.m/star_m[g_index], 1./3.)*star[index].rad*RSUN/units.l;
+#else
 		Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad*RSUN/units.l;
+#endif
 		Rss= 4.24e-06*cenma.m/SOLAR_MASS_DYN*RSUN/units.l;
 		Rdisr= MAX(Rdisr, Rss);
 	} else {
 #ifdef USE_MPI
-		Rdisr= pow(2.*cenma.m/star_m[index], 1./3.)*star[index].rad;
+		Rdisr= pow(2.*cenma.m/star_m[g_index], 1./3.)*star[index].rad;
 #else
 		Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad;
 #endif
 	};
 	Jlc= sqrt(2.*cenma.m*madhoc*Rdisr);
 #ifdef USE_MPI
-	vlc= Jlc/star_r[index];
+	vlc= Jlc/star_r[g_index];
 #else
 	vlc= Jlc/star[index].r;
 #endif
@@ -107,7 +115,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
 			dprintf("index=%ld, id=%ld: star eaten by BH\n", index, star[index].id);
 #ifdef USE_MPI
-			cenma.m_new += star_m[index]; 
+			cenma.m_new += star_m[g_index]; 
 #else
 			cenma.m_new += star[index].m; 
 #endif
@@ -201,7 +209,7 @@ double calc_P_orb(long index)
         star_interval.max= clus.N_MAX+1;
 
 #ifdef USE_MPI
-	E = star[index].E + MPI_PHI_S(star_r[index], index);
+	E = star[index].E + MPI_PHI_S(star_r[get_global_idx(index)], get_global_idx(index));
 #else
 	E = star[index].E + PHI_S(star[index].r, index);
 #endif
@@ -238,7 +246,7 @@ double calc_P_orb(long index)
 		   radial period for the general cluster potential.  This shouldn't make
 		   any difference for the BH loss cone stuff, since the orbit is circular. */
 #ifdef USE_MPI
-		return(2.0 * PI * star[index].r / star[index].vt);		
+		return(2.0 * PI * star_r[get_global_idx(index)] / star[index].vt);		
 #else
 		return(2.0 * PI * star[index].r / star[index].vt);		
 #endif
@@ -249,14 +257,14 @@ double calc_P_orb(long index)
 		params.E = E;
 		params.J = J;
 		params.index = index;
-                //if (SEARCH_GRID)
-                //  star_interval= search_grid_get_interval(r_grid, orbit_rs.rp);
+		//if (SEARCH_GRID)
+		//  star_interval= search_grid_get_interval(r_grid, orbit_rs.rp);
 		//params.kmin = FindZero_r(star_interval.min, star_interval.max, orbit_rs.rp);
-                //if (SEARCH_GRID)
-                //  star_interval= search_grid_get_interval(r_grid, orbit_rs.ra);
+		//if (SEARCH_GRID)
+		//  star_interval= search_grid_get_interval(r_grid, orbit_rs.ra);
 		//params.kmax = FindZero_r(star_interval.min, star_interval.max, orbit_rs.ra) + 1;
-                params.kmax= orbit_rs.kmax+1;
-                params.kmin= orbit_rs.kmin;
+		params.kmax= orbit_rs.kmax+1;
+		params.kmin= orbit_rs.kmin;
 		params.rp = orbit_rs.rp;
 		params.ra = orbit_rs.ra;
 		F.params = &params;

@@ -184,6 +184,7 @@ void exit_cleanly(int signal)
 	free_arrays();
 
 #ifdef USE_MPI
+	//mpi_files_merge();
 	//OPT: Another way would be to use assert at all error checks
 	MPI_Abort(MPI_COMM_WORLD, signal);
 #endif
@@ -266,18 +267,13 @@ void set_velocities3(void){
 /* computes intermediate energies, and transfers "new" dynamical params to the standard variables */
 void ComputeIntermediateEnergy(void)
 {
-	long j;
+	long j=1, g_j = get_global_idx(j);
 	/* compute intermediate energies for stars due to change in pot */ 
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
-#ifdef USE_MPI
-		if( ! ( (j>=mpiBegin && j<=mpiEnd) || (j > clus.N_MAX+1) ) )
-			continue;
-#endif
-
 		/* but do only for NON-Escaped stars */
 		if (star[j].rnew < 1.0e6) {
 #ifdef USE_MPI
-			star[j].EI = sqr(star[j].vr) + sqr(star[j].vt) + star_phi[j] - potential(star[j].rnew);
+			star[j].EI = sqr(star[j].vr) + sqr(star[j].vt) + star_phi[g_j] - potential(star[j].rnew);
 #else
 			star[j].EI = sqr(star[j].vr) + sqr(star[j].vt) + star[j].phi - potential(star[j].rnew);
 #endif
@@ -287,12 +283,7 @@ void ComputeIntermediateEnergy(void)
 	/* Transferring new positions to .r, .vr, and .vt from .rnew, .vrnew, and .vtnew */
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
 #ifdef USE_MPI
-		if( ! ( (j>=mpiBegin && j<=mpiEnd) || (j > clus.N_MAX+1) ) )
-			continue;
-#endif
-
-#ifdef USE_MPI
-		star[j].rOld = star_r[j];
+		star[j].rOld = star_r[g_j];
 		star[j].r = star[j].rnew;
 		//star_r[j] = star[j].rnew;
 		star[j].m = star_m[j];
@@ -484,22 +475,25 @@ void mpi_ComputeEnergy(void)
 {
 /* Calculates E,J for every star. Also, calculates, global eneryg variabies. */
 	double buf_reduce[5], phi0 = 0.0;
-	int i;
+	int i, j=0;
 	for(i=0; i<5; i++)
 		buf_reduce[i] = 0.0;
 
-	for (i=mpiBegin; i<=mpiEnd; i++) {
-		star[i].E = star_phi[i] + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
-		star[i].J = star_r[i] * star[i].vt;		
+	for (i=1; i<=mpiEnd-mpiBegin+1; i++) {
+		j = get_global_idx(i);
+		star[i].E = star_phi[j] + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
+		star[i].J = star_r[j] * star[i].vt;		
 	}
 
 	phi0 = star_phi[0];
 
-	for (i=mpiBegin; i<=mpiEnd; i++) {
-		buf_reduce[1] += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star_m[i] / clus.N_STAR;
-		buf_reduce[2] += star_phi[i] * star_m[i] / clus.N_STAR;
+	for (i=1; i<=mpiEnd-mpiBegin+1; i++) {
+		j = get_global_idx(i);
+		buf_reduce[1] += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star_m[j] / clus.N_STAR;
+		buf_reduce[2] += star_phi[j] * star_m[j] / clus.N_STAR;
 		buf_reduce[2] += phi0 * cenma.m*madhoc/ clus.N_STAR;
 
+	//MPI3:Ignoring binaries for now.
 		if (star[i].binind == 0) {
 			buf_reduce[3] += star[i].Eint;
 		} else if (binary[star[i].binind].inuse) {
@@ -598,8 +592,9 @@ long mpi_potential_calculate(void) {
 
 	Rtidal = orbit_r * pow(Mtotal, 1.0 / 3.0);
 
+	//MPI3: What will happen to the last sentinel? Ask Stefan.
 	/* zero boundary star first for safety */
-	zero_star(clus.N_MAX + 1);
+	//zero_star(clus.N_MAX + 1);
 
 	star_r[clus.N_MAX + 1] = SF_INFINITY;
 	star_phi[clus.N_MAX + 1] = 0.0;
@@ -1133,9 +1128,6 @@ MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Recv(&star_m[mpiBegin - J/2], J/2, MPI_DOUBLE, ( myid + procs - 1) % procs, 0, MPI_COMM_WORLD, &stat);
 MPI_Barrier(MPI_COMM_WORLD);
 */
-	//int mpiBeginLocal, mpiEndLocal;
-	//mpiFindIndicesCustom( nave, 20, myid, &mpiBeginLocal, &mpiEndLocal );
-	//mpiFindIndicesSpecial( nave, &mpiBeginLocal, &mpiEndLocal );
 
 	/* calculate rhoj's (Casertano & Hut 1985) */
 	//for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
@@ -1378,8 +1370,10 @@ void central_calculate(void)
 		rhojsum += rhoj[i];
 		rhoj2sum += sqr(rhoj[i]);
 		central.rho += sqr(rhoj[i]);
-		central.v_rms += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
 #ifdef USE_MPI
+		if( i >= mpiBegin && i <= mpiEnd )
+			central.v_rms += rhoj[i] * (sqr(star[get_local_idx(i)].vr) + sqr(star[get_local_idx(i)].vt));
+
 		central.rc += rhoj[i] * star_r[i];
 		rc_nb += sqr(rhoj[i] * star_r[i]);
 		central.m_ave += rhoj[i] * star_m[i] * madhoc;
@@ -1388,7 +1382,15 @@ void central_calculate(void)
 		rc_nb += sqr(rhoj[i] * star[i].r);
 		central.m_ave += rhoj[i] * star[i].m * madhoc;
 #endif
+
+#ifdef USE_MPI
+	if(myid==0)
+		MPI_Allreduce(MPI_IN_PLACE, &central.v_rms, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	else
+		MPI_Allreduce(&central.v_rms, &central.v_rms, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#endif
 	}
+
 	central.rho /= rhojsum;
 	/* correction for inherent bias in estimator */
 	central.rho *= 4.0/5.0;
@@ -1429,12 +1431,20 @@ void central_calculate(void)
 	central.a_ave = 0.0;
 	central.a2_ave = 0.0;
 	central.ma_ave = 0.0;
+
+#ifdef USE_MPI
+	for (i=1; i<=mpiEnd-mpiBegin+1; i++) {
+#else
 	for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
+#endif
 	/* for (i=1; i<=MIN((long) N_core, clus.N_STAR); i++) { */
 		Ncentral++;
+
+		j = get_global_idx(i);
+
 		/* use only code units here, so always divide star[].m by clus.N_STAR */
 #ifdef USE_MPI
-		central.w2_ave += 2.0 * star_m[i] / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
+		central.w2_ave += 2.0 * star_m[j] / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
 #else
 		central.w2_ave += 2.0 * star[i].m / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
 #endif
@@ -1442,14 +1452,14 @@ void central_calculate(void)
 		if (star[i].binind == 0) {
 			central.N_sin++;
 #ifdef USE_MPI
-			Msincentral += star_m[i] / ((double) clus.N_STAR);
+			Msincentral += star_m[j] / ((double) clus.N_STAR);
 #else
 			Msincentral += star[i].m / ((double) clus.N_STAR);
 #endif
 			central.v_sin_rms += sqr(star[i].vr) + sqr(star[i].vt);
 			central.R2_ave += sqr(star[i].rad);
 #ifdef USE_MPI
-			central.mR_ave += star_m[i] / ((double) clus.N_STAR) * star[i].rad;
+			central.mR_ave += star_m[j] / ((double) clus.N_STAR) * star[i].rad;
 #else
 			central.mR_ave += star[i].m / ((double) clus.N_STAR) * star[i].rad;
 #endif
@@ -1457,7 +1467,7 @@ void central_calculate(void)
 			central.N_bin++;
 
 #ifdef USE_MPI
-			Mbincentral += star_m[i] / ((double) clus.N_STAR);
+			Mbincentral += star_m[j] / ((double) clus.N_STAR);
 #else
 			Mbincentral += star[i].m / ((double) clus.N_STAR);
 #endif
@@ -1465,12 +1475,36 @@ void central_calculate(void)
 			central.a_ave += binary[star[i].binind].a;
 			central.a2_ave += sqr(binary[star[i].binind].a);
 #ifdef USE_MPI
-			central.ma_ave += star_m[i] / ((double) clus.N_STAR) * binary[star[i].binind].a;
+			central.ma_ave += star_m[j] / ((double) clus.N_STAR) * binary[star[i].binind].a;
 #else
 			central.ma_ave += star[i].m / ((double) clus.N_STAR) * binary[star[i].binind].a;
 #endif
 		}
 	}
+
+#ifdef USE_MPI
+	//MPI3: Packing into array to optimize communication.
+	double buf_reduce[5];
+	buf_reduce[0] = central.w2_ave;
+	buf_reduce[1] = Msincentral;
+	buf_reduce[2] = central.mR_ave;
+	buf_reduce[3] = Mbincentral;
+	buf_reduce[4] = central.ma_ave;
+
+	MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 5, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+
+	central.w2_ave = buf_reduce[0];
+	Msincentral = buf_reduce[1];
+	central.mR_ave = buf_reduce[2];
+	Mbincentral = buf_reduce[3];
+	central.ma_ave = buf_reduce[4];
+
+	if(myid==0)
+		MPI_Allreduce(MPI_IN_PLACE, &Ncentral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	else
+		MPI_Allreduce(&Ncentral, &Ncentral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#endif
+
 	/* object quantities */
 #ifdef USE_MPI
 	rcentral = star_r[Ncentral + 1];
@@ -1707,9 +1741,10 @@ void calc_central_new()
 	//MPI2: Tested! Errors of 1e-14.
 	//mpi_central_calculate();
 
-	if(myid==0)
-		central_calculate();
+	//if(myid==0)
+	central_calculate();
 
+/*
 	MPI_Bcast(&central, sizeof(central_t), MPI_BYTE, 0, MPI_COMM_WORLD);
 	v_core = central.v_rms;
 	rho_core = central.rho;
@@ -1719,7 +1754,7 @@ void calc_central_new()
 	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.m_ave);
 	rho_core_single = central.rho_sin;
 	rho_core_bin = central.rho_bin;
-
+*/
 #else
 	central_calculate();
 #endif
@@ -1878,20 +1913,9 @@ void energy_conservation1()
 {
 	/* some numbers necessary to implement Stodolkiewicz's
 	 * energy conservation scheme */
-	int i;
-/*
-#ifdef USE_MPI 
-	//MPI2: Only running till N_MAX for now since no new stars are created, later new loop has to be introduced from N_MAX+1 to N_MAX_NEW.
-	for (i=mpiBegin; i<=mpiEnd; i++)
-#else
-*/
+	int i, g_i;
 	for (i = 1; i <= clus.N_MAX_NEW; i++)
 	{
-#ifdef USE_MPI
-		if( ! ( (i>=mpiBegin && i<=mpiEnd) || (i > clus.N_MAX+1) ) )
-			continue;
-#endif
-
 		/* saving velocities */
 		star[i].vtold = star[i].vt;
 		star[i].vrold = star[i].vr;
@@ -1900,7 +1924,8 @@ void energy_conservation1()
 		 * calling potential_calculate(), needs to be saved 
 		 * now */  
 #ifdef USE_MPI
-		star[i].Uoldrold = star_phi[i] + MPI_PHI_S(star_r[i], i);
+		g_i = get_global_idx(i);
+		star[i].Uoldrold = star_phi[g_i] + MPI_PHI_S(star_r[g_i], g_i);
 #else
 		star[i].Uoldrold = star[i].phi + PHI_S(star[i].r, i);
 #endif
@@ -1918,12 +1943,9 @@ void toy_rejuvenation()
 	int i;
 	DMrejuv = 0.0;
 	if (STAR_AGING_SCHEME > 0) {
-#ifdef USE_MPI 
-		for (i=mpiBegin; i<=mpiEnd; i++)
-#else
 		//MPI2: Why is this only till N_MAX?
+		//MPI3: This hasnt been changed to take global/local indices. For later.
 		for (i=1; i<=clus.N_MAX; i++)
-#endif
 			remove_old_star(TotalTime, i);
 	}
 }
@@ -1975,14 +1997,10 @@ void energy_conservation2()
 	 * energy conservation scheme */
 	for (i = 1; i <= clus.N_MAX_NEW; i++) 
 	{
-#ifdef USE_MPI
-     if( ! ( (i>=mpiBegin && i<=mpiEnd) || (i > clus.N_MAX+1) ) )
-        continue;
-#endif
 	/* the following cannot be calculated after sorting 
 	 * and calling potential_calculate() */
 #ifdef USE_MPI 
-		star[i].Uoldrnew = potential(star[i].rnew) + MPI_PHI_S(star[i].rnew, i);
+		star[i].Uoldrnew = potential(star[i].rnew) + MPI_PHI_S(star[i].rnew, get_global_idx(i));
 #else
 		star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);
 #endif
@@ -2220,7 +2238,18 @@ void pre_sort_comm()
 void qsorts_new(void)
 {
 #ifdef USE_MPI
-	if(myid==0)
+	//if(myid==0)
+	MPI_Datatype startype;
+	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
+	MPI_Type_commit( &startype );
+
+	bucket_sort(star,
+					&clus.N_MAX_NEW,
+					startype,
+					MPI_COMM_WORLD,
+					procs,
+					64);
+
 #endif
 		/* Sorting stars by radius. The 0th star at radius 0 
 			and (N_STAR+1)th star at SF_INFINITY are already set earlier.
@@ -2337,4 +2366,35 @@ void set_rng_states()
 	for(i = 1; i < procs; i++)
 		st[i] = rng_t113_jump( st[i-1] , JPoly_2_20);
 #endif
+}
+
+
+int get_global_idx(int i)
+{
+	if(i == 0) return 0;
+
+	if(myid == 0) return i;
+
+ 	if(i - Start[myid] > clus.N_MAX)
+	{
+		eprintf("Index less than 1! proc:%d i=%d\n",myid,i);
+		exit_cleanly(-1);
+	}
+	//return ( End[myid-1] + i );
+	return ( Start[myid] + i - 1 );
+}
+
+int get_local_idx(int i)
+{
+	if(i == 0) return 0;
+
+	if(myid == 0) return i;
+
+ 	if(i - End[myid-1] < 1)
+	{
+		eprintf("Index less than 1!\n");
+		exit_cleanly(-1);
+	}
+
+	return ( i - End[myid-1] );
 }

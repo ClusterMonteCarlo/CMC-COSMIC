@@ -13,9 +13,10 @@
 void zero_star(long j)
 {
 #ifdef USE_MPI
-	star_r[j] = 0.0;
-	star_m[j] = 0.0;
-	star_phi[j] = 0.0;
+	int g_j = get_global_idx(j);
+	star_r[g_j] = 0.0;
+	star_m[g_j] = 0.0;
+	star_phi[g_j] = 0.0;
 #endif
 	//OPT: Try using memset or bzero for better readable code.
 	star[j].r = 0.0;
@@ -111,8 +112,9 @@ void destroy_obj(long i)
 
 	/* need to zero out E's, J, but can't zero out potential---this is the easiest way */
 #ifdef USE_MPI
-	r = star_r[i];
-	phi = star_phi[i];
+	int g_i = get_global_idx(i);
+	r = star_r[g_i];
+	phi = star_phi[g_i];
 #else
 	r = star[i].r;
 	phi = star[i].phi;
@@ -121,8 +123,8 @@ void destroy_obj(long i)
 	zero_star(i);
 
 #ifdef USE_MPI
-	star_r[i] = r;
-	star_phi[i] = phi;
+	star_r[g_i] = r;
+	star_phi[g_i] = phi;
 #else
 	star[i].r = r;
 	star[i].phi = phi;
@@ -171,10 +173,10 @@ long create_star(int idx, int dyn_0_se_1)
 		//MPI2: This assumes that SE will create stars only after dynamics. If this is violated at some point, there are going to be problems :)
 		if(dyn_0_se_1 == 0)
 			//if star is created by dynamics
-			created_star_dyn_node[findProcForIndex(idx)]++;
+			created_star_dyn_node[findProcForIndex(get_global_idx(idx))]++;
 		else if(dyn_0_se_1 ==1)
 			//if star is created by stellar evolution
-			created_star_se_node[findProcForIndex(idx)]++;
+			created_star_se_node[findProcForIndex(get_global_idx(idx))]++;
 		else
 		{
 			eprintf("Invalid argument to create_star()");
@@ -184,12 +186,13 @@ long create_star(int idx, int dyn_0_se_1)
 #endif
 
 	/* put new star at end; the +1 is to not overwrite the boundary star */
-	i = clus.N_MAX_NEW + 1;
+	//MPI3: Now we dont neet the sentinel I guess. But not sure.
+	i = clus.N_MAX_NEW; //+ 1;
 
 #ifdef USE_MPI
 	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
 #else
-	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
+	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(get_global_idx(idx)), dyn_0_se_1);
 #endif
 
 	/* initialize to zero for safety */
@@ -319,7 +322,7 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	/* first store random variable */
 	if (setY) {
 #ifndef USE_MPI
-	curr_st = &st[findProcForIndex(k)];
+	curr_st = &st[findProcForIndex(get_global_idx(k))];
 #endif
 		star[k].Y = rng_t113_dbl_new(curr_st);
 		//star[k].Y = rng_t113_dbl();
@@ -348,9 +351,11 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	}
 
 #ifdef USE_MPI		
-	*rcm = (star_m[k] * star_r[k] + star_m[kp] * star_r[kp]) / (star_m[k] + star_m[kp]);
+	int g_k = get_global_idx(k);
+	int g_kp = get_global_idx(kp);
+	*rcm = (star_m[g_k] * star_r[g_k] + star_m[g_kp] * star_r[g_kp]) / (star_m[g_k] + star_m[g_kp]);
 	for (j=1; j<=3; j++) {
-		vcm[j] = (star_m[k] * v[j] + star_m[kp] * vp[j]) / (star_m[k] + star_m[kp]);
+		vcm[j] = (star_m[g_k] * v[j] + star_m[g_kp] * vp[j]) / (star_m[g_k] + star_m[g_kp]);
 	}
 #else
 	/* compute CM quantities */
@@ -364,8 +369,8 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 void set_star_EJ(long k)
 {
 #ifdef USE_MPI
-	star[k].E = star_phi[k] + 0.5 * (sqr(star[k].vr) + sqr(star[k].vt));
-	star[k].J = star_r[k] * star[k].vt;
+	star[k].E = star_phi[get_global_idx(k)] + 0.5 * (sqr(star[k].vr) + sqr(star[k].vt));
+	star[k].J = star_r[get_global_idx(k)] * star[k].vt;
 #else
 	star[k].E = star[k].phi + 0.5 * (sqr(star[k].vr) + sqr(star[k].vt));
 	star[k].J = star[k].r * star[k].vt;
@@ -375,7 +380,7 @@ void set_star_EJ(long k)
 void set_star_news(long k)
 {
 #ifdef USE_MPI
-	star[k].rnew = star_r[k];
+	star[k].rnew = star_r[get_global_idx(k)];
 #else
 	star[k].rnew = star[k].r;
 #endif
@@ -386,9 +391,10 @@ void set_star_news(long k)
 void set_star_olds(long k)
 {
 #ifdef USE_MPI
-	star[k].rOld = star_r[k];
-	star[k].r_peri = star_r[k];
-	star[k].r_apo = star_r[k];
+	int g_k = get_global_idx(k);
+	star[k].rOld = star_r[g_k];
+	star[k].r_peri = star_r[g_k];
+	star[k].r_apo = star_r[g_k];
 #else
 	star[k].rOld = star[k].r;
 	star[k].r_peri = star[k].r;
@@ -961,7 +967,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			}
 			
 #ifndef USE_MPI
-			curr_st = &st[findProcForIndex(k)];
+			curr_st = &st[findProcForIndex(get_global_idx(k))];
 #endif
 			/* properties specific to single/binary/triple stars */
 			if (hier.obj[i]->n == 1) {
@@ -1386,7 +1392,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 #ifdef USE_MPI
 double mpi_simul_relax_new(void)
 {
-	long si, k, p, N_LIMIT, simin, simax;
+	long si, k, j, p, N_LIMIT, simin, simax;
 	double dt, dtmin=GSL_POSINF, DTrel=0.0, W, n_local;
 	double Mv2ave, Mave, M2ave, sigma;
 
@@ -1394,7 +1400,8 @@ double mpi_simul_relax_new(void)
 	p = 10; //For this value, the results are very close to the original simul_relax() function.
 
 	//MPI2: Earlier the divion of stars among processors for this part was different, and the one for the main code was different to achieve maximum load balancing. But, in that case this function required communication with neighbors. So, it was changed such that both the main code and this function use the same kind of division of stars among processors. Now, stars are divided in sets of 20 to avoid communication caused due to this function.
-	for (si=mpiBegin+p; si<mpiEnd-p; si+=2*p) {
+	//for (si=mpiBegin+p; si<mpiEnd-p; si+=2*p) {
+	for (si=1+p; si<mpiEnd-mpiBegin+1-p; si+=2*p) {
 		simin = si - p;
 		simax = simin + (2 * p - 1);
 
@@ -1402,8 +1409,9 @@ double mpi_simul_relax_new(void)
 		Mave = 0.0;
 		M2ave = 0.0;
 		for (k=simin; k<=simax; k++) {
+			j = get_global_idx(k);
 			//OPT use variable for star_m[k] * madhoc
-			double tmp = star_m[k] * madhoc;
+			double tmp = star_m[j] * madhoc;
 			Mv2ave += tmp * (sqr(star[k].vr) + sqr(star[k].vt));
 			Mave += tmp;
 			M2ave += sqr(tmp);
@@ -1419,7 +1427,7 @@ double mpi_simul_relax_new(void)
 		W = 4.0 * sigma / sqrt(3.0 * PI);
 
 		/* Compute local density */
-		n_local = calc_n_local(si, p, clus.N_MAX);
+		n_local = calc_n_local(get_global_idx(si), p, clus.N_MAX);
 		
 		/* remember that code time units are t_cross * N/log(GAMMA*N) */
 		/* this expression is from Freitag & Benz (2001), eqs. (8) and (9), we're just
@@ -1542,7 +1550,7 @@ double simul_relax(gsl_rng *rng)
    they shorten the timestep to a crawl. */
 void break_wide_binaries(void)
 {
-	long j, k, knew, knewp;
+	long j, k, g_k, knew, knewp;
 	double W, vorb, Eexcess=0.0, exc_ratio, nlocal, llocal;
 	
 	//MPI2: Might have to change this later to handle N_MAX_NEW
@@ -1551,20 +1559,11 @@ void break_wide_binaries(void)
 	for (k=mpiBegin; k<=mpiEnd; k++)
 #else
 */
-	//MPI2: Running till N_MAX since findProcForIndex will cause a problem since currently start creation is not handled properly.
-	//for (k=1; k<=clus.N_MAX_NEW; k++)
-	for (k=1; k<=clus.N_MAX_NEW; k++)
-//#endif
-	{
-#ifdef USE_MPI
-		if( ! ( (k>=mpiBegin && k<=mpiEnd) || (k > clus.N_MAX) ) )
-			continue;
-#endif
 
-#ifdef USE_MPI
-		if( ! ( (k>=mpiBegin && k<=mpiEnd) || (k > clus.N_MAX+1) ) )
-			continue;
-#endif
+	//MPI3: Since N_MAX_NEW is set to mpiEnd, no change is need in the loop here. Yay!
+	for (k=1; k<=clus.N_MAX_NEW; k++)
+	{
+		g_k = get_global_idx(k);
 
 		if (star[k].binind) {
 			/* binary index */
@@ -1572,14 +1571,14 @@ void break_wide_binaries(void)
 			
 			/* get relative velocity from velocity dispersion at binary's radial position */
 #ifdef USE_MPI
-			W = 4.0 * sigma_r(star_r[k]) / sqrt(3.0 * PI);
+			W = 4.0 * sigma_r(star_r[g_k]) / sqrt(3.0 * PI);
 #else
 			W = 4.0 * sigma_r(star[k].r) / sqrt(3.0 * PI);
 #endif	
 		
 			/* this is an order of magnitude estimate for the orbital speed */
 #ifdef USE_MPI
-			vorb = sqrt(star_m[k] * madhoc / binary[j].a);
+			vorb = sqrt(star_m[g_k] * madhoc / binary[j].a);
 #else
 			vorb = sqrt(star[k].m * madhoc / binary[j].a);
 #endif
@@ -1607,9 +1606,9 @@ void break_wide_binaries(void)
 			} else {
 				/* take excess energy from nearby field star (single or binary) */
 #ifdef USE_MPI
-				if(Eexcess > 0 && star[k].interacted == 0 && Eexcess < 0.5*(sqr(star[k].vt)+sqr(star[k].vr))*star_m[k]*madhoc) {
+				if(Eexcess > 0 && star[k].interacted == 0 && Eexcess < 0.5*(sqr(star[k].vt)+sqr(star[k].vr))*star_m[g_k]*madhoc) {
 					exc_ratio = 
-						sqrt( (sqr(star[k].vt)+sqr(star[k].vr)-2.0*Eexcess/(star_m[k]*madhoc))/
+						sqrt( (sqr(star[k].vt)+sqr(star[k].vr)-2.0*Eexcess/(star_m[g_k]*madhoc))/
 						      (sqr(star[k].vt)+sqr(star[k].vr)) );
 #else
 				if(Eexcess > 0 && star[k].interacted == 0 && Eexcess < 0.5*(sqr(star[k].vt)+sqr(star[k].vr))*star[k].m*madhoc) {
@@ -1816,7 +1815,7 @@ double calc_average_mass_sqr(long index, long N_LIMIT) {
   M2ave = 0.0;
   for (k=simin; k<=simax; k++) {
 #ifdef USE_MPI
-    M2ave += sqr(star_m[k] * madhoc);
+    M2ave += sqr(star_m[get_global_idx(k)] * madhoc);
 #else
     M2ave += sqr(star[k].m * madhoc);
 #endif

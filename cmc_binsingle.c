@@ -39,7 +39,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 #endif
 
 #ifndef USE_MPI
-	curr_st = &st[findProcForIndex(ksin)];
+	curr_st = &st[findProcForIndex(get_global_idx(ksin))];
 #endif
 	b = sqrt(rng_t113_dbl_new(curr_st)) * bmax / binary[jbin].a;
 	/* b should be in units of a */
@@ -144,7 +144,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	fb_init_scattering(hier->obj, W/vc, b, rtid);
 	
 #ifndef USE_MPI
-	curr_st = &st[findProcForIndex(ksin)];
+	curr_st = &st[findProcForIndex(get_global_idx(ksin))];
 #endif
 
 	/* trickle down the binary properties, then back up */
