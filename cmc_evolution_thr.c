@@ -399,15 +399,16 @@ double GetTimeStep(gsl_rng *rng) {
 void tidally_strip_stars(void) {
 	double phi_rtidal, phi_zero, gierszalpha;
 	long i, j, k;
-	k=0;
-	
+	k = 0;
 	j = 0;
 	Etidal = 0.0;
+
+#ifdef USE_MPI
+	TidalMassLoss += TidalMassLoss_old;
+#else
 	OldTidalMassLoss = TidalMassLoss;
-	/******************************/
-	/* get new particle positions */
-	/******************************/
-	max_r = get_positions();
+#endif
+
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 	
 	gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
@@ -425,10 +426,7 @@ void tidally_strip_stars(void) {
 		phi_zero = potential(0.0);
 		DTidalMassLoss = 0.0;
 
-//MPI2: There's a problem in this loop since Etidal needs to be checked everytime. Might need to be done sequentially. Oh wait!, cant be done sequentially yoo, since other variables for other stars after N/procs are not present on root node! So, moving this just before sorting tidally_strip_stars2() and doing it on root.
-
-		/* XXX maybe we should use clus.N_MAX_NEW below?? */
-		for (i = 1; i <= clus.N_MAX; i++) 
+		for (i = 1; i <= clus.N_MAX_NEW; i++) 
 		{
 			if (TIDAL_TREATMENT == 0){
 				/*radial cut off criteria*/
@@ -479,20 +477,15 @@ void tidally_strip_stars(void) {
 					}
 					fprintf (escfile, "\n");
 
-
-
 					/* perhaps this will fix the problem wherein stars are ejected (and counted)
 					   multiple times */
 					dprintf ("before SE: id=%ld k=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
-		     star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
-	     		star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star[i].phi, star[i].r);
-					destroy_obj(i);
-					if (Etotal.K + Etotal.P - Etidal >= 0)
-						break;
+							star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
+							star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star[i].phi, star[i].r);
 
+					destroy_obj(i);
 				}
 			}
-
 
 			else if (TIDAL_TREATMENT == 1){
 				/* DEBUG: Now using Giersz prescription for tidal stripping 
@@ -500,6 +493,7 @@ void tidally_strip_stars(void) {
 				   Note that this alpha factor behaves strangely for small N (N<~10^3) */
 
 				gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
+
 				if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
 					dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star[i].m, star[i].E, star[i].binind); 
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
@@ -546,27 +540,48 @@ void tidally_strip_stars(void) {
 					}
 					fprintf (escfile, "\n");
 
-
-
 					/* perhaps this will fix the problem wherein stars are ejected (and counted)
 					   multiple times */
 					destroy_obj(i);
-
-					if (Etotal.K + Etotal.P - Etidal >= 0)
-						break;
-
 				}
 			}
-
 		}
 
 		j++;
-		TidalMassLoss = TidalMassLoss + DTidalMassLoss;
+		TidalMassLoss += DTidalMassLoss;
 		gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 				j, TidalMassLoss, DTidalMassLoss);
 		fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
 				j, TidalMassLoss, DTidalMassLoss);
-	} while (DTidalMassLoss > 0 && (Etotal.K + Etotal.P - Etidal) < 0);
+
+#ifdef USE_MPI
+   if(myid==0)
+      MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   else
+      MPI_Allreduce(&DTidalMassLoss, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#endif
+
+	} while (DTidalMassLoss > 0);
+
+#ifdef USE_MPI
+	//MPI3: Packing into array to optimize communication.
+	double buf_reduce[6];
+	buf_reduce[0] = Eescaped;
+	buf_reduce[1] = Jescaped;
+	buf_reduce[2] = Eintescaped;
+	buf_reduce[3] = Ebescaped;
+	buf_reduce[4] = TidalMassLoss;
+	buf_reduce[5] = Etidal;
+
+	MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 6, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+	Eescaped = buf_reduce[0];
+	Jescaped = buf_reduce[1];
+	Eintescaped = buf_reduce[2];
+	Ebescaped = buf_reduce[3];
+	TidalMassLoss = buf_reduce[4];
+	Etidal = buf_reduce[5];
+#endif
 }
 
 void remove_star(long j, double phi_rtidal, double phi_zero) {

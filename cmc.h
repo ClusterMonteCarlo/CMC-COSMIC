@@ -492,8 +492,7 @@ void calc_clusdyn_new();
 void calc_timestep(gsl_rng *rng);
 void energy_conservation1();
 void energy_conservation2();
-void tidally_strip_stars1();
-void tidally_strip_stars2();
+void new_orbits_calculate();
 void toy_rejuvenation();
 void pre_sort_comm();
 void post_sort_comm();
@@ -596,11 +595,10 @@ void central_calculate(void);
 void mpi_central_calculate(void);
 void mpi_central_calculate1(void);
 void mpi_central_calculate2(void);
-void bucket_sort( star_t         *starData,
+void sample_sort( star_t        *starData,
                   long          *local_N,
                   MPI_Datatype  eType,
                   MPI_Comm      commgroup,
-                  int           num_buckets,
                   int           num_samples );
 #endif
 

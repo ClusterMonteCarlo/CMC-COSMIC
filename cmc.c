@@ -279,8 +279,7 @@ int main(int argc, char *argv[])
 		toy_rejuvenation();
 
 		/* this calls get_positions() */
-		tidally_strip_stars1();
-
+		new_orbits_calculate();
 
 		/* more numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
@@ -297,18 +296,21 @@ int main(int argc, char *argv[])
 		//collect_bin_data();		
 
 		//MPI3: Commenting out this for now as there are problems with this - refer to email discussions with Stefan.
-		//tidally_strip_stars2();
+		tidally_strip_stars();
 
 		qsorts_new();
 
+/*
 #ifdef USE_MPI 
    printf("id = %d\trng = %li\n", myid, rng_t113_int_new(curr_st));
 #else
    for(i=0; i<procs; i++)
       printf("i = %d\trng = %li\n", i, rng_t113_int_new(&st[i]));
 #endif
+*/
 
 #ifdef USE_MPI
+/*
 		strcpy(filename, "test_out_par");
 		strcpy(tempstr, filename);
 		sprintf(num, "%d", myid);
@@ -333,11 +335,13 @@ int main(int argc, char *argv[])
 			system("./process.sh");
 MPI_Barrier(MPI_COMM_WORLD);
 printf("%d %d HIIIIIIIII\n", myid, (mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%2-1);
+*/
 #else
 		strcpy(tempstr, "test_out_ser.dat");
 		ftest = fopen( tempstr, "w" );
 		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			fprintf(ftest, "%.18g\n", star[i].r);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
 			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
 		fclose(ftest);
 #endif
