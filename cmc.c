@@ -258,6 +258,7 @@ int main(int argc, char *argv[])
 			DMse_mimic[i] = 0.0;
 #endif
 
+
 		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
 		if (STELLAR_EVOLUTION > 0)
 			do_stellar_evolution(rng);
@@ -300,17 +301,10 @@ int main(int argc, char *argv[])
 
 		qsorts_new();
 
-/*
-#ifdef USE_MPI 
-   printf("id = %d\trng = %li\n", myid, rng_t113_int_new(curr_st));
-#else
-   for(i=0; i<procs; i++)
-      printf("i = %d\trng = %li\n", i, rng_t113_int_new(&st[i]));
-#endif
-*/
+		post_sort_comm();
 
-#ifdef USE_MPI
 /*
+#ifdef USE_MPI
 		strcpy(filename, "test_out_par");
 		strcpy(tempstr, filename);
 		sprintf(num, "%d", myid);
@@ -325,19 +319,83 @@ int main(int argc, char *argv[])
 				for( j = 1; j <= End[i]-Start[i]+1; j++ )
 				//for( j = mpiBegin; j <= mpiEnd; j++ )
 				//for( j = 1; j <= clus.N_MAX; j++ )
-					fprintf(ftest, "%ld\t%.18g\t\n", mpiBegin+j-1, star[j].r);
-					//fprintf(ftest, "%ld\t%ld\t\n", mpiBegin+j-1, star[j].id);
-					//fprintf(ftest, "%ld\t%.18g\t\n", j, star_m[j]);
+					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].m);
+					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
+					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
 				fclose(ftest);
 			}
 		}
 		if(myid==0)
 			system("./process.sh");
 MPI_Barrier(MPI_COMM_WORLD);
-printf("%d %d HIIIIIIIII\n", myid, (mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%2-1);
-*/
 #else
 		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].m);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+		fclose(ftest);
+#endif
+return;
+*/
+
+/*
+#ifdef USE_MPI 
+   printf("id = %d\trng = %li\n", myid, rng_t113_int_new(curr_st));
+#else
+   for(i=0; i<procs; i++)
+      printf("i = %d\trng = %li\n", i, rng_t113_int_new(&st[i]));
+#endif
+*/
+
+/*
+#ifdef USE_MPI
+		if(myid==2)
+		{
+			strcpy(tempstr, "test_out_par.dat");
+			ftest = fopen( tempstr, "w" );
+			for( i = 1; i <= clus.N_MAX; i++ )
+				fprintf(ftest, "%.18g\n", star_r[i]);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+			fclose(ftest);
+		}
+#endif
+MPI_Barrier(MPI_COMM_WORLD);
+*/
+/*
+*/
+
+		calc_potential_new2();
+
+#ifdef USE_MPI
+	//printf("%ld----------------------\n",clus.N_MAX);
+	if(myid==0)
+	{
+		strcpy(tempstr, "test_out_par.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n",i, star_phi[i]);
+		//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+		//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+		fclose(ftest);
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].phi);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+		fclose(ftest);
+#endif
+return;
+
+/*
+#ifndef USE_MPI
+		strcpy(tempstr, "test_sort_ser.dat");
 		ftest = fopen( tempstr, "w" );
 		for( i = 1; i <= clus.N_MAX; i++ )
 			fprintf(ftest, "%.18g\n", star[i].r);
@@ -345,16 +403,12 @@ printf("%d %d HIIIIIIIII\n", myid, (mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%2-1);
 			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
 		fclose(ftest);
 #endif
-return;
-
-		calc_potential_new2();
+*/
 
 		//Calculating Start and End values for each processor for mimcking parallel rng.
 		findLimits( clus.N_MAX, 20 );
 
 		set_velocities3();
-
-		post_sort_comm();
 
 		distr_bin_data();
 

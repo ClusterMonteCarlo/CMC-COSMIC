@@ -230,7 +230,7 @@ int binary_search( star_t* starData, double r, int kmin, int kmax )
 3. Optimize for load-balancing - my method.
 4. Use binning during sampling (Stefan's suggestion)
 */
-void sample_sort( star_t        *starData,
+int sample_sort( star_t        *starData,
                   long          *local_N, //Pass clus.N_MAX_NEW
                   MPI_Datatype  eType,
                   MPI_Comm      commgroup,
@@ -487,6 +487,22 @@ void sample_sort( star_t        *starData,
 	free(expected_cum_count);
 
 	*local_N = total_recv_num;
+
+/*
+	int j;
+	strcpy(filename, "test_out_par");
+	strcpy(tempstr, filename);
+	sprintf(num, "%d", myid);
+	strcat(tempstr, num);
+	strcat(tempstr, ".dat");
+	ftest = fopen( tempstr, "w" );
+	for( j = 1; j <= total_recv_num; j++ )
+		fprintf(ftest, "%.18g\n", starData[j].r);
+	fclose(ftest);
+	if(myid==0)
+		system("./process.sh");
+*/
+	return global_N;
 }
 
 #endif

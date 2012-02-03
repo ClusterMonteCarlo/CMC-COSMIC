@@ -462,8 +462,11 @@ double potential(double r);	       /* get potential using star.phi */
 double potential_serial(double r);
 double fastpotential(double r, long kmin, long kmax);
 long potential_calculate(void);	/* calculate potential at star locations in star.phi */
+long potential_calculate_mimic(void); //to mimic the parallel version
 #ifdef USE_MPI
 long mpi_potential_calculate(void);
+long mpi_potential_calculate2(void);
+MPI_Comm inv_comm_create();
 #endif
 
 /* Bharath: Timing Functions */ 
@@ -595,7 +598,7 @@ void central_calculate(void);
 void mpi_central_calculate(void);
 void mpi_central_calculate1(void);
 void mpi_central_calculate2(void);
-void sample_sort( star_t        *starData,
+int sample_sort( star_t        *starData,
                   long          *local_N,
                   MPI_Datatype  eType,
                   MPI_Comm      commgroup,
