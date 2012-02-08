@@ -251,6 +251,12 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 
+		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
+		if (STELLAR_EVOLUTION > 0)
+			do_stellar_evolution(rng);
+
+		Prev_Dt = Dt;
+
 		/* evolve stars up to new time */
 		DMse = 0.0;
 #ifndef USE_MPI
@@ -258,12 +264,6 @@ int main(int argc, char *argv[])
 			DMse_mimic[i] = 0.0;
 #endif
 
-
-		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
-		if (STELLAR_EVOLUTION > 0)
-			do_stellar_evolution(rng);
-
-		Prev_Dt = Dt;
 
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
@@ -303,114 +303,14 @@ int main(int argc, char *argv[])
 
 		post_sort_comm();
 
-/*
-#ifdef USE_MPI
-		strcpy(filename, "test_out_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = 1; j <= End[i]-Start[i]+1; j++ )
-				//for( j = mpiBegin; j <= mpiEnd; j++ )
-				//for( j = 1; j <= clus.N_MAX; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].m);
-					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
-					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-MPI_Barrier(MPI_COMM_WORLD);
-#else
-		strcpy(tempstr, "test_out_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].m);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-		fclose(ftest);
-#endif
-return;
-*/
-
-/*
-#ifdef USE_MPI 
-   printf("id = %d\trng = %li\n", myid, rng_t113_int_new(curr_st));
-#else
-   for(i=0; i<procs; i++)
-      printf("i = %d\trng = %li\n", i, rng_t113_int_new(&st[i]));
-#endif
-*/
-
-/*
-#ifdef USE_MPI
-		if(myid==2)
-		{
-			strcpy(tempstr, "test_out_par.dat");
-			ftest = fopen( tempstr, "w" );
-			for( i = 1; i <= clus.N_MAX; i++ )
-				fprintf(ftest, "%.18g\n", star_r[i]);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-			fclose(ftest);
-		}
-#endif
-MPI_Barrier(MPI_COMM_WORLD);
-*/
-/*
-*/
-
-		calc_potential_new2();
-
-#ifdef USE_MPI
-	//printf("%ld----------------------\n",clus.N_MAX);
-	if(myid==0)
-	{
-		strcpy(tempstr, "test_out_par.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n",i, star_phi[i]);
-		//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-		//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-		fclose(ftest);
-	}
-	MPI_Barrier(MPI_COMM_WORLD);
-#else
-		strcpy(tempstr, "test_out_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].phi);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-		fclose(ftest);
-#endif
-return;
-
-/*
-#ifndef USE_MPI
-		strcpy(tempstr, "test_sort_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%.18g\n", star[i].r);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-		fclose(ftest);
-#endif
-*/
+		calc_potential_new();
 
 		//Calculating Start and End values for each processor for mimcking parallel rng.
 		findLimits( clus.N_MAX, 20 );
 
-		set_velocities3();
+		energy_conservation3();
 
-		distr_bin_data();
+		//distr_bin_data();
 
 		//commenting out for MPI
 		/*
@@ -426,8 +326,9 @@ return;
 
 		reset_interaction_flags();
 
+		//MPI2: Commenting out for MPI
 		/* update variables, then print */
-		update_vars();
+		//update_vars();
 
 		tcount++;
 
@@ -440,48 +341,6 @@ return;
 			}
 		 */
 
-/*
-#ifdef USE_MPI
-		strcpy(filename, "test_out_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-				{
-					//if(star[j].binind>0)
-						//fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
-				if(star[j].id <= 0)
-					fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", j, star_r[j], star[j].id, binary[star[j].binind].id1, binary[star[j].binind].id2);
-				else
-					fprintf(ftest, "%ld\t%.18g\t%ld\n", j, star_r[j], star[j].id);
-				}
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-#else
-		strcpy(tempstr, "test_out_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-		{
-			//if(star[i].binind>0)
-				//fprintf(ftest, "%ld\t%.18g\n", i, binary[star[i].binind].a);
-		if(star[i].id <= 0)
-			fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
-		else
-			fprintf(ftest, "%ld\t%.18g\t%ld\n", i, star[i].r, star[i].id);
-		}
-		fclose(ftest);
-#endif
-*/
 		print_results();
 
 		/* take a snapshot, we need more accurate 
@@ -551,8 +410,8 @@ return;
 	if (SEARCH_GRID)
 		search_grid_free(r_grid);
 
-	if(zpars)
-		free(zpars);
+//	if(zpars)
+//		free(zpars);
 
 #ifdef DEBUGGING
 	g_hash_table_destroy(star_ids);
@@ -565,3 +424,169 @@ return;
 
 	return(0);
 }
+/*
+#ifdef USE_MPI
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = 1; j <= End[i]-Start[i]+1; j++ )
+				//for( j = mpiBegin; j <= mpiEnd; j++ )
+				//for( j = 1; j <= clus.N_MAX; j++ )
+					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].vtnew);
+					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
+					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+MPI_Barrier(MPI_COMM_WORLD);
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].vtnew);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+		fclose(ftest);
+#endif
+//return;
+
+*/
+
+/*
+#ifdef USE_MPI 
+   printf("id = %d\trng = %li\n", myid, rng_t113_int_new(curr_st));
+#else
+   for(i=0; i<procs; i++)
+      printf("i = %d\trng = %li\n", i, rng_t113_int_new(&st[i]));
+#endif
+*/
+
+/*
+#ifdef USE_MPI
+		if(myid==2)
+		{
+			strcpy(tempstr, "test_out_par.dat");
+			ftest = fopen( tempstr, "w" );
+			for( i = 1; i <= clus.N_MAX; i++ )
+				fprintf(ftest, "%.18g\n", star_r[i]);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+			fclose(ftest);
+		}
+#endif
+MPI_Barrier(MPI_COMM_WORLD);
+*/
+
+/*
+#ifdef USE_MPI
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = Start[i]; j <= End[i]; j++ )
+				{
+					//if(star[j].binind>0)
+						//fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
+				if(star[j].id <= 0)
+					fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", j, star_r[j], star[j].id, binary[star[j].binind].id1, binary[star[j].binind].id2);
+				else
+					fprintf(ftest, "%ld\t%.18g\t%ld\n", j, star_r[j], star[j].id);
+				}
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+		{
+			//if(star[i].binind>0)
+				//fprintf(ftest, "%ld\t%.18g\n", i, binary[star[i].binind].a);
+		if(star[i].id <= 0)
+			fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
+		else
+			fprintf(ftest, "%ld\t%.18g\t%ld\n", i, star[i].r, star[i].id);
+		}
+		fclose(ftest);
+#endif
+*/
+
+/*
+
+#ifdef USE_MPI
+	//printf("%ld----------------------\n",clus.N_MAX);
+	if(myid==1)
+	{
+		strcpy(tempstr, "test_out_par.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n",i, star_m[i]);
+		//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+		//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+		fclose(ftest);
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+#else
+	strcpy(tempstr, "test_out_ser.dat");
+	ftest = fopen( tempstr, "w" );
+	for( i = 1; i <= clus.N_MAX; i++ )
+		fprintf(ftest, "%ld\t%.18g\n", i, star[i].m);
+	//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+	//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+	fclose(ftest);
+#endif
+return;
+
+ 
+#ifdef USE_MPI
+		if(myid==0)
+		{
+			ftest = fopen("mpi_globvar.dat","w");
+#else
+		{
+			ftest = fopen("ser_globvar.dat","w");
+#endif
+			fprintf(ftest, "clus.N_MAX_NEW=%ld\nclus.N_MAX=%ld\nTidalMassLoss=%g\nOldTidalMassLoss=%g\nPrev_Dt=%g\nEescaped=%g\nJescaped=%g\nEintescaped=%g\nEbescaped=%g\nMtotal=%g\ninitial_total_mass=%g\nDMse=%g\nDMrejuv=%g\ncenma.m=%g\ncenma.m_new=%g\ncenma.E=%g\ntcount=%ld\nStepCount=%ld\nsnap_num=%ld\nEcheck=%ld\nnewstarid=%ld\n",
+					clus.N_MAX_NEW,
+					clus.N_MAX,
+					TidalMassLoss,
+					OldTidalMassLoss,
+					Prev_Dt,
+					Eescaped,
+					Jescaped,
+					Eintescaped,
+					Ebescaped,
+					Mtotal,
+					initial_total_mass,
+					DMse,
+					DMrejuv,
+					cenma.m,
+					cenma.m_new,
+					cenma.E,
+					tcount,
+					StepCount,
+					snap_num,
+					Echeck,
+					newstarid);
+			fclose(ftest);
+		}
+*/

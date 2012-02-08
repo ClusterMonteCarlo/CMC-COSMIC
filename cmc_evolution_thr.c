@@ -37,7 +37,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	/* for newly created stars, position si is not ordered */
         //dprintf("clus.N_MAX= %li\n", clus.N_MAX);
 #ifdef USE_MPI
-	if (si > mpiEnd) {
+	if (si > mpiEnd-mpiBegin+1) {
 #else
 	if (si > clus.N_MAX) {
 #endif
@@ -106,7 +106,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		kmin = FindZero_Q(g_si, 0, ktemp, E, J);
 		kmax = FindZero_Q(g_si, ktemp, clus.N_MAX + 1, E, J);
 #endif
-		
+
 		while (function_Q(g_si, kmin, E, J) > 0 && kmin > 0)
 			kmin--;
 		while (function_Q(g_si, kmin + 1, E, J) < 0 
@@ -126,6 +126,9 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		Uk = star[i].phi + PHI_S(rk, si);
 		Uk1 = star[i1].phi + PHI_S(rk1, si);
 #endif
+		
+if(g_si==516)
+	printf("--------------->kmin=%ld kmax=%ld uk=%.18g uk1=%.18g rk=%.18g rk1=%.18g\n", kmin, kmax, Uk, Uk1, rk, rk1);
 		
 		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
 		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
@@ -390,7 +393,11 @@ double GetTimeStep(gsl_rng *rng) {
 
 	/* debugging */
 	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
-	//printf("Dt=%.18g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
+
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	printf("Dt=%.18g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
 
 	return (Dt);
 }
@@ -411,11 +418,15 @@ void tidally_strip_stars(void) {
 
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 	
-	gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-		j, OldTidalMassLoss, DTidalMassLoss);
-	fprintf(logfile, "tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-		j, OldTidalMassLoss, DTidalMassLoss);
-
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	{
+		gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+				j, OldTidalMassLoss, DTidalMassLoss);
+		fprintf(logfile, "tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+				j, OldTidalMassLoss, DTidalMassLoss);
+	}
 	
 	/* Iterate the removal of tidally stripped stars 
 	 * by reducing Rtidal */
@@ -549,10 +560,15 @@ void tidally_strip_stars(void) {
 
 		j++;
 		TidalMassLoss += DTidalMassLoss;
-		gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-				j, TidalMassLoss, DTidalMassLoss);
-		fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-				j, TidalMassLoss, DTidalMassLoss);
+#ifdef USE_MPI
+		if(myid==0)
+#endif
+		{
+			gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+					j, TidalMassLoss, DTidalMassLoss);
+			fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+					j, TidalMassLoss, DTidalMassLoss);
+		}
 
 #ifdef USE_MPI
    if(myid==0)
@@ -813,6 +829,12 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			if (g0 < 1.0 / vr * drds)	/* if g0 < g(s0) then success! */
 				break;
 		}
+
+#ifdef USE_MPI
+if(myid==0)
+#endif
+if(j==516)
+	printf("---------------> si=%ld r=%.18g rmin=%.18g rmax=%.18g vr^2=%.18g X=%.18g E=%.18g J=%.18g\n", si, r, rmin, rmax, Q, X, E, J);
 
 		if (k == N_TRY + 1) {
 			eprintf("N_TRY exceeded\n");

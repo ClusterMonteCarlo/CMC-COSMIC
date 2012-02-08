@@ -39,9 +39,11 @@ void print_results(void){
 #ifdef USE_MPI
 	if(myid==0)
 #endif
-	PrintLogOutput();
-	PrintFileOutput();
-	fflush(NULL);
+	{
+		PrintLogOutput();
+		//PrintFileOutput();
+		fflush(NULL);
+	}
 }
 
 /*********** Output 2D/3D snapshots **************/
@@ -107,6 +109,7 @@ void PrintLogOutput(void)
 	/* Computing half-mass radii, and relaxation time */
 	m = rh = trh = 0.0;
 	rh_binary = rh_single = m_binary = m_single = 0.0;
+/*
 	for (ih=1; ih<=clus.N_MAX; ih++) {
 		k = ih;
 #ifdef USE_MPI
@@ -124,7 +127,7 @@ void PrintLogOutput(void)
 		if (m_single / (Mtotal - (M_b / clus.N_STAR)) <= 0.5) {
 			rh_single = star_r[k];
 		}
-		/* avoid dividing by zero if there are no binaries */
+		// avoid dividing by zero if there are no binaries
 		if (M_b > 0) {
 			if (m_binary / M_b * clus.N_STAR <= 0.5) {
 				rh_binary = star_r[k];
@@ -145,7 +148,7 @@ void PrintLogOutput(void)
 		if (m_single / (Mtotal - (M_b / clus.N_STAR)) <= 0.5) {
 			rh_single = star[k].r;
 		}
-		/* avoid dividing by zero if there are no binaries */
+		// avoid dividing by zero if there are no binaries
 		if (M_b > 0) {
 			if (m_binary / M_b * clus.N_STAR <= 0.5) {
 				rh_binary = star[k].r;
@@ -153,7 +156,8 @@ void PrintLogOutput(void)
 		}
 #endif
 	}
-	
+*/	
+
 	/* t_rh calculated using r_h */
 	trh = ((0.138 * clus.N_MAX) / log((double) clus.N_MAX)) * sqrt((rh * rh * rh) / Mtotal) * log((double) clus.N_MAX) / clus.N_MAX;
 

@@ -356,10 +356,11 @@ int sample_sort( star_t        *starData,
 	for (i=1; i<procs; i++) total_recv_num += recv_count[i];
 
 	// Watch out! If the no.of stars after sort is very uneven, there is a possibility of it exceeding the allocated memore. In that case load_bal might have to be increased.
-	double load_bal = 1.2;
+	double load_bal = 2;
 	resultBuf = (star_t*) malloc((int)floor((double)expected_count[myid] * load_bal) * sizeof(star_t)); //The multiplying factor load_bal is for collecting data from neighbors fix load imbalance due to parallel sorting.
 	//resultBuf = (star_t*) malloc(total_recv_num * sizeof(star_t));
-	dprintf("Allocating memory to receive %d stars on proc %d\n", (int)floor((double)expected_count[myid]*load_bal), myid);
+	//dprintf("Allocating memory to receive %d stars on proc %d\n", (int)floor((double)expected_count[myid]*load_bal), myid);
+	dprintf("Allocating memory to receive %d stars on proc %d\n", total_recv_num, myid);
 
 	for(i=0; i<procs; i++)
 		dprintf("proc %d:\tsend_count[%d] = %d\tsend_index[%d] = %d\trecv_count[%d] = %d \n", myid, i, send_count[i], i, send_index[i], i, recv_count[i]);

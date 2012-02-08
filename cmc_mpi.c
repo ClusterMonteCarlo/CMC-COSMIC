@@ -88,6 +88,26 @@ void mpiFindDispAndLenCustom( long N, int blkSize, int* mpiDisp, int* mpiLen )
 }
 
 
+/* Creates a new communicator with inverse order of processes. */
+MPI_Comm inv_comm_create(int procs, MPI_Comm old_comm)
+{
+	int i, debug, *newranks;
+	int new_rank, new_np;
+	int group_rank, group_np;
+	MPI_Group orig_group, new_group;
+	MPI_Comm  new_comm;
+
+	newranks = (int *) malloc (procs * sizeof(int));
+	for (i=0; i<procs; i++)
+		newranks[i] = procs - 1 - i;
+
+	MPI_Comm_group(old_comm, &orig_group);
+	MPI_Group_incl(orig_group, procs, newranks, &new_group);
+	MPI_Comm_create(old_comm, new_group, &new_comm);
+
+	return new_comm;
+}
+
 //Function to find start index (displacement) and length for each processor for a loop over N. Not used anymore.
 /*
 void mpiFindDispAndLen( long N, int* mpiDisp, int* mpiLen )
