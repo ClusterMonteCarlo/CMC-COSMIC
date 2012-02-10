@@ -1333,6 +1333,8 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 
+	fprintf(lightcollisionfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:type1 #12:type2 #13:type3 #14:rad1 #15:rad2 #16:rad3 #17:Eb #18:ecc #19:a(au) #20:rp(au)\n");
+
 	sprintf(outfile, "%s.3bbdebug.log", outprefix);
 	if ((threebbdebugfile = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create 3bb debug output file \"%s\".\n", outfile);
