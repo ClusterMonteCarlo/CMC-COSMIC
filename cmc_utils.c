@@ -291,7 +291,7 @@ void mpi_set_velocities3(void){
 			v2 = sqr(star[i].vr)+sqr(star[i].vt);
 			if (star[i].interacted == 0) {
 				if (vnew2_arr[i] ==1) {
-					E_dump_capacity = v2 - E_dump_factor * 0.5 * m * v2_new;
+					E_dump_capacity = v2*m*0.5 - E_dump_factor * 0.5 * m * v2_new;
 					E_dump = MIN( E_dump_capacity, Eexcess );
 					if(Eexcess > 0) {
 						exc_ratio = sqrt( (v2 - 2 * E_dump / m) / v2 );
