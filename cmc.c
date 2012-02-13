@@ -221,9 +221,6 @@ int main(int argc, char *argv[])
 		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
 	     		star[787].se_menv,star[787].se_renv,star[787].se_ospin,star[787].se_epoch,star[787].se_tms,star[787].se_tphys,star[787].phi, star[787].r);*/
 
-		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
-		   will disappear! */
-		clus.N_MAX_NEW++;
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
@@ -231,6 +228,11 @@ int main(int argc, char *argv[])
 		if (STELLAR_EVOLUTION > 0) {
 			do_stellar_evolution(rng);
 		}
+
+		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
+		   will disappear! */
+        /* This really has to come after SE otherwise merger products will disappear. */
+		clus.N_MAX_NEW++;
 
 		/*dprintf ("after SE: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
 		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
