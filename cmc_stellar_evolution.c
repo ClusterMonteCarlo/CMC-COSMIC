@@ -200,15 +200,19 @@ void stellar_evolution_init(void){
 
 /* note that this routine is called after perturb_stars() and get_positions() */
 void do_stellar_evolution(gsl_rng *rng){
-  long k, kb;
-  int kprev,i,j;
+  long k, kb, j, jj;
+  int kprev,i;
   double dtp, tphysf, vs[12], VKO;
+  double M_beforeSE, M10_beforeSE, M100_beforeSE, M1000_beforeSE, Mcore_beforeSE;
+  double M_afterSE, M10_afterSE, M100_afterSE, M1000_afterSE, Mcore_afterSE;
+  double r10_beforeSE, r100_beforeSE, r1000_beforeSE, rcore_beforeSE;
+  double dM_dt_SE10, dM_dt_SE100, dM_dt_SE1000, dM_dt_SEcore; 
   binary_t tempbinary;
   bse_set_merger(-1.0);
   /* double vk, theta; */
   
-  //for(k=1; k<=clus.N_MAX; k++){
   for(k=1; k<=clus.N_MAX_NEW; k++){ 
+
     if (star[k].binind == 0) { /* single star */
         tphysf = TotalTime / MEGA_YEAR;
         dtp = tphysf;
@@ -358,6 +362,14 @@ void do_stellar_evolution(gsl_rng *rng){
         	/* 	star[k].vt += sin(theta) * vk; */
         	/* 	set_star_EJ(k); */
         	/* } */
+		
+		if (WRITE_BH_INFO) {
+			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
+				fprintf(newbhfile, "%.18g %g 0 %ld %g %g %g\n", TotalTime, star[k].r, star[k].id,star[k].se_mass, star[k].se_mt, VKO); 
+//m_init, m_bh, time, id, kick, r, vr_init, vt_init, vr_final, vt_final, binflag, m0_init, m1_init, m0_final, m1_final, 
+			}
+		}
+
 	}
     } else { /* binary */
 	tphysf = TotalTime / MEGA_YEAR;
@@ -396,8 +408,11 @@ void do_stellar_evolution(gsl_rng *rng){
 	  	handle_bse_outcome(k, kb, vs, tphysf);
 	}
     }
+    bh_count(k);
   }
 }
+
+
 void write_stellar_data(void){
   long k, kb;
   FILE *stel_file;
@@ -916,6 +931,59 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
 	    binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_tb);
     exit_cleanly(-1);
   }
+}
+
+// Meagan: count different types of bh-objects; at end of timestep, we'll print these totals
+void bh_count(long k) {
+	long b;
+	double phi_r0, phi_rt;
+	phi_r0 = potential(0.0);
+	phi_rt = potential(Rtidal);
+	b = star[k].binind;
+	if(b>0) {
+                //BINARIES
+		if(binary[b].bse_kw[0]==14 || binary[b].bse_kw[1]==14) { // binary containing at least one bh
+			bhbinary += 1;
+			if(binary[b].bse_kw[0]==14 && binary[b].bse_kw[1]==14) { // both are bhs
+				bhbh += 1;
+			} else { // one of the stars is not a BH
+				bhnonbh += 1;
+				//if (binary[b].bse_kw[0]==14 && binary[b].bse_kw[1]!=14) { // primary bh, secondary other
+				if (binary[b].bse_kw[0]==13 || binary[b].bse_kw[1]==13) { //  BH-NS
+					bh13 += 1;			
+				} else if (binary[b].bse_kw[0]==10 || binary[b].bse_kw[1]==10) {
+					bh10 += 1;
+				} else if (binary[b].bse_kw[0]==11 || binary[b].bse_kw[1]==11) {
+					bh11 += 1; 
+				} else if (binary[b].bse_kw[0]==12 || binary[b].bse_kw[1]==12) { 
+					bh12 += 1;
+				} else if (binary[b].bse_kw[0]==9 || binary[b].bse_kw[1]==9 ||
+					   binary[b].bse_kw[0]==8 || binary[b].bse_kw[1]==8) { 
+					bh89 += 1;  // BH-POSTMS_HE binary
+				} else if (binary[b].bse_kw[0]==7 || binary[b].bse_kw[1]==7) { 
+					bh7 += 1;  // BH-MS_HE binary
+				} else if ( (binary[b].bse_kw[0]>=2 && binary[b].bse_kw[0]<=6) ||
+					    (binary[b].bse_kw[1]>=2 && binary[b].bse_kw[1]<=6) ) {
+					bh26 += 1;  // BH-postMS binary
+				} else if ((binary[b].bse_kw[0]>=0 && binary[b].bse_kw[0]<=1) ||
+					   (binary[b].bse_kw[1]>=0 && binary[b].bse_kw[1]<=1)) {
+					bh01 += 1;  // BH-MS binary
+				}
+				bhstar = bh01 + bh26 + bh7 + bh89;
+				bhwd = bh10 + bh11 + bh12;
+			}	
+
+			//gzprintf(bhinfofile_gz,"%ld %.16g 1 %ld %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld %d %d %.8g %.8g %g %g %g %g %g\n", tcount, TotalTime, star[k].id, star[k].r_peri, star[k].r_apo, star[k].r, star[k].vr, star[k].vt, star[k].phi, binary[b].id1, binary[b].id2, binary[b].bse_kw[0], binary[b].bse_kw[1], binary[b].bse_mass[0], binary[b].bse_mass[1], binary[b].bse_tb, binary[b].a, binary[b].e, binary[b].bse_bcm_radrol[1], binary[b].bse_bcm_dmdt[0]);
+
+		}
+
+	} else {
+		//SINGLE BHs
+		if(star[k].se_k==14){
+			bhsingle += 1;
+			//gzprintf(bhinfofile_gz,"%ld %.16g 0 %ld %.8g %.8g %.8g %.8g %.8g -100 -100 %d -100 %.8g -100 -100 -100 -100 -100 -100\n", tcount, TotalTime, star[k].id, star[k].r_peri, star[k].r_apo, star[k].r, star[k].vr, star[k].vt, star[k].phi, star[k].se_k, star[k].se_mt);
+		}
+        }
 }
 
 /* k=star index, kbi=0 or 1, knew=index of new star */

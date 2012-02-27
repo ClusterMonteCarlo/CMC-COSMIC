@@ -25,8 +25,8 @@ _EXTERN_ double initial_total_mass, Mtotal;
 _EXTERN_ double DMse, DMrejuv;
 /******************* Input file parameters *************************/
 _EXTERN_ long N_STAR_DIM, N_BIN_DIM, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, TIDAL_TREATMENT, SS_COLLISION, TIDAL_CAPTURE, STAR_AGING_SCHEME, PREAGING, NO_MASS_BINS;
-_EXTERN_ long SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME;
-_EXTERN_ int SNAPSHOTTING, SNAPSHOT_CORE_COLLAPSE, SNAPSHOT_CORE_BOUNCE;
+_EXTERN_ long SNAPSHOT_DELTACOUNT, BH_SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME;
+_EXTERN_ int SNAPSHOTTING, BH_SNAPSHOTTING, SNAPSHOT_CORE_COLLAPSE, SNAPSHOT_CORE_BOUNCE;
 _EXTERN_ long IDUM, PERTURB, RELAXATION;
 _EXTERN_ long NUM_CENTRAL_STARS;
 _EXTERN_ double SNAPSHOT_DELTAT, T_MAX, T_MAX_PHYS, THETASEMAX;
@@ -43,6 +43,22 @@ _EXTERN_ char *SNAPSHOT_WINDOW_UNITS;
 _EXTERN_ int MASS_PC_BH_INCLUDE;
 _EXTERN_ int BINSINGLE, BINBIN;
 _EXTERN_ int BININITKT, STOPATCORECOLLAPSE;
+/* Meagan - 3bb */
+_EXTERN_ int THREEBODYBINARIES, ONLY_FORM_BH_THREEBODYBINARIES;;
+_EXTERN_ double MIN_BINARY_HARDNESS;
+_EXTERN_ long N3bbformed;
+_EXTERN_ double delta_E_3bb;
+// Meagan: extra bh output
+_EXTERN_ long bhbinary, bhsingle, bhnonbh, bhbh, bh13, bh10, bh11, bh12, bhwd;
+_EXTERN_ long bhstar, bh01, bh26, bh7, bh89;
+_EXTERN_ long esc_bhsingle, esc_bhbinary, esc_bhnonbh, esc_bhbh, esc_bh13; 
+_EXTERN_ long esc_bh10, esc_bh11, esc_bh12, esc_bhwd, esc_bhstar, esc_bh01, esc_bh26;
+_EXTERN_ long esc_bh7, esc_bh89; 
+_EXTERN_ long esc_bhsingle_tot, esc_bhbinary_tot, esc_bhnonbh_tot, esc_bhbh_tot;
+_EXTERN_ long esc_bh13_tot, esc_bh10_tot, esc_bh11_tot, esc_bh12_tot, esc_bhwd_tot;
+_EXTERN_ long esc_bhstar_tot, esc_bh01_tot, esc_bh26_tot, esc_bh7_tot, esc_bh89_tot;
+_EXTERN_ double fb_bh, esc_fb_bh, esc_fb_bh_tot;
+_EXTERN_ FILE *bhinfofile, *bhinfofile_gz, *escbhinfofile, *bhsummaryfile, *escbhsummaryfile, *newbhfile;
 /* BSE input file parameters */
 _EXTERN_ int BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_IDUM, BSE_WINDFLAG;
 _EXTERN_ double BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_MXNS, BSE_BCONST, BSE_CK, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA;
@@ -53,15 +69,18 @@ _EXTERN_ binary_t *binary;
 /* file pointers */
 _EXTERN_ FILE *lagradfile, *dynfile, *lagrad10file, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
-_EXTERN_ FILE *binaryfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
+_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
+// Meagan: file for tracking potential fluctuations for innermost 1000 stars
+_EXTERN_ FILE *phi_variation;
+
 /* everything else except arrays */
 _EXTERN_ char outprefix[100];
 _EXTERN_ char dummystring[MAX_STRING_LENGTH], dummystring2[MAX_STRING_LENGTH], dummystring3[MAX_STRING_LENGTH], dummystring4[MAX_STRING_LENGTH];
 _EXTERN_ int se_file_counter;
 _EXTERN_ long tcount;
 _EXTERN_ long Echeck;
-_EXTERN_ long snap_num, StepCount;
+_EXTERN_ long snap_num, StepCount, bh_snap_num;
 _EXTERN_ long newstarid;
 _EXTERN_ double rho_core_single, rho_core_bin, rh_single, rh_binary;
 _EXTERN_ double TotalTime, Dt;
@@ -108,6 +127,7 @@ _EXTERN_ int FORCE_RLX_STEP;
  */
 _EXTERN_ double CIRC_PERIOD_THRESHOLD;
 _EXTERN_ int WRITE_STELLAR_INFO;
+_EXTERN_ int WRITE_BH_INFO;
 _EXTERN_ int WRITE_RWALK_INFO;
 _EXTERN_ int WRITE_EXTRA_CORE_INFO;
 _EXTERN_ int CALCULATE10;
