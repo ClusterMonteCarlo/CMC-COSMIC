@@ -17,12 +17,18 @@ typedef struct{
 	double bse_menv[2];
 	double bse_renv[2];
 	double bse_ospin[2]; /* original spin */
+        double bse_B_0[2]; /* Pulsar magnetic field */
+        double bse_bacc[2]; /* Amount of mass pulsar has accreted */
+        double bse_tacc[2]; /* Amount of time pulsar has spent accreting */
 	double bse_epoch[2];
 	double bse_tms[2];
 	double bse_tphys; /* physical time */
 	double bse_tb; /* binary orbital period */
 	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
 	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
+        double bse_bcm_B[2]; /* PK: Pulsar surface magnetic field strength */
+/* parameter providing formation scenario 4-TypeII, 5-ECSN(when implemented), 6-AIC, 7-MIC*/
+        double bse_bcm_formation[2];
 	double m1init;
 	double m2init;
 	double ainit;

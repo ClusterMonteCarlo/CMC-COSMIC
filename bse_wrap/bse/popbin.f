@@ -30,6 +30,7 @@
 * neta is the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally). 
 * bwind is the binary enhanced mass loss parameter (inactive for single).
 * hewind is a helium star mass loss factor (1.0 normally).
+* windflag sets which wind prescription is to be used (0=bse, 1=StarTrack, 2=Vink)
 * alpha1 is the common-envelope efficiency parameter (1.0).  
 * lambda is the binding energy factor for common envelope evolution (0.5).
 *
@@ -60,6 +61,7 @@
       neta = 0.5
       bwind = 0.0
       hewind = 1.0
+      windflag = 0
       alpha1 = 3.0
       lambda = 0.5 
       ceflag = 0

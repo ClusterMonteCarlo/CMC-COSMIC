@@ -176,7 +176,34 @@ int main(int argc, char *argv[])
 	/* initialize stellar evolution things */
 	DMse = 0.0;
 	if (STELLAR_EVOLUTION > 0) {
-		stellar_evolution_init();
+          long new_N=0;
+          stellar_evolution_init();
+          for (i=1; i<=clus.N_MAX_NEW+1; i++) {
+            if (star[i].m> ZERO) {
+              new_N++;
+            } else {
+              star[i].r=SF_INFINITY;
+            }
+          }
+          dprintf("The new particle number is %li\n", new_N);
+          clus.N_MAX=new_N;
+
+          /* It can happen that some binaries merge during the first year of
+           * their evolution, whether this is physical or not. Here we account
+           * for this by removing destroyed star[]s and update phi and
+           * energies
+           */
+          qsorts(star+1,clus.N_MAX_NEW+1);
+          potential_calculate();
+          if (SEARCH_GRID)
+            search_grid_update(r_grid);
+          comp_mass_percent();
+          comp_multi_mass_percent();
+          ComputeEnergy();
+          /* update variables, then print */
+          update_vars();
+          /* calculate dynamical quantities */
+          clusdyn_calculate();
 	}
 	
 	update_vars();
@@ -243,15 +270,17 @@ int main(int argc, char *argv[])
 		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,
 	     		star[787].se_menv,star[787].se_renv,star[787].se_ospin,star[787].se_epoch,star[787].se_tms,star[787].se_tphys,star[787].phi, star[787].r);*/
 
-		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
-		   will disappear! */
-		clus.N_MAX_NEW++;
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
 		if (STELLAR_EVOLUTION > 0) {
 			do_stellar_evolution(rng);
 		}
+
+		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
+		   will disappear! */
+        /* This really has to come after SE otherwise merger products will disappear. */
+		clus.N_MAX_NEW++;
 
 		/*dprintf ("after SE: id=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
 		     star[787].id,star[787].se_k,star[787].se_mass,star[787].se_mt,star[787].se_radius,star[787].se_lum,star[787].se_mc,star[787].se_rc,

@@ -1,6 +1,7 @@
 ***
       SUBROUTINE hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
-     &                  r,lum,kw,mc,rc,menv,renv,k2)
+     &                  r,lum,kw,mc,rc,menv,renv,k2,ST_tide,
+     &                  ecsnp,ecsn_mlow)
 *
 *
 *       H-R diagram for population I stars.
@@ -22,16 +23,19 @@
       implicit none
 *
       integer kw,kwp
-      INTEGER ceflag,tflag,ifflag,nsflag,wdflag
+      INTEGER ceflag,tflag,ifflag,nsflag,wdflag,ST_tide
       COMMON /FLAGS/ ceflag,tflag,ifflag,nsflag,wdflag
 *
       real*8 mass,aj,mt,tm,tn,tscls(20),lums(10),GB(10),zpars(20)
       real*8 r,lum,mc,rc,menv,renv,k2
       real*8 mch,mlp,tiny
-      parameter(mch=1.44d0,mlp=12.d0,tiny=1.0d-14)
+*      parameter(mch=1.44d0,mlp=12.d0,tiny=1.0d-14)
+      parameter(mlp=12.d0,tiny=1.0d-14)
       real*8 mass0,mt0,mtc
       REAL*8 neta,bwind,hewind,mxns
       COMMON /VALUE1/ neta,bwind,hewind,mxns
+* 
+      real*8 mt_max,ecsnp,ecsn_mlow,mchold
 * 
       real*8 thook,thg,tbagb,tau,tloop,taul,tauh,tau1,tau2,dtau,texp
       real*8 lx,ly,dell,alpha,beta,eta
@@ -72,10 +76,12 @@
 *
 * Make evolutionary changes to stars that have not reached KW > 5.
 *
+      mch = 1.44d0 !set here owing to AIC ECSN model.
+*
       mass0 = mass
-      if(mass0.gt.100.d0) mass = 100.d0
+C      if(mass0.gt.100.d0) mass = 100.d0
       mt0 = mt
-      if(mt0.gt.100.d0) mt = 100.d0
+C      if(mt0.gt.100.d0) mt = 100.d0
 *
       if(kw.gt.6) goto 90
 *
@@ -304,7 +310,7 @@
                rx = rmin*(rx/rmin)**texp
             else
                rx = rmin
-            end if
+            endif
             texp = MIN(MAX(0.4d0,rmin/rx),2.5d0)
             lum = lums(4)*(lums(7)/lums(4))**(tau**texp)
             if(aj.lt.tloop)then
@@ -323,7 +329,7 @@
             else
                r = ragbf(mt,lum,zpars(2))
                rg = r
-            end if
+            endif
          else
 *
 * For IM stars CHeB consists of a RG phase (before tloop) and a blue
@@ -452,11 +458,20 @@
                endif
 *
                mt = mc
-               if(mcbagb.lt.1.6d0)then
+               if(ecsnp.gt.0.d0.and.mcbagb.lt.ecsn_mlow)then
+                  kw = 11
+               elseif(ecsnp.eq.0.d0.and.mcbagb.lt.1.6d0)then !double check what this should be. should be ecsn_mlow. Remember need to add option if ecsnp = 0 (i.e. no ECSN!!!)
 *     
 * Zero-age Carbon/Oxygen White Dwarf
 *
                   kw = 11
+               elseif(ecsnp.gt.0.d0.and.mcbagb.ge.ecsn_mlow.and.
+     &                mcbagb.le.ecsnp.and.mc.lt.1.08d0)then
+                  kw = 11
+*               elseif(mcbagb.ge.1.6d0.and.mcbagb.le.2.5d0.and.
+*                      mc.lt.1.08d0)then !can introduce this into code at some point.
+*                  kw = 11
+
                else
 *     
 * Zero-age Oxygen/Neon White Dwarf
@@ -466,7 +481,17 @@
                mass = mt
 *
             else
-               if(mcbagb.lt.1.6d0)then
+               if(ecsnp.gt.0.d0.and.mcbagb.lt.ecsn_mlow)then
+*
+* Star is not massive enough to ignite C burning.
+* so no remnant is left after the SN
+*
+                  kw = 15
+                  aj = 0.d0
+                  mt = 0.d0
+                  lum = 1.0d-10
+                  r = 1.0d-10
+               elseif(ecsnp.eq.0.d0.and.mcbagb.lt.1.6d0)then
 *
 * Star is not massive enough to ignite C burning.
 * so no remnant is left after the SN
@@ -479,7 +504,7 @@
                else
                   if(nsflag.eq.0)then
                      mt = 1.17d0 + 0.09d0*mc
-                  elseif(nsflag.ge.1)then
+                  elseif(nsflag.eq.1)then
 *
 * Use NS/BH mass given by Belczynski et al. 2002, ApJ, 572, 407. 
 *
@@ -493,7 +518,33 @@
                      elseif(mc.lt.7.6d0)then
                         mt = mcx + (mc - 5.d0)*(mt - mcx)/2.6d0
                      endif
+                  elseif(nsflag.ge.2)then
+*
+* Use NS/BH masses given by Belczynski+08. PK.
+*
+                     if(ecsnp.gt.0.d0.and.mcbagb.le.ecsnp)then
+                        mcx = 1.38d0
+                     elseif(ecsnp.eq.0.d0.and.mcbagb.le.2.25d0)then !this should be ecsnp, unless ecsnp=0
+*                     if(mcbagb.le.2.35d0)then
+                        mcx = 1.38d0
+                     elseif(mc.lt.4.29d0)then
+*                     elseif(mc.lt.4.82d0)then
+                        mcx = 1.5d0
+                     elseif(mc.ge.4.29d0.and.mc.lt.6.31d0)then
+*                     elseif(mc.ge.4.82d0.and.mc.lt.6.31d0)then
+                        mcx = 2.11d0
+                     elseif(mc.ge.6.31d0.and.mc.lt.6.75d0)then
+                        mcx = 0.69*mc - 2.26d0
+                     elseif(mc.ge.6.75d0)then
+                        mcx = 0.37*mc - 0.07d0
+                     endif
+                     if(mc.le.5.d0)then
+                        mt = mcx
+                     elseif(mc.lt.7.6d0)then
+                        mt = mcx + (mc - 5.d0)*(mt - mcx)/2.6d0
+                     endif
                   endif
+                  if(nsflag.ge.2) mt = mt*0.9d0 !rough estimate of converting baryonic mass to gravitational mass...
                   mc = mt
                   if(mt.le.mxns)then
 *
@@ -555,10 +606,17 @@
                aj = 0.d0
                mc = mcmax
                if(mc.lt.mch)then
-                  if(mass.lt.1.6d0)then
+                  if(ecsnp.gt.0.d0.and.mass.lt.ecsn_mlow)then
+                     mt = MAX(mc,(mc+0.31d0)/1.45d0)
+                     kw = 11
+                  elseif(ecsnp.eq.0.d0.and.mass.lt.1.6d0)then
 *     
 * Zero-age Carbon/Oxygen White Dwarf
 *
+                     mt = MAX(mc,(mc+0.31d0)/1.45d0)
+                     kw = 11
+                  elseif(ecsnp.gt.0.d0.and.mass.gt.ecsn_mlow.and.
+     &                   mass.le.ecsnp.and.mc.le.1.08d0)then
                      mt = MAX(mc,(mc+0.31d0)/1.45d0)
                      kw = 11
                   else
@@ -570,7 +628,13 @@
                   endif
                   mass = mt
                else
-                  if(mass.lt.1.6d0)then
+                  if(ecsnp.gt.0.d0.and.mass.lt.ecsn_mlow)then
+                     kw = 15
+                     aj = 0.d0
+                     mt = 0.d0
+                     lum = 1.0d-10
+                     r = 1.0d-10
+                  elseif(ecsnp.eq.0.d0.and.mass.lt.1.6d0)then
 *
 * Star is not massive enough to ignite C burning.
 * so no remnant is left after the SN
@@ -588,6 +652,31 @@
                            mcx = 0.161767d0*mc + 1.067055d0
                         else
                            mcx = 0.314154d0*mc + 0.686088d0
+                        endif
+                        if(mc.le.5.d0)then
+                           mt = mcx
+                        elseif(mc.lt.7.6d0)then
+                           mt = mcx + (mc - 5.d0)*(mt - mcx)/2.6d0
+                        endif
+                     elseif(nsflag.eq.2)then
+*
+* Use NS/BH masses given by Belczynski+08. PK.
+*
+*                        if(mc.lt.4.82d0)then
+                        if(ecsnp.gt.0.d0.and.mcbagb.le.ecsnp)then
+                           mcx = 1.38d0
+                        elseif(ecsnp.eq.0.d0.and.mcbagb.le.2.25d0)then
+                           mcx = 1.38d0
+                        elseif(mc.lt.4.29d0)then
+*                        elseif(mc.lt.4.82d0)then
+                           mcx = 1.5d0
+                        elseif(mc.ge.4.29d0.and.mc.lt.6.31d0)then
+*                        elseif(mc.ge.4.82d0.and.mc.lt.6.31d0)then
+                           mcx = 2.11d0
+                        elseif(mc.ge.6.31d0.and.mc.lt.6.75d0)then
+                           mcx = (0.69*mc - 2.26d0)
+                        elseif(mc.ge.6.75d0)then
+                           mcx = (0.37*mc - 0.07d0)
                         endif
                         if(mc.le.5.d0)then
                            mt = mcx
@@ -618,6 +707,8 @@
 *        White dwarf.
 *
          mc = mt
+         mchold = mch
+         if(ecsnp.gt.0.d0.and.kw.eq.12) mch = 1.38d0
          if(mc.ge.mch)then
 *
 * Accretion induced supernova with no remnant
@@ -628,6 +719,10 @@
                kw = 13
                aj = 0.d0
                mt = 1.3d0
+               if(ecsnp.gt.0.d0)then
+                  mt = 1.38d0
+                  mt = 0.9d0*mt !in ST this is a quadratic, will add in later.
+               endif
             else
                kw = 15
                aj = 0.d0
@@ -669,6 +764,7 @@
             if(mt.lt.0.000005d0) r = 0.009d0
 *
          endif
+         mch = mchold !added for AIC ECSN stuff.
       endif
 *
       if(kw.eq.13)then
@@ -781,12 +877,24 @@
      &              lums(4),rzams,rtms,rg,menv,renv,k2)
       endif
 *
-      if(mass.gt.99.99d0)then
-         mass = mass0
+      if(ST_tide.gt.0)then
+         if(kw.le.2.or.kw.eq.7.or.kw.ge.10)then
+            if(mt.le.1.d0)then
+               k2 = 0.205d0
+            else
+               k2 = 0.075d0
+            endif
+         else
+           k2 = 0.1d0
+         endif
       endif
-      if(mt.gt.99.99d0)then
-         mt = mt0
-      endif
+*
+C      if(mass.gt.99.99d0)then
+C         mass = mass0
+C      endif
+C      if(mt.gt.99.99d0)then
+C         mt = mt0
+C      endif
 *
       return
       end

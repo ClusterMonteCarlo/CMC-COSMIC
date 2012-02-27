@@ -55,15 +55,17 @@
       real*8 v1out,v2out,v3out,vkout
       logical output
 *
-      COMMON /VALUE4/ sigma,bhflag
+      real*8 bconst,CK
+      COMMON /VALUE4/ sigma,bconst,CK,bhflag
       real*8 mxns,neta,bwind,hewind
       COMMON /VALUE1/ neta,bwind,hewind,mxns
       real*8 bkick(12)
 *      COMMON /VKICK/ bkick
       real ran3,xx
       external ran3
-      integer id1_pass,id2_pass
-      COMMON /cmcpass/ id1_pass,id2_pass
+      integer*8 id1_pass,id2_pass
+      real*8 merger
+      COMMON /cmcpass/ merger,id1_pass,id2_pass
 *
       output = .true. !useful for debugging...
       v1out = 0.d0

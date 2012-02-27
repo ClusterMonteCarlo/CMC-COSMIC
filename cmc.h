@@ -88,12 +88,17 @@ typedef struct{
 	double bse_menv[2];
 	double bse_renv[2];
 	double bse_ospin[2]; /* original spin */
+        double bse_B_0[2]; /* Pulsar magnetic field */
+        double bse_bacc[2]; /* Amount of mass pulsar has accreted */
+        double bse_tacc[2]; /* Amount of time pulsar has spent accreting */
 	double bse_epoch[2];
 	double bse_tms[2];
 	double bse_tphys; /* physical time */
 	double bse_tb; /* binary orbital period */
 	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
 	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
+        double bse_bcm_B[2]; /* Pulsar magnetic field strength at surface */
+        double bse_bcm_formation[2]; /* provides formation pathway of NS */
 	//Sourav:toy rejuvenation variables
 	double lifetime_m1; /*Sourav: lifetime of star1*/
 	double lifetime_m2; /*Sourav: lifetime of star2*/
@@ -145,6 +150,9 @@ typedef struct{
 	int se_k;
 	double se_mt;
 	double se_ospin;
+        double se_B_0; /* Pulsar initial magentif field */
+        double se_bacc;
+        double se_tacc;
 	double se_epoch;
 	double se_tphys;
 	double se_radius;
@@ -154,6 +162,8 @@ typedef struct{
 	double se_menv;
 	double se_renv;
 	double se_tms;
+        double se_scm_B; /* Pulsar surface magnetic field */
+        double se_scm_formation; /* formation pathway of NS */
 	//Sourav: toy rejuvenation variables
 	double createtime, createtimenew, createtimeold;
 	double lifetime, lifetimeold, lifetimenew;
@@ -202,7 +212,7 @@ typedef struct{
         int SNAPSHOT_CORE_COLLAPSE;
 #define PARAMDOC_SNAPSHOT_CORE_BOUNCE "output extra snapshotting information during core bounce (0=off, 1=on)"
         int SNAPSHOT_CORE_BOUNCE;
-#define PARAMDOC_SNAPSHOT_WINDOWS "Output extra snapshots within time windows. \nThe format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc." 
+#define PARAMDOC_SNAPSHOT_WINDOWS "Output extra snapshots within time windows. \n#The format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc." 
         int SNAPSHOT_WINDOWS;
 #define PARAMDOC_SNAPSHOT_WINDOW_UNITS "Units used for time window parameters. Possible choices: Gyr, Trel, and Tcr"
         int SNAPSHOT_WINDOW_UNITS;
@@ -313,6 +323,8 @@ typedef struct{
 	int BSE_BWIND;
 #define PARAMDOC_BSE_HEWIND "hewind is a helium star mass-loss factor (0.5 normally)."
 	int BSE_HEWIND;
+#define PARAMDOC_BSE_WINDFLAG "windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink)."
+	int BSE_WINDFLAG;
 #define PARAMDOC_BSE_ALPHA1 "alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)"
 	int BSE_ALPHA1;
 #define PARAMDOC_BSE_LAMBDA "labmda is the stellar binding energy factor for common-envelope evolution (0.5; +'ve allows it to vary, -'ve holds it constant at that value always)."
@@ -520,6 +532,7 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew);
 void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid);
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid);
 double r_of_m(double M);
+void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide);
 
 /* Fewbody stuff */
 void destroy_obj(long i);

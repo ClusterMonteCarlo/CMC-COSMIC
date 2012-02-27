@@ -34,6 +34,7 @@ int main(void) {
   bse_set_neta(0.5);
   bse_set_bwind(0.0);
   bse_set_hewind(1.0);
+  bse_set_windflag(0);
   bse_set_alpha1(1.0);
   bse_set_lambda(0.5);
   bse_set_ceflag(0);
@@ -43,6 +44,8 @@ int main(void) {
   bse_set_bhflag(0);
   bse_set_nsflag(1);
   bse_set_mxns(3.0);
+  bse_set_bconst(-3000.0);
+  bse_set_CK(-1000.0);
   bse_set_idum(29769);
   bse_set_pts1(0.05);
   bse_set_pts2(0.01);
@@ -67,9 +70,19 @@ int main(void) {
     /* zero out some vars */
     binarray[i].bse_ospin[0] = 0.0;
     binarray[i].bse_ospin[1] = 0.0;
+    binarray[i].bse_B_0[0] = 0.0;
+    binarray[i].bse_B_0[1] = 0.0;
+    binarray[i].bse_bacc[0] = 0.0;
+    binarray[i].bse_bacc[1] = 0.0;
+    binarray[i].bse_tacc[0] = 0.0;
+    binarray[i].bse_tacc[1] = 0.0;
     binarray[i].bse_epoch[0] = 0.0;
     binarray[i].bse_epoch[1] = 0.0;
     binarray[i].bse_tphys = 0.0;
+    binarray[i].bse_bcm_formation[0] = 0.0;
+    binarray[i].bse_bcm_formation[1] = 0.0;
+    binarray[i].bse_bcm_B[0] = 0.0;
+    binarray[i].bse_bcm_B[1] = 0.0;
 
     /* set primary mass from power law */
     X = gsl_rng_uniform(rng);
@@ -133,7 +146,8 @@ int main(void) {
 		 &(binarray[i].bse_radius[0]), &(binarray[i].bse_lum[0]), 
 		 &(binarray[i].bse_massc[0]), &(binarray[i].bse_radc[0]), 
 		 &(binarray[i].bse_menv[0]), &(binarray[i].bse_renv[0]), 
-		 &(binarray[i].bse_ospin[0]), &(binarray[i].bse_epoch[0]), 
+		 &(binarray[i].bse_ospin[0]), &(binarray[i].bse_B_0[0]),
+                 &(binarray[i].bse_bacc[0]), &(binarray[i].bse_tacc[0]), &(binarray[i].bse_epoch[0]), 
 		 &(binarray[i].bse_tms[0]), 
 		 &binarray[i].bse_tphys, &tphysf, &dtp, 
 		 &z, zpars, 

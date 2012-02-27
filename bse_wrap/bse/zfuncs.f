@@ -862,11 +862,20 @@
       return
       end
 ***
-      real*8 FUNCTION vrotf(m)
+      real*8 FUNCTION vrotf(m,ST)
       implicit none
+      integer ST
       real*8 m
 *
-      vrotf = 330.d0*m**3.3d0/(15.d0 + m**3.45d0)
+      if(ST.gt.0)then
+         if(m.gt.6.35d0)then
+            vrotf = (10.d0*m**-0.0354d0)/(0.0389d0+m**-7.95d0)
+         else
+            vrotf = (13.4d0*m**-0.12d0)/(0.0389d0+m**-7.95d0)
+         endif
+      else
+         vrotf = 330.d0*m**3.3d0/(15.d0 + m**3.45d0)
+      endif
 *
       return
       end

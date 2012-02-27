@@ -43,6 +43,11 @@ void zero_star(long j)
 	star[j].se_k = 0;
 	star[j].se_mt = 0.0;
 	star[j].se_ospin = 0.0;
+        star[j].se_B_0 = 0.0; /* PK */
+        star[j].se_bacc = 0.0;
+        star[j].se_tacc = 0.0;
+        star[j].se_scm_B = 0.0;
+        star[j].se_scm_formation = 0.0;
 	star[j].se_epoch = 0.0;
 	star[j].se_tphys = 0.0;
 	star[j].se_radius = 0.0;
