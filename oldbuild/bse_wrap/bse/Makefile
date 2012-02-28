@@ -4,7 +4,7 @@ CMPLR = gfortran
 else
 CMPLR = gfortran
 endif
-FFLAGS = -02
+FFLAGS = 
 LFLAGS = const_bse.h zdata.h 
 
 .f.o:

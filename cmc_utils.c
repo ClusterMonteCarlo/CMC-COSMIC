@@ -935,6 +935,97 @@ void central_calculate(void)
 	free(rhoj);
 }
 
+double local_kT(long si, int p) {
+  int simin, simax, j;
+  double mave, kT;
+
+  simin = si - p;
+  simax = simin + (2 * p - 1);
+  if (simin < 1) {
+    simin = 1;
+    simax = simin + (2 * p - 1);
+  }
+  mave= 0.;
+  for (j=simin; j< simax; j++) {
+    mave+= star[j].m *madhoc;
+  }
+  mave/= (double)(2 * p);
+
+  kT= (1.0/3.0) * mave * sigma_array.sigma[si] * sigma_array.sigma[si];
+
+  return(kT);
+}
+
+double core_kT(int Ncore, int p) {
+  int i;
+  double kT;
+
+  kT= 0.;
+  for (i=1; i<Ncore+1; i++) {
+    kT+= local_kT(i, p);
+  }
+  kT/= Ncore;
+
+  return(kT);
+}
+
+central_t
+central_hard_binary(double ktmin, central_t old_cent) {
+  int i, Ncentral; 
+  double Rcentral, Vcentral, kTcore, Mbincentral;
+  central_t cent;
+  
+  cent= old_cent;
+
+  cent.a_ave=0.;
+  cent.a2_ave=0.;
+  cent.v_bin_rms=0.;
+  cent.ma_ave=0.;
+  cent.m_bin_ave=0.;
+  cent.n_bin=0.;
+  cent.rho_bin=0.;
+  cent.N_bin=0;
+
+  Ncentral= MIN(NUM_CENTRAL_STARS, clus.N_MAX);
+  Rcentral= star[Ncentral+1].r;
+  Vcentral= 4./3.*PI*cub(Rcentral);
+  kTcore= core_kT(Ncentral, AVEKERNEL);
+  printf("kTcore is %g\n", kTcore);
+
+  Mbincentral=0.;
+  for (i=1; i<Ncentral+1; i++) {
+    double Eb, a, m1, m2;
+
+    if (!(star[i].binind>0)) continue;
+    
+    a= binary[star[i].binind].a;
+    m1= binary[star[i].binind].m1 * madhoc;
+    m2= binary[star[i].binind].m2 * madhoc;
+    Eb= m1*m2/2./a;
+    Eb/= kTcore;
+
+    if (Eb< ktmin) continue;
+
+    cent.N_bin++;
+    Mbincentral += star[i].m * madhoc;
+    cent.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
+    cent.a_ave += a;
+    cent.a2_ave += a*a;
+    cent.ma_ave += star[i].m *madhoc * a;
+  }
+  if (cent.N_bin>0) {
+    cent.a_ave/= cent.N_bin;
+    cent.a2_ave/= cent.N_bin;
+    cent.v_bin_rms/= cent.N_bin;
+    cent.ma_ave/= cent.N_bin;
+    cent.m_bin_ave= Mbincentral/cent.N_bin;
+    cent.n_bin= cent.N_bin/Vcentral;
+    cent.rho_bin= Mbincentral/Vcentral;
+  }
+  
+  return(cent);
+}
+
 /* calculate cluster dynamical quantities */
 void clusdyn_calculate(void)
 {

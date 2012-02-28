@@ -62,8 +62,7 @@ ifeq ($(UNAME),Darwin)
 CC = gcc
 #CFLAGS = -Wall -O3 -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include -L/sw/lib -L/opt/local/lib -L/sw/lib/gcc4.4/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 #CFLAGS = -Wall -O3 -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include -L/sw/lib -L/opt/local/lib -L/sw/lib/gcc4.4/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-#CFLAGS = -m32 -Wall -O3 -g -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include -L/sw/lib -L/opt/local/lib -L/sw/lib/gcc4.4/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
-CFLAGS = -Wall -O3 -g -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include -L/sw/lib -L/opt/local/lib -L/sw/lib/gcc4.4/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
+CFLAGS = -m32 -Wall -O3 -I/sw/include -I/sw/include/gnugetopt -I/opt/local/include -L/sw/lib -L/opt/local/lib -L/sw/lib/gcc4.4/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 #CFLAGS = -Wall -O3 -I/sw/include -L/sw/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 #CFLAGS = -Wall -O3 -I/opt/local/include -L/opt/local/lib -DCMCVERSION="\"$(VERSION)\"" -DCMCDATE="\"$(DATE)\""
 LIBFLAGS = -lz -lgsl -lgslcblas -lcfitsio $(FLIBS) -lm
@@ -111,7 +110,7 @@ ifeq ($(HOSTNAME),fugu.phys.northwestern.edu)
 #CFLAGS := -Wall -Ofast -OPT:fast_math=on -LNO:fu=9:full_unroll_size=7000 -static-data -I/usr/include/cfitsio
 #CFLAGS := $(CFLAGS) -march=opteron -I/usr/include/cfitsio
 #CC = gcc
-CFLAGS := $(CFLAGS) -march=k8 -I/export/apps/gsl-1.9/include -I/export/apps/cfitsio/include -L/export/apps/gsl-1.9/lib -L/export/apps/cfitsio/lib -L/usr/lib -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/ 
+CFLAGS := $(CFLAGS) -march=k8 -I/export/apps/gsl-1.9/include -I/export/apps/cfitsio/include -L/export/apps/gsl-1.9/lib -L/export/apps/cfitsio/lib -L/usr/lib -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/
 #CFLAGS := $(CFLAGS) -march=k8 -I/usr/include/cfitsio
 #CFLAGS := $(CFLAGS) -m32 -march=k8 -I/share/apps/gsl/include -L/share/apps/gsl/lib -I/share/apps/cfitsio/include -L/share/apps/cfitsio/lib $(DEBUG_FLAGS)
 LIBFLAGS := $(LIBFLAGS) -static 

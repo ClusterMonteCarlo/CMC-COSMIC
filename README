@@ -1,0 +1,35 @@
+To install the ClusterMonteCarlo (CMC) code Autoconf later than 2.59 is
+required. Simply run 
+
+autoreconf -ivf
+
+which produces a configure script. The code can then be installed like any
+other Autotools project, as described in INSTALL. The default installation path
+is the user's home directory. There are some extra configure options that one
+might want to use:
+
+--enable-cuda   enable GPU acceleration for nVidia cards using CUDA C
+
+This option requires the nVidia CUDA toolkit to be installed and nvcc to be in
+your PATH.
+
+--enable-static-linking         links all external libraries statically
+
+It is automatically disabled when --enable-cuda is set, as the CUDA runtime
+library only exists as a shared library.
+
+--enable-experimental   Use a more accurate (but slower) orbit calculation
+                        routine.
+
+This is only necessary for runs with IMBH.
+
+--with-gcc-arch         use architecture <arch> for gcc -march/-mtune,
+                        instead of guessing.
+
+The AX_CC_MAX_OPT macro does not recognize the newer Xeon (iCore7 family)
+processors, which are, e.g., installed on Quest, so you can set the
+corresponding architecture flag with this option.  For newer gcc versions you
+can set this flag to native and gcc will detect the architecture of the machine
+it is running on itself.
+
+

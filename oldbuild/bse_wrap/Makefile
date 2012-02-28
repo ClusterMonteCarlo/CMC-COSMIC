@@ -11,8 +11,7 @@ BSEOBJS = bse/comenv.o bse/corerd.o bse/deltat.o \
 	bse/mrenv.o bse/ran3.o bse/rl.o bse/star.o \
 	bse/zcnsts.o bse/zfuncs.o
 
-all: c_sse c_bse popsynth 
-#all: c_sse c_bse popsynth popsynth-mpi
+all: c_sse c_bse popsynth popsynth-mpi
 
 c_sse: c_sse.o bse_wrap.o $(BSEOBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBFLAGS)

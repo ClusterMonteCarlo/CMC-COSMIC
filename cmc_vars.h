@@ -119,6 +119,10 @@ _EXTERN_ long BH_LOSS_CONE;
 _EXTERN_ double BH_R_DISRUPT_NB;
 /* force to use the relaxation step, even if relaxation is turned off */
 _EXTERN_ int FORCE_RLX_STEP;
+/* calculate the binary interaction time steps by only considering hard binaries (0=off, 1=on) */
+_EXTERN_ int DT_HARD_BINARIES;
+/* defines the minimum binary binding energy for a hard binary */
+_EXTERN_ double HARD_BINARY_KT;
 /* A threshold value for the difference between apastron and periastron below
  * which an orbit is considered to be circular. Currently this is only used 
  * for the period calculation in the loss-cone routine, as the integrator 

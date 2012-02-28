@@ -285,6 +285,10 @@ typedef struct{
         int BH_R_DISRUPT_NB;
 #define PARAMDOC_FORCE_RLX_STEP "force a relaxation step (useful when RELAXATION=0) (0=off, 1=on)"
         int FORCE_RLX_STEP; 
+#define PARAMDOC_DT_HARD_BINARIES "calculate the binary interaction time steps by only considering hard binaries (0=off, 1=on)"
+        int DT_HARD_BINARIES; 
+#define PARAMDOC_HARD_BINARY_KT "The minimum binary binding energy (in units of kT) for a binary to be considered 'hard' for the time step calculation."
+        int HARD_BINARY_KT; 
 #ifdef EXPERIMENTAL
 #define PARAMDOC_BH_LC_FDT "sub time step size on which the code tries to approximately advance particles that have a MC time step larger than BH_LC_FDT times the local relaxation time. In some versions of the code the particles are literally advanced while in other a simple scaling is used. None of them really work. (0)"
         int BH_LC_FDT;
@@ -544,6 +548,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng);
 void qsorts(star_t *s, long n);
 void units_set(void);
 void central_calculate(void);
+central_t central_hard_binary(double ktmin, central_t old_cent);
 void clusdyn_calculate(void);
 void print_interaction_status(char status_text[]);
 void print_interaction_error(void);
@@ -674,6 +679,7 @@ long search_grid_get_grid_index(struct Search_Grid *grid, double r);
 double search_grid_get_r(struct Search_Grid *grid, long index);
 double search_grid_get_grid_indexf(struct Search_Grid *grid, double r);
 void search_grid_free(struct Search_Grid *grid);
+void search_grid_print_binsizes(struct Search_Grid *grid);
 
 #ifdef DEBUGGING
 #include <glib.h>
