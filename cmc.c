@@ -71,11 +71,60 @@ int main(int argc, char *argv[])
 	Echeck = 0; 		
 	se_file_counter = 0; 	
 	snap_num = 0; 		
+	bh_snap_num = 0;
 	StepCount = 0; 		
 	tcount = 1;
 	TotalTime = 0.0;
 	reset_rng_t113(IDUM);
-	
+
+	/* Meagan - 3bb */
+	N3bbformed = 0;
+	delta_E_3bb = 0.0;
+
+	/* Meagan - bh counters */
+	bhsingle = 0;
+	bhbinary = 0;
+	bhbh = 0;
+	bhnonbh = 0;
+	bh13 = 0;
+	bh10 = 0;
+	bh11 = 0;
+	bh12 = 0;
+	bhwd = 0;
+	bhstar = 0;
+	bh01=0;
+	bh26=0;
+	bh7=0;
+	bh89=0;
+	esc_bhsingle = 0;
+	esc_bhbinary = 0;
+	esc_bhbh = 0;
+	esc_bhnonbh = 0;
+	esc_bh13 = 0;
+	esc_bh10 = 0;
+	esc_bh11 = 0;
+	esc_bh12 = 0;
+	esc_bhwd = 0;
+	esc_bhstar = 0;
+	esc_bh01 = 0;
+	esc_bh26 = 0;
+	esc_bh7 = 0;
+	esc_bh89 = 0;
+	esc_bhsingle_tot = 0;
+	esc_bhbinary_tot = 0;
+	esc_bhbh_tot = 0;
+	esc_bhnonbh_tot = 0;
+	esc_bh13_tot = 0;
+	esc_bh10_tot = 0;
+	esc_bh11_tot = 0;
+	esc_bh12_tot = 0;
+	esc_bhwd_tot = 0;
+	esc_bhstar_tot = 0;
+	esc_bh01_tot = 0;
+	esc_bh26_tot = 0;
+	esc_bh7_tot = 0;
+	esc_bh89_tot = 0;
+
 	/* binary remainders */
 	clus.N_MAX = clus.N_STAR;
 	N_b = clus.N_BINARY;
@@ -224,7 +273,6 @@ int main(int argc, char *argv[])
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
-
 		if (STELLAR_EVOLUTION > 0) {
 			do_stellar_evolution(rng);
 		}
@@ -302,6 +350,9 @@ int main(int argc, char *argv[])
 		/* reset interacted flag */
 		for (i = 1; i <= clus.N_MAX; i++) {
 			star[i].interacted = 0;
+			/* Meagan - 3bb */
+			star[i].threebb_interacted = 0;
+
 		}
 		
 		/* update variables, then print */
@@ -324,6 +375,11 @@ int main(int argc, char *argv[])
 				write_stellar_data();
 			}
 		}		
+		// Meagan - bh snapshot
+		if(tcount%BH_SNAPSHOT_DELTACOUNT==0) {
+			print_bh_snapshot();
+		}		
+
 	} /* End FOR (time step iteration loop) */
 
 	times(&tmsbuf);

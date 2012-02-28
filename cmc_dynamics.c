@@ -13,7 +13,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 {
 	long j, si, p=AVEKERNEL, N_LIMIT, k, kp, ksin, kbin;
 	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
-	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi;
+	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4];
+	double vel1[4], vel2[4], vel3[4], vel1a[4], vel2a[4], vel1b[4], vel3b[4], rcm=0.0, rperi;
 	double Trel12;
 	int i;
 	long Nrel=0, Nrelbeta[4]={0,0,0,0};
@@ -21,6 +22,12 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	double qaverelbeta[4]={0.0,0.0,0.0,0.0};
 	FILE *binfp;
 	char filename[1024];
+/* Meagan: added these variables for three-body binary formation */
+	long sq, k1, k2, k3, form_binary;
+	double n_threshold, triplet_count, num_triplets_averaged=200;
+	double ave_local_mass, sigma_local, vrel_ave, v1[4], v2[4], v3[4], vrel12[4], vrel3[4]; 
+	double angle1, angle2, angle3, angle4; 
+	double eta_min=MIN_BINARY_HARDNESS, Y1, rate_3bb, rate_ave, P_3bb, P_ave;
 
 	/* Calculate and store velocity dispersion profile for use with breaking binaries later.
 	   This can't be calculated later since the properties of the cluster members are changing with time. */
@@ -67,14 +74,151 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		fflush(stdout);
 	}
 	fprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
-	
+
+
+
+
+/* Added by Meagan 3/10/11  */
+	//================================
+	//  Three-body binary formation  |
+	//================================
+
+	/* TODO: set n_threshold to reasonable value */
+	n_threshold = 0;  /* density threshold: below threshold, don't even bother doing 3BB formation */	
+	triplet_count = 0; //  # of potential binary-forming triplets (three single stars)
+			   //  Used for outputting binary formation rate, averaged over innermost objects
+
+
+	//=====================================================================================
+	//  Loop through objects, 3 at a time, and check whether all three are single object  |
+	//  If three singles, check whether a binary should be formed with stars 1 and 2      |
+	//=====================================================================================
+
+	if (THREEBODYBINARIES) { // Flag for turning on three-body binary formation
+		for (sq=1; sq<=N_LIMIT-N_LIMIT%3-2; sq+=3) { // loop through objects, 3 at a time
+			dt = SaveDt;
+			form_binary = 0; // reset this to zero; later we decide whether to form a binary, and if so, set form_binary=1
+			// Local density about star k1, nearest 20 stars (10 inside, 10 outside)
+			n_local = calc_n_local(k1, 10, N_LIMIT);
+			// Sort stars by mass (k1 is most massive)
+			sort_three_masses(sq, &k1, &k2, &k3);
+
+			// If density above threshold, check for 3bb formation
+			if (n_local > n_threshold) {
+				// Are all stars singles? If not, exit loop - don't do binary formation
+				if (star[k1].binind == 0 && star[k2].binind == 0 && star[k3].binind == 0) {
+					triplet_count ++;
+					// Calc local velocity dispersion, nearest 20 stars	
+					calc_sigma_local(k1, 10, N_LIMIT, &ave_local_mass, &sigma_local);
+					// Average relative speed for a Maxwellian, from Binney & Tremaine
+					vrel_ave = 4.0 * sigma_local / sqrt(3.0 * PI);
+					// Quantities needed for encounter
+					calc_3bb_encounter_dyns(k1, k2, k3, angle1, angle2, v1, v2, v3, &vrel12, &vrel3, rng);
+
+					//====================================================================
+					//  Calculate probability of binary formation between stars 1 and 2  |
+					//====================================================================
+					/* units in rate are 1/T_cross  */
+
+					// Calculate RATE of binary formation
+
+					// Below is rate_3bb with all the velocity terms vrel_3 and vrel_12 replaced with the averaged local relative velocity, vrel_ave. We did this because we were finding that when we used the actual relative velocities, vrel12, if too large, the 3bb rate would be extremely low and binaries would not form (since it depends strongly on v: v^-9). When we replaced vrel12 with the average relative velocity (over 20 stars), the 3bb formation rate was high enough that binaries would form. We decided to use the average relative velocity for all relative velocity terms, vrel_3 and vrel_12.
+					rate_3bb = sqrt(2) * sqr(PI) * sqr(n_local) *  pow(vrel_ave, -9) * pow(((star[k1].m + star[k2].m) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m)) * eta_min);
+
+					// Calculate PROBABILITY of binary formation
+					P_3bb = rate_3bb * (dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)));
+
+					// print info on probability calculation, for innermost 200 triplets, in each timestep
+					if (triplet_count <= num_triplets_averaged) {
+						P_ave += P_3bb;
+						rate_ave += rate_3bb;
+					}
+
+					// For each timestep, output average rate and probability of 3bb formation, 
+					// for innermost triplets (actual number is num_triplets_averaged)
+					if (triplet_count == num_triplets_averaged) {						P_ave = P_ave/num_triplets_averaged;
+						rate_ave = rate_ave/num_triplets_averaged;
+						fprintf(threebbprobabilityfile, "%g %g %g %g %g %g\n", TotalTime, dt, dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)), rate_ave, P_ave, star[k3].r);
+					}
+
+					//=======================================================
+					//  Monte Carlo - To form binary or not to form binary  |
+					//=======================================================
+
+					Y1 = rng_t113_dbl();
+					if (P_3bb > Y1) { // Binary should be formed
+						//  TODO: should really check if a three-body induced collision would happen - simply check rp to see if stars would be in contact - if so, make them collide instead.
+
+						/* For now, can choose whether to allow any star types 
+							to be involved in 3bb formation, or only BHs */
+						if (ONLY_FORM_BH_THREEBODYBINARIES) { // let only BHs be involved in 3bb
+							if (star[k1].se_k==14 && star[k2].se_k==14 && star[k3].se_k==14) { // ALL objects BHs - form binary
+								form_binary = 1; // we will actually form it later
+								N3bbformed ++;
+							} else { // at least one object is not a BH; keep track of this 'light collision'
+								form_binary = 0; // BUT DO NOT form a binary
+							}
+
+						/* Allow all star types to be involved with 3bb formation. 
+							This is fine in point mass approximation, where we 
+							don't have to worry about physical collisions */
+						} else {  
+							form_binary = 1;
+							N3bbformed ++;
+						}
+						/* Here is where new binary properties are calculated.
+						if form_binary=1, the new binary will be created, but if form_binary=0,
+						the interaction will be logged in lightcollision log  */
+						make_threebodybinary(P_3bb, k1, k2, k3, form_binary, eta_min, ave_local_mass, n_local, sigma_local, v1, v2, v3, vrel12, vrel3, delta_E_3bb, rng);
+					} else { // Probability of 3bb formation too low ==> No binary formed
+						form_binary = 0;
+						/* do nothing; check 3bb formation for next 3 stars */
+					}
+				} 
+			}
+		} 
+	} 
+			
+
+
+/***********************************************/	
+
+
 	/* the big loop, with limits chosen so that we omit the last star if it is not paired */
-	for (si=1; si<=N_LIMIT-N_LIMIT%2-1; si+=2) {
+
+	/* Meagan: 2/10/12  ** Switched 'for' loop to 'while' loop
+	Had to change the structure of this loop from one that simply loops over pairs of stars
+	and lets them interact, to one where it is possible to skip certain stars, if they have 
+	already interacted in the 3bb formation loop above. The reasoning is that, if stars have 
+	been involved in strong 3-body interaction, then they've already undergone a relaxation
+	interaction, and should not be relaxed again. 
+	****  To handle this, switched from 'for' loop to 'while' loop   */
+
+	si = 1;
+
+	// previously: for (si=1; si<=N_LIMIT-N_LIMIT%2-1; si+=2) {
+	while (si<=N_LIMIT-N_LIMIT%2-1) {
+		/* si is used to iterate over objects, and k, kp are the objects that will interact
+		   NOTE: objects k, kp will not always be nearest neighbors, since some stars
+			are skipped if they already interacted in 3bb loop!  */
 		dt = SaveDt;
-		
-		k = si;
-		kp = si + 1;
-		
+		// only let those stars that did not participate in 3bb formation interact/relax
+		while (star[si].threebb_interacted == 1) {
+			si += 1; // iterate until non-interacted object found
+		}
+
+		k = si;  // object 1 for interaction
+//		kp = si + 1;
+		si += 1;
+		while (star[si].threebb_interacted == 1) {
+		//	fprintf(threebbfile, "star marked as threebb_interacted!\n");
+			si += 1; // iterate until non-interacted object found
+		}	
+		kp = si; // object 2 for interaction
+		si += 1; // iterate for the next interaction
+
+		/* The indices for the 2 stars that will interact are k and kp  */
+
 		/* set dynamical params for this pair */
 		calc_encounter_dyns(k, kp, v, vp, w, &W, &rcm, vcm, rng, 1);
 
