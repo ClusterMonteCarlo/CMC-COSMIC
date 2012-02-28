@@ -76,6 +76,11 @@ AC_PROG_F77([pathf90 ifort gfortran g77])
 AC_F77_LIBRARY_LDFLAGS
 FILTER_VAR([FLIBS], [-lgcc* -lcrt*.o -LIST:* -LNO:* -lSystem])
 
+#Hack to get around problem with path scale fortran and cfitsio both defining ffseek.
+USE_PATHSCALE=${F77##path*}
+set ${USE_PATHSCALE:=yes}
+AS_IF([test "x$USE_PATHSCALE" == "xyes"], [LIBTOOL_LDFLAGS+=-Wl,-zmuldefs])
+
 # We only use libtool to "pass" the -static flag to the C/FORTRAN compiler in a portable way.
 # We do not intend to build shared libraries.
 #AC_DISABLE_SHARED
@@ -83,6 +88,8 @@ AC_PROG_LIBTOOL
 
 # Checks for programs.
 AC_PROG_CXX
+AS_IF([test "x$enable_cuda" == "xyes"], [], [CXX=$CC])
+
 AC_PROG_AWK
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
