@@ -127,8 +127,8 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		Uk1 = star[i1].phi + PHI_S(rk1, si);
 #endif
 		
-if(g_si==516)
-	printf("--------------->kmin=%ld kmax=%ld uk=%.18g uk1=%.18g rk=%.18g rk1=%.18g\n", kmin, kmax, Uk, Uk1, rk, rk1);
+//if(g_si==516)
+//	printf("--------------->kmin=%ld kmax=%ld uk=%.18g uk1=%.18g rk=%.18g rk1=%.18g\n", kmin, kmax, Uk, Uk1, rk, rk1);
 		
 		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
 		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
@@ -571,10 +571,10 @@ void tidally_strip_stars(void) {
 		}
 
 #ifdef USE_MPI
-   if(myid==0)
+   //if(myid==0)
       MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   else
-      MPI_Allreduce(&DTidalMassLoss, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+   //else
+   //   MPI_Allreduce(&DTidalMassLoss, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #endif
 
 	} while (DTidalMassLoss > 0);
@@ -829,13 +829,13 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			if (g0 < 1.0 / vr * drds)	/* if g0 < g(s0) then success! */
 				break;
 		}
-
+/*
 #ifdef USE_MPI
 if(myid==0)
 #endif
 if(j==516)
 	printf("---------------> si=%ld r=%.18g rmin=%.18g rmax=%.18g vr^2=%.18g X=%.18g E=%.18g J=%.18g\n", si, r, rmin, rmax, Q, X, E, J);
-
+*/
 		if (k == N_TRY + 1) {
 			eprintf("N_TRY exceeded\n");
 			exit_cleanly(-1);

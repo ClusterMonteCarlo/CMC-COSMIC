@@ -232,10 +232,10 @@ void stellar_evolution_init(void){
 	}
 
 #ifdef USE_MPI
-	if(myid==0)
+	//if(myid==0)
 		MPI_Allreduce(MPI_IN_PLACE, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-	else
-		MPI_Allreduce(&DMse, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	//else
+	//	MPI_Allreduce(&DMse, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
 	for(i=0; i<procs; i++)
 		DMse += DMse_mimic[i];

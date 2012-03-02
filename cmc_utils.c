@@ -273,7 +273,7 @@ void mpi_set_velocities3(void){
 	}
 
 	if(Eexcess > 0)
-		printf("id=%d WARNING!!!!! -------> Excess = %g\n", myid, Eexcess);
+		printf("\nid=%d WARNING!!!!! -------> Excess = %g\n\n", myid, Eexcess);
 
 	Eexcess_prev = 0.0;
 	do {
@@ -2135,7 +2135,6 @@ void pre_sort_comm()
 void qsorts_new(void)
 {
 #ifdef USE_MPI
-	//if(myid==0)
 	MPI_Datatype startype;
 	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
 	MPI_Type_commit( &startype );
@@ -2144,7 +2143,8 @@ void qsorts_new(void)
 									&clus.N_MAX_NEW,
 									startype,
 									MPI_COMM_WORLD,
-									256);
+									1024);
+	//MPI_Type_free(startype);
 #else
 	/* Sorting stars by radius. The 0th star at radius 0 
 		and (N_STAR+1)th star at SF_INFINITY are already set earlier.
@@ -2160,28 +2160,33 @@ void post_sort_comm()
 	MPI_Status stat;
 	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
+	double *temp_r = (double *) malloc( ((int)clus.N_MAX_NEW+1) * sizeof(double) );
+	double *temp_m = (double *) malloc( ((int)clus.N_MAX_NEW+1) * sizeof(double) );
+	
+	//MPI3: Can be made more efficient by using MPI datatypes.
 	for(i=1; i<=clus.N_MAX_NEW; i++) {
-		star_r[i] = star[i].r;
-		star_m[i] = star[i].m;
+		temp_r[i] = star[i].r;
+		temp_m[i] = star[i].m;
+		//star_r[i] = star[i].r;
+		//star_m[i] = star[i].m;
 	}
-
 /*
 	printf("%d new=%ld\n",myid, clus.N_MAX_NEW);
 	if(myid==0)
 		for(i=0; i<procs; i++)
 			printf("%d %d\n", mpiDisp[i], mpiLen[i]);
-
-	if(myid==0)
-	{
-		MPI_Allgatherv(MPI_IN_PLACE, mpiLen[myid], MPI_DOUBLE, star_r+1, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
-		MPI_Allgatherv(MPI_IN_PLACE, mpiLen[myid], MPI_DOUBLE, star_m+1, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
-	}
-	else
 */
 	{
-		MPI_Allgatherv(star_r+1, mpiLen[myid], MPI_DOUBLE, star_r, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
-		MPI_Allgatherv(star_m+1, mpiLen[myid], MPI_DOUBLE, star_m, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
+		//MPI3: No idea why this is not working. Consult Wei-keng.
+		//MPI_Allgatherv(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, star_r, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
+		//MPI_Allgatherv(MPI_IN_PLACE, mpiLen[myid], MPI_DOUBLE, star_m, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
+		MPI_Allgatherv(temp_r+1, mpiLen[myid], MPI_DOUBLE, star_r, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
+		MPI_Allgatherv(temp_m+1, mpiLen[myid], MPI_DOUBLE, star_m, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
 	}
+
+	//MPI3: Is this required?
+	MPI_Barrier(MPI_COMM_WORLD);
+	free(temp_r);
 #endif
 }
 

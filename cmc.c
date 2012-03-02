@@ -46,12 +46,27 @@ int main(int argc, char *argv[])
 		new_size = (long*) malloc(procs * sizeof(long));
 	}
 
+/*
+//code for using gdb with mpi.
+//http://www.open-mpi.org/faq/?category=debugging#serial-debuggers
+{
+    int ii = 0;
+    char hostname[256];
+    gethostname(hostname, sizeof(hostname));
+    printf("PID %d on %s ready for attach\n", getpid(), hostname);
+    fflush(stdout);
+    while (0 == ii)
+        sleep(5);
+}
+*/
+
 #else
 	procs = 1;
 	created_star_dyn_node = (int *) calloc(procs, sizeof(int));
 	created_star_se_node = (int *) calloc(procs, sizeof(int));
 	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
+
 	Start = (int *) calloc(procs, sizeof(int));
 	End = (int *) calloc(procs, sizeof(int));
 
@@ -264,7 +279,6 @@ int main(int argc, char *argv[])
 			DMse_mimic[i] = 0.0;
 #endif
 
-
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
 #ifndef USE_MPI
@@ -296,9 +310,9 @@ int main(int argc, char *argv[])
 
 		//collect_bin_data();		
 
-		//MPI3: Commenting out this for now as there are problems with this - refer to email discussions with Stefan.
 		tidally_strip_stars();
 
+		//printf("---->>>%d COMPLETED BEFORE SORT\n", myid);
 		qsorts_new();
 
 		post_sort_comm();
@@ -308,8 +322,17 @@ int main(int argc, char *argv[])
 		//Calculating Start and End values for each processor for mimcking parallel rng.
 		findLimits( clus.N_MAX, 20 );
 
-		energy_conservation3();
-
+/*
+		MPI_Barrier(MPI_COMM_WORLD);
+		printf("---->>>%d HIIIIIIIIII1111111111\n", myid);
+		MPI_Barrier(MPI_COMM_WORLD);
+*/
+		//energy_conservation3();
+/*
+		MPI_Barrier(MPI_COMM_WORLD);
+		printf("---->>>%d HIIIIIIIIII2222222222\n", myid);
+		MPI_Barrier(MPI_COMM_WORLD);
+*/
 		//distr_bin_data();
 
 		//commenting out for MPI
@@ -343,9 +366,46 @@ int main(int argc, char *argv[])
 
 		print_results();
 
+#ifdef USE_MPI
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = 1; j <= End[i]-Start[i]+1; j++ )
+					//for( j = mpiBegin; j <= mpiEnd; j++ )
+					//for( j = 1; j <= clus.N_MAX; j++ )
+					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].vtnew);
+					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
+					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+			system("./process.sh");
+MPI_Barrier(MPI_COMM_WORLD);
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].vtnew);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+		fclose(ftest);
+#endif
+//return;
+
+
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
 		 */
+/*
 #ifdef USE_MPI
 	if(myid==0)
 #endif
@@ -355,6 +415,7 @@ int main(int argc, char *argv[])
 				write_stellar_data();
 			}
 		}		
+*/
 	} /* End WHILE (time step iteration loop) */
 
 	mpi_files_merge();
@@ -395,11 +456,13 @@ int main(int argc, char *argv[])
 	free_arrays();
 
 #ifdef USE_MPI
+/*
 	free(mpiDisp);
 	free(mpiLen);
 	free(curr_st);
 	free(binary_buf);
 	free(num_bin_buf);
+*/
 #else
 	free(st); //commenting because it throws some error
 #endif

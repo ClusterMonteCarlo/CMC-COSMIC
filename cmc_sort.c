@@ -259,8 +259,6 @@ int sample_sort( star_t        *starData,
 	int         ideal_count;
 #endif
 
-	dprintf("proc %d: local_N = %ld\n", myid, *local_N);
-
 	MPI_Type_size(eType, &eSize);
 
 	/* local in-place sort */
@@ -278,6 +276,7 @@ int sample_sort( star_t        *starData,
 
 	//find global total number of elements to be sorted in parallel
 	MPI_Allreduce(local_N, &global_N, 1, MPI_INT, MPI_SUM, commgroup);
+	dprintf("A total of %ld stars to be sorted in parallel\n", global_N);
 
 	//mpiFindIndicesCustom( global_N, 20, myid, &mpiBegin, &mpiEnd );
 	findLimits( global_N, 20 );
@@ -288,7 +287,8 @@ int sample_sort( star_t        *starData,
 
 	//MPI3: If we use time as seed, reproducibility will become a problem. Using the timestep count as random seed instead to have both some randomness and reproducability..
 	//srand ( time(NULL) );
-	srand ( tcount );
+	if(tcount==1)
+		srand ( tcount );
 
 	/* Sample arrays to collect samples from each node and send to root */
 	sampleKeyArray_local = (double*) malloc(num_samples * sizeof(double));
@@ -299,12 +299,14 @@ int sample_sort( star_t        *starData,
 	/* Picking random samples and sending to root */
 	for(i=0; i<num_samples; i++)
 		sampleKeyArray_local[i] = starData[ rand() % *local_N + 1 ].r;
-
+/*
 	MPI_Datatype sampleType;
 	MPI_Type_contiguous( sizeof(sampleKeyArray_local), MPI_BYTE, &sampleType );
 	MPI_Type_commit( &sampleType );
-
-	MPI_Gather(sampleKeyArray_local, num_samples, sampleType, sampleKeyArray_all, num_samples, sampleType, 0, commgroup);
+*/
+	MPI_Gather(sampleKeyArray_local, num_samples, MPI_DOUBLE, sampleKeyArray_all, num_samples, MPI_DOUBLE, 0, commgroup);
+	//MPI_Gather(sampleKeyArray_local, num_samples, sampleType, sampleKeyArray_all, num_samples, sampleType, 0, commgroup);
+	//MPI_Type_free(sampleType);
 
 	/* Sorting the collected samples, and sending back splitters */
 	if(myid==0)
@@ -315,7 +317,10 @@ int sample_sort( star_t        *starData,
 			splitterArray[i] = sampleKeyArray_all[ (i+1) * num_samples - 1 ];
 	}
 
-	MPI_Bcast(splitterArray, procs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(splitterArray, procs-1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	free(sampleKeyArray_all);
+	free(sampleKeyArray_local);
 
 	/* find the offset index for each send using binary search on splitter array */
 	send_index = (int *) calloc(procs, sizeof(int));
@@ -360,6 +365,8 @@ int sample_sort( star_t        *starData,
 	resultBuf = (star_t*) malloc((int)floor((double)expected_count[myid] * load_bal) * sizeof(star_t)); //The multiplying factor load_bal is for collecting data from neighbors fix load imbalance due to parallel sorting.
 	//resultBuf = (star_t*) malloc(total_recv_num * sizeof(star_t));
 	//dprintf("Allocating memory to receive %d stars on proc %d\n", (int)floor((double)expected_count[myid]*load_bal), myid);
+	dprintf("proc %d: local_N = %ld\n", myid, *local_N);
+
 	dprintf("Allocating memory to receive %d stars on proc %d\n", total_recv_num, myid);
 
 	for(i=0; i<procs; i++)
@@ -407,12 +414,6 @@ int sample_sort( star_t        *starData,
 	MPI_Waitall(2*procs, sendReq, sendStatus);
 
 	dprintf("New no.of stars in proc %d = %d\n", myid, total_recv_num);
-
-	free(send_index);
-	free(send_count);
-	free(recv_count);
-	free(sendStatus);
-	free(sendReq);
 
 	/* merge sort might be faster */
 	qsorts(resultBuf, total_recv_num);
@@ -482,13 +483,26 @@ int sample_sort( star_t        *starData,
 	for (i=0; i<total_recv_num; i++)
 		starData[i+1+r_count_fwd] = resultBuf[i + s_count_back];
 
+	*local_N = total_recv_num;
+
+	MPI_Barrier(commgroup);
+	free(send_index);
+	free(send_count);
+	free(recv_count);
+	free(sendStatus);
+	free(sendReq);
+	free(splitterArray);
+
 	free(resultBuf);
 	free(actual_count);
 	free(actual_cum_count);
+	free(expected_count);
 	free(expected_cum_count);
 
-	*local_N = total_recv_num;
+	return global_N;
+}
 
+#endif
 /*
 	int j;
 	strcpy(filename, "test_out_par");
@@ -503,10 +517,6 @@ int sample_sort( star_t        *starData,
 	if(myid==0)
 		system("./process.sh");
 */
-	return global_N;
-}
-
-#endif
 /*
       strcpy(filename, "test_keys");
       strcpy(tempstr, filename);
