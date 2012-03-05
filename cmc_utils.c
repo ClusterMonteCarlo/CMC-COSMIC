@@ -223,7 +223,7 @@ void mpi_set_velocities3(void){
 	int g_i;
 	double m, E_dump, E_dump_capacity, Eexcess_check, v2, v2_new;
 	double E_dump_factor = 0.8; //Percentage of excess energy to be dumped on each star.
-	char *vnew2_arr = (char *) malloc (clus.N_MAX_NEW * sizeof(char));
+	char *vnew2_arr = (char *) malloc ((clus.N_MAX_NEW+1) * sizeof(char));
 	MPI_Status stat;
 
 	Eexcess = 0.0; Eexcess_prev = 0.0;
@@ -325,6 +325,7 @@ void set_velocities3(void){
 	Eexcess = 0.0;
 	for (i = 1; i <= clus.N_MAX; i++) {
 		m = star[i].m;
+
 		/* modify velocities of stars that have only undergone relaxation */
 		if (star[i].interacted == 0) {
 			Unewrold = potential_serial(star[i].rOld) + PHI_S(star[i].rOld, i);
@@ -332,6 +333,7 @@ void set_velocities3(void){
 
 			vold2 = star[i].vtold*star[i].vtold + 
 				star[i].vrold*star[i].vrold;
+
 			/* predict new velocity */
 			vnew2 = vold2 + 2.0*(1.0-q)*(star[i].Uoldrold - star[i].Uoldrnew)
 				+ 2.0*q*(Unewrold - Unewrnew);
@@ -2187,6 +2189,7 @@ void post_sort_comm()
 	//MPI3: Is this required?
 	MPI_Barrier(MPI_COMM_WORLD);
 	free(temp_r);
+	free(temp_m);
 #endif
 }
 

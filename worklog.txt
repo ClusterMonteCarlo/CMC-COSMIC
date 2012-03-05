@@ -1,0 +1,52 @@
+Mar 4 2012
+Bharath
+---------------
+
+I have been getting these errors at the end of the timestep, and also earlier
+in random points of execution. No predictability as to when the code will fail
+and throw such an error. I figured out today that this is because either
+memory is accessed beyond an amount allocated. as in:
+
+char *vnew2_arr = (char *) malloc ((clus.N_MAX_NEW+1) * sizeof(char));
+for (i = 1; i <= clus.N_MAX_NEW; i++) {
+	if (vnew2_arr[i] ==1) {
+		.
+		.
+		.
+
+
+OR
+when an MPI function tries to communicate more than what is allocated. as in:
+
+SplitterArray = (double*) malloc((procs-1) * sizeof(double));
+MPI_Bcast(splitterArray, procs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+.
+.
+.
+
+Be wary of this in future.
+
+Example of error:
+******************************************************************************
+tcount=4 TotalTime=1.7755249694258547e-02 Dt=6.3971496901400384e-03
+Etotal=-0.25 max_r=743.622 N_bound=99997 Rtidal=999990
+Mtotal=0.99997 Etotal.P=-0.499806 Etotal.K=0.249806 VRatio=0.99961
+TidalMassLoss=0.00018
+core_radius=0.361361 rho_core=1.14582 v_core=inf Trc=inf conc_param=2057.84
+N_core=11324
+trh=0 rh=0 rh_single=0 rh_binary=0
+N_b=0 M_b=0 E_b=0
+******************************************************************************
+DIAGNOSTIC: CheckStop(): No. of timesteps > T_MAX_COUNT ... Terminating.
+17.0100 seconds of processing
+The total number of bisections is 0
+
+*** glibc detected *** ../cmc_mpi: corrupted double-linked list:
+0x0000000013cb77e0 ***
+======= Backtrace: =========
+/lib64/libc.so.6[0x342b66f38c]
+/lib64/libc.so.6(cfree+0x8c)[0x342b672b1c]
+.
+.
+.
+

@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
 		printf("---->>>%d HIIIIIIIIII1111111111\n", myid);
 		MPI_Barrier(MPI_COMM_WORLD);
 */
-		//energy_conservation3();
+		energy_conservation3();
 /*
 		MPI_Barrier(MPI_COMM_WORLD);
 		printf("---->>>%d HIIIIIIIIII2222222222\n", myid);
@@ -381,20 +381,20 @@ int main(int argc, char *argv[])
 				for( j = 1; j <= End[i]-Start[i]+1; j++ )
 					//for( j = mpiBegin; j <= mpiEnd; j++ )
 					//for( j = 1; j <= clus.N_MAX; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].vtnew);
+					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].vt);
 					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
 					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
 				fclose(ftest);
 			}
 		}
+MPI_Barrier(MPI_COMM_WORLD);
 		if(myid==0)
 			system("./process.sh");
-MPI_Barrier(MPI_COMM_WORLD);
 #else
 		strcpy(tempstr, "test_out_ser.dat");
 		ftest = fopen( tempstr, "w" );
 		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].vtnew);
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].vt);
 			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
 			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
 		fclose(ftest);
@@ -456,13 +456,11 @@ MPI_Barrier(MPI_COMM_WORLD);
 	free_arrays();
 
 #ifdef USE_MPI
-/*
 	free(mpiDisp);
 	free(mpiLen);
 	free(curr_st);
 	free(binary_buf);
 	free(num_bin_buf);
-*/
 #else
 	free(st); //commenting because it throws some error
 #endif
@@ -470,8 +468,8 @@ MPI_Barrier(MPI_COMM_WORLD);
 	//free(Start);
 	//free(End);
 
-	if (SEARCH_GRID)
-		search_grid_free(r_grid);
+//	if (SEARCH_GRID)
+//		search_grid_free(r_grid);
 
 //	if(zpars)
 //		free(zpars);
