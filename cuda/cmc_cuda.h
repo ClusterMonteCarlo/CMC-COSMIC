@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <cuda/cuda.h>
+#include <cuda.h>
 
 #ifndef _CUDA_MAIN_
 #define _CUDA_EXTERN_ extern

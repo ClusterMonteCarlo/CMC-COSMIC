@@ -103,6 +103,7 @@ void search_grid_update(struct Search_Grid *grid) {
         grid->radius[r_index+1]= i;
     };
   };
+ // search_grid_print_binsizes(grid);
 };
 
 /* This function gives only the approximate radius of the search grid
@@ -200,3 +201,11 @@ void search_grid_free(struct Search_Grid *grid) {
   }
 };
 
+void search_grid_print_binsizes(struct Search_Grid *grid) {
+  long i;
+
+  for (i=1; i<grid->length; i++) {
+    printf("%.12g %li\n", star[grid->radius[i]].r, 
+	grid->radius[i]-grid->radius[i-1]);
+  }
+}
