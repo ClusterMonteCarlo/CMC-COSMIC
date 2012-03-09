@@ -50,3 +50,9 @@ The total number of bisections is 0
 .
 .
 
+Mar 5 2012
+Bharath
+---------------
+
+There are a lot of comments I wrote throughout the code. Sit with Stefan and
+fix all of them.

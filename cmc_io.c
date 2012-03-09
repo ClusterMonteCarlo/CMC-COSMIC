@@ -1593,7 +1593,13 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 	/* MPI2: Calculating Start and End for mimcking parallel rng */
 	findLimits( cfd.NOBJ, 20 );
 
+//		MPI_Barrier(MPI_COMM_WORLD);
+//		printf("---->>>%d HIIIIIIIIII1111111111\n", myid);
+//		MPI_Barrier(MPI_COMM_WORLD);
 	mpiInitGlobArrays();
+		MPI_Barrier(MPI_COMM_WORLD);
+		printf("---->>>%d start = %d end = %d\n", myid, Start[myid], End[myid]);
+		MPI_Barrier(MPI_COMM_WORLD);
 	/* Set up initial conditions */
 	//MPI2: can be done on all nodes? which means no need to broadcast star structure.
 	//MPI2: This fn populates the star array with the the data obtained after parsing
@@ -1796,6 +1802,7 @@ void mpi_files_merge(void)
 {
 #ifdef USE_MPI
 	long i;
+	MPI_Barrier(MPI_COMM_WORLD);
 	if(myid==0)
 	{
 		char file_ext[64];
@@ -1828,7 +1835,7 @@ void mpi_files_merge(void)
 			cat_and_rm_files("core.dat");
 	}
 	//MPI2: Is barrier needed? Probably not.
-	//MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Barrier(MPI_COMM_WORLD);
 #endif
 }
 

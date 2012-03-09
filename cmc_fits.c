@@ -14,7 +14,7 @@
 
 void load_fits_file_data(void)
 {
-	long i, j=0;
+	long i, g_i=0;
 
 	newstarid = 0;
 
@@ -25,23 +25,23 @@ void load_fits_file_data(void)
 	//MPI3: Copying only the data each process needs.
 	for (i=0; i<=End[myid] - Start[myid]+1; i++) {
 		//MPI3: Getting global index to read only stars that belong to this processor.
-		j = get_global_idx(i);
+		g_i = get_global_idx(i);
 #else
 	/* copy everything over from cfd */
 	for (i=0; i<=cfd.NOBJ+1; i++) {
-		j = i;
+		g_i = i;
 #endif
-		star[i].id = cfd.obj_id[j];
+		star[i].id = cfd.obj_id[g_i];
 		if (star[i].id > newstarid) {
-			newstarid = star[j].id;
+			newstarid = star[i].id;
 		}
-		star[i].se_k = cfd.obj_k[j];
-		star[i].rad = cfd.obj_Reff[j];
-		star[i].vr = cfd.obj_vr[j];
-		star[i].vt = cfd.obj_vt[j];
-		star[i].binind = cfd.obj_binind[j];
-		star[i].m = cfd.obj_m[j] * ((double) clus.N_STAR);
-		star[i].r = cfd.obj_r[j];
+		star[i].se_k = cfd.obj_k[g_i];
+		star[i].rad = cfd.obj_Reff[g_i];
+		star[i].vr = cfd.obj_vr[g_i];
+		star[i].vt = cfd.obj_vt[g_i];
+		star[i].binind = cfd.obj_binind[g_i];
+		star[i].m = cfd.obj_m[g_i] * ((double) clus.N_STAR);
+		star[i].r = cfd.obj_r[g_i];
 		/*Sourav: putting creation time and lifetime as a variable*/
 		/*Sourav: this is ongoing changes*/
 		if (!star[i].binind){
@@ -59,6 +59,9 @@ void load_fits_file_data(void)
 			}
 		}
 	}
+		MPI_Barrier(MPI_COMM_WORLD);
+		printf("---->>>%d %d HIIIIIIIIII1111111111\n", myid, newstarid);
+		MPI_Barrier(MPI_COMM_WORLD);
 
 #ifdef USE_MPI
 	//MPI3: All procs read data for global arrays.
@@ -70,39 +73,39 @@ void load_fits_file_data(void)
 
 	//MPI3: Ignoring binaries distribution for now.
 	for (i=0; i<=cfd.NBINARY; i++) {
-		j = cfd.bs_index[i];
-		binary[j].id1 = cfd.bs_id1[i];
-		binary[j].id2 = cfd.bs_id2[i];
-		if (binary[j].id1 > newstarid) {
-			newstarid = binary[j].id1;
+		g_i = cfd.bs_index[i];
+		binary[g_i].id1 = cfd.bs_id1[i];
+		binary[g_i].id2 = cfd.bs_id2[i];
+		if (binary[g_i].id1 > newstarid) {
+			newstarid = binary[g_i].id1;
 		}
-		if (binary[j].id2 > newstarid) {
-			newstarid = binary[j].id2;
+		if (binary[g_i].id2 > newstarid) {
+			newstarid = binary[g_i].id2;
 		}
-		binary[j].rad1 = cfd.bs_Reff1[i];
-		binary[j].rad2 = cfd.bs_Reff2[i];
-		binary[j].m1 = cfd.bs_m1[i] * ((double) clus.N_STAR);
-		binary[j].m2 = cfd.bs_m2[i] * ((double) clus.N_STAR);
-		binary[j].a = cfd.bs_a[i];
-		binary[j].e = cfd.bs_e[i];
-		binary[j].inuse = 1;
+		binary[g_i].rad1 = cfd.bs_Reff1[i];
+		binary[g_i].rad2 = cfd.bs_Reff2[i];
+		binary[g_i].m1 = cfd.bs_m1[i] * ((double) clus.N_STAR);
+		binary[g_i].m2 = cfd.bs_m2[i] * ((double) clus.N_STAR);
+		binary[g_i].a = cfd.bs_a[i];
+		binary[g_i].e = cfd.bs_e[i];
+		binary[g_i].inuse = 1;
 		/*Sourav: assign lifetimes to the binary components*/
 		if (STAR_AGING_SCHEME==1 ||STAR_AGING_SCHEME==3){
 			if (PREAGING){
-				binary[j].createtime_m1 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-				binary[j].createtime_m2 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+				binary[g_i].createtime_m1 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+				binary[g_i].createtime_m2 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 			}else {
-				binary[j].createtime_m1 = 0.0;
-				binary[j].createtime_m2 = 0.0;
+				binary[g_i].createtime_m1 = 0.0;
+				binary[g_i].createtime_m2 = 0.0;
 			}
-			binary[j].lifetime_m1 = pow(10.0,9.921)*pow((binary[j].m1 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-			binary[j].lifetime_m2 = pow(10.0,9.921)*pow((binary[j].m2 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			binary[g_i].lifetime_m1 = pow(10.0,9.921)*pow((binary[g_i].m1 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			binary[g_i].lifetime_m2 = pow(10.0,9.921)*pow((binary[g_i].m2 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 		}
 		else {
-			binary[j].createtime_m1 = 0.0;
-			binary[j].createtime_m2 = 0.0;
-			binary[j].lifetime_m1 = GSL_POSINF;
-			binary[j].lifetime_m2 = GSL_POSINF;
+			binary[g_i].createtime_m1 = 0.0;
+			binary[g_i].createtime_m2 = 0.0;
+			binary[g_i].lifetime_m1 = GSL_POSINF;
+			binary[g_i].lifetime_m2 = GSL_POSINF;
 		}
 	}
 

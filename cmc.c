@@ -121,8 +121,6 @@ int main(int argc, char *argv[])
 		bin_vars_calculate();
 	}
 
-	total_bisections= 0;
-
 	/*
 		Skipping search grid for MPI
 		if (SEARCH_GRID) 
@@ -439,11 +437,6 @@ MPI_Barrier(MPI_COMM_WORLD);
 	dprintf("Sys time (ch)= %.6e seconds\n", (double)
 			(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
 
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	printf("The total number of bisections is %li\n", total_bisections);
-
 	/* free RNG */
 	gsl_rng_free(rng);
 
@@ -451,6 +444,7 @@ MPI_Barrier(MPI_COMM_WORLD);
 	cuCleanUp();
 #endif
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	/* flush buffers before returning */
 	close_buffers();
 	free_arrays();
@@ -465,14 +459,14 @@ MPI_Barrier(MPI_COMM_WORLD);
 	free(st); //commenting because it throws some error
 #endif
 
-	//free(Start);
-	//free(End);
+	free(Start);
+	free(End);
 
-//	if (SEARCH_GRID)
-//		search_grid_free(r_grid);
+	if (SEARCH_GRID)
+		search_grid_free(r_grid);
 
-//	if(zpars)
-//		free(zpars);
+	if(zpars)
+		free(zpars);
 
 #ifdef DEBUGGING
 	g_hash_table_destroy(star_ids);

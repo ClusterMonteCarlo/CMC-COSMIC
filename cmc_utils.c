@@ -200,8 +200,8 @@ void free_arrays(void){
 
 	/* MPI Stuff */
 #ifdef USE_MPI
-	free(star_r); free(star_m); free(star_phi);
-	free(new_size); free(disp); free(len);
+	//free(star_r); free(star_m); free(star_phi);
+	//free(new_size); free(disp); free(len);
 #endif
 }
 
@@ -1613,7 +1613,7 @@ void central_calculate(void)
 	Mbincentral = buf_reduce[3];
 	central.ma_ave = buf_reduce[4];
 
-		MPI_Allreduce(MPI_IN_PLACE, &Ncentral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Allreduce(MPI_IN_PLACE, &Ncentral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #endif
 
 	/* object quantities */
