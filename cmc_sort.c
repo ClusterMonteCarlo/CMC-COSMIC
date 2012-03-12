@@ -206,10 +206,12 @@ int binary_search( star_t* starData, double r, int kmin, int kmax )
 {
 	long ktry;
 
-	if (starData[kmin].r > r  || starData[kmax].r < r) {
-		eprintf("r is outside kmin kmax!!\n");
-		return -1;
-	};      
+	if (starData[kmin].r > r  || starData[kmax].r < r)
+		dprintf("proc %d: r=%g is outside kmin=%g kmax=%g!!\n", myid, r, starData[kmin].r, starData[kmax].r);
+	if (starData[kmin].r > r)
+		return kmin;
+	if (starData[kmax].r < r)
+		return kmax+1;
 
 	do {      
 		ktry = (kmin+kmax+1)/2;
@@ -313,8 +315,13 @@ int sample_sort( star_t        *starData,
 	{
 		qsort( sampleKeyArray_all, procs*num_samples, sizeof(double), compare );
 
+		dprintf("Splitter array is: ");
 		for(i=0; i<procs-1; i++)
+		{
 			splitterArray[i] = sampleKeyArray_all[ (i+1) * num_samples - 1 ];
+			dprintf("%g ", splitterArray[i]);
+		}
+		dprintf("\n\n");
 	}
 
 	MPI_Bcast(splitterArray, procs-1, MPI_DOUBLE, 0, MPI_COMM_WORLD);

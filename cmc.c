@@ -365,6 +365,17 @@ int main(int argc, char *argv[])
 		print_results();
 
 #ifdef USE_MPI
+		if(myid==2)
+		{
+			strcpy(tempstr, "test_out_par.dat");
+			ftest = fopen( tempstr, "w" );
+			for( i = 1; i <= clus.N_MAX; i++ )
+				fprintf(ftest, "%ld\t%.18g\n", i, star_r[i]);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+			fclose(ftest);
+		}
+/*
 		strcpy(filename, "test_out_par");
 		strcpy(tempstr, filename);
 		sprintf(num, "%d", myid);
@@ -387,12 +398,17 @@ int main(int argc, char *argv[])
 		}
 MPI_Barrier(MPI_COMM_WORLD);
 		if(myid==0)
-			system("./process.sh");
+		{
+			char process_str[30];
+			sprintf(process_str, "./process.sh %d", procs);
+			system(process_str);
+		}
+*/
 #else
 		strcpy(tempstr, "test_out_ser.dat");
 		ftest = fopen( tempstr, "w" );
 		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].vt);
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
 			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
 			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
 		fclose(ftest);
@@ -416,7 +432,7 @@ MPI_Barrier(MPI_COMM_WORLD);
 */
 	} /* End WHILE (time step iteration loop) */
 
-	mpi_files_merge();
+	//mpi_files_merge();
 
 	times(&tmsbuf);
 
@@ -444,7 +460,6 @@ MPI_Barrier(MPI_COMM_WORLD);
 	cuCleanUp();
 #endif
 #ifdef USE_MPI
-	MPI_Barrier(MPI_COMM_WORLD);
 #endif
 	/* flush buffers before returning */
 	close_buffers();
@@ -460,14 +475,14 @@ MPI_Barrier(MPI_COMM_WORLD);
 	free(st); //commenting because it throws some error
 #endif
 
-	free(Start);
-	free(End);
+	//free(Start);
+	//free(End);
 
-	if (SEARCH_GRID)
-		search_grid_free(r_grid);
+	//if (SEARCH_GRID)
+	//	search_grid_free(r_grid);
 
-	if(zpars)
-		free(zpars);
+	//if(zpars)
+	//	free(zpars);
 
 #ifdef DEBUGGING
 	g_hash_table_destroy(star_ids);
