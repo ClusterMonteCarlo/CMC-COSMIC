@@ -1597,9 +1597,11 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 //		printf("---->>>%d HIIIIIIIIII1111111111\n", myid);
 //		MPI_Barrier(MPI_COMM_WORLD);
 	mpiInitGlobArrays();
+#ifdef USE_MPI
 		MPI_Barrier(MPI_COMM_WORLD);
 		printf("---->>>%d start = %d end = %d\n", myid, Start[myid], End[myid]);
 		MPI_Barrier(MPI_COMM_WORLD);
+#endif
 	/* Set up initial conditions */
 	//MPI2: can be done on all nodes? which means no need to broadcast star structure.
 	//MPI2: This fn populates the star array with the the data obtained after parsing

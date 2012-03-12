@@ -59,10 +59,11 @@ void load_fits_file_data(void)
 			}
 		}
 	}
+#ifdef USE_MPI
 		MPI_Barrier(MPI_COMM_WORLD);
 		printf("---->>>%d %d HIIIIIIIIII1111111111\n", myid, newstarid);
 		MPI_Barrier(MPI_COMM_WORLD);
-
+#endif
 #ifdef USE_MPI
 	//MPI3: All procs read data for global arrays.
 	for (i=0; i<=cfd.NOBJ+1; i++) {

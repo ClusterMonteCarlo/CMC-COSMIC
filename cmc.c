@@ -443,8 +443,9 @@ MPI_Barrier(MPI_COMM_WORLD);
 #ifdef USE_CUDA
 	cuCleanUp();
 #endif
-
+#ifdef USE_MPI
 	MPI_Barrier(MPI_COMM_WORLD);
+#endif
 	/* flush buffers before returning */
 	close_buffers();
 	free_arrays();
