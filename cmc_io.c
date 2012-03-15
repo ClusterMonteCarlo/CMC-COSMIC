@@ -1590,12 +1590,11 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 #endif
 	 */
 
-	/* MPI2: Calculating Start and End for mimcking parallel rng */
-	findLimits( cfd.NOBJ, 20 );
+#ifdef USE_MPI
+	/* MPI3: Calculating mpiBegin and mpiEnd to enable each proc to read only the data from file relevant to it */
+	mpiFindIndicesCustom( cfd.NOBJ, 20, myid, &mpiBegin, &mpiEnd );
+#endif
 
-//		MPI_Barrier(MPI_COMM_WORLD);
-//		printf("---->>>%d HIIIIIIIIII1111111111\n", myid);
-//		MPI_Barrier(MPI_COMM_WORLD);
 	mpiInitGlobArrays();
 
 	/* Set up initial conditions */

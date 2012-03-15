@@ -23,7 +23,7 @@ void load_fits_file_data(void)
 
 #ifdef USE_MPI
 	//MPI3: Copying only the data each process needs.
-	for (i=0; i<=End[myid] - Start[myid]+1; i++) {
+	for (i=0; i<=mpiEnd - mpiBegin+1; i++) {
 		//MPI3: Getting global index to read only stars that belong to this processor.
 		g_i = get_global_idx(i);
 #else

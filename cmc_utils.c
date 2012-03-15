@@ -196,12 +196,12 @@ void free_arrays(void){
 	free(mass_pc); free(densities_r); free(no_star_r); 
 	free(ke_rad_r); free(ke_tan_r); free(v2_rad_r); free(v2_tan_r);
 	free(ave_mass_r); free(mass_r);
-	free(star); free(binary);
+	free(star); //free(binary);
 
 	/* MPI Stuff */
 #ifdef USE_MPI
-	//free(star_r); free(star_m); free(star_phi);
-	//free(new_size); free(disp); free(len);
+	free(star_r); free(star_m); free(star_phi);
+	free(new_size); free(disp); free(len);
 #endif
 }
 
@@ -1992,8 +1992,9 @@ void calc_potential_new()
 {
 #ifdef USE_MPI
 	mpi_potential_calculate();
+
 	//MPI2: Calculating indices which will be used in all loops till beginning of the main loop. The value 20 depends on the p value used in calc_sigma_new()
-   mpiFindIndicesCustom( clus.N_MAX, 20, myid, &mpiBegin, &mpiEnd );
+	mpiFindIndicesCustom( clus.N_MAX, 20, myid, &mpiBegin, &mpiEnd );
 #else
 	potential_calculate();
 #endif
@@ -2320,7 +2321,11 @@ int findProcForIndex( int j )
 
 	for( i = 0; i < procs; i++ )
 		if( j >= Start[i] && j <= End[i] )
+		{
+			//printf("starid = %d proc = %d start = %d end = %d\n", j, i, Start[i], End[i]);
 			return i;
+		}
+//printf("HIIIIIIIIIIIIIIIIIIIIII starid = %d proc = %d start = %d end = %d\n", j, i, Start[i], End[i]);
 
 	up_bound = clus.N_MAX + 1;
 #ifndef USE_MPI

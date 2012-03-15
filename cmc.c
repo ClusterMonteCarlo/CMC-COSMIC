@@ -67,9 +67,6 @@ int main(int argc, char *argv[])
 	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
 
-	Start = (int *) calloc(procs, sizeof(int));
-	End = (int *) calloc(procs, sizeof(int));
-
 	create_timing_files();
 
 	/* set some important global variables */
@@ -84,6 +81,11 @@ int main(int argc, char *argv[])
 
 	//MPI3: Allocate N/procs + 10% for each node. Also allocate a separate buffer array for receiving ghost particles. File I/O, each process takes its slice of data. Also, assemble the global arrays - _m, and _r.
 	get_star_data(argc, argv, rng);
+
+	Start = (int *) calloc(procs, sizeof(int));
+	End = (int *) calloc(procs, sizeof(int));
+
+	findLimits( clus.N_MAX, 20 );
 
 	N_b_OLD = N_b;
 	N_b_NEW = N_b;
@@ -146,6 +148,8 @@ int main(int argc, char *argv[])
 	clus.N_MAX_NEW = clus.N_MAX;
 	/* initialize stellar evolution things */
 	DMse = 0.0;
+
+
 #ifndef USE_MPI
 	for(i=0; i<procs; i++)
 		DMse_mimic[i] = 0.0;
@@ -310,7 +314,6 @@ int main(int argc, char *argv[])
 
 		tidally_strip_stars();
 
-		//printf("---->>>%d COMPLETED BEFORE SORT\n", myid);
 		qsorts_new();
 
 		post_sort_comm();
@@ -320,17 +323,8 @@ int main(int argc, char *argv[])
 		//Calculating Start and End values for each processor for mimcking parallel rng.
 		findLimits( clus.N_MAX, 20 );
 
-/*
-		MPI_Barrier(MPI_COMM_WORLD);
-		printf("---->>>%d HIIIIIIIIII1111111111\n", myid);
-		MPI_Barrier(MPI_COMM_WORLD);
-*/
 		energy_conservation3();
-/*
-		MPI_Barrier(MPI_COMM_WORLD);
-		printf("---->>>%d HIIIIIIIIII2222222222\n", myid);
-		MPI_Barrier(MPI_COMM_WORLD);
-*/
+
 		//distr_bin_data();
 
 		//commenting out for MPI
@@ -362,9 +356,8 @@ int main(int argc, char *argv[])
 			}
 		 */
 
-		print_results();
-
 #ifdef USE_MPI
+/*
 		if(myid==2)
 		{
 			strcpy(tempstr, "test_out_par.dat");
@@ -375,7 +368,7 @@ int main(int argc, char *argv[])
 			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
 			fclose(ftest);
 		}
-/*
+*/
 		strcpy(filename, "test_out_par");
 		strcpy(tempstr, filename);
 		sprintf(num, "%d", myid);
@@ -390,31 +383,30 @@ int main(int argc, char *argv[])
 				for( j = 1; j <= End[i]-Start[i]+1; j++ )
 					//for( j = mpiBegin; j <= mpiEnd; j++ )
 					//for( j = 1; j <= clus.N_MAX; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].vt);
+					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].E);
 					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
 					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
 				fclose(ftest);
 			}
 		}
-MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Barrier(MPI_COMM_WORLD);
 		if(myid==0)
 		{
 			char process_str[30];
 			sprintf(process_str, "./process.sh %d", procs);
 			system(process_str);
 		}
-*/
 #else
 		strcpy(tempstr, "test_out_ser.dat");
 		ftest = fopen( tempstr, "w" );
 		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].E);
 			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
 			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
 		fclose(ftest);
 #endif
-//return;
 
+		print_results();
 
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
@@ -436,6 +428,7 @@ MPI_Barrier(MPI_COMM_WORLD);
 
 	times(&tmsbuf);
 
+
 #ifdef USE_MPI
 	if(myid==0)
 #endif
@@ -454,7 +447,7 @@ MPI_Barrier(MPI_COMM_WORLD);
 			(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
 
 	/* free RNG */
-	gsl_rng_free(rng);
+	//gsl_rng_free(rng);
 
 #ifdef USE_CUDA
 	cuCleanUp();
@@ -475,8 +468,8 @@ MPI_Barrier(MPI_COMM_WORLD);
 	free(st); //commenting because it throws some error
 #endif
 
-	//free(Start);
-	//free(End);
+	free(Start);
+	free(End);
 
 	//if (SEARCH_GRID)
 	//	search_grid_free(r_grid);

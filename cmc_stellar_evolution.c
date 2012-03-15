@@ -57,6 +57,10 @@ void stellar_evolution_init(void){
 	bse_instar();
 	dprintf("se_init: %g %g %g %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
 
+	int ii;
+	for(ii=0; ii< procs; ii++)
+		printf("i=%d start=%d end=%d\n", ii, Start[ii], End[ii]);
+
 #ifdef USE_MPI 
 	for (k=1; k<=mpiEnd-mpiBegin+1; k++) {
 		j = get_global_idx(k);
@@ -179,6 +183,7 @@ void stellar_evolution_init(void){
 
 #ifndef USE_MPI
 			curr_st = &st[findProcForIndex(k)];
+			//printf("starid = %d proc = %d start = %d end = %d\n", k, findProcForIndex(k), Start[findProcForIndex(k)], End[findProcForIndex(k)]);
 #endif
 
 			vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
