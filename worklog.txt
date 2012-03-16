@@ -56,3 +56,17 @@ Bharath
 
 There are a lot of comments I wrote throughout the code. Sit with Stefan and
 fix all of them.
+
+
+Mar 14 2012
+Bharath
+---------------
+
+The serial version with the -s argument itself is not optimized, so the
+speedup is inaccurate. Particularly for the routine findProcForIndex(), has a
+loop over nprocs (emulated with -s), and sometimes is called for each star.
+n this case
+complexity would be N * nprocs. This function can be optimized, and also is
+unnecessary in the serial version and its effect should not be considered
+while measuring speedup. Need to think!
+

@@ -67,6 +67,13 @@ int main(int argc, char *argv[])
 	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
 
+	//Currently doing on all nodes to avoid broadcasting of global variables. Later, might have to be split into 2 or more functions, and store all global variables into a structure for easy broadcast.
+	/* parse input */
+	parser(argc, argv, rng); //to do parallel i/o
+
+	Start = (int *) calloc(procs, sizeof(int));
+	End = (int *) calloc(procs, sizeof(int));
+
 	create_timing_files();
 
 	/* set some important global variables */

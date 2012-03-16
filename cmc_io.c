@@ -1561,9 +1561,6 @@ void write_snapshot(char *filename) {
 
 void get_star_data(int argc, char *argv[], gsl_rng *rng)
 {
-	//Currently doing on all nodes to avoid broadcasting of global variables. Later, might have to be split into 2 or more functions, and store all global variables into a structure for easy broadcast.
-	/* parse input */
-	parser(argc, argv, rng); //to do parallel i/o
 
 	/* print version information to log file */
 	//commenting out print_version temporarily for basic mpi
@@ -1589,11 +1586,6 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 	//load_id_table(star_ids, "trace_list");
 #endif
 	 */
-
-#ifdef USE_MPI
-	/* MPI3: Calculating mpiBegin and mpiEnd to enable each proc to read only the data from file relevant to it */
-	mpiFindIndicesCustom( cfd.NOBJ, 20, myid, &mpiBegin, &mpiEnd );
-#endif
 
 	mpiInitGlobArrays();
 
