@@ -1561,7 +1561,6 @@ void write_snapshot(char *filename) {
 
 void get_star_data(int argc, char *argv[], gsl_rng *rng)
 {
-
 	/* print version information to log file */
 	//commenting out print_version temporarily for basic mpi
 	//print_version(logfile);

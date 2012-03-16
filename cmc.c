@@ -67,13 +67,6 @@ int main(int argc, char *argv[])
 	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
 
-	//Currently doing on all nodes to avoid broadcasting of global variables. Later, might have to be split into 2 or more functions, and store all global variables into a structure for easy broadcast.
-	/* parse input */
-	parser(argc, argv, rng); //to do parallel i/o
-
-	Start = (int *) calloc(procs, sizeof(int));
-	End = (int *) calloc(procs, sizeof(int));
-
 	create_timing_files();
 
 	/* set some important global variables */
@@ -85,6 +78,16 @@ int main(int argc, char *argv[])
 	/* initialize GSL RNG */
 	gsl_rng_env_setup();
 	rng = gsl_rng_alloc(rng_type);
+
+	//Currently doing on all nodes to avoid broadcasting of global variables. Later, might have to be split into 2 or more functions, and store all global variables into a structure for easy broadcast.
+	/* parse input */
+	parser(argc, argv, rng); //to do parallel i/o
+
+	Start = (int *) calloc(procs, sizeof(int));
+	End = (int *) calloc(procs, sizeof(int));
+
+	/* MPI2: Calculating Start and End for mimcking parallel rng */
+	findLimits( cfd.NOBJ, 20 );
 
 	//MPI3: Allocate N/procs + 10% for each node. Also allocate a separate buffer array for receiving ghost particles. File I/O, each process takes its slice of data. Also, assemble the global arrays - _m, and _r.
 	get_star_data(argc, argv, rng);

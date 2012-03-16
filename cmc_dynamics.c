@@ -229,9 +229,8 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			wprintf("P_enc = %g >= 1!\n", P_enc);
 		}
 
-
 #ifndef USE_MPI
-		curr_st = &st[findProcForIndex(k)];
+		curr_st = &st[findProcForIndex(g_k)];
 #endif
 		/* do encounter or two-body relaxation */
 		if(rng_t113_dbl_new(curr_st) < P_enc) { 
