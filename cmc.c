@@ -366,56 +366,6 @@ int main(int argc, char *argv[])
 			}
 		 */
 
-#ifdef USE_MPI
-/*
-		if(myid==2)
-		{
-			strcpy(tempstr, "test_out_par.dat");
-			ftest = fopen( tempstr, "w" );
-			for( i = 1; i <= clus.N_MAX; i++ )
-				fprintf(ftest, "%ld\t%.18g\n", i, star_r[i]);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-			fclose(ftest);
-		}
-*/
-		strcpy(filename, "test_out_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = 1; j <= End[i]-Start[i]+1; j++ )
-					//for( j = mpiBegin; j <= mpiEnd; j++ )
-					//for( j = 1; j <= clus.N_MAX; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].E);
-					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
-					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
-				fclose(ftest);
-			}
-		}
-		MPI_Barrier(MPI_COMM_WORLD);
-		if(myid==0)
-		{
-			char process_str[30];
-			sprintf(process_str, "./process.sh %d", procs);
-			system(process_str);
-		}
-#else
-		strcpy(tempstr, "test_out_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].E);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-		fclose(ftest);
-#endif
-
 		print_results();
 
 		/* take a snapshot, we need more accurate 
@@ -663,4 +613,53 @@ return;
 					newstarid);
 			fclose(ftest);
 		}
+#ifdef USE_MPI
+		if(myid==2)
+		{
+			strcpy(tempstr, "test_out_par.dat");
+			ftest = fopen( tempstr, "w" );
+			for( i = 1; i <= clus.N_MAX; i++ )
+				fprintf(ftest, "%ld\t%.18g\n", i, star_r[i]);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+			fclose(ftest);
+		}
+
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = 1; j <= End[i]-Start[i]+1; j++ )
+					//for( j = mpiBegin; j <= mpiEnd; j++ )
+					//for( j = 1; j <= clus.N_MAX; j++ )
+					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].E);
+					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
+					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
+				fclose(ftest);
+			}
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+		if(myid==0)
+		{
+			char process_str[30];
+			sprintf(process_str, "./process.sh %d", procs);
+			system(process_str);
+		}
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].E);
+			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
+			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
+		fclose(ftest);
+#endif
+
 */
