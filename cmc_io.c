@@ -1829,19 +1829,15 @@ void mpi_files_merge(void)
 
 void cat_and_rm_files(char* file_ext)
 {
-	char file_buffer[150], temp[150];
+	char cmd[150];
 	int i;
-	sprintf(file_buffer, "%s0.%s ", outprefix_bak, file_ext);
-	for( i = 1; i < procs; ++i )
-		sprintf( file_buffer, "%s%s%d.%s ", file_buffer, outprefix_bak, i, file_ext );
-	strcpy(temp, file_buffer);
-	sprintf( file_buffer, "cat %s> %s.%s", temp, outprefix_bak, file_ext);
-	system( file_buffer );
-	dprintf("MPI Files merging: lag file = %s\n", file_buffer);
 
 	for( i = 0; i < procs; ++i )
 	{
-		sprintf( file_buffer, "rm %s%d.%s", outprefix_bak, i, file_ext);
-		system( file_buffer );
-	}	
+		sprintf(cmd, "cat %s%d.%s >> %s.%s", outprefix_bak, i, file_ext, outprefix_bak, file_ext);
+		system( cmd );
+		sprintf(cmd, "rm %s%d.%s", outprefix_bak, i, file_ext);
+		system( cmd );
+	}
+	dprintf("MPI Files merging: lag file = %s.%s\n", outprefix_bak, file_ext);
 }

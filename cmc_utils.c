@@ -1499,11 +1499,11 @@ void central_calculate(void)
 		rc_nb += sqr(rhoj[i] * star[i].r);
 		central.m_ave += rhoj[i] * star[i].m * madhoc;
 #endif
+	}
 
 #ifdef USE_MPI
 		MPI_Allreduce(MPI_IN_PLACE, &central.v_rms, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #endif
-	}
 
 	central.rho /= rhojsum;
 	/* correction for inherent bias in estimator */
@@ -1613,7 +1613,7 @@ void central_calculate(void)
 	Mbincentral = buf_reduce[3];
 	central.ma_ave = buf_reduce[4];
 
-	MPI_Allreduce(MPI_IN_PLACE, &Ncentral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Allreduce(MPI_IN_PLACE, &Ncentral, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD);
 #endif
 
 	/* object quantities */
@@ -2321,11 +2321,7 @@ int findProcForIndex( int j )
 
 	for( i = 0; i < procs; i++ )
 		if( j >= Start[i] && j <= End[i] )
-		{
-			//printf("starid = %d proc = %d start = %d end = %d\n", j, i, Start[i], End[i]);
 			return i;
-		}
-//printf("HIIIIIIIIIIIIIIIIIIIIII starid = %d proc = %d start = %d end = %d\n", j, i, Start[i], End[i]);
 
 	up_bound = clus.N_MAX + 1;
 #ifndef USE_MPI

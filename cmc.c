@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
 */
 	} /* End WHILE (time step iteration loop) */
 
-	//mpi_files_merge();
+	mpi_files_merge();
 
 	times(&tmsbuf);
 

@@ -70,3 +70,13 @@ complexity would be N * nprocs. This function can be optimized, and also is
 unnecessary in the serial version and its effect should not be considered
 while measuring speedup. Need to think!
 
+
+Mar 16 2012
+Bharath
+---------------
+
+Still some bugs that remain to be fixed include:
+1) mpi_file_merge() throws weird errors when run for large procs.
+2) free_arrays() -> memory free error occurs when binary array is freed.
+Currently commented out.
+3) gsl_rng_free() throws memory error.
