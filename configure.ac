@@ -60,8 +60,8 @@ AS_IF([ test "x$enable_mpi" == "xyes" ], [
     AX_MPI([])
     NU_MPI_FLAGS([])
     CFLAGS="$CFLAGS -DUSE_MPI $MPI_CFLAGS"
-    LIBS="$LIBS $MPI_CLINK"], []
-)
+    LIBS="$LIBS $MPI_CLINK"], 
+[])
 
 AS_IF([test "x$FFLAGS" == x], [FFLAGS='-g -O2'], [])
 # Always add debug symbols
@@ -105,8 +105,7 @@ AS_IF([ test x$enable_mpi == "xyes"], [
     LIBS="$LIBS $MPI_FLINK"
     REMOVE_DUPS([LIBS])
     AC_MSG_NOTICE(["The libs are now $LIBS"]) ], 
-    []
-)
+[])
 
 #Hack to get around problem with path scale fortran and cfitsio both defining ffseek.
 USE_PATHSCALE=${F77##path*}
