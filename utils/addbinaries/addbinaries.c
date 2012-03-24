@@ -248,7 +248,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 					/* evolving stars a little bit to set luminosity and radius */
 					tphysf = 1.0e-6;
 					dtp = tphysf;
-					bse_evolv1(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius), 
+					bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 						   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 					   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
 					   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
@@ -275,7 +275,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 					/* evolving stars a little bit to set luminosity and radius */
 					tphysf = 1.0e-6;
 					dtp = tphysf;
-					bse_evolv1(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius), 
+					bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 						   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 					   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
 					   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
@@ -327,7 +327,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				/* evolving stars a little bit to set luminosity and radius */
 				tphysf = 1.0e-6;
 				dtp = tphysf;
-				bse_evolv1(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius), 
+				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
 				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
@@ -398,7 +398,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				/* evolving stars a little bit to set luminosity and radius */
 				tphysf = 1.0e-6;
 				dtp = tphysf;
-				bse_evolv1(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius), 
+				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
 				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
@@ -424,7 +424,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				/* evolving stars a little bit to set luminosity and radius */
 				tphysf = 1.0e-6;
 				dtp = tphysf;
-				bse_evolv1(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius), 
+				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
 				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
@@ -487,7 +487,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				/* evolving stars a little bit to set luminosity and radius */
 				tphysf = 1.0e-6;
 				dtp = tphysf;
-				bse_evolv1(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius), 
+				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
 				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
