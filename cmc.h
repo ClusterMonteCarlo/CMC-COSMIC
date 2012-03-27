@@ -474,6 +474,8 @@ MPI_Comm inv_comm_create();
 #endif
 
 /* Bharath: Timing Functions */ 
+double timeStartSimple();
+void timeEndSimple(double timeStart, double *timeAccum);
 void timeStart();
 void timeEnd(char* fileName, char *funcName, double *tTime);
 void timeStart2(double *st);
@@ -793,9 +795,21 @@ void write_snapshot(char *filename);
 #endif
 
 #define gprintf(args...) if (!quiet) {fprintf(stdout, args);}
+
+#ifdef USE_MPI
+#define diaprintf(args...) if (!quiet) { if(myid == 0) { fprintf(stdout, "DIAGNOSTIC: %s(): ", __FUNCTION__); fprintf(stdout, args); }}
+#else
 #define diaprintf(args...) if (!quiet) {fprintf(stdout, "DIAGNOSTIC: %s(): ", __FUNCTION__); fprintf(stdout, args);}
+#endif
+
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
-#define wprintf(args...) {fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}
+
+#ifdef USE_MPI
+#define wprintf(args...) { if(myid==0) { fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}}
+#else
+#define wprintf(args...) { fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}
+#endif
+
 #define eprintf(args...) {fprintf(stderr, "ERROR: %s:%d in %s(): ", __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}
 #ifdef DEBUGGING
 #undef MAX

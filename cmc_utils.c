@@ -1815,6 +1815,47 @@ inline double function_q(long j, long double r, long double pot, long double E, 
   return (res);
 };
 
+/* gettimeofday Example:
+ */
+/*
+	timeval tim;
+	gettimeofday(&tim, NULL);
+	double t1=tim.tv_sec+(tim.tv_usec/1000000.0);
+	do_something_long();
+	gettimeofday(&tim, NULL);
+	double t2=tim.tv_sec+(tim.tv_usec/1000000.0);
+	printf("%.6lf seconds elapsed\n", t2-t1);
+ */
+
+double timeStartSimple()
+{
+double timeStart=0;
+#ifdef USE_MPI
+	MPI_Barrier(MPI_COMM_WORLD);
+	timeStart = MPI_Wtime();
+#else
+	timeval tim;
+	gettimeofday(&tim, NULL);
+	double timeStart=tim.tv_sec+(tim.tv_usec/1000000.0);
+#endif
+return timeStart;
+}
+
+void timeEndSimple(double timeStart, double *timeAccum)
+{
+#ifdef USE_MPI
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	double timeEnd = MPI_Wtime();
+	*timeAccum += timeEnd - timeStart;
+#else
+	timeval tim;
+	gettimeofday(&tim, NULL);
+	double timeEnd=tim.tv_sec+(tim.tv_usec/1000000.0);
+	*timeAccum += timeEnd - timeStart;
+#endif
+}
+
 void timeStart()
 {
 /*

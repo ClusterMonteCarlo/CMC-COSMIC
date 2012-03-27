@@ -7,6 +7,7 @@
 #include <time.h>
 #include <signal.h>
 #include <sys/times.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <gsl/gsl_rng.h>
 #include "cmc.h"
@@ -21,12 +22,13 @@
 int main(int argc, char *argv[])
 {
 	struct tms tmsbuf, tmsbufref;
-	long i, j;
+	long i;
 	gsl_rng *rng;
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
-	//MPI2: The clock here is inaccurate since there might be overhead before this due to MPI initialization etc.
-	clock_t t1=clock();
+	//MPI3: There might be overhead if timing is done due to MPI_Barriers.
+	double tmpTimeStart, tmpTimeStart_full;
+	double t_full=0.0, t_init=0.0, t_sort=0.0, t_ener=0.0, t_se=0.0, t_dyn=0.0, t_orb=0.0, t_oth=0.0, t_filemer=0.0;
 
 #ifdef USE_MPI
 	//MPI2: Some code from the main branch might have been removed in the MPI version. Please check.
@@ -67,6 +69,8 @@ int main(int argc, char *argv[])
 	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
 
+	tmpTimeStart_full = timeStartSimple();
+	tmpTimeStart = timeStartSimple();
 	create_timing_files();
 
 	/* set some important global variables */
@@ -222,11 +226,14 @@ int main(int argc, char *argv[])
 		MPI_Bcast(star_m, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	}
 #endif
+	timeEndSimple(tmpTimeStart, &t_init);
 
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
 	while (CheckStop(tmsbufref) == 0) 
 	{
+
+		tmpTimeStart = timeStartSimple();
 #ifndef USE_MPI
 		for(i=0; i<procs; i++)
 		{
@@ -271,17 +278,23 @@ int main(int argc, char *argv[])
 #else
 		clus.N_MAX_NEW = clus.N_MAX;
 #endif
+		timeEndSimple(tmpTimeStart, &t_oth);
 
+		tmpTimeStart = timeStartSimple();
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
 		//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
+		timeEndSimple(tmpTimeStart, &t_dyn);
 
+		tmpTimeStart = timeStartSimple();
 		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
 		if (STELLAR_EVOLUTION > 0)
 			do_stellar_evolution(rng);
+		timeEndSimple(tmpTimeStart, &t_se);
 
+		tmpTimeStart = timeStartSimple();
 		Prev_Dt = Dt;
 
 		/* evolve stars up to new time */
@@ -304,10 +317,14 @@ int main(int argc, char *argv[])
 		/*Sourav: checking all stars for their possible extinction from old age*/
 		//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
 		toy_rejuvenation();
+		timeEndSimple(tmpTimeStart, &t_oth);
 
+		tmpTimeStart = timeStartSimple();
 		/* this calls get_positions() */
 		new_orbits_calculate();
+		timeEndSimple(tmpTimeStart, &t_orb);
 
+		tmpTimeStart = timeStartSimple();
 		/* more numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
 		energy_conservation2();
@@ -323,17 +340,24 @@ int main(int argc, char *argv[])
 		//collect_bin_data();		
 
 		tidally_strip_stars();
+		timeEndSimple(tmpTimeStart, &t_oth);
 
+		tmpTimeStart = timeStartSimple();
 		qsorts_new();
 
 		post_sort_comm();
+		timeEndSimple(tmpTimeStart, &t_sort);
 
+		tmpTimeStart = timeStartSimple();
 		calc_potential_new();
 
 		//Calculating Start and End values for each processor for mimcking parallel rng.
 		findLimits( clus.N_MAX, 20 );
+		timeEndSimple(tmpTimeStart, &t_oth);
 
+		tmpTimeStart = timeStartSimple();
 		energy_conservation3();
+		timeEndSimple(tmpTimeStart, &t_ener);
 
 		//distr_bin_data();
 
@@ -347,6 +371,7 @@ int main(int argc, char *argv[])
 		comp_multi_mass_percent();
 		 */
 
+		tmpTimeStart = timeStartSimple();
 		compute_energy_new();
 
 		reset_interaction_flags();
@@ -367,6 +392,7 @@ int main(int argc, char *argv[])
 		 */
 
 		print_results();
+		timeEndSimple(tmpTimeStart, &t_oth);
 
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
@@ -384,17 +410,31 @@ int main(int argc, char *argv[])
 */
 	} /* End WHILE (time step iteration loop) */
 
+	tmpTimeStart = timeStartSimple();
 	mpi_files_merge();
+	timeEndSimple(tmpTimeStart, &t_filemer);
 
 	times(&tmsbuf);
-
+	timeEndSimple(tmpTimeStart_full, &t_full);
 
 #ifdef USE_MPI
 	if(myid==0)
 #endif
 	{
-		clock_t t2=clock();
-		printf("%.4lf seconds of processing\n", (t2-t1)/(double)CLOCKS_PER_SEC);
+		printf("******************************************************************************\n");
+		printf("Time Taken:\n------------------------\n%.4lf:\tInitialization\n%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n%.4lf:\tFiles Merge\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_init, t_dyn, t_se, t_orb, t_sort, t_ener, t_oth, t_filemer, t_full);
+
+/*
+		printf("%.4lf seconds of processing\n", t_full);
+		printf("%.4lf seconds took by initialization\n", t_init);
+		printf("%.4lf seconds took by sorting\n", t_sort);
+		printf("%.4lf seconds took by energy conservation\n", t_ener);
+		printf("%.4lf seconds took by dynamics\n", t_dyn);
+		printf("%.4lf seconds took by SE\n", t_se);
+		printf("%.4lf seconds took by orb. calc.\n", t_orb);
+		printf("%.4lf seconds took by others\n", t_oth);
+		printf("%.4lf seconds took by file merge\n", t_filemer);
+*/
 	}
 
 	dprintf("Usr time = %.6e ", (double)
@@ -412,12 +452,12 @@ int main(int argc, char *argv[])
 #ifdef USE_CUDA
 	cuCleanUp();
 #endif
-#ifdef USE_MPI
-#endif
+
 	/* flush buffers before returning */
 	close_buffers();
-	free_arrays();
+	//free_arrays();
 
+/*
 #ifdef USE_MPI
 	free(mpiDisp);
 	free(mpiLen);
@@ -427,7 +467,7 @@ int main(int argc, char *argv[])
 #else
 	free(st); //commenting because it throws some error
 #endif
-
+*/
 	free(Start);
 	free(End);
 
