@@ -391,6 +391,27 @@ int main(int argc, char *argv[])
 			}
 		 */
 
+/* TESTING FOR KEVIN */
+/*
+#ifdef USE_MPI
+		// Only proc with id 0 prints out.
+		if(myid==0)
+		{
+			strcpy(tempstr, "test_out_par.dat");
+			ftest = fopen( tempstr, "w" );
+			for( i = 1; i <= clus.N_MAX; i++ )
+				fprintf(ftest, "%ld\t%.18g\n",i, star_r[i]);
+			fclose(ftest);
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
+		fclose(ftest);
+#endif
+*/
 		print_results();
 		timeEndSimple(tmpTimeStart, &t_oth);
 

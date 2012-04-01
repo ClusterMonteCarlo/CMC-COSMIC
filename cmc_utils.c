@@ -8,6 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/times.h>
+#include <sys/time.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_spline.h>
 #include "cmc.h"
@@ -1834,9 +1835,9 @@ double timeStart=0;
 	MPI_Barrier(MPI_COMM_WORLD);
 	timeStart = MPI_Wtime();
 #else
-	timeval tim;
+	struct timeval tim;
 	gettimeofday(&tim, NULL);
-	double timeStart=tim.tv_sec+(tim.tv_usec/1000000.0);
+	timeStart=tim.tv_sec+(tim.tv_usec/1000000.0);
 #endif
 return timeStart;
 }
@@ -1849,7 +1850,7 @@ void timeEndSimple(double timeStart, double *timeAccum)
 	double timeEnd = MPI_Wtime();
 	*timeAccum += timeEnd - timeStart;
 #else
-	timeval tim;
+	struct timeval tim;
 	gettimeofday(&tim, NULL);
 	double timeEnd=tim.tv_sec+(tim.tv_usec/1000000.0);
 	*timeAccum += timeEnd - timeStart;
