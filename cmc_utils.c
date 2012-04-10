@@ -2274,12 +2274,19 @@ void qsorts_new(void)
 	MPI_Datatype startype;
 	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
 	MPI_Type_commit( &startype );
-
-	clus.N_MAX = sample_sort(star,
+/*
+	clus.N_MAX = sample_sort_old(star,
 									&clus.N_MAX_NEW,
 									startype,
 									MPI_COMM_WORLD,
 									1024);
+*/
+	clus.N_MAX = sample_sort(	star+1,
+                					&clus.N_MAX_NEW,
+                					startype,
+                					MPI_COMM_WORLD,
+                					1024	);
+
 	//MPI_Type_free(startype);
 #else
 	/* Sorting stars by radius. The 0th star at radius 0 

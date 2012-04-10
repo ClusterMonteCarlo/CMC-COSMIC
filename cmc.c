@@ -329,6 +329,8 @@ int main(int argc, char *argv[])
 		 * energy conservation scheme */
 		energy_conservation2();
 
+		tidally_strip_stars();
+
 		/* Compute Intermediate Energies of stars. 
 		 * Also transfers new positions and velocities from srnew[], 
 		 * svrnew[], svtnew[] to sr[], svr[], svt[], and saves srOld[] 
@@ -339,7 +341,6 @@ int main(int argc, char *argv[])
 
 		//collect_bin_data();		
 
-		tidally_strip_stars();
 		timeEndSimple(tmpTimeStart, &t_oth);
 
 		tmpTimeStart = timeStartSimple();

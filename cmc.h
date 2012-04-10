@@ -606,11 +606,28 @@ void central_calculate(void);
 void mpi_central_calculate(void);
 void mpi_central_calculate1(void);
 void mpi_central_calculate2(void);
-int sample_sort( star_t        *starData,
+int sample_sort_old( star_t        *starData,
                   long          *local_N,
                   MPI_Datatype  eType,
                   MPI_Comm      commgroup,
                   int           num_samples );
+
+typedef star_t type;
+typedef double keyType;
+void remove_stripped_stars(type* buf, int* local_N);
+int sample_sort( type			*buf,
+						int			*local_N,
+						MPI_Datatype dataType,
+						MPI_Comm    commgroup,
+						int			n_samples );
+void load_balance( 	type 				*inbuf,
+							type 				*outbuf,
+							int 				*expected_count, 
+							int				*actual_count, 
+							int 				myid, 
+							int 				procs, 
+							MPI_Datatype 	dataType, 	
+							MPI_Comm			commgroup	);
 #endif
 
 central_t central_hard_binary(double ktmin, central_t old_cent);

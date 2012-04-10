@@ -1789,8 +1789,11 @@ void distr_bin_data()
 void mpi_files_merge(void)
 {
 #ifdef USE_MPI
-	long i;
+	int i;
 	MPI_Barrier(MPI_COMM_WORLD);
+
+	// Total of 21 files. And variable no.of files for lagrad***.dat, core.dat
+	// Later try to do these in parallel.
 	if(myid==0)
 	{
 		char file_ext[64];
@@ -1816,7 +1819,7 @@ void mpi_files_merge(void)
 		cat_and_rm_files("removestar.log");
 		cat_and_rm_files("relaxation.dat");
 		for(i=0; i<NO_MASS_BINS-1; i++){
-			sprintf(file_ext, "lagrad%ld-%g-%g.dat", i, mass_bins[i], mass_bins[i+1]);
+			sprintf(file_ext, "lagrad%d-%g-%g.dat", i, mass_bins[i], mass_bins[i+1]);
 			cat_and_rm_files(file_ext);
 		}
 		if (WRITE_EXTRA_CORE_INFO)
@@ -1827,6 +1830,7 @@ void mpi_files_merge(void)
 #endif
 }
 
+/*
 void cat_and_rm_files(char* file_ext)
 {
 	char cmd[150];
@@ -1840,4 +1844,29 @@ void cat_and_rm_files(char* file_ext)
 		system( cmd );
 	}
 	dprintf("MPI Files merging: lag file = %s.%s\n", outprefix_bak, file_ext);
+}
+*/
+
+void cat_and_rm_files(char* file_ext)
+{
+   //char *filename_buf, temp[150];
+	char* filename_buf = (char*)malloc(25 * procs * sizeof(char)); //25 is assumed to be the worst case length of a filename including outprefix.
+	char* cmd = (char*)malloc(25 * procs * sizeof(char));
+   int i;
+
+   sprintf(filename_buf, "%s0.%s ", outprefix_bak, file_ext);
+   for( i = 1; i < procs; ++i )
+      sprintf( filename_buf, "%s%s%d.%s ", filename_buf, outprefix_bak, i, file_ext );
+
+   sprintf( cmd, "cat %s> %s.%s", filename_buf, outprefix_bak, file_ext);
+   system( cmd );
+   dprintf("MPI Files merging: lag file = %s\n", filename_buf);
+
+   for( i = 0; i < procs; ++i )
+   {
+      sprintf( cmd, "rm %s%d.%s", outprefix_bak, i, file_ext);
+      system( cmd );
+   }
+	//free(filename_buf);
+	//free(cmd);
 }
