@@ -582,7 +582,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			eprintf("too many values for parameter: \"%s\".\n", line);
 			exit(1);
 		} else if (sscanf(line, "%s %s", parameter_name, values) == 2) {
-			if (strcmp(parameter_name, "BINBIN") == 0) {
+			if (strcmp(parameter_name, "SAMPLESIZE") == 0) {
+				PRINT_PARSED(PARAMDOC_SAMPLESIZE);
+				sscanf(values, "%d", &SAMPLESIZE);
+				parsed.SAMPLESIZE = 1;
+			} else if (strcmp(parameter_name, "BINBIN") == 0) {
 				PRINT_PARSED(PARAMDOC_BINBIN);
 				sscanf(values, "%d", &BINBIN);
 				parsed.BINBIN = 1;
@@ -965,6 +969,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
 	/*Sourav: new parameter*/
 	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
+	CHECK_PARSED(SAMPLESIZE, 1024, PARAMDOC_SAMPLESIZE);
 	CHECK_PARSED(PREAGING, 0, PARAMDOC_PREAGING);
 	CHECK_PARSED(BINBIN, 1, PARAMDOC_BINBIN);
 	CHECK_PARSED(BINSINGLE, 1, PARAMDOC_BINSINGLE);

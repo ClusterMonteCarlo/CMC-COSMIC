@@ -2279,13 +2279,13 @@ void qsorts_new(void)
 									&clus.N_MAX_NEW,
 									startype,
 									MPI_COMM_WORLD,
-									1024);
+									SAMPLESIZE);
 */
 	clus.N_MAX = sample_sort(	star+1,
                 					&clus.N_MAX_NEW,
                 					startype,
                 					MPI_COMM_WORLD,
-                					1024	);
+                					SAMPLESIZE	);
 
 	//MPI_Type_free(startype);
 #else

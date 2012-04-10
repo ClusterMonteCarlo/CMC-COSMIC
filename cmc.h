@@ -182,6 +182,8 @@ struct get_pos_str {
 
 // This is a total hack for including parameter documentation
 typedef struct{
+#define PARAMDOC_SAMPLESIZE "no.of sample keys contributed per processor for sample sort--binary interactions. Applicable only for the parallel version"
+	int SAMPLESIZE;
 #define PARAMDOC_BINBIN "toggles binary--binary interactions (0=off, 1=on)"
 	int BINBIN;
 #define PARAMDOC_BINSINGLE "toggles binary--single interactions (0=off, 1=on)"

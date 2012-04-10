@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
 	//MPI3: There might be overhead if timing is done due to MPI_Barriers.
 	double tmpTimeStart, tmpTimeStart_full;
 	double t_full=0.0, t_init=0.0, t_sort=0.0, t_ener=0.0, t_se=0.0, t_dyn=0.0, t_orb=0.0, t_oth=0.0, t_filemer=0.0;
+	t_sort_only=0.0;
+	t_load_bal=0.0;
 
 #ifdef USE_MPI
 	//MPI2: Some code from the main branch might have been removed in the MPI version. Please check.
@@ -444,7 +446,7 @@ int main(int argc, char *argv[])
 #endif
 	{
 		printf("******************************************************************************\n");
-		printf("Time Taken:\n------------------------\n%.4lf:\tInitialization\n%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n%.4lf:\tFiles Merge\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_init, t_dyn, t_se, t_orb, t_sort, t_ener, t_oth, t_filemer, t_full);
+		printf("Time Taken:\n------------------------\n%.4lf:\tInitialization\n%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\t \(%lf: Sort %lf: Load bal.\)\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n%.4lf:\tFiles Merge\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_init, t_dyn, t_se, t_orb, t_sort, t_sort_only, t_load_bal, t_ener, t_oth, t_filemer, t_full);
 
 /*
 		printf("%.4lf seconds of processing\n", t_full);

@@ -40,6 +40,7 @@ _EXTERN_ char MASS_PC[1000], MASS_BINS[1000], INPUT_FILE[1000];
 _EXTERN_ char *SNAPSHOT_WINDOWS;
 _EXTERN_ char *SNAPSHOT_WINDOW_UNITS;
 _EXTERN_ int MASS_PC_BH_INCLUDE;
+_EXTERN_ int SAMPLESIZE;
 _EXTERN_ int BINSINGLE, BINBIN;
 _EXTERN_ int STREAMS;
 _EXTERN_ int BININITKT, STOPATCORECOLLAPSE;
@@ -104,10 +105,12 @@ _EXTERN_ FILE* ftest2;
 _EXTERN_ char num2[5],filename2[20], tempstr2[20];
 _EXTERN_ long *new_size;
 _EXTERN_ int *disp, *len;
-	//Temp file handle for debugging
-	FILE *ftest;
-	//MPI2: Some variables to assist debugging
-	char num[5],filename[20], tempstr[20];
+//Temp file handle for debugging
+FILE *ftest;
+//MPI2: Some variables to assist debugging
+char num[5],filename[20], tempstr[20];
+_EXTERN_ double t_sort_only;
+_EXTERN_ double t_load_bal;
 
 
 /* debugging */

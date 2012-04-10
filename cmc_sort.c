@@ -613,6 +613,8 @@ int sample_sort( type			*buf,
                  int          n_samples )
 {
 
+	double tmpTimeStart = timeStartSimple();
+
 	int    			i;
 	int 				procs, myid;
 	int  	  		 	dataSize;
@@ -792,8 +794,11 @@ int sample_sort( type			*buf,
 */
 
 	qsort(resultBuf, total_recv_count, sizeof(type), compare_type);
+	timeEndSimple(tmpTimeStart, &t_sort_only);
 
+	tmpTimeStart = timeStartSimple();
 	load_balance(resultBuf, buf, expected_count, actual_count, myid, procs, dataType, commgroup);
+	timeEndSimple(tmpTimeStart, &t_load_bal);
 
 	*local_N = actual_count[myid];
 
@@ -953,25 +958,6 @@ void load_balance( 	type 				*inbuf,
 	free(actual_cum_count);
 	free(expected_cum_count);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif
 /*
