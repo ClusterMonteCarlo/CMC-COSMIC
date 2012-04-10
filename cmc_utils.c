@@ -197,7 +197,7 @@ void free_arrays(void){
 	free(mass_pc); free(densities_r); free(no_star_r); 
 	free(ke_rad_r); free(ke_tan_r); free(v2_rad_r); free(v2_tan_r);
 	free(ave_mass_r); free(mass_r);
-	free(star); //free(binary);
+	free(star); free(binary);
 
 	/* MPI Stuff */
 #ifdef USE_MPI

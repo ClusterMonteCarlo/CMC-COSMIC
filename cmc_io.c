@@ -1790,41 +1790,61 @@ void mpi_files_merge(void)
 {
 #ifdef USE_MPI
 	int i;
+	char file_ext[64];
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	// Total of 21 files. And variable no.of files for lagrad***.dat, core.dat
-	// Later try to do these in parallel.
-	if(myid==0)
-	{
-		char file_ext[64];
+	// Total of 22 files. Variable no.of files for lagrad***.dat, core.dat
+	// Using a simple brute force parallelization.
+	if(0 % procs == myid)
 		cat_and_rm_files("cmc.parsed");
+	if(1 % procs == myid)
 		cat_and_rm_files("lagrad.dat");
+	if(2 % procs == myid)
 		cat_and_rm_files("dyn.dat");
+	if(3 % procs == myid)
 		cat_and_rm_files("lagrad_10_info.dat");
+	if(4 % procs == myid)
 		cat_and_rm_files("avemass_lagrad.dat");
+	if(5 % procs == myid)
 		cat_and_rm_files("nostar_lagrad.dat");
+	if(6 % procs == myid)
 		cat_and_rm_files("rho_lagrad.dat");
+	if(7 % procs == myid)
 		cat_and_rm_files("ke_rad_lagrad.dat");
+	if(8 % procs == myid)
 		cat_and_rm_files("ke_tan_lagrad.dat");
+	if(9 % procs == myid)
 		cat_and_rm_files("v2_rad_lagrad.dat");
+	if(10 % procs == myid)
 		cat_and_rm_files("v2_tan_lagrad.dat");
+	if(11 % procs == myid)
 		cat_and_rm_files("centmass.dat");
+	if(12 % procs == myid)
 		cat_and_rm_files("log");
+	if(13 % procs == myid)
 		cat_and_rm_files("bin.dat");
+	if(14 % procs == myid)
 		cat_and_rm_files("binint.log");
+	if(15 % procs == myid)
 		cat_and_rm_files("esc.dat");
+	if(16 % procs == myid)
 		cat_and_rm_files("collision.log");
+	if(17 % procs == myid)
 		cat_and_rm_files("tidalcapture.log");
+	if(18 % procs == myid)
 		cat_and_rm_files("semergedisrupt.log");
+	if(19 % procs == myid)
 		cat_and_rm_files("removestar.log");
+	if(20 % procs == myid)
 		cat_and_rm_files("relaxation.dat");
+	if(21 % procs == myid)
 		for(i=0; i<NO_MASS_BINS-1; i++){
 			sprintf(file_ext, "lagrad%d-%g-%g.dat", i, mass_bins[i], mass_bins[i+1]);
 			cat_and_rm_files(file_ext);
 		}
+	if(22 % procs == myid)
 		if (WRITE_EXTRA_CORE_INFO)
 			cat_and_rm_files("core.dat");
-	}
 	//MPI2: Is barrier needed? Probably not.
 	MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -1850,8 +1870,8 @@ void cat_and_rm_files(char* file_ext)
 void cat_and_rm_files(char* file_ext)
 {
    //char *filename_buf, temp[150];
-	char* filename_buf = (char*)malloc(25 * procs * sizeof(char)); //25 is assumed to be the worst case length of a filename including outprefix.
-	char* cmd = (char*)malloc(25 * procs * sizeof(char));
+	char* filename_buf = (char*)malloc(40 * procs * sizeof(char)); //40 is assumed to be the worst case length of a filename including outprefix.
+	char* cmd = (char*)malloc(40 * procs * sizeof(char));
    int i;
 
    sprintf(filename_buf, "%s0.%s ", outprefix_bak, file_ext);

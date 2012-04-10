@@ -69,7 +69,8 @@ n this case
 complexity would be N * nprocs. This function can be optimized, and also is
 unnecessary in the serial version and its effect should not be considered
 while measuring speedup. Need to think!
-
+Stefan suggested using 2 loops which will simplify this, but that is a lot of
+work!
 
 Mar 16 2012
 Bharath
@@ -80,3 +81,22 @@ Still some bugs that remain to be fixed include:
 2) free_arrays() -> memory free error occurs when binary array is freed.
 Currently commented out.
 3) gsl_rng_free() throws memory error.
+Stefan's suggestion: Fix by printing out the rng's value at many places, and
+see if it changes anywhere.
+
+Mar 16 2012
+Bharath
+---------------
+
+Changes: 
+1)Fixed a bug - tidally_strip_stars() was called after compute_intermediate.., 
+so stripped stars whose rnew values were set to INF were
+not updated to r from rnew. Changed the orded in which these 2 fns are called
+2)Fixed cat_and_rm_files to previous version which is apparently faster
+3)Added new version of sample sort with a cleaner implementation, and a better
+load balancing function that handles extremely imbalanced load which might be
+due to poor sampling.
+
+To do:
+1) See if cat_rm_files can be done in parallel instead of only by root
+2) Use parallel filesystem on Hopper, and may be on fugu

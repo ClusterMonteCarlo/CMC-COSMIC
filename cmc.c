@@ -469,7 +469,7 @@ int main(int argc, char *argv[])
 			(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
 
 	/* free RNG */
-	//gsl_rng_free(rng);
+	//gsl_rng_free(rng); //throws memory corruption error for the serial version.
 
 #ifdef USE_CUDA
 	cuCleanUp();
@@ -477,9 +477,8 @@ int main(int argc, char *argv[])
 
 	/* flush buffers before returning */
 	close_buffers();
-	//free_arrays();
+	free_arrays();
 
-/*
 #ifdef USE_MPI
 	free(mpiDisp);
 	free(mpiLen);
@@ -489,15 +488,15 @@ int main(int argc, char *argv[])
 #else
 	free(st); //commenting because it throws some error
 #endif
-*/
+
 	free(Start);
 	free(End);
 
-	//if (SEARCH_GRID)
-	//	search_grid_free(r_grid);
+	if (SEARCH_GRID)
+		search_grid_free(r_grid);
 
-	//if(zpars)
-	//	free(zpars);
+	if(zpars)
+		free(zpars);
 
 #ifdef DEBUGGING
 	g_hash_table_destroy(star_ids);

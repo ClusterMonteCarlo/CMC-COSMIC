@@ -436,6 +436,7 @@ double GetTimeStep(gsl_rng *rng) {
 /* removes tidally-stripped stars */
 void tidally_strip_stars(void) {
 	double phi_rtidal, phi_zero, gierszalpha;
+	double m, r, phi;
 	long i, j, k;
 	k = 0;
 	j = 0;
@@ -470,17 +471,29 @@ void tidally_strip_stars(void) {
 
 		for (i = 1; i <= clus.N_MAX_NEW; i++) 
 		{
+
+#ifdef USE_MPI
 			int g_i = get_global_idx(i);
+			m = star_m[g_i];
+			r = star_r[g_i];
+			phi = star_phi[g_i];
+#else
+			m = star[i].m;
+			r = star[i].r;
+			phi = star[i].phi;
+#endif
+
+
 			if (TIDAL_TREATMENT == 0){
 				/*radial cut off criteria*/
 
 				if (star[i].r_apo > Rtidal && star[i].rnew < 1000000) { 
-					dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star_m[g_i], star[i].E, star[i].binind);
+					dprintf("tidally stripping star with r_apo > Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, m, star[i].E, star[i].binind);
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
-					Eescaped += star[i].E * star_m[g_i] / clus.N_STAR;
-					Jescaped += star[i].J * star_m[g_i] / clus.N_STAR;
+					Eescaped += star[i].E * m / clus.N_STAR;
+					Jescaped += star[i].J * m / clus.N_STAR;
 
 					if (star[i].binind == 0) {
 						Eintescaped += star[i].Eint;
@@ -490,14 +503,14 @@ void tidally_strip_stars(void) {
 						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
 					}
 
-					DTidalMassLoss += star_m[g_i] / clus.N_STAR;
-					Etidal += star[i].E * star_m[g_i] / clus.N_STAR;
+					DTidalMassLoss += m / clus.N_STAR;
+					Etidal += star[i].E * m / clus.N_STAR;
 
 					/* logging */
 					fprintf(escfile,
 							"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
-							tcount, TotalTime, star_m[g_i],
-							star_r[g_i], star[i].vr, star[i].vt, star[i].r_peri,
+							tcount, TotalTime, m,
+							r, star[i].vr, star[i].vt, star[i].r_peri,
 							star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
 
 					if (star[i].binind) {
@@ -524,7 +537,7 @@ void tidally_strip_stars(void) {
 					   multiple times */
 					dprintf ("before SE: id=%ld k=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
 							star[i].id,i,star[i].se_k,star[i].se_mass,star[i].se_mt,star[i].se_radius,star[i].se_lum,star[i].se_mc,star[i].se_rc,
-							star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys,star_phi[g_i], star_r[g_i]);
+							star[i].se_menv,star[i].se_renv,star[i].se_ospin,star[i].se_epoch,star[i].se_tms,star[i].se_tphys, phi, r);
 
 					destroy_obj(i);
 				}
@@ -538,12 +551,12 @@ void tidally_strip_stars(void) {
 				gierszalpha = 1.5 - 3.0 * pow(log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR), 0.25);
 
 				if (star[i].E > gierszalpha * phi_rtidal && star[i].rnew < 1000000) {
-					dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, star_m[g_i], star[i].E, star[i].binind); 
+					dprintf("tidally stripping star with E > phi rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", i, star[i].id, m, star[i].E, star[i].binind); 
 					star[i].rnew = SF_INFINITY;	/* tidally stripped star */
 					star[i].vrnew = 0.0;
 					star[i].vtnew = 0.0;
-					Eescaped += star[i].E * star_m[g_i] / clus.N_STAR;
-					Jescaped += star[i].J * star_m[g_i] / clus.N_STAR;
+					Eescaped += star[i].E * m / clus.N_STAR;
+					Jescaped += star[i].J * m / clus.N_STAR;
 
 					if (star[i].binind == 0) {
 						Eintescaped += star[i].Eint;
@@ -553,14 +566,14 @@ void tidally_strip_stars(void) {
 						Eintescaped += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
 					}
 
-					DTidalMassLoss += star_m[g_i] / clus.N_STAR;
-					Etidal += star[i].E * star_m[g_i] / clus.N_STAR;
+					DTidalMassLoss += m / clus.N_STAR;
+					Etidal += star[i].E * m / clus.N_STAR;
 
 					/* logging */
 					fprintf(escfile,
 							"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
-							tcount, TotalTime, star_m[g_i],
-							star_r[g_i], star[i].vr, star[i].vt, star[i].r_peri,
+							tcount, TotalTime, m,
+							r, star[i].vr, star[i].vt, star[i].r_peri,
 							star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
 
 					if (star[i].binind) {
