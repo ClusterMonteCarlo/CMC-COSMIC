@@ -111,3 +111,5 @@ debugging a while today, but cant fix it. Need to be fixed later.
 Also, tidalmassloss values are not right in the output, check!
 A small portion of code in PrintFileOutput() has been commented out by me
 since it was throwing seg. fault. needs to be fixed later.
+Stefan also asked me long back to check how the new energy transfer functions,
+and to make some plot to check something. Now forgot what :)

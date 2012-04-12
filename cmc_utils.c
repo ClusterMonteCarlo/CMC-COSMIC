@@ -647,8 +647,8 @@ void mpi_ComputeEnergy(void)
 			Etotal.K += temp;
 		}
 */
-	if(myid==0)
-		printf("Etotal.tot=%.18g Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
+	//if(myid==0)
+	//	printf("Etotal.tot=%.18g Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
 }
 #endif
 
@@ -682,7 +682,7 @@ void ComputeEnergy(void)
 	Etotal.P *= 0.5;
 	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
 
-	printf("Etotal.tot=%.18g Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n", Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
+	//printf("Etotal.tot=%.18g Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n", Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
 }
 
 #ifdef USE_MPI
@@ -1947,6 +1947,15 @@ void set_global_vars1()
 	initial_total_mass = 1.0;
 	newstarid = 0;
 	cenma.E = 0.0;
+
+#ifdef USE_MPI
+	Eescaped_old = 0.0;
+	Jescaped_old = 0.0;
+	Eintescaped_old = 0.0;
+	Ebescaped_old = 0.0;
+	TidalMassLoss_old = 0.0;
+	Etidal_old = 0.0;
+#endif
 }
 
 void set_global_vars2()
@@ -2051,7 +2060,7 @@ void compute_energy_new()
 	Jescaped += Jescaped_old;
 	Eintescaped += Eintescaped_old;
 	Ebescaped += Ebescaped_old;
-	TidalMassLoss += TidalMassLoss_old;
+	//TidalMassLoss += TidalMassLoss_old;
 	Etidal += Etidal_old;
 
 	//MPI2: Tested! No errors.
@@ -2173,7 +2182,9 @@ void new_orbits_calculate()
 		//MPI2: Since max_r will be used only be the root node, hopefully the Bcast wont be reqd.
 		//MPI3: Should it be AllReduce?
 		MPI_Allreduce(MPI_IN_PLACE, &max_r, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);		
+		MPI_Allreduce(MPI_IN_PLACE, &TidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 
+		TidalMassLoss += TidalMassLoss_old;
 #else
 		OldTidalMassLoss = TidalMassLoss;
 		max_r = get_positions();

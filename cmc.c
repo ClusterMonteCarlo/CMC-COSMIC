@@ -147,12 +147,6 @@ int main(int argc, char *argv[])
 
 	/* compute energy initially */
 	star[0].E = star[0].J = 0.0;
-	Eescaped_old = 0.0;
-	Jescaped_old = 0.0;
-	Eintescaped_old = 0.0;
-	Ebescaped_old = 0.0;
-	TidalMassLoss_old = 0.0;
-	Etidal_old = 0.0;
 
 	compute_energy_new();
 

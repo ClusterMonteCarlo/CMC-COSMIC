@@ -443,7 +443,7 @@ void tidally_strip_stars(void) {
 	Etidal = 0.0;
 
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
-	
+
 #ifdef USE_MPI
 	if(myid==0)
 #endif
@@ -598,10 +598,13 @@ void tidally_strip_stars(void) {
 		}
 
 		j++;
-		TidalMassLoss += DTidalMassLoss;
 
 #ifdef USE_MPI
       MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#endif
+		TidalMassLoss += DTidalMassLoss;
+
+#ifdef USE_MPI
 		if(myid==0)
 #endif
 		{
@@ -616,22 +619,22 @@ void tidally_strip_stars(void) {
 
 #ifdef USE_MPI
 	//MPI3: Packing into array to optimize communication.
-	double buf_reduce[6];
+	double buf_reduce[5];
 	buf_reduce[0] = Eescaped;
 	buf_reduce[1] = Jescaped;
 	buf_reduce[2] = Eintescaped;
 	buf_reduce[3] = Ebescaped;
-	buf_reduce[4] = TidalMassLoss;
-	buf_reduce[5] = Etidal;
+	//buf_reduce[4] = TidalMassLoss;
+	buf_reduce[4] = Etidal;
 
-	MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 6, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 5, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 	Eescaped = buf_reduce[0];
 	Jescaped = buf_reduce[1];
 	Eintescaped = buf_reduce[2];
 	Ebescaped = buf_reduce[3];
-	TidalMassLoss = buf_reduce[4];
-	Etidal = buf_reduce[5];
+	//TidalMassLoss = buf_reduce[4];
+	Etidal = buf_reduce[4];
 #endif
 }
 
