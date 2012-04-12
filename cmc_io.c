@@ -41,7 +41,7 @@ void print_results(void){
 #endif
 	{
 		PrintLogOutput();
-		//PrintFileOutput();
+		PrintFileOutput();
 		fflush(NULL);
 	}
 }
@@ -184,10 +184,10 @@ void PrintLogOutput(void)
 
 	gprintf("Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
 	fprintf(logfile, "Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
-	
+
 	gprintf("Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
 	fprintf(logfile, "Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
-	
+
 	gprintf("TidalMassLoss=%g\n", TidalMassLoss);
 	fprintf(logfile, "TidalMassLoss=%g\n", TidalMassLoss);
 	
@@ -212,7 +212,11 @@ void PrintFileOutput(void) {
 	int *multimassr_empty  = (int *) malloc((NO_MASS_BINS-1)*sizeof(int));
 
 	/* print useful headers */
+#ifdef USE_MPI
+	if (tcount == 1 && myid == 0) {
+#else
 	if (tcount == 1) {
+#endif
 		fprintf(lagradfile, "# Lagrange radii [code units]\n");
 		fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
 		fprintf(no_star_file, "# Number of stars within Lagrange radii [dimensionless]\n");
@@ -316,7 +320,11 @@ void PrintFileOutput(void) {
 
 	/* information on the central BH */
 	/* print useful header */
+#ifdef USE_MPI
+	if (tcount == 1 && myid == 0) {
+#else
 	if (tcount == 1) {
+#endif
 		fprintf(centmass_file, "# Information on central black hole [code units unless otherwise noted]\n");
 		fprintf(centmass_file, "#1:t #2:cenma.m #3:Dt #4:rho_core #5:Etotal.tot #6:Etotal.K #7:Etotal.P\n");
 	}
@@ -325,7 +333,11 @@ void PrintFileOutput(void) {
 	
 	/* output Time,N_MAX,TotalE,TotalKE,TotalPE,Mtotal */
 	/* print useful header */
+#ifdef USE_MPI
+	if (tcount == 1 && myid == 0) {
+#else
 	if (tcount == 1) {
+#endif
 		fprintf(dynfile, "# Dynamical information [code units]\n");
 		fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN) #28.N_c_nb\n");
 		//Sourav:printing properties at 10 lagrange radii
@@ -415,12 +427,16 @@ void PrintFileOutput(void) {
 	n_single = 0;
 	n_binary = 0;
 	for (i=1; i<=clus.N_MAX; i++) {
+	//MPI3: Commenting out since it is throwing seg fault. Later needs to be fixed.
+	/*
 		if (star[i].binind > 0) {
 			n_binary++;
 		} else {
 			n_single++;
 		}
+	*/
 	}
+
 	/* this is such a kludge: core_radius is not initialized on the first timestep */
 	if (n_single + n_binary == 0) {
 		fb = 0.0;
@@ -429,7 +445,11 @@ void PrintFileOutput(void) {
 	}
 	
 	/* print useful header */
+#ifdef USE_MPI
+	if (tcount == 1 && myid == 0) {
+#else
 	if (tcount == 1) {
+#endif
 		fprintf(binaryfile, "# Binary information [code units]\n");
 		fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
 	}
@@ -1325,9 +1345,18 @@ void close_buffers(void)
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		fclose(mlagradfile[i]);
 	}
-        if (WRITE_EXTRA_CORE_INFO) {
-          fclose(corefile);
-        }
+	if (WRITE_EXTRA_CORE_INFO) {
+		fclose(corefile);
+	}
+
+	//TEMPORARY
+#ifdef USE_MPI
+	if(myid==0)
+	{
+		fclose(fp_lagrad);
+		fclose(fp_log);
+	}
+#endif
 }
 
 /* trap signals */
@@ -1791,7 +1820,7 @@ void distr_bin_data()
 #endif
 }
 
-void mpi_files_merge(void)
+void mpi_merge_files(void)
 {
 #ifdef USE_MPI
 	int i;
@@ -1864,6 +1893,7 @@ void cat_and_rm_files(char* file_ext)
 	for( i = 0; i < procs; ++i )
 	{
 		sprintf(cmd, "cat %s%d.%s >> %s.%s", outprefix_bak, i, file_ext, outprefix_bak, file_ext);
+		dprintf("command is %s\n", cmd);
 		system( cmd );
 		sprintf(cmd, "rm %s%d.%s", outprefix_bak, i, file_ext);
 		system( cmd );
@@ -1885,7 +1915,7 @@ void cat_and_rm_files(char* file_ext)
 
    sprintf( cmd, "cat %s> %s.%s", filename_buf, outprefix_bak, file_ext);
    system( cmd );
-   dprintf("MPI Files merging: lag file = %s\n", filename_buf);
+   dprintf("MPI Files merging: file = %s\n", filename_buf);
 
    for( i = 0; i < procs; ++i )
    {
@@ -1894,4 +1924,85 @@ void cat_and_rm_files(char* file_ext)
    }
 	//free(filename_buf);
 	//free(cmd);
+}
+
+void save_root_files()
+{
+#ifdef USE_MPI
+	int i;
+	char file_ext[64];
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	if(myid==0)
+	{
+		save_root_files_helper("cmc.parsed");
+		save_root_files_helper("lagrad.dat");
+		save_root_files_helper("dyn.dat");
+		save_root_files_helper("lagrad_10_info.dat");
+		save_root_files_helper("avemass_lagrad.dat");
+		save_root_files_helper("nostar_lagrad.dat");
+		save_root_files_helper("rho_lagrad.dat");
+		save_root_files_helper("ke_rad_lagrad.dat");
+		save_root_files_helper("ke_tan_lagrad.dat");
+		save_root_files_helper("v2_rad_lagrad.dat");
+		save_root_files_helper("v2_tan_lagrad.dat");
+		save_root_files_helper("centmass.dat");
+		save_root_files_helper("log");
+		save_root_files_helper("bin.dat");
+		save_root_files_helper("binint.log");
+		save_root_files_helper("esc.dat");
+		save_root_files_helper("collision.log");
+		save_root_files_helper("tidalcapture.log");
+		save_root_files_helper("semergedisrupt.log");
+		save_root_files_helper("removestar.log");
+		save_root_files_helper("relaxation.dat");
+		for(i=0; i<NO_MASS_BINS-1; i++){
+			sprintf(file_ext, "lagrad%d-%g-%g.dat", i, mass_bins[i], mass_bins[i+1]);
+			save_root_files_helper(file_ext);
+		}
+		if (WRITE_EXTRA_CORE_INFO)
+			save_root_files_helper("core.dat");
+		//MPI2: Is barrier needed? Probably not.
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+#endif
+}
+
+void save_root_files_helper(char* file_ext)
+{
+   char cmd[150];
+   int i;
+
+   sprintf(cmd, "cp %s0.%s %s.%s", outprefix_bak, file_ext, outprefix_bak, file_ext);
+	system( cmd );
+
+   for( i = 0; i < procs; ++i )
+   {
+      sprintf( cmd, "rm %s%d.%s &", outprefix_bak, i, file_ext);
+      system( cmd );
+   }
+}
+
+void print_small_output()
+{
+#ifdef USE_MPI
+	int i;
+	if(myid==0)
+	{
+		if (tcount == 1)
+		{
+			fp_lagrad = fopen("small.lagrad.dat", "w");
+			fp_log = fopen("small.log.dat", "w");
+			fprintf(fp_lagrad, "# Lagrange radii [code units]\n");
+			fprintf(fp_log, "# TotalTime\tDt\ttcount\tclus.N_MAX\tMtotal\tEtotal.tot\n");
+		}
+
+		fprintf(fp_lagrad, "%ld\t%.16e\t", tcount, TotalTime);
+		for (i=0; i<MASS_PC_COUNT; i++)
+			fprintf(fp_lagrad, "%e\t", mass_r[i]);
+		fprintf(fp_lagrad, "\n");
+		
+		fprintf(fp_log, "%.8g\t%.8g\t%ld\t%ld\t%.8g\t%.8g\n", TotalTime, Dt, tcount, clus.N_MAX, Mtotal, Etotal.tot);
+	}
+#endif
 }

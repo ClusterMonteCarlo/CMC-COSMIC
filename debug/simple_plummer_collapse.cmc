@@ -6,4 +6,4 @@ MASS_BINS = 0.1,1.0,10.0,100.0,1000.0
 
 SAMPLE_SIZE = 1024 #No.of sample keys contributed by each proc. for sample sort - only applicable for MPI version.
 STELLAR_EVOLUTION = 1
-T_MAX_COUNT = 3
+T_MAX_COUNT = 30

@@ -147,6 +147,12 @@ int main(int argc, char *argv[])
 
 	/* compute energy initially */
 	star[0].E = star[0].J = 0.0;
+	Eescaped_old = 0.0;
+	Jescaped_old = 0.0;
+	Eintescaped_old = 0.0;
+	Ebescaped_old = 0.0;
+	TidalMassLoss_old = 0.0;
+	Etidal_old = 0.0;
 
 	compute_energy_new();
 
@@ -383,8 +389,6 @@ int main(int argc, char *argv[])
 		/* update variables, then print */
 		//update_vars();
 
-		tcount++;
-
 		calc_clusdyn_new();
 
 		//MPI2: Commenting out for MPI
@@ -416,6 +420,8 @@ int main(int argc, char *argv[])
 #endif
 */
 		print_results();
+		print_small_output();
+		tcount++;
 		timeEndSimple(tmpTimeStart, &t_oth);
 
 		/* take a snapshot, we need more accurate 
@@ -435,7 +441,8 @@ int main(int argc, char *argv[])
 	} /* End WHILE (time step iteration loop) */
 
 	tmpTimeStart = timeStartSimple();
-	mpi_files_merge();
+	//mpi_merge_files();
+	save_root_files();
 	timeEndSimple(tmpTimeStart, &t_filemer);
 
 	times(&tmsbuf);

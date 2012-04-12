@@ -474,6 +474,7 @@ long mpi_potential_calculate(void);
 long mpi_potential_calculate2(void);
 MPI_Comm inv_comm_create();
 #endif
+void print_small_output();
 
 /* Bharath: Timing Functions */ 
 double timeStartSimple();
@@ -523,7 +524,9 @@ void alloc_bin_buf();
 
 /* Function to handle I/O in parallel version */
 void cat_and_rm_files(char* file_ext);
-void mpi_files_merge();
+void mpi_merge_files();
+void save_root_files();
+void save_root_files_helper(char* file_ext);
 /* End */
 
 void comp_mass_percent(void);
@@ -617,7 +620,7 @@ int sample_sort_old( star_t        *starData,
 typedef star_t type;
 typedef double keyType;
 void remove_stripped_stars(type* buf, int* local_N);
-int sample_sort( type			*buf,
+int sample_sort( 	type			*buf,
 						int			*local_N,
 						MPI_Datatype dataType,
 						MPI_Comm    commgroup,

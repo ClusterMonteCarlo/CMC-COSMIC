@@ -573,7 +573,7 @@ int binary_search( type* buf, keyType r, int kmin, int kmax )
 
    if (getKey(&buf[kmin]) > r  || getKey(&buf[kmax]) < r)
       //printf("proc %d: r=%g is outside kmin=%g kmax=%g!!\n", myid, r, getKey(&buf[kmin]), getKey(buf[kmax]));
-      printf("r=%f is outside kmin=%f kmax=%f!!\n", r, getKey(&buf[kmin]), getKey(&buf[kmax]));
+      dprintf("r=%f is outside kmin=%f kmax=%f!!\n", r, getKey(&buf[kmin]), getKey(&buf[kmax]));
    if (getKey(&buf[kmin]) > r)
       return kmin;
    if (getKey(&buf[kmax]) < r)

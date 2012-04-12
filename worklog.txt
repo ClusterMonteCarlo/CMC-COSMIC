@@ -84,7 +84,7 @@ Currently commented out.
 Stefan's suggestion: Fix by printing out the rng's value at many places, and
 see if it changes anywhere.
 
-Mar 16 2012
+Apr 10 2012
 Bharath
 ---------------
 
@@ -100,3 +100,14 @@ due to poor sampling.
 To do:
 1) See if cat_rm_files can be done in parallel instead of only by root
 2) Use parallel filesystem on Hopper, and may be on fugu
+
+
+Apr 11 2012
+Bharath
+--------------
+File outputs dont work. For now, the corresponding function is commented out
+in print_results(). If uncommented, throws seg fault. no clue why! I tried
+debugging a while today, but cant fix it. Need to be fixed later.
+Also, tidalmassloss values are not right in the output, check!
+A small portion of code in PrintFileOutput() has been commented out by me
+since it was throwing seg. fault. needs to be fixed later.

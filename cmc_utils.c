@@ -1496,6 +1496,7 @@ void central_calculate(void)
 		rc_nb += sqr(rhoj[i] * star_r[i]);
 		central.m_ave += rhoj[i] * star_m[i] * madhoc;
 #else
+      central.v_rms += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
 		central.rc += rhoj[i] * star[i].r;
 		rc_nb += sqr(rhoj[i] * star[i].r);
 		central.m_ave += rhoj[i] * star[i].m * madhoc;
@@ -2050,7 +2051,7 @@ void compute_energy_new()
 	Jescaped += Jescaped_old;
 	Eintescaped += Eintescaped_old;
 	Ebescaped += Ebescaped_old;
-	//TidalMassLoss += TidalMassLoss_old;
+	TidalMassLoss += TidalMassLoss_old;
 	Etidal += Etidal_old;
 
 	//MPI2: Tested! No errors.
@@ -2173,30 +2174,9 @@ void new_orbits_calculate()
 		//MPI3: Should it be AllReduce?
 		MPI_Allreduce(MPI_IN_PLACE, &max_r, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);		
 
-//MPI3: I think this reduction is not needed here as it has been moved after tidally_strip_stars().
-/*
-		//MPI2: Packing into array to optimize communication.
-		double buf_reduce[6];
-		buf_reduce[0] = Eescaped;
-		buf_reduce[1] = Jescaped;
-		buf_reduce[2] = Eintescaped;
-		buf_reduce[3] = Ebescaped;
-		buf_reduce[4] = TidalMassLoss;
-		buf_reduce[5] = Etidal;
-
-		MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 6, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
-
-		Eescaped = buf_reduce[0];
-		Jescaped = buf_reduce[1];
-		Eintescaped = buf_reduce[2];
-		Ebescaped = buf_reduce[3];
-		TidalMassLoss = buf_reduce[4];
-		Etidal = buf_reduce[5];
-*/
 #else
-		/* this calls get_positions() */
+		OldTidalMassLoss = TidalMassLoss;
 		max_r = get_positions();
-		//tidally_strip_stars();
 #endif
 }
 

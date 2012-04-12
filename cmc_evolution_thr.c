@@ -442,12 +442,6 @@ void tidally_strip_stars(void) {
 	j = 0;
 	Etidal = 0.0;
 
-#ifdef USE_MPI
-	TidalMassLoss += TidalMassLoss_old;
-#else
-	OldTidalMassLoss = TidalMassLoss;
-#endif
-
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 	
 #ifdef USE_MPI
@@ -605,7 +599,9 @@ void tidally_strip_stars(void) {
 
 		j++;
 		TidalMassLoss += DTidalMassLoss;
+
 #ifdef USE_MPI
+      MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 		if(myid==0)
 #endif
 		{
@@ -615,12 +611,6 @@ void tidally_strip_stars(void) {
 					j, TidalMassLoss, DTidalMassLoss);
 		}
 
-#ifdef USE_MPI
-   //if(myid==0)
-      MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   //else
-   //   MPI_Allreduce(&DTidalMassLoss, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-#endif
 
 	} while (DTidalMassLoss > 0);
 
