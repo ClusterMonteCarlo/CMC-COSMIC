@@ -415,6 +415,10 @@ int main(int argc, char *argv[])
 */
 		print_results();
 		print_small_output();
+#ifdef USE_MPI
+		if(myid==0)
+#endif
+			print_snapshot_windows();
 		tcount++;
 		timeEndSimple(tmpTimeStart, &t_oth);
 

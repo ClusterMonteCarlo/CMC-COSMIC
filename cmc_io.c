@@ -49,23 +49,24 @@ void print_results(void){
 /*********** Output 2D/3D snapshots **************/
 void print_2Dsnapshot(void)
 {
+/*
 	long i, j;
 	j=0;
 	char outfile[100];
 	
 	if (SNAPSHOTTING) {
-		/* open file for 2D snapshot */
+		// open file for 2D snapshot 
 		sprintf(outfile, "%s.snap%04ld.dat.gz", outprefix, snap_num);
 		if ((snapfile = (FILE *) gzopen(outfile, "wb")) == NULL) {
 			eprintf("cannot create 2D snapshot file %s\n", outfile);
 			exit_cleanly(1);
 		}
 		
-		/* print useful header */
+		// print useful header 
 		gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
 		gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.star.phi\n");
 		
-		/* then print data */
+		// then print data 
 		for (i=1; i<=clus.N_MAX; i++) {
 			gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
 				 star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, 
@@ -96,9 +97,10 @@ void print_2Dsnapshot(void)
 		
 		gzclose(snapfile);
 		
-		/* global counter for snapshot output file */
+		// global counter for snapshot output file 
 		snap_num++;
 	}
+*/
 }
 
 void PrintLogOutput(void)
@@ -468,15 +470,16 @@ void PrintFileOutput(void) {
         }
 
 	/* also saves INITIAL snapshot (StepCount=0) */
+/*
 	if (TotalTime >= SNAPSHOT_DELTAT * StepCount) {
 		StepCount++;
-		print_2Dsnapshot();
+		//print_2Dsnapshot();
 		if (WRITE_STELLAR_INFO){
 			write_stellar_data();	
 		}
 	}
-
 	print_snapshot_windows();
+*/
 	free(multimassr_empty);
 }
 
@@ -1525,7 +1528,9 @@ void print_snapshot_windows(void) {
     if (total_time>= start+step_counter*step && total_time<=stop) {
       char outfile[100];
       sprintf(outfile, "%s.w%02i_snap%04d.dat.gz", outprefix, i+1, step_counter+1);
-      write_snapshot(outfile);
+      //write_snapshot(outfile);
+		print_denprof_snapshot(outfile);
+
       snapshot_window_counters[i]++;
       dprintf("Wrote snapshot #%i for time window %i (%s) at time %g %s.", step_counter+1, i+1, outfile, 
           total_time, SNAPSHOT_WINDOW_UNITS);
@@ -1987,12 +1992,17 @@ void print_small_output()
 {
 #ifdef USE_MPI
 	int i;
+	char filenm1[150], filenm2[150];
+
 	if(myid==0)
 	{
 		if (tcount == 1)
 		{
-			fp_lagrad = fopen("small.lagrad.dat", "w");
-			fp_log = fopen("small.log.dat", "w");
+			sprintf(filenm1, "%s.%s", outprefix_bak, "small.lagrad.dat");
+			sprintf(filenm2, "%s.%s", outprefix_bak, "small.log.dat");
+
+			fp_lagrad = fopen(filenm1, "w");
+			fp_log = fopen(filenm2, "w");
 			fprintf(fp_lagrad, "# Lagrange radii [code units]\n");
 			fprintf(fp_log, "# TotalTime\tDt\ttcount\tclus.N_MAX\tMtotal\tEtotal.tot\n");
 		}
@@ -2005,4 +2015,29 @@ void print_small_output()
 		fprintf(fp_log, "%.8g\t%.8g\t%ld\t%ld\t%.8g\t%.8g\n", TotalTime, Dt, tcount, clus.N_MAX, Mtotal, Etotal.tot);
 	}
 #endif
+}
+
+
+void print_denprof_snapshot(char* infile)
+{
+	//char filenm[150];
+	//sprintf(filenm, "%s.%s", outprefix, "small.denprof.dat");
+
+	//if(tcount == 1)
+	fp_denprof = fopen(infile, "w");
+
+	int i, j;
+	double m, den;
+	//fprintf(fp_denprof, "%ld\t", tcount);
+	for(i=1; i<clus.N_MAX-20; i+=20)
+	{
+		m=0;
+		for(j=i; j<i+20; j++)
+			m += star_m[j];
+
+		den = m * madhoc / (4 * PI * ( cub(star_r[i+19]) - cub(star_r[i]) ) / 3);
+		fprintf(fp_denprof, "%.16e\t%.16e\n", star_r[i+10], den);
+	}			
+	//fprintf(fp_denprof, "\n");
+	fclose(fp_denprof);
 }

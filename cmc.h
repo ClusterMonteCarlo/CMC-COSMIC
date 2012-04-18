@@ -475,6 +475,7 @@ long mpi_potential_calculate2(void);
 MPI_Comm inv_comm_create();
 #endif
 void print_small_output();
+void print_denprof_snapshot(char* infile);
 
 /* Bharath: Timing Functions */ 
 double timeStartSimple();

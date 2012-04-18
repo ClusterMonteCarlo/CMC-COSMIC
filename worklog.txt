@@ -113,3 +113,6 @@ A small portion of code in PrintFileOutput() has been commented out by me
 since it was throwing seg. fault. needs to be fixed later.
 Stefan also asked me long back to check how the new energy transfer functions,
 and to make some plot to check something. Now forgot what :)
+I just tested 953, and tested for 30 timesteps and 10^5 stars and the results
+printed on the screen match perfectly without any differences for each
+timestep till 30. Yay!!!
