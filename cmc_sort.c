@@ -552,6 +552,8 @@ void find_expected_count( int* expected_count, int N, int numprocs )
 keyType* sample(type *buf, keyType *sample_array, int N, int n_samples)
 {
 	//srand ( time(NULL) );
+	if(n_samples > N)
+		eprintf("Oversampling occurred! id = %d num samples = %d local no. of stars = %d", myid, n_samples, N);
 
 	int i;
 	for(i=1; i<=n_samples; i++)
