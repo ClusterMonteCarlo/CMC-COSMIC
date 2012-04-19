@@ -528,6 +528,8 @@ void cat_and_rm_files(char* file_ext);
 void mpi_merge_files();
 void save_root_files();
 void save_root_files_helper(char* file_ext);
+void rm_files();
+void rm_files_helper(char* file_ext);
 /* End */
 
 void comp_mass_percent(void);

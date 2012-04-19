@@ -1989,6 +1989,53 @@ void save_root_files_helper(char* file_ext)
 */
 }
 
+void rm_files()
+{
+#ifdef USE_MPI
+   int i;
+   char file_ext[64];
+
+   rm_files_helper("cmc.parsed");
+   rm_files_helper("lagrad.dat");
+   rm_files_helper("dyn.dat");
+   rm_files_helper("lagrad_10_info.dat");
+   rm_files_helper("avemass_lagrad.dat");
+   rm_files_helper("nostar_lagrad.dat");
+   rm_files_helper("rho_lagrad.dat");
+   rm_files_helper("ke_rad_lagrad.dat");
+   rm_files_helper("ke_tan_lagrad.dat");
+   rm_files_helper("v2_rad_lagrad.dat");
+   rm_files_helper("v2_tan_lagrad.dat");
+   rm_files_helper("centmass.dat");
+   rm_files_helper("log");
+   rm_files_helper("bin.dat");
+   rm_files_helper("binint.log");
+   rm_files_helper("esc.dat");
+   rm_files_helper("collision.log");
+   rm_files_helper("tidalcapture.log");
+   rm_files_helper("semergedisrupt.log");
+   rm_files_helper("removestar.log");
+   rm_files_helper("relaxation.dat");
+   for(i=0; i<NO_MASS_BINS-1; i++){
+      sprintf(file_ext, "lagrad%d-%g-%g.dat", i, mass_bins[i], mass_bins[i+1]);
+      rm_files_helper(file_ext);
+   }
+   if (WRITE_EXTRA_CORE_INFO)
+      rm_files_helper("core.dat");
+
+   //MPI2: Is barrier needed? Probably not.
+   MPI_Barrier(MPI_COMM_WORLD);
+#endif
+}
+
+void rm_files_helper(char* file_ext)
+{
+   char cmd[150];
+
+   sprintf(cmd, "rm %s%d.%s &", outprefix_bak, myid, file_ext);
+   system( cmd );
+}
+
 void print_small_output()
 {
 #ifdef USE_MPI

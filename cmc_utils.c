@@ -274,7 +274,7 @@ void mpi_set_velocities3(void){
 	}
 
 	if(Eexcess > 0)
-		printf("\nid=%d WARNING!!!!! -------> Excess = %g\n\n", myid, Eexcess);
+		printf("id=%d WARNING!!!!! -------> Excess = %g\n", myid, Eexcess);
 
 	Eexcess_prev = 0.0;
 	do {

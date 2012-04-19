@@ -441,6 +441,7 @@ int main(int argc, char *argv[])
 	tmpTimeStart = timeStartSimple();
 	//mpi_merge_files();
 	save_root_files();
+	rm_files();
 	timeEndSimple(tmpTimeStart, &t_filemer);
 
 	times(&tmsbuf);
