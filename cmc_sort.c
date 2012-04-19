@@ -266,21 +266,21 @@ int sample_sort_old( star_t        *starData,
 	/* local in-place sort */
 	qsorts(starData+1, *local_N);
 
-	printf("before stripping id = %d localN = %ld\n", myid, *local_N);
+	dprintf("before stripping id = %d localN = %ld\n", myid, *local_N);
 	// Fixing local_N to account for lost stars.
 	i = *local_N;
 	while(star[i].r == SF_INFINITY)
 	{
-		dprintf("stripped star found and removed.\n");
+		dmpiprintf("stripped star found and removed. i = %d id = %d from proc. %d, local_N = %ld \n", i, star[i].id, myid, *local_N);
 		zero_star(i); //Check with Stefan if this is needed.
 		(*local_N)--;
 		i--;
 	}
-	printf("after stripping id = %d localN = %ld\n", myid, *local_N);
+	dprintf("after stripping id = %d localN = %ld\n", myid, *local_N);
 
 	//find global total number of elements to be sorted in parallel
 	MPI_Allreduce(local_N, &global_N, 1, MPI_INT, MPI_SUM, commgroup);
-	dprintf("A total of %d stars to be sorted in parallel\n", global_N);
+	rootprintf("A total of %ld stars to be sorted in parallel\n", global_N);
 
 	//mpiFindIndicesCustom( global_N, 20, myid, &mpiBegin, &mpiEnd );
 	findLimits( global_N, 20 );
@@ -317,13 +317,13 @@ int sample_sort_old( star_t        *starData,
 	{
 		qsort( sampleKeyArray_all, procs*num_samples, sizeof(double), compare );
 
-		dprintf("Splitter array is: ");
+		//dprintf("Splitter array is: ");
 		for(i=0; i<procs-1; i++)
 		{
 			splitterArray[i] = sampleKeyArray_all[ (i+1) * num_samples - 1 ];
-			dprintf("%g ", splitterArray[i]);
+			//dprintf("%g ", splitterArray[i]);
 		}
-		dprintf("\n\n");
+		//dprintf("\n\n");
 	}
 
 	MPI_Bcast(splitterArray, procs-1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -370,16 +370,17 @@ int sample_sort_old( star_t        *starData,
 	for (i=1; i<procs; i++) total_recv_count += recv_count[i];
 
 	// Watch out! If the no.of stars after sort is very uneven, there is a possibility of it exceeding the allocated memore. In that case load_bal might have to be increased.
-	double load_bal = 2;
+	double load_bal = 4;
 	resultBuf = (star_t*) malloc((int)floor((double)expected_count[myid] * load_bal) * sizeof(star_t)); //The multiplying factor load_bal is for collecting data from neighbors fix load imbalance due to parallel sorting.
 	//resultBuf = (star_t*) malloc(total_recv_count * sizeof(star_t));
 	//dprintf("Allocating memory to receive %d stars on proc %d\n", (int)floor((double)expected_count[myid]*load_bal), myid);
-	dprintf("proc %d: local_N = %ld\n", myid, *local_N);
+	//dprintf("proc %d: local_N = %ld\n", myid, *local_N);
 
-	dprintf("Allocating memory to receive %d stars on proc %d\n", total_recv_count, myid);
+	dmpiprintf("Proc %d will receive: %d \t Ideal: %d\n", myid, send_count[myid]+total_recv_count, expected_count[myid]);
+	MPI_Barrier(commgroup);
 
-	for(i=0; i<procs; i++)
-		dprintf("proc %d:\tsend_count[%d] = %d\tsend_index[%d] = %d\trecv_count[%d] = %d \n", myid, i, send_count[i], i, send_index[i], i, recv_count[i]);
+	//for(i=0; i<procs; i++)
+		//dprintf("proc %d:\tsend_count[%d] = %d\tsend_index[%d] = %d\trecv_count[%d] = %d \n", myid, i, send_count[i], i, send_index[i], i, recv_count[i]);
 
 	/* allocate asynchronous I/O request and wait status */
 	sendStatus = (MPI_Status*)  malloc(2*procs* sizeof(MPI_Status));
@@ -422,7 +423,7 @@ int sample_sort_old( star_t        *starData,
 	/* wait till all asynchronous I/O done */
 	MPI_Waitall(2*procs, sendReq, sendStatus);
 
-	dprintf("New no.of stars in proc %d = %d\n", myid, total_recv_count);
+	//dprintf("New no.of stars in proc %d = %d\n", myid, total_recv_count);
 
 	/* merge sort might be faster */
 	qsorts(resultBuf, total_recv_count);
@@ -445,10 +446,7 @@ int sample_sort_old( star_t        *starData,
 		tmp2 = actual_cum_count[i];
 	}
 
-	dprintf("actual\t%d\t%d\t%d\t%d\t%d\t%d\n", myid, total_recv_count, actual_count[0], actual_count[1], actual_count[2], actual_count[3] );
-	if(myid==0)
-		dprintf("\nideal\t%d\t%d\t%d\t%d\t%d\t%d\n", myid, global_N, expected_count[0], expected_count[1], expected_count[2], expected_count[3]);
-
+	dmpiprintf("IDCHECK %d\n", myid);
 	if(myid != 0)
 	{
 		s_count_back = expected_cum_count[myid-1] - actual_cum_count[myid-1];
@@ -485,8 +483,8 @@ int sample_sort_old( star_t        *starData,
 	//dprintf("%d sent_fwd = %d sent_back = %d recd_fwd = %ld recd_back = %ld\n", myid, s_count_fwd, s_count_back, count_back/sizeof(star_t), count_fwd/sizeof(star_t));
 	total_recv_count += r_count_fwd + r_count_back - s_count_fwd - s_count_back;
 
-	dprintf("%d sent_fwd = %d sent_back = %d recd_fwd = %d recd_back = %d\n", myid, s_count_fwd, s_count_back, r_count_fwd, r_count_back);
-	dprintf("%d total_recv_count = %d\n", myid, total_recv_count);
+	//dprintf("%d sent_fwd = %d sent_back = %d recd_fwd = %d recd_back = %d\n", myid, s_count_fwd, s_count_back, r_count_fwd, r_count_back);
+	//dprintf("%d total_recv_count = %d\n", myid, total_recv_count);
 
 	//MPI3: Copy everything back to star array - make sure enough memory is allocated for star in each node. Retain sentinel - 0th star.
 	for (i=0; i<total_recv_count; i++)
@@ -800,6 +798,7 @@ int sample_sort( type			*buf,
 	load_balance(resultBuf, buf, expected_count, actual_count, myid, procs, dataType, commgroup);
 	timeEndSimple(tmpTimeStart, &t_load_bal);
 
+	tmpTimeStart = timeStartSimple();
 	*local_N = actual_count[myid];
 
 	free(expected_count);
@@ -810,6 +809,7 @@ int sample_sort( type			*buf,
 	free(sendStatus);
 	free(sendReq);
 	free(actual_count);
+	timeEndSimple(tmpTimeStart, &t_sort_only);
 
 	return global_N;
 }

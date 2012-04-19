@@ -384,9 +384,11 @@ void PrintFileOutput(void) {
 					TotalTime, Dt, tcount, n_10, m_10, n_sing_10, m_sing_10, n_bin_10, m_bin_10, r_10, rho_10);
 	}
 
+	//MPI3: Commenting out since it is throwing seg fault. Later needs to be fixed.
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
 	   whereas N_b only counts EXISTING BOUND binaries. */
 	/* calculate core binary fraction */
+/*
 	n_single = 0;
 	n_binary = 0;
 	//Sourav:initialize nb core properties
@@ -411,7 +413,7 @@ void PrintFileOutput(void) {
 	}
 	N_core_binary_nb = n_binary_nb;
 	
-	/* this is such a kludge: core_radius is not initialized on the first timestep */
+	// this is such a kludge: core_radius is not initialized on the first timestep
 	if (n_single + n_binary == 0) {
 		fb_core = 0.0;
 	} else {
@@ -425,28 +427,25 @@ void PrintFileOutput(void) {
 		fb_core_nb = ((double) n_binary_nb)/((double) (n_single_nb + n_binary_nb));
 	}
 	
-	/* calculate overall binary fraction */
+	// calculate overall binary fraction
 	n_single = 0;
 	n_binary = 0;
 	for (i=1; i<=clus.N_MAX; i++) {
-	//MPI3: Commenting out since it is throwing seg fault. Later needs to be fixed.
-	/*
 		if (star[i].binind > 0) {
 			n_binary++;
 		} else {
 			n_single++;
 		}
-	*/
 	}
 
-	/* this is such a kludge: core_radius is not initialized on the first timestep */
+	// this is such a kludge: core_radius is not initialized on the first timestep
 	if (n_single + n_binary == 0) {
 		fb = 0.0;
 	} else {
 		fb = ((double) n_binary)/((double) (n_single + n_binary));
 	}
 	
-	/* print useful header */
+	// print useful header
 #ifdef USE_MPI
 	if (tcount == 1 && myid == 0) {
 #else
@@ -455,7 +454,7 @@ void PrintFileOutput(void) {
 		fprintf(binaryfile, "# Binary information [code units]\n");
 		fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
 	}
-	/* print data */
+	// print data
 	fprintf(binaryfile,
 		"%.6g %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %.8g %ld\n",
 		TotalTime, N_b, M_b, E_b, rh_single, 
@@ -468,6 +467,7 @@ void PrintFileOutput(void) {
           write_core_data(corefile, no_remnants);
           fprintf(corefile, "\n");
         }
+*/
 
 	/* also saves INITIAL snapshot (StepCount=0) */
 /*
@@ -1825,7 +1825,7 @@ void distr_bin_data()
 #endif
 }
 
-void mpi_merge_files(void)
+void mpi_merge_files()
 {
 #ifdef USE_MPI
 	int i;
@@ -1980,12 +1980,13 @@ void save_root_files_helper(char* file_ext)
 
    sprintf(cmd, "cp %s0.%s %s.%s", outprefix_bak, file_ext, outprefix_bak, file_ext);
 	system( cmd );
-
+/*
    for( i = 0; i < procs; ++i )
    {
       sprintf( cmd, "rm %s%d.%s &", outprefix_bak, i, file_ext);
       system( cmd );
    }
+*/
 }
 
 void print_small_output()

@@ -2262,9 +2262,11 @@ void pre_sort_comm()
 void qsorts_new(void)
 {
 #ifdef USE_MPI
+	double tmpTimeStart = timeStartSimple();
 	MPI_Datatype startype;
 	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
 	MPI_Type_commit( &startype );
+	timeEndSimple(tmpTimeStart, &t_sort_only);
 /*
 	clus.N_MAX = sample_sort_old(star,
 									&clus.N_MAX_NEW,
@@ -2272,11 +2274,14 @@ void qsorts_new(void)
 									MPI_COMM_WORLD,
 									SAMPLESIZE);
 */
+	int temp = (int)clus.N_MAX_NEW; //to avoid incompatible pointer type warning
 	clus.N_MAX = sample_sort(	star+1,
-                					&clus.N_MAX_NEW,
+                					&temp,
+                					//&clus.N_MAX_NEW,
                 					startype,
                 					MPI_COMM_WORLD,
                 					SAMPLESIZE	);
+	clus.N_MAX_NEW = temp;
 
 	//MPI_Type_free(startype);
 #else

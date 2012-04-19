@@ -827,6 +827,9 @@ void write_snapshot(char *filename);
 
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 
+#define dmpiprintf(args...) if (USE_MPI) { fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args); }
+#define rootprintf(args...) if (debug) {if(myid == 0) { fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args); }}
+
 #ifdef USE_MPI
 #define wprintf(args...) { if(myid==0) { fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}}
 #else

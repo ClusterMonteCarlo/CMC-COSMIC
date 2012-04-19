@@ -1,16 +1,17 @@
 # required parameters
 GAMMA = 0.1
-INPUT_FILE = ~/cmc/cmc-mpi/debug/simple_plummer_collapse.fits
+#INPUT_FILE = ~/cmc/cmc-mpi/debug/simple_plummer_collapse.fits
+INPUT_FILE = /scratch2/scratchdirs/bpa342/cmc/simple_plummer_collapse.fits
 MASS_PC = 0.00001,0.00003,0.0001,0.0002,0.0003,0.0004,0.0005,0.0008,0.001,0.0012,0.0014,0.0016,0.0018,0.002,0.0022,0.0024,0.0026,0.0028,0.003,0.0035,0.004,0.005,0.008,0.01,0.013,0.015,0.018,0.02,0.05,0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95,0.99
 MASS_BINS = 0.1,1.0,10.0,100.0,1000.0
 
-SAMPLE_SIZE = 1024 #No.of sample keys contributed by each proc. for sample sort - only applicable for MPI version.
-STELLAR_EVOLUTION = 1
-T_MAX_COUNT = 10
+SAMPLESIZE = 128 #No.of sample keys contributed by each proc. for sample sort - only applicable for MPI version.
+STELLAR_EVOLUTION = 0
+#T_MAX_COUNT = 150
 SNAPSHOTTING = 1
 SNAPSHOT_DELTAT = 1000000
 SNAPSHOT_DELTACOUNT = 1000000
 SNAPSHOT_CORE_COLLAPSE = 0
 SNAPSHOT_CORE_BOUNCE = 0
-SNAPSHOT_WINDOWS = 0.01,0.01,0.05
+SNAPSHOT_WINDOWS = 1.1,0.02,1.5
 SNAPSHOT_WINDOW_UNITS = Trel
