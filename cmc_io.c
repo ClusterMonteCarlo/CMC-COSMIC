@@ -1976,11 +1976,11 @@ void save_root_files()
 void save_root_files_helper(char* file_ext)
 {
    char cmd[150];
-   int i;
 
    sprintf(cmd, "cp %s0.%s %s.%s", outprefix_bak, file_ext, outprefix_bak, file_ext);
 	system( cmd );
 /*
+   int i;
    for( i = 0; i < procs; ++i )
    {
       sprintf( cmd, "rm %s%d.%s &", outprefix_bak, i, file_ext);

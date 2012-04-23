@@ -319,7 +319,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			star[k].vt = sqrt(sqr(v_new[1]) + sqr(v_new[2]));
 			star[kp].vr = vp_new[3];
 			star[kp].vt = sqrt(sqr(vp_new[1]) + sqr(vp_new[2]));
-			if(star[k].vr == 0 || star[k].vt == 0 || star[kp].vr == 0 || star[kp].vt == 0)
 
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);

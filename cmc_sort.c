@@ -271,7 +271,7 @@ int sample_sort_old( star_t        *starData,
 	i = *local_N;
 	while(star[i].r == SF_INFINITY)
 	{
-		dmpiprintf("stripped star found and removed. i = %d id = %d from proc. %d, local_N = %ld \n", i, star[i].id, myid, *local_N);
+		dmpiprintf("stripped star found and removed. i = %d id = %ld from proc. %d, local_N = %ld \n", i, star[i].id, myid, *local_N);
 		zero_star(i); //Check with Stefan if this is needed.
 		(*local_N)--;
 		i--;
@@ -280,7 +280,7 @@ int sample_sort_old( star_t        *starData,
 
 	//find global total number of elements to be sorted in parallel
 	MPI_Allreduce(local_N, &global_N, 1, MPI_INT, MPI_SUM, commgroup);
-	rootprintf("A total of %ld stars to be sorted in parallel\n", global_N);
+	rootprintf("A total of %d stars to be sorted in parallel\n", global_N);
 
 	//mpiFindIndicesCustom( global_N, 20, myid, &mpiBegin, &mpiEnd );
 	findLimits( global_N, 20 );

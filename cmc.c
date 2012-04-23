@@ -71,7 +71,6 @@ int main(int argc, char *argv[])
 	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
 
-	tmpTimeStart_full = timeStartSimple();
 	tmpTimeStart = timeStartSimple();
 	create_timing_files();
 
@@ -229,6 +228,7 @@ int main(int argc, char *argv[])
 	}
 #endif
 	timeEndSimple(tmpTimeStart, &t_init);
+	tmpTimeStart_full = timeStartSimple();
 
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
@@ -438,12 +438,6 @@ int main(int argc, char *argv[])
 */
 	} /* End WHILE (time step iteration loop) */
 
-	tmpTimeStart = timeStartSimple();
-	//mpi_merge_files();
-	save_root_files();
-	rm_files();
-	timeEndSimple(tmpTimeStart, &t_filemer);
-
 	times(&tmsbuf);
 	timeEndSimple(tmpTimeStart_full, &t_full);
 
@@ -452,20 +446,21 @@ int main(int argc, char *argv[])
 #endif
 	{
 		printf("******************************************************************************\n");
-		printf("Time Taken:\n------------------------\n%.4lf:\tInitialization\n%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\t \(%lf: Sort %lf: Load bal.\)\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n%.4lf:\tFiles Merge\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_init, t_dyn, t_se, t_orb, t_sort, t_sort_only, t_load_bal, t_ener, t_oth, t_filemer, t_full);
-
-/*
-		printf("%.4lf seconds of processing\n", t_full);
-		printf("%.4lf seconds took by initialization\n", t_init);
-		printf("%.4lf seconds took by sorting\n", t_sort);
-		printf("%.4lf seconds took by energy conservation\n", t_ener);
-		printf("%.4lf seconds took by dynamics\n", t_dyn);
-		printf("%.4lf seconds took by SE\n", t_se);
-		printf("%.4lf seconds took by orb. calc.\n", t_orb);
-		printf("%.4lf seconds took by others\n", t_oth);
-		printf("%.4lf seconds took by file merge\n", t_filemer);
-*/
+		printf("Time Taken:\n------------------------\n");
+		printf("%.4lf:\tInitialization\n------------------------\n", t_init);
+		printf("%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\t \(%lf: Sort %lf: Load bal.\)\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_dyn, t_se, t_orb, t_sort, t_sort_only, t_load_bal, t_ener, t_oth, t_full);
 	}
+
+	tmpTimeStart = timeStartSimple();
+	//mpi_merge_files();
+	save_root_files();
+	rm_files();
+	timeEndSimple(tmpTimeStart, &t_filemer);
+
+#ifdef USE_MPI
+	if(myid==0)
+#endif
+	printf("%.4lf:\tFiles Merge\n------------------------\n", t_filemer);
 
 	dprintf("Usr time = %.6e ", (double)
 			(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
