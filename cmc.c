@@ -31,6 +31,10 @@ int main(int argc, char *argv[])
 	double t_full=0.0, t_init=0.0, t_sort=0.0, t_ener=0.0, t_se=0.0, t_dyn=0.0, t_orb=0.0, t_oth=0.0, t_filemer=0.0;
 	t_sort_only=0.0;
 	t_load_bal=0.0;
+	t_sort1=0.0;
+	t_sort2=0.0;
+	t_sort3=0.0;
+	t_sort4=0.0;
 
 #ifdef USE_MPI
 	//MPI2: Some code from the main branch might have been removed in the MPI version. Please check.
@@ -442,20 +446,21 @@ int main(int argc, char *argv[])
 	timeEndSimple(tmpTimeStart_full, &t_full);
 
 #ifdef USE_MPI
-	if(myid==0)
+   if(myid==0)
 #endif
-	{
-		printf("******************************************************************************\n");
-		printf("Time Taken:\n------------------------\n");
-		printf("%.4lf:\tInitialization\n------------------------\n", t_init);
-		printf("%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\t \(%lf: Sort %lf: Load bal.\)\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_dyn, t_se, t_orb, t_sort, t_sort_only, t_load_bal, t_ener, t_oth, t_full);
-	}
+   {
+      printf("******************************************************************************\n");
+      printf("Time Taken:\n------------------------\n");
+      printf("%.4lf:\tInitialization\n------------------------\n", t_init);
+      printf("%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\t \(%lf: Sort %lf: Load bal.\)\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_dyn, t_se, t_orb, t_sort, t_sort_only, t_load_bal, t_ener, t_oth, t_full);
+		printf("%.4lf:\t%.4lf:\t%.4lf:\t%.4lf:\t\n------------------------\n", t_sort1, t_sort2, t_sort3, t_sort4);
+   }
 
-	tmpTimeStart = timeStartSimple();
-	//mpi_merge_files();
-	save_root_files();
-	rm_files();
-	timeEndSimple(tmpTimeStart, &t_filemer);
+   tmpTimeStart = timeStartSimple();
+   //mpi_merge_files();
+   save_root_files();
+   rm_files();
+   timeEndSimple(tmpTimeStart, &t_filemer);
 
 #ifdef USE_MPI
 	if(myid==0)

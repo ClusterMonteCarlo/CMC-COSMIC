@@ -110,8 +110,8 @@ _EXTERN_ int *disp, *len;
 FILE *ftest;
 //MPI2: Some variables to assist debugging
 char num[5],filename[20], tempstr[20];
-_EXTERN_ double t_sort_only;
-_EXTERN_ double t_load_bal;
+_EXTERN_ double t_sort_only, t_load_bal;
+_EXTERN_ double t_sort1, t_sort2, t_sort3, t_sort4;
 
 
 /* debugging */

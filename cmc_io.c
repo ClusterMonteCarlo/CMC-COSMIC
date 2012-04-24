@@ -2032,7 +2032,7 @@ void rm_files_helper(char* file_ext)
 {
    char cmd[150];
 
-   sprintf(cmd, "rm %s%d.%s &", outprefix_bak, myid, file_ext);
+   sprintf(cmd, "rm %s%d.%s", outprefix_bak, myid, file_ext);
    system( cmd );
 }
 

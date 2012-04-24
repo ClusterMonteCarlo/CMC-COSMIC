@@ -637,6 +637,7 @@ int sample_sort( type			*buf,
 	MPI_Comm_rank(commgroup, &myid);
 	MPI_Type_size(dataType, &dataSize);
 
+	double tmpTimeStart2 = timeStartSimple();
 	/* local in-place sort */
 	qsort( buf, *local_N, sizeof(type), compare_type );
 
@@ -658,6 +659,8 @@ int sample_sort( type			*buf,
 		for(i=0; i<procs; i++)
 			printf("expected_count[%d] = %d\n",i, expected_count[i]);
 */
+	timeEndSimple(tmpTimeStart2, &t_sort1);
+	tmpTimeStart2 = timeStartSimple();
 
 	/* Picking random/uniform samples and sending to root */
 	sampleKeyArray_local = (keyType*) malloc(n_samples * sizeof(keyType));
@@ -726,6 +729,8 @@ int sample_sort( type			*buf,
 
 	actual_count = (int*) malloc(procs * sizeof(int));
 	MPI_Allgather( &total_recv_count, 1, MPI_INT, actual_count, 1, MPI_INT, commgroup );
+	timeEndSimple(tmpTimeStart2, &t_sort2);
+	tmpTimeStart2 = timeStartSimple();
 
 	//Finding the maximum size of resultBuf to be allocated.
 	max_alloc_outbuf_size = 0;
@@ -793,7 +798,10 @@ int sample_sort( type			*buf,
 			printf("%f\n", getKey(&resultBuf[i]));	
 */
 
+	timeEndSimple(tmpTimeStart2, &t_sort3);
+	tmpTimeStart2 = timeStartSimple();
 	qsort(resultBuf, total_recv_count, sizeof(type), compare_type);
+	timeEndSimple(tmpTimeStart2, &t_sort4);
 	timeEndSimple(tmpTimeStart, &t_sort_only);
 
 	tmpTimeStart = timeStartSimple();
