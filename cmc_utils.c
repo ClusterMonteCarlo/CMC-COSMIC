@@ -492,7 +492,7 @@ long CheckStop(struct tms tmsbufref) {
 		if(myid==0)
 #endif
 			diaprintf("N_core < 100.0; terminating.\n");
-			//return (1);
+			return (1);
 		}
 	}
 
