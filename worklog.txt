@@ -116,3 +116,18 @@ and to make some plot to check something. Now forgot what :)
 I just tested 953, and tested for 30 timesteps and 10^5 stars and the results
 printed on the screen match perfectly without any differences for each
 timestep till 30. Yay!!!
+
+Apr 30 2012
+Bharath
+--------------
+
+In central_calculate(), there is a loop:
+Apparently the num ofcentral stars is 300. But in the parallel version, this
+seems to be calculating for all the stars! Possible BUGGGG???!!
+
+#ifdef USE_MPI
+   for (i=1; i<=mpiEnd-mpiBegin+1; i++) {
+#else
+   for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
+#endif
+
