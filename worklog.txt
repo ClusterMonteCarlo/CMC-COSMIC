@@ -131,3 +131,42 @@ seems to be calculating for all the stars! Possible BUGGGG???!!
    for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
 #endif
 
+
+Jun 20 2012
+Bharath
+--------------
+Starting to work on binaries and star creation...
+
+parser()
+For now, allocating memory for binaries same as before. Might need review
+later.
+
+load_fits_file_data()
+changing the serial code to read binary data from the cfd struct - ignoring
+the bs_index variable. Hopefully should not create a problem with the serial
+version.
+serial version to be TESTED.
+
+The binary array too seems to have a sentinel, not really, but the 0th element
+is never used (as per Stefan). So, the code is appropriately written. Have to
+be tested later for bugs.
+
+What earlier was thought as not required - calc_sigma_new() resurfaced with an
+error in dynamics apply, where there is a bisection in break_wide_binaries().
+So, including calc_sigma_new() back.
+
+However, the sigma value in the parallel version might not be same as the
+serial version (look at comments in function header). Should be kept in mind
+while doing comparison, also may be try to modify the serial version to mimic the parallel.
+
+The calc_sigma_r fn is called once during initialization (since it might be
+needed for calculating kT in timestep calculation), and once in dynamics where
+it is used in break_wide_binaries(). I noticed that this fn, as well as
+central_calc() were called before calc_potential, and they were using the values 
+mpiBegin and mpiEnd - this was a bug., so I moved the potential calc before this fn. 
+And also Start and End values were generated twice befoer and after get_star_data(), 
+fixed that too.
+
+TODO: change exit_cleanly() calls to take in argument as to which function
+called exit, and print it out before calling mpi_abort(). Or alternatively
+make sure there is an eprintf before every exit_cleanly() call.

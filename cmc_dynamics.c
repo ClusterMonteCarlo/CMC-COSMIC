@@ -26,15 +26,12 @@ void dynamics_apply(double dt, gsl_rng *rng)
 
 //OPT:Check if removing this changes results. If not, get rid of it.
 //MPI3: Removing calc_sigma as per Stefan's suggestion.
-/*
 #ifdef USE_MPI
 	mpi_calc_sigma_r();
 #else
 	//Calculate and store velocity dispersion profile for use with breaking binaries later. This can't be calculated later since the properties of the cluster members are changing with time.
 	calc_sigma_r();
 #endif
-*/
-
 
 #ifdef USE_MPI
 	//if(myid==0) 
@@ -239,23 +236,27 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				/* binary--binary */
 				print_interaction_status("BB");
 
+//printf(" binbin\n");
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "BB %g %g\n", TotalTime, rcm); */
 			} else if (star[k].binind > 0 || star[kp].binind > 0) {
 				/* binary--single */
 				print_interaction_status("BS");
 
+//printf(" binsingle\n");
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "BS %g %g\n", TotalTime, rcm); */
 			} else {
 				/* single--single */
 				print_interaction_status("SS");
 
+//printf(" collision\n");
 				/* do collision */
 				sscollision_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "SS %g %g\n", TotalTime, rcm); */
 			}
 		} else if (RELAXATION) {
+//printf(" Relaxation\n");
 			/* do two-body relaxation */
 			Trel12 = (PI/32.0) * cub(W) / ( ((double) clus.N_STAR) * n_local * sqr((mass_k+mass_kp)*madhoc) ) ;
 			beta = (PI/2.0) * sqrt(dt/Trel12);

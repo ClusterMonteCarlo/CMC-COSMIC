@@ -12,14 +12,54 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
+void load_binary_data(int d_k, int s_k) {
+		binary[d_k].id1 = cfd.bs_id1[s_k];
+		binary[d_k].id2 = cfd.bs_id2[s_k];
+		if (binary[d_k].id1 > newstarid) {
+			newstarid = binary[d_k].id1;
+		}
+		if (binary[d_k].id2 > newstarid) {
+			newstarid = binary[d_k].id2;
+		}
+		binary[d_k].rad1 = cfd.bs_Reff1[s_k];
+		binary[d_k].rad2 = cfd.bs_Reff2[s_k];
+		binary[d_k].m1 = cfd.bs_m1[s_k] * ((double) clus.N_STAR);
+		binary[d_k].m2 = cfd.bs_m2[s_k] * ((double) clus.N_STAR);
+		binary[d_k].a = cfd.bs_a[s_k];
+		binary[d_k].e = cfd.bs_e[s_k];
+		binary[d_k].inuse = 1;
+		/*Sourav: assign lifetimes to the binary components*/
+		if (STAR_AGING_SCHEME==1 ||STAR_AGING_SCHEME==3){
+			if (PREAGING){
+				binary[d_k].createtime_m1 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+				binary[d_k].createtime_m2 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			}else {
+				binary[d_k].createtime_m1 = 0.0;
+				binary[d_k].createtime_m2 = 0.0;
+			}
+			binary[d_k].lifetime_m1 = pow(10.0,9.921)*pow((binary[d_k].m1 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+			binary[d_k].lifetime_m2 = pow(10.0,9.921)*pow((binary[d_k].m2 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
+		}
+		else {
+			binary[d_k].createtime_m1 = 0.0;
+			binary[d_k].createtime_m2 = 0.0;
+			binary[d_k].lifetime_m1 = GSL_POSINF;
+			binary[d_k].lifetime_m2 = GSL_POSINF;
+		}
+}
+
 void load_fits_file_data(void)
 {
 	long i, g_i=0;
+	int b_i=1;
 
 	newstarid = 0;
 
 	/* set units */
 	units_set();
+
+	//MPI: Just to load the 0th element (never used) with whatever is in the cfd struct.
+	load_binary_data(0, 0);
 
 #ifdef USE_MPI
 	//MPI3: Copying only the data each process needs.
@@ -39,7 +79,19 @@ void load_fits_file_data(void)
 		star[i].rad = cfd.obj_Reff[g_i];
 		star[i].vr = cfd.obj_vr[g_i];
 		star[i].vt = cfd.obj_vt[g_i];
-		star[i].binind = cfd.obj_binind[g_i];
+
+      if(cfd.obj_binind[g_i])
+      {
+#ifdef USE_MPI
+         load_binary_data(b_i, cfd.obj_binind[g_i]);
+         star[i].binind = b_i;
+#else
+			load_binary_data(cfd.obj_binind[g_i], cfd.obj_binind[g_i]);
+			star[i].binind = cfd.obj_binind[g_i];
+#endif
+         b_i++;
+      }
+
 		star[i].m = cfd.obj_m[g_i] * ((double) clus.N_STAR);
 		star[i].r = cfd.obj_r[g_i];
 		/*Sourav: putting creation time and lifetime as a variable*/
@@ -59,6 +111,13 @@ void load_fits_file_data(void)
 			}
 		}
 	}
+
+#ifdef USE_MPI
+	num_bin = b_i-1;
+#else
+	if((b_i-1)!=cfd.NOBJ) eprintf("Binary number inconsistent: in binary array = %d, in cfd = %d\n", b_i, cfd.NOBJ);
+#endif
+
 #ifdef USE_MPI
 	//MPI3: All procs read data for global arrays.
 	for (i=0; i<=cfd.NOBJ+1; i++) {
@@ -66,44 +125,6 @@ void load_fits_file_data(void)
 		star_r[i] = cfd.obj_r[i];
 	}
 #endif
-
-	//MPI3: Ignoring binaries distribution for now.
-	for (i=0; i<=cfd.NBINARY; i++) {
-		g_i = cfd.bs_index[i];
-		binary[g_i].id1 = cfd.bs_id1[i];
-		binary[g_i].id2 = cfd.bs_id2[i];
-		if (binary[g_i].id1 > newstarid) {
-			newstarid = binary[g_i].id1;
-		}
-		if (binary[g_i].id2 > newstarid) {
-			newstarid = binary[g_i].id2;
-		}
-		binary[g_i].rad1 = cfd.bs_Reff1[i];
-		binary[g_i].rad2 = cfd.bs_Reff2[i];
-		binary[g_i].m1 = cfd.bs_m1[i] * ((double) clus.N_STAR);
-		binary[g_i].m2 = cfd.bs_m2[i] * ((double) clus.N_STAR);
-		binary[g_i].a = cfd.bs_a[i];
-		binary[g_i].e = cfd.bs_e[i];
-		binary[g_i].inuse = 1;
-		/*Sourav: assign lifetimes to the binary components*/
-		if (STAR_AGING_SCHEME==1 ||STAR_AGING_SCHEME==3){
-			if (PREAGING){
-				binary[g_i].createtime_m1 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-				binary[g_i].createtime_m2 = - pow(10.0,9.921)*pow(PREAGING_MASS,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-			}else {
-				binary[g_i].createtime_m1 = 0.0;
-				binary[g_i].createtime_m2 = 0.0;
-			}
-			binary[g_i].lifetime_m1 = pow(10.0,9.921)*pow((binary[g_i].m1 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-			binary[g_i].lifetime_m2 = pow(10.0,9.921)*pow((binary[g_i].m2 * units.mstar / MSUN),-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
-		}
-		else {
-			binary[g_i].createtime_m1 = 0.0;
-			binary[g_i].createtime_m2 = 0.0;
-			binary[g_i].lifetime_m1 = GSL_POSINF;
-			binary[g_i].lifetime_m2 = GSL_POSINF;
-		}
-	}
 
 	/* some assignments so the code won't break */
 #ifdef USE_MPI

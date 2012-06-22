@@ -101,30 +101,56 @@ int main(int argc, char *argv[])
 	//MPI3: Allocate N/procs + 10% for each node. Also allocate a separate buffer array for receiving ghost particles. File I/O, each process takes its slice of data. Also, assemble the global arrays - _m, and _r.
 	get_star_data(argc, argv, rng);
 
-	Start = (int *) calloc(procs, sizeof(int));
-	End = (int *) calloc(procs, sizeof(int));
-
-	findLimits( clus.N_MAX, 20 );
-
 	N_b_OLD = N_b;
 	N_b_NEW = N_b;
 
 	set_rng_states();
 
-	//MPI3: Need to check if this function and the sigma variable is reqd at all! Use the buffer for collecting ghost particles.
-	//MPI3: Ignoring for now. Parallelize after verifying if the variable is reqd at all.
-	//calc_sigma_new();
+	orbit_r = R_MAX;
+
+	calc_potential_new();
+
+	calc_sigma_new();
+
+#ifdef USE_MPI
+	int j;
+	strcpy(filename, "test_out_par");
+	strcpy(tempstr, filename);
+	sprintf(num, "%d", myid);
+	strcat(tempstr, num);
+	strcat(tempstr, ".dat");
+	for( i = 0; i < procs; i++ )
+	{
+		if(myid == i)
+		{
+			//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+			ftest = fopen( tempstr, "w" );
+			for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
+				fprintf(ftest, "%d\t%.18g\n", get_global_idx(j), sigma_array.r[j]);
+			fclose(ftest);
+		}
+	}
+	if(myid==0)
+	{
+		char process_str[30];
+		sprintf(process_str, "./process.sh %d", procs);
+		system(process_str);
+	}
+#else
+	int j;
+	strcpy(tempstr, "test_out_ser.dat");
+	ftest = fopen( tempstr, "w" );
+	for( j = 1; j <= clus.N_MAX; j++ )
+	fprintf(ftest, "%d\t%.18gn", j, sigma_array.r[j]);
+	fclose(ftest);
+#endif
 
 	/* calculate central quantities */
-	calc_central_new();
+	central_calculate();
 
 	/* print out binary properties to a file */
 	//MPI2: skipping  file outputs for now.
 	//print_initial_binaries();
-
-	orbit_r = R_MAX;
-
-	calc_potential_new();
 
 	//MPI2: Setting this because in the MPI version only _r is set, and will create problem while sorting.
 #ifndef USE_MPI
@@ -132,15 +158,18 @@ int main(int argc, char *argv[])
 	star[clus.N_MAX + 1].phi = 0.0;
 #endif
 
-	//MPI3: Temporarily avoiding binary stuff.
+	//MPI3: Most probably this wont be reqd.
+/*
 	if(N_b !=0)
 	{
 		alloc_bin_buf();
 
 		distr_bin_data();
 
-		bin_vars_calculate();
 	}
+*/
+
+	bin_vars_calculate();
 
 	/*
 		Skipping search grid for MPI
@@ -184,14 +213,13 @@ int main(int argc, char *argv[])
 #endif
 
 	//OPT: M_b E_b calculated twice? Check for redundancy.
-	if(N_b!=0)
-		update_vars();
+	update_vars();
 
 	times(&tmsbufref);
 
 	//OPT: Check for redundancy. Ask Stefan
 	/* calculate central quantities */
-	calc_central_new();
+	central_calculate();
 
 	/* can skip for MPI
 		if (WRITE_EXTRA_CORE_INFO) {
@@ -265,7 +293,7 @@ int main(int argc, char *argv[])
 #endif
 
 		/* calculate central quantities */
-		calc_central_new();
+		central_calculate();
 
 		//=========================================
 		//MPI3: COMPLETED PARALLELIZATION TILL HERE>

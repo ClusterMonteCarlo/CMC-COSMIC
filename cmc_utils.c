@@ -1122,28 +1122,25 @@ void free_ivector(int *v, long nl, long nh)
 /* update some important global variables */
 void update_vars(void)
 {
-	long i, j, k;
-	int g_i;
+	long i, k;
 	
 	/* update total number, mass, and binding energy of binaries in cluster */
 	N_b = 0;
 	M_b = 0.0;
 	E_b = 0.0;
 #ifdef USE_MPI
-	for (i=1; i<=clus.N_MAX_NEW; i++) 
-		g_i = get_global_idx(i);
+	for (i=1; i<=mpiEnd-mpiBegin+1; i++) 
 #else
 	for (i=1; i<=clus.N_MAX; i++)
 #endif
 	{
-		j = i;
-		k = star[j].binind;
+		k = star[i].binind;
 		if (k != 0) {
 			N_b++;
 #ifdef USE_MPI
-			M_b += star_m[g_i];
+			M_b += star_m[get_global_idx(i)];
 #else
-			M_b += star[j].m;
+			M_b += star[i].m;
 #endif
 			if (binary[k].inuse){
 				E_b += (binary[k].m1/clus.N_STAR) * (binary[k].m2/clus.N_STAR) / (2.0 * binary[k].a);
@@ -1666,21 +1663,6 @@ void central_calculate(void)
 	free(rhoj);
 }
 
-#ifdef USE_MPI
-void mpi_clusdyn_calculate(void)
-{
-	double m=0.0;
-	long k=1;
-
-	//MPI3: Potential parallelization possibolity for large N.
-	while (m < 0.5 * Mtotal) {
-		m += star_m[k] / clus.N_STAR;
-		k++;
-	}
-	clusdyn.rh = star_r[k];
-}
-#endif
-
 double local_kT(long si, int p) {
   int simin, simax, j;
   double mave, kT;
@@ -1771,6 +1753,21 @@ central_hard_binary(double ktmin, central_t old_cent) {
   
   return(cent);
 }
+
+#ifdef USE_MPI
+void mpi_clusdyn_calculate(void)
+{
+	double m=0.0;
+	long k=1;
+
+	//MPI3: Potential parallelization possibolity for large N.
+	while (m < 0.5 * Mtotal) {
+		m += star_m[k] / clus.N_STAR;
+		k++;
+	}
+	clusdyn.rh = star_r[k];
+}
+#endif
 
 /* calculate cluster dynamical quantities */
 void clusdyn_calculate(void)
@@ -1987,43 +1984,14 @@ void calc_sigma_new()
 #endif
 }
 
-void calc_central_new()
-{
-	//Step 2: stay on root node
-	//MPI2: Split into 2 functions: part 1 can be parallelized after making m and r arrays global. Part 2 has to be done on root node.
-#ifdef USE_MPI
-	//MPI2: Tested! Errors of 1e-14.
-	//mpi_central_calculate();
-
-	//if(myid==0)
-	central_calculate();
-
-/*
-	MPI_Bcast(&central, sizeof(central_t), MPI_BYTE, 0, MPI_COMM_WORLD);
-	v_core = central.v_rms;
-	rho_core = central.rho;
-	core_radius = central.rc;
-	N_core = 4.0 / 3.0 * PI * cub(core_radius) * (central.n / 2.0);
-	N_core_nb = 4.0 / 3.0 * PI * cub(rc_nb) * (central.n / 2.0);
-	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.m_ave);
-	rho_core_single = central.rho_sin;
-	rho_core_bin = central.rho_bin;
-*/
-#else
-	central_calculate();
-#endif
-}
-
 void bin_vars_calculate()
 {
-/* Calculates some global binary variables - total binary mass,and E. */
+	/* Calculates some global binary variables - total binary mass,and E. */
 	int i, j;
-	//MPI2: Binaries; Ignore.
-	//MPI3: Can be totally parallel.
 	M_b = 0.0;
 	E_b = 0.0;
 #ifdef USE_MPI
-	for (i=mpiBegin; i<=mpiEnd; i++)
+	for (i=1; i<=mpiEnd-mpiBegin+1; i++)
 #else
 	for (i=1; i<=clus.N_STAR; i++)
 #endif

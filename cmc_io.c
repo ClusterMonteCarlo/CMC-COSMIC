@@ -2068,6 +2068,7 @@ void print_small_output()
 
 void print_denprof_snapshot(char* infile)
 {
+#ifdef USE_MPI
 	//char filenm[150];
 	//sprintf(filenm, "%s.%s", outprefix, "small.denprof.dat");
 
@@ -2088,4 +2089,5 @@ void print_denprof_snapshot(char* infile)
 	}			
 	//fprintf(fp_denprof, "\n");
 	fclose(fp_denprof);
+#endif
 }

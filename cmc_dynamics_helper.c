@@ -1560,21 +1560,23 @@ void break_wide_binaries(void)
 #else
 */
 
-	//MPI3: Since N_MAX_NEW is set to mpiEnd, no change is need in the loop here. Yay!
+	//MPI3: Since N_MAX_NEW is set to mpiEnd-mpiBegin+1, no change is need in the loop here. Yay!
 	for (k=1; k<=clus.N_MAX_NEW; k++)
 	{
 		g_k = get_global_idx(k);
 
 		if (star[k].binind) {
+
 			/* binary index */
 			j = star[k].binind;
 			
 			/* get relative velocity from velocity dispersion at binary's radial position */
 #ifdef USE_MPI
-			W = 4.0 * sigma_r(star_r[g_k]) / sqrt(3.0 * PI);
+			W = 4.0 * sigma_array.sigma[g_k] / sqrt(3.0 * PI);
 #else
-			W = 4.0 * sigma_r(star[k].r) / sqrt(3.0 * PI);
+			W = 4.0 * sigma_array.sigma[k] / sqrt(3.0 * PI);
 #endif	
+//		printf("------->%d Im here %d %d %d\n", myid, k, star[k].binind, sigma_array.n);
 		
 			/* this is an order of magnitude estimate for the orbital speed */
 #ifdef USE_MPI
@@ -1636,109 +1638,146 @@ void mpi_calc_sigma_r(void)
 	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
 	double Mv2ave, Mave;
 	
-	N_LIMIT = clus.N_MAX;
+	N_LIMIT = mpiEnd-mpiBegin+1;
 	sigma_array.n = N_LIMIT;
+
+	struct ghost_pts {
+		double* prev;
+		double* next;
+	};
+
+	struct ghost_pts ghost_pts_vr;
+	struct ghost_pts ghost_pts_vt;
+
+	ghost_pts_vr.prev = (double *) malloc(p * sizeof(double));
+	ghost_pts_vr.next = (double *) malloc(p * sizeof(double));
+	ghost_pts_vt.prev = (double *) malloc(p * sizeof(double));
+	ghost_pts_vt.next = (double *) malloc(p * sizeof(double));
 	double* buf_v = (double *) malloc(2 * p * sizeof(double));
 
 	MPI_Status stat;
-	int mpiBeginLocal, mpiEndLocal;
-	mpiFindIndicesCustom( N_LIMIT, 20, myid, &mpiBeginLocal, &mpiEndLocal );
-	siminlast = mpiBeginLocal;//set to min index
 
 	/* MPI2: Communicating ghost particles */
 	/* Testing has been done. The parallel version is more accurate than the serial one since there are less round off errors because at nproc points among N_MAX, the actual sliding sum is calculated freshly rather than the way it is done in the serial version - adding and subtracting the extreme neighbors. Differences between serial and parallel version starts at N_MAX/nproc +1 th star and increases as expected.
 */
 
-
 	for(k=0; k<2*p; k++)
-	{
 		if( k < p )
-			buf_v[k] = star[mpiBeginLocal + k].vr;
+			buf_v[k] = star[1 + k].vr;
 		else
-			buf_v[k] = star[mpiBeginLocal + k - p].vt;
-	}
+			buf_v[k] = star[1 + k - p].vt;
 
-	//Replace with MPI_Sendrecv. Does not optimize, but just code becomes compact.
+	//OPT: Replace with MPI_Sendrecv. Does not optimize, but just code becomes compact.
 	MPI_Send(buf_v, 2 * p, MPI_DOUBLE, ( myid + procs - 1 ) % procs, 0, MPI_COMM_WORLD);
 	MPI_Recv(buf_v, 2 * p, MPI_DOUBLE, ( myid + 1) % procs, 0, MPI_COMM_WORLD, &stat);
 
 	for(k=0; k<2*p; k++)
-	{
 		if(myid != procs-1)
 		{
 			if( k < p )
-				star[mpiEndLocal + k + 1].vr = buf_v[k];
+				ghost_pts_vr.next[k] = buf_v[k];
 			else
-				star[mpiEndLocal + k - p + 1].vt = buf_v[k];
+				ghost_pts_vt.next[k-p] = buf_v[k];
 		}
-	}
 
 	/*****************/
 
 	for(k=0; k<2*p; k++)
-	{
 		if( k < p )
-			buf_v[k] = star[mpiEndLocal - p + k + 1].vr;
+			buf_v[k] = star[N_LIMIT - p + k + 1].vr;
 		else
-			buf_v[k] = star[mpiEndLocal - p + k + 1 - p].vt;
-	}
+			buf_v[k] = star[N_LIMIT - p + k + 1 - p].vt;
 
 	MPI_Send(buf_v, 2 * p, MPI_DOUBLE, ( myid + 1 ) % procs, 0, MPI_COMM_WORLD);
 	MPI_Recv(buf_v, 2 * p, MPI_DOUBLE, ( myid + procs - 1) % procs, 0, MPI_COMM_WORLD, &stat);
 
 	for(k=0; k<2*p; k++)
-	{
 		if( myid != 0 )
 		{
-		if( k < p )
-			 star[mpiBeginLocal - p + k].vr = buf_v[k];
-		else
-			 star[mpiBeginLocal - p + k - p].vt = buf_v[k];
+			if( k < p )
+				ghost_pts_vr.prev[k] = buf_v[k];
+			else
+				ghost_pts_vt.prev[k-p] = buf_v[k];
 		}
-	}
 
 	free(buf_v);
 	/* End of communication */
+	printf("%d HIIIIIII\n", myid);
+MPI_Barrier(MPI_COMM_WORLD);
 
+	siminlast = 1;//set to min index
 	if (myid!=0)
-		simaxlast = mpiBeginLocal - 1 - p;
+		simaxlast = - p;
 	else
-		simaxlast = mpiBeginLocal - 1;
+		simaxlast = 0;
 
 	Mv2ave = 0.0;
 	Mave = 0.0;
-	for (si=mpiBeginLocal; si<=mpiEndLocal; si++) {
+	for (si=1; si<=N_LIMIT; si++) {
+
+		int g_si = get_global_idx(si);
 		simin = si - p;
+		int g_simin = g_si - p;
 		simax = simin + (2 * p - 1);
-		if (simin < 1) {
+		int g_simax = g_simin + (2 * p - 1); 
+
+		if (g_simin < 1) {
 			simin = 1;
 			simax = simin + (2 * p - 1);
-		} else if (simax > N_LIMIT) {
+		} else if (g_simax > clus.N_MAX) {
 			simax = N_LIMIT;
 			simin = simax - (2 * p - 1);
 		}
 
+		double vr=0.0, vt=0.0;
 		// do sliding sum
 		for (k=siminlast; k<simin; k++) {
+			if (k < 1) {
+				vr = ghost_pts_vr.prev[k+p-1];
+				vt = ghost_pts_vt.prev[k+p-1];
+			} else {
+				vr = star[k].vr;
+				vt = star[k].vt;
+			}
+
+			int g_k = get_global_idx(k);
+
 			/*MPI2: Using the global mass array*/
-			Mv2ave -= star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-			Mave -= star_m[k] * madhoc;
+			Mv2ave -= star_m[g_k] * madhoc * (sqr(vr) + sqr(vt));
+			Mave -= star_m[g_k] * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
+			if (k > N_LIMIT) {
+				vr = ghost_pts_vr.next[k-N_LIMIT-1];
+				vt = ghost_pts_vt.next[k-N_LIMIT-1];
+			} else if (k < 1) {
+				vr = ghost_pts_vr.prev[k+p-1];
+				vt = ghost_pts_vt.prev[k+p-1];
+			} else {
+				vr = star[k].vr;
+				vt = star[k].vt;
+			}
+
+			int g_k = get_global_idx(k);
+
 			/*MPI2: Using the global mass array*/
-			Mv2ave += star_m[k] * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-			Mave += star_m[k] * madhoc;
+			Mv2ave += star_m[g_k] * madhoc * (sqr(vr) + sqr(vt));
+			Mave += star_m[g_k] * madhoc;
 		}
 		
 		/* store sigma (sigma is the 3D velocity dispersion) */
 		/*MPI2: Using the global r array*/
-		sigma_array.r[si] = star_r[si];
+		sigma_array.r[si] = star_r[g_si];
 		sigma_array.sigma[si] = sqrt(Mv2ave/Mave);
 		
 		siminlast = simin;
 		simaxlast = simax;
 	}
+	free(ghost_pts_vr.prev);
+	free(ghost_pts_vt.prev);
+	free(ghost_pts_vr.next);
+	free(ghost_pts_vt.next);
 }
 #endif
 
@@ -1759,39 +1798,52 @@ void calc_sigma_r(void)
 	Mv2ave = 0.0;
 	Mave = 0.0;
 
-	for (si=1; si<=N_LIMIT; si++) {
-		// determine appropriate bounds for summing
-		simin = si - p;
-		simax = simin + (2 * p - 1);
-		if (simin < 1) {
-			simin = 1;
+/*
+	for(i=0; i<procs; i++)
+	{
+		Mv2ave = 0.0;
+		Mave = 0.0;
+		siminlast = 1;//set to min index
+		if (myid!=0)
+			simaxlast = Start[i] - 1 - p;
+		else
+			simaxlast = Start[i] - 1;
+		for (si=Start[i]; si<=End[i]; si++) {
+*/
+		for (si=1; si<=N_LIMIT; si++) {
+			// determine appropriate bounds for summing
+			simin = si - p;
 			simax = simin + (2 * p - 1);
-		} else if (simax > N_LIMIT) {
-			simax = N_LIMIT;
-			simin = simax - (2 * p - 1);
-		}
+			if (simin < 1) {
+				simin = 1;
+				simax = simin + (2 * p - 1);
+			} else if (simax > N_LIMIT) {
+				simax = N_LIMIT;
+				simin = simax - (2 * p - 1);
+			}
 
-		// do sliding sum
-		for (k=siminlast; k<simin; k++) {
-			Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-			Mave -= star[k].m * madhoc;
-		}
+			// do sliding sum
+			for (k=siminlast; k<simin; k++) {
+				Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+				Mave -= star[k].m * madhoc;
+			}
 
-		for (k=simaxlast+1; k<=simax; k++) {
-			Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-			Mave += star[k].m * madhoc;
+			for (k=simaxlast+1; k<=simax; k++) {
+				Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
+				Mave += star[k].m * madhoc;
+			}
+			// don't need to average since one gets divided by the other
+			//Mv2ave /= (double) (2 * p);
+			//Mave /= (double) (2 * p);
+
+			/* store sigma (sigma is the 3D velocity dispersion) */
+			sigma_array.r[si] = star[si].r;
+			sigma_array.sigma[si] = sqrt(Mv2ave/Mave);
+
+			siminlast = simin;
+			simaxlast = simax;
 		}
-		// don't need to average since one gets divided by the other
-		//Mv2ave /= (double) (2 * p);
-		//Mave /= (double) (2 * p);
-		
-		/* store sigma (sigma is the 3D velocity dispersion) */
-		sigma_array.r[si] = star[si].r;
-		sigma_array.sigma[si] = sqrt(Mv2ave/Mave);
-		
-		siminlast = simin;
-		simaxlast = simax;
-	}
+//	}
 }
 
 double calc_average_mass_sqr(long index, long N_LIMIT) {
