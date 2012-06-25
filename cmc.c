@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 	strcpy(tempstr, "test_out_ser.dat");
 	ftest = fopen( tempstr, "w" );
 	for( j = 1; j <= clus.N_MAX; j++ )
-	fprintf(ftest, "%d\t%.18gn", j, sigma_array.r[j]);
+	fprintf(ftest, "%d\t%.18g\n", j, sigma_array.r[j]);
 	fclose(ftest);
 #endif
 
@@ -370,10 +370,6 @@ int main(int argc, char *argv[])
 		 * svrnew[], svtnew[] to sr[], svr[], svt[], and saves srOld[] 
 		 */
 		ComputeIntermediateEnergy();
-
-		//pre_sort_comm();
-
-		//collect_bin_data();		
 
 		timeEndSimple(tmpTimeStart, &t_oth);
 

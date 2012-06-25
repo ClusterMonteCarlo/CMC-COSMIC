@@ -1977,6 +1977,7 @@ void calc_sigma_new()
 {
 
 	//MPI2: mpi_calc_sigma_r(): Tests for precision: Biggest errors are ~ 1e-13. Might be because of catastrphic cancellation/rounding errors?. This might be due to the already imprecise but faster serial code . In a sense, the MPI version might be more precise, because for every processor, actual average is performed for the 1st local star which means errors dont carry over from the previous set of stars which are handled by another processor.
+	//MPI3: HASNT BEEN TESTED YET!
 #ifdef USE_MPI
 	mpi_calc_sigma_r();
 #else
@@ -2245,10 +2246,9 @@ void qsorts_new(void)
 	int temp = (int)clus.N_MAX_NEW; //to avoid incompatible pointer type warning
 	clus.N_MAX = sample_sort(	star+1,
                 					&temp,
-                					//&clus.N_MAX_NEW,
                 					startype,
                 					MPI_COMM_WORLD,
-                					SAMPLESIZE	);
+                					SAMPLESIZE );
 	clus.N_MAX_NEW = temp;
 
 	//MPI_Type_free(startype);

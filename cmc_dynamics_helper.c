@@ -173,10 +173,12 @@ long create_star(int idx, int dyn_0_se_1)
 		//MPI2: This assumes that SE will create stars only after dynamics. If this is violated at some point, there are going to be problems :)
 		if(dyn_0_se_1 == 0)
 			//if star is created by dynamics
-			created_star_dyn_node[findProcForIndex(get_global_idx(idx))]++;
+			//created_star_dyn_node[findProcForIndex(get_global_idx(idx))]++; //why is get_global_idx reqd in the serial version??
+			created_star_dyn_node[findProcForIndex(idx)]++;
 		else if(dyn_0_se_1 ==1)
 			//if star is created by stellar evolution
-			created_star_se_node[findProcForIndex(get_global_idx(idx))]++;
+			//created_star_se_node[findProcForIndex(get_global_idx(idx))]++;
+			created_star_se_node[findProcForIndex(idx)]++;
 		else
 		{
 			eprintf("Invalid argument to create_star()");
@@ -190,9 +192,9 @@ long create_star(int idx, int dyn_0_se_1)
 	i = clus.N_MAX_NEW; //+ 1;
 
 #ifdef USE_MPI
-	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
+	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
 #else
-	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(get_global_idx(idx)), dyn_0_se_1);
+	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
 #endif
 
 	/* initialize to zero for safety */
@@ -206,18 +208,11 @@ long create_binary(int idx, int dyn_0_se_1)
 {
 	long i, j;
 	
-#ifdef USE_MPI
-if(myid==0)
-#endif
-{
 	/* find first free binary */
 	i = 1;
 	while (i <= N_BIN_DIM && binary[i].inuse) {
 		i++;
 	}
-
-	if(i > N_b_OLD)
-		N_b_NEW = i;
 
 	/* problem! */
 	if (i > N_BIN_DIM) {
@@ -225,12 +220,11 @@ if(myid==0)
 		exit_cleanly(1);
 	}
 
-	dprintf("HOLE FOUND at %ld\t INSERTING STAR %d\n", i, idx);
-}
+	printf("HOLE FOUND at %ld\t INSERTING STAR %d\n", i, idx);
+
 #ifdef USE_MPI
-else
 	/* account for new binary */
-	i = ++N_b_NEW;
+	i = ++N_b_local;
 #endif
 	
 	/* initialize to zero for safety */
@@ -245,9 +239,9 @@ else
 	star[j].binind = i;
 	
 #ifdef USE_MPI
-	dprintf("Binary Created on node %d!! single star idx = %ld binind = %ld\n", myid, j, i);
+	printf("Binary Created on node %d!! single star idx = %ld binind = %ld\n", myid, j, i);
 #else
-	dprintf("Binary Created!! single star idx = %ld binind = %ld\n", j, i);
+	printf("Binary Created!! single star idx = %ld binind = %ld\n", j, i);
 #endif	
 
 	return(j);
@@ -1553,13 +1547,6 @@ void break_wide_binaries(void)
 	long j, k, g_k, knew, knewp;
 	double W, vorb, Eexcess=0.0, exc_ratio, nlocal, llocal;
 	
-	//MPI2: Might have to change this later to handle N_MAX_NEW
-/*
-#ifdef USE_MPI
-	for (k=mpiBegin; k<=mpiEnd; k++)
-#else
-*/
-
 	//MPI3: Since N_MAX_NEW is set to mpiEnd-mpiBegin+1, no change is need in the loop here. Yay!
 	for (k=1; k<=clus.N_MAX_NEW; k++)
 	{
@@ -1576,7 +1563,6 @@ void break_wide_binaries(void)
 #else
 			W = 4.0 * sigma_array.sigma[k] / sqrt(3.0 * PI);
 #endif	
-//		printf("------->%d Im here %d %d %d\n", myid, k, star[k].binind, sigma_array.n);
 		
 			/* this is an order of magnitude estimate for the orbital speed */
 #ifdef USE_MPI
@@ -1702,8 +1688,6 @@ void mpi_calc_sigma_r(void)
 
 	free(buf_v);
 	/* End of communication */
-	printf("%d HIIIIIII\n", myid);
-MPI_Barrier(MPI_COMM_WORLD);
 
 	siminlast = 1;//set to min index
 	if (myid!=0)
@@ -1761,13 +1745,13 @@ MPI_Barrier(MPI_COMM_WORLD);
 
 			int g_k = get_global_idx(k);
 
-			/*MPI2: Using the global mass array*/
+			/*MPI3: Using the global mass array*/
 			Mv2ave += star_m[g_k] * madhoc * (sqr(vr) + sqr(vt));
 			Mave += star_m[g_k] * madhoc;
 		}
 		
 		/* store sigma (sigma is the 3D velocity dispersion) */
-		/*MPI2: Using the global r array*/
+		/*MPI3: Using the global r array*/
 		sigma_array.r[si] = star_r[g_si];
 		sigma_array.sigma[si] = sqrt(Mv2ave/Mave);
 		

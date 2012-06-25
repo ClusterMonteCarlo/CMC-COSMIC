@@ -202,6 +202,8 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd){
 
 	cmc_malloc_fits_data_t(cfd);
 
+printf("----->>>%s\n", filename );
+
 	/* read in data columns */
 	nelem = cfd->NOBJ+2;
 	fits_read_col(fptr, TLONG, 1, frow, felem, nelem, &floatnull, cfd->obj_id, &anynull, &status);

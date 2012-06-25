@@ -96,7 +96,7 @@ _EXTERN_ struct rng_t113_state *st;
 _EXTERN_ binary_t *binary_buf;
 _EXTERN_ int *num_bin_buf;
 _EXTERN_ int size_bin_buf;
-_EXTERN_ int num_bin;
+_EXTERN_ int N_b_local;
 
 /* for newly created stars - mimicking rng */
 #ifndef USE_MPI

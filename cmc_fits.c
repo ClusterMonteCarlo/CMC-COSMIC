@@ -112,10 +112,9 @@ void load_fits_file_data(void)
 		}
 	}
 
-#ifdef USE_MPI
-	num_bin = b_i-1;
-#else
-	if((b_i-1)!=cfd.NOBJ) eprintf("Binary number inconsistent: in binary array = %d, in cfd = %d\n", b_i, cfd.NOBJ);
+	N_b_local = b_i-1;
+#ifndef USE_MPI
+	if((b_i-1)!=cfd.NBINARY) eprintf("Binary number inconsistent: in binary array = %d, in cfd = %d\n", b_i-1, cfd.NBINARY);
 #endif
 
 #ifdef USE_MPI
@@ -142,6 +141,8 @@ void load_fits_file_data(void)
 	cenma.m = star_m[0];
 	cenma.m_new= star_m[0];
 	star_m[0] = 0.0;
+	//MPI3: The way newstarid is assigned above, it wont be the same on all procs. Assuming it will be the sum of N_STAR and N_BINARY.
+	newstarid = clus.N_STAR+clus.N_BINARY;
 #else
 	cenma.m = star[0].m;
 	cenma.m_new= star[0].m;
@@ -154,4 +155,6 @@ void load_fits_file_data(void)
 		diaprintf("R_disrupt for a solar mass star in NB-units, Rdisr=%lg\n", 
 				pow(2.*cenma.m/MSUN*units.mstar, 1./3.)*RSUN/units.l);
 	};
+
+	printf("----->>HIIIIII newstarid=%d %ld\n",newstarid, clus.N_STAR+clus.N_BINARY);
 }

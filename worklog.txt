@@ -170,3 +170,12 @@ fixed that too.
 TODO: change exit_cleanly() calls to take in argument as to which function
 called exit, and print it out before calling mpi_abort(). Or alternatively
 make sure there is an eprintf before every exit_cleanly() call.
+
+TODO: Parallelize SE/Fortran rng.
+
+newstarid, and assiging ids to newstars is taken care of. newstarid is
+initialized by N_STAR+N_BINARY, otherwise, if followed the same procedure as
+in sequential code, we might have to do a reduction.
+
+Changed create_star() - didnt understand why get_global_idx() is called? :\
+!!!
