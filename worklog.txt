@@ -179,3 +179,12 @@ in sequential code, we might have to do a reduction.
 
 Changed create_star() - didnt understand why get_global_idx() is called? :\
 !!!
+
+IMPORTANT NOTE: Changed get_global_idx() such that it will return it will
+return Start[myid] + i - 1 for i=0. Earlier, used to return 0 for i=0. This
+change was made as I was encountering errors while rewriting calc_sigma_r()
+and the binning spanned over i=0th star and was returning mass as 0 as
+get_global_idx(0) was returnung the sentinel. This might affect other places
+where get_global_idx(i) is called with i=0. However I dont recollect any such
+places as I assume all loops start from 1 and not zero. However this is a
+point to keep in mind in case there are errors encountered later.

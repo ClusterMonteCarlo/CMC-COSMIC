@@ -2380,7 +2380,7 @@ void set_rng_states()
 
 int get_global_idx(int i)
 {
-	if(i == 0) return 0;
+//	if(i == 0) return 0;
 
 	if(myid == 0) return i;
 

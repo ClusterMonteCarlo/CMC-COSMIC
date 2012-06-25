@@ -1725,13 +1725,18 @@ void mpi_calc_sigma_r(void)
 			}
 
 			int g_k = get_global_idx(k);
-
 			/*MPI2: Using the global mass array*/
 			Mv2ave -= star_m[g_k] * madhoc * (sqr(vr) + sqr(vt));
 			Mave -= star_m[g_k] * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
+			int g_k = get_global_idx(k);
+if(myid==1 && si==1 && k<1)
+	printf("=====>%d %d %d %.18g %.18g %.18g %d %.18g\n",simaxlast+1, simax, k+p-1, ghost_pts_vr.prev[k+p-1], ghost_pts_vt.prev[k+p-1], star_m[g_k], g_k, madhoc);
+else if(myid==1 && si==1)
+	printf("=====>%d %d %d %.18g %.18g %.18g %d %.18g\n",simaxlast+1, simax, k+p-1, star[k].vr, star[k].vt, star_m[g_k], g_k, madhoc);
+
 			if (k > N_LIMIT) {
 				vr = ghost_pts_vr.next[k-N_LIMIT-1];
 				vt = ghost_pts_vt.next[k-N_LIMIT-1];
@@ -1742,8 +1747,6 @@ void mpi_calc_sigma_r(void)
 				vr = star[k].vr;
 				vt = star[k].vt;
 			}
-
-			int g_k = get_global_idx(k);
 
 			/*MPI3: Using the global mass array*/
 			Mv2ave += star_m[g_k] * madhoc * (sqr(vr) + sqr(vt));
@@ -1776,26 +1779,20 @@ void calc_sigma_r(void)
 	sigma_array.n = N_LIMIT;
 
 	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
-	siminlast = 1;//set to min index
-	simaxlast = 0;//set to min index - 1
-	
-	Mv2ave = 0.0;
-	Mave = 0.0;
 
-/*
+	int i;
 	for(i=0; i<procs; i++)
 	{
 		Mv2ave = 0.0;
 		Mave = 0.0;
-		siminlast = 1;//set to min index
-		if (myid!=0)
+
+		siminlast = Start[i];//set to min index
+		if (i!=0)
 			simaxlast = Start[i] - 1 - p;
 		else
 			simaxlast = Start[i] - 1;
+
 		for (si=Start[i]; si<=End[i]; si++) {
-*/
-		for (si=1; si<=N_LIMIT; si++) {
-			// determine appropriate bounds for summing
 			simin = si - p;
 			simax = simin + (2 * p - 1);
 			if (simin < 1) {
@@ -1827,7 +1824,7 @@ void calc_sigma_r(void)
 			siminlast = simin;
 			simaxlast = simax;
 		}
-//	}
+	}
 }
 
 double calc_average_mass_sqr(long index, long N_LIMIT) {

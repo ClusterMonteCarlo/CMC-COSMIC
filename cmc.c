@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 			//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
 			ftest = fopen( tempstr, "w" );
 			for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
-				fprintf(ftest, "%d\t%.18g\n", get_global_idx(j), sigma_array.r[j]);
+				fprintf(ftest, "%d\t%.18g\n", get_global_idx(j), sigma_array.sigma[j]);
 			fclose(ftest);
 		}
 	}
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 	strcpy(tempstr, "test_out_ser.dat");
 	ftest = fopen( tempstr, "w" );
 	for( j = 1; j <= clus.N_MAX; j++ )
-	fprintf(ftest, "%d\t%.18g\n", j, sigma_array.r[j]);
+	fprintf(ftest, "%d\t%.18g\n", j, sigma_array.sigma[j]);
 	fclose(ftest);
 #endif
 
