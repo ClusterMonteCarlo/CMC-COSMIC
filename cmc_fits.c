@@ -65,7 +65,8 @@ void load_fits_file_data(void)
 	//MPI3: Copying only the data each process needs.
 	for (i=0; i<=End[myid] - Start[myid]+1; i++) {
 		//MPI3: Getting global index to read only stars that belong to this processor.
-		g_i = get_global_idx(i);
+		if(i==0) g_i = 0;
+		else g_i = get_global_idx(i);
 #else
 	/* copy everything over from cfd */
 	for (i=0; i<=cfd.NOBJ+1; i++) {
@@ -155,6 +156,4 @@ void load_fits_file_data(void)
 		diaprintf("R_disrupt for a solar mass star in NB-units, Rdisr=%lg\n", 
 				pow(2.*cenma.m/MSUN*units.mstar, 1./3.)*RSUN/units.l);
 	};
-
-	printf("----->>HIIIIII newstarid=%d %ld\n",newstarid, clus.N_STAR+clus.N_BINARY);
 }

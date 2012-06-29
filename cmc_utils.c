@@ -2235,7 +2235,10 @@ void qsorts_new(void)
 	MPI_Datatype startype;
 	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
 	MPI_Type_commit( &startype );
-	timeEndSimple(tmpTimeStart, &t_sort_only);
+
+	MPI_Datatype binarytype;
+	MPI_Type_contiguous( sizeof(binary_t), MPI_BYTE, &binarytype );
+	MPI_Type_commit( &binarytype );
 /*
 	clus.N_MAX = sample_sort_old(star,
 									&clus.N_MAX_NEW,
@@ -2247,11 +2250,13 @@ void qsorts_new(void)
 	clus.N_MAX = sample_sort(	star+1,
                 					&temp,
                 					startype,
+                					binarytype,
                 					MPI_COMM_WORLD,
                 					SAMPLESIZE );
 	clus.N_MAX_NEW = temp;
 
 	//MPI_Type_free(startype);
+	timeEndSimple(tmpTimeStart, &t_sort_only);
 #else
 	/* Sorting stars by radius. The 0th star at radius 0 
 		and (N_STAR+1)th star at SF_INFINITY are already set earlier.
@@ -2380,7 +2385,10 @@ void set_rng_states()
 
 int get_global_idx(int i)
 {
+//encountering errors while rewriting calc_sigma_r() and the binning spanned over i=0th star and was returning mass as 0 as get_global_idx(0) was returnung the sentinel. Hope all loops start from i=1, otherwise there is going to be a problem.
 //	if(i == 0) return 0;
+//MPI3: In calc_sigma_new() this happens, so will get this danger warning once. Ignore.
+//if(i==0) printf("---------DANGER!!!!!!!!!!! get_global_idx(i) called with i=0\n");
 
 	if(myid == 0) return i;
 

@@ -1095,39 +1095,39 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	N_STAR_DIM = 2 + clus.N_STAR + 2 * clus.N_BINARY;
 	/* remember we can form binaries from tidal capture */
 	N_BIN_DIM = 2 + clus.N_STAR / 2 + clus.N_BINARY;
-	
 	/* safety factors, so we don't have to worry about memory management/garbage collection */
 	N_STAR_DIM = (long) floor(1.1 * ((double) N_STAR_DIM));
 	N_BIN_DIM = (long) floor(1.1 * ((double) N_BIN_DIM));
+
 	
 	/*********************************************/
 	/* allocation of memory for global variables */
 	/*********************************************/
 	
-	
-	//MPI3: Allocating only enough memory per processor.
-	N_STAR_DIM_OPT = 2 + clus.N_STAR / procs + 2 * clus.N_BINARY / procs;
-	N_STAR_DIM_OPT = (long) floor(1.1 * ((double) N_STAR_DIM_OPT));
-
 	/* allocate memory for velocity dispersion array */
 	sigma_array.n = 0;
 
-	/* the main star array containing all star parameters */
 #ifdef USE_MPI
+	//MPI3: Allocating only enough memory per processor.
+	N_STAR_DIM_OPT = 1 + clus.N_STAR / procs + 2 * clus.N_BINARY / procs;
+	N_BIN_DIM_OPT = clus.N_STAR / (2 * procs) + clus.N_BINARY / procs;
+	//MPI3: Giving a larger safety factor for the parallel version.
+	N_STAR_DIM_OPT = (long) floor(1.5 * ((double) N_STAR_DIM_OPT));
+	N_BIN_DIM_OPT = (long) floor(1.5 * ((double) N_BIN_DIM_OPT));
+
 	star = (star_t *) calloc(N_STAR_DIM_OPT, sizeof(star_t));
+	binary = (binary_t *) calloc(N_BIN_DIM_OPT, sizeof(binary_t));
 	sigma_array.r = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
 	sigma_array.sigma = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
 #else
+	/* the main star array containing all star parameters */
 	star = (star_t *) calloc(N_STAR_DIM, sizeof(star_t));
+	binary = (binary_t *) calloc(N_BIN_DIM, sizeof(binary_t));
 	sigma_array.r = (double *) calloc(N_STAR_DIM, sizeof(double));
 	sigma_array.sigma = (double *) calloc(N_STAR_DIM, sizeof(double));
 #endif
 
-	
-	/* the main binary array containing all binary parameters */
-	//MPI3: This binary array allocation should be postponed until load_fits_file_data() where memory is allocated based on how many binaries each processor receives, and thus reducing some memory wastage.
-	binary = (binary_t *) calloc(N_BIN_DIM, sizeof(binary_t));
-	
+
 	/* quantities calculated for various lagrange radii */
 	mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
 	ave_mass_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));

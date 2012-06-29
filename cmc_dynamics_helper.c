@@ -154,7 +154,8 @@ void destroy_binary(long i)
 {
 	/* set inuse flag to zero, and zero out all other properties for safety */
 	zero_binary(i);
-	dprintf("Binary %ld destroyed!\n", i);
+	printf("Binary %ld destroyed!\n", i);
+	N_b_local--;
 }
 
 /* create a new star, returning its index */
@@ -1732,10 +1733,6 @@ void mpi_calc_sigma_r(void)
 
 		for (k=simaxlast+1; k<=simax; k++) {
 			int g_k = get_global_idx(k);
-if(myid==1 && si==1 && k<1)
-	printf("=====>%d %d %d %.18g %.18g %.18g %d %.18g\n",simaxlast+1, simax, k+p-1, ghost_pts_vr.prev[k+p-1], ghost_pts_vt.prev[k+p-1], star_m[g_k], g_k, madhoc);
-else if(myid==1 && si==1)
-	printf("=====>%d %d %d %.18g %.18g %.18g %d %.18g\n",simaxlast+1, simax, k+p-1, star[k].vr, star[k].vt, star_m[g_k], g_k, madhoc);
 
 			if (k > N_LIMIT) {
 				vr = ghost_pts_vr.next[k-N_LIMIT-1];

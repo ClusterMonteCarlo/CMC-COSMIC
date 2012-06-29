@@ -110,40 +110,10 @@ int main(int argc, char *argv[])
 
 	calc_potential_new();
 
-	calc_sigma_new();
+	printf("----->>HIIIIII newstarid=%d %d\n",newstarid, clus.N_STAR+clus.N_BINARY);
+	MPI_Barrier(MPI_COMM_WORLD);
 
-#ifdef USE_MPI
-	int j;
-	strcpy(filename, "test_out_par");
-	strcpy(tempstr, filename);
-	sprintf(num, "%d", myid);
-	strcat(tempstr, num);
-	strcat(tempstr, ".dat");
-	for( i = 0; i < procs; i++ )
-	{
-		if(myid == i)
-		{
-			//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-			ftest = fopen( tempstr, "w" );
-			for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
-				fprintf(ftest, "%d\t%.18g\n", get_global_idx(j), sigma_array.sigma[j]);
-			fclose(ftest);
-		}
-	}
-	if(myid==0)
-	{
-		char process_str[30];
-		sprintf(process_str, "./process.sh %d", procs);
-		system(process_str);
-	}
-#else
-	int j;
-	strcpy(tempstr, "test_out_ser.dat");
-	ftest = fopen( tempstr, "w" );
-	for( j = 1; j <= clus.N_MAX; j++ )
-	fprintf(ftest, "%d\t%.18g\n", j, sigma_array.sigma[j]);
-	fclose(ftest);
-#endif
+	calc_sigma_new();
 
 	/* calculate central quantities */
 	central_calculate();
@@ -378,6 +348,48 @@ int main(int argc, char *argv[])
 
 		post_sort_comm();
 		timeEndSimple(tmpTimeStart, &t_sort);
+
+#ifdef USE_MPI
+		int j;
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+				ftest = fopen( tempstr, "w" );
+				for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
+				{
+					//if(star[j].binind>0)
+						//fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
+					if(star[j].binind>0)
+						fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", get_global_idx(j), star_r[j], star[j].id, binary[star[j].binind].id1, binary[star[j].binind].id2);
+//					else
+//					fprintf(ftest, "%ld\t%.18g\t%ld\n", j, star_r[j], star[j].id);
+				}
+				fclose(ftest);
+			}
+		}
+		if(myid==0)
+		{
+			char process_str[30];
+			sprintf(process_str, "./process.sh %d", procs);
+			system(process_str);
+		}
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+		{
+			if(star[i].binind>0)
+				fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
+		}
+		fclose(ftest);
+#endif
 
 		tmpTimeStart = timeStartSimple();
 		calc_potential_new();
@@ -753,6 +765,39 @@ return;
 			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
 			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
 		fclose(ftest);
+#endif
+
+#ifdef USE_MPI
+	int j;
+	strcpy(filename, "test_out_par");
+	strcpy(tempstr, filename);
+	sprintf(num, "%d", myid);
+	strcat(tempstr, num);
+	strcat(tempstr, ".dat");
+	for( i = 0; i < procs; i++ )
+	{
+		if(myid == i)
+		{
+			//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+			ftest = fopen( tempstr, "w" );
+			for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
+				fprintf(ftest, "%d\t%.18g\n", get_global_idx(j), sigma_array.sigma[j]);
+			fclose(ftest);
+		}
+	}
+	if(myid==0)
+	{
+		char process_str[30];
+		sprintf(process_str, "./process.sh %d", procs);
+		system(process_str);
+	}
+#else
+	int j;
+	strcpy(tempstr, "test_out_ser.dat");
+	ftest = fopen( tempstr, "w" );
+	for( j = 1; j <= clus.N_MAX; j++ )
+	fprintf(ftest, "%d\t%.18g\n", j, sigma_array.sigma[j]);
+	fclose(ftest);
 #endif
 
 */

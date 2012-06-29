@@ -626,15 +626,19 @@ void remove_stripped_stars(type* buf, int* local_N);
 int sample_sort( 	type			*buf,
 						int			*local_N,
 						MPI_Datatype dataType,
+						MPI_Datatype bDataType,
 						MPI_Comm    commgroup,
 						int			n_samples );
 void load_balance( 	type 				*inbuf,
 							type 				*outbuf,
+							binary_t			*b_inbuf,
+							binary_t			*b_outbuf,
 							int 				*expected_count, 
 							int				*actual_count, 
 							int 				myid, 
 							int 				procs, 
 							MPI_Datatype 	dataType, 	
+							MPI_Datatype 	b_dataType, 	
 							MPI_Comm			commgroup	);
 #endif
 

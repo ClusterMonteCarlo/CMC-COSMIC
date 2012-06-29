@@ -609,6 +609,7 @@ void remove_stripped_stars(type* buf, int* local_N)
 int sample_sort( type			*buf,
                  int	         *local_N,
                  MPI_Datatype dataType,
+                 MPI_Datatype b_dataType,
                  MPI_Comm     commgroup,
                  int          n_samples )
 {
@@ -722,10 +723,46 @@ int sample_sort( type			*buf,
 		send_count[i] = send_index[i+1] - send_index[i];
 
 	send_count[procs-1] = (*local_N) - send_index[procs-1]; // + 1;
+
 	MPI_Alltoall(send_count, 1, MPI_INT, recv_count, 1, MPI_INT, commgroup);
 
 	total_recv_count = 0;
 	for (i=0; i<procs; i++) total_recv_count += recv_count[i];
+
+
+	/***** Binary info *****/
+	int* b_send_index = (int*) malloc(procs * sizeof(int));
+	int* b_send_count = (int*) malloc(procs * sizeof(int));
+	int* b_recv_count = (int*) malloc(procs * sizeof(int));
+	binary_t* buf_bin = (binary_t*) malloc(N_BIN_DIM_OPT * sizeof(binary_t));
+	binary_t *b_recvBuf;
+	MPI_Status *b_sendStatus, *b_recvStatus;
+	MPI_Request	*b_sendReq, *b_recvReq;
+
+	int j, k=0, m=0;
+	for(i=0; i<procs;i++)
+	{
+		b_send_index[i] = k;
+		for(j=send_index[i]; j<send_index[i]+send_count[i]; j++)
+			if(buf[j].binind > 0 && binary[buf[j].binind].inuse)
+			{
+				if(binary[buf[j].binind].inuse) m++;
+				memcpy(&buf_bin[k], &binary[buf[j].binind], sizeof(binary_t));
+				k++;
+			}
+		b_send_count[i] = k - b_send_index[i];
+	}
+printf("---->%d %d\n", myid, m);
+
+	//Set binary array to zeros, if not might cause problems when new stars are created in the next timestep. So it's best to wipe out the older data.
+	memset (binary, 0, N_BIN_DIM_OPT * sizeof(binary_t));
+
+	MPI_Alltoall(b_send_count, 1, MPI_INT, b_recv_count, 1, MPI_INT, commgroup);
+
+	int b_total_recv_count = 0;
+	for (i=0; i<procs; i++) b_total_recv_count += b_recv_count[i];
+	/***** End binary info *****/
+
 
 	actual_count = (int*) malloc(procs * sizeof(int));
 	MPI_Allgather( &total_recv_count, 1, MPI_INT, actual_count, 1, MPI_INT, commgroup );
@@ -738,19 +775,24 @@ int sample_sort( type			*buf,
 		max_alloc_outbuf_size = (actual_count[i] > max_alloc_outbuf_size) ? actual_count[i] : max_alloc_outbuf_size;
 
 	/* allocate recv buffer */
-	// Watch out! If the no.of stars after sort is very uneven, there is a possibility of it exceeding the allocated memore. In that case load_bal might have to be increased.
-	//float load_imbal = 2;
-	//resultBuf = (type*) malloc((int)floor((*local_N) * load_imbal) * sizeof(type)); 
+	//MPI3: May be one could just use actual_count[myid] instead of max_alloc...?
 	resultBuf = (type*) malloc(max_alloc_outbuf_size * sizeof(type)); 
 
-	//for(i=0; i<procs; i++)
-	//	printf("proc %d:\tsend_count[%d] = %d\tsend_index[%d] = %d\trecv_count[%d] = %d \n", myid, i, send_count[i], i, send_index[i], i, recv_count[i]);
+	for(i=0; i<procs; i++)
+		printf("proc %d:\tsend_count[%d] = %d\tsend_index[%d] = %d\trecv_count[%d] = %d \n", myid, i, b_send_count[i], i, b_send_index[i], i, b_recv_count[i]);
 
 	/* allocate asynchronous I/O request and wait status */
 	sendStatus = (MPI_Status*)  malloc(2*procs* sizeof(MPI_Status));
 	sendReq    = (MPI_Request*) malloc(2*procs* sizeof(MPI_Request));
 	recvStatus = sendStatus + procs;
 	recvReq    = sendReq    + procs;
+	b_sendStatus = (MPI_Status*)  malloc(2*procs* sizeof(MPI_Status));
+	b_sendReq    = (MPI_Request*) malloc(2*procs* sizeof(MPI_Request));
+	b_recvStatus = b_sendStatus + procs;
+	b_recvReq    = b_sendReq    + procs;
+	int b_DataSize;
+	MPI_Type_size(b_dataType, &b_DataSize);
+	binary_t* b_resultBuf = (binary_t*) malloc(N_BIN_DIM_OPT * sizeof(binary_t));
 
 	/* asynchronous sends */
 	for (i=0; i<procs; i++) {
@@ -763,40 +805,71 @@ int sample_sort( type			*buf,
 					0,
 					commgroup,
 					&sendReq[i]);
+
+		b_sendReq[i] = MPI_REQUEST_NULL;
+		if (myid != i && b_send_count[i] > 0)
+			MPI_Isend(buf_bin + b_send_index[i],// *dataSize,
+					b_send_count[i],
+					b_dataType,
+					i,
+					0,
+					commgroup,
+					&b_sendReq[i]);
 	}
 
 	/* asynchronous recv */
 	recvBuf = resultBuf;
+	b_recvBuf = b_resultBuf;
 	for (i=0; i<procs; i++) {
 		recvReq[i] = MPI_REQUEST_NULL;
+		b_recvReq[i] = MPI_REQUEST_NULL;
 		if (myid == i) {
 			memcpy(recvBuf, buf+send_index[i], send_count[i]*dataSize);
+			memcpy(b_recvBuf, buf_bin+b_send_index[i], b_send_count[i]*b_DataSize);
+		} else {
+			if (recv_count[i] > 0) {
+				MPI_Irecv(recvBuf,
+						recv_count[i],
+						dataType,
+						i,
+						0,
+						commgroup,
+						&recvReq[i]);
+			}
+			if (b_recv_count[i] > 0) {
+				MPI_Irecv(b_recvBuf,
+						b_recv_count[i],
+						b_dataType,
+						i,
+						0,
+						commgroup,
+						&b_recvReq[i]);
+			}
+
 		}
-		else if (recv_count[i] > 0) {
-			MPI_Irecv(recvBuf,
-					recv_count[i],
-					dataType,
-					i,
-					0,
-					commgroup,
-					&recvReq[i]);
-		}
-		recvBuf += recv_count[i];// * dataSize;
+		recvBuf += recv_count[i];
+		b_recvBuf += b_recv_count[i];
 	}
 
 	/* wait till all asynchronous i/o done */
 	MPI_Waitall(2*procs, sendReq, sendStatus);
+	MPI_Waitall(2*procs, b_sendReq, b_sendStatus);
 
-	//printf("HELLO!!! %d %d \n ", myid, max_alloc_outbuf_size);
 	dprintf("new no.of stars in proc %d = %d\n", myid, total_recv_count);
 
-//	*local_N = total_recv_count;
+	//MPI3: Before we do local sort, we need to fix the binary addressing.
+	//Add additional checks!! Test thoroughly. Before alltoall use the id value of star elements to one of the ids of binaries, and check post sort - for testing.
+	j=0;
+	for(i=0;i<total_recv_count;i++)
+		if(resultBuf[i].binind > 0)
+		{
+			resultBuf[i].binind = j;
+			j++;
+		}
+	
+	if(j!=b_total_recv_count)
+		eprintf("Binary numbers mismatch in proc %d j = %d recv_cnt = %d\n", myid, j, b_total_recv_count);
 
-/*
-	if(myid == 1)
-		for(i=0; i<total_recv_count; i++)
-			printf("%f\n", getKey(&resultBuf[i]));	
-*/
 
 	timeEndSimple(tmpTimeStart2, &t_sort3);
 	tmpTimeStart2 = timeStartSimple();
@@ -805,8 +878,11 @@ int sample_sort( type			*buf,
 	timeEndSimple(tmpTimeStart, &t_sort_only);
 
 	tmpTimeStart = timeStartSimple();
-	load_balance(resultBuf, buf, expected_count, actual_count, myid, procs, dataType, commgroup);
+	load_balance(resultBuf, buf, b_resultBuf, binary, expected_count, actual_count, myid, procs, dataType, b_dataType, commgroup);
 	timeEndSimple(tmpTimeStart, &t_load_bal);
+
+	MPI_Barrier(commgroup);
+	printf("HELLO!!! %d %d %d\n ", myid, b_total_recv_count, N_b_local);
 
 	tmpTimeStart = timeStartSimple();
 	*local_N = actual_count[myid];
@@ -827,11 +903,14 @@ int sample_sort( type			*buf,
 
 void load_balance( 	type 				*inbuf,
 							type 				*outbuf,
+							binary_t			*b_inbuf,
+							binary_t			*b_outbuf,
 							int 				*expected_count, 
 							int				*actual_count, 
 							int 				myid, 
 							int 				procs, 
 							MPI_Datatype 	dataType, 	
+							MPI_Datatype 	b_dataType, 	
 							MPI_Comm			commgroup	)
 {
 
@@ -908,12 +987,42 @@ void load_balance( 	type 				*inbuf,
 	//send_count[procs-1] = local_count - (send_index[procs-1] + send_count[proc-1]); // + 1;
 	MPI_Alltoall(send_count, 1, MPI_INT, recv_count, 1, MPI_INT, commgroup);
 
-	//for(i=0; i<procs; i++)
-	//	printf("proc %d:\tsend_index[%d] = %d\tsend_count[%d] = %d\trecv_count[%d] = %d \n", myid, i, send_index[i], i, send_count[i], i, recv_count[i]);
-
 	total_recv_count = 0;
 	for (i=0; i<procs; i++) total_recv_count += recv_count[i];
 	dprintf("after load-balancing stars in proc %d = %d expected_count = %d\n", myid, total_recv_count, expected_count[myid]);
+
+	/***** Binary info *****/
+	int* b_send_index = (int*) malloc(procs * sizeof(int));
+	int* b_send_count = (int*) malloc(procs * sizeof(int));
+	int* b_recv_count = (int*) malloc(procs * sizeof(int));
+	binary_t* buf_bin = (binary_t*) malloc(N_BIN_DIM_OPT * sizeof(binary_t));
+	binary_t *b_recvBuf;
+	MPI_Status *b_sendStatus, *b_recvStatus;
+	MPI_Request	*b_sendReq, *b_recvReq;
+
+	int j, k=0, m=0;
+	for(i=0; i<procs;i++)
+	{
+		b_send_index[i] = k;
+		for(j=send_index[i]; j<send_index[i]+send_count[i]; j++)
+			if(inbuf[j].binind > 0 && b_inbuf[inbuf[j].binind].inuse)
+			{
+				if(b_inbuf[inbuf[j].binind].inuse) m++;
+				memcpy(&buf_bin[k], &b_inbuf[inbuf[j].binind], sizeof(binary_t));
+				k++;
+			}
+		b_send_count[i] = k - b_send_index[i];
+	}
+printf("LB---->%d %d\n", myid, m);
+
+	MPI_Alltoall(b_send_count, 1, MPI_INT, b_recv_count, 1, MPI_INT, commgroup);
+
+	int b_total_recv_count = 0;
+	for (i=0; i<procs; i++) b_total_recv_count += b_recv_count[i];
+	/***** End binary info *****/
+
+	//for(i=0; i<procs; i++)
+	//	printf("proc %d:\tsend_index[%d] = %d\tsend_count[%d] = %d\trecv_count[%d] = %d \n", myid, i, send_index[i], i, send_count[i], i, recv_count[i]);
 
 	/* allocate asynchronous I/O request and wait status */
 	MPI_Status 	*sendStatus = (MPI_Status*)  malloc(2*procs* sizeof(MPI_Status));
@@ -921,6 +1030,12 @@ void load_balance( 	type 				*inbuf,
 	MPI_Status 	*recvStatus = sendStatus + procs;
 	MPI_Request *recvReq    = sendReq    + procs;
 	MPI_Type_size(dataType, &dataSize);
+	b_sendStatus = (MPI_Status*)  malloc(2*procs* sizeof(MPI_Status));
+	b_sendReq    = (MPI_Request*) malloc(2*procs* sizeof(MPI_Request));
+	b_recvStatus = b_sendStatus + procs;
+	b_recvReq    = b_sendReq    + procs;
+	int b_DataSize;
+	MPI_Type_size(b_dataType, &b_DataSize);
 
 	/* asynchronous sends */
 	for (i=0; i<procs; i++) {
@@ -933,27 +1048,51 @@ void load_balance( 	type 				*inbuf,
 					0,
 					commgroup,
 					&sendReq[i]);
+
+		b_sendReq[i] = MPI_REQUEST_NULL;
+		if (myid != i && b_send_count[i] > 0)
+			MPI_Isend(buf_bin + b_send_index[i],// *dataSize,
+					b_send_count[i],
+					b_dataType,
+					i,
+					0,
+					commgroup,
+					&b_sendReq[i]);
 	}
 
 	/* asynchronous recv */
 	recvBuf = outbuf;
+	b_recvBuf = b_outbuf;
 	for (i=0; i<procs; i++) {
 		recvReq[i] = MPI_REQUEST_NULL;
+		b_recvReq[i] = MPI_REQUEST_NULL;
 		if (myid == i) {
 			memcpy(recvBuf, inbuf+send_index[i], send_count[i]*dataSize);
-		}
-		else if (recv_count[i] > 0) {
-			MPI_Irecv(recvBuf,
-					recv_count[i],
-					dataType,
-					i,
-					0,
-					commgroup,
-					&recvReq[i]);
-		}
-		recvBuf += recv_count[i];// * dataSize;
-	}
+			memcpy(b_recvBuf, buf_bin+b_send_index[i], b_send_count[i]*b_DataSize);
+		} else {
+			if (recv_count[i] > 0) {
+				MPI_Irecv(recvBuf,
+						recv_count[i],
+						dataType,
+						i,
+						0,
+						commgroup,
+						&recvReq[i]);
+			}
+			if (b_recv_count[i] > 0) {
+				MPI_Irecv(b_recvBuf,
+						b_recv_count[i],
+						b_dataType,
+						i,
+						0,
+						commgroup,
+						&b_recvReq[i]);
+			}
 
+		}
+		recvBuf += recv_count[i];
+		b_recvBuf += b_recv_count[i];
+	}
 	/* wait till all asynchronous i/o done */
 	MPI_Waitall(2*procs, sendReq, sendStatus);
 
