@@ -106,7 +106,8 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		kmin = FindZero_Q(g_si, 0, ktemp, E, J);
 		kmax = FindZero_Q(g_si, ktemp, clus.N_MAX + 1, E, J);
 #endif
-
+if(myid==0 && si==24981)
+printf("----->kmin=%d kmax=%d g_si=%d ktemp=%d clus.N_MAX+1=%d, E=%g J=%g\n", kmin, kmax, g_si, ktemp, clus.N_MAX+1, E, J);
 		while (function_Q(g_si, kmin, E, J) > 0 && kmin > 0)
 			kmin--;
 		while (function_Q(g_si, kmin + 1, E, J) < 0 
@@ -392,7 +393,7 @@ double GetTimeStep(gsl_rng *rng) {
 			significantly larger than the round-off error. */
 		if (DMse < -1.0e-10 * ((double) clus.N_STAR)) {
 			eprintf("DMse = %g < -1.0e-10 * ((double) clus.N_STAR)!\n", DMse);
-			exit_cleanly(-1);
+			exit_cleanly(-1, __FUNCTION__);
 		}
 		/* get timescale for 1% mass loss from cluster */
 		Tse = 0.01 * Mtotal / (fabs(DMse) / Prev_Dt);
@@ -407,7 +408,7 @@ double GetTimeStep(gsl_rng *rng) {
 	} else {
 		if (DMrejuv<0.0) {
 			eprintf("DMrejuv = %g < 0.0!\n", DMrejuv);
-			exit_cleanly(-1);
+			exit_cleanly(-1, __FUNCTION__);
 		}
 		/* get timescale for 0.1% mass loss from cluster */
 		Trejuv = 0.01 * Mtotal / (fabs(DMrejuv) / Prev_Dt);
@@ -754,6 +755,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		j = si;
 		g_j = get_global_idx(j);		
 
+if(myid==0 && si==24981)
+printf("----->E=%g %g J=%g %g r=%g\n", E, star[j].E, J, star[j].J, star_r[g_j]);
 #ifdef USE_MPI
 		E = star[j].E + MPI_PHI_S(star_r[g_j], g_j);
 #else
@@ -860,7 +863,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 				dprintf("circular orbit: vr^2<0: setting vr=0: si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g\n", si, r, rmin, rmax, Q, X, E, J);
 				if (isnan(Q)) {
 					eprintf("si = %ld \tfatal error: Q=vr^2==nan!\n",si);
-					exit_cleanly(-1);
+					printf("----> si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g kmin=%d kmax=%d\n", si, r, rmin, rmax, Q, X, E, J, orbit_rs.kmin, orbit_rs.kmax);
+						exit_cleanly(-1, __FUNCTION__);
 				}
 				vr = 0;
 			}
@@ -876,7 +880,7 @@ if(j==516)
 */
 		if (k == N_TRY + 1) {
 			eprintf("N_TRY exceeded\n");
-			exit_cleanly(-1);
+			exit_cleanly(-1, __FUNCTION__);
 		}
 
 		/* remove stars if they are too close to center,
@@ -943,6 +947,7 @@ double get_positions(){
 
 	max_rad = 0.0;	/* max radius for all stars, returned on success */
 
+printf("------------->%d I AM THE BLACK SHEEP\n", myid);
 	phi_rtidal = potential(Rtidal);
 	phi_zero = potential(0.0);
 

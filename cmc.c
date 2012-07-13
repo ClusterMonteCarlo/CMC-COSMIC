@@ -110,7 +110,6 @@ int main(int argc, char *argv[])
 
 	calc_potential_new();
 
-	printf("----->>HIIIIII newstarid=%d %d\n",newstarid, clus.N_STAR+clus.N_BINARY);
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	calc_sigma_new();
@@ -282,7 +281,6 @@ int main(int argc, char *argv[])
 #else
 		clus.N_MAX_NEW = clus.N_MAX;
 #endif
-		timeEndSimple(tmpTimeStart, &t_oth);
 
 		tmpTimeStart = timeStartSimple();
 		/* Perturb velocities of all N_MAX stars. 
@@ -291,8 +289,68 @@ int main(int argc, char *argv[])
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 		timeEndSimple(tmpTimeStart, &t_dyn);
+/*
+#ifdef USE_MPI
+		// Only proc with id 0 prints out.
+		if(myid==0)
+		{
+			strcpy(tempstr, "test_out_par.dat");
+			ftest = fopen( tempstr, "w" );
+			for( i = 1; i <= clus.N_MAX; i++ )
+				fprintf(ftest, "%ld\t%.18g\n",i, star_r[i]);
+			fclose(ftest);
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
+		fclose(ftest);
+#endif
+*/
+
+
+#ifdef USE_MPI
+		int j;
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				ftest = fopen( tempstr, "w" );
+				for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
+					fprintf(ftest, "%ld\t%.18g\t%.18g\n", get_global_idx(j), star[j].E, star[j].J);
+				fclose(ftest);
+			}
+		MPI_Barrier(MPI_COMM_WORLD);
+		}
+		if(myid==0)
+		{
+			char process_str[30];
+			sprintf(process_str, "./process.sh %d", procs);
+			system(process_str);
+		}
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+		{
+			if(star[i].binind>0)
+				fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2, star[i].binind);
+			else
+				fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\n", i, star[i].r, star[i].id, star[i].binind);
+		}
+		fclose(ftest);
+#endif
+
 
 		tmpTimeStart = timeStartSimple();
+
 		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
 		if (STELLAR_EVOLUTION > 0)
 			do_stellar_evolution(rng);
@@ -349,6 +407,9 @@ int main(int argc, char *argv[])
 		post_sort_comm();
 		timeEndSimple(tmpTimeStart, &t_sort);
 
+		tmpTimeStart = timeStartSimple();
+		calc_potential_new();
+/*
 #ifdef USE_MPI
 		int j;
 		strcpy(filename, "test_out_par");
@@ -360,16 +421,15 @@ int main(int argc, char *argv[])
 		{
 			if(myid == i)
 			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
 				ftest = fopen( tempstr, "w" );
 				for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
 				{
-					//if(star[j].binind>0)
-						//fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
 					if(star[j].binind>0)
-						fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", get_global_idx(j), star_r[j], star[j].id, binary[star[j].binind].id1, binary[star[j].binind].id2);
-//					else
-//					fprintf(ftest, "%ld\t%.18g\t%ld\n", j, star_r[j], star[j].id);
+						fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", get_global_idx(j), star_r[get_global_idx(j)], star[j].id, binary[star[j].binind].id1, binary[star[j].binind].id2);
+					else
+						fprintf(ftest, "%ld\t%.18g\t%ld\n", get_global_idx(j), star_r[get_global_idx(j)], star[j].id);
+
+if(star[j].id==-100 && star[j].binind<=0) printf("%d ERRRRRROR %d %d %d\n", myid, get_global_idx(j), star[j].id, star[j].binind);
 				}
 				fclose(ftest);
 			}
@@ -386,14 +446,13 @@ int main(int argc, char *argv[])
 		for( i = 1; i <= clus.N_MAX; i++ )
 		{
 			if(star[i].binind>0)
-				fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
+				fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2, star[i].binind);
+			else
+				fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\n", i, star[i].r, star[i].id, star[i].binind);
 		}
 		fclose(ftest);
 #endif
-
-		tmpTimeStart = timeStartSimple();
-		calc_potential_new();
-
+*/
 		//Calculating Start and End values for each processor for mimcking parallel rng.
 		findLimits( clus.N_MAX, 20 );
 		timeEndSimple(tmpTimeStart, &t_oth);
@@ -414,6 +473,7 @@ int main(int argc, char *argv[])
 		comp_multi_mass_percent();
 		 */
 
+
 		tmpTimeStart = timeStartSimple();
 		compute_energy_new();
 
@@ -431,7 +491,8 @@ int main(int argc, char *argv[])
 			no_remnants= no_remnants_core(6);
 			}
 		 */
-
+/*
+*/
 /* TESTING FOR KEVIN */
 /*
 #ifdef USE_MPI
@@ -452,7 +513,7 @@ int main(int argc, char *argv[])
 			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
 		fclose(ftest);
 #endif
-*/
+
 		print_results();
 		print_small_output();
 #ifdef USE_MPI
@@ -461,7 +522,7 @@ int main(int argc, char *argv[])
 			print_snapshot_windows();
 		tcount++;
 		timeEndSimple(tmpTimeStart, &t_oth);
-
+*/
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
 		 */

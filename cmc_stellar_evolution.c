@@ -228,7 +228,7 @@ void stellar_evolution_init(void){
 			handle_bse_outcome(k, kb, vs, tphysf);
 		} else {
 			eprintf("totally confused!\n");
-			exit_cleanly(-1);
+			exit_cleanly(-1, __FUNCTION__);
 		}
 	}
 
@@ -605,7 +605,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       binary[kb].bse_bcm_radrol[1] = bse_get_bcm(j, 29);
     } else {
       eprintf("Could not extract BSE bcm info!  Input dtp not exactly equal to tphysf-tphys?");
-      exit_cleanly(-1);
+      exit_cleanly(-1, __FUNCTION__);
     }
   } else if (binary[kb].bse_mass[0] != 0.0 && binary[kb].bse_mass[1] != 0.0) {
     /* disruption with both stars "intact" */
@@ -928,7 +928,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     dprintf("unhandled binary outcome!\n");
     dprintf("bse_mass0=%g bse_mass1=%g tb=%g\n", 
 	    binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_tb);
-    exit_cleanly(-1);
+    exit_cleanly(-1, __FUNCTION__);
   }
 }
 

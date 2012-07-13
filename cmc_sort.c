@@ -729,6 +729,10 @@ int sample_sort( type			*buf,
 	total_recv_count = 0;
 	for (i=0; i<procs; i++) total_recv_count += recv_count[i];
 
+	int* recv_displ = (int*) malloc(procs * sizeof(int));
+	recv_displ[0] = 0;
+	for(i=1; i<procs; i++)
+		recv_displ[i] = recv_displ[i-1] + recv_count[i-1];
 
 	/***** Binary info *****/
 	int* b_send_index = (int*) malloc(procs * sizeof(int));
@@ -738,21 +742,26 @@ int sample_sort( type			*buf,
 	binary_t *b_recvBuf;
 	MPI_Status *b_sendStatus, *b_recvStatus;
 	MPI_Request	*b_sendReq, *b_recvReq;
+	int b_DataSize;
+	MPI_Type_size(b_dataType, &b_DataSize);
 
 	int j, k=0, m=0;
 	for(i=0; i<procs;i++)
 	{
 		b_send_index[i] = k;
 		for(j=send_index[i]; j<send_index[i]+send_count[i]; j++)
-			if(buf[j].binind > 0 && binary[buf[j].binind].inuse)
+		{
+			if(buf[j].id==-100 && buf[j].binind<=0) printf("%d ERRRRRROR1 %d %d %d\n", myid, i, buf[j].id, buf[j].binind);
+			if(buf[j].binind > 0/* && binary[buf[j].binind].inuse*/)
 			{
 				if(binary[buf[j].binind].inuse) m++;
-				memcpy(&buf_bin[k], &binary[buf[j].binind], sizeof(binary_t));
+				memcpy(&buf_bin[k], &binary[buf[j].binind], b_DataSize);
 				k++;
 			}
+		}
 		b_send_count[i] = k - b_send_index[i];
 	}
-printf("---->%d %d\n", myid, m);
+//printf("---->%d %d\n", myid, m);
 
 	//Set binary array to zeros, if not might cause problems when new stars are created in the next timestep. So it's best to wipe out the older data.
 	memset (binary, 0, N_BIN_DIM_OPT * sizeof(binary_t));
@@ -778,8 +787,10 @@ printf("---->%d %d\n", myid, m);
 	//MPI3: May be one could just use actual_count[myid] instead of max_alloc...?
 	resultBuf = (type*) malloc(max_alloc_outbuf_size * sizeof(type)); 
 
+/*
 	for(i=0; i<procs; i++)
 		printf("proc %d:\tsend_count[%d] = %d\tsend_index[%d] = %d\trecv_count[%d] = %d \n", myid, i, b_send_count[i], i, b_send_index[i], i, b_recv_count[i]);
+*/
 
 	/* allocate asynchronous I/O request and wait status */
 	sendStatus = (MPI_Status*)  malloc(2*procs* sizeof(MPI_Status));
@@ -790,8 +801,6 @@ printf("---->%d %d\n", myid, m);
 	b_sendReq    = (MPI_Request*) malloc(2*procs* sizeof(MPI_Request));
 	b_recvStatus = b_sendStatus + procs;
 	b_recvReq    = b_sendReq    + procs;
-	int b_DataSize;
-	MPI_Type_size(b_dataType, &b_DataSize);
 	binary_t* b_resultBuf = (binary_t*) malloc(N_BIN_DIM_OPT * sizeof(binary_t));
 
 	/* asynchronous sends */
@@ -819,7 +828,7 @@ printf("---->%d %d\n", myid, m);
 
 	/* asynchronous recv */
 	recvBuf = resultBuf;
-	b_recvBuf = b_resultBuf;
+	b_recvBuf = b_resultBuf+1;
 	for (i=0; i<procs; i++) {
 		recvReq[i] = MPI_REQUEST_NULL;
 		b_recvReq[i] = MPI_REQUEST_NULL;
@@ -855,28 +864,81 @@ printf("---->%d %d\n", myid, m);
 	MPI_Waitall(2*procs, sendReq, sendStatus);
 	MPI_Waitall(2*procs, b_sendReq, b_sendStatus);
 
-	dprintf("new no.of stars in proc %d = %d\n", myid, total_recv_count);
+	printf("new no.of stars in proc %d = %d\n", myid, total_recv_count);
 
 	//MPI3: Before we do local sort, we need to fix the binary addressing.
 	//Add additional checks!! Test thoroughly. Before alltoall use the id value of star elements to one of the ids of binaries, and check post sort - for testing.
-	j=0;
-	for(i=0;i<total_recv_count;i++)
-		if(resultBuf[i].binind > 0)
+	k=1; 
+	int kprev;
+//	for(i=0;i<total_recv_count;i++)
+	for(i=0; i<procs; i++)
+	{
+		kprev=k;
+		for(j=recv_displ[i]; j<recv_displ[i]+recv_count[i]; j++)
 		{
-			resultBuf[i].binind = j;
-			j++;
+			if(resultBuf[j].binind > 0)
+			{
+				resultBuf[j].binind = k;
+				k++;
+			}
+			if(resultBuf[j].id==-100 && resultBuf[j].binind<=0) printf("%d ERRRRRROR2 %d %d %d %d\n", myid, i, j, resultBuf[j].id, resultBuf[j].binind);
 		}
-	
-	if(j!=b_total_recv_count)
-		eprintf("Binary numbers mismatch in proc %d j = %d recv_cnt = %d\n", myid, j, b_total_recv_count);
+		if(k-kprev!=b_recv_count[i]) eprintf("mismatch in proc %d j = %d recv_cnt = %d\n", myid, k-kprev, b_recv_count[i]);
+	}
 
+	if(k-1!=b_total_recv_count)
+		eprintf("Binary numbers mismatch in proc %d j = %d recv_cnt = %d\n", myid, k-1, b_total_recv_count);
 
 	timeEndSimple(tmpTimeStart2, &t_sort3);
 	tmpTimeStart2 = timeStartSimple();
 	qsort(resultBuf, total_recv_count, sizeof(type), compare_type);
 	timeEndSimple(tmpTimeStart2, &t_sort4);
 	timeEndSimple(tmpTimeStart, &t_sort_only);
-
+/*
+#ifdef USE_MPI
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("id=%d\tbegin=%d\tend=\%d\n", myid, mpiBegin, mpiEnd);
+				ftest = fopen( tempstr, "w" );
+				for( j = 0; j <= total_recv_count; j++ )
+				{
+					//if(star[j].binind>0)
+						//fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
+					if(resultBuf[j].binind>0)
+						fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\t%ld\n", get_global_idx(j+1), resultBuf[j].r, resultBuf[j].id, b_resultBuf[resultBuf[j].binind].id1, b_resultBuf[resultBuf[j].binind].id2, resultBuf[j].binind);
+					else
+						fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\n", get_global_idx(j+1), resultBuf[j].r, resultBuf[j].id, resultBuf[j].binind);
+				}
+				fclose(ftest);
+			}
+			MPI_Barrier(commgroup);
+		}
+		if(myid==0)
+		{
+			char process_str[30];
+			sprintf(process_str, "./process.sh %d", procs);
+			system(process_str);
+		}
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+		{
+			if(star[i].binind>0)
+				fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
+			else
+				fprintf(ftest, "%ld\t%.18g\t%ld\n", i, star[i].r, star[i].id);
+		}
+		fclose(ftest);
+#endif
+*/
 	tmpTimeStart = timeStartSimple();
 	load_balance(resultBuf, buf, b_resultBuf, binary, expected_count, actual_count, myid, procs, dataType, b_dataType, commgroup);
 	timeEndSimple(tmpTimeStart, &t_load_bal);
@@ -886,6 +948,52 @@ printf("---->%d %d\n", myid, m);
 
 	tmpTimeStart = timeStartSimple();
 	*local_N = actual_count[myid];
+	//N_b_local=?
+/*
+#ifdef USE_MPI
+		strcpy(filename, "test_out_par");
+		strcpy(tempstr, filename);
+		sprintf(num, "%d", myid);
+		strcat(tempstr, num);
+		strcat(tempstr, ".dat");
+		for( i = 0; i < procs; i++ )
+		{
+			if(myid == i)
+			{
+				//printf("id=%d\tbegin=%d\tend=\%d\n", myid, mpiBegin, mpiEnd);
+				ftest = fopen( tempstr, "w" );
+				for( j = 0; j < actual_count[i]; j++ )
+				{
+					//if(star[j].binind>0)
+						//fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
+					if(buf[j].binind>0)
+						fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\t%ld\n", get_global_idx(j+1), buf[j].r, buf[j].id, binary[buf[j].binind].id1, binary[buf[j].binind].id2, buf[j].binind);
+					else
+						fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\n", get_global_idx(j+1), buf[j].r, buf[j].id, buf[j].binind);
+				}
+				fclose(ftest);
+			}
+			MPI_Barrier(commgroup);
+		}
+		if(myid==0)
+		{
+			char process_str[30];
+			sprintf(process_str, "./process.sh %d", procs);
+			system(process_str);
+		}
+#else
+		strcpy(tempstr, "test_out_ser.dat");
+		ftest = fopen( tempstr, "w" );
+		for( i = 1; i <= clus.N_MAX; i++ )
+		{
+			if(star[i].binind>0)
+				fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
+			else
+				fprintf(ftest, "%ld\t%.18g\t%ld\n", i, star[i].r, star[i].id);
+		}
+		fclose(ftest);
+#endif
+*/
 
 	free(expected_count);
 	free(send_index);
@@ -991,6 +1099,11 @@ void load_balance( 	type 				*inbuf,
 	for (i=0; i<procs; i++) total_recv_count += recv_count[i];
 	dprintf("after load-balancing stars in proc %d = %d expected_count = %d\n", myid, total_recv_count, expected_count[myid]);
 
+	int* recv_displ = (int*) malloc(procs * sizeof(int));
+	recv_displ[0] = 0;
+	for(i=1; i<procs; i++)
+		recv_displ[i] = recv_displ[i-1] + recv_count[i-1];
+
 	/***** Binary info *****/
 	int* b_send_index = (int*) malloc(procs * sizeof(int));
 	int* b_send_count = (int*) malloc(procs * sizeof(int));
@@ -1013,12 +1126,11 @@ void load_balance( 	type 				*inbuf,
 			}
 		b_send_count[i] = k - b_send_index[i];
 	}
-printf("LB---->%d %d\n", myid, m);
-
 	MPI_Alltoall(b_send_count, 1, MPI_INT, b_recv_count, 1, MPI_INT, commgroup);
 
 	int b_total_recv_count = 0;
 	for (i=0; i<procs; i++) b_total_recv_count += b_recv_count[i];
+	N_b_local = b_total_recv_count;
 	/***** End binary info *****/
 
 	//for(i=0; i<procs; i++)
@@ -1062,7 +1174,7 @@ printf("LB---->%d %d\n", myid, m);
 
 	/* asynchronous recv */
 	recvBuf = outbuf;
-	b_recvBuf = b_outbuf;
+	b_recvBuf = b_outbuf+1;
 	for (i=0; i<procs; i++) {
 		recvReq[i] = MPI_REQUEST_NULL;
 		b_recvReq[i] = MPI_REQUEST_NULL;
@@ -1095,6 +1207,30 @@ printf("LB---->%d %d\n", myid, m);
 	}
 	/* wait till all asynchronous i/o done */
 	MPI_Waitall(2*procs, sendReq, sendStatus);
+	MPI_Waitall(2*procs, b_sendReq, b_sendStatus);
+printf("LB---->%d %d\n", myid, m);
+
+
+	k=1; 
+	int kprev;
+//	for(i=0;i<total_recv_count;i++)
+	for(i=0; i<procs; i++)
+	{
+		kprev=k;
+		for(j=recv_displ[i]; j<recv_displ[i]+recv_count[i]; j++)
+		{
+			if(outbuf[j].binind > 0)
+			{
+				outbuf[j].binind = k;
+				k++;
+			}
+			if(outbuf[j].id==-100 && outbuf[j].binind<=0) printf("%d ERRRRRROR2 %d %d %d %d\n", myid, i, j, outbuf[j].id, outbuf[j].binind);
+		}
+		if(k-kprev!=b_recv_count[i]) eprintf("mismatch in proc %d j = %d recv_cnt = %d\n", myid, k-kprev, b_recv_count[i]);
+	}
+
+	if(k-1!=b_total_recv_count)
+		eprintf("Binary numbers mismatch in proc %d j = %d recv_cnt = %d\n", myid, k-1, b_total_recv_count);
 
 	actual_count[myid] = total_recv_count;
 

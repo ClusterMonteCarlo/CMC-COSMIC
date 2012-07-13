@@ -62,7 +62,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		}
 		/* DEBUG */
 	}	
-	
+
 	/* Original dt provided, saved for repeated encounters, where dt is changed */
 	SaveDt = dt;
 	/* keeps track of stars from disrupted binaries */
@@ -114,6 +114,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		/* set dynamical params for this pair */
 		calc_encounter_dyns(k, kp, v, vp, w, &W, &rcm, vcm, rng, 1);
 
+//if(myid==0/* && k==16832 && star_r[25001]<0.4*/) printf("HIIIII---->%d r=%g\n", g_k, star_r[25001]);
 		//MPI: Makes use of r values of stars outside range. Assuming r array is global, no change needed for MPI version.
 		/* Compute local density */
 		n_local = calc_n_local(g_k, p, N_LIMIT);
@@ -235,31 +236,36 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			if (star[k].binind > 0 && star[kp].binind > 0) {
 				/* binary--binary */
 				print_interaction_status("BB");
-
-//printf(" binbin\n");
+if(g_k==24981)
+printf(" binbin\n");
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "BB %g %g\n", TotalTime, rcm); */
 			} else if (star[k].binind > 0 || star[kp].binind > 0) {
 				/* binary--single */
 				print_interaction_status("BS");
 
-//printf(" binsingle\n");
+if(g_k==24981)
+printf(" binsingle\n");
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "BS %g %g\n", TotalTime, rcm); */
 			} else {
 				/* single--single */
 				print_interaction_status("SS");
 
-//printf(" collision\n");
+if(g_k==24981)
+printf(" collision\n");
 				/* do collision */
 				sscollision_do(k, kp, rperi, w, W, rcm, vcm, rng);
 				/* fprintf(collisionfile, "SS %g %g\n", TotalTime, rcm); */
 			}
 		} else if (RELAXATION) {
-//printf(" Relaxation\n");
+if(g_k==24981)
+printf(" Relaxation\n");
 			/* do two-body relaxation */
 			Trel12 = (PI/32.0) * cub(W) / ( ((double) clus.N_STAR) * n_local * sqr((mass_k+mass_kp)*madhoc) ) ;
 			beta = (PI/2.0) * sqrt(dt/Trel12);
+if(g_k==24981)
+printf("=============>>>%d %g %g %g\n", mpiEnd-mpiBegin+1, W, n_local, madhoc);
 
 			/* record statistics on scattering angles */
 			Nrel++;
@@ -281,7 +287,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			wp = sqrt(sqr(w[1]) + sqr(w[2]));
 			if (wp == 0.0) {
 				eprintf("wp=0 \n");
-				exit_cleanly(1);
+				exit_cleanly(1, __FUNCTION__);
 			}
 			
 			/* You'll notice here that the sign on w1 is opposite that of what's shown in Kris Joshi's

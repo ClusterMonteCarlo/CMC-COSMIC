@@ -106,8 +106,10 @@ void destroy_obj(long i)
 	double r, phi;
 
 	if (star[i].binind) {
-		dprintf("Star %ld destroyed, binary %ld!\n", i, star[i].binind);
+		printf("proc=%d Star %ld destroyed with id %ld, binary binind=%ld id1=%ld id2=%ld!\n", myid, i, star[i].id, star[i].binind, binary[star[i].binind].id1, binary[star[i].binind].id2);
 		destroy_binary(star[i].binind);
+	} else {
+		printf("proc=%d Star %ld destroyed with id %ld!\n", myid, i, star[i].id);
 	}
 
 	/* need to zero out E's, J, but can't zero out potential---this is the easiest way */
@@ -154,7 +156,7 @@ void destroy_binary(long i)
 {
 	/* set inuse flag to zero, and zero out all other properties for safety */
 	zero_binary(i);
-	printf("Binary %ld destroyed!\n", i);
+	printf("proc=%d Binary %ld with id1=%ld id2=%ld destroyed!\n", myid, i, binary[i].id1, binary[i].id2);
 	N_b_local--;
 }
 
@@ -183,14 +185,18 @@ long create_star(int idx, int dyn_0_se_1)
 		else
 		{
 			eprintf("Invalid argument to create_star()");
-			exit_cleanly(-2);
+			exit_cleanly(-2, __FUNCTION__);
 		}
 	}
 #endif
 
 	/* put new star at end; the +1 is to not overwrite the boundary star */
 	//MPI3: Now we dont neet the sentinel I guess. But not sure.
-	i = clus.N_MAX_NEW; //+ 1;
+#ifdef USE_MPI
+	i = clus.N_MAX_NEW;
+#else
+	i = clus.N_MAX_NEW + 1;
+#endif
 
 #ifdef USE_MPI
 	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
@@ -218,7 +224,7 @@ long create_binary(int idx, int dyn_0_se_1)
 	/* problem! */
 	if (i > N_BIN_DIM) {
 		eprintf("cannot find unused binary.\n");
-		exit_cleanly(1);
+		exit_cleanly(1, __FUNCTION__);
 	}
 
 	printf("HOLE FOUND at %ld\t INSERTING STAR %d\n", i, idx);
@@ -278,6 +284,9 @@ double calc_n_local(long k, long p, long N_LIMIT)
 		kmax = N_LIMIT;
 		kmin = N_LIMIT - 2 * p - 1;
 	}
+//if(kmax>25000 && myid==0)
+//printf("---------------->>>>>> kmin=%d kmax=%d rmin=%g rmax=%g\n", kmin, kmax, star_r[kmin], star_r[kmax]);
+
 
 #ifdef USE_MPI
 	return((2.0 * ((double) p)) * 3.0 / (4.0 * PI * (cub(star_r[kmax]) - cub(star_r[kmin]))));
@@ -342,7 +351,7 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 
 	if (*W == 0.0) {
 		eprintf("W = 0! for star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
-		exit_cleanly(1);
+		exit_cleanly(1, __FUNCTION__);
 	}
 
 #ifdef USE_MPI		
@@ -435,7 +444,7 @@ double binint_get_mass(long k, long kp, long id)
 	}
 	
 	eprintf("cannot find matching id %ld!\n", id);
-	exit_cleanly(1);
+	exit_cleanly(1, __FUNCTION__);
 	/* this is just for the compiler */
 	exit(1);
 }
@@ -470,7 +479,7 @@ long binint_get_startype(long k, long kp, long id)
 	}
 	
 	eprintf("cannot find matching id %ld!\n", id);
-	exit_cleanly(1);
+	exit_cleanly(1, __FUNCTION__);
 	/* this is just for the compiler */
 	exit(1);
 }
@@ -506,7 +515,7 @@ double binint_get_createtime(long k, long kp, long id)
 	}
 	
 	eprintf("cannot find matching id %ld!\n", id);
-	exit_cleanly(1);
+	exit_cleanly(1, __FUNCTION__);
 	/* this is just for the compiler */
 	exit(1);
 }
@@ -541,7 +550,7 @@ double binint_get_lifetime(long k, long kp, long id)
 	}
 	
 	eprintf("cannot find matching id %ld!\n", id);
-	exit_cleanly(1);
+	exit_cleanly(1, __FUNCTION__);
 	/* this is just for the compiler */
 	exit(1);
 }
@@ -584,7 +593,7 @@ long binint_get_indices(long k, long kp, long id, int *bi)
 	}
 	
 	eprintf("cannot find matching id %ld!\n", id);
-	exit_cleanly(1);
+	exit_cleanly(1, __FUNCTION__);
 	/* this is just for the compiler */
 	exit(1);
 }
@@ -658,7 +667,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 	} else {
 		/* thankfully won't need to print out quads */
 		eprintf("Don't know how to print out object with >3 stars!\n");
-		exit_cleanly(1);
+		exit_cleanly(1, __FUNCTION__);
 	}
 }
 
@@ -770,7 +779,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 		cmc_units.E = cmc_units.m * sqr(cmc_units.v);
 	} else {
 		eprintf("no binaries!");
-		exit_cleanly(1);
+		exit_cleanly(1, __FUNCTION__);
 		exit(1);
 	}
 	
@@ -795,7 +804,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	wp = sqrt(sqr(w[1]) + sqr(w[2]));
 	if (wp == 0.0) {
 		eprintf("wp = 0!\n");
-		exit_cleanly(1);
+		exit_cleanly(1, __FUNCTION__);
 	}
 
 	/* wx, wy, and wz are the x, y, and z axes (unit vectors) of the fewbody
@@ -874,19 +883,22 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				}
 			} else {
 				eprintf("object with n=%d!\n", hier.obj[i]->n);
-				exit_cleanly(1);
+				exit_cleanly(1, __FUNCTION__);
 				/* this is just for the compiler */
 				exit(1);
 			}
 			
 			/* generic properties */
 			/* set radial position */
+
+
 #ifdef USE_MPI
-			star_r[knew] = rcm;
+			star_r[get_global_idx(knew)] = rcm;
 			if (istriple) {
-				star_r[knewp] = rcm;
+				star_r[get_global_idx(knewp)] = rcm;
 			}
 #else
+
 			star[knew].r = rcm;
 			if (istriple) {
 				star[knewp].r = rcm;
@@ -908,12 +920,13 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			}
 			
 			/* set mass; this gets overwritten later for collisions */
+
 #ifdef USE_MPI
 			if (istriple) {
-				star_m[knew] = hier.obj[i]->obj[bid]->m * cmc_units.m / madhoc;
-				star_m[knewp] = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
+				star_m[get_global_idx(knew)] = hier.obj[i]->obj[bid]->m * cmc_units.m / madhoc;
+				star_m[get_global_idx(knewp)] = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
 			} else {
-				star_m[knew] = hier.obj[i]->m * cmc_units.m / madhoc;
+				star_m[get_global_idx(knew)] = hier.obj[i]->m * cmc_units.m / madhoc;
 			}
 #else
 			if (istriple) {
@@ -926,9 +939,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 			/* set potential */
 #ifdef USE_MPI
-			star_phi[knew] = potential(star_r[knew]);
+			star_phi[get_global_idx(knew)] = potential(star_r[get_global_idx(knew)]);
 			if (istriple) {
-				star_phi[knewp] = potential(star_r[knewp]);
+				star_phi[get_global_idx(knewp)] = potential(star_r[get_global_idx(knewp)]);
 			}			
 #else
 			star[knew].phi = potential(star[knew].r);
@@ -1145,7 +1158,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				}
 				
 #ifdef USE_MPI
-				star_m[knew] = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
+				star_m[get_global_idx(knew)] = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
 #else
 				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
 #endif
@@ -1345,9 +1358,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						star[knew].r,
 						*(hier.obj[i]->obj[bid]->obj[1]), k, kp, binary[star[knew].binind].bse_kw[1]);
 				}
-				
+
 #ifdef USE_MPI
-				star_m[knew] = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
+				star_m[get_global_idx(knew)] = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
 #else
 				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
 #endif
@@ -1725,14 +1738,15 @@ void mpi_calc_sigma_r(void)
 				vt = star[k].vt;
 			}
 
-			int g_k = get_global_idx(k);
+			//MPI3: Using a direct expression instead of get_global_idx() since it was changed to return the global index for stars outside local subset.
+			int g_k = Start[myid] + k - 1; //get_global_idx(k);
 			/*MPI2: Using the global mass array*/
 			Mv2ave -= star_m[g_k] * madhoc * (sqr(vr) + sqr(vt));
 			Mave -= star_m[g_k] * madhoc;
 		}
 
 		for (k=simaxlast+1; k<=simax; k++) {
-			int g_k = get_global_idx(k);
+			int g_k = Start[myid] + k - 1; //get_global_idx(k);
 
 			if (k > N_LIMIT) {
 				vr = ghost_pts_vr.next[k-N_LIMIT-1];
@@ -1878,7 +1892,7 @@ double sigma_tc_nd(double n, double m1, double r1, double m2, double vinf) {
 		a = 3.66 * pow(m2/m1, 0.200) + 2.94 * pow(m2/m1, 1.32);
 	} else {
 		eprintf("unknown polytropic index n=%g!\n", n);
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 		exit(1);
 	}
 	
@@ -1922,7 +1936,7 @@ double sigma_tc_nn(double na, double ma, double ra, double nb, double mb, double
 		a = 6.05 * pow(m2/m1, 0.835*log(gamma)+0.468) + 6.50 * pow(m2/m1, 0.563*log(gamma)+1.75);
 	} else {
 		eprintf("unknown polytropic indexes n1=%g n2=%g!\n", n1, n2);
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 		exit(1);
 	}
 	
@@ -1937,7 +1951,7 @@ double Tl(int order, double polytropicindex, double eta)
 
 	if (l != 2 && l != 3) {
 		eprintf("unknown order l=%d\n", l);
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 		exit(1);
 	}
 
@@ -1961,7 +1975,7 @@ double Tl(int order, double polytropicindex, double eta)
 		}
 	} else {
 		eprintf("unknown polytropic index n=%g\n", n);
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 		exit(1);
 	}
 }

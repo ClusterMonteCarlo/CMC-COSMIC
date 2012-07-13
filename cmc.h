@@ -698,7 +698,8 @@ int remove_old_star(double time, long k);
 
 /* signal/GSL error handling stuff */
 void toggle_debugging(int signal);
-void exit_cleanly(int signal);
+void exit_cleanly_old(int signal);
+void exit_cleanly(int signal, const char* fn);
 void sf_gsl_errhandler(const char *reason, const char *file, int line, int gsl_errno);
 void close_buffers(void);
 void trap_sigs(void);

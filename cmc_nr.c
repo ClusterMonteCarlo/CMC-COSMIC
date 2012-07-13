@@ -46,6 +46,8 @@ long FindZero_r(long kmin, long kmax, double r){
 	 * find and return the index k, such that star[k].r<r<star[k+1].r */
 	long ktry;
 
+if(myid==0)
+printf("------>myid=%d r_kmin=%d r_kmax=%d r_ktry=%g r=%g\n", myid, star_r[kmin], star_r[kmax], star_r[ktry], r);
 #ifdef USE_MPI
 	if ((star_r[kmin]>r && kmin>1) || star_r[kmax]<r) {
 		dprintf("r is outside kmin kmax!!\n");
@@ -176,6 +178,9 @@ long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 	 * rather than increasing */
 	long ktry;
 
+if(myid==0 && j==24981)
+printf("----->j=%d kmin=%d kmax=%d 1=%g 2=%g\n", j, kmin, kmax, FUNC(j, kmin, E, J), FUNC(j, kmax, E, J));
+
 	if(FUNC(j, kmin, E, J)<FUNC(j, kmax, E, J)){
 		do {
 			ktry = (kmin+kmax+1)/2;
@@ -220,7 +225,7 @@ double calc_pot_within_interval(double r, void *p) {
 #endif
     eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r, 
         star[k].r, star[k+1].r, r-star[k].r, r-star[k+1].r);
-    exit_cleanly(-1);
+    exit_cleanly(-1, __FUNCTION__);
   };
 
 #ifdef USE_MPI
@@ -265,7 +270,7 @@ double calc_pot_in_interval(double r, long k) {
 #endif
     eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r, 
         star[k].r, star[k+1].r, r-star[k].r, r-star[k+1].r);
-    exit_cleanly(-1);
+    exit_cleanly(-1, __FUNCTION__);
   };
 
 #ifdef USE_MPI
@@ -562,7 +567,7 @@ APSIDES_PRECISION+APSIDES_PRECISION*MIN(r_high,r_low));
 
   if (GSL_FN_EVAL(&F, apsis)< 0.) {
     eprintf("Residual is negative! Apsis= %g, vr(apsis)= %g\n", apsis, GSL_FN_EVAL(&F, apsis));
-    exit_cleanly(-1);
+    exit_cleanly(-1, __FUNCTION__);
   }
 
   return(apsis);

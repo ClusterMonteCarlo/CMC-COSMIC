@@ -374,7 +374,7 @@ void PrintFileOutput(void) {
 		/* exit if not enough stars */
 		if (n_10 <= 6 || n_10 >= clus.N_STAR-6) {
 			eprintf("clus.N_STAR <= 2*J || n_10 >= clus.N_STAR-6\n");
-			exit_cleanly(-1);
+			exit_cleanly(-1, __FUNCTION__);
 		}
 		else{
 			r_10=star[n_10].r;
@@ -1367,9 +1367,9 @@ void close_buffers(void)
 void trap_sigs(void)
 {
 	/* Catch some signals */
-	signal(SIGINT, exit_cleanly);
-	signal(SIGTERM, exit_cleanly);
-	signal(SIGQUIT, exit_cleanly);
+	signal(SIGINT, exit_cleanly_old);
+	signal(SIGTERM, exit_cleanly_old);
+	signal(SIGQUIT, exit_cleanly_old);
 	signal(SIGUSR1, toggle_debugging);
 	
 	/* override GSL error handler */
@@ -1518,7 +1518,7 @@ void print_snapshot_windows(void) {
     total_time= TotalTime * log(GAMMA * clus.N_STAR) / clus.N_STAR;
   } else {
     eprintf("Unrecognized unit %s.", SNAPSHOT_WINDOW_UNITS);
-    exit_cleanly(-1);
+    exit_cleanly(-1, __FUNCTION__);
   }
 
   for (i=0; i<snapshot_window_count; i++) {
@@ -1560,7 +1560,7 @@ void write_snapshot(char *filename) {
 
   if ((snapfile = (FILE *) gzopen(filename, "wb")) == NULL) {
     eprintf("cannot create 2D snapshot file %s\n", filename);
-    exit_cleanly(1);
+    exit_cleanly(1, __FUNCTION__);
   }
 
   /* print useful header */

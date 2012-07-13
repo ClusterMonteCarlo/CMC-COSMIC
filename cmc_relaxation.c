@@ -65,7 +65,7 @@ get_encounter_dyns(struct star_coords star1, struct star_coords star2, gsl_rng *
   enc.W = sqrt(sqr(enc.w[1]) + sqr(enc.w[2]) + sqr(enc.w[3]));
   if (enc.W == 0.0) {
     eprintf("W = 0!\n");
-    exit_cleanly(1);
+    exit_cleanly(1, __FUNCTION__);
   }
 
   /* compute CM quantities */
@@ -146,7 +146,7 @@ scatter_relax(struct encounter enc, struct relaxation_params rparams) {
   wp = sqrt(sqr(enc.w[1]) + sqr(enc.w[2]));
   if (wp == 0.0) {
     eprintf("wp=0 \n");
-    exit_cleanly(1);
+    exit_cleanly(1, __FUNCTION__);
   }
 
   /* You'll notice here that the sign on w1 is opposite that of what's shown in Kris Joshi's
@@ -222,7 +222,7 @@ scatter_relax_old(struct star_coords pos[2], double dt, gsl_rng *rng) {
   wp = sqrt(sqr(enc.w[1]) + sqr(enc.w[2]));
   if (wp == 0.0) {
     eprintf("wp=0 \n");
-    exit_cleanly(1);
+    exit_cleanly(1, __FUNCTION__);
   }
 
   /* You'll notice here that the sign on w1 is opposite that of what's shown in Kris Joshi's

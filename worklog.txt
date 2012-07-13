@@ -188,3 +188,18 @@ get_global_idx(0) was returnung the sentinel. This might affect other places
 where get_global_idx(i) is called with i=0. However I dont recollect any such
 places as I assume all loops start from 1 and not zero. However this is a
 point to keep in mind in case there are errors encountered later.
+
+Jul 5 2012
+Bharath
+---------
+There was a bug in energy cnoservation scheme - index passed as input to
+MPI_PHI_S was local and not global.
+
+In dynamics apply, after binary interactinos are performed by fewbody, if new
+stars are created, r, m and phi for these are set to new values. In the
+current version of the code, the global arrays are set, which is wrong and
+throws errors. These new r values should be stored in the .r variable, and the
+global ararys should remain untouched. I am trying this, but dont know if it
+the the right way to fix this issue. Discussion with Stefan recommended.
+Also have changed zero_star() which is called in create_star() to zero out 
+only the star array and not the global arrays.

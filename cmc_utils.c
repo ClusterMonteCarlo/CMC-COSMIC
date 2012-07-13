@@ -66,7 +66,7 @@ double potential_serial(double r) {
 				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
 		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
 			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
-		exit_cleanly(-2);
+		exit_cleanly(-2, __FUNCTION__);
 	}
 
 	/* Henon's method of computing the potential using star[].phi */ 
@@ -121,7 +121,7 @@ double potential(double r) {
            if (kmin==kmax-1) {
              i= kmin;
            } else {
-             i =  FindZero_r(kmin, kmax, r);
+             i = FindZero_r(kmin, kmax, r);
            };
 	   last_index= i;
    };
@@ -138,7 +138,7 @@ double potential(double r) {
 				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
 		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
 			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
-		exit_cleanly(-2);
+		exit_cleanly(-2, __FUNCTION__);
 	}
 
 	/* Henon's method of computing the potential using star[].phi */ 
@@ -177,8 +177,7 @@ void toggle_debugging(int signal)
 	}
 }
 
-/* close buffers, then exit */
-void exit_cleanly(int signal)
+void exit_cleanly_old(int signal)
 {
 
 	close_buffers();
@@ -187,6 +186,22 @@ void exit_cleanly(int signal)
 #ifdef USE_MPI
 	//mpi_files_merge();
 	//OPT: Another way would be to use assert at all error checks
+	MPI_Abort(MPI_COMM_WORLD, signal);
+#endif
+
+	exit(signal);
+}
+/* close buffers, then exit */
+void exit_cleanly(int signal, const char* fn)
+{
+
+	close_buffers();
+	free_arrays();
+
+#ifdef USE_MPI
+	//mpi_files_merge();
+	//OPT: Another way would be to use assert at all error checks
+	printf("------->MPI_Abort called in %s by proc %d\n", fn, myid);
 	MPI_Abort(MPI_COMM_WORLD, signal);
 #endif
 
@@ -210,7 +225,7 @@ void free_arrays(void){
 void sf_gsl_errhandler(const char *reason, const char *file, int line, int gsl_errno)
 {
 	fprintf(stderr, "gsl: %s:%d: ERROR: %s\n", file, line, reason);
-	exit_cleanly(gsl_errno);
+	exit_cleanly(gsl_errno, __FUNCTION__);
 }
 
 #ifdef USE_MPI
@@ -227,6 +242,8 @@ void mpi_set_velocities3(void){
 	char *vnew2_arr = (char *) malloc ((clus.N_MAX_NEW+1) * sizeof(char));
 	MPI_Status stat;
 
+printf("------------------------>%d %d\n", myid, clus.N_MAX_NEW);
+
 	Eexcess = 0.0; Eexcess_prev = 0.0;
 	for (i = 1; i <= clus.N_MAX_NEW; i++) {
 		g_i = get_global_idx(i);
@@ -235,8 +252,7 @@ void mpi_set_velocities3(void){
 		/* modify velocities of stars that have only undergone relaxation */
 		if (star[i].interacted == 0) {
 			Unewrold = potential(star[i].rOld) + MPI_PHI_S(star[i].rOld, g_i);
-			Unewrnew = star_phi[g_i] + MPI_PHI_S(star_r[g_i], i);
-
+			Unewrnew = star_phi[g_i] + MPI_PHI_S(star_r[g_i], g_i);
 
 			vold2 = star[i].vtold*star[i].vtold + 
 				star[i].vrold*star[i].vrold;
@@ -272,6 +288,7 @@ void mpi_set_velocities3(void){
 			}
 		}
 	}
+
 
 	if(Eexcess > 0)
 		printf("id=%d WARNING!!!!! -------> Excess = %g\n", myid, Eexcess);
@@ -702,7 +719,7 @@ long mpi_potential_calculate(void) {
 		/* I guess NaNs do happen... */
 		if(isnan(mprev)){
 			eprintf("NaN (2) detected\n");
-			exit_cleanly(-1);
+			exit_cleanly(-1, __FUNCTION__);
 		}
 		k++;
 	}
@@ -743,7 +760,7 @@ long mpi_potential_calculate(void) {
 	star_phi[0] = star_phi[1]+ cenma.m*madhoc/star_r[1]; /* U(r=0) is U_1 */
 	if (isnan(star_phi[0])) {
 		eprintf("NaN in phi[0] detected\n");
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 	}
 
 	return (clus.N_MAX);
@@ -775,7 +792,7 @@ long potential_calculate(void) {
 		/* I guess NaNs do happen... */
 		if(isnan(mprev)){
 			eprintf("NaN (2) detected\n");
-			exit_cleanly(-1);
+			exit_cleanly(-1, __FUNCTION__);
 		}
 		k++;
 	}
@@ -808,7 +825,7 @@ long potential_calculate(void) {
 		  eprintf("NaN in phi[%li] detected\n", k);
 		  eprintf("phi[k+1]=%g mprev=%g, r[k]=%g, r[k+1]=%g, m[k]=%g, clus.N_STAR=%li\n", 
 		  	star[k + 1].phi, mprev, star[k].r, star[k + 1].r, star[k].m, clus.N_STAR);
-		  exit_cleanly(-1);
+		  exit_cleanly(-1, __FUNCTION__);
 		}
 	}
 
@@ -823,7 +840,7 @@ long potential_calculate(void) {
 	star[0].phi = star[1].phi+ cenma.m*madhoc/star[1].r; /* U(r=0) is U_1 */
 	if (isnan(star[0].phi)) {
 		eprintf("NaN in phi[0] detected\n");
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 	}
 
 	return (clus.N_MAX);
@@ -1026,7 +1043,7 @@ double fastpotential(double r, long kmin, long kmax) {
 				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
 		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
 			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
-		exit_cleanly(-2);
+		exit_cleanly(-2, __FUNCTION__);
 	}
 
 	/* Henon's method of computing the potential using star[].phi */ 
@@ -1081,7 +1098,7 @@ void nrerror(char error_text[])
 	fprintf(stderr,"Numerical Recipes run-time error...\n");
 	fprintf(stderr,"%s\n",error_text);
 	fprintf(stderr,"...now exiting to system...\n");
-	exit_cleanly(1);
+	exit_cleanly(1, __FUNCTION__);
 }
 
 double *vector(long nl, long nh)
@@ -1223,7 +1240,7 @@ void mpi_central_calculate1(void)
 	/* exit if not enough stars */
 	if (clus.N_STAR <= 2*J || nave >= clus.N_STAR-6) {
 		eprintf("clus.N_STAR <= 2*J || nave >= clus.N_STAR-6\n");
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 	}
 
 	/* allocate array for local density calculations */
@@ -1445,7 +1462,7 @@ void central_calculate(void)
 	/* exit if not enough stars */
 	if (clus.N_STAR <= 2*J || nave >= clus.N_STAR-6) {
 		eprintf("clus.N_STAR <= 2*J || nave >= clus.N_STAR-6\n");
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 	}
 
 	/* allocate array for local density calculations */
@@ -2359,7 +2376,7 @@ int findProcForIndex( int j )
 #endif
 
 	eprintf("Star id out of bounds! for id = %d\n", j);
-	exit_cleanly(-2);
+	exit_cleanly(-2, __FUNCTION__);
 	return -1;
 }
 
@@ -2390,12 +2407,18 @@ int get_global_idx(int i)
 //MPI3: In calc_sigma_new() this happens, so will get this danger warning once. Ignore.
 //if(i==0) printf("---------DANGER!!!!!!!!!!! get_global_idx(i) called with i=0\n");
 
+	if(i > End[myid] - Start[myid] + 1)
+	{
+		printf("------>NEW STAR? myid=%d i=%d gi=%d\n", myid, i, ( clus.N_MAX + (i - (End[myid] - Start[myid] + 1)) ));
+		return ( clus.N_MAX + (i - (End[myid] - Start[myid] + 1)) ); 
+	}
+
 	if(myid == 0) return i;
 
  	if(i - Start[myid] > clus.N_MAX)
 	{
 		eprintf("Index less than 1! proc:%d i=%d\n",myid,i);
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 	}
 	//return ( End[myid-1] + i );
 	return ( Start[myid] + i - 1 );
@@ -2410,7 +2433,7 @@ int get_local_idx(int i)
  	if(i - End[myid-1] < 1)
 	{
 		eprintf("Index less than 1!\n");
-		exit_cleanly(-1);
+		exit_cleanly(-1, __FUNCTION__);
 	}
 
 	return ( i - End[myid-1] );

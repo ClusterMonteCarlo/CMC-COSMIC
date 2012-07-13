@@ -185,7 +185,7 @@ long get_positive_Q_index_new_J(long index, double E, double J, orbit_rs_t orbit
     ktemp= get_positive_Q_index(index, E, J);
     if (ktemp!=-1) {
       eprintf("KATASTROPHE!! Got index=%li, ktemp=%li\n", index, ktemp);
-      exit_cleanly(-1);
+      exit_cleanly(-1, __FUNCTION__);
     };
     return(-1);
   };
@@ -220,13 +220,13 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
   if (star[index].m < ZERO) {
 #endif
     eprintf("Star has zero mass! Should have been already removed! Bail out.");
-    exit_cleanly(-1);
+    exit_cleanly(-1, __FUNCTION__);
   }
 
   /* remove unbound stars */
   if (E >= 0.0) {
     eprintf("Star is unbound! Should have been already removed! Bail out.");
-    exit_cleanly(-1);
+    exit_cleanly(-1, __FUNCTION__);
   }
 
   /* skip the rest if the star is on a nearly circular orbit */
@@ -271,7 +271,7 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
             index, r, rmin, rmax, Q, X, E, J);
         if (isnan(Q)) {
           eprintf("fatal error: Q=vr^2==nan!\n");
-          exit_cleanly(-1);
+          exit_cleanly(-1, __FUNCTION__);
         }
         vr = 0;
       }
@@ -280,7 +280,7 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
     }
     if (k == N_TRY + 1) {
       eprintf("N_TRY exceeded\n");
-      exit_cleanly(-1);
+      exit_cleanly(-1, __FUNCTION__);
     };
 
     /* pick random sign for v_r */
