@@ -1049,16 +1049,16 @@ void cp_m_to_newstar(long oldk, int kbi, long knew)
   
   if (kbi == -1) { /* star comes from input single star */
 #ifdef USE_MPI
-    star_m[knew] = star_m[oldk];
+    star_m[get_global_idx(knew)] = star_m[get_global_idx(oldk)];
 #else
     star[knew].m = star[oldk].m;
 #endif
   } else { /* star comes from input binary */
     if (kbi == 0) {
 #ifdef USE_MPI
-      star_m[knew] = binary[kb].m1; //should this be multiplied by MSUN/units.mstar ?
+      star_m[get_global_idx(knew)] = binary[kb].m1; //should this be multiplied by MSUN/units.mstar ?
     } else {
-      star_m[knew] = binary[kb].m2;//should this be multiplied by MSUN/units.mstar ?
+      star_m[get_global_idx(knew)] = binary[kb].m2;//should this be multiplied by MSUN/units.mstar ?
 #else
       star[knew].m = binary[kb].m1; //should this be multiplied by MSUN/units.mstar ?
     } else {
@@ -1130,7 +1130,7 @@ void cp_m_to_star(long oldk, int kbi, star_t *target_star)
   
   if (kbi == -1) { /* star comes from input single star */
 #ifdef USE_MPI
-    target_star->m = star_m[oldk];
+    target_star->m = star_m[get_global_idx(oldk)];
 #else
     target_star->m = star[oldk].m;
 #endif

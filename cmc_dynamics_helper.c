@@ -231,7 +231,7 @@ long create_binary(int idx, int dyn_0_se_1)
 
 #ifdef USE_MPI
 	/* account for new binary */
-	i = ++N_b_local;
+	++N_b_local;
 #endif
 	
 	/* initialize to zero for safety */
@@ -326,7 +326,7 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	/* first store random variable */
 	if (setY) {
 #ifndef USE_MPI
-	curr_st = &st[findProcForIndex(get_global_idx(k))];
+	curr_st = &st[findProcForIndex(k)];
 #endif
 		star[k].Y = rng_t113_dbl_new(curr_st);
 		//star[k].Y = rng_t113_dbl();
@@ -733,8 +733,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			- binary[jbin].Eint1 - binary[jbin].Eint2
 			- binary[jbinp].Eint1 - binary[jbinp].Eint2;
 		
-#ifdef USE_MPi
-		cmc_units.v = sqrt((star_m[k]+star_m[kp])/(star_m[k]*star_m[kp]) * 
+#ifdef USE_MPI
+		cmc_units.v = sqrt((star_m[get_global_idx(k)]+star_m[get_global_idx(kp)])/(star_m[get_global_idx(k)]*star_m[get_global_idx(kp)]) * 
 				   (binary[jbin].m1*binary[jbin].m2/binary[jbin].a + 
 				    binary[jbinp].m1*binary[jbinp].m2/binary[jbinp].a) * madhoc);
 #else
@@ -767,7 +767,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			- binary[jbin].Eint1 - binary[jbin].Eint2 - star[ksin].Eint;
 
 #ifdef USE_MPI
-		cmc_units.v = sqrt((star_m[ksin]+star_m[kbin])/(star_m[ksin]*star_m[kbin]) * 
+		cmc_units.v = sqrt((star_m[get_global_idx(ksin)]+star_m[get_global_idx(kbin)])/(star_m[get_global_idx(ksin)]*star_m[get_global_idx(kbin)]) * 
 				   (binary[jbin].m1 * binary[jbin].m2 / binary[jbin].a) * madhoc);
 #else
 		cmc_units.v = sqrt((star[ksin].m+star[kbin].m)/(star[ksin].m*star[kbin].m) * 
@@ -788,7 +788,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 	t=0;
 #ifdef USE_MPI
-	bmax = rperi * sqrt(1.0 + 2.0 * ((star_m[k] + star_m[kp]) * madhoc) / (rperi * sqr(W)));
+	bmax = rperi * sqrt(1.0 + 2.0 * ((star_m[get_global_idx(k)] + star_m[get_global_idx(kp)]) * madhoc) / (rperi * sqr(W)));
 #else
 	bmax = rperi * sqrt(1.0 + 2.0 * ((star[k].m + star[kp].m) * madhoc) / (rperi * sqr(W)));
 #endif
@@ -975,7 +975,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			}
 			
 #ifndef USE_MPI
-			curr_st = &st[findProcForIndex(get_global_idx(k))];
+			curr_st = &st[findProcForIndex(k)];
 #endif
 			/* properties specific to single/binary/triple stars */
 			if (hier.obj[i]->n == 1) {
@@ -1027,6 +1027,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				}
 				
 				star[knew].rad = star[knew].se_radius * RSUN / units.l;
+
+//MPI3: Keeping the global m updated.
+#ifdef USE_MPI
+//				star_m[get_global_idx(knew)] = star[knew].m;
+#endif
 
 				/* track binding energy */
 				BEf += -star[knew].Eint;
@@ -1172,6 +1177,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					/ (2.0 * binary[star[knew].binind].a) 
 					- binary[star[knew].binind].Eint1 - binary[star[knew].binind].Eint2;
                                 compress_binary(&star[knew], &binary[star[knew].binind]);
+printf("----->new binary myid=%d knew=%d binind=%d id1=%d id2=%d\n", myid, knew, star[knew].binind, binary[star[knew].binind].id1, binary[star[knew].binind].id2);
 			} else if (hier.obj[i]->n == 3) {
 				/******************************************/
 				/* break triple by shrinking inner binary */

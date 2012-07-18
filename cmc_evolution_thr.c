@@ -106,8 +106,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		kmin = FindZero_Q(g_si, 0, ktemp, E, J);
 		kmax = FindZero_Q(g_si, ktemp, clus.N_MAX + 1, E, J);
 #endif
-if(myid==0 && si==24981)
-printf("----->kmin=%d kmax=%d g_si=%d ktemp=%d clus.N_MAX+1=%d, E=%g J=%g\n", kmin, kmax, g_si, ktemp, clus.N_MAX+1, E, J);
+
 		while (function_Q(g_si, kmin, E, J) > 0 && kmin > 0)
 			kmin--;
 		while (function_Q(g_si, kmin + 1, E, J) < 0 
@@ -127,9 +126,6 @@ printf("----->kmin=%d kmax=%d g_si=%d ktemp=%d clus.N_MAX+1=%d, E=%g J=%g\n", km
 		Uk = star[i].phi + PHI_S(rk, si);
 		Uk1 = star[i1].phi + PHI_S(rk1, si);
 #endif
-		
-//if(g_si==516)
-//	printf("--------------->kmin=%ld kmax=%ld uk=%.18g uk1=%.18g rk=%.18g rk1=%.18g\n", kmin, kmax, Uk, Uk1, rk, rk1);
 		
 		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
 		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
@@ -347,6 +343,11 @@ double GetTimeStep(gsl_rng *rng) {
 		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(xcoll) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
 				(1.0 + central.mR_ave/(2.0*xcoll*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
 			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
+printf("myid=%d nsin=%g xcoll=%g vsin=%g r2=%g mr=%g\n", myid, central.n_sin, xcoll, central.v_sin_rms, central.R2_ave, central.mR_ave);
+
+#ifdef USE_MPI
+if(myid==0)
+#endif
 		fprintf (stdout, "Time = %f Gyr Tcoll = %f Gyr\n", 
 				TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09,
 				Tcoll*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09);
@@ -424,12 +425,10 @@ double GetTimeStep(gsl_rng *rng) {
 	}
 
 	/* debugging */
-	dprintf("Dt=%g DTrel=%g DTcoll=%g DTbb=%g DTbs=%g DTse=%g DTrejuv=%g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
-
 #ifdef USE_MPI
 	if(myid==0)
 #endif
-	printf("Dt=%.18g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
+		printf("Dt=%.18g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
 
 	return (Dt);
 }
@@ -755,8 +754,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		j = si;
 		g_j = get_global_idx(j);		
 
-if(myid==0 && si==24981)
-printf("----->E=%g %g J=%g %g r=%g\n", E, star[j].E, J, star[j].J, star_r[g_j]);
 #ifdef USE_MPI
 		E = star[j].E + MPI_PHI_S(star_r[g_j], g_j);
 #else
@@ -863,21 +860,14 @@ printf("----->E=%g %g J=%g %g r=%g\n", E, star[j].E, J, star[j].J, star_r[g_j]);
 				dprintf("circular orbit: vr^2<0: setting vr=0: si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g\n", si, r, rmin, rmax, Q, X, E, J);
 				if (isnan(Q)) {
 					eprintf("si = %ld \tfatal error: Q=vr^2==nan!\n",si);
-					printf("----> si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g kmin=%d kmax=%d\n", si, r, rmin, rmax, Q, X, E, J, orbit_rs.kmin, orbit_rs.kmax);
-						exit_cleanly(-1, __FUNCTION__);
+					exit_cleanly(-1, __FUNCTION__);
 				}
 				vr = 0;
 			}
 			if (g0 < 1.0 / vr * drds)	/* if g0 < g(s0) then success! */
 				break;
 		}
-/*
-#ifdef USE_MPI
-if(myid==0)
-#endif
-if(j==516)
-	printf("---------------> si=%ld r=%.18g rmin=%.18g rmax=%.18g vr^2=%.18g X=%.18g E=%.18g J=%.18g\n", si, r, rmin, rmax, Q, X, E, J);
-*/
+
 		if (k == N_TRY + 1) {
 			eprintf("N_TRY exceeded\n");
 			exit_cleanly(-1, __FUNCTION__);
@@ -947,7 +937,6 @@ double get_positions(){
 
 	max_rad = 0.0;	/* max radius for all stars, returned on success */
 
-printf("------------->%d I AM THE BLACK SHEEP\n", myid);
 	phi_rtidal = potential(Rtidal);
 	phi_zero = potential(0.0);
 

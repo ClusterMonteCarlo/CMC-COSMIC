@@ -242,8 +242,6 @@ void mpi_set_velocities3(void){
 	char *vnew2_arr = (char *) malloc ((clus.N_MAX_NEW+1) * sizeof(char));
 	MPI_Status stat;
 
-printf("------------------------>%d %d\n", myid, clus.N_MAX_NEW);
-
 	Eexcess = 0.0; Eexcess_prev = 0.0;
 	for (i = 1; i <= clus.N_MAX_NEW; i++) {
 		g_i = get_global_idx(i);
@@ -1547,6 +1545,9 @@ void central_calculate(void)
 	/* core relaxation time, Spitzer (1987) eq. (2-62) */
 	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.m_ave);
 
+//printf("rho=%g v_rms=%g rc=%g m_ave=%g n=%g rc_s=%g N_sin=%ld N_bin=%ld n_sin=%g n_bin=%g\n rho)sin")
+
+
 	/* calculate other quantities using old method */
 	Ncentral = 0;
 	Msincentral = 0.0;
@@ -2409,8 +2410,8 @@ int get_global_idx(int i)
 
 	if(i > End[myid] - Start[myid] + 1)
 	{
-		printf("------>NEW STAR? myid=%d i=%d gi=%d\n", myid, i, ( clus.N_MAX + (i - (End[myid] - Start[myid] + 1)) ));
-		return ( clus.N_MAX + (i - (End[myid] - Start[myid] + 1)) ); 
+//		printf("------>NEW STAR? myid=%d i=%d gi=%d\n", myid, i, ( clus.N_MAX + (i - (End[myid] - Start[myid] + 1)) ));
+		return ( 1 + clus.N_MAX + (i - (End[myid] - Start[myid] + 1)) ); 
 	}
 
 	if(myid == 0) return i;

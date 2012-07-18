@@ -25,7 +25,6 @@ long FindZero_r_serial(long kmin, long kmax, double r){
 
 	do {
 		ktry = (kmin+kmax+1)/2;
-		//printf("ktry=%ld\n",ktry);
 		if (star[ktry].r<r)
 		{
 			kmin = ktry;
@@ -46,8 +45,6 @@ long FindZero_r(long kmin, long kmax, double r){
 	 * find and return the index k, such that star[k].r<r<star[k+1].r */
 	long ktry;
 
-if(myid==0)
-printf("------>myid=%d r_kmin=%d r_kmax=%d r_ktry=%g r=%g\n", myid, star_r[kmin], star_r[kmax], star_r[ktry], r);
 #ifdef USE_MPI
 	if ((star_r[kmin]>r && kmin>1) || star_r[kmax]<r) {
 		dprintf("r is outside kmin kmax!!\n");
@@ -177,9 +174,6 @@ long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 	 * anologous to above, except FUNC(k) may be decreasing 
 	 * rather than increasing */
 	long ktry;
-
-if(myid==0 && j==24981)
-printf("----->j=%d kmin=%d kmax=%d 1=%g 2=%g\n", j, kmin, kmax, FUNC(j, kmin, E, J), FUNC(j, kmax, E, J));
 
 	if(FUNC(j, kmin, E, J)<FUNC(j, kmax, E, J)){
 		do {
