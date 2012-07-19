@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
 
 
 /* TESTING FOR KEVIN */
-/*
+
 #ifdef USE_MPI
 		// Only proc with id 0 prints out.
 		if(myid==0)
@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
 			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
 		fclose(ftest);
 #endif
-*/
+
 
 		print_results();
 		print_small_output();

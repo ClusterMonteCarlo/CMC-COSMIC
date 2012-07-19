@@ -611,9 +611,6 @@ void units_set(void);
 void central_calculate(void);
 
 #ifdef USE_MPI
-void mpi_central_calculate(void);
-void mpi_central_calculate1(void);
-void mpi_central_calculate2(void);
 int sample_sort_old( star_t        *starData,
                   long          *local_N,
                   MPI_Datatype  eType,

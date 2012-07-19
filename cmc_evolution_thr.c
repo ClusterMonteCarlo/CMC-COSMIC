@@ -307,6 +307,7 @@ double get_Tbs(central_t central) {
   } else {
     Tbs = GSL_POSINF;
   }
+
   return(Tbs);
 }
 

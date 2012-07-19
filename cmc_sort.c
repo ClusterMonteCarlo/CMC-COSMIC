@@ -784,10 +784,6 @@ int sample_sort( type			*buf,
 	//MPI3: May be one could just use actual_count[myid] instead of max_alloc...?
 	resultBuf = (type*) malloc(max_alloc_outbuf_size * sizeof(type)); 
 
-/*
-	for(i=0; i<procs; i++)
-		printf("proc %d:\tsend_count[%d] = %d\tsend_index[%d] = %d\trecv_count[%d] = %d \n", myid, i, b_send_count[i], i, b_send_index[i], i, b_recv_count[i]);
-*/
 
 	/* allocate asynchronous I/O request and wait status */
 	sendStatus = (MPI_Status*)  malloc(2*procs* sizeof(MPI_Status));

@@ -1208,233 +1208,6 @@ void units_set(void)
 	}
 }
 
-#ifdef USE_MPI
-void mpi_central_calculate(void)
-{
-	mpi_central_calculate1();
-	mpi_central_calculate2();
-}
-#endif
-
-#ifdef USE_MPI
-/* calculate central quantities */
-void mpi_central_calculate1(void)
-{
-	double m=0.0, *rhoj, mrho, Vrj, rhojsum, rhoj2sum;
-	long J=6, i, j, jmin, jmax, nave;
-
-	/* average over all stars out to half-mass radius */
-	//MPI3: Do on all nodes. That can avoid Bcast.
-	if(myid==0) {
-		nave = 1;
-		while (m < 0.5 * Mtotal) {
-		/*MPI2: Using global m array*/
-			m += star_m[nave] / clus.N_STAR;
-			nave++;
-		}
-	}
-	MPI_Bcast(&nave, 1, MPI_LONG, 0, MPI_COMM_WORLD);
-
-	/* exit if not enough stars */
-	if (clus.N_STAR <= 2*J || nave >= clus.N_STAR-6) {
-		eprintf("clus.N_STAR <= 2*J || nave >= clus.N_STAR-6\n");
-		exit_cleanly(-1, __FUNCTION__);
-	}
-
-	/* allocate array for local density calculations */
-	rhoj = (double *) malloc((nave+1) * sizeof(double));
-
-	//MPI2: Communicating ghost particles
-/*
-	MPI_Status stat;
-	if(myid != 0)
-		MPI_Send(&star_m[mpiBegin], J/2, MPI_DOUBLE, ( myid + procs - 1 ) % procs, 0, MPI_COMM_WORLD);
-	if(myid != procs-1)
-		MPI_Recv(&star_m[mpiEnd + 1], J/2, MPI_DOUBLE, ( myid + 1 ) % procs, 0, MPI_COMM_WORLD, &stat);
-MPI_Barrier(MPI_COMM_WORLD);
-	if(myid != procs-1)
-		MPI_Send(&star_m[mpiEnd - J/2 + 1], J/2, MPI_DOUBLE, ( myid + 1 ) % procs, 0, MPI_COMM_WORLD);
-	if(myid != 0)
-		MPI_Recv(&star_m[mpiBegin - J/2], J/2, MPI_DOUBLE, ( myid + procs - 1) % procs, 0, MPI_COMM_WORLD, &stat);
-MPI_Barrier(MPI_COMM_WORLD);
-*/
-
-	/* calculate rhoj's (Casertano & Hut 1985) */
-	//for (i=mpiBeginLocal; i<=mpiEndLocal; i++) {
-	for (i=1; i<=nave; i++) {
-		// Change so that the rest of the nodes dont have to continue for nave times.
-		if( ! (i>=mpiBegin && i<=mpiEnd) )
-			continue;
-
-		//MPI3: J is a constant = 6 here.
-		jmin = MAX(i-J/2, 1);
-		jmax = jmin + J;
-		mrho = 0.0;
-		//OPT: Loop could be optimized by using sliding window, but at the loss of accuracy and comparability with serial code.
-		/* this is equivalent to their J-1 factor for the case of equal masses,
-		   and seems like a good generalization for unequal masses */
-		for (j=jmin+1; j<=jmax-1; j++) {
-			mrho += star_m[j] * madhoc;
-		}
-
-		Vrj = 4.0/3.0 * PI * (fb_cub(star_r[jmax]) - fb_cub(star_r[jmin]));
-		rhoj[i] = mrho / Vrj;
-	}
-
-	/* calculate core quantities using density weighted averages (note that in 
-	   Casertano & Hut (1985) only rho and rc are analyzed and tested) */
-	double buf_reduce[7];
-	for(i=0; i<7; i++)
-		buf_reduce[i] = 0.0;
-
-	for (i=1; i<=nave; i++) {
-		if( ! (i>=mpiBegin && i<=mpiEnd) )
-			continue;
-		buf_reduce[0] += rhoj[i];
-		buf_reduce[1] += sqr(rhoj[i]);
-		buf_reduce[2] += sqr(rhoj[i]);
-		buf_reduce[3] += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
-		buf_reduce[4] += rhoj[i] * star_r[i];
-		buf_reduce[5] += sqr(rhoj[i] * star_r[i]);
-		buf_reduce[6] += rhoj[i] * star_m[i] * madhoc;
-	}
-
-	if(myid==0)
-		MPI_Reduce(MPI_IN_PLACE, buf_reduce, 7, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-	else
-		MPI_Reduce(buf_reduce, buf_reduce, 7, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);		
-
-	rhojsum = buf_reduce[0];
-	rhoj2sum = buf_reduce[1];
-	central.rho = buf_reduce[2];
-	central.v_rms = buf_reduce[3];
-	central.rc = buf_reduce[4];
-	rc_nb = buf_reduce[5];
-	central.m_ave = buf_reduce[6];
-
-	//MPI3: Do on all nodes.
-	if(myid==0) {
-		central.rho /= rhojsum;
-		/* correction for inherent bias in estimator */
-		central.rho *= 4.0/5.0;
-		/* and now correct for the fact this estimate of density is systematically smaller than the
-			theoretical by a factor of about 2 (for a range of King models and for the Plummer model) */
-		central.rho *= 2.0;
-		central.v_rms /= rhojsum;
-		central.v_rms = sqrt(central.v_rms);
-		central.rc /= rhojsum;
-		rc_nb = sqrt(rc_nb/rhoj2sum);
-		central.m_ave /= rhojsum;
-
-		/* quantities derived from averages */
-		central.n = central.rho / central.m_ave;
-		central.rc_spitzer = sqrt(3.0 * sqr(central.v_rms) / (4.0 * PI * central.rho));
-	}
-	free(rhoj);
-}
-#endif
-
-#ifdef USE_MPI
-void mpi_central_calculate2(void) {
-	double Msincentral, Mbincentral, Vcentral, rcentral;
-	long i, Ncentral;
-
-	if(myid==0) {
-		/* calculate other quantities using old method */
-		Ncentral = 0;
-		Msincentral = 0.0;
-		Mbincentral = 0.0;
-		central.N_sin = 0;
-		central.N_bin = 0;
-		central.v_sin_rms = 0.0;
-		central.v_bin_rms = 0.0;
-		central.w2_ave = 0.0;
-		central.R2_ave = 0.0;
-		central.mR_ave = 0.0;
-		central.a_ave = 0.0;
-		central.a2_ave = 0.0;
-		central.ma_ave = 0.0;
-
-		//MPI3: Can be totally parallel. Might need reduce- but for those values that impact timestep calculation, have to be done using send and recv in a particular order to avoid round-off errors.
-		for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
-			Ncentral++;
-			/* use only code units here, so always divide star[].m by clus.N_STAR */
-			central.w2_ave += 2.0 * star_m[i] / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
-
-			if (star[i].binind == 0) {
-				central.N_sin++;
-				Msincentral += star_m[i] / ((double) clus.N_STAR);
-				central.v_sin_rms += sqr(star[i].vr) + sqr(star[i].vt);
-				central.R2_ave += sqr(star[i].rad);
-				central.mR_ave += star_m[i] / ((double) clus.N_STAR) * star[i].rad;
-			} else {
-				central.N_bin++;
-				Mbincentral += star_m[i] / ((double) clus.N_STAR);
-				central.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
-				central.a_ave += binary[star[i].binind].a;
-				central.a2_ave += sqr(binary[star[i].binind].a);
-				central.ma_ave += star_m[i] / ((double) clus.N_STAR) * binary[star[i].binind].a;
-			}
-		}
-
-		/* object quantities */
-		rcentral = star_r[Ncentral + 1];
-		Vcentral = 4.0/3.0 * PI * cub(rcentral);
-		central.w2_ave /= central.m_ave * ((double) Ncentral);
-
-		/* single star quantities */
-		central.n_sin = ((double) central.N_sin) / Vcentral;
-		central.rho_sin = Msincentral / Vcentral;
-		if (central.N_sin != 0) {
-			central.m_sin_ave = Msincentral / ((double) central.N_sin);
-			central.v_sin_rms = sqrt(central.v_sin_rms / ((double) central.N_sin));
-			central.R2_ave /= ((double) central.N_sin);
-			central.mR_ave /= ((double) central.N_sin);
-		} else {
-			central.m_sin_ave = 0.0;
-			central.v_sin_rms = 0.0;
-			central.R2_ave = 0.0;
-			central.mR_ave = 0.0;
-		}
-
-		/* binary star quantities */
-		central.n_bin = ((double) central.N_bin) / Vcentral;
-		central.rho_bin = Mbincentral / Vcentral;
-		if (central.N_bin != 0) {
-			central.m_bin_ave = Mbincentral / ((double) central.N_bin);
-			central.v_bin_rms = sqrt(central.v_bin_rms / ((double) central.N_bin));
-			central.a_ave /= ((double) central.N_bin);
-			central.a2_ave /= ((double) central.N_bin);
-			central.ma_ave /= ((double) central.N_bin);
-		} else {
-			central.m_bin_ave = 0.0;
-			central.v_bin_rms = 0.0;
-			central.a_ave = 0.0;
-			central.a2_ave = 0.0;
-			central.ma_ave = 0.0;
-		}
-	}
-
-	MPI_Bcast(&central, sizeof(central_t), MPI_BYTE, 0, MPI_COMM_WORLD);
-
-	/* set global code variables */
-	v_core = central.v_rms;
-	rho_core = central.rho;
-	core_radius = central.rc;
-	N_core = 4.0 / 3.0 * PI * cub(core_radius) * (central.n / 2.0);
-	//Sourav
-	N_core_nb = 4.0 / 3.0 * PI * cub(rc_nb) * (central.n / 2.0);
-
-	/* core relaxation time, Spitzer (1987) eq. (2-62) */
-	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.m_ave);
-
-	/* set global variables that are used throughout the code */
-	rho_core_single = central.rho_sin;
-	rho_core_bin = central.rho_bin;
-	
-}
-#endif
-
 /* calculate central quantities */
 void central_calculate(void)
 {
@@ -1515,6 +1288,7 @@ void central_calculate(void)
 #endif
 	}
 
+//MPI3: This reduce gives round-off errors which might affect the timestep mildly. Consult Stefan and see if it needs to be changed to be summed up in order.
 #ifdef USE_MPI
 		MPI_Allreduce(MPI_IN_PLACE, &central.v_rms, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #endif
@@ -1545,8 +1319,6 @@ void central_calculate(void)
 	/* core relaxation time, Spitzer (1987) eq. (2-62) */
 	Trc = 0.065 * cub(central.v_rms) / (central.rho * central.m_ave);
 
-//printf("rho=%g v_rms=%g rc=%g m_ave=%g n=%g rc_s=%g N_sin=%ld N_bin=%ld n_sin=%g n_bin=%g\n rho)sin")
-
 
 	/* calculate other quantities using old method */
 	Ncentral = 0;
@@ -1563,74 +1335,101 @@ void central_calculate(void)
 	central.a2_ave = 0.0;
 	central.ma_ave = 0.0;
 
-#ifdef USE_MPI
-	for (i=1; i<=mpiEnd-mpiBegin+1; i++) {
-#else
 	for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
-#endif
-	/* for (i=1; i<=MIN((long) N_core, clus.N_STAR); i++) { */
-		Ncentral++;
+		//MPI3: In the case when the central stars dont all lie in the root node, this just cant be done only by the root node. But assuming that case will never happen, we'll just throw an error for such cases.
+		if(NUM_CENTRAL_STARS > End[0] - Start[0]) 
+		{
+			eprintf("Central stars dont fit in root node!\n");
+			MPI_Abort(MPI_COMM_WORLD, -1);
+		}
 
-		j = get_global_idx(i);
+		if(myid==0)
+		{
+			Ncentral++;
+
+			j = get_global_idx(i);
 
 		/* use only code units here, so always divide star[].m by clus.N_STAR */
 #ifdef USE_MPI
-		central.w2_ave += 2.0 * star_m[j] / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
+			central.w2_ave += 2.0 * star_m[j] / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
 #else
-		central.w2_ave += 2.0 * star[i].m / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
+			central.w2_ave += 2.0 * star[i].m / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
 #endif
 
-		if (star[i].binind == 0) {
-			central.N_sin++;
+			if (star[i].binind == 0) {
+				central.N_sin++;
 #ifdef USE_MPI
-			Msincentral += star_m[j] / ((double) clus.N_STAR);
+				Msincentral += star_m[j] / ((double) clus.N_STAR);
 #else
-			Msincentral += star[i].m / ((double) clus.N_STAR);
+				Msincentral += star[i].m / ((double) clus.N_STAR);
 #endif
-			central.v_sin_rms += sqr(star[i].vr) + sqr(star[i].vt);
-			central.R2_ave += sqr(star[i].rad);
+				central.v_sin_rms += sqr(star[i].vr) + sqr(star[i].vt);
+				central.R2_ave += sqr(star[i].rad);
 #ifdef USE_MPI
-			central.mR_ave += star_m[j] / ((double) clus.N_STAR) * star[i].rad;
+				central.mR_ave += star_m[j] / ((double) clus.N_STAR) * star[i].rad;
 #else
-			central.mR_ave += star[i].m / ((double) clus.N_STAR) * star[i].rad;
+				central.mR_ave += star[i].m / ((double) clus.N_STAR) * star[i].rad;
 #endif
-		} else {
-			central.N_bin++;
+			} else {
+				central.N_bin++;
 
 #ifdef USE_MPI
-			Mbincentral += star_m[j] / ((double) clus.N_STAR);
+				Mbincentral += star_m[j] / ((double) clus.N_STAR);
 #else
-			Mbincentral += star[i].m / ((double) clus.N_STAR);
+				Mbincentral += star[i].m / ((double) clus.N_STAR);
 #endif
-			central.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
-			central.a_ave += binary[star[i].binind].a;
-			central.a2_ave += sqr(binary[star[i].binind].a);
+				central.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
+				central.a_ave += binary[star[i].binind].a;
+				central.a2_ave += sqr(binary[star[i].binind].a);
 #ifdef USE_MPI
-			central.ma_ave += star_m[j] / ((double) clus.N_STAR) * binary[star[i].binind].a;
+				central.ma_ave += star_m[j] / ((double) clus.N_STAR) * binary[star[i].binind].a;
 #else
-			central.ma_ave += star[i].m / ((double) clus.N_STAR) * binary[star[i].binind].a;
+				central.ma_ave += star[i].m / ((double) clus.N_STAR) * binary[star[i].binind].a;
 #endif
+			}
 		}
 	}
 
 #ifdef USE_MPI
 	//MPI3: Packing into array to optimize communication.
-	double buf_reduce[5];
-	buf_reduce[0] = central.w2_ave;
-	buf_reduce[1] = Msincentral;
-	buf_reduce[2] = central.mR_ave;
-	buf_reduce[3] = Mbincentral;
-	buf_reduce[4] = central.ma_ave;
+	double *buf_bcast_dbl = (double*) malloc(10 * sizeof(double));
+	buf_bcast_dbl[0] = central.w2_ave;
+	buf_bcast_dbl[1] = Msincentral;
+	buf_bcast_dbl[2] = central.mR_ave;
+	buf_bcast_dbl[3] = Mbincentral;
+	buf_bcast_dbl[4] = central.ma_ave;
+	buf_bcast_dbl[5] = central.a2_ave;
+	buf_bcast_dbl[6] = central.a_ave;
+	buf_bcast_dbl[7] = central.v_sin_rms;
+	buf_bcast_dbl[8] = central.v_bin_rms;
+	buf_bcast_dbl[9] = central.R2_ave;
 
-	MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 5, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+	MPI_Bcast( buf_bcast_dbl, 10, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
-	central.w2_ave = buf_reduce[0];
-	Msincentral = buf_reduce[1];
-	central.mR_ave = buf_reduce[2];
-	Mbincentral = buf_reduce[3];
-	central.ma_ave = buf_reduce[4];
+	central.w2_ave = buf_bcast_dbl[0];
+	Msincentral = buf_bcast_dbl[1];
+	central.mR_ave = buf_bcast_dbl[2];
+	Mbincentral = buf_bcast_dbl[3];
+	central.ma_ave = buf_bcast_dbl[4];
+	central.a2_ave = buf_bcast_dbl[5];
+	central.a_ave = buf_bcast_dbl[6];
+	central.v_sin_rms = buf_bcast_dbl[7];
+	central.v_bin_rms = buf_bcast_dbl[8];
+	central.R2_ave = buf_bcast_dbl[9];
+	free(buf_bcast_dbl);
+	
+	long *buf_bcast_long = (long*) malloc(3 * sizeof(long));
+	buf_bcast_long[0] = Ncentral;
+	buf_bcast_long[1] = central.N_sin;
+	buf_bcast_long[2] = central.N_bin;
 
-	MPI_Allreduce(MPI_IN_PLACE, &Ncentral, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Bcast( buf_bcast_long, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+
+	Ncentral = buf_bcast_long[0];
+	central.N_sin = buf_bcast_long[1];
+	central.N_bin = buf_bcast_long[2];
+
+	free(buf_bcast_long);
 #endif
 
 	/* object quantities */
@@ -1673,6 +1472,8 @@ void central_calculate(void)
 		central.a2_ave = 0.0;
 		central.ma_ave = 0.0;
 	}
+
+//printf("\n%d rho=%g v_rms=%g rc=%g m_ave=%g n=%g rc_s=%g N_sin=%ld N_bin=%ld n_sin=%g n_bin=%g\n rho_sin=%g rho_bin=%g m_sin_ave=%g m_bin_ave=%g v_sin=%g v_bin=%g w2=%g R2=%g mR=%g a=%g a2=%g ma=%g\n\n", myid, central.rho, central.v_rms, central.rc, central.m_ave, central.n, central.rc_spitzer, central.N_sin, central.N_bin, central.n_sin, central.n_bin, central.rho_sin, central.rho_bin, central.m_sin_ave, central.m_bin_ave, central.v_sin_rms, central.v_bin_rms, central.w2_ave, central.R2_ave, central.mR_ave, central.a_ave, central.a2_ave, central.ma_ave);
 
 	/* set global variables that are used throughout the code */
 	rho_core_single = central.rho_sin;
@@ -2099,7 +1900,6 @@ void calc_timestep(gsl_rng *rng)
 	//MPI3: Do on all nodes, and remove Bcast
 	//for the next step, only simul_relax needs to be done in parallel, and DTrel needs to be broadcasted. rest can be done on each node.
 	//Step 2: Do simul_relax() on all procs and others only on root. then broadcast Dt
-	Dt = GetTimeStep(rng); //reduction again. Timestep needs to be communicated to all procs.
 
 	/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
 	//MPI2: root node

@@ -7,7 +7,7 @@ MASS_BINS = 0.1,1.0,10.0,100.0,1000.0
 
 SAMPLESIZE = 128 #No.of sample keys contributed by each proc. for sample sort - only applicable for MPI version.
 STELLAR_EVOLUTION = 0
-T_MAX_COUNT = 2
+T_MAX_COUNT = 5
 SNAPSHOTTING = 1
 SNAPSHOT_DELTAT = 1000000
 SNAPSHOT_DELTACOUNT = 1000000
