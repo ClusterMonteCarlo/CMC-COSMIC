@@ -611,18 +611,13 @@ void units_set(void);
 void central_calculate(void);
 
 #ifdef USE_MPI
-int sample_sort_old( star_t        *starData,
-                  long          *local_N,
-                  MPI_Datatype  eType,
-                  MPI_Comm      commgroup,
-                  int           num_samples );
-
 typedef star_t type;
 typedef double keyType;
 void remove_stripped_stars(type* buf, int* local_N);
 int sample_sort( 	type			*buf,
 						int			*local_N,
 						MPI_Datatype dataType,
+						binary_t		*b_buf,
 						MPI_Datatype bDataType,
 						MPI_Comm    commgroup,
 						int			n_samples );

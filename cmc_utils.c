@@ -1337,6 +1337,7 @@ void central_calculate(void)
 
 	for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
 		//MPI3: In the case when the central stars dont all lie in the root node, this just cant be done only by the root node. But assuming that case will never happen, we'll just throw an error for such cases.
+#ifdef USE_MPI
 		if(NUM_CENTRAL_STARS > End[0] - Start[0]) 
 		{
 			eprintf("Central stars dont fit in root node!\n");
@@ -1345,6 +1346,7 @@ void central_calculate(void)
 
 		if(myid==0)
 		{
+#endif
 			Ncentral++;
 
 			j = get_global_idx(i);
@@ -1387,7 +1389,9 @@ void central_calculate(void)
 				central.ma_ave += star[i].m / ((double) clus.N_STAR) * binary[star[i].binind].a;
 #endif
 			}
+#ifdef USE_MPI
 		}
+#endif
 	}
 
 #ifdef USE_MPI
@@ -1900,6 +1904,7 @@ void calc_timestep(gsl_rng *rng)
 	//MPI3: Do on all nodes, and remove Bcast
 	//for the next step, only simul_relax needs to be done in parallel, and DTrel needs to be broadcasted. rest can be done on each node.
 	//Step 2: Do simul_relax() on all procs and others only on root. then broadcast Dt
+   Dt = GetTimeStep(rng); //reduction again. Timestep needs to be communicated to all procs.
 
 	/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
 	//MPI2: root node
@@ -2057,17 +2062,11 @@ void qsorts_new(void)
 	MPI_Datatype binarytype;
 	MPI_Type_contiguous( sizeof(binary_t), MPI_BYTE, &binarytype );
 	MPI_Type_commit( &binarytype );
-/*
-	clus.N_MAX = sample_sort_old(star,
-									&clus.N_MAX_NEW,
-									startype,
-									MPI_COMM_WORLD,
-									SAMPLESIZE);
-*/
 	int temp = (int)clus.N_MAX_NEW; //to avoid incompatible pointer type warning
 	clus.N_MAX = sample_sort(	star+1,
                 					&temp,
                 					startype,
+										binary+1,
                 					binarytype,
                 					MPI_COMM_WORLD,
                 					SAMPLESIZE );

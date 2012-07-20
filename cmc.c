@@ -349,6 +349,51 @@ int main(int argc, char *argv[])
 		tmpTimeStart = timeStartSimple();
 		calc_potential_new();
 
+#ifdef USE_MPI
+      int j;
+      strcpy(filename, "test_out_par");
+      strcpy(tempstr, filename);
+      sprintf(num, "%d", myid);
+      strcat(tempstr, num);
+      strcat(tempstr, ".dat");
+      for( i = 0; i < procs; i++ )
+      {
+         if(myid == i)
+         {
+            //printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
+            ftest = fopen( tempstr, "w" );
+            for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
+            {
+               //if(star[j].binind>0)
+                  //fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
+               if(star[j].binind>0)
+                  fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", get_global_idx(j), star_r[get_global_idx(j)], star[j].id, binary[star[j].binind].id1, binary[star[j].binind].id2);
+               else
+                  fprintf(ftest, "%ld\t%.18g\t%ld\n", get_global_idx(j), star_r[get_global_idx(j)], star[j].id);
+            }
+            fclose(ftest);
+         }
+      }
+      if(myid==0)
+      {
+         char process_str[30];
+         sprintf(process_str, "./process.sh %d", procs);
+         system(process_str);
+      }
+#else
+      strcpy(tempstr, "test_out_ser.dat");
+      ftest = fopen( tempstr, "w" );
+      for( i = 1; i <= clus.N_MAX; i++ )
+      {
+         if(star[i].binind>0)
+            fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
+         else
+            fprintf(ftest, "%ld\t%.18g\t%ld\n", i, star[i].r, star[i].id);
+      }
+      fclose(ftest);
+#endif
+
+
 		//Calculating Start and End values for each processor for mimcking parallel rng.
 		findLimits( clus.N_MAX, 20 );
 		timeEndSimple(tmpTimeStart, &t_oth);
@@ -389,7 +434,7 @@ int main(int argc, char *argv[])
 
 
 /* TESTING FOR KEVIN */
-
+/*
 #ifdef USE_MPI
 		// Only proc with id 0 prints out.
 		if(myid==0)
@@ -408,7 +453,7 @@ int main(int argc, char *argv[])
 			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
 		fclose(ftest);
 #endif
-
+*/
 
 		print_results();
 		print_small_output();
