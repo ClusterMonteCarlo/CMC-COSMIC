@@ -10,6 +10,7 @@
 #include "common/taus113-v2.h"
 #include "fewbody-0.24/fewbody.h"
 #include "cmc_core.h"
+#include "config.h"
 
 // This automatic SVN versioning only updates the version of this file.
 //#define CMCVERSION "$Revision$"

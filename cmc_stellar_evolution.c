@@ -11,6 +11,7 @@ void stellar_evolution_init(void){
   double tphysf, dtp, vs[12];
   int i;
   long k, kb;
+  struct rng_t113_state temp_state;
   binary_t tempbinary;
   
   /* SSE */
@@ -117,6 +118,8 @@ void stellar_evolution_init(void){
 		 &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 		 &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
       */
+      get_rng_t113(&temp_state);
+      bse_set_taus113state(temp_state, 0);
       bse_evolv2(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 			&(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 			&(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -125,6 +128,8 @@ void stellar_evolution_init(void){
 			&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 			&(tempbinary.bse_tb), &(tempbinary.e), vs);
 
+      temp_state=bse_get_taus113state();
+      set_rng_t113(temp_state);
       star[k].se_mass = tempbinary.bse_mass0[0];
       star[k].se_k = tempbinary.bse_kw[0];
       star[k].se_mt = tempbinary.bse_mass[0];
@@ -183,6 +188,8 @@ void stellar_evolution_init(void){
   /* Update star id for pass through. */
       bse_set_id1_pass(binary[kb].id1);
       bse_set_id2_pass(binary[kb].id2);
+      get_rng_t113(&temp_state);
+      bse_set_taus113state(temp_state, 0);
       bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
 		 &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
 		 &(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), 
@@ -190,6 +197,8 @@ void stellar_evolution_init(void){
 		 &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
 		 &(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 		 &(binary[kb].bse_tb), &(binary[kb].e), vs);
+      temp_state=bse_get_taus113state();
+      set_rng_t113(temp_state);
       handle_bse_outcome(k, kb, vs, tphysf);
     } else {
       eprintf("totally confused!\n");
@@ -207,6 +216,7 @@ void do_stellar_evolution(gsl_rng *rng){
   double M_afterSE, M10_afterSE, M100_afterSE, M1000_afterSE, Mcore_afterSE;
   double r10_beforeSE, r100_beforeSE, r1000_beforeSE, rcore_beforeSE;
   double dM_dt_SE10, dM_dt_SE100, dM_dt_SE1000, dM_dt_SEcore; 
+  struct rng_t113_state temp_state;
   binary_t tempbinary;
   bse_set_merger(-1.0);
   /* double vk, theta; */
@@ -265,6 +275,8 @@ void do_stellar_evolution(gsl_rng *rng){
 		   	&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 		   	&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
 		*/
+                get_rng_t113(&temp_state);
+                bse_set_taus113state(temp_state, 0);
 		bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 				  &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 				  &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -272,6 +284,8 @@ void do_stellar_evolution(gsl_rng *rng){
 				  &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
 				  &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 				  &(tempbinary.bse_tb), &(tempbinary.e), vs);
+                temp_state=bse_get_taus113state();
+                set_rng_t113(temp_state);
 
 		star[k].se_mass = tempbinary.bse_mass0[0];
 		star[k].se_k = tempbinary.bse_kw[0];
@@ -386,6 +400,8 @@ void do_stellar_evolution(gsl_rng *rng){
   /* Update star id for pass through. */
 		bse_set_id1_pass(binary[kb].id1);
 		bse_set_id2_pass(binary[kb].id2);
+                get_rng_t113(&temp_state);
+                bse_set_taus113state(temp_state, 0);
 	  	bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
 	  	     	&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
 		     	&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]),
@@ -393,6 +409,8 @@ void do_stellar_evolution(gsl_rng *rng){
 			&(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
 		     	&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 		     	&(binary[kb].bse_tb), &(binary[kb].e), vs);
+                temp_state=bse_get_taus113state();
+                set_rng_t113(temp_state);
 		if(isnan(binary[kb].bse_radius[0])){
 		  fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
 		  fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1], binary[kb].bse_tb);

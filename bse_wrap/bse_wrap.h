@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "../common/taus113-v2.h"
 
 /* A structure used to pass binary information along to bse_wrap.c . */
 typedef struct{
@@ -112,6 +113,9 @@ void bse_comenv(bse_binary *binary, double *zpars,
 /* note the index swap between fortran and C: i,j->j,i */
 extern struct { int idum; } value3_;
 extern struct { int idum2, iy, ir[32]; } rand3_;
+#ifdef USE_TAUS
+extern struct { long long int state[4]; int first;} taus113state_;
+#endif
 extern struct { int ktype[15][15]; } types_;
 extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
 extern struct { double neta, bwind, hewind, mxns; int windflag; } value1_;
@@ -154,6 +158,7 @@ void bse_set_gamma(double gamma); /* angular momentum factor for mass lost durin
 void bse_set_merger(double merger); /* pass through a value signifying a merger (>0.d0), evolv2.f will then do the appropriate kick and/or initial spin*/
 void bse_set_id1_pass(long int id1_pass); /* pass through cmc star id into bse to help in debugging, this is used for iso star and star 1 in binary */
 void bse_set_id2_pass(long int id2_pass); /* pass through cmc star id into bse to help in debugging, this is used for star 2 in binary */
+void bse_set_taus113state(struct rng_t113_state state, int first);
 
 /* getters */
 double bse_get_alpha1(void); /* get CE alpha */
@@ -164,6 +169,7 @@ float bse_get_bpp(int i, int j); /* binary evolution log */
 float bse_get_bcm(int i, int j); /* stored binary parameters at interval dtp */
 char *bse_get_sselabel(int kw); /* converts stellar type number to text label */
 char *bse_get_bselabel(int kw); /* converts binary type number to text label */
+struct rng_t113_state bse_get_taus113state(void);
 int icase_get(int i, int j); /* use to get mixed type from ktype table */
 
 /* copied functions */
