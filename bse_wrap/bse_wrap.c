@@ -517,6 +517,23 @@ void bse_set_eddfac(double eddfac) { value5_.eddfac = eddfac; }
 void bse_set_gamma(double gamma) { value5_.gamma = gamma; }
 void bse_set_id1_pass(long int id1_pass) { cmcpass_.id1_pass = id1_pass; }
 void bse_set_id2_pass(long int id2_pass) { cmcpass_.id2_pass = id2_pass; }
+#ifndef USE_TAUS
+/* need to define this here, as it is not defined in the Fortran part
+ * when we don't use the Tausworthe generator for BSE kicks */
+static struct { long long int state[4]; int first;} taus113state_;
+#endif
+void bse_set_taus113state(struct rng_t113_state state, int first) {
+  int i;
+
+  taus113state_.state[0]= state.z[0];
+  taus113state_.state[1]= state.z[1];
+  taus113state_.state[2]= state.z[2];
+  taus113state_.state[3]= state.z[3];
+
+  if (first>=0) {
+    taus113state_.first= first;
+  }
+}
 
 /* getters */
 /* note the index flip and decrement so the matrices are accessed
@@ -527,6 +544,17 @@ float bse_get_spp(int i, int j) { return(single_.spp[j-1][i-1]); }
 float bse_get_scm(int i, int j) { return(single_.scm[j-1][i-1]); }
 float bse_get_bpp(int i, int j) { return(binary_.bpp[j-1][i-1]); }
 float bse_get_bcm(int i, int j) { return(binary_.bcm[j-1][i-1]); }
+struct rng_t113_state bse_get_taus113state(void) {
+  struct rng_t113_state state;
+  int i;
+
+  state.z[0]= taus113state_.state[0];
+  state.z[1]= taus113state_.state[1];
+  state.z[2]= taus113state_.state[2];
+  state.z[3]= taus113state_.state[3];
+
+  return (state);
+}
 int icase_get(int i, int j) { return(types_.ktype[j][i]); }
 
 char *bse_get_sselabel(int kw)

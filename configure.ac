@@ -17,7 +17,7 @@ AC_PREFIX_DEFAULT([$HOME])
 
 AC_ARG_ENABLE(static-linking, [AC_HELP_STRING([--enable-static-linking], 
               [Link all external libraries statically])],
-	[LIBTOOL_LDFLAGS="-all-static"])
+	[])
 
 AC_ARG_ENABLE(experimental, [AC_HELP_STRING([--enable-experimental], 
               [Enable a more accurate (but slower) orbit determination.])],
@@ -52,7 +52,28 @@ AS_IF([test "x$enable_mpi" == "xyes" && test "x$enable_static_linking" == "xyes"
       LIBTOOL_LDFLAGS=""
 ])
 
-AC_PROG_CC([gcc pathcc icc])
+AC_ARG_ENABLE([tausworth],
+              [AC_HELP_STRING([--enable-tausworth],
+                              [Use the Combined Tausworth random number generator used
+                               in the CMC part also for the kick routine in BSE.
+                               This option is automatically set when OpenMP is enabled.])],
+              [], [AS_IF([test $enable_openmp == yes],
+                         [enable_tausworth=yes],[enable_tausworth=no])]
+              )
+
+AC_ARG_ENABLE([ran3],
+              [AC_HELP_STRING([--enable-ran3],
+                              [Use Knuth''s subtractive random number generator, ran3,
+                               from Numerical Recipes in the BSE kick routine. Cannot be
+                               used with OpenMP.])],
+              [], [AS_IF([test "$enable_tausworth" == "no"],
+                         [enable_ran3=yes],[])]
+             )
+
+AS_IF([test "$enable_tausworth" == "yes" && test "$enable_ran3" == "yes"],
+      [AC_MSG_ERROR([--enable-tausworth and --enable-ran3 cannot be both set.])], [])
+
+AC_PROG_CC([gcc pathcc icc cc cl.exe /usr/ucb/cc])
 # Set the maximum optimization
 AX_CC_MAXOPT
 
@@ -70,6 +91,8 @@ CFLAGS="$CFLAGS -g"
 # Force the C compiler to issue all warnings
 AX_CFLAGS_WARN_ALL([CFLAGS_WARN])
 CFLAGS="$CFLAGS $CFLAGS_WARN"
+
+AM_CONDITIONAL([USE_TAUS], test "$enable_tausworth" == "yes")
 
 # Try to find out the name of the host.
 AC_ARG_VAR([HOSTNAME], [Full name of the host. Sets default values for certain variables.])
@@ -90,8 +113,34 @@ AS_IF([test "x$HAS_DATE" == "xyes"], [CMCDATE=[`date | sed -e 's|[[:space:]]|_|g
 AC_SUBST([CMCVERSION])
 AC_SUBST([CMCDATE])
 
+AS_IF([test "x$HOSTNAME" == "xfugu.phys.northwestern.edu"],
+      [AC_PROG_F77([ifort pathf90 gfortran g77])],
+      [ AS_IF([test "$enable_tausworth" == "yes"],
+              [AC_PROG_F77([ifort g77 gfortran pathf90])] ,[])
+        AS_IF([test "$enable_ran3" == "yes"],
+              [AC_PROG_F77([ifort g77 gfortran pathf90])], [])
+        AS_IF([test "$enable_openmp" == "yes"], [AC_PROG_FC([]) F77=${FC}])
+      ]
+     )
+# see if the f77 compiler can handle integer KINDs
+# this is only needed for --enable-tausworth
+AS_IF([test "$enable_tausworth" == "yes"],
+      [ NU_FORTRAN_INT64_KIND
+        AS_IF([test "x$KINDINT64" == "x-1"],
+              [AS_IF([test "$enable_openmp" == "no"],
+                     [AC_PROG_FC([]) F77=${FC}
+                      NU_FORTRAN_INT64_KIND], [])
+               AS_IF([test "x$KINDINT64" == "x-1"],
+                     [AC_MSG_ERROR([Unable to find a Fortran compiler with integer
+                                    KIND value corresponding to 64-bit integers])
+                     ], [])
+              ], [])
+      ])
+AS_IF([ test "x$enable_tausworth" == "xyes"],
+      [AC_DEFINE([USE_TAUS], 1, [Define whether we use the Combined Tausworth random number generator])
+      ],[])
+
 # get the right fortran flags
-AC_PROG_F77([pathf90 ifort gfortran g77])
 AC_F77_LIBRARY_LDFLAGS
 FILTER_VAR([FLIBS], [-lgcc* -lcrt*.o -LIST:* -LNO:* -lSystem])
 
@@ -136,6 +185,7 @@ AS_IF([test "x$enable_cuda" == "xyes"], [
 AS_IF([test "x$HOSTNAME" == "xfugu.phys.northwestern.edu"], SET_FUGU_DIRS)
 AS_IF([test "x$HOSTNAME" == "xfugu.phys.northwestern.edu"], SET_FUGU_FLAGS)
 
+AS_IF([test "x$enable_static_linking" == "xyes"], [LIBTOOL_LDFLAGS+=-all-static], [])
 AC_SUBST([LIBTOOL_LDFLAGS])
 
 # Checks for libraries.
@@ -157,15 +207,15 @@ AC_CHECK_LIB([gslcblas], [cblas_drot], [], [gsl_cblas_not_found=yes])
 AS_IF([test "x$gsl_cblas_not_found" == "xyes"], [
 	ADD_FLAGS_PKG_CONF([gsl])
 	AS_UNSET([ac_cv_lib_gslcblas_cblas_drot])
-	AC_CHECK_LIB([gslcblas], [cblas_drot], [], 
+	AC_CHECK_LIB([gslcblas], [cblas_drot], [],
                      [AC_MSG_ERROR(["Unable to link against gslcblas."])])
 ])
-	
+
 AC_CHECK_LIB([gsl], [gsl_root_fsolver_alloc], [], [gsl_not_found=yes])
 AS_IF([test "x$gsl_not_found" == "xyes"], [
 	ADD_FLAGS_PKG_CONF([gsl])
 	AS_UNSET([ac_cv_lib_gsl_gsl_root_fsolver_alloc])
-	AC_CHECK_LIB([gsl], [gsl_root_fsolver_alloc], [], 
+	AC_CHECK_LIB([gsl], [gsl_root_fsolver_alloc], [],
                      [AC_MSG_ERROR(["Unable to link against gsl."])])
 ])
 
@@ -173,7 +223,7 @@ ACX_PTHREAD([])
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([float.h stddef.h stdlib.h string.h unistd.h]) 
+AC_CHECK_HEADERS([float.h stddef.h stdlib.h string.h unistd.h])
 
 AC_CHECK_HEADERS([fitsio.h], [], [
 	ADD_FLAGS_PKG_CONF([cfitsio])
@@ -200,7 +250,7 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([floor pow sqrt strchr strcspn strtol])
 
-AC_CONFIG_FILES([bse_wrap/bse/Makefile bse_wrap/Makefile fewbody-0.24/Makefile libs/Makefile Makefile])
+AC_CONFIG_FILES([bse_wrap/bse/Makefile bse_wrap/bse/int64.h bse_wrap/Makefile
+                 fewbody-0.24/Makefile libs/Makefile Makefile])
 AC_OUTPUT
 
-                 

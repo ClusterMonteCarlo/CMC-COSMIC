@@ -523,10 +523,14 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
 	binary_t tempbinary, tbcopy;
 	int tbi=-1, j, ktry, i, fb, icase;
+        struct rng_t113_state temp_state;
 
 	for(i=0;i<=11;i++) {
 	  vs[i] = 0.0;
 	}
+
+        get_rng_t113(&temp_state);
+        bse_set_taus113state(temp_state, 0);
 
 	if (STELLAR_EVOLUTION && !STAR_AGING_SCHEME) {
 		/* evolve for just a year for merger */
@@ -892,6 +896,8 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
                    vs[i] = 0.0;
                 }
 	}
+        temp_state= bse_get_taus113state();
+        set_rng_t113(temp_state);
 }
 
 /* calculate resulting semi-major axis from collisional common envelope event */

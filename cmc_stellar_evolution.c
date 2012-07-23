@@ -18,6 +18,7 @@ void stellar_evolution_init(void){
 	double tphysf, dtp, vs[12];
 	int i, j=0;
 	long k, kb;
+       struct rng_t113_state temp_state;
 	binary_t tempbinary;
 
 	/* SSE */
@@ -134,6 +135,8 @@ void stellar_evolution_init(void){
 				&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 				&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
 			 */
+                        get_rng_t113(&temp_state);
+                        bse_set_taus113state(temp_state, 0);
 			bse_evolv2(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 					&(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 					&(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -142,6 +145,8 @@ void stellar_evolution_init(void){
 					&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 					&(tempbinary.bse_tb), &(tempbinary.e), vs);
 
+                        temp_state=bse_get_taus113state();
+                        set_rng_t113(temp_state);
 			//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
 			//zero_out_array(vs, 12);
 
@@ -217,11 +222,15 @@ void stellar_evolution_init(void){
 			/* Update star id for pass through. */
 			bse_set_id1_pass(binary[kb].id1);
 			bse_set_id2_pass(binary[kb].id2);
+                        get_rng_t113(&temp_state);
+                        bse_set_taus113state(temp_state, 0);
 			bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
 					&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
 					&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
 					&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 					&(binary[kb].bse_tb), &(binary[kb].e), vs);
+                        temp_state=bse_get_taus113state();
+                        set_rng_t113(temp_state);
 			//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
 			//zero_out_array(vs, 12);
 
@@ -250,6 +259,7 @@ void do_stellar_evolution(gsl_rng *rng)
 	int g_k;
 	int kprev;
 	double dtp, tphysf, vs[12], VKO;
+        struct rng_t113_state temp_state;
 	binary_t tempbinary;
 	/* double vk, theta; */
 
@@ -325,6 +335,8 @@ void do_stellar_evolution(gsl_rng *rng)
 					&(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
 					&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
 				 */
+                                get_rng_t113(&temp_state);
+                                bse_set_taus113state(temp_state, 0);
 				bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 						&(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 						&(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -332,6 +344,8 @@ void do_stellar_evolution(gsl_rng *rng)
 						&(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
 						&(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 						&(tempbinary.bse_tb), &(tempbinary.e), vs);
+                                temp_state=bse_get_taus113state();
+                                set_rng_t113(temp_state);
 
 				//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
 				//zero_out_array(vs, 12);
@@ -420,11 +434,15 @@ void do_stellar_evolution(gsl_rng *rng)
 				/* Update star id for pass through. */
 				bse_set_id1_pass(binary[kb].id1);
 				bse_set_id2_pass(binary[kb].id2);
+                                get_rng_t113(&temp_state);
+                                bse_set_taus113state(temp_state, 0);
 				bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
 						&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
 						&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
 						&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
 						&(binary[kb].bse_tb), &(binary[kb].e), vs);
+                                temp_state=bse_get_taus113state();
+                                set_rng_t113(temp_state);
 
 				//MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
 				//zero_out_array(vs, 12);

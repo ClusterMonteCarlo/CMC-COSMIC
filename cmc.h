@@ -11,6 +11,7 @@
 #include "common/taus113-v2.h"
 #include "fewbody-0.24/fewbody.h"
 #include "cmc_core.h"
+#include "config.h"
 
 #ifdef USE_MPI
 #include "cmc_mpi.h"
