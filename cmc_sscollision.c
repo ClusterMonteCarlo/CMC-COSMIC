@@ -36,7 +36,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 	bmax = rperimax * sqrt(1.0 + 2.0 * ((mass_k + mass_kp) * madhoc) / (rperimax * sqr(W)));
 #ifndef USE_MPI
-	 curr_st = &st[findProcForIndex(get_global_idx(k))];
+	 curr_st = &st[findProcForIndex(k)];
 #endif
 	//b = sqrt(rng_t113_dbl()) * bmax;
 	b = sqrt(rng_t113_dbl_new(curr_st)) * bmax;
@@ -529,8 +529,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 	  vs[i] = 0.0;
 	}
 
-        get_rng_t113(&temp_state);
-        bse_set_taus113state(temp_state, 0);
+  bse_set_taus113state(*curr_st, 0);
 
 	if (STELLAR_EVOLUTION && !STAR_AGING_SCHEME) {
 		/* evolve for just a year for merger */
@@ -1036,8 +1035,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
                    vs[i] = 0.0;
                 }
 	}
-        temp_state= bse_get_taus113state();
-        set_rng_t113(temp_state);
+  *curr_st= bse_get_taus113state();
 }
 
 /* calculate resulting semi-major axis from collisional common envelope event */
