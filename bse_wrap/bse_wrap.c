@@ -515,6 +515,7 @@ void bse_set_acc2(double acc2) { value5_.acc2 = acc2; }
 void bse_set_epsnov(double epsnov) { value5_.epsnov = epsnov; }
 void bse_set_eddfac(double eddfac) { value5_.eddfac = eddfac; }
 void bse_set_gamma(double gamma) { value5_.gamma = gamma; }
+void bse_set_merger(double merger) {cmcpass_.merger = merger; }
 void bse_set_id1_pass(long int id1_pass) { cmcpass_.id1_pass = id1_pass; }
 void bse_set_id2_pass(long int id2_pass) { cmcpass_.id2_pass = id2_pass; }
 #ifndef USE_TAUS

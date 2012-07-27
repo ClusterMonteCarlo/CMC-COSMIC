@@ -206,8 +206,9 @@
 *
       REAL*8 kw3,wsun,wx
       PARAMETER(kw3=619.2d0,wsun=9.46d+07,wx=9.46d+08)
-      integer id1_pass,id2_pass
-      COMMON /cmcpass/ id1_pass,id2_pass
+      integer*8 id1_pass,id2_pass
+      REAL*8 merger
+      COMMON /cmcpass/ merger,id1_pass,id2_pass
       LOGICAL output
 *
 * Save the initial state.
@@ -803,8 +804,12 @@
 *
 * At this point there may have been a supernova.
 *
-         if(kw.ne.kstar(k).and.kstar(k).le.12.and.
-     &      (kw.eq.13.or.kw.eq.14))then
+         if((kw.ne.kstar(k).and.kstar(k).le.12.and.
+     &      (kw.eq.13.or.kw.eq.14)).or.(ABS(merger).ge.20.d0))then
+            if(ABS(merger).ge.20.d0)then
+               sigma = ABS(merger)
+               fallback = 0.d0
+            endif
             if(sgl)then
                CALL kick(kw,mass(k),mt,0.d0,0.d0,-1.d0,0.d0,vk,k,
      &                   0.d0,fallback,bkick)
@@ -831,6 +836,7 @@
                tb = (sep/aursun)*SQRT(sep/(aursun*(mt+mass(3-k))))
                oorb = twopi/tb
             endif
+            merger = -1.d0
             snova = .true.
          endif
 *

@@ -119,7 +119,7 @@ extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
 extern struct { float scm[14][50000], spp[3][20]; } single_;
 extern struct { float bcm[34][50000], bpp[10][80]; } binary_;
-extern struct { long int id1_pass, id2_pass; } cmcpass_;
+extern struct { double merger; long int id1_pass; long int id2_pass; } cmcpass_;
 
 /* setters */
 void bse_set_idum(int idum); /* RNG seed (for NS birth kicks) */
@@ -146,6 +146,7 @@ void bse_set_acc2(double acc2); /* Bondi-Hoyle wind accretion factor (3/2) */
 void bse_set_epsnov(double epsnov); /* fraction of accreted matter retained in nova eruption (0.001) */
 void bse_set_eddfac(double eddfac); /* Eddington limit factor for mass transfer (1.0) */
 void bse_set_gamma(double gamma); /* angular momentum factor for mass lost during Roche (-1.0) */
+void bse_set_merger(double merger); /* pass through a value signifying a merger (>0.d0), evolv2.f will then do the appropriate kick and/or initial spin*/
 void bse_set_id1_pass(long int id1_pass); /* pass through cmc star id into bse to help in debugging, this is used for iso star and star 1 in binary */
 void bse_set_id2_pass(long int id2_pass); /* pass through cmc star id into bse to help in debugging, this is used for star 2 in binary */
 void bse_set_taus113state(struct rng_t113_state state, int first);

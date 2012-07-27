@@ -49,7 +49,8 @@ void stellar_evolution_init(void){
 	bse_set_epsnov(0.001);
 	bse_set_eddfac(BSE_EDDFAC); /* (normally 1.0) */
 	bse_set_gamma(BSE_GAMMA);
-
+  bse_set_merger(-1.0);
+  
 	/* set parameters relating to metallicity */
 	zpars = (double *) malloc(20 * sizeof(double));
 	bse_zcnsts(&METALLICITY, zpars);
@@ -261,6 +262,7 @@ void do_stellar_evolution(gsl_rng *rng)
 	double dtp, tphysf, vs[12], VKO;
         struct rng_t113_state temp_state;
 	binary_t tempbinary;
+  bse_set_merger(-1.0);
 	/* double vk, theta; */
 
 	//MPI2: Running till N_MAX_NEW+1 following the bugfix of incrementing N_MAX_NEW after SE.
