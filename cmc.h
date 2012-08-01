@@ -825,9 +825,13 @@ void write_snapshot(char *filename);
 #define diaprintf(args...) if (!quiet) {fprintf(stdout, "DIAGNOSTIC: %s(): ", __FUNCTION__); fprintf(stdout, args);}
 #endif
 
+#ifdef USE_MPI
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: in proc %d, %s(): ", myid, __FUNCTION__); fprintf(stderr, args);}
+#else
+#define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
+#endif
 
-#define dmpiprintf(args...) if (USE_MPI) { fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args); }
+#define dmpiprintf(args...) if (mpi_debug) { fprintf(stderr, "DEBUG: in proc %d, %s(): ", myid, __FUNCTION__); fprintf(stderr, args); }
 #define rootprintf(args...) if (debug) {if(myid == 0) { fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args); }}
 
 #ifdef USE_MPI

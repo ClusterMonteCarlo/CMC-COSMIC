@@ -118,6 +118,7 @@ _EXTERN_ double t_sort1, t_sort2, t_sort3, t_sort4;
 
 /* debugging */
 _EXTERN_ int debug;
+_EXTERN_ int mpi_debug;
 /* units */
 _EXTERN_ units_t units;
 _EXTERN_ double madhoc;

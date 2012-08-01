@@ -139,9 +139,15 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			dprintf("It is, therefore, set to zero.\n");
 			dprintf("rmin_old= %g rmin_new= %g rmin_sqrt= %g\n", actual_rmin, rmin, inside_sqrt);
 			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
-				star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
-			dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+                    star_r[kmin+1],star_r[kmin],star_r[kmin+1]-star_r[kmin]);
+            dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star_r[kmin+1]-rmin,rmin-star_r[kmin]);
 
+            if ((rmin<rk) || (rmin>rk1)) {
+                dprintf("si=%d rmin=%g outside of star interval (%g,%g), using bisection to get root. kmin=%d kmax=%d\n", si, rmin, rk, rk1, kmin, kmax);
+                rmin= find_root_vr(g_si, kmin, E, J);
+                dprintf("new rmin=%g, rmin in interval? %s\n", rmin, 
+                        (rmin>=rk)&&(rmin<=rk1)? "Yes": "No");
+            }
 		}
 		else{
 			// /*rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));*/
@@ -191,8 +197,15 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			dprintf("It is, therefore, set to zero.\n");
 			dprintf("rmax_old= %g rmax_new= %g rmax_sqrt= %g\n", actual_rmax, rmax, inside_sqrt);
 			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
-				star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
-			dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+                    star_r[kmin+1],star_r[kmin],star_r[kmin+1]-star_r[kmin]);
+            dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star_r[kmin+1]-rmin,rmin-star_r[kmin]);
+
+            if ((rmax<rk) || (rmax>rk1)) {
+                dprintf("si=%d rmax=%g outside of star interval (%g,%g), using bisection to get root.kmin=%d kmax=%d\n", si, rmax, rk, rk1, kmin, kmax);
+                rmax= find_root_vr(si, kmax, E, J);
+                dprintf("new rmax=%g, rmax in interval? %s\n", rmax, 
+                        (rmax>=rk)&&(rmax<=rk1)? "Yes": "No");
+            }
 		}
 		else{
 		/*rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));*/

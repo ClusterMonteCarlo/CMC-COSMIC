@@ -473,7 +473,11 @@ double find_root_vr(long index, long k, double E, double J) {
   F.params= &p;
 
   /* check if the values of F at the interval boundaries have different signs */
+#ifdef USE_MPI
+  if (GSL_SIGN(GSL_FN_EVAL(&F, star_r[k]))==GSL_SIGN(GSL_FN_EVAL(&F, star_r[k+1]))) {
+#else
   if (GSL_SIGN(GSL_FN_EVAL(&F, star[k].r))==GSL_SIGN(GSL_FN_EVAL(&F, star[k+1].r))) {
+#endif
     eprintf("The signs of F[k] and F[k+1] are the same!\n");
     eprintf("k= %li, F[k]= %g, F[k+1]= %g, r[k]= %g, r[k+1]= %g\n", k, 
         GSL_FN_EVAL(&F, star[k].r), GSL_FN_EVAL(&F, star[k+1].r), star[k].r, star[k+1].r);
@@ -483,7 +487,7 @@ double find_root_vr(long index, long k, double E, double J) {
   }
 
 #ifdef USE_MPI
-  status= gsl_root_fsolver_set(q_root, &F, star[k].r, star[k+1].r);
+  status= gsl_root_fsolver_set(q_root, &F, star_r[k], star_r[k+1]);
 #else
   status= gsl_root_fsolver_set(q_root, &F, star[k].r, star[k+1].r);
 #endif

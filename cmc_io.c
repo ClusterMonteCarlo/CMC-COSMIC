@@ -1613,18 +1613,14 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 				 };
 	 */
 	/* initialize the root finder algorithm */
-	/*	Commenting out for MPI
-		q_root = gsl_root_fsolver_alloc (gsl_root_fsolver_brent);
-	 */
+    q_root = gsl_root_fsolver_alloc (gsl_root_fsolver_brent);
 
-	/* Commenting out for MPI
 #ifdef DEBUGGING
 	// create a new hash table for the star ids 
 	star_ids= g_hash_table_new(g_int_hash, g_int_equal);
 	// load a trace list 
 	//load_id_table(star_ids, "trace_list");
 #endif
-	 */
 
 	mpiInitGlobArrays();
 
