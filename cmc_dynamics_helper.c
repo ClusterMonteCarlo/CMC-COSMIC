@@ -77,8 +77,6 @@ void zero_binary(long j)
 	binary[j].createtime_m2 = 0.0;
 	binary[j].lifetime_m1 = GSL_POSINF;
 	binary[j].lifetime_m2 = GSL_POSINF;
-	// Meagan: to keep track of three-body binaries
-	//binary[j].threebodybinary = 0;
 }
 
 void print_interaction_status(char status_text[])
@@ -459,45 +457,13 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 		binary[star[knew].binind].Eint2 = star[k2].Eint;
 		binary[star[knew].binind].a = semi_major;
 		binary[star[knew].binind].e = ecc;
-		//Sourav: toy rejuvenation- some new variables
-		//binary[knew].createtime_m1 = star[k1].createtime; // These are all set in cp_SEvars_to_newbinary()
-		//binary[knew].createtime_m2 = star[k2].createtime;
-		//binary[knew].lifetime_m1 = star[k1].lifetime;;
-		//binary[knew].lifetime_m2 = star[k2].lifetime;
-			// ????? For star properties that do not apply for binary (such as rad...since we don't 
-			// have a single star with a single radius), what do I set to? These are quantities
-			// that are printed as "-100" in the output files. 
-
+	
 		// star properties for the new binary
 		star[knew].r = binary_cm;
 		star[knew].vr = vb[3];
 		star[knew].vt = sqrt(sqr(vb[1]) + sqr(vb[2]));
 		star[knew].m = star[k1].m + star[k2].m;
 		star[knew].Eint = star[k1].Eint + star[k2].Eint;  // Set new internal energy for the binary, sum of Eint1 and Eint2 of the two components
-
-
-	//	star[knew].E = 0.0;
-	//	star[knew].J = 0.0;
-	//	star[knew].EI = 0.0; 		// Intermediate energy: seems that I can leave this set to zero?
-	//	star[knew].Eint = 0.0;
-	//	star[knew].rnew = 0.0;		// set in set_star_news() function
-	//	star[knew].vrnew = 0.0;
-	//	star[knew].vtnew = 0.0;
-	//	star[knew].rOld = 0.0;		// do I have to set this? What is it?
-	//	star[knew].X = 0.0;
-	//	star[knew].Y = 0.0;
-	//	star[knew].r_peri = 0.0; 	// these are set later
-	//	star[knew].r_apo = 0.0;
-	//	star[knew].phi = 0.0;
-	//	star[knew].interacted = 0;
-	//	star[knew].id = 0;		// what do I set ID to in binary
-	//	star[knew].rad = 0.0;		// what about Uoldrold and Uoldrnew?
-	//	star[knew].Uoldrold = 0.0;
-	//	star[knew].Uoldrnew = 0.0;
-
-	//Sourav: toy rejuvenation- some more variables
-	//	star[knew].vtold = 0.0;		// What about these?
-	//	star[knew].vrold = 0.0;
 
 	//	fprintf(threebbfile, "new binary properties for object 'knew':  r=%g  vr=%g  vt=%g\n", star[knew].r, star[knew].vr, star[knew].vt);
 
