@@ -11,24 +11,55 @@
 #include "cmc_vars.h"
 
 void create_rwalk_file(char *fname) {
-  FILE *rwalk_file= NULL;
 
+#ifdef USE_MPI
+    MPI_File mpi_rwalk_file;
+    char mpi_rwalk_file_buf[10000];
+    char mpi_rwalk_file_wrbuf[10000000];
+    int mpi_rwalk_file_len=0, mpi_rwalk_file_ofst_total=0;
+    MPI_File_open(MPI_COMM_WORLD, fname, MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &mpi_rwalk_file);
+    MPI_File_set_size(mpi_rwalk_file, 0);
+#else
+  FILE *rwalk_file= NULL;
   rwalk_file= fopen(fname, "a");
-  fprintf(rwalk_file, "\n");
-  fprintf(rwalk_file, 
-      "# 1:index, 2:Time, 3:r, 4:Trel, 5:dt, 6:l2_scale, 7:n_steps, 8:beta 9:n_local, 10:W, 11:P_orb, 12:n_orb\n");
+#endif
+
+  pararootfprintf(rwalk_file, "\n");
+  pararootfprintf(rwalk_file, 
+          "# 1:index, 2:Time, 3:r, 4:Trel, 5:dt, 6:l2_scale, 7:n_steps, 8:beta 9:n_local, 10:W, 11:P_orb, 12:n_orb\n");
+#ifdef USE_MPI
+  mpi_para_file_write(mpi_rwalk_file_wrbuf, &mpi_rwalk_file_len, &mpi_rwalk_file_ofst_total, &mpi_rwalk_file);
+  MPI_File_close(&mpi_rwalk_file);
+#else
   fclose(rwalk_file);
+#endif
 }
 
 void write_rwalk_data(char *fname, long index, double Trel, double dt, 
     double l2_scale, double n_steps, double beta, double n_local, double W, 
     double P_orb, double n_orb) {
-  FILE *rwalk_file= NULL;
 
+#ifdef USE_MPI
+    MPI_File mpi_rwalk_file;
+    char mpi_rwalk_file_buf[10000];
+    char mpi_rwalk_file_wrbuf[10000000];
+    int mpi_rwalk_file_len=0, mpi_rwalk_file_ofst_total=0;
+    MPI_File_open(MPI_COMM_WORLD, fname, MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &mpi_rwalk_file);
+    MPI_File_set_size(mpi_rwalk_file, 0);
+#else
+  FILE *rwalk_file= NULL;
   rwalk_file= fopen(fname, "a");
-  fprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
+#endif
+
+  parafprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
       index, TotalTime, star[index].r, Trel, dt, sqrt(l2_scale), n_steps, beta, n_local, W, P_orb, n_orb);
+
+#ifdef USE_MPI
+  mpi_para_file_write(mpi_rwalk_file_wrbuf, &mpi_rwalk_file_len, &mpi_rwalk_file_ofst_total, &mpi_rwalk_file);
+  MPI_File_close(&mpi_rwalk_file);
+#else
   fclose(rwalk_file);
+#endif
 }
 
 void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt)

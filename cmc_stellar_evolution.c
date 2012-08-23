@@ -16,9 +16,8 @@ void zero_out_array(double* ptr, int size)
 
 void stellar_evolution_init(void){  
   double tphysf, dtp, vs[12];
-  int i, j=0;
+  int i;
   long k, kb;
-       struct rng_t113_state temp_state;
   binary_t tempbinary;
 
   /* SSE */
@@ -61,7 +60,7 @@ void stellar_evolution_init(void){
 
 #ifdef USE_MPI 
   for (k=1; k<=mpiEnd-mpiBegin+1; k++) {
-    j = get_global_idx(k);
+    long g_k = get_global_idx(k);
 #else
   /* set initial properties of stars */
   for (k=1; k<=clus.N_MAX; k++) {
@@ -69,7 +68,7 @@ void stellar_evolution_init(void){
 
     if (star[k].binind == 0) { /* single star */
 #ifdef USE_MPI
-      star[k].se_mass = star_m[j] * units.mstar / MSUN;
+      star[k].se_mass = star_m[g_k] * units.mstar / MSUN;
 #else
       star[k].se_mass = star[k].m * units.mstar / MSUN;
 #endif
@@ -89,7 +88,7 @@ void stellar_evolution_init(void){
       dtp = tphysf - star[k].se_tphys;
       dtp = 0.0;
 #ifdef USE_MPI
-      DMse += star_m[j] * madhoc;
+      DMse += star_m[g_k] * madhoc;
 #else
       DMse_mimic[findProcForIndex(k)] += star[k].m * madhoc;
 #endif
@@ -172,8 +171,8 @@ void stellar_evolution_init(void){
 
       star[k].rad = star[k].se_radius * RSUN / units.l;
 #ifdef USE_MPI
-      star_m[j] = star[k].se_mt * MSUN / units.mstar;
-      DMse -= star_m[j] * madhoc;
+      star_m[g_k] = star[k].se_mt * MSUN / units.mstar;
+      DMse -= star_m[g_k] * madhoc;
 #else
       star[k].m = star[k].se_mt * MSUN / units.mstar;
       DMse_mimic[findProcForIndex(k)] -= star[k].m * madhoc;
@@ -258,10 +257,8 @@ void stellar_evolution_init(void){
 void do_stellar_evolution(gsl_rng *rng)
 {
   long k, kb;
-  int g_k;
   int kprev;
   double dtp, tphysf, vs[12], VKO;
-        struct rng_t113_state temp_state;
   binary_t tempbinary;
   bse_set_merger(-1.0);
   /* double vk, theta; */
@@ -270,7 +267,7 @@ void do_stellar_evolution(gsl_rng *rng)
   //MPI3: Why to run till N_MAX_NEW+1?! I guess it is to account for the sentinel. But now, we have no sentinel.
 #ifdef USE_MPI
   for(k=1; k<=clus.N_MAX_NEW; k++){ 
-    g_k = get_global_idx(k);
+    int g_k = get_global_idx(k);
 #else
   for(k=1; k<=clus.N_MAX_NEW+1; k++){ 
 #endif
@@ -493,52 +490,85 @@ void do_stellar_evolution(gsl_rng *rng)
 
 void write_stellar_data(void){
   long k, kb;
-  FILE *stel_file;
   char filename[1024];
   
   se_file_counter++;
   
   /* single star info */
   sprintf(filename, "%s_stellar_info.%05d.dat", outprefix, se_file_counter);
+
+#ifdef USE_MPI
+  MPI_File mpi_stel_file;
+  char mpi_stel_file_buf[10000], mpi_stel_file_wrbuf[10000000];
+  int mpi_stel_file_len=0, mpi_stel_file_ofst_total=0;
+  MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_stel_file);
+  MPI_File_set_size(mpi_stel_file, 0);
+#else
+  FILE *stel_file;
   stel_file = fopen(filename, "w");
   if (stel_file==NULL){
     fprintf(stderr,
       "file cannot be opened to write stellar info\n");
     return;
   }
-  fprintf(stel_file, "# time (Myr): %e\n",
+#endif
+
+  pararootfprintf(stel_file, "# time (Myr): %e\n",
     TotalTime/MEGA_YEAR);
-  fprintf(stel_file, "# time (FP):  %e\n", TotalTime);
-  fprintf(stel_file,
+  pararootfprintf(stel_file, "# time (FP):  %e\n", TotalTime);
+  pararootfprintf(stel_file,
     "#  id        mass        radius     luminosity  type\n");
-  fprintf(stel_file,
+  pararootfprintf(stel_file,
     "#======= ============ ============ ============ ====\n");
+
+#ifdef USE_MPI
+  for(k=1; k<=clus.N_MAX_NEW; k++){
+    parafprintf(stel_file, "%08d ", get_global_idx(k));
+#else
   for(k=1; k<=clus.N_MAX; k++){
-    fprintf(stel_file, "%08ld ", k);
-    fprintf(stel_file, "%e ", star[k].se_mt);
-    fprintf(stel_file, "%e ", star[k].se_radius);
-    fprintf(stel_file, "%e ", star[k].se_lum);
-    fprintf(stel_file, "%d ", star[k].se_k);
-    fprintf(stel_file, "\n");
+    parafprintf(stel_file, "%08ld ", k);
+#endif
+    parafprintf(stel_file, "%e ", star[k].se_mt);
+    parafprintf(stel_file, "%e ", star[k].se_radius);
+    parafprintf(stel_file, "%e ", star[k].se_lum);
+    parafprintf(stel_file, "%d ", star[k].se_k);
+    parafprintf(stel_file, "\n");
   }
+
+#ifdef USE_MPI
+  mpi_para_file_write(mpi_stel_file_wrbuf, &mpi_stel_file_len, &mpi_stel_file_ofst_total, &mpi_stel_file);
+  MPI_File_close(&mpi_stel_file);
+#else
   fclose(stel_file);
-  
+#endif
+
   /* binary star info */
   sprintf(filename, "%s_binary_stellar_info.%05d.dat", outprefix, se_file_counter);
+
+#ifdef USE_MPI
+  MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_stel_file);
+  MPI_File_set_size(mpi_stel_file, 0);
+#else
   stel_file = fopen(filename, "w");
   if (stel_file==NULL){
     fprintf(stderr,
       "file cannot be opened to write binary stellar info\n");
     return;
   }
-  fprintf(stel_file, "# time (Myr): %e\n",
+#endif
+
+  pararootfprintf(stel_file, "# time (Myr): %e\n",
     TotalTime/MEGA_YEAR);
-  fprintf(stel_file, "# time (FP):  %e\n", TotalTime);
-  fprintf(stel_file, "#1:id1 #2:id2 #3:M1[MSUN] #4:M2 #5:R1[RSUN] #6:R2 #7:k1 #8:k2 #9:Porb[day] #10:e #11:L1[LSUN] #12:L2 #13:Mcore1[MSUN] #14:Mcore2 #15:Rcore1[RSUN] #16:Rcore2 #17:Menv1[MSUN] #18:Menv2 #19:Renv1[RSUN] #20:Renv2 #21:Tms1[MYR] #22:Tms2 #23:Mdot1[MSUN/YR] #24:Mdot2 #25:R1/ROL1 #26:R2/ROL2\n");
+  pararootfprintf(stel_file, "# time (FP):  %e\n", TotalTime);
+  pararootfprintf(stel_file, "#1:id1 #2:id2 #3:M1[MSUN] #4:M2 #5:R1[RSUN] #6:R2 #7:k1 #8:k2 #9:Porb[day] #10:e #11:L1[LSUN] #12:L2 #13:Mcore1[MSUN] #14:Mcore2 #15:Rcore1[RSUN] #16:Rcore2 #17:Menv1[MSUN] #18:Menv2 #19:Renv1[RSUN] #20:Renv2 #21:Tms1[MYR] #22:Tms2 #23:Mdot1[MSUN/YR] #24:Mdot2 #25:R1/ROL1 #26:R2/ROL2\n");
+#ifdef USE_MPI
+  for(k=1; k<=clus.N_MAX_NEW; k++){
+#else
   for(k=1; k<=clus.N_MAX; k++){
+#endif
     if (star[k].binind) {
       kb = star[k].binind;
-      fprintf(stel_file, "%08ld %08ld %g %g %g %g %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", 
+      parafprintf(stel_file, "%08ld %08ld %g %g %g %g %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", 
         binary[kb].id1, binary[kb].id2,
         binary[kb].bse_mass[0], binary[kb].bse_mass[1],
         binary[kb].bse_radius[0], binary[kb].bse_radius[1],
@@ -554,12 +584,17 @@ void write_stellar_data(void){
         binary[kb].bse_bcm_radrol[0], binary[kb].bse_bcm_radrol[1]);
     }
   }
+#ifdef USE_MPI
+  mpi_para_file_write(mpi_stel_file_wrbuf, &mpi_stel_file_len, &mpi_stel_file_ofst_total, &mpi_stel_file);
+  MPI_File_close(&mpi_stel_file);
+#else
   fclose(stel_file);
+#endif
 }
 
 void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
 {
-  int j, g_k;
+  int j;
   long knew, knewp;
   double dtp, VKO;
   
@@ -574,7 +609,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     binary[kb].m1 = binary[kb].bse_mass[0] * MSUN / units.mstar;
     binary[kb].m2 = binary[kb].bse_mass[1] * MSUN / units.mstar;
 #ifdef USE_MPI
-   g_k = get_global_idx(k);
+    int g_k = get_global_idx(k);
     star_m[g_k] = binary[kb].m1 + binary[kb].m2;
     DMse -= star_m[g_k] * madhoc;
 #else
@@ -644,7 +679,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     DMse_mimic[findProcForIndex(k)] -= (star[knew].m + star[knewp].m) * madhoc;
 #endif
 
-    fprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g)\n", 
+    parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g)\n", 
       TotalTime, 
       star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
       star[knewp].id, star[knewp].m * units.mstar / FB_CONST_MSUN,
@@ -761,7 +796,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     knew = create_star(k, 1);
     cp_binmemb_to_star(k, 0, knew);
 
-    fprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
+    parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
       TotalTime, 
       star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
@@ -855,7 +890,7 @@ if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
     knew = create_star(k, 1);
     cp_binmemb_to_star(k, 1, knew);
 
-    fprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
+    parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
       TotalTime, 
       star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
@@ -967,7 +1002,6 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   star_m[knew] = binary[kb].bse_mass[kbi] * MSUN / units.mstar;
   star_phi[knew] = star_phi[g_k];
 #else
-  int g_k = k;
   /* and set the stars' dynamical properties */
   star[knew].r = star[k].r;
   star[knew].m = binary[kb].bse_mass[kbi] * MSUN / units.mstar;

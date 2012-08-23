@@ -37,13 +37,11 @@ void cmc_print_usage(FILE *stream, char *argv[])
 
 void print_results(void){
 #ifdef USE_MPI
-	if(myid==0)
+    PrintParaFileOutput();
 #endif
-	{
-		PrintLogOutput();
-		PrintFileOutput();
-		fflush(NULL);
-	}
+    PrintLogOutput();
+    PrintFileOutput();
+    fflush(NULL);
 }
 
 /*********** Output 2D/3D snapshots **************/
@@ -111,31 +109,78 @@ void PrintLogOutput(void)
 	/* Computing half-mass radii, and relaxation time */
 	m = rh = trh = 0.0;
 	rh_binary = rh_single = m_binary = m_single = 0.0;
-/*
+
+#ifdef USE_MPI
 	for (ih=1; ih<=clus.N_MAX; ih++) {
 		k = ih;
-#ifdef USE_MPI
+
 		m += star_m[k] / clus.N_STAR;
-		
-		if (star[k].binind > 0) {
-			m_binary += star_m[k] / clus.N_STAR;
-		} else {
-			m_single += star_m[k] / clus.N_STAR;
-		}
 		
 		if (m/Mtotal <= 0.5) {
 			rh = star_r[k];
 		}
-		if (m_single / (Mtotal - (M_b / clus.N_STAR)) <= 0.5) {
-			rh_single = star_r[k];
+    }
+
+    double *m_binary_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
+    double *m_single_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
+
+	for (ih=1; ih<=clus.N_MAX_NEW; ih++) {
+		k = ih;
+        int g_k = get_global_idx(k);
+
+		if (star[k].binind > 0) {
+			m_binary_arr[k] = m_binary_arr[k-1] + star_m[g_k] / clus.N_STAR;
+            m_single_arr[k] = m_single_arr[k-1];
+		} else {
+			m_single_arr[k] = m_single_arr[k-1] + star_m[g_k] / clus.N_STAR;
+            m_binary_arr[k] = m_binary_arr[k-1];
 		}
+    }
+
+    double buf_comm[2];
+    double buf_comm_recv[2];
+    buf_comm[0] = m_binary_arr[clus.N_MAX_NEW];
+    buf_comm[1] = m_single_arr[clus.N_MAX_NEW];
+
+    //MPI3: Since only the root node will print out these stuff, Allreduce is not reqd.
+    //MPI_Allreduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Reduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    if(myid==0)
+    {
+        m_binary = buf_comm_recv[0];
+        m_single = buf_comm_recv[1];
+    }
+
+    MPI_Exscan(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+	for (ih=1; ih<=clus.N_MAX_NEW; ih++) {
+		k = ih;
+        int g_k = get_global_idx(k);
+
+		if ((m_single_arr[k] + buf_comm_recv[1]) / (Mtotal - (M_b / clus.N_STAR)) <= 0.5) {
+			rh_single = (m_single_arr[k] + buf_comm_recv[1]) / (Mtotal - (M_b / clus.N_STAR));//star_r[g_k];
+		}
+
 		// avoid dividing by zero if there are no binaries
 		if (M_b > 0) {
-			if (m_binary / M_b * clus.N_STAR <= 0.5) {
-				rh_binary = star_r[k];
+			if ((m_binary_arr[k] + buf_comm_recv[0])/ M_b * clus.N_STAR <= 0.5) {
+				rh_binary = star_r[g_k];
 			}
 		}
+    }
+
+    buf_comm[0] = rh_binary;
+    buf_comm[1] = rh_single;
+
+    //MPI3: Since r's are always monotonically increasing since they are sorted, I can just take the max.
+    //MPI_Allreduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+    MPI_Reduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
+    rh_binary = buf_comm_recv[0];
+    rh_single = buf_comm_recv[1];
 #else
+	for (ih=1; ih<=clus.N_MAX; ih++) {
+		k = ih;
 		m += star[k].m / clus.N_STAR;
 		
 		if (star[k].binind > 0) {
@@ -156,9 +201,8 @@ void PrintLogOutput(void)
 				rh_binary = star[k].r;
 			}
 		}
-#endif
 	}
-*/	
+#endif
 
 	/* t_rh calculated using r_h */
 	trh = ((0.138 * clus.N_MAX) / log((double) clus.N_MAX)) * sqrt((rh * rh * rh) / Mtotal) * log((double) clus.N_MAX) / clus.N_MAX;
@@ -178,107 +222,55 @@ void PrintLogOutput(void)
 		conc_param = (max_r / core_radius);
 	}
 
-	gprintf("******************************************************************************\n");
-	fprintf(logfile, "******************************************************************************\n");
+	rootgprintf("******************************************************************************\n");
+	pararootfprintf(logfile, "******************************************************************************\n");
 
-	gprintf("tcount=%ld TotalTime=%.16e Dt=%.16e\n", tcount, TotalTime, Dt);
-	fprintf(logfile, "tcount=%ld TotalTime=%.16e Dt=%.16e\n", tcount, TotalTime, Dt);
+	rootgprintf("tcount=%ld TotalTime=%.16e Dt=%.16e\n", tcount, TotalTime, Dt);
+	pararootfprintf(logfile, "tcount=%ld TotalTime=%.16e Dt=%.16e\n", tcount, TotalTime, Dt);
 
-	gprintf("Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
-	fprintf(logfile, "Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
+	rootgprintf("Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
+	pararootfprintf(logfile, "Etotal=%g max_r=%g N_bound=%ld Rtidal=%g\n", Etotal.tot, max_r, clus.N_MAX, Rtidal);
 
-	gprintf("Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
-	fprintf(logfile, "Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
+	rootgprintf("Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
+	pararootfprintf(logfile, "Mtotal=%g Etotal.P=%g Etotal.K=%g VRatio=%g\n", Mtotal, Etotal.P, Etotal.K, -2.0 * Etotal.K / Etotal.P);
 
-	gprintf("TidalMassLoss=%g\n", TidalMassLoss);
-	fprintf(logfile, "TidalMassLoss=%g\n", TidalMassLoss);
+	rootgprintf("TidalMassLoss=%g\n", TidalMassLoss);
+	pararootfprintf(logfile, "TidalMassLoss=%g\n", TidalMassLoss);
 	
-	gprintf("core_radius=%g rho_core=%g v_core=%g Trc=%g conc_param=%g N_core=%g\n",
+	rootgprintf("core_radius=%g rho_core=%g v_core=%g Trc=%g conc_param=%g N_core=%g\n",
 		core_radius, rho_core, v_core, Trc, conc_param, N_core);
-	fprintf(logfile, "core_radius=%g rho_core=%g v_core=%g Trc=%g conc_param=%g N_core=%g\n",
+	pararootfprintf(logfile, "core_radius=%g rho_core=%g v_core=%g Trc=%g conc_param=%g N_core=%g\n",
 		core_radius, rho_core, v_core, Trc, conc_param, N_core);
 	
-	gprintf("trh=%g rh=%g rh_single=%g rh_binary=%g\n", trh, rh, rh_single, rh_binary);
-	fprintf(logfile, "trh=%g rh=%g rh_single=%g rh_binary=%g\n", trh, rh, rh_single, rh_binary);
+	rootgprintf("trh=%g rh=%g rh_single=%g rh_binary=%g\n", trh, rh, rh_single, rh_binary);
+	pararootfprintf(logfile, "trh=%g rh=%g rh_single=%g rh_binary=%g\n", trh, rh, rh_single, rh_binary);
 	
-	gprintf("N_b=%ld M_b=%g E_b=%g\n", N_b, M_b/clus.N_STAR, E_b);
-	fprintf(logfile, "N_b=%ld M_b=%g E_b=%g\n", N_b, M_b/clus.N_STAR, E_b);
+	rootgprintf("N_b=%ld M_b=%g E_b=%g\n", N_b, M_b/clus.N_STAR, E_b);
+	pararootfprintf(logfile, "N_b=%ld M_b=%g E_b=%g\n", N_b, M_b/clus.N_STAR, E_b);
 
-	gprintf("******************************************************************************\n");
-	fprintf(logfile, "******************************************************************************\n");
+	rootgprintf("******************************************************************************\n");
+	pararootfprintf(logfile, "******************************************************************************\n");
+
+#ifdef USE_MPI
+    mpi_para_file_write(mpi_logfile_wrbuf, &mpi_logfile_len, &mpi_logfile_ofst_total, &mpi_logfile);
+#endif
+
 }
 
 void PrintFileOutput(void) {
-	long i, j, n_single, n_binary, n_single_nb, n_binary_nb, N_core_binary, N_core_binary_nb, n_10=1, n_sing_10=0, n_bin_10=0;
+	long i, j, n_single, n_binary, n_single_c, n_binary_c, n_single_nb, n_binary_nb, N_core_binary, N_core_binary_nb, n_10=1, n_sing_10=0, n_bin_10=0;
 	double fb, fb_core, fb_core_nb, m_sing_10=0.0, m_bin_10=0.0, m_10=0.0, r_10=0.0, rho_10=0.0;
-	int *multimassr_empty  = (int *) malloc((NO_MASS_BINS-1)*sizeof(int));
-
-	/* print useful headers */
-#ifdef USE_MPI
-	if (tcount == 1 && myid == 0) {
-#else
-	if (tcount == 1) {
-#endif
-		fprintf(lagradfile, "# Lagrange radii [code units]\n");
-		fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
-		fprintf(no_star_file, "# Number of stars within Lagrange radii [dimensionless]\n");
-		fprintf(densities_file, "# Density within Lagrange radii [code units]\n");
-		fprintf(ke_rad_file, "# Total radial kinetic energy within Lagrange radii [code units]\n");
-		fprintf(ke_tan_file, "# Total tangential kinetic energy within Lagrange radii [code units]\n");
-		fprintf(v2_rad_file, "# Sum of v_r within Lagrange radii [code units]\n");
-		fprintf(v2_tan_file, "# Sum of v_t within Lagrange radii [code units]\n");
-		for(i=0; i<NO_MASS_BINS-1; i++){
-			fprintf(mlagradfile[i], "# Lagrange radii for %g < m < %g range [code units]\n", mass_bins[i], mass_bins[i+1]);
-		}
-		
-		fprintf(lagradfile, "# 1:t");
-		fprintf(ave_mass_file, "# 1:t");
-		fprintf(no_star_file, "# 1:t");
-		fprintf(densities_file, "# 1:t");
-		fprintf(ke_rad_file, "# 1:t");
-		fprintf(ke_tan_file, "# 1:t");
-		fprintf(v2_rad_file, "# 1:t");
-		fprintf(v2_tan_file, "# 1:t");
-		for(i=0; i<NO_MASS_BINS-1; i++){
-			fprintf(mlagradfile[i], "# 1:t");
-		}
-
-		for (i=0; i<MASS_PC_COUNT; i++) {
-			fprintf(lagradfile, " %ld:r(%g)", i+2, mass_pc[i]);
-			fprintf(ave_mass_file, " %ld:<m>(%g)", i+2, mass_pc[i]);
-			fprintf(no_star_file, " %ld:N(%g)", i+2, mass_pc[i]);
-			fprintf(densities_file, " %ld:rho(%g)", i+2, mass_pc[i]);
-			fprintf(ke_rad_file, " %ld:T_r(%g)", i+2, mass_pc[i]);
-			fprintf(ke_tan_file, " %ld:T_t(%g)", i+2, mass_pc[i]);
-			fprintf(v2_rad_file, " %ld:V2_r(%g)", i+2, mass_pc[i]);
-			fprintf(v2_tan_file, " %ld:V2_t(%g)", i+2, mass_pc[i]);
-			for(j=0; j<NO_MASS_BINS-1; j++){
-				fprintf(mlagradfile[j], " %ld:r(%g)", i+2, mass_pc[i]);
-			}
-		}
-
-		fprintf(lagradfile, "\n");
-		fprintf(ave_mass_file, "\n");
-		fprintf(no_star_file, "\n");
-		fprintf(densities_file, "\n");
-		fprintf(ke_rad_file, "\n");
-		fprintf(ke_tan_file, "\n");
-		fprintf(v2_rad_file, "\n");
-		fprintf(v2_tan_file, "\n");
-		for(i=0; i<NO_MASS_BINS-1; i++){
-			fprintf(mlagradfile[i], "\n");
-		}
-	}
+	int *multimassr_empty = (int *) malloc((NO_MASS_BINS-1)*sizeof(int));
 
 	/* print data */
-	fprintf(lagradfile, "%.9e ", TotalTime);
-	fprintf(ave_mass_file, "%.9e ",TotalTime);
-	fprintf(no_star_file, "%.9e ",TotalTime);
-	fprintf(densities_file, "%.9e ",TotalTime);
-	fprintf(ke_rad_file, "%.9e ",TotalTime);
-	fprintf(ke_tan_file, "%.9e ",TotalTime);
-	fprintf(v2_rad_file, "%.9e ",TotalTime);
-	fprintf(v2_tan_file, "%.9e ",TotalTime);
+	rootfprintf(lagradfile, "%.9e ", TotalTime);
+	rootfprintf(ave_mass_file, "%.9e ",TotalTime);
+	rootfprintf(no_star_file, "%.9e ",TotalTime);
+	rootfprintf(densities_file, "%.9e ",TotalTime);
+	rootfprintf(ke_rad_file, "%.9e ",TotalTime);
+	rootfprintf(ke_tan_file, "%.9e ",TotalTime);
+	rootfprintf(v2_rad_file, "%.9e ",TotalTime);
+	rootfprintf(v2_tan_file, "%.9e ",TotalTime);
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		multimassr_empty[i] = 1;
 		for(j=0; j<NO_MASS_BINS-1; j++){
@@ -287,74 +279,120 @@ void PrintFileOutput(void) {
 	}
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		if ( !multimassr_empty[i] ){
-			fprintf(mlagradfile[i], "%.9e ", TotalTime);
+			rootfprintf(mlagradfile[i], "%.9e ", TotalTime);
 		}
 	}
 
 	for (i = 0; i < MASS_PC_COUNT ; i++) {
-		fprintf(lagradfile, "%e ", mass_r[i]);
-		fprintf(ave_mass_file,"%e ", ave_mass_r[i] * units.m / MSUN);
-		fprintf(no_star_file,"%g ", no_star_r[i]);
-		fprintf(densities_file,"%e ", densities_r[i]);
-		fprintf(ke_rad_file,"%e ", ke_rad_r[i]);
-		fprintf(ke_tan_file,"%e ", ke_tan_r[i]);
-		fprintf(v2_rad_file,"%e ", v2_rad_r[i]);
-		fprintf(v2_tan_file,"%e ", v2_tan_r[i]);
+		rootfprintf(lagradfile, "%e ", mass_r[i]);
+		rootfprintf(ave_mass_file,"%e ", ave_mass_r[i] * units.m / MSUN);
+		rootfprintf(no_star_file,"%g ", no_star_r[i]);
+		rootfprintf(densities_file,"%e ", densities_r[i]);
+		rootfprintf(ke_rad_file,"%e ", ke_rad_r[i]);
+		rootfprintf(ke_tan_file,"%e ", ke_tan_r[i]);
+		rootfprintf(v2_rad_file,"%e ", v2_rad_r[i]);
+		rootfprintf(v2_tan_file,"%e ", v2_tan_r[i]);
 		for(j=0; j<NO_MASS_BINS-1; j++){
 			if ( !multimassr_empty[j] ){
-				fprintf(mlagradfile[j], "%e ", multi_mass_r[j][i]);
+				rootfprintf(mlagradfile[j], "%e ", multi_mass_r[j][i]);
 			}
 		}
 	}
-	fprintf(lagradfile, "\n");
-	fprintf(ave_mass_file,"\n");
-	fprintf(no_star_file,"\n");
-	fprintf(densities_file,"\n");
-	fprintf(ke_rad_file,"\n");
-	fprintf(ke_tan_file,"\n");
-	fprintf(v2_rad_file,"\n");
-	fprintf(v2_tan_file,"\n");
+	rootfprintf(lagradfile, "\n");
+	rootfprintf(ave_mass_file,"\n");
+	rootfprintf(no_star_file,"\n");
+	rootfprintf(densities_file,"\n");
+	rootfprintf(ke_rad_file,"\n");
+	rootfprintf(ke_tan_file,"\n");
+	rootfprintf(v2_rad_file,"\n");
+	rootfprintf(v2_tan_file,"\n");
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		if ( !multimassr_empty[i] ){
-			fprintf(mlagradfile[i], "\n");
+			rootfprintf(mlagradfile[i], "\n");
 		}
 	}
 
 	/* information on the central BH */
-	/* print useful header */
-#ifdef USE_MPI
-	if (tcount == 1 && myid == 0) {
-#else
-	if (tcount == 1) {
-#endif
-		fprintf(centmass_file, "# Information on central black hole [code units unless otherwise noted]\n");
-		fprintf(centmass_file, "#1:t #2:cenma.m #3:Dt #4:rho_core #5:Etotal.tot #6:Etotal.K #7:Etotal.P\n");
-	}
-	fprintf(centmass_file, "%.9e %.9e %.9e %.9e %.9e %.9e %.9e\n",
+	rootfprintf(centmass_file, "%.9e %.9e %.9e %.9e %.9e %.9e %.9e\n",
 		TotalTime, cenma.m * madhoc, Dt, rho_core, Etotal.tot, Etotal.K, Etotal.P);
 	
 	/* output Time,N_MAX,TotalE,TotalKE,TotalPE,Mtotal */
-	/* print useful header */
-#ifdef USE_MPI
-	if (tcount == 1 && myid == 0) {
-#else
-	if (tcount == 1) {
-#endif
-		fprintf(dynfile, "# Dynamical information [code units]\n");
-		fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN) #28.N_c_nb\n");
-		//Sourav:printing properties at 10 lagrange radii
-		if (CALCULATE10){
-			fprintf(lagrad10file, "#Dynamical information at 0.1 lagrange radius\n");
-			fprintf(lagrad10file, "#1.t #2.Dt #3.tcount #4.N_10 #5.M_10 #6.N_s,10 #7.M_s,10 #8.N_b,10 #9.M_b_10 #10.r_10 #11.rho_10\n");
-		}
-	}
-	fprintf(dynfile, "%.8g %.8g %ld %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
+	rootfprintf(dynfile, "%.8g %.8g %ld %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
 		TotalTime, Dt, tcount, clus.N_MAX, Mtotal, -2.0*Etotal.K/Etotal.P, N_core, core_radius, max_r, 
 		Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped, 
 		Eoops, Etotal.tot+Eoops, clusdyn.rh, central.rho, central.rc_spitzer, central.v_rms, rc_nb, DMse*units.m/MSUN, DMrejuv*units.m/MSUN, N_core_nb);
 
+
 	//Sourav: printing properties at 10% lagrange radius
 	if (CALCULATE10){
+#ifdef USE_MPI
+        int i;
+        double m_10_prev=0;
+
+        for(i=1; i<Start[myid]; i++)
+            m_10_prev += star_m[i] / clus.N_STAR;
+
+		n_10=1;
+		m_bin_10 = 0.0;
+		m_sing_10 = 0.0;
+		m_10 = m_10_prev;
+
+		while (m_10 < 0.1 * Mtotal) {
+            int g_n_10 = get_global_idx(n_10);
+			m_10 += star_m[g_n_10] / clus.N_STAR;
+
+			if (star[n_10].binind>0){
+				n_bin_10++;
+				m_bin_10 += star_m[g_n_10] / clus.N_STAR;
+			}
+			else{
+				n_sing_10++;
+				m_sing_10 += star_m[g_n_10] / clus.N_STAR;
+			}
+			n_10++;
+		}
+
+        n_10--; //since n_10 is initialized to 1 for all procs. So if summed, it'll give the wrong index.
+        long buf_comm_long[3];
+        double buf_comm_dbl[3];
+
+        buf_comm_long[0] = n_sing_10;
+        buf_comm_long[1] = n_bin_10;
+        buf_comm_long[2] = n_10;
+
+        buf_comm_dbl[0] = m_sing_10;
+        buf_comm_dbl[1] = m_bin_10;
+        buf_comm_dbl[2] = m_10;
+
+        //MPI3: Since only root node is printing Allreduce is not reqd.
+        MPI_Reduce(MPI_IN_PLACE, buf_comm_long, 3, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(MPI_IN_PLACE, buf_comm_dbl, 3, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+        n_sing_10 = buf_comm_long[0];
+        n_bin_10 = buf_comm_long[1];
+        n_10 = buf_comm_long[2];
+
+        m_sing_10 = buf_comm_dbl[0];
+        m_bin_10 = buf_comm_dbl[1];
+        m_10 = buf_comm_dbl[2];
+
+		/* exit if not enough stars */
+        if(myid==0)
+        {
+            if (n_10 <= 6 || n_10 >= clus.N_STAR-6) {
+                eprintf("clus.N_STAR <= 2*J || n_10 >= clus.N_STAR-6\n");
+                exit_cleanly(-1, __FUNCTION__);
+            }
+            else{
+                r_10=star_r[n_10];
+                rho_10 = m_10/(4.0 * 3.0 * PI * fb_cub(r_10));	
+            }
+        }
+
+        rootfprintf(lagrad10file, "%.8g %.8g %.ld %ld %.8g %ld %.8g %ld %.8g %.8g %.8g\n",
+                TotalTime, Dt, tcount, n_10, m_10, n_sing_10, m_sing_10, n_bin_10, m_bin_10, r_10, rho_10);
+
+#else
 		n_10=1;
 		m_bin_10 = 0.0;
 		m_sing_10 = 0.0;
@@ -382,42 +420,72 @@ void PrintFileOutput(void) {
 		}
 		fprintf(lagrad10file, "%.8g %.8g %.ld %ld %.8g %ld %.8g %ld %.8g %.8g %.8g\n",
 					TotalTime, Dt, tcount, n_10, m_10, n_sing_10, m_sing_10, n_bin_10, m_bin_10, r_10, rho_10);
+#endif
 	}
 
 	//MPI3: Commenting out since it is throwing seg fault. Later needs to be fixed.
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
 	   whereas N_b only counts EXISTING BOUND binaries. */
 	/* calculate core binary fraction */
-/*
+
 	n_single = 0;
 	n_binary = 0;
+	n_single_c = 0;
+	n_binary_c = 0;
 	//Sourav:initialize nb core properties
 	n_single_nb = 0;
 	n_binary_nb = 0;
-	for (i=1; star[i].r<=core_radius; i++) {
+
+    find_nstars_within_r(core_radius, &n_single_c, &n_binary_c);
+	//Sourav:calculate n_sing and n_bin for nb core
+    find_nstars_within_r(rc_nb, &n_single_nb, &n_binary_nb);
+
+	// calculate overall binary fraction
+#ifdef USE_MPI
+	for (i=1; i<=clus.N_MAX_NEW; i++) {
+#else
+	for (i=1; i<=clus.N_MAX; i++) {
+#endif
 		if (star[i].binind > 0) {
 			n_binary++;
 		} else {
 			n_single++;
 		}
 	}
-	N_core_binary = n_binary;
-	
-	//Sourav:calculate n_sing and n_bin for nb core
-	for (i=1; star[i].r<=rc_nb; i++) {
-		if (star[i].binind > 0) {
-			n_binary_nb++;
-		} else {
-			n_single_nb++;
-		}
-	}
+
+#ifdef USE_MPI
+    long buf_comm[6];
+    long buf_comm_recv[6];
+
+    buf_comm[0] = n_single_c;
+    buf_comm[1] = n_binary_c;
+    buf_comm[2] = n_single_nb;
+    buf_comm[3] = n_binary_nb;
+    buf_comm[4] = n_single;
+    buf_comm[5] = n_binary;
+
+    //MPI3: Since only root node is printing Allreduce is not reqd.
+    MPI_Reduce(buf_comm, buf_comm_recv, 6, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    if(myid==0)
+    {
+        n_single_c = buf_comm_recv[0];
+        n_binary_c = buf_comm_recv[1];
+        n_single_nb = buf_comm_recv[2];
+        n_binary_nb = buf_comm_recv[3];
+        n_single = buf_comm_recv[4];
+        n_binary = buf_comm_recv[5];
+    }
+#endif
+
+	N_core_binary = n_binary_c;
 	N_core_binary_nb = n_binary_nb;
 	
 	// this is such a kludge: core_radius is not initialized on the first timestep
-	if (n_single + n_binary == 0) {
+	if (n_single_c + n_binary_c == 0) {
 		fb_core = 0.0;
 	} else {
-		fb_core = ((double) n_binary)/((double) (n_single + n_binary));
+		fb_core = ((double) n_binary_c)/((double) (n_single_c + n_binary_c));
 	}
 	
 	//calculate the same for nb core
@@ -427,17 +495,6 @@ void PrintFileOutput(void) {
 		fb_core_nb = ((double) n_binary_nb)/((double) (n_single_nb + n_binary_nb));
 	}
 	
-	// calculate overall binary fraction
-	n_single = 0;
-	n_binary = 0;
-	for (i=1; i<=clus.N_MAX; i++) {
-		if (star[i].binind > 0) {
-			n_binary++;
-		} else {
-			n_single++;
-		}
-	}
-
 	// this is such a kludge: core_radius is not initialized on the first timestep
 	if (n_single + n_binary == 0) {
 		fb = 0.0;
@@ -445,17 +502,8 @@ void PrintFileOutput(void) {
 		fb = ((double) n_binary)/((double) (n_single + n_binary));
 	}
 	
-	// print useful header
-#ifdef USE_MPI
-	if (tcount == 1 && myid == 0) {
-#else
-	if (tcount == 1) {
-#endif
-		fprintf(binaryfile, "# Binary information [code units]\n");
-		fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
-	}
 	// print data
-	fprintf(binaryfile,
+	rootfprintf(binaryfile,
 		"%.6g %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %ld %.6g %.6g %.6g %.6g %.6g %.6g %ld %.8g %ld\n",
 		TotalTime, N_b, M_b, E_b, rh_single, 
 		rh_binary, rho_core_single, rho_core_bin, 
@@ -463,11 +511,13 @@ void PrintFileOutput(void) {
 		fb, E_bb, E_bs, DE_bb, DE_bs, 
 		N_core_binary_nb, fb_core_nb, N_core_binary);
 
+#ifndef USE_MPI
+        //MPI3: This hasn't been parallelized.
         if (WRITE_EXTRA_CORE_INFO) {
           write_core_data(corefile, no_remnants);
-          fprintf(corefile, "\n");
+          rootfprintf(corefile, "\n");
         }
-*/
+#endif
 
 	/* also saves INITIAL snapshot (StepCount=0) */
 /*
@@ -483,6 +533,51 @@ void PrintFileOutput(void) {
 	free(multimassr_empty);
 }
 
+void find_nstars_within_r(double r, long *ns, long *nb)
+{
+    long i;
+#ifdef USE_MPI
+	for (i=1; star_r[get_global_idx(i)]<=r; i++) {
+#else
+	for (i=1; star[i].r<=r; i++) {
+#endif
+		if (star[i].binind > 0) {
+			(*nb)++;
+		} else {
+			(*ns)++;
+		}
+	}
+}
+
+#ifdef USE_MPI
+void PrintParaFileOutput(void)
+{
+    mpi_para_file_write(mpi_logfile_wrbuf, &mpi_logfile_len, &mpi_logfile_ofst_total, &mpi_logfile);
+    mpi_para_file_write(mpi_escfile_wrbuf, &mpi_escfile_len, &mpi_escfile_ofst_total, &mpi_escfile);
+    mpi_para_file_write(mpi_binintfile_wrbuf, &mpi_binintfile_len, &mpi_binintfile_ofst_total, &mpi_binintfile);
+    mpi_para_file_write(mpi_collisionfile_wrbuf, &mpi_collisionfile_len, &mpi_collisionfile_ofst_total, &mpi_collisionfile);
+    mpi_para_file_write(mpi_tidalcapturefile_wrbuf, &mpi_tidalcapturefile_len, &mpi_tidalcapturefile_ofst_total, &mpi_tidalcapturefile);
+    mpi_para_file_write(mpi_semergedisruptfile_wrbuf, &mpi_semergedisruptfile_len, &mpi_semergedisruptfile_ofst_total, &mpi_semergedisruptfile);
+    mpi_para_file_write(mpi_removestarfile_wrbuf, &mpi_removestarfile_len, &mpi_removestarfile_ofst_total, &mpi_removestarfile);
+    mpi_para_file_write(mpi_relaxationfile_wrbuf, &mpi_relaxationfile_len, &mpi_relaxationfile_ofst_total, &mpi_relaxationfile);
+}
+
+void mpi_para_file_write(char* wrbuf, int *len, int *prev_cum_offset, MPI_File* fh)
+{
+    int offset=0, tot_offset=0;
+    MPI_Status mpistat;
+    MPI_Exscan(len, &offset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    offset += *prev_cum_offset;
+    MPI_File_write_at_all(*fh, offset, wrbuf, *len, MPI_CHAR, &mpistat);
+
+    MPI_Allreduce (len, &tot_offset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    *prev_cum_offset += tot_offset;
+
+    wrbuf[0] = '\0';
+    *len=0;
+}
+#endif
+
 /*** Parsing of Input Parameters / Memory allocation / File I/O ***/
 void parser(int argc, char *argv[], gsl_rng *r)
 {
@@ -491,7 +586,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	char *curr_mass;
 	parsed_t parsed;
 	parsed_t *spp;
-	long i;
+	long i, j;
 	int allparsed=1;
 	/* int *ip; */
 	FILE *in, *parsedfp;
@@ -545,10 +640,12 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	/* set inputfile and outprefix now that the options have been parsed */
 	sprintf(inputfile, "%s", argv[optind]);
 	sprintf(outprefix, "%s", argv[optind+1]);
+/*
 #ifdef USE_MPI
 	strcpy(outprefix_bak, outprefix);
 	sprintf(outprefix, "%s%d", outprefix, myid);
 #endif
+*/
 	dprintf("inputfile=%s outprefix=%s\n", inputfile, outprefix);
 
 	/*======= Opening of input & output files =======*/
@@ -557,11 +654,17 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 	
+#ifdef USE_MPI
+if(myid==0) {
+#endif
 	sprintf(outfile, "%s.cmc.parsed", outprefix);
 	if ((parsedfp = fopen(outfile, "w")) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
+#ifdef USE_MPI
+}
+#endif
 
 	/* nothing is set yet, so assigning all zeros to variable parsed */
 	/* one way to do it is a complicated for loop (?which depends on the 
@@ -598,7 +701,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			i++;
 		}
 
+#ifdef USE_MPI
+#define PRINT_PARSED(DOC) if(myid==0) fprintf(parsedfp, "# %s\n%s\n", DOC, line)
+#else
 #define PRINT_PARSED(DOC) fprintf(parsedfp, "# %s\n%s\n", DOC, line)
+#endif
 
 		/* see if there are too many values for parameter */
 		if (sscanf(line, "%s %s %s", parameter_name, values, dummy) == 3) {
@@ -974,7 +1081,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	if (parsed.A == 0) { \
 		wprintf("parameter \"%s\" unset: using default value \"%s\").\n", #A, #DEFAULT); \
                 A=DEFAULT; \
-                fprintf(parsedfp, "# %s\n%s %s     # default value\n", DOC, #A, #DEFAULT); \
+                rootfprintf(parsedfp, "# %s\n%s %s     # default value\n", DOC, #A, #DEFAULT); \
 	}
 	
 	CHECK_PARSED(MASS_PC_BH_INCLUDE, 1, PARAMDOC_MASS_PC_BH_INCLUDE);
@@ -1068,6 +1175,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 	
+#ifdef USE_MPI
+if(myid==0)
+#endif
 	fclose(parsedfp);
 	
 	/* read the number of stars and possibly other parameters */
@@ -1163,76 +1273,208 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	/*======= Opening of output files =======*/
 	sscanf("w", "%s", outfilemode);
 	
-	sprintf(outfile, "%s.lagrad.dat", outprefix);
-	if ((lagradfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s.dyn.dat", outprefix);
-	if ((dynfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	//Sourav:new file containing info at 10% lagrange radius
-	sprintf(outfile, "%s.lagrad_10_info.dat", outprefix);
-	if ((lagrad10file = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s.avemass_lagrad.dat", outprefix);
-	if ((ave_mass_file = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s.nostar_lagrad.dat", outprefix);
-	if ((no_star_file = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s.rho_lagrad.dat", outprefix);
-	if ((densities_file = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s.ke_rad_lagrad.dat", outprefix);
-	if ((ke_rad_file = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s.ke_tan_lagrad.dat", outprefix);
-	if ((ke_tan_file = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s.v2_rad_lagrad.dat", outprefix);
-	if ((v2_rad_file = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s.v2_tan_lagrad.dat", outprefix);
-	if ((v2_tan_file = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
-	sprintf(outfile, "%s.centmass.dat", outprefix);
-	if ((centmass_file = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create output file \"%s\".\n", outfile);
-		exit(1);
-	}
+#ifdef USE_MPI
+    //MPI3-IO: Following are files that are written only by the root node.
+    if(myid==0) {
+#endif
 
-	sprintf(outfile, "%s.log", outprefix);
-	if ((logfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create log output file \"%s\".\n", outfile);
-		exit(1);
-	}
+        sprintf(outfile, "%s.lagrad.dat", outprefix);
+        if ((lagradfile = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        sprintf(outfile, "%s.dyn.dat", outprefix);
+        if ((dynfile = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        //Sourav:new file containing info at 10% lagrange radius
+        sprintf(outfile, "%s.lagrad_10_info.dat", outprefix);
+        if ((lagrad10file = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        sprintf(outfile, "%s.avemass_lagrad.dat", outprefix);
+        if ((ave_mass_file = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        sprintf(outfile, "%s.nostar_lagrad.dat", outprefix);
+        if ((no_star_file = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        sprintf(outfile, "%s.rho_lagrad.dat", outprefix);
+        if ((densities_file = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        sprintf(outfile, "%s.ke_rad_lagrad.dat", outprefix);
+        if ((ke_rad_file = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        sprintf(outfile, "%s.ke_tan_lagrad.dat", outprefix);
+        if ((ke_tan_file = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        sprintf(outfile, "%s.v2_rad_lagrad.dat", outprefix);
+        if ((v2_rad_file = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        sprintf(outfile, "%s.v2_tan_lagrad.dat", outprefix);
+        if ((v2_tan_file = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
+        sprintf(outfile, "%s.centmass.dat", outprefix);
+        if ((centmass_file = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create output file \"%s\".\n", outfile);
+            exit(1);
+        }
 
+        /* general binary information */
+        sprintf(outfile, "%s.bin.dat", outprefix);
+        if ((binaryfile = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create binary file \"%s\".\n", outfile);
+            exit(1);
+        }
+
+        /* lagrange radii for multiple mass bins */
+        mlagradfile = (FILE **) malloc((NO_MASS_BINS-1)*sizeof(FILE *));
+        for(i=0; i<NO_MASS_BINS-1; i++){ /* NO_MASS_BINS need to be >=2 to be
+                                            meaningful */
+            sprintf(outfile, "%s.lagrad%ld-%g-%g.dat", outprefix, i,
+                    mass_bins[i], mass_bins[i+1]);
+            if ((mlagradfile[i] = fopen(outfile, outfilemode)) == NULL) {
+                eprintf("cannot create output file \"%s\".\n", outfile);
+                exit(1);
+            }
+        }
+
+        /* File that contains data for various definitions of core radii */
+        if (WRITE_EXTRA_CORE_INFO) {
+            sprintf(outfile, "%s.core.dat", outprefix);
+            if ((corefile = fopen(outfile, outfilemode)) == NULL) {
+                eprintf("cannot create output file \"%s\".\n", outfile);
+                exit(1);
+            }
+
+            /* the core that contains no remnants */
+            append_core_header(corefile, "norem", 0);
+            rootfprintf(corefile, "\n");
+        }
+
+        /* Printing our headers */
+        fprintf(lagradfile, "# Lagrange radii [code units]\n");
+        fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
+        fprintf(no_star_file, "# Number of stars within Lagrange radii [dimensionless]\n");
+        fprintf(densities_file, "# Density within Lagrange radii [code units]\n");
+        fprintf(ke_rad_file, "# Total radial kinetic energy within Lagrange radii [code units]\n");
+        fprintf(ke_tan_file, "# Total tangential kinetic energy within Lagrange radii [code units]\n");
+        fprintf(v2_rad_file, "# Sum of v_r within Lagrange radii [code units]\n");
+        fprintf(v2_tan_file, "# Sum of v_t within Lagrange radii [code units]\n");
+        for(i=0; i<NO_MASS_BINS-1; i++){
+            fprintf(mlagradfile[i], "# Lagrange radii for %g < m < %g range [code units]\n", mass_bins[i], mass_bins[i+1]);
+        }
+
+        fprintf(lagradfile, "# 1:t");
+        fprintf(ave_mass_file, "# 1:t");
+        fprintf(no_star_file, "# 1:t");
+        fprintf(densities_file, "# 1:t");
+        fprintf(ke_rad_file, "# 1:t");
+        fprintf(ke_tan_file, "# 1:t");
+        fprintf(v2_rad_file, "# 1:t");
+        fprintf(v2_tan_file, "# 1:t");
+        for(i=0; i<NO_MASS_BINS-1; i++){
+            fprintf(mlagradfile[i], "# 1:t");
+        }
+
+        for (i=0; i<MASS_PC_COUNT; i++) {
+            fprintf(lagradfile, " %ld:r(%g)", i+2, mass_pc[i]);
+            fprintf(ave_mass_file, " %ld:<m>(%g)", i+2, mass_pc[i]);
+            fprintf(no_star_file, " %ld:N(%g)", i+2, mass_pc[i]);
+            fprintf(densities_file, " %ld:rho(%g)", i+2, mass_pc[i]);
+            fprintf(ke_rad_file, " %ld:T_r(%g)", i+2, mass_pc[i]);
+            fprintf(ke_tan_file, " %ld:T_t(%g)", i+2, mass_pc[i]);
+            fprintf(v2_rad_file, " %ld:V2_r(%g)", i+2, mass_pc[i]);
+            fprintf(v2_tan_file, " %ld:V2_t(%g)", i+2, mass_pc[i]);
+            for(j=0; j<NO_MASS_BINS-1; j++){
+                fprintf(mlagradfile[j], " %ld:r(%g)", i+2, mass_pc[i]);
+            }
+        }
+
+        fprintf(lagradfile, "\n");
+        fprintf(ave_mass_file, "\n");
+        fprintf(no_star_file, "\n");
+        fprintf(densities_file, "\n");
+        fprintf(ke_rad_file, "\n");
+        fprintf(ke_tan_file, "\n");
+        fprintf(v2_rad_file, "\n");
+        fprintf(v2_tan_file, "\n");
+        for(i=0; i<NO_MASS_BINS-1; i++){
+            fprintf(mlagradfile[i], "\n");
+        }
+
+        fprintf(centmass_file, "# Information on central black hole [code units unless otherwise noted]\n");
+        fprintf(centmass_file, "#1:t #2:cenma.m #3:Dt #4:rho_core #5:Etotal.tot #6:Etotal.K #7:Etotal.P\n");
+        fprintf(dynfile, "# Dynamical information [code units]\n");
+        fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN) #28.N_c_nb\n");
+        //Sourav:printing properties at 10 lagrange radii
+        if (CALCULATE10){
+            fprintf(lagrad10file, "#Dynamical information at 0.1 lagrange radius\n");
+            fprintf(lagrad10file, "#1.t #2.Dt #3.tcount #4.N_10 #5.M_10 #6.N_s,10 #7.M_s,10 #8.N_b,10 #9.M_b_10 #10.r_10 #11.rho_10\n");
+        }
+
+        fprintf(binaryfile, "# Binary information [code units]\n");
+        fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
+
+#ifdef USE_MPI
+    }
+#endif
+
+
+#ifdef USE_MPI
+    //MPI3-IO: Files that might be written by nodes are opened by all procs using MPI-IO.
+    sprintf(outfile, "%s.log", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_logfile);
+    MPI_File_set_size(mpi_logfile, 0);
+
+    // output files for binaries 
+    sprintf(outfile, "%s.binint.log", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_binintfile);
+    MPI_File_set_size(mpi_binintfile, 0);
+
+    sprintf(outfile, "%s.esc.dat", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_escfile);
+    MPI_File_set_size(mpi_escfile, 0);
+
+    sprintf(outfile, "%s.collision.log", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_collisionfile);
+    MPI_File_set_size(mpi_collisionfile, 0);
+
+    sprintf(outfile, "%s.tidalcapture.log", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_tidalcapturefile);
+    MPI_File_set_size(mpi_tidalcapturefile, 0);
+
+    sprintf(outfile, "%s.semergedisrupt.log", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_semergedisruptfile);
+    MPI_File_set_size(mpi_semergedisruptfile, 0);
+
+    sprintf(outfile, "%s.removestar.log", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_removestarfile);
+    MPI_File_set_size(mpi_removestarfile, 0);
+
+    sprintf(outfile, "%s.relaxation.dat", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_relaxationfile);
+    MPI_File_set_size(mpi_relaxationfile, 0);
+
+#else
+
+    //MPI3: In the serial version, these are just opened as normal.
 	/* output files for binaries */
-	/* general binary information */
-	sprintf(outfile, "%s.bin.dat", outprefix);
-	if ((binaryfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create binary file \"%s\".\n", outfile);
-		exit(1);
-	}
 	/* file for binary interaction information */
 	sprintf(outfile, "%s.binint.log", outprefix);
 	if ((binintfile = fopen(outfile, outfilemode)) == NULL) {
@@ -1246,8 +1488,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		eprintf("cannot create escapers file \"%s\".\n", outfile);
 		exit(1);
 	}
-	/* print header */
-	fprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1\n");
 
 	/* Collision log file */
 	sprintf(outfile, "%s.collision.log", outprefix);
@@ -1255,8 +1495,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		eprintf("cannot create collision log file \"%s\".\n", outfile);
 		exit(1);
 	}
-	/* print header */
-	fprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
 
 	/* Tidal capture log file */
 	sprintf(outfile, "%s.tidalcapture.log", outprefix);
@@ -1264,8 +1502,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		eprintf("cannot create tidal capture log file \"%s\".\n", outfile);
 		exit(1);
 	}
-	/* print header */
-	fprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]\n");
 
 	/* Stellar evolution merger log file */
 	sprintf(outfile, "%s.semergedisrupt.log", outprefix);
@@ -1273,8 +1509,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		eprintf("cannot create stellar evolution merger/disruption log file \"%s\".\n", outfile);
 		exit(1);
 	}
-	/* print header */
-	fprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
 
 	/*Sourav: old star removal info file*/
 	sprintf(outfile, "%s.removestar.log", outprefix);
@@ -1282,9 +1516,6 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		eprintf("cannot create old star removal log file \"%s\".\n", outfile);
 		exit(1);
 	}
-	/*Sourav: print header*/
-	fprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
-	fprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 
 	/* Relaxation data file */
 	sprintf(outfile, "%s.relaxation.dat", outprefix);
@@ -1293,41 +1524,53 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 
-	/* lagrange radii for multiple mass bins */
-	mlagradfile = (FILE **) malloc((NO_MASS_BINS-1)*sizeof(FILE *));
-	for(i=0; i<NO_MASS_BINS-1; i++){ /* NO_MASS_BINS need to be >=2 to be
-							meaningful */
-		sprintf(outfile, "%s.lagrad%ld-%g-%g.dat", outprefix, i,
-							mass_bins[i], mass_bins[i+1]);
-		if ((mlagradfile[i] = fopen(outfile, outfilemode)) == NULL) {
-			eprintf("cannot create output file \"%s\".\n", outfile);
-			exit(1);
-		}
+    //MPI3: Files that need participation by more than one node.
+	sprintf(outfile, "%s.log", outprefix);
+	if ((logfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create log output file \"%s\".\n", outfile);
+		exit(1);
 	}
-        
-	/* File that contains data for various definitions of core radii */
-	if (WRITE_EXTRA_CORE_INFO) {
-		sprintf(outfile, "%s.core.dat", outprefix);
-		if ((corefile = fopen(outfile, outfilemode)) == NULL) {
-			eprintf("cannot create output file \"%s\".\n", outfile);
-			exit(1);
-		}
+#endif
 
-		/* the core that contains no remnants */
-		append_core_header(corefile, "norem", 0);
-		fprintf(corefile, "\n");
-	}
+
+	/* print header */
+	pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1\n");
+	/* print header */
+	pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
+	/* print header */
+	pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]\n");
+	/* print header */
+	pararootfprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
+	/*Sourav: print header*/
+	pararootfprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
+	pararootfprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
+
 }
 
 /* close buffers */
 void close_buffers(void)
+{
+//MPI3: These files are written to only by the root
+#ifdef USE_MPI
+    if(myid==0)
+#endif
+        close_root_buffers();
+
+//MPI3: These include the rest that are written to by all procs.
+#ifdef USE_MPI
+    mpi_close_node_buffers();
+#else
+    close_node_buffers();
+#endif
+}
+
+void close_root_buffers(void)
 {
 	int i;
 
 	fclose(lagradfile);
 	fclose(dynfile);
 	fclose(lagrad10file);
-	fclose(logfile);
 	fclose(ave_mass_file);
 	fclose(no_star_file);
 	fclose(densities_file);
@@ -1336,24 +1579,40 @@ void close_buffers(void)
 	fclose(v2_rad_file);
 	fclose(v2_tan_file);
 	fclose(centmass_file);
+	fclose(binaryfile);
+	for(i=0; i<NO_MASS_BINS-1; i++)
+		fclose(mlagradfile[i]);
+	if (WRITE_EXTRA_CORE_INFO) 
+		fclose(corefile);
+}
+
+void close_node_buffers(void)
+{
+	fclose(logfile);
+	fclose(binintfile);
 	fclose(escfile);
 	fclose(collisionfile);
 	fclose(tidalcapturefile);
 	fclose(semergedisruptfile);
-	fclose(relaxationfile);
-	/*Sourav: closing the file I opened*/
 	fclose(removestarfile);
-	fclose(binaryfile);
-	fclose(binintfile);
+	fclose(relaxationfile);
+}
 
-	for(i=0; i<NO_MASS_BINS-1; i++){
-		fclose(mlagradfile[i]);
-	}
-	if (WRITE_EXTRA_CORE_INFO) {
-		fclose(corefile);
-	}
+#ifdef USE_MPI
+/* MPI3-IO: close buffers */
+void mpi_close_node_buffers(void)
+{
+	MPI_File_close(&mpi_logfile);
+	MPI_File_close(&mpi_binintfile);
+	MPI_File_close(&mpi_escfile);
+	MPI_File_close(&mpi_collisionfile);
+	MPI_File_close(&mpi_tidalcapturefile);
+	MPI_File_close(&mpi_semergedisruptfile);
+	MPI_File_close(&mpi_removestarfile);
+	MPI_File_close(&mpi_relaxationfile);
 
 	//TEMPORARY
+/*
 #ifdef USE_MPI
 	if(myid==0)
 	{
@@ -1361,7 +1620,9 @@ void close_buffers(void)
 		fclose(fp_log);
 	}
 #endif
+*/
 }
+#endif
 
 /* trap signals */
 void trap_sigs(void)
@@ -1379,6 +1640,10 @@ void trap_sigs(void)
 /* print handy script for converting output files to physical units */
 void print_conversion_script(void)
 {
+#ifdef USE_MPI
+if(myid==0)
+{
+#endif
 	char dummystring[1024];
 	FILE *ofp;
 	/* BOOKMARK */
@@ -1441,6 +1706,9 @@ void print_conversion_script(void)
 	fclose(ofp);
 
 	chmod(dummystring, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+#ifdef USE_MPI
+}
+#endif
 }
 
 /* routines for printing star/binary info in a unified log format */
@@ -1599,11 +1867,39 @@ void write_snapshot(char *filename) {
   gzclose(snapfile);
 }
 
+void print_denprof_snapshot(char* infile)
+{
+#ifdef USE_MPI
+	//char filenm[150];
+	//sprintf(filenm, "%s.%s", outprefix, "small.denprof.dat");
+
+	//if(tcount == 1)
+	fp_denprof = fopen(infile, "w");
+
+	int i, j;
+	double m, den;
+	//fprintf(fp_denprof, "%ld\t", tcount);
+	for(i=1; i<clus.N_MAX-20; i+=20)
+	{
+		m=0;
+		for(j=i; j<i+20; j++)
+			m += star_m[j];
+
+		den = m * madhoc / (4 * PI * ( cub(star_r[i+19]) - cub(star_r[i]) ) / 3);
+		fprintf(fp_denprof, "%.16e\t%.16e\n", star_r[i+10], den);
+	}			
+	//fprintf(fp_denprof, "\n");
+	fclose(fp_denprof);
+#endif
+}
+
 void get_star_data(int argc, char *argv[], gsl_rng *rng)
 {
 	/* print version information to log file */
-	//commenting out print_version temporarily for basic mpi
-	//print_version(logfile);
+	pararootfprintf(logfile, "** %s %s (%s) [%s] **\n", CMCPRETTYNAME, CMCVERSION, CMCNICK, CMCDATE);
+#ifdef USE_MPI
+    mpi_para_file_write(mpi_logfile_wrbuf, &mpi_logfile_len, &mpi_logfile_ofst_total, &mpi_logfile);
+#endif
 
 	/* initialize the Search_Grid r_grid */
 	//If we use the GPU code, we dont need the SEARCH_GRID. So commenting it out
@@ -1667,7 +1963,7 @@ void alloc_bin_buf()
 	num_bin_buf = (int *) calloc( size_bin_buf, sizeof(int) );
 #endif
 }
-
+/*
 void mpi_merge_files()
 {
 #ifdef USE_MPI
@@ -1731,7 +2027,7 @@ void mpi_merge_files()
 	MPI_Barrier(MPI_COMM_WORLD);
 #endif
 }
-
+*/
 /*
 void cat_and_rm_files(char* file_ext)
 {
@@ -1748,7 +2044,6 @@ void cat_and_rm_files(char* file_ext)
 	}
 	dprintf("MPI Files merging: lag file = %s.%s\n", outprefix_bak, file_ext);
 }
-*/
 
 void cat_and_rm_files(char* file_ext)
 {
@@ -1773,7 +2068,8 @@ void cat_and_rm_files(char* file_ext)
 	//free(filename_buf);
 	//free(cmd);
 }
-
+*/
+/*
 void save_root_files()
 {
 #ifdef USE_MPI
@@ -1815,13 +2111,15 @@ void save_root_files()
 	MPI_Barrier(MPI_COMM_WORLD);
 #endif
 }
-
+*/
+/*
 void save_root_files_helper(char* file_ext)
 {
    char cmd[150];
 
    sprintf(cmd, "cp %s0.%s %s.%s", outprefix_bak, file_ext, outprefix_bak, file_ext);
 	system( cmd );
+*/
 /*
    int i;
    for( i = 0; i < procs; ++i )
@@ -1829,9 +2127,9 @@ void save_root_files_helper(char* file_ext)
       sprintf( cmd, "rm %s%d.%s &", outprefix_bak, i, file_ext);
       system( cmd );
    }
-*/
 }
-
+*/
+/*
 void rm_files()
 {
 #ifdef USE_MPI
@@ -1878,7 +2176,8 @@ void rm_files_helper(char* file_ext)
    sprintf(cmd, "rm %s%d.%s", outprefix_bak, myid, file_ext);
    system( cmd );
 }
-
+*/
+/*
 void print_small_output()
 {
 #ifdef USE_MPI
@@ -1907,30 +2206,4 @@ void print_small_output()
 	}
 #endif
 }
-
-
-void print_denprof_snapshot(char* infile)
-{
-#ifdef USE_MPI
-	//char filenm[150];
-	//sprintf(filenm, "%s.%s", outprefix, "small.denprof.dat");
-
-	//if(tcount == 1)
-	fp_denprof = fopen(infile, "w");
-
-	int i, j;
-	double m, den;
-	//fprintf(fp_denprof, "%ld\t", tcount);
-	for(i=1; i<clus.N_MAX-20; i+=20)
-	{
-		m=0;
-		for(j=i; j<i+20; j++)
-			m += star_m[j];
-
-		den = m * madhoc / (4 * PI * ( cub(star_r[i+19]) - cub(star_r[i]) ) / 3);
-		fprintf(fp_denprof, "%.16e\t%.16e\n", star_r[i+10], den);
-	}			
-	//fprintf(fp_denprof, "\n");
-	fclose(fp_denprof);
-#endif
-}
+*/

@@ -293,10 +293,10 @@ void remove_stripped_stars(type* buf, int* local_N)
 }
 
 // NEWER VERSION OF SAMPLE SORT WITH CLEANER LOAD BALANCING FUNCTION
-int sample_sort( type			*buf,
-                 int	         *local_N,
+int sample_sort( type	      *buf,
+                 int	      *local_N,
                  MPI_Datatype dataType,
-					  binary_t		*b_buf,
+                 binary_t     *b_buf,
                  MPI_Datatype b_dataType,
                  MPI_Comm     commgroup,
                  int          n_samples )

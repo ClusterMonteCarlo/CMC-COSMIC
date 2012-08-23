@@ -138,12 +138,18 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			dprintf("The sqrt in the expression for rmin has a negative argument!");
 			dprintf("It is, therefore, set to zero.\n");
 			dprintf("rmin_old= %g rmin_new= %g rmin_sqrt= %g\n", actual_rmin, rmin, inside_sqrt);
-			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
-                    star_r[kmin+1],star_r[kmin],star_r[kmin+1]-star_r[kmin]);
+#ifdef USE_MPI
+            dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
+                     star_r[kmin+1],star_r[kmin],star_r[kmin+1]-star_r[kmin]);
             dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star_r[kmin+1]-rmin,rmin-star_r[kmin]);
+#else
+            dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
+                    star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
+            dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+#endif
 
             if ((rmin<rk) || (rmin>rk1)) {
-                dprintf("si=%d rmin=%g outside of star interval (%g,%g), using bisection to get root. kmin=%d kmax=%d\n", si, rmin, rk, rk1, kmin, kmax);
+                dprintf("si=%ld rmin=%g outside of star interval (%g,%g), using bisection to get root. kmin=%ld kmax=%ld\n", si, rmin, rk, rk1, kmin, kmax);
                 rmin= find_root_vr(g_si, kmin, E, J);
                 dprintf("new rmin=%g, rmin in interval? %s\n", rmin, 
                         (rmin>=rk)&&(rmin<=rk1)? "Yes": "No");
@@ -196,12 +202,18 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			dprintf("The sqrt in the expression for rmax has a negative argument!");
 			dprintf("It is, therefore, set to zero.\n");
 			dprintf("rmax_old= %g rmax_new= %g rmax_sqrt= %g\n", actual_rmax, rmax, inside_sqrt);
+#ifdef USE_MPI
 			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
                     star_r[kmin+1],star_r[kmin],star_r[kmin+1]-star_r[kmin]);
             dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star_r[kmin+1]-rmin,rmin-star_r[kmin]);
+#else
+			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
+                    star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
+            dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+#endif
 
             if ((rmax<rk) || (rmax>rk1)) {
-                dprintf("si=%d rmax=%g outside of star interval (%g,%g), using bisection to get root.kmin=%d kmax=%d\n", si, rmax, rk, rk1, kmin, kmax);
+                dprintf("si=%ld rmax=%g outside of star interval (%g,%g), using bisection to get root.kmin=%ld kmax=%ld\n", si, rmax, rk, rk1, kmin, kmax);
                 rmax= find_root_vr(si, kmax, E, J);
                 dprintf("new rmax=%g, rmax in interval? %s\n", rmax, 
                         (rmax>=rk)&&(rmax<=rk1)? "Yes": "No");
@@ -357,14 +369,10 @@ double GetTimeStep(gsl_rng *rng) {
 		Tcoll = 1.0 / (16.0 * sqrt(PI) * central.n_sin * sqr(xcoll) * (central.v_sin_rms/sqrt(3.0)) * central.R2_ave * 
 				(1.0 + central.mR_ave/(2.0*xcoll*sqr(central.v_sin_rms/sqrt(3.0))*central.R2_ave))) * 
 			log(GAMMA * ((double) clus.N_STAR)) / ((double) clus.N_STAR);
-printf("myid=%d nsin=%g xcoll=%g vsin=%g r2=%g mr=%g\n", myid, central.n_sin, xcoll, central.v_sin_rms, central.R2_ave, central.mR_ave);
 
-#ifdef USE_MPI
-if(myid==0)
-#endif
-		fprintf (stdout, "Time = %f Gyr Tcoll = %f Gyr\n", 
-				TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09,
-				Tcoll*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09);
+        rootfprintf (stdout, "Time = %f Gyr Tcoll = %f Gyr\n", 
+                TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09,
+                Tcoll*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR/1e+09);
 	} else {
 		Tcoll = GSL_POSINF;
 	}
@@ -442,7 +450,7 @@ if(myid==0)
 #ifdef USE_MPI
 	if(myid==0)
 #endif
-		printf("Dt=%.18g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
+		dprintf("Dt=%.18g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
 
 	return (Dt);
 }
@@ -458,15 +466,10 @@ void tidally_strip_stars(void) {
 
 	DTidalMassLoss = TidalMassLoss - OldTidalMassLoss;
 
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	{
-		gprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-				j, OldTidalMassLoss, DTidalMassLoss);
-		fprintf(logfile, "tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-				j, OldTidalMassLoss, DTidalMassLoss);
-	}
+    rootgprintf("tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+            j, OldTidalMassLoss, DTidalMassLoss);
+    pararootfprintf(logfile, "tidally_strip_stars(): iteration %ld: OldTidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+            j, OldTidalMassLoss, DTidalMassLoss);
 	
 	/* Iterate the removal of tidally stripped stars 
 	 * by reducing Rtidal */
@@ -515,7 +518,7 @@ void tidally_strip_stars(void) {
 					Etidal += star[i].E * m / clus.N_STAR;
 
 					/* logging */
-					fprintf(escfile,
+					parafprintf(escfile,
 							"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
 							tcount, TotalTime, m,
 							r, star[i].vr, star[i].vt, star[i].r_peri,
@@ -523,23 +526,23 @@ void tidally_strip_stars(void) {
 
 					if (star[i].binind) {
 						k = star[i].binind;
-						fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+						parafprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
 								binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
 								binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
 								binary[k].id1, binary[k].id2,
 								binary[k].a * units.l / AU, binary[k].e);
 					} else {
-						fprintf(escfile, "0 0 0 0 0 0 0 ");	
+						parafprintf(escfile, "0 0 0 0 0 0 0 ");	
 					}
 
 					if (star[i].binind == 0) {
-						fprintf(escfile, "%d na na ", 
+						parafprintf(escfile, "%d na na ", 
 								star[i].se_k);
 					} else {
-						fprintf(escfile, "na %d %d",
+						parafprintf(escfile, "na %d %d",
 								binary[k].bse_kw[0], binary[k].bse_kw[1]);
 					}
-					fprintf (escfile, "\n");
+					parafprintf (escfile, "\n");
 
 					/* perhaps this will fix the problem wherein stars are ejected (and counted)
 					   multiple times */
@@ -578,7 +581,7 @@ void tidally_strip_stars(void) {
 					Etidal += star[i].E * m / clus.N_STAR;
 
 					/* logging */
-					fprintf(escfile,
+					parafprintf(escfile,
 							"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
 							tcount, TotalTime, m,
 							r, star[i].vr, star[i].vt, star[i].r_peri,
@@ -586,23 +589,23 @@ void tidally_strip_stars(void) {
 
 					if (star[i].binind) {
 						k = star[i].binind;
-						fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+						parafprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
 								binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
 								binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
 								binary[k].id1, binary[k].id2,
 								binary[k].a * units.l / AU, binary[k].e);
 					} else {
-						fprintf(escfile, "0 0 0 0 0 0 0 ");	
+						parafprintf(escfile, "0 0 0 0 0 0 0 ");	
 					}
 
 					if (star[i].binind == 0) {
-						fprintf(escfile, "%d na na ", 
+						parafprintf(escfile, "%d na na ", 
 								star[i].se_k);
 					} else {
-						fprintf(escfile, "na %d %d",
+						parafprintf(escfile, "na %d %d",
 								binary[k].bse_kw[0], binary[k].bse_kw[1]);
 					}
-					fprintf (escfile, "\n");
+					parafprintf (escfile, "\n");
 
 					/* perhaps this will fix the problem wherein stars are ejected (and counted)
 					   multiple times */
@@ -614,19 +617,14 @@ void tidally_strip_stars(void) {
 		j++;
 
 #ifdef USE_MPI
-      MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #endif
 		TidalMassLoss += DTidalMassLoss;
 
-#ifdef USE_MPI
-		if(myid==0)
-#endif
-		{
-			gprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-					j, TidalMassLoss, DTidalMassLoss);
-			fprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
-					j, TidalMassLoss, DTidalMassLoss);
-		}
+        rootgprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+                j, TidalMassLoss, DTidalMassLoss);
+        pararootfprintf(logfile, "tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
+                j, TidalMassLoss, DTidalMassLoss);
 
 
 	} while (DTidalMassLoss > 0);
@@ -653,7 +651,7 @@ void tidally_strip_stars(void) {
 }
 
 void remove_star(long j, double phi_rtidal, double phi_zero) {
-	double E, J;
+	double E, J, m, r;
 	long k=0;
 
 	/* dprintf("removing star: i=%ld id=%ld m=%g E=%g bin=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
@@ -666,13 +664,14 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 
 
 #ifdef USE_MPI
-	int g_j = get_global_idx(j);
-	Eescaped += E * star_m[g_j] / clus.N_STAR;
-	Jescaped += J * star_m[g_j] / clus.N_STAR;
+	m = star_m[get_global_idx(j)];
+	r = star_r[get_global_idx(j)];
 #else
-	Eescaped += E * star[j].m / clus.N_STAR;
-	Jescaped += J * star[j].m / clus.N_STAR;
+	m = star[j].m;
+	r = star[j].r;
 #endif
+	Eescaped += E * m / clus.N_STAR;
+	Jescaped += J * m / clus.N_STAR;
 
 	if (star[j].binind == 0) {
 		Eintescaped += star[j].Eint;
@@ -682,47 +681,35 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 		Eintescaped += binary[star[j].binind].Eint1 + binary[star[j].binind].Eint2;
 	}
 
-#ifdef USE_MPI
-	TidalMassLoss += star_m[g_j] / clus.N_STAR;
-	Etidal += E * star_m[g_j] / clus.N_STAR;
-#else
-	TidalMassLoss += star[j].m / clus.N_STAR;
-	Etidal += E * star[j].m / clus.N_STAR;
-#endif
+	TidalMassLoss += m / clus.N_STAR;
+	Etidal += E * m / clus.N_STAR;
 
 	/* logging */
-#ifdef USE_MPI
-	fprintf(escfile, "%ld %.8g %.8g ",
-		tcount, TotalTime, star_m[j]);
-	fprintf(escfile, "%.8g %.8g %.8g ",
-		star_r[j], star[j].vr, star[j].vt);
-#else
-	fprintf(escfile, "%ld %.8g %.8g ",
-		tcount, TotalTime, star[j].m);
-	fprintf(escfile, "%.8g %.8g %.8g ",
-		star[j].r, star[j].vr, star[j].vt);
-#endif
-	fprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
+	parafprintf(escfile, "%ld %.8g %.8g ",
+		tcount, TotalTime, m);
+	parafprintf(escfile, "%.8g %.8g %.8g ",
+		r, star[j].vr, star[j].vt);
+	parafprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
 	        star[j].r_peri, star[j].r_apo, Rtidal, phi_rtidal, phi_zero, E, J, star[j].id);
 	if (star[j].binind) {
 		k = star[j].binind;
-		fprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+		parafprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
 				binary[k].m1 * (units.m / clus.N_STAR) / MSUN, 
 				binary[k].m2 * (units.m / clus.N_STAR) / MSUN, 
 				binary[k].id1, binary[k].id2,
 				binary[k].a * units.l / AU, binary[k].e);
 	} else {
-		fprintf(escfile, "0 0 0 0 0 0 0 ");	
+		parafprintf(escfile, "0 0 0 0 0 0 0 ");	
 	}
 
 	if (star[j].binind == 0) {
-		fprintf(escfile, "%d na na ", 
+		parafprintf(escfile, "%d na na ", 
 				star[j].se_k);
 	} else {
-		fprintf(escfile, "na %d %d ",
+		parafprintf(escfile, "na %d %d ",
 				binary[k].bse_kw[0], binary[k].bse_kw[1]);
 	}
-	fprintf (escfile, "\n");
+	parafprintf (escfile, "\n");
 
 	/* perhaps this will fix the problem wherein stars are ejected (and counted)
 	   multiple times */

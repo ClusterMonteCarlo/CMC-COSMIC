@@ -203,3 +203,33 @@ global ararys should remain untouched. I am trying this, but dont know if it
 the the right way to fix this issue. Discussion with Stefan recommended.
 Also have changed zero_star() which is called in create_star() to zero out 
 only the star array and not the global arrays.
+
+Jul 29 2012
+Bharath
+---------
+Forgot about writing ocmments for a while.
+The patch Stefan wrote to fix NTRY exceeded bug was tested on hopper and it
+worked successfully. It is to be remembered that this has to be committed into
+the svn.
+
+Aug 6 2012
+Bharath
+---------
+the variable N_b_local might be no longer red. consider removing it everywhere
+in the code.
+I remember I saw some places where the timers are incorrect. These needs to be
+checked again. I faintly remember it was wrong somewhere in the sorting
+/ load balancing routine.
+The serial version still crashes when the gsl_rng_free(rng); line at the end
+of cmc.c is uncommented.
+
+Aug 23 2012
+Bharath
+---------
+File outputs have mostly been fixed.
+NOTE: The only exception is the corefile which seems to be too difficult to
+parallelize, and might also take up a lot of communication. As per Stefan,
+this should be the last priority, so for now this is not parallelized. But,
+this needs to be taken care of later. To be kept in mind.
+ALso, go through every .c file and check is every function has been actually
+pararllelized and the indices (global, local etc.) fixed.

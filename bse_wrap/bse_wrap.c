@@ -524,7 +524,6 @@ void bse_set_id2_pass(long int id2_pass) { cmcpass_.id2_pass = id2_pass; }
 static struct { long long int state[4]; int first;} taus113state_;
 #endif
 void bse_set_taus113state(struct rng_t113_state state, int first) {
-  int i;
 
   taus113state_.state[0]= state.z[0];
   taus113state_.state[1]= state.z[1];
@@ -547,7 +546,6 @@ float bse_get_bpp(int i, int j) { return(binary_.bpp[j-1][i-1]); }
 float bse_get_bcm(int i, int j) { return(binary_.bcm[j-1][i-1]); }
 struct rng_t113_state bse_get_taus113state(void) {
   struct rng_t113_state state;
-  int i;
 
   state.z[0]= taus113state_.state[0];
   state.z[1]= taus113state_.state[1];

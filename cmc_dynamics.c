@@ -20,7 +20,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	long Nrel=0, Nrelbeta[4]={0,0,0,0};
 	double relbeta[4]={PI/2.0,PI/4.0,PI/8.0,PI/16.0}, maverelbeta[4]={0.0,0.0,0.0,0.0}, raverelbeta[4]={0.0,0.0,0.0,0.0};
 	double qaverelbeta[4]={0.0,0.0,0.0,0.0};
-	FILE *binfp;
 	char filename[1024];
 	double mass_k, mass_kp; //Bharath: MPI
 
@@ -33,35 +32,44 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	calc_sigma_r();
 #endif
 
-#ifdef USE_MPI
-	//if(myid==0) 
-	if(0) 
-#endif
-	{
-		/* useful debugging and file headers */
-		if (tcount == 1) {
-			fprintf(relaxationfile, "# time");
-			for (i=0; i<4; i++) {
-				fprintf(relaxationfile, " thetase>%g:f,q,<M>,<r>", relbeta[i]);
-			}
-			fprintf(relaxationfile, "\n");
-		}
+    /* useful debugging and file headers */
+    if (tcount == 1) {
+        pararootfprintf(relaxationfile, "# time");
+        for (i=0; i<4; i++) {
+            pararootfprintf(relaxationfile, " thetase>%g:f,q,<M>,<r>", relbeta[i]);
+        }
+        pararootfprintf(relaxationfile, "\n");
+    }
 
-		// MPI2: This hopefully does not execute, so dont have to worry abt binaries here.
-		/* DEBUG: print out binary information every N steps */
-		if (0) {
-			/* if (tcount%50==0 || tcount==1) { */
-			sprintf(filename, "a_e2.%04ld.dat", tcount);
-			binfp = fopen(filename, "w");
-			for (j=1; j<=clus.N_MAX; j++) {
-				if (star[j].binind) {
-					fprintf(binfp, "%g %g\n", binary[star[j].binind].a, sqr(binary[star[j].binind].e));
-				}
-			}
-			fclose(binfp);
-		}
-		/* DEBUG */
-	}	
+    // MPI2: This hopefully does not execute, so dont have to worry abt binaries here.
+    /* DEBUG: print out binary information every N steps */
+    if (0) {
+        /* if (tcount%50==0 || tcount==1) { */
+#ifdef USE_MPI
+        MPI_File mpi_binfp;
+        char mpi_binfp_buf[10000], mpi_binfp_wrbuf[10000000];
+        int mpi_binfp_len=0, mpi_binfp_ofst_total=0;
+        sprintf(filename, "a_e2.%04ld.dat", tcount);
+        MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_binfp);
+        MPI_File_set_size(mpi_binfp, 0);
+#else
+        FILE *binfp;
+        sprintf(filename, "a_e2.%04ld.dat", tcount);
+        binfp = fopen(filename, "w");
+#endif
+        for (j=1; j<=clus.N_MAX; j++) {
+            if (star[j].binind) {
+                parafprintf(binfp, "%g %g\n", binary[star[j].binind].a, sqr(binary[star[j].binind].e));
+            }
+        }
+#ifdef USE_MPI
+        mpi_para_file_write(mpi_binfp_wrbuf, &mpi_binfp_len, &mpi_binfp_ofst_total, &mpi_binfp);
+        MPI_File_close(&mpi_binfp);
+#else
+        fclose(binfp);
+#endif
+    }
+    /* DEBUG */
 
 	/* Original dt provided, saved for repeated encounters, where dt is changed */
 	SaveDt = dt;
@@ -76,19 +84,13 @@ void dynamics_apply(double dt, gsl_rng *rng)
 
 	N_LIMIT = clus.N_MAX;
 
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	gprintf("%s(): performing interactions:\n", __FUNCTION__);
+	rootgprintf("%s(): performing interactions:\n", __FUNCTION__);
 
 	if (!quiet) {
 		fflush(stdout);
 	}
 
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	fprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
+	pararootfprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
 
 #ifdef USE_MPI	
 	for (si=1; si<=(mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%2-1; si+=2) {
@@ -236,20 +238,20 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				/* binary--binary */
 				print_interaction_status("BB");
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
-				/* fprintf(collisionfile, "BB %g %g\n", TotalTime, rcm); */
+				/* parafprintf(collisionfile, "BB %g %g\n", TotalTime, rcm); */
 			} else if (star[k].binind > 0 || star[kp].binind > 0) {
 				/* binary--single */
 				print_interaction_status("BS");
 
 				binint_do(k, kp, rperi, w, W, rcm, vcm, rng);
-				/* fprintf(collisionfile, "BS %g %g\n", TotalTime, rcm); */
+				/* parafprintf(collisionfile, "BS %g %g\n", TotalTime, rcm); */
 			} else {
 				/* single--single */
 				print_interaction_status("SS");
 
 				/* do collision */
 				sscollision_do(k, kp, rperi, w, W, rcm, vcm, rng);
-				/* fprintf(collisionfile, "SS %g %g\n", TotalTime, rcm); */
+				/* parafprintf(collisionfile, "SS %g %g\n", TotalTime, rcm); */
 			}
 		} else if (RELAXATION) {
 			/* do two-body relaxation */
@@ -322,23 +324,46 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		}
 	}
 
-	/* print relaxation information */
-	fprintf(relaxationfile, "%g", TotalTime);
+    //MPI3: Reduction for File IO - relaxationfile
+#ifdef USE_MPI
+    double buf_comm_dbl[3][4];
+    double buf_comm_dbl_recv[3][4];
+    long buf_comm_long[5];
+    long buf_comm_long_recv[5];
+    for (i=0; i<4; i++) {
+        buf_comm_dbl[0][i] = qaverelbeta[i];
+        buf_comm_dbl[1][i] = maverelbeta[i];
+        buf_comm_dbl[2][i] = raverelbeta[i];
+        buf_comm_long[i] = Nrelbeta[i];
+    }
+    buf_comm_long[4] = Nrel;
+
+    //MPI3: Since only root node is printing Allreduce is not reqd.
+    MPI_Reduce(buf_comm_dbl, buf_comm_dbl_recv, 12, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(buf_comm_long, buf_comm_long_recv, 5, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+    Nrel = buf_comm_long_recv[4];
+#endif
+
+    /* print relaxation information */
+	pararootfprintf(relaxationfile, "%g", TotalTime);
 	for (i=0; i<4; i++) {
-		fprintf(relaxationfile, " %g %g %g %g", 
+#ifdef USE_MPI
+        Nrelbeta[i] = buf_comm_long_recv[i];
+        qaverelbeta[i] = buf_comm_dbl_recv[0][i];
+        maverelbeta[i] = buf_comm_dbl_recv[1][i];
+        raverelbeta[i] = buf_comm_dbl_recv[2][i];
+#endif
+		pararootfprintf(relaxationfile, " %g %g %g %g", 
 				((double) Nrelbeta[i])/((double) Nrel), 
 				qaverelbeta[i]/((double) Nrelbeta[i]),
 				maverelbeta[i]/((double) Nrelbeta[i]),
 				raverelbeta[i]/((double) Nrelbeta[i]));
 	}
-	fprintf(relaxationfile, "\n");
+	pararootfprintf(relaxationfile, "\n");
 
 	/* put newline on "...performing interactions..." line */
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	gprintf("\n");
-	fprintf(logfile, "\n");
+	rootgprintf("\n");
+	pararootfprintf(logfile, "\n");
 
 	//MPI2: Binaries, ignoring for now.
 	/* break pathologically wide binaries */

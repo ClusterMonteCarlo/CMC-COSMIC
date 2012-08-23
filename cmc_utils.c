@@ -334,7 +334,6 @@ void set_velocities3(void){
 	double q=0.5; /* q=0.5 -> Stodolkiewicz, q=0 -> Delta U all from rnew */
 	double alpha;
 	long i;
-	int g_i;
 	double m, v2, E_dump, E_dump_capacity;
 	double E_dump_factor = 0.8; //Percentage of excess energy to be dumped on each star.
 
@@ -646,8 +645,8 @@ void mpi_ComputeEnergy(void)
 
 	Etotal.tot += cenma.E + Eescaped + Ebescaped + Eintescaped;
 
-	double temp = 0.0;
-	MPI_Status stat;
+//	double temp = 0.0;
+//	MPI_Status stat;
 //if(myid==0)
 //	Etotal.K = buf_reduce[1];	
 
@@ -887,6 +886,13 @@ void comp_multi_mass_percent(){
 	r_inbin = (double *) calloc(NO_MASS_BINS, sizeof(double));
 	star_bins = (int *) malloc((clus.N_MAX+2)*sizeof(int));
 	for (i = 1; i <= clus.N_MAX; i++) {
+#ifdef USE_MPI
+		star_bins[i] = find_stars_mass_bin(star_m[i]/SOLAR_MASS_DYN);
+		if (star_bins[i] == -1) continue; /* -1: star isn't in legal bin */
+        mtotal_inbin[star_bins[i]] += star_m[i];
+		number_inbin[star_bins[i]]++;
+		r_inbin[star_bins[i]] = star_r[i];
+#else
 		star_bins[i] = find_stars_mass_bin(star[i].m/SOLAR_MASS_DYN);
 		if (star_bins[i] == -1) continue; /* -1: star isn't in legal bin */
 		mtotal_inbin[star_bins[i]] += star[i].m; /* no unit problem, since 
@@ -894,6 +900,7 @@ void comp_multi_mass_percent(){
 							   	        percentage only. */
 		number_inbin[star_bins[i]]++;
 		r_inbin[star_bins[i]] = star[i].r;
+#endif
 	}
 	/* populate arrays rs[NO_MASS_BINS][j] and percents[][] */
 	rs = (double **) malloc(NO_MASS_BINS*sizeof(double *));
@@ -913,9 +920,15 @@ void comp_multi_mass_percent(){
 	for (i = 1; i <= clus.N_MAX; i++) {
 		int sbin = star_bins[i];
 		if (sbin == -1) continue;
+#ifdef USE_MPI
+		mcount_inbin[sbin] += star_m[i];
+		ncount_inbin[sbin]++;
+		rs[sbin][ncount_inbin[sbin]] = star_r[i];
+#else
 		mcount_inbin[sbin] += star[i].m;
 		ncount_inbin[sbin]++;
 		rs[sbin][ncount_inbin[sbin]] = star[i].r;
+#endif
 		percents[sbin][ncount_inbin[sbin]] = 
 				mcount_inbin[sbin]/mtotal_inbin[sbin];
 	}
@@ -991,6 +1004,84 @@ void comp_mass_percent(){
 		mcount=0;
 	}
 
+
+#ifdef USE_MPI
+    double *ke_rad_prev_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
+    double *ke_tan_prev_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
+    double *v2_rad_prev_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
+    double *v2_tan_prev_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
+
+	for (k = 1; k <= clus.N_MAX_NEW; k++) {
+        int g_k = get_global_idx(k);
+		ke_rad_prev_arr[k] = ke_rad_prev_arr[k-1] + 0.5 * star_m[g_k] * madhoc * star[k].vr * star[k].vr;
+		ke_tan_prev_arr[k] = ke_tan_prev_arr[k-1] + 0.5 * star_m[g_k] * madhoc * star[k].vt * star[k].vt;
+		v2_rad_prev_arr[k] = v2_rad_prev_arr[k-1] + star[k].vr * star[k].vr;
+		v2_tan_prev_arr[k] = v2_tan_prev_arr[k-1] + star[k].vt * star[k].vt;
+    }
+
+    MPI_Status stat;
+    double buf_comm[4];
+    double buf_comm_recv[4];
+    buf_comm[0] = ke_rad_prev_arr[clus.N_MAX_NEW];
+    buf_comm[1] = ke_tan_prev_arr[clus.N_MAX_NEW];
+    buf_comm[2] = v2_rad_prev_arr[clus.N_MAX_NEW];
+    buf_comm[3] = v2_tan_prev_arr[clus.N_MAX_NEW];
+
+    MPI_Exscan(buf_comm, buf_comm_recv, 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+    ke_rad_prev = buf_comm_recv[0];
+    ke_tan_prev = buf_comm_recv[1];
+    v2_rad_prev = buf_comm_recv[2];
+    v2_tan_prev = buf_comm_recv[3];
+
+	for (k = 1; k <= clus.N_MAX; k++) {
+		mprev += star_m[k] / clus.N_STAR;
+
+		if (mprev / Mtotal > mass_pc[mcount]) {
+
+			mass_r[mcount] = star_r[k];
+			ave_mass_r[mcount] = mprev/Mtotal/k*initial_total_mass;
+			no_star_r[mcount] = k;
+			densities_r[mcount] = mprev*clus.N_STAR/
+				(4/3*3.1416*pow(star_r[k],3));
+
+            int proc_k = findProcForIndex(k);
+            if(proc_k!=0)
+            {
+                if(proc_k == myid)
+                {
+                    buf_comm[0] = ke_rad_prev + ke_rad_prev_arr[get_local_idx(k)];
+                    buf_comm[1] = ke_tan_prev + ke_tan_prev_arr[get_local_idx(k)];
+                    buf_comm[2] = v2_rad_prev + v2_rad_prev_arr[get_local_idx(k)];
+                    buf_comm[3] = v2_tan_prev + v2_tan_prev_arr[get_local_idx(k)];
+                    MPI_Send(buf_comm, 4, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                }
+                if(myid==0)
+                {
+                    MPI_Recv(buf_comm_recv, 4, MPI_DOUBLE, proc_k, 0, MPI_COMM_WORLD, &stat);
+                    ke_rad_r[mcount] = buf_comm_recv[0];
+                    ke_tan_r[mcount] = buf_comm_recv[1];
+                    v2_rad_r[mcount] = buf_comm_recv[2];
+                    v2_tan_r[mcount] = buf_comm_recv[3];
+                }
+            } else {
+                ke_rad_r[mcount] = ke_rad_prev_arr[k];
+                ke_tan_r[mcount] = ke_tan_prev_arr[k];
+                v2_rad_r[mcount] = v2_rad_prev_arr[k];
+                v2_tan_r[mcount] = v2_tan_prev_arr[k];
+            }
+
+			mcount++;
+			if (mcount == MASS_PC_COUNT)
+				break;
+		}
+	}
+
+    free(ke_rad_prev_arr);
+    free(ke_tan_prev_arr);
+    free(v2_rad_prev_arr);
+    free(v2_tan_prev_arr);
+#else
 	for (k = 1; k <= clus.N_MAX; k++) {	/* Only need to count up to N_MAX */
 		mprev += star[k].m / clus.N_STAR;
 		ke_rad_prev += 0.5 * star[k].m * madhoc * star[k].vr * star[k].vr;
@@ -1012,6 +1103,8 @@ void comp_mass_percent(){
 				break;
 		}
 	}
+
+#endif
 }
 
 /* The potential computed using the star[].phi computed at the star 
@@ -1775,6 +1868,26 @@ void set_global_vars1()
 	Ebescaped_old = 0.0;
 	TidalMassLoss_old = 0.0;
 	Etidal_old = 0.0;
+
+    //MPI3: Initializing some MPI IO related variables.
+    mpi_logfile_len=0;
+    mpi_escfile_len=0;
+    mpi_binintfile_len=0;
+    mpi_collisionfile_len=0;
+    mpi_tidalcapturefile_len=0;
+    mpi_semergedisruptfile_len=0;
+    mpi_removestarfile_len=0;
+    mpi_relaxationfile_len=0;
+
+    mpi_logfile_ofst_total=0;
+    mpi_escfile_ofst_total=0;
+    mpi_binaryfile_ofst_total=0;
+    mpi_binintfile_ofst_total=0;
+    mpi_collisionfile_ofst_total=0;
+    mpi_tidalcapturefile_ofst_total=0;
+    mpi_semergedisruptfile_ofst_total=0;
+    mpi_removestarfile_ofst_total=0;
+    mpi_relaxationfile_ofst_total=0;
 #endif
 }
 
@@ -1830,6 +1943,10 @@ void bin_vars_calculate()
 			E_b += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 		}
 	}
+#ifdef USE_MPI
+	MPI_Allreduce(MPI_IN_PLACE, &M_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+	MPI_Allreduce(MPI_IN_PLACE, &E_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+#endif
 }
 
 void calc_potential_new()
@@ -2063,13 +2180,13 @@ void qsorts_new(void)
 	MPI_Type_contiguous( sizeof(binary_t), MPI_BYTE, &binarytype );
 	MPI_Type_commit( &binarytype );
 	int temp = (int)clus.N_MAX_NEW; //to avoid incompatible pointer type warning
-	clus.N_MAX = sample_sort(	star+1,
-                					&temp,
-                					startype,
-										binary+1,
-                					binarytype,
-                					MPI_COMM_WORLD,
-                					SAMPLESIZE );
+	clus.N_MAX = sample_sort(   star+1,
+                				&temp,
+                				startype,
+                                binary+1,
+                				binarytype,
+                				MPI_COMM_WORLD,
+                				SAMPLESIZE );
 	clus.N_MAX_NEW = temp;
 
 	//MPI_Type_free(startype);
@@ -2086,7 +2203,6 @@ void post_sort_comm()
 {
 #ifdef USE_MPI
 	int i;
-	MPI_Status stat;
 	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
 	double *temp_r = (double *) malloc( ((int)clus.N_MAX_NEW+1) * sizeof(double) );

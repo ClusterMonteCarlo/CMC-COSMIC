@@ -50,7 +50,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	    rperi <= 1.3 * star[kp].rad) {
 
 		/* log stuff */
-		fprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
+		parafprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
 			sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
 
 		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
@@ -105,7 +105,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 				- 0.5 * mass_kp * madhoc * phi_kp;
 		
 			/* log stuff */
-			fprintf(tidalcapturefile, "%s\n", sprint_star_dyn(kp, dummystring));
+			parafprintf(tidalcapturefile, "%s\n", sprint_star_dyn(kp, dummystring));
 
 			destroy_obj(k);
 		} else {
@@ -172,7 +172,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			compress_binary(&star[knew], &binary[star[knew].binind]);
 			
 			/* log stuff */
-			fprintf(tidalcapturefile, "%s\n", sprint_bin_dyn(knew, dummystring));
+			parafprintf(tidalcapturefile, "%s\n", sprint_bin_dyn(knew, dummystring));
 
 			destroy_obj(k);
 			destroy_obj(kp);
@@ -181,7 +181,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		   rperi <= 1.3 * star[k].rad) {
 
 		/* log stuff */
-		fprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
+		parafprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
 				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
 
 		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
@@ -233,7 +233,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 				- 0.5 * mass_k * madhoc * phi_k;
 	
 			/* log stuff */
-			fprintf(tidalcapturefile, "%s\n", sprint_star_dyn(k, dummystring));
+			parafprintf(tidalcapturefile, "%s\n", sprint_star_dyn(k, dummystring));
 
 			destroy_obj(kp);
 		} else {
@@ -299,7 +299,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			compress_binary(&star[knew], &binary[star[knew].binind]);
 			
 			/* log stuff */
-			fprintf(tidalcapturefile, "%s\n", sprint_bin_dyn(knew, dummystring));
+			parafprintf(tidalcapturefile, "%s\n", sprint_bin_dyn(knew, dummystring));
 
 			destroy_obj(k);
 			destroy_obj(kp);
@@ -366,7 +366,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 //#endif
 
 		/* log collision */
-		fprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d\n", 
+		parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d\n", 
 			TotalTime, 
 			star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN, 
 			star[k].id, mass_k * units.mstar / FB_CONST_MSUN, 
@@ -486,13 +486,13 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			compress_binary(&star[knew], &binary[star[knew].binind]);
 
 			/* log stuff */
-			fprintf(tidalcapturefile, "%.3g SS_TC %s+%s->%s\n", TotalTime, 
+			parafprintf(tidalcapturefile, "%.3g SS_TC %s+%s->%s\n", TotalTime, 
 				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), sprint_bin_dyn(knew, dummystring3));
 			
 			destroy_obj(k);
 			destroy_obj(kp);
 		} else {
-			fprintf(tidalcapturefile, "%.3g SS_TC_FAILED %s+%s->%s+%s\n", TotalTime, 
+			parafprintf(tidalcapturefile, "%.3g SS_TC_FAILED %s+%s->%s+%s\n", TotalTime, 
 				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2),
 				sprint_star_dyn(k, dummystring3), sprint_star_dyn(kp, dummystring4));
 		}
@@ -523,7 +523,6 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
 	binary_t tempbinary, tbcopy;
 	int tbi=-1, j, ktry, i, fb, icase;
-        struct rng_t113_state temp_state;
 
 	for(i=0;i<=11;i++) {
 	  vs[i] = 0.0;

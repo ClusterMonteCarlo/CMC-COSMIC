@@ -91,9 +91,7 @@ void mpiFindDispAndLenCustom( long N, int blkSize, int* mpiDisp, int* mpiLen )
 /* Creates a new communicator with inverse order of processes. */
 MPI_Comm inv_comm_create(int procs, MPI_Comm old_comm)
 {
-	int i, debug, *newranks;
-	int new_rank, new_np;
-	int group_rank, group_np;
+	int i, *newranks;
 	MPI_Group orig_group, new_group;
 	MPI_Comm  new_comm;
 

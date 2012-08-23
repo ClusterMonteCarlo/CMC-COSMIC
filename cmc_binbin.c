@@ -130,14 +130,14 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hi
 	hier->obj[3] = NULL;
 
 	/* logging */
-	fprintf(binintfile, "********************************************************************************\n");
-	fprintf(binintfile, "type=BB t=%.9g\n", TotalTime);
-	fprintf(binintfile, "params: b=%g v=%g\n", b, W/vc);
+	parafprintf(binintfile, "********************************************************************************\n");
+	parafprintf(binintfile, "type=BB t=%.9g\n", TotalTime);
+	parafprintf(binintfile, "params: b=%g v=%g\n", b, W/vc);
 	/* set units to 1 since we're already in CGS */
 	fb_units.v = fb_units.l = fb_units.t = fb_units.m = fb_units.E = 1.0;
-	fprintf(binintfile, "input: ");
+	parafprintf(binintfile, "input: ");
 	binint_log_obj(hier->obj[0], fb_units);
-	fprintf(binintfile, "input: ");
+	parafprintf(binintfile, "input: ");
 	binint_log_obj(hier->obj[1], fb_units);
 	
 	/* get the units and normalize */

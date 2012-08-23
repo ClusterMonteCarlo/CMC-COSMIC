@@ -88,7 +88,7 @@ void print_interaction_status(char status_text[])
 	if (!quiet) {
 		fflush(stdout);
 	}
-	fprintf(logfile, " %s", status_text);
+	parafprintf(logfile, " %s", status_text);
 }
 
 void print_interaction_error(void)
@@ -97,7 +97,7 @@ void print_interaction_error(void)
 	if (!quiet) {
 		fflush(stdout);
 	}
-	fprintf(logfile, "!");
+	parafprintf(logfile, "!");
 }
 
 /* destroy an object (can be star or binary) */
@@ -106,10 +106,10 @@ void destroy_obj(long i)
 	double r, phi;
 
 	if (star[i].binind) {
-		printf("proc=%d Star %ld destroyed with id %ld, binary binind=%ld id1=%ld id2=%ld!\n", myid, i, star[i].id, star[i].binind, binary[star[i].binind].id1, binary[star[i].binind].id2);
+		dprintf("proc=%d Star %ld destroyed with id %ld, binary binind=%ld id1=%ld id2=%ld!\n", myid, i, star[i].id, star[i].binind, binary[star[i].binind].id1, binary[star[i].binind].id2);
 		destroy_binary(star[i].binind);
 	} else {
-		printf("proc=%d Star %ld destroyed with id %ld!\n", myid, i, star[i].id);
+		dprintf("proc=%d Star %ld destroyed with id %ld!\n", myid, i, star[i].id);
 	}
 
 	/* need to zero out E's, J, but can't zero out potential---this is the easiest way */
@@ -156,7 +156,7 @@ void destroy_binary(long i)
 {
 	/* set inuse flag to zero, and zero out all other properties for safety */
 	zero_binary(i);
-	printf("proc=%d Binary %ld with id1=%ld id2=%ld destroyed!\n", myid, i, binary[i].id1, binary[i].id2);
+	dprintf("proc=%d Binary %ld with id1=%ld id2=%ld destroyed!\n", myid, i, binary[i].id1, binary[i].id2);
 	N_b_local--;
 }
 
@@ -199,9 +199,9 @@ long create_star(int idx, int dyn_0_se_1)
 #endif
 
 #ifdef USE_MPI
-	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
+	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
 #else
-	printf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
+	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
 #endif
 
 	/* initialize to zero for safety */
@@ -227,7 +227,7 @@ long create_binary(int idx, int dyn_0_se_1)
 		exit_cleanly(1, __FUNCTION__);
 	}
 
-	printf("HOLE FOUND at %ld\t INSERTING STAR %d\n", i, idx);
+	dprintf("HOLE FOUND at %ld\t INSERTING STAR %d\n", i, idx);
 
 #ifdef USE_MPI
 	/* account for new binary */
@@ -246,9 +246,9 @@ long create_binary(int idx, int dyn_0_se_1)
 	star[j].binind = i;
 	
 #ifdef USE_MPI
-	printf("Binary Created on node %d!! single star idx = %ld binind = %ld\n", myid, j, i);
+	dprintf("Binary Created on node %d!! single star idx = %ld binind = %ld\n", myid, j, i);
 #else
-	printf("Binary Created!! single star idx = %ld binind = %ld\n", j, i);
+	dprintf("Binary Created!! single star idx = %ld binind = %ld\n", j, i);
 #endif	
 
 	return(j);
@@ -284,9 +284,6 @@ double calc_n_local(long k, long p, long N_LIMIT)
 		kmax = N_LIMIT;
 		kmin = N_LIMIT - 2 * p - 1;
 	}
-//if(kmax>25000 && myid==0)
-//printf("---------------->>>>>> kmin=%d kmax=%d rmin=%g rmax=%g\n", kmin, kmax, star_r[kmin], star_r[kmax]);
-
 
 #ifdef USE_MPI
 	return((2.0 * ((double) p)) * 3.0 / (4.0 * PI * (cub(star_r[kmax]) - cub(star_r[kmin]))));
@@ -346,8 +343,6 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	}
 
 	*W = sqrt(sqr(w[1]) + sqr(w[2]) + sqr(w[3]));
-	//if(star[k].vr == 0 || star[k].vt == 0 || star[kp].vr == 0 || star[kp].vt == 0)
-		//printf("star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
 
 	if (*W == 0.0) {
 		eprintf("W = 0! for star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
@@ -611,7 +606,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring1, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		fprintf(binintfile, "type=single m=%g R=%g Eint=%g id=%s\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, obj->Eint*units.E, idstring1);
+		parafprintf(binintfile, "type=single m=%g R=%g Eint=%g id=%s\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, obj->Eint*units.E, idstring1);
 	} else if (fb_n_hier(obj) == 2) {
 		/* first write id strings */
 		snprintf(idstring1, FB_MAX_STRING_LENGTH, "%ld", obj->obj[0]->id[0]);
@@ -625,7 +620,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring2, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		fprintf(binintfile, "type=binary m0=%g m1=%g R0=%g R1=%g Eint1=%g Eint2=%g id0=%s id1=%s a=%g e=%g\n", 
+		parafprintf(binintfile, "type=binary m0=%g m1=%g R0=%g R1=%g Eint1=%g Eint2=%g id0=%s id1=%s a=%g e=%g\n", 
 			obj->obj[0]->m*units.m/MSUN, obj->obj[1]->m*units.m/MSUN, 
 			obj->obj[0]->R*units.l/RSUN, obj->obj[1]->R*units.l/RSUN, 
 			obj->obj[0]->Eint*units.E, obj->obj[1]->Eint*units.E, 
@@ -657,7 +652,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring3, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		fprintf(binintfile, "type=triple min0=%g min1=%g mout=%g Rin0=%g Rin1=%g Rout=%g Eintin0=%g Eintin1=%g Eintout=%g idin1=%s idin2=%s idout=%s ain=%g aout=%g ein=%g eout=%g\n",
+		parafprintf(binintfile, "type=triple min0=%g min1=%g mout=%g Rin0=%g Rin1=%g Rout=%g Eintin0=%g Eintin1=%g Eintout=%g idin1=%s idin2=%s idout=%s ain=%g aout=%g ein=%g eout=%g\n",
 			obj->obj[bid]->obj[0]->m*units.m/MSUN, obj->obj[bid]->obj[1]->m*units.m/MSUN, obj->obj[sid]->m*units.m/MSUN,
 			obj->obj[bid]->obj[0]->R*units.l/RSUN, obj->obj[bid]->obj[1]->R*units.l/RSUN, obj->obj[sid]->R*units.l/RSUN,
 			obj->obj[bid]->obj[0]->Eint*units.E, obj->obj[bid]->obj[1]->Eint*units.E, obj->obj[sid]->Eint*units.E,
@@ -674,7 +669,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 void binint_log_status(fb_ret_t retval)
 {
 	/* must print out Nosc when upgraded to latest Fewbody */
-	fprintf(binintfile, "status: DE/E=%g DE=%g DL/L=%g DL=%g tcpu=%g\n", 
+	parafprintf(binintfile, "status: DE/E=%g DE=%g DL/L=%g DL=%g tcpu=%g\n", 
 		retval.DeltaEfrac, retval.DeltaE, retval.DeltaLfrac, retval.DeltaL, retval.tcpu);
 }
 
@@ -683,25 +678,25 @@ void binint_log_collision(const char interaction_type[], long id,
 {
 	int j;
 	
-	fprintf(collisionfile, "t=%g %s idm=%ld(mm=%g) id1=%ld(m1=%g)",
+	parafprintf(collisionfile, "t=%g %s idm=%ld(mm=%g) id1=%ld(m1=%g)",
 		TotalTime, interaction_type, id, 
 		mass * units.mstar / FB_CONST_MSUN, obj.id[0], 
 		binint_get_mass(k, kp, obj.id[0]) * units.mstar 
 						  / FB_CONST_MSUN);
 	for (j=1; j<obj.ncoll; j++) {
-		fprintf(collisionfile, ":id%d=%ld(m%d=%g)", 
+		parafprintf(collisionfile, ":id%d=%ld(m%d=%g)", 
 			j+1, obj.id[j], j+1,
 			binint_get_mass(k, kp, obj.id[j]) * units.mstar 
 							  / FB_CONST_MSUN);
 	}
-	fprintf(collisionfile," (r=%g) ", r);
+	parafprintf(collisionfile," (r=%g) ", r);
 //Sourav
-	fprintf(collisionfile, "typem=%ld ", startype);
+	parafprintf(collisionfile, "typem=%ld ", startype);
 	for (j=0; j<obj.ncoll; j++) {
-		fprintf(collisionfile, "type%d=%ld ", j+1, 
+		parafprintf(collisionfile, "type%d=%ld ", j+1, 
 				binint_get_startype(k, kp, obj.id[j]));
 	}
-	fprintf(collisionfile, "\n");
+	parafprintf(collisionfile, "\n");
 }
 
 /* do binary interaction (bin-bin or bin-single) */
@@ -844,22 +839,22 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	if ( !( (fabs(retval.DeltaEfrac) < 1.0e-3 || fabs(retval.DeltaE) < 1.0e-3) && 
 		 (fabs(retval.DeltaLfrac) < 1.0e-3 || fabs(retval.DeltaL) < 1.0e-3) ) ) {
 		/* energy error; ignore for now */
-		fprintf(binintfile, "outcome: energy and/or angular momentum error\n");
+		parafprintf(binintfile, "outcome: energy and/or angular momentum error\n");
 		print_interaction_error();
 	} else if (retval.retval == 0) {
 		/* bad outcome; ignore for now */
-		fprintf(binintfile, "outcome: stopped\n");
+		parafprintf(binintfile, "outcome: stopped\n");
 		print_interaction_error();
 	} else if (hier.obj[0]->n == 4) {
 		/* outcome is a quadruple */
-		fprintf(binintfile, "outcome: error\n");
+		parafprintf(binintfile, "outcome: error\n");
 		print_interaction_error();
 	} else {
-		fprintf(binintfile, "outcome: %s (%s)\n", fb_sprint_hier(hier, string1), fb_sprint_hier_hr(hier, string2));
+		parafprintf(binintfile, "outcome: %s (%s)\n", fb_sprint_hier(hier, string1), fb_sprint_hier_hr(hier, string2));
 		
 		for (i=0; i<hier.nobj; i++) {
 			/* logging */
-			fprintf(binintfile, "output: ");
+			parafprintf(binintfile, "output: ");
 			binint_log_obj(hier.obj[i], printing_units);
 
 			/* single/binary/triple stars */
@@ -1177,7 +1172,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					/ (2.0 * binary[star[knew].binind].a) 
 					- binary[star[knew].binind].Eint1 - binary[star[knew].binind].Eint2;
                                 compress_binary(&star[knew], &binary[star[knew].binind]);
-printf("----->new binary myid=%d knew=%d binind=%d id1=%d id2=%d\n", myid, knew, star[knew].binind, binary[star[knew].binind].id1, binary[star[knew].binind].id2);
 			} else if (hier.obj[i]->n == 3) {
 				/******************************************/
 				/* break triple by shrinking inner binary */

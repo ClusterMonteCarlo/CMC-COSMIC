@@ -19,6 +19,7 @@
 #include "cuda/cmc_cuda.h"
 #endif
 
+
 int main(int argc, char *argv[])
 {
 	struct tms tmsbuf, tmsbufref;
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
 
 	//MPI3: There might be overhead if timing is done due to MPI_Barriers.
 	double tmpTimeStart, tmpTimeStart_full;
-	double t_full=0.0, t_init=0.0, t_sort=0.0, t_ener=0.0, t_se=0.0, t_dyn=0.0, t_orb=0.0, t_oth=0.0, t_filemer=0.0;
+	double t_full=0.0, t_init=0.0, t_sort=0.0, t_ener=0.0, t_se=0.0, t_dyn=0.0, t_orb=0.0, t_oth=0.0;
 	t_sort_only=0.0;
 	t_load_bal=0.0;
 	t_sort1=0.0;
@@ -46,28 +47,6 @@ int main(int argc, char *argv[])
 	//MPI2: Used for Gathering particles on root node before sorting
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
-
-	if(myid==0)
-	{
-		disp = (int*) malloc(procs * sizeof(int));
-		len = (int*) malloc(procs * sizeof(int));
-		new_size = (long*) malloc(procs * sizeof(long));
-	}
-
-/*
-//code for using gdb with mpi.
-//http://www.open-mpi.org/faq/?category=debugging#serial-debuggers
-{
-    int ii = 0;
-    char hostname[256];
-    gethostname(hostname, sizeof(hostname));
-    printf("PID %d on %s ready for attach\n", getpid(), hostname);
-    fflush(stdout);
-    while (0 == ii)
-        sleep(5);
-}
-*/
-
 #else
 	procs = 1;
 	created_star_dyn_node = (int *) calloc(procs, sizeof(int));
@@ -76,7 +55,6 @@ int main(int argc, char *argv[])
 #endif
 
 	tmpTimeStart = timeStartSimple();
-	create_timing_files();
 
 	/* set some important global variables */
 	set_global_vars1();
@@ -115,26 +93,11 @@ int main(int argc, char *argv[])
 	/* calculate central quantities */
 	central_calculate();
 
-	/* print out binary properties to a file */
-	//MPI2: skipping  file outputs for now.
-	//print_initial_binaries();
-
 	//MPI2: Setting this because in the MPI version only _r is set, and will create problem while sorting.
 #ifndef USE_MPI
 	star[clus.N_MAX + 1].r = SF_INFINITY;
 	star[clus.N_MAX + 1].phi = 0.0;
 #endif
-
-	//MPI3: Most probably this wont be reqd.
-/*
-	if(N_b !=0)
-	{
-		alloc_bin_buf();
-
-		distr_bin_data();
-
-	}
-*/
 
 	bin_vars_calculate();
 
@@ -151,16 +114,18 @@ int main(int argc, char *argv[])
 
 	set_energy_vars();
 
-	/*
-	//MPI2: ignore for now
-	comp_mass_percent(); //used for diagnostics. needs neighouring particles to compute cum. sum.
-	//MPI2: ignore for now
+	comp_mass_percent();
+
 	comp_multi_mass_percent();
-	*/
 
 	/* If we don't set it here, new stars created by breaking binaries (BSE) will
 	 * end up in the wrong place */
-	clus.N_MAX_NEW = clus.N_MAX;
+#ifdef USE_MPI
+    clus.N_MAX_NEW = mpiEnd-mpiBegin+1;
+#else
+    clus.N_MAX_NEW = clus.N_MAX;
+#endif
+
 	/* initialize stellar evolution things */
 	DMse = 0.0;
 
@@ -196,13 +161,14 @@ int main(int argc, char *argv[])
 
 	calc_clusdyn_new();
 
-	//MPI3: Commenting out outputs for now.
+	/* print out binary properties to a file */
+	print_initial_binaries();
+
 	/* Printing Results for initial model */
-	//print_results();
+	print_results();
 
 	/* print handy script for converting output files to physical units */
-	//skip outputs for MPI
-	//print_conversion_script();
+	print_conversion_script();
 
 #ifdef USE_CUDA
 	cuInitialize();
@@ -261,15 +227,6 @@ int main(int argc, char *argv[])
 
 		/* calculate central quantities */
 		central_calculate();
-
-		//=========================================
-		//MPI3: COMPLETED PARALLELIZATION TILL HERE>
-		//=========================================
-		/*if(myid==1)
-			for(i=0; i<procs; i++)
-				printf("%ld %d %d\n", i, Start[i], End[i]);
-		*/
-		//=========================================
 
 		calc_timestep(rng);
 
@@ -349,52 +306,7 @@ int main(int argc, char *argv[])
 		tmpTimeStart = timeStartSimple();
 		calc_potential_new();
 
-#ifdef USE_MPI
-      int j;
-      strcpy(filename, "test_out_par");
-      strcpy(tempstr, filename);
-      sprintf(num, "%d", myid);
-      strcat(tempstr, num);
-      strcat(tempstr, ".dat");
-      for( i = 0; i < procs; i++ )
-      {
-         if(myid == i)
-         {
-            //printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-            ftest = fopen( tempstr, "w" );
-            for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
-            {
-               //if(star[j].binind>0)
-                  //fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
-               if(star[j].binind>0)
-                  fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", get_global_idx(j), star_r[get_global_idx(j)], star[j].id, binary[star[j].binind].id1, binary[star[j].binind].id2);
-               else
-                  fprintf(ftest, "%ld\t%.18g\t%ld\n", get_global_idx(j), star_r[get_global_idx(j)], star[j].id);
-            }
-            fclose(ftest);
-         }
-      }
-      if(myid==0)
-      {
-         char process_str[30];
-         sprintf(process_str, "./process.sh %d", procs);
-         system(process_str);
-      }
-#else
-      strcpy(tempstr, "test_out_ser.dat");
-      ftest = fopen( tempstr, "w" );
-      for( i = 1; i <= clus.N_MAX; i++ )
-      {
-         if(star[i].binind>0)
-            fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
-         else
-            fprintf(ftest, "%ld\t%.18g\t%ld\n", i, star[i].r, star[i].id);
-      }
-      fclose(ftest);
-#endif
-
-
-		//Calculating Start and End values for each processor for mimcking parallel rng.
+		//Calculating Start and End values for each processor.
 		findLimits( clus.N_MAX, 20 );
 		timeEndSimple(tmpTimeStart, &t_oth);
 
@@ -402,17 +314,14 @@ int main(int argc, char *argv[])
 		energy_conservation3();
 		timeEndSimple(tmpTimeStart, &t_ener);
 
-		//distr_bin_data();
-
 		//commenting out for MPI
 		/*
 			if (SEARCH_GRID)
 			search_grid_update(r_grid);
+		 */
 	
-		//MPI2: Ignoring for MPI
 		comp_mass_percent();
 		comp_multi_mass_percent();
-		 */
 
 		tmpTimeStart = timeStartSimple();
 		compute_energy_new();
@@ -421,7 +330,7 @@ int main(int argc, char *argv[])
 
 		//MPI2: Commenting out for MPI
 		/* update variables, then print */
-		//update_vars();
+		update_vars();
 
 		calc_clusdyn_new();
 
@@ -455,14 +364,18 @@ int main(int argc, char *argv[])
 #endif
 */
 
+
 		print_results();
-		print_small_output();
+/*
+
 #ifdef USE_MPI
 		if(myid==0)
 #endif
 			print_snapshot_windows();
+*/
 		tcount++;
 		timeEndSimple(tmpTimeStart, &t_oth);
+
 
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
@@ -483,39 +396,24 @@ int main(int argc, char *argv[])
 	times(&tmsbuf);
 	timeEndSimple(tmpTimeStart_full, &t_full);
 
-#ifdef USE_MPI
-   if(myid==0)
-#endif
-   {
-      printf("******************************************************************************\n");
-      printf("Time Taken:\n------------------------\n");
-      printf("%.4lf:\tInitialization\n------------------------\n", t_init);
-      printf("%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\t \(%lf: Sort %lf: Load bal.\)\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_dyn, t_se, t_orb, t_sort, t_sort_only, t_load_bal, t_ener, t_oth, t_full);
-		printf("%.4lf:\t%.4lf:\t%.4lf:\t%.4lf:\t\n------------------------\n", t_sort1, t_sort2, t_sort3, t_sort4);
-   }
+    rootprintf("******************************************************************************\n");
+    rootprintf("Time Taken:\n------------------------\n");
+    rootprintf("%.4lf:\tInitialization\n------------------------\n", t_init);
+    rootprintf("%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\t \(%lf: Sort %lf: Load bal.\)\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_dyn, t_se, t_orb, t_sort, t_sort_only, t_load_bal, t_ener, t_oth, t_full);
+    rootprintf("%.4lf:\t%.4lf:\t%.4lf:\t%.4lf:\t\n------------------------\n", t_sort1, t_sort2, t_sort3, t_sort4);
 
-   tmpTimeStart = timeStartSimple();
-   //mpi_merge_files();
-   save_root_files();
-   rm_files();
-   timeEndSimple(tmpTimeStart, &t_filemer);
 
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	printf("%.4lf:\tFiles Merge\n------------------------\n", t_filemer);
-
-	dprintf("Usr time = %.6e ", (double)
-			(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
-	dprintf("Sys time = %.6e\n", (double)
-			(tmsbuf.tms_stime-tmsbufref.tms_stime)/sysconf(_SC_CLK_TCK));
-	dprintf("Usr time (ch) = %.6e ", (double)
-			(tmsbuf.tms_cutime-tmsbufref.tms_cutime)/sysconf(_SC_CLK_TCK));
-	dprintf("Sys time (ch)= %.6e seconds\n", (double)
-			(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
+    dprintf("Usr time = %.6e ", (double)
+            (tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
+    dprintf("Sys time = %.6e\n", (double)
+            (tmsbuf.tms_stime-tmsbufref.tms_stime)/sysconf(_SC_CLK_TCK));
+    dprintf("Usr time (ch) = %.6e ", (double)
+            (tmsbuf.tms_cutime-tmsbufref.tms_cutime)/sysconf(_SC_CLK_TCK));
+    dprintf("Sys time (ch)= %.6e seconds\n", (double)
+            (tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
 
 	/* free RNG */
-	//gsl_rng_free(rng); //throws memory corruption error for the serial version.
+	//gsl_rng_free(rng);
 
 #ifdef USE_CUDA
 	cuCleanUp();
@@ -532,7 +430,7 @@ int main(int argc, char *argv[])
 	free(binary_buf);
 	free(num_bin_buf);
 #else
-	free(st); //commenting because it throws some error
+	free(st);
 #endif
 
 	free(Start);
@@ -802,4 +700,56 @@ return;
 	fclose(ftest);
 #endif
 
+*/
+/*
+//code for using gdb with mpi.
+//http://www.open-mpi.org/faq/?category=debugging#serial-debuggers
+{
+    int ii = 0;
+    char hostname[256];
+    gethostname(hostname, sizeof(hostname));
+    printf("PID %d on %s ready for attach\n", getpid(), hostname);
+    fflush(stdout);
+    while (0 == ii)
+        sleep(5);
+}
+*/
+
+//Testing MPI-IO
+/*
+#ifdef USE_MPI
+    char mpi_iotest_wrbuf[1000000];
+    char mpi_iotest_buf[100];
+    int mpi_iotest_len=0, foutoffset=0, cum_offset=0, tot_offset=0;
+    MPI_File fh;
+    MPI_Status mpistat;
+
+    //MPI3: Opening and closing file once in case it exists to delete it. Then opening again. Should find a better solution later.
+    MPI_File_delete ("mpiiotest.log", MPI_INFO_NULL);
+    MPI_File_open(MPI_COMM_WORLD, "mpiiotest.log", MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
+//---------------------
+    mpi_iotest_wrbuf[0] = '\0';
+    mpi_iotest_len=0;
+    foutoffset=0;
+
+    parafprintf(iotest, "My name is %d\n", myid);
+    //   sprintf(mpi_iotest_buf, "My name is %d\n", myid);
+    //   strcat(mpi_iotest_wrbuf, mpi_iotest_buf);
+    //   mpi_iotest_len += strlen(mpi_iotest_buf);
+    if(myid==2)
+        parafprintf(iotest, "My name is not at all fugu\n");
+    else
+        parafprintf(iotest, "My name is also fugu\n");
+    //   strcat(mpi_iotest_wrbuf, mpi_iotest_buf);
+    //   mpi_iotest_len += strlen(mpi_iotest_buf);
+    MPI_Exscan(&mpi_iotest_len, &foutoffset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    foutoffset += cum_offset;
+
+    MPI_File_write_at_all(fh, foutoffset, mpi_iotest_wrbuf, mpi_iotest_len, MPI_CHAR, &mpistat);
+    MPI_Allreduce (&mpi_iotest_len, &tot_offset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    cum_offset += tot_offset;
+
+    //printf("----->%d strln=%d foutoffset=%d cum_off=%d\n", myid, lenstr, foutoffset, cum_offset);
+    MPI_File_close(&fh);
+#endif
 */

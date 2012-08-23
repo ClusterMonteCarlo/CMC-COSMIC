@@ -71,6 +71,9 @@
 
 #define MAX_STRING_LENGTH 2048
 
+//MPI3: For MPI-IO
+#define STR_BUF_LEN 10000
+#define STR_WRBUF_LEN 100000000
 
 
 
@@ -475,8 +478,6 @@ long mpi_potential_calculate(void);
 long mpi_potential_calculate2(void);
 MPI_Comm inv_comm_create();
 #endif
-void print_small_output();
-void print_denprof_snapshot(char* infile);
 
 /* Bharath: Timing Functions */ 
 double timeStartSimple();
@@ -525,12 +526,14 @@ void alloc_bin_buf();
 /* End */
 
 /* Function to handle I/O in parallel version */
-void cat_and_rm_files(char* file_ext);
-void mpi_merge_files();
-void save_root_files();
-void save_root_files_helper(char* file_ext);
-void rm_files();
-void rm_files_helper(char* file_ext);
+//void cat_and_rm_files(char* file_ext)
+//void mpi_merge_files();
+//void save_root_files();
+//void save_root_files_helper(char* file_ext);
+//void rm_files();
+//void rm_files_helper(char* file_ext);
+//void print_small_output();
+void print_denprof_snapshot(char* infile);
 /* End */
 
 void comp_mass_percent(void);
@@ -546,6 +549,9 @@ void ComputeEnergy(void);
 
 #ifdef USE_MPI
 void mpi_ComputeEnergy(void);
+void mpi_para_file_write(char* wrbuf, int *len, int *prev_cum_offset, MPI_File* fh);
+void PrintParaFileOutput(void);
+void mpi_close_node_buffers(void);
 #endif
 
 void PrintLogOutput(void);
@@ -569,6 +575,7 @@ void print_version(FILE *stream);
 void cmc_print_usage(FILE *stream, char *argv[]);
 void parser(int argc, char *argv[], gsl_rng *r);
 void PrintFileOutput(void);
+void find_nstars_within_r(double r, long *ns, long *nb);
 char *sprint_star_dyn(long k, char string[MAX_STRING_LENGTH]);
 char *sprint_bin_dyn(long k, char string[MAX_STRING_LENGTH]);
 
@@ -695,6 +702,8 @@ void exit_cleanly_old(int signal);
 void exit_cleanly(int signal, const char* fn);
 void sf_gsl_errhandler(const char *reason, const char *file, int line, int gsl_errno);
 void close_buffers(void);
+void close_root_buffers(void); //files that are opened only by the root node in MPI version.
+void close_node_buffers(void); //files that need to be opened by all nodes using MPI-IO.
 void trap_sigs(void);
 void free_arrays(void);
 
@@ -832,7 +841,6 @@ void write_snapshot(char *filename);
 #endif
 
 #define dmpiprintf(args...) if (mpi_debug) { fprintf(stderr, "DEBUG: in proc %d, %s(): ", myid, __FUNCTION__); fprintf(stderr, args); }
-#define rootprintf(args...) if (debug) {if(myid == 0) { fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args); }}
 
 #ifdef USE_MPI
 #define wprintf(args...) { if(myid==0) { fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}}
@@ -841,6 +849,39 @@ void write_snapshot(char *filename);
 #endif
 
 #define eprintf(args...) {fprintf(stderr, "ERROR: %s:%d in %s(): ", __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}
+
+//MPI3-IO: This was the easiest way to convert hundreds of fprintf statements to do parallel IO without manually changing each one of them.
+#ifdef USE_MPI
+
+#define parafprintf(file, args...)                       \
+do { sprintf(mpi_ ## file ## _buf, args);               \
+strcat(mpi_ ## file ## _wrbuf, mpi_ ## file ## _buf);   \
+mpi_ ## file ## _len += strlen(mpi_ ## file ## _buf); }         \
+while(0)
+
+#define pararootfprintf(file, args...) { if(myid==0) parafprintf(file, args); }
+
+#define rootfprintf(file, args...) { if(myid==0) fprintf(file, args); }
+
+#define rootgprintf(args...) if (!quiet) {if(myid==0) fprintf(stdout, args);}
+
+#define rootprintf(args...) {if(myid == 0) { fprintf(stdout, args); }}
+
+#else
+
+#define parafprintf(file, args...) { fprintf(file, args); }
+
+#define pararootfprintf(file, args...) { parafprintf(file, args); }
+
+#define rootfprintf(file, args...) { fprintf(file, args); }
+
+#define rootgprintf(args...) if (!quiet) {fprintf(stdout, args);}
+
+#define rootprintf(args...) { fprintf(stdout, args); }
+
+#endif
+
+
 #ifdef DEBUGGING
 #undef MAX
 #undef MIN
