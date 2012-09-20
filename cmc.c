@@ -99,6 +99,54 @@ int main(int argc, char *argv[])
 	star[clus.N_MAX + 1].phi = 0.0;
 #endif
 
+	/* Meagan - 3bb */
+	N3bbformed = 0;
+	delta_E_3bb = 0.0;
+
+	/* Meagan - bh counters */
+	bhsingle = 0;
+	bhbinary = 0;
+	bhbh = 0;
+	bhnonbh = 0;
+	bh13 = 0;
+	bh10 = 0;
+	bh11 = 0;
+	bh12 = 0;
+	bhwd = 0;
+	bhstar = 0;
+	bh01=0;
+	bh26=0;
+	bh7=0;
+	bh89=0;
+	esc_bhsingle = 0;
+	esc_bhbinary = 0;
+	esc_bhbh = 0;
+	esc_bhnonbh = 0;
+	esc_bh13 = 0;
+	esc_bh10 = 0;
+	esc_bh11 = 0;
+	esc_bh12 = 0;
+	esc_bhwd = 0;
+	esc_bhstar = 0;
+	esc_bh01 = 0;
+	esc_bh26 = 0;
+	esc_bh7 = 0;
+	esc_bh89 = 0;
+	esc_bhsingle_tot = 0;
+	esc_bhbinary_tot = 0;
+	esc_bhbh_tot = 0;
+	esc_bhnonbh_tot = 0;
+	esc_bh13_tot = 0;
+	esc_bh10_tot = 0;
+	esc_bh11_tot = 0;
+	esc_bh12_tot = 0;
+	esc_bhwd_tot = 0;
+	esc_bhstar_tot = 0;
+	esc_bh01_tot = 0;
+	esc_bh26_tot = 0;
+	esc_bh7_tot = 0;
+	esc_bh89_tot = 0;
+
 	bin_vars_calculate();
 
 	/*
@@ -114,10 +162,6 @@ int main(int argc, char *argv[])
 
 	set_energy_vars();
 
-	comp_mass_percent();
-
-	comp_multi_mass_percent();
-
 	/* If we don't set it here, new stars created by breaking binaries (BSE) will
 	 * end up in the wrong place */
 #ifdef USE_MPI
@@ -125,6 +169,10 @@ int main(int argc, char *argv[])
 #else
     clus.N_MAX_NEW = clus.N_MAX;
 #endif
+
+	comp_mass_percent();
+
+	comp_multi_mass_percent();
 
 	/* initialize stellar evolution things */
 	DMse = 0.0;
@@ -265,6 +313,7 @@ int main(int argc, char *argv[])
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
 #ifndef USE_MPI
+        /* This really has to come after SE otherwise merger products will disappear. */
 		clus.N_MAX_NEW++;
 #endif
 
@@ -390,8 +439,13 @@ int main(int argc, char *argv[])
 				write_stellar_data();
 			}
 		}		
+		// Meagan - bh snapshot
+		if(tcount%BH_SNAPSHOT_DELTACOUNT==0) {
+			print_bh_snapshot();
+		}		
 */
-	} /* End WHILE (time step iteration loop) */
+
+	} /* End FOR (time step iteration loop) */
 
 	times(&tmsbuf);
 	timeEndSimple(tmpTimeStart_full, &t_full);

@@ -14,7 +14,6 @@ void print_initial_binaries(void)
 {
 	long i, j;
 	char outfile[1024];
-	FILE *initbinfile;
 
     sprintf(outfile, "%s.initbin.dat", outprefix);
 
@@ -26,6 +25,7 @@ void print_initial_binaries(void)
     MPI_File_set_size(mpi_initbinfile, 0);
 #else
     /* open file for writing */
+	FILE *initbinfile;
     if ((initbinfile = fopen(outfile, "w")) == NULL) {
         eprintf("cannot create initbin file \"%s\".\n", outfile);
         exit(1);

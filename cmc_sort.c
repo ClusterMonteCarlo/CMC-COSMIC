@@ -496,7 +496,6 @@ int sample_sort( type	      *buf,
 	tmpTimeStart = timeStartSimple();
 	*local_N = actual_count[myid];
 
-
 	free(expected_count);
 	free(actual_count);
 	free(send_index);

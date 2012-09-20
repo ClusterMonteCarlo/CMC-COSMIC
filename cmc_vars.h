@@ -24,8 +24,8 @@ _EXTERN_ double initial_total_mass, Mtotal;
 _EXTERN_ double DMse, DMrejuv;
 /******************* Input file parameters *************************/
 _EXTERN_ long N_STAR_DIM, N_STAR_DIM_OPT, N_BIN_DIM, N_BIN_DIM_OPT, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, TIDAL_TREATMENT, SS_COLLISION, TIDAL_CAPTURE, STAR_AGING_SCHEME, PREAGING, NO_MASS_BINS;
-_EXTERN_ long SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME;
-_EXTERN_ int SNAPSHOTTING, SNAPSHOT_CORE_COLLAPSE, SNAPSHOT_CORE_BOUNCE;
+_EXTERN_ long SNAPSHOT_DELTACOUNT, BH_SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME;
+_EXTERN_ int SNAPSHOTTING, BH_SNAPSHOTTING, SNAPSHOT_CORE_COLLAPSE, SNAPSHOT_CORE_BOUNCE;
 _EXTERN_ long IDUM, PERTURB, RELAXATION;
 _EXTERN_ long NUM_CENTRAL_STARS;
 _EXTERN_ double SNAPSHOT_DELTAT, T_MAX, T_MAX_PHYS, THETASEMAX;
@@ -44,6 +44,22 @@ _EXTERN_ int SAMPLESIZE;
 _EXTERN_ int BINSINGLE, BINBIN;
 _EXTERN_ int STREAMS;
 _EXTERN_ int BININITKT, STOPATCORECOLLAPSE;
+/* Meagan - 3bb */
+_EXTERN_ int THREEBODYBINARIES, ONLY_FORM_BH_THREEBODYBINARIES;;
+_EXTERN_ double MIN_BINARY_HARDNESS;
+_EXTERN_ long N3bbformed;
+_EXTERN_ double delta_E_3bb;
+// Meagan: extra bh output
+_EXTERN_ long bhbinary, bhsingle, bhnonbh, bhbh, bh13, bh10, bh11, bh12, bhwd;
+_EXTERN_ long bhstar, bh01, bh26, bh7, bh89;
+_EXTERN_ long esc_bhsingle, esc_bhbinary, esc_bhnonbh, esc_bhbh, esc_bh13; 
+_EXTERN_ long esc_bh10, esc_bh11, esc_bh12, esc_bhwd, esc_bhstar, esc_bh01, esc_bh26;
+_EXTERN_ long esc_bh7, esc_bh89; 
+_EXTERN_ long esc_bhsingle_tot, esc_bhbinary_tot, esc_bhnonbh_tot, esc_bhbh_tot;
+_EXTERN_ long esc_bh13_tot, esc_bh10_tot, esc_bh11_tot, esc_bh12_tot, esc_bhwd_tot;
+_EXTERN_ long esc_bhstar_tot, esc_bh01_tot, esc_bh26_tot, esc_bh7_tot, esc_bh89_tot;
+_EXTERN_ double fb_bh, esc_fb_bh, esc_fb_bh_tot;
+_EXTERN_ FILE *bhsummaryfile, *escbhsummaryfile, *newbhfile;
 /* BSE input file parameters */
 _EXTERN_ int BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_IDUM, BSE_WINDFLAG;
 _EXTERN_ double BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_MXNS, BSE_BCONST, BSE_CK, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA;
@@ -55,9 +71,10 @@ _EXTERN_ binary_t *binary;
 /* file pointers */
 _EXTERN_ FILE *lagradfile, *dynfile, *lagrad10file, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
-_EXTERN_ FILE *binaryfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
+_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
 _EXTERN_ FILE *fp_lagrad, *fp_log, *fp_denprof;
+// Meagan: file for tracking potential fluctuations for innermost 1000 stars
 
 #ifdef USE_MPI
 /* Corresponding MPI File(pointer)s */
@@ -73,6 +90,17 @@ _EXTERN_ int mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collision
 
 _EXTERN_ int mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
 
+/* Meagan's 3bb files */
+_EXTERN_ MPI_File mpi_bhsummaryfile, mpi_escbhsummaryfile, mpi_newbhfile, mpi_threebbfile, mpi_threebbprobabilityfile, mpi_lightcollisionfile, mpi_threebbdebugfile;
+
+_EXTERN_ char mpi_bhsummaryfile_buf[STR_BUF_LEN], mpi_escbhsummaryfile_buf[STR_BUF_LEN], mpi_newbhfile_buf[STR_BUF_LEN], mpi_threebbfile_buf[STR_BUF_LEN], mpi_threebbprobabilityfile_buf[STR_BUF_LEN], mpi_lightcollisionfile_buf[STR_BUF_LEN], mpi_threebbdebugfile_buf[STR_BUF_LEN];
+
+_EXTERN_ char mpi_bhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_escbhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_newbhfile_wrbuf[STR_WRBUF_LEN], mpi_threebbfile_wrbuf[STR_WRBUF_LEN], mpi_threebbprobabilityfile_wrbuf[STR_WRBUF_LEN], mpi_lightcollisionfile_wrbuf[STR_WRBUF_LEN], mpi_threebbdebugfile_wrbuf[STR_WRBUF_LEN];
+
+_EXTERN_ int mpi_bhsummaryfile_len, mpi_escbhsummaryfile_len, mpi_newbhfile_len, mpi_threebbfile_len, mpi_threebbprobabilityfile_len, mpi_lightcollisionfile_len, mpi_threebbdebugfile_len;
+
+_EXTERN_ int mpi_bhsummaryfile_ofst_total, mpi_escbhsummaryfile_ofst_total, mpi_newbhfile_ofst_total, mpi_threebbfile_ofst_total, mpi_threebbprobabilityfile_ofst_total, mpi_lightcollisionfile_ofst_total, mpi_threebbdebugfile_ofst_total;
+
 #endif
 
 /* everything else except arrays */
@@ -81,7 +109,7 @@ _EXTERN_ char dummystring[MAX_STRING_LENGTH], dummystring2[MAX_STRING_LENGTH], d
 _EXTERN_ int se_file_counter;
 _EXTERN_ long tcount;
 _EXTERN_ long Echeck;
-_EXTERN_ long snap_num, StepCount;
+_EXTERN_ long snap_num, StepCount, bh_snap_num;
 _EXTERN_ long newstarid;
 _EXTERN_ double rho_core_single, rho_core_bin, rh_single, rh_binary;
 _EXTERN_ double TotalTime, Dt;
@@ -175,6 +203,7 @@ _EXTERN_ double HARD_BINARY_KT;
  */
 _EXTERN_ double CIRC_PERIOD_THRESHOLD;
 _EXTERN_ int WRITE_STELLAR_INFO;
+_EXTERN_ int WRITE_BH_INFO;
 _EXTERN_ int WRITE_RWALK_INFO;
 _EXTERN_ int WRITE_EXTRA_CORE_INFO;
 _EXTERN_ int CALCULATE10;

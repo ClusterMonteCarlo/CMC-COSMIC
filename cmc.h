@@ -100,17 +100,24 @@ typedef struct{
 	double bse_menv[2];
 	double bse_renv[2];
 	double bse_ospin[2]; /* original spin */
+        double bse_B_0[2]; /* Pulsar magnetic field */
+        double bse_bacc[2]; /* Amount of mass pulsar has accreted */
+        double bse_tacc[2]; /* Amount of time pulsar has spent accreting */
 	double bse_epoch[2];
 	double bse_tms[2];
 	double bse_tphys; /* physical time */
 	double bse_tb; /* binary orbital period */
 	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
 	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
+        double bse_bcm_B[2]; /* Pulsar magnetic field strength at surface */
+        double bse_bcm_formation[2]; /* provides formation pathway of NS */
 	//Sourav:toy rejuvenation variables
 	double lifetime_m1; /*Sourav: lifetime of star1*/
 	double lifetime_m2; /*Sourav: lifetime of star2*/
 	double createtime_m1; /*Sourav: createtime of star1*/
 	double createtime_m2; /*Sourav: createtime of star2*/
+	// Meagan: to keep track of three-body binaries
+	//int threebodybinary; /* whether binary was formed via three-body encounter */
 } binary_t;
 
 struct star_coords {
@@ -144,6 +151,7 @@ typedef struct{
 	double r_apo; /* apocenter distance */
 	double phi; /* value of potential at position of star (only updated at end of timestep) */
 	long   interacted; /* whether or not the star has undergone a strong interaction (i.e., not relaxation) */
+	long   threebb_interacted;/*whether or not object was involved in three-body binary formation*/
 	long   binind; /* index to the binary */
 	long   id; 	/* the star's unique identifier */
 	double rad; /* radius */
@@ -154,6 +162,9 @@ typedef struct{
 	int se_k;
 	double se_mt;
 	double se_ospin;
+        double se_B_0; /* Pulsar initial magentif field */
+        double se_bacc;
+        double se_tacc;
 	double se_epoch;
 	double se_tphys;
 	double se_radius;
@@ -163,6 +174,8 @@ typedef struct{
 	double se_menv;
 	double se_renv;
 	double se_tms;
+        double se_scm_B; /* Pulsar surface magnetic field */
+        double se_scm_formation; /* formation pathway of NS */
 	//Sourav: toy rejuvenation variables
 	double createtime, createtimenew, createtimeold;
 	double lifetime, lifetimeold, lifetimenew;
@@ -194,6 +207,17 @@ typedef struct{
 	int BINSINGLE;
 #define PARAMDOC_STREAMS "to run the serial version with the given number of random streams - primarily used to mimic the parallel version running with the same no.of processors"
 	int STREAMS;
+/* Meagan - 3bb */
+#define PARAMDOC_THREEBODYBINARIES "toggles three-body binary formation (0=off, 1=on)"
+	int THREEBODYBINARIES;
+#define PARAMDOC_MIN_BINARY_HARDNESS "minimum hardness for newly formed three-body binaries"
+	int MIN_BINARY_HARDNESS;
+#define PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES "allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)"
+	int ONLY_FORM_BH_THREEBODYBINARIES;
+#define PARAMDOC_BH_SNAPSHOTTING "toggles output bh snapshotting (0=off, 1=on)"
+	int BH_SNAPSHOTTING;
+#define PARAMDOC_BH_SNAPSHOT_DELTACOUNT "BH snapshotting interval in time steps"
+	int BH_SNAPSHOT_DELTACOUNT;
 #define PARAMDOC_SNAPSHOTTING "toggles output snapshotting (0=off, 1=on)"
 	int SNAPSHOTTING;
 #define PARAMDOC_SNAPSHOT_DELTAT "snapshotting time interval (FP units)"
@@ -204,7 +228,7 @@ typedef struct{
         int SNAPSHOT_CORE_COLLAPSE;
 #define PARAMDOC_SNAPSHOT_CORE_BOUNCE "output extra snapshotting information during core bounce (0=off, 1=on)"
         int SNAPSHOT_CORE_BOUNCE;
-#define PARAMDOC_SNAPSHOT_WINDOWS "Output extra snapshots within time windows. \nThe format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc." 
+#define PARAMDOC_SNAPSHOT_WINDOWS "Output extra snapshots within time windows. \n#The format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc." 
         int SNAPSHOT_WINDOWS;
 #define PARAMDOC_SNAPSHOT_WINDOW_UNITS "Units used for time window parameters. Possible choices: Gyr, Trel, and Tcr"
         int SNAPSHOT_WINDOW_UNITS;
@@ -297,6 +321,8 @@ typedef struct{
         int CIRC_PERIOD_THRESHOLD;
 #define PARAMDOC_WRITE_STELLAR_INFO "Write out information about stellar evolution for each single and binary star, (0=off, 1=on)"
         int WRITE_STELLAR_INFO;
+#define PARAMDOC_WRITE_BH_INFO "Write out information about BHs each timestep, (0=off, 1=on)"
+        int WRITE_BH_INFO;
 #define PARAMDOC_WRITE_RWALK_INFO "Write out information about the random walk in J-space around the central black hole, (0=off, 1=on)"
         int WRITE_RWALK_INFO;
 #define PARAMDOC_WRITE_EXTRA_CORE_INFO "Write out information about cores that are defined differently from the standard (0=off, 1=on)"
@@ -568,6 +594,7 @@ double qsimp(double (*func) (double), double a, double b);
 void splint(double xa[], double ya[], double y2a[], long n, double x, double *y);
 void spline(double x[], double y[], long n, double yp1, double ypn, double y2[]);
 void print_2Dsnapshot(void);
+void print_bh_snapshot(void);
 void get_physical_units(void);
 void update_vars(void);
 
@@ -603,7 +630,7 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew);
 void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid);
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid);
 double r_of_m(double M);
-void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb);
+void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide);
 
 /* Fewbody stuff */
 void destroy_obj(long i);
@@ -685,16 +712,33 @@ double simul_relax(gsl_rng *rng);
 double simul_relax_new(void);
 #ifdef USE_MPI
 double mpi_simul_relax_new(void);
+void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r, double *sig_sigma, long* sig_n, int r_0_mave_1);
 #endif
 
 void break_wide_binaries(void);
-void calc_sigma_r(void);
-void mpi_calc_sigma_r(void);
+void calc_sigma_r(long p, long N_LIMIT, double *sig_r, double *sig_sigma, long* sig_n, int r_0_mave_1);
 void zero_out_array(double* ptr, int size);
 
 double sigma_r(double r);
 
+// Meagan
+/* three-body binary formation */
+void sort_three_masses(long sq, long *k1, long *k2, long *k3);
+#ifdef USE_MPI
+void mpi_sort_three_masses(long sq, long *k1, long *k2, long *k3);
+#endif
+double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], double vrel3[4]);
+void calc_3bb_encounter_dyns(long k1, long k2, long k3, double v1[4], double v2[4], double v3[4], double (*vrel12)[4], double (*vrel3)[4], gsl_rng *rng);
+void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_running, gsl_rng *rng);
+void calc_sigma_local(long k1, long p, long N_LIMIT, double *ave_local_mass, double *sigma_local);
 int remove_old_star(double time, long k);
+
+// Meagan
+/* extra output for bhs */
+void bh_count(long k);
+void print_bh_summary(void);
+void count_esc_bhs(long j);
+void print_esc_bh_summary(void);
 
 /* signal/GSL error handling stuff */
 void toggle_debugging(int signal);

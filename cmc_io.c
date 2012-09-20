@@ -63,7 +63,7 @@ void print_2Dsnapshot(void)
 		// print useful header 
 		gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
 		gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.star.phi\n");
-		
+
 		// then print data 
 		for (i=1; i<=clus.N_MAX; i++) {
 			gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
@@ -100,6 +100,63 @@ void print_2Dsnapshot(void)
 	}
 */
 }
+
+
+void print_bh_snapshot(void) {
+	long i, j;
+	char outfile[100];
+	
+	if (BH_SNAPSHOTTING) {
+		/* open file for BH snapshot */
+	
+		sprintf(outfile, "%s.bhinfo%04ld.dat.gz", outprefix, bh_snap_num);
+		if ((snapfile = (FILE *) gzopen(outfile, "wb")) == NULL) {
+			eprintf("cannot create bh snapshot file %s\n", outfile);
+			exit_cleanly(1, __FUNCTION__);
+		}
+		
+		/* print useful header */
+		gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
+		gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] #24:star.phi\n");
+
+		/* then print data */
+		for (i=1; i<=clus.N_MAX; i++) {
+			j=star[i].binind;
+			if (star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14) { // object contains a BH (either single BH or a binary with at least one BH)
+				gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
+					 star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, 
+					 star[i].r, star[i].vr, star[i].vt, 
+					 star[i].E, star[i].J);
+				if (j) {
+					gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
+						 binary[j].m1 * (units.m / clus.N_STAR) / MSUN, 
+						 binary[j].m2 * (units.m / clus.N_STAR) / MSUN, 
+						 binary[j].id1, binary[j].id2,
+						 binary[j].a * units.l / AU, binary[j].e);
+				} else {
+					gzprintf(snapfile, "0 0 0 0 0 0 0 ");	
+				}
+			
+				if (star[i].binind == 0) {
+					gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 ", 
+						 star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
+				} else {
+					gzprintf(snapfile, "0 0 0 %d %d %.8g %.8g %.8g %.8g ",
+						binary[j].bse_kw[0], binary[j].bse_kw[1], 
+						binary[j].bse_lum[0], binary[j].bse_lum[1],
+						binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN);
+				}
+				gzprintf(snapfile, "%0.12g\n", star[i].phi);
+			}
+		}
+		gzclose(snapfile);
+
+		/* global counter for snapshot output file */
+		bh_snap_num++;
+	}
+}
+
+
 
 void PrintLogOutput(void)
 {
@@ -531,6 +588,169 @@ void PrintFileOutput(void) {
 	print_snapshot_windows();
 */
 	free(multimassr_empty);
+
+	/* Meagan - extra output for bhs */
+	if (WRITE_BH_INFO) {
+		print_bh_summary();
+		print_esc_bh_summary();
+	}
+}
+
+/* Meagan: extra output for bhs */
+void print_bh_summary() {
+
+#ifdef USE_MPI
+    long buf_comm[12];
+    long buf_comm_recv[12];
+    buf_comm[0] = bhsingle;
+    buf_comm[1] = bhbinary;
+    buf_comm[2] = bhbh;
+    buf_comm[3] = bhnonbh;
+    buf_comm[4] = bhwd;
+    buf_comm[5] = bh01;
+    buf_comm[6] = bh7;
+    buf_comm[7] = bh10;
+    buf_comm[8] = bh12;
+    buf_comm[9] = bh13;
+    buf_comm[10] = bh26;
+    buf_comm[11] = bh89;
+
+    //MPI3: bhstar, and bhwd might be calculated after the reduce instead of in bh_count to save 2 communication calls.
+    MPI_Reduce(buf_comm, buf_comm_recv, 12, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    bhsingle = buf_comm_recv[0];
+    bhbinary = buf_comm_recv[1];
+    bhbh = buf_comm_recv[2];
+    bhnonbh  = buf_comm_recv[3];
+    bhwd = buf_comm_recv[4];
+    bh01 = buf_comm_recv[5];
+    bh7 = buf_comm_recv[6];
+    bh10 = buf_comm_recv[7];
+    bh12 = buf_comm_recv[8];
+    bh13 = buf_comm_recv[9];
+    bh26 = buf_comm_recv[10];
+    bh89 = buf_comm_recv[11];
+#endif
+
+	double fb_bh;	
+	if ((bhbinary + bhsingle) > 0) {
+		fb_bh = ((double) (bhbinary))/((double) (bhsingle + bhbinary));
+	} else {
+		fb_bh = 0.0;
+	}
+	rootfprintf(bhsummaryfile, "%ld %.8g %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %.6g\n",
+		tcount, TotalTime, (bhsingle + bhbinary + 2*bhbh), bhsingle, bhbinary, 
+		bhbh, bhnonbh, bh13, bhwd, (bh10+bh11+bh12), bhstar, bh01, bh26, 
+		bh7, bh89, fb_bh);
+
+	// reset all counts for next timestep
+	bhbinary=0;
+	bhsingle=0;
+	bhbh=0;
+	bhnonbh=0;
+	bh13=0;
+	bh10=0;
+	bh11=0;
+	bh12=0;
+	bhwd=0;
+	bhstar=0;
+	bh01=0;
+	bh26=0;
+	bh7=0;
+	bh89=0;
+}
+
+/* Meagan - extra output for bhs */
+void print_esc_bh_summary() {
+        // Meagan: log info about escaped bhs
+
+#ifdef USE_MPI
+    long buf_comm[12];
+    long buf_comm_recv[12];
+    buf_comm[0] = esc_bhsingle;
+    buf_comm[1] = esc_bhbinary;
+    buf_comm[2] = esc_bhbh;
+    buf_comm[3] = esc_bhnonbh;
+    buf_comm[4] = esc_bhwd;
+    buf_comm[5] = esc_bh01;
+    buf_comm[6] = esc_bh7;
+    buf_comm[7] = esc_bh10;
+    buf_comm[8] = esc_bh12;
+    buf_comm[9] = esc_bh13;
+    buf_comm[10] = esc_bh26;
+    buf_comm[11] = esc_bh89;
+
+    //MPI3: esc_bhstar, and esc_bhwd might be calculated after the reduce instead of in bh_count to save 2 communication calls.
+    MPI_Reduce(buf_comm, buf_comm_recv, 12, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    esc_bhsingle = buf_comm_recv[0];
+    esc_bhbinary = buf_comm_recv[1];
+    esc_bhbh = buf_comm_recv[2];
+    esc_bhnonbh  = buf_comm_recv[3];
+    esc_bhwd = buf_comm_recv[4];
+    esc_bh01 = buf_comm_recv[5];
+    esc_bh7 = buf_comm_recv[6];
+    esc_bh10 = buf_comm_recv[7];
+    esc_bh12 = buf_comm_recv[8];
+    esc_bh13 = buf_comm_recv[9];
+    esc_bh26 = buf_comm_recv[10];
+    esc_bh89 = buf_comm_recv[11];
+#endif
+
+    esc_bhsingle_tot += esc_bhsingle;
+    esc_bhbinary_tot += esc_bhbinary;
+    esc_bhbh_tot += esc_bhbh;
+    esc_bhnonbh_tot += esc_bhnonbh;
+    esc_bh13_tot += esc_bh13;
+    esc_bhwd_tot += esc_bhwd;
+    esc_bhstar_tot = esc_bhstar_tot + esc_bh01 + esc_bh26 + esc_bh7 +  esc_bh89;
+    esc_bh10_tot += esc_bh10;
+    esc_bh11_tot += esc_bh11;
+    esc_bh12_tot += esc_bh12;
+    esc_bh01_tot += esc_bh01;
+    esc_bh26_tot += esc_bh26;
+    esc_bh7_tot += esc_bh7;
+    esc_bh89_tot += esc_bh89;
+    if ((esc_bhbinary + esc_bhsingle)>0) {
+        esc_fb_bh = ((double) (esc_bhbinary))/((double) (esc_bhbinary + esc_bhsingle));
+    } else {
+        esc_fb_bh = 0.0;
+    }
+    if (esc_bhbinary_tot>0 || esc_bhsingle_tot>0) {
+        esc_fb_bh_tot = ((double) (esc_bhbinary_tot))/((double) (esc_bhbinary_tot + esc_bhsingle_tot));
+    } else {
+        esc_fb_bh_tot = 0.0;
+    }
+    rootfprintf(escbhsummaryfile, "%ld %.8g %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %.6g %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %.6g\n",
+            tcount, TotalTime, 
+            // counts for this timestep
+            (esc_bhsingle + esc_bhbinary + 2*esc_bhbh), esc_bhsingle, 
+            esc_bhbinary, esc_bhbh, esc_bhnonbh, esc_bh13, esc_bhwd, 
+            (esc_bh10+esc_bh11+esc_bh12), esc_bhstar, esc_bh01, esc_bh26, 
+            esc_bh7, esc_bh89, esc_fb_bh,
+            // cumulative counts for escaping bhs
+            (esc_bhsingle_tot + esc_bhbinary_tot + 2*esc_bhbh_tot), esc_bhsingle_tot, 
+            esc_bhbinary_tot, esc_bhbh_tot, esc_bhnonbh_tot, esc_bh13_tot, esc_bhwd_tot, 
+            (esc_bh10_tot+esc_bh11_tot+esc_bh12_tot), esc_bhstar_tot, esc_bh01_tot, 
+            esc_bh26_tot, esc_bh7_tot, esc_bh89_tot, esc_fb_bh_tot);
+
+
+    // reset counts for next timestep
+    esc_bhsingle = 0;
+    esc_bhbinary = 0;
+    esc_bhbh = 0;
+    esc_bhnonbh = 0;
+    esc_bh13 = 0;
+    esc_bhwd = 0;
+    esc_bh10 = 0;
+    esc_bh11 = 0;
+    esc_bh12 = 0;
+    esc_bhstar = 0;
+    esc_bh01 = 0;
+    esc_bh26 = 0;
+    esc_bh7 = 0;
+    esc_bh89 = 0;
+    esc_fb_bh = 0.0;
 }
 
 void find_nstars_within_r(double r, long *ns, long *nb)
@@ -560,6 +780,17 @@ void PrintParaFileOutput(void)
     mpi_para_file_write(mpi_semergedisruptfile_wrbuf, &mpi_semergedisruptfile_len, &mpi_semergedisruptfile_ofst_total, &mpi_semergedisruptfile);
     mpi_para_file_write(mpi_removestarfile_wrbuf, &mpi_removestarfile_len, &mpi_removestarfile_ofst_total, &mpi_removestarfile);
     mpi_para_file_write(mpi_relaxationfile_wrbuf, &mpi_relaxationfile_len, &mpi_relaxationfile_ofst_total, &mpi_relaxationfile);
+
+    /* Meagan's 3bb files */
+    if (WRITE_BH_INFO)
+        mpi_para_file_write(mpi_newbhfile_wrbuf, &mpi_newbhfile_len, &mpi_newbhfile_ofst_total, &mpi_newbhfile);
+    if (THREEBODYBINARIES)
+    {
+        mpi_para_file_write(mpi_threebbfile_wrbuf, &mpi_threebbfile_len, &mpi_threebbfile_ofst_total, &mpi_threebbfile);
+        mpi_para_file_write(mpi_threebbprobabilityfile_wrbuf, &mpi_threebbprobabilityfile_len, &mpi_threebbprobabilityfile_ofst_total, &mpi_threebbprobabilityfile);
+        mpi_para_file_write(mpi_lightcollisionfile_wrbuf, &mpi_lightcollisionfile_len, &mpi_lightcollisionfile_ofst_total, &mpi_lightcollisionfile);
+        mpi_para_file_write(mpi_threebbdebugfile_wrbuf, &mpi_threebbdebugfile_len, &mpi_threebbdebugfile_ofst_total, &mpi_threebbdebugfile);
+    }
 }
 
 void mpi_para_file_write(char* wrbuf, int *len, int *prev_cum_offset, MPI_File* fh)
@@ -728,6 +959,27 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_STREAMS);
 				sscanf(values, "%d", &procs);
 				parsed.STREAMS = 1;
+	/* Meagan: new parameters for three-body binaries: THREEBODYBINARIES, MIN_BINARY_HARDNESS, ONLY_FORM_BH_THREEBODYBINARIES */
+			} else if (strcmp(parameter_name, "THREEBODYBINARIES") == 0) {
+				PRINT_PARSED(PARAMDOC_THREEBODYBINARIES);
+				sscanf(values, "%d", &THREEBODYBINARIES);
+				parsed.THREEBODYBINARIES = 1;
+			} else if (strcmp(parameter_name, "MIN_BINARY_HARDNESS") == 0) {
+				PRINT_PARSED(PARAMDOC_MIN_BINARY_HARDNESS);
+				sscanf(values, "%lf", &MIN_BINARY_HARDNESS);
+				parsed.MIN_BINARY_HARDNESS = 1;
+			} else if (strcmp(parameter_name, "ONLY_FORM_BH_THREEBODYBINARIES") == 0) {
+				PRINT_PARSED(PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES);
+				sscanf(values, "%d", &ONLY_FORM_BH_THREEBODYBINARIES);
+				parsed.ONLY_FORM_BH_THREEBODYBINARIES = 1;
+			} else if (strcmp(parameter_name, "BH_SNAPSHOTTING") == 0) {
+				PRINT_PARSED(PARAMDOC_BH_SNAPSHOTTING);
+				sscanf(values, "%d", &BH_SNAPSHOTTING);
+				parsed.BH_SNAPSHOTTING = 1;
+                        } else if (strcmp(parameter_name, "BH_SNAPSHOT_DELTACOUNT") == 0) {
+				PRINT_PARSED(PARAMDOC_BH_SNAPSHOT_DELTACOUNT);
+				sscanf(values, "%ld", &BH_SNAPSHOT_DELTACOUNT);
+				parsed.BH_SNAPSHOT_DELTACOUNT = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOTTING") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOTTING);
 				sscanf(values, "%d", &SNAPSHOTTING);
@@ -748,10 +1000,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
 				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
 				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
-			} else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
-				PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
-				SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
-				parse_snapshot_windows(values);
+                        } else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
+                                PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
+                                if (strncmp(values, "NULL", 4) == 0) {
+                                  SNAPSHOT_WINDOWS=NULL;
+                                } else {
+                                  SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
+                                  strncpy(SNAPSHOT_WINDOWS, values, 300);
+                                }
 				parsed.SNAPSHOT_WINDOWS = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_WINDOW_UNITS") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOW_UNITS);
@@ -943,7 +1199,11 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_WRITE_STELLAR_INFO);
 				sscanf(values, "%i", &WRITE_STELLAR_INFO);
 				parsed.WRITE_STELLAR_INFO = 1;
-			} else if (strcmp(parameter_name, "WRITE_RWALK_INFO")== 0) {
+                        } else if (strcmp(parameter_name, "WRITE_BH_INFO")== 0) {
+				PRINT_PARSED(PARAMDOC_WRITE_BH_INFO);
+				sscanf(values, "%i", &WRITE_BH_INFO);
+				parsed.WRITE_BH_INFO = 1;
+                        } else if (strcmp(parameter_name, "WRITE_RWALK_INFO")== 0) {
 				PRINT_PARSED(PARAMDOC_WRITE_RWALK_INFO);
 				sscanf(values, "%i", &WRITE_RWALK_INFO);
 				parsed.WRITE_RWALK_INFO = 1;
@@ -1089,9 +1349,10 @@ if(myid==0) {
 	CHECK_PARSED(RELAXATION, 1, PARAMDOC_RELAXATION);
 	CHECK_PARSED(THETASEMAX, 1.0, PARAMDOC_THETASEMAX);
 	CHECK_PARSED(STELLAR_EVOLUTION, 0, PARAMDOC_STELLAR_EVOLUTION);
-	CHECK_PARSED(WRITE_STELLAR_INFO, 0, PARAMDOC_WRITE_STELLAR_INFO);
-	CHECK_PARSED(WRITE_RWALK_INFO, 0, PARAMDOC_WRITE_RWALK_INFO);
-	CHECK_PARSED(WRITE_EXTRA_CORE_INFO, 0, PARAMDOC_WRITE_EXTRA_CORE_INFO);
+        CHECK_PARSED(WRITE_STELLAR_INFO, 0, PARAMDOC_WRITE_STELLAR_INFO);
+        CHECK_PARSED(WRITE_BH_INFO, 0, PARAMDOC_WRITE_BH_INFO);
+        CHECK_PARSED(WRITE_RWALK_INFO, 0, PARAMDOC_WRITE_RWALK_INFO);
+        CHECK_PARSED(WRITE_EXTRA_CORE_INFO, 0, PARAMDOC_WRITE_EXTRA_CORE_INFO);
 	CHECK_PARSED(CALCULATE10, 0, PARAMDOC_CALCULATE10);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
@@ -1104,6 +1365,11 @@ if(myid==0) {
 	CHECK_PARSED(BINBIN, 1, PARAMDOC_BINBIN);
 	CHECK_PARSED(BINSINGLE, 1, PARAMDOC_BINSINGLE);
 	CHECK_PARSED(STREAMS, 1, PARAMDOC_STREAMS);
+	/*Meagan: new parameters for 3-body binary formation*/
+	CHECK_PARSED(THREEBODYBINARIES, 0, PARAMDOC_THREEBODYBINARIES);
+	CHECK_PARSED(MIN_BINARY_HARDNESS, 5.0, PARAMDOC_MIN_BINARY_HARDNESS);
+	CHECK_PARSED(ONLY_FORM_BH_THREEBODYBINARIES, 1, PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES);
+	// default - 1: three-body binary formation only allowed for black holes
 	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);
 	CHECK_PARSED(MINIMUM_R, 0.0, PARAMDOC_MINIMUM_R);
 	CHECK_PARSED(BH_R_DISRUPT_NB, 0., PARAMDOC_BH_R_DISRUPT_NB);
@@ -1116,6 +1382,8 @@ if(myid==0) {
 	CHECK_PARSED(STOPATCORECOLLAPSE, 1, PARAMDOC_STOPATCORECOLLAPSE);
 	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT, 0.5, PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT);
 
+	CHECK_PARSED(BH_SNAPSHOTTING, 0, PARAMDOC_BH_SNAPSHOTTING);
+	CHECK_PARSED(BH_SNAPSHOT_DELTACOUNT, 50, PARAMDOC_BH_SNAPSHOT_DELTACOUNT);
 	CHECK_PARSED(SNAPSHOTTING, 0, PARAMDOC_SNAPSHOTTING);
 	CHECK_PARSED(SNAPSHOT_DELTACOUNT, 250, PARAMDOC_SNAPSHOT_DELTACOUNT);
 	CHECK_PARSED(SNAPSHOT_DELTAT, 0.25, PARAMDOC_SNAPSHOT_DELTAT);
@@ -1180,6 +1448,9 @@ if(myid==0)
 #endif
 	fclose(parsedfp);
 	
+        /* set-up snapshot window variables */
+        parse_snapshot_windows(SNAPSHOT_WINDOWS);
+
 	/* read the number of stars and possibly other parameters */
 	cmc_read_fits_file(INPUT_FILE, &cfd);
 	clus.N_STAR = cfd.NOBJ;
@@ -1367,6 +1638,21 @@ if(myid==0)
             rootfprintf(corefile, "\n");
         }
 
+        /* Meagan: output file for three-body binary formation */
+		// file for bh summary, at each timestep
+		sprintf(outfile, "%s.bh.dat", outprefix);
+		if ((bhsummaryfile = fopen(outfile, outfilemode)) == NULL) {
+			eprintf("cannot create bh.dat file %s\n", outfile);
+			exit(1);
+		}
+	
+		// file for escaping bh summary, at each timestep
+		sprintf(outfile, "%s.esc.bh.dat", outprefix);
+		if ((escbhsummaryfile = fopen(outfile, outfilemode)) == NULL) {
+			eprintf("cannot create esc.bh.dat file %s\n", outfile);
+			exit(1);
+		}
+	
         /* Printing our headers */
         fprintf(lagradfile, "# Lagrange radii [code units]\n");
         fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
@@ -1431,6 +1717,10 @@ if(myid==0)
         fprintf(binaryfile, "# Binary information [code units]\n");
         fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
 
+		// print header
+		fprintf(bhsummaryfile, "#1:tcount  #2:TotalTime  #3:N_bh  #4:N_bh_single  #5:N_bh_binary  #6:N_bh-bh  #7:N_bh-ns  #8:N_bh-wd  #9:N_bh-star  #10:N_bh-nonbh  #11:fb_bh\n");
+//#10:  #11:Binary_id1  #12:Binary_id2  #13:kw1  #14:kw2  #15:M1   #16:M2   #17:P  #18:a  #19:e  #20:R2/RL2  #21:dm1/dt\n");
+
 #ifdef USE_MPI
     }
 #endif
@@ -1471,6 +1761,31 @@ if(myid==0)
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_relaxationfile);
     MPI_File_set_size(mpi_relaxationfile, 0);
 
+    if (THREEBODYBINARIES)
+    {
+        sprintf(outfile, "%s.3bb.log", outprefix);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_threebbfile);
+        MPI_File_set_size(mpi_threebbfile, 0);
+
+        sprintf(outfile, "%s.3bbprobability.log", outprefix);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_threebbprobabilityfile);
+        MPI_File_set_size(mpi_threebbprobabilityfile, 0);
+
+        sprintf(outfile, "%s.lightcollision.log", outprefix);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_lightcollisionfile);
+        MPI_File_set_size(mpi_lightcollisionfile, 0);
+
+        sprintf(outfile, "%s.3bbdebug.log", outprefix);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_threebbdebugfile);
+        MPI_File_set_size(mpi_threebbdebugfile, 0);
+    }
+
+    // Meagan: extra output for black holes
+    if (WRITE_BH_INFO) {
+        sprintf(outfile, "%s.bhformation.dat", outprefix);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_newbhfile);
+        MPI_File_set_size(mpi_newbhfile, 0);
+    }
 #else
 
     //MPI3: In the serial version, these are just opened as normal.
@@ -1530,22 +1845,79 @@ if(myid==0)
 		eprintf("cannot create log output file \"%s\".\n", outfile);
 		exit(1);
 	}
+
+    if (THREEBODYBINARIES)
+    {
+        /* Meagan: output file for three-body binary formation */
+        sprintf(outfile, "%s.3bb.log", outprefix);
+        if ((threebbfile = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create 3bb log output file \"%s\".\n", outfile);
+            exit(1);
+        }
+
+        sprintf(outfile, "%s.3bbprobability.log", outprefix);
+        if ((threebbprobabilityfile = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create three-body formation probability log output file \"%s\".\n", outfile);
+            exit(1);
+        }
+
+        sprintf(outfile, "%s.lightcollision.log", outprefix);
+        if ((lightcollisionfile = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create light collision log output file \"%s\".\n", outfile);
+            exit(1);
+        }
+
+        sprintf(outfile, "%s.3bbdebug.log", outprefix);
+        if ((threebbdebugfile = fopen(outfile, outfilemode)) == NULL) {
+            eprintf("cannot create 3bb debug output file \"%s\".\n", outfile);
+            exit(1);
+        }
+    }
+
+	// Meagan: extra output for black holes
+	if (WRITE_BH_INFO) {
+		// file for info about newly formed BHs
+		sprintf(outfile, "%s.bhformation.dat", outprefix);
+		if ((newbhfile = fopen(outfile, outfilemode)) == NULL) {
+			eprintf("cannot create bhformation.dat file %s\n", outfile);
+			exit(1);
+		}
+    }
 #endif
 
-
-	/* print header */
+    // print header
 	pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1\n");
-	/* print header */
+    // print header
 	pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
-	/* print header */
+    // print header
 	pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]\n");
-	/* print header */
+    // print header
 	pararootfprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
-	/*Sourav: print header*/
+    //Sourav:  print header
 	pararootfprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 	pararootfprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 
+    if (THREEBODYBINARIES)
+    {
+        // print header
+        pararootfprintf(threebbfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:ave_local_mass #12:sigma_local #13:eta #14:Eb #15:ecc #16:a[AU] #17:r_peri[AU] #18:r(bin) #19:r(single) #20:vr(bin) #21:vt(bin) #22:vr(single) #23:vt(single) #24:phi(bin) #25:phi(single) #26:delta_PE #27:delta_KE #28:delta_E(interaction) #29:delta_E(cumulative) #30:N_3bb\n");
+        // print header
+        pararootfprintf(threebbprobabilityfile, "#1:time #2:dt #3:dt*N/log(gamma*N) #3:Rate_3bb #4:P_3bb #5:r\n### average rate and probability of three-body binary formation in the timestep; calculated from the innermost 300 triplets of single stars considered for three-body binary formation\n");
+        // print header
+        pararootfprintf(lightcollisionfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:type1 #12:type2 #13:type3 #14:rad1 #15:rad2 #16:rad3 #17:Eb #18:ecc #19:a(au) #20:rp(au)\n");
+        // print header
+        pararootfprintf(threebbdebugfile, "#1:k1 #2:k2 #3:k3 #4:id1 #5:id2 #6:id3 #7:r1 #8:r2 #9:r3 #10:m1 #11:m2 #12:m3 #13:v1 #14:v1[1] #15:v1[2] #16:v1[2] #17:v2 #18:v2[1] #19:v2[2] #20:v2[3] #21:v3 #22:v3[1] #23:v3[2] #24:v3[3] #25:v1_cmf #26:v1_cmf[1] #27:v1_cmf[2] #28:v1_cmf[3] #29:v2_cmf #30:v2_cmf[1] #31:v2_cmf[2] #32:v2_cmf[3] #33:v3_cmf #34:v3_cmf[1] #35:v3_cmf[2] #36:v3_cmf[3] #37:knew #38:bin_id #39:bin_r #40:bin_m #41:vs_cmf #42:vs_cmf[1] #43:vs_cmf[2] #44:vs_cmf[3] #45:vb_cmf #46:vb_cmf[1] #47:vb_cmf[2] #48:vb_cmf[3] #49:vs #50:vs[1] #51:vs[2] #52:vs[3] #53:vb #55:vb[1] #56:vb[2] #57:vb[3] #58:ave_local_m #59:sigma #60:eta #61:Eb #62:ecc #63:rp #64:a #65:PE_i #66:PE_f #67:KE_cmf_i #68:KE_cmf_f #69:KE_i #70:KE_f #71:delta_PE #72:delta_KE #73:delta_E\n");
+    }
+
+    // print header
+    pararootfprintf(escbhsummaryfile, "#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
+    // print header
+	if (WRITE_BH_INFO)
+		pararootfprintf(newbhfile,"#:time #:r #:ID #:m_progenitor #:bh mass #:kick[km/s]\n");
+//"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
+
 }
+
 
 /* close buffers */
 void close_buffers(void)
@@ -1584,6 +1956,9 @@ void close_root_buffers(void)
 		fclose(mlagradfile[i]);
 	if (WRITE_EXTRA_CORE_INFO) 
 		fclose(corefile);
+    /* Meagan's 3bb stuff */
+    fclose(bhsummaryfile);
+    fclose(escbhsummaryfile);
 }
 
 void close_node_buffers(void)
@@ -1594,8 +1969,20 @@ void close_node_buffers(void)
 	fclose(collisionfile);
 	fclose(tidalcapturefile);
 	fclose(semergedisruptfile);
-	fclose(removestarfile);
 	fclose(relaxationfile);
+	/*Sourav: closing the file I opened*/
+	fclose(removestarfile);
+    /* Meagan: close 3bb log file */
+    if (THREEBODYBINARIES)
+    {
+        fclose(threebbfile);
+        fclose(threebbprobabilityfile);
+        fclose(lightcollisionfile);
+        fclose(threebbdebugfile);
+    }
+    if (WRITE_BH_INFO) {
+        fclose(newbhfile);
+    }
 }
 
 #ifdef USE_MPI
@@ -1608,8 +1995,20 @@ void mpi_close_node_buffers(void)
 	MPI_File_close(&mpi_collisionfile);
 	MPI_File_close(&mpi_tidalcapturefile);
 	MPI_File_close(&mpi_semergedisruptfile);
-	MPI_File_close(&mpi_removestarfile);
 	MPI_File_close(&mpi_relaxationfile);
+	/*Sourav: closing the file I opened*/
+	MPI_File_close(&mpi_removestarfile);
+    /* Meagan: close 3bb log file */
+    if (THREEBODYBINARIES)
+    {
+        MPI_File_close(&mpi_threebbfile);
+        MPI_File_close(&mpi_threebbprobabilityfile);
+        MPI_File_close(&mpi_lightcollisionfile);
+        MPI_File_close(&mpi_threebbdebugfile);
+    }
+    if (WRITE_BH_INFO) {
+        MPI_File_close(&mpi_newbhfile);
+    }
 
 	//TEMPORARY
 /*
@@ -1739,7 +2138,10 @@ void parse_snapshot_windows(char *param_string) {
   char *cur_window, *intern_window=NULL, *intern_param=NULL;
   char *cur_wstring, *cur_pstring;
   int j;
-  strcpy(SNAPSHOT_WINDOWS, param_string);
+
+  if (param_string==NULL) {
+    return;
+  }
   snapshot_window_count= 0;
   snapshot_windows= NULL;
   cur_wstring= param_string;
@@ -1801,7 +2203,7 @@ void print_snapshot_windows(void) {
 		print_denprof_snapshot(outfile);
 
       snapshot_window_counters[i]++;
-      dprintf("Wrote snapshot #%i for time window %i (%s) at time %g %s.", step_counter+1, i+1, outfile, 
+      dprintf("Wrote snapshot #%i for time window %i (%s) at time %g %s.\n", step_counter+1, i+1, outfile, 
           total_time, SNAPSHOT_WINDOW_UNITS);
     }
   }

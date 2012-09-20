@@ -13,10 +13,11 @@
 *
       REAL*8 neta,bwind,hewind,mxns,alpha1,lambda
       REAL*8 sigma,beta,xi,acc2,epsnov,eddfac,gamma
+      REAL*8 bconst,CK
       INTEGER windflag
       COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag
       COMMON /VALUE2/ alpha1,lambda
-      COMMON /VALUE4/ sigma,bhflag
+      COMMON /VALUE4/ sigma,bconst,CK,bhflag
       COMMON /VALUE5/ beta,xi,acc2,epsnov,eddfac,gamma
       INTEGER*8 id1_pass,id2_pass
       REAL*8 merger
@@ -27,6 +28,6 @@
       COMMON /TSTEPC/ dmmax,drmax
       REAL scm(50000,14),spp(20,3)
       COMMON /SINGLE/ scm,spp
-      REAL bcm(50000,34),bpp(80,10)
+      REAL bcm(50000,36),bpp(80,10)
       COMMON /BINARY/ bcm,bpp
 *

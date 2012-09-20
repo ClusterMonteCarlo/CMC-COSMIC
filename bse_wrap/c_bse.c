@@ -26,7 +26,7 @@ int main(void)
 {
   int i, j, kw[2];
   double mass0[2], mass[2], tb, ecc;
-  double menv[2], renv[2], ospin[2], epoch[2], tms[2], tphys;
+  double menv[2], renv[2], ospin[2], B_0[2], bacc[2], tacc[2], epoch[2], tms[2], tphys;
   double rad[2], lum[2], massc[2], radc[2];
   double tphysf, dtp, z=0.02, *zpars;
   double vs[12];
@@ -46,9 +46,11 @@ int main(void)
   bse_set_tflag(1);
   bse_set_ifflag(0);
   bse_set_wdflag(1);
-  bse_set_bhflag(0);
+  bse_set_bhflag(1);
   bse_set_nsflag(1);
   bse_set_mxns(3.0);
+  bse_set_bconst(-3000.0);
+  bse_set_CK(-1000.0);
   bse_set_idum(29769);
   bse_set_pts1(0.05);
   bse_set_pts2(0.01);
@@ -73,6 +75,12 @@ int main(void)
   ecc = 0.0;
   ospin[0] = 0.0;
   ospin[1] = 0.0;
+  B_0[0] = 0.0;
+  B_0[1] = 0.0;
+  bacc[0] = 0.0;
+  bacc[1] = 0.0;
+  tacc[0] = 0.0;
+  tacc[1] = 0.0;
   epoch[0] = 0.0;
   epoch[1] = 0.0;
   tphys = 0.0;
@@ -81,7 +89,7 @@ int main(void)
 
   while (kw[0]<=1) {
     bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
-	       &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
+	       &(menv[0]), &(renv[0]), &(ospin[0]), &(B_0[0]), &(bacc[0]), &(tacc[0]), &(epoch[0]), &(tms[0]), 
 	       &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
     
     j = 1;
@@ -126,7 +134,7 @@ int main(void)
   ecc = 1.0 - 0.1*(rad[0]+rad[1])/214.9456/a;
 
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
-	     &(menv[0]), &(renv[0]), &(ospin[0]), &(epoch[0]), &(tms[0]), 
+	     &(menv[0]), &(renv[0]), &(ospin[0]), &(B_0[0]), &(bacc[0]), &(tacc[0]), &(epoch[0]), &(tms[0]), 
 	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
 
   j = 1;

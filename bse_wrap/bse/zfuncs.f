@@ -862,14 +862,10 @@
       return
       end
 ***
-      real*8 FUNCTION vrotf(m)
+      real*8 FUNCTION vrotf(m,ST)
       implicit none
       integer ST
       real*8 m
-C     The following is a temporary hack until this branch is fully synced
-C     with springcleaning. Remove when fully syncing!
-      ST=0
-C     End of hack.
 *
       if(ST.gt.0)then
          if(m.gt.6.35d0)then

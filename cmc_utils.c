@@ -394,13 +394,13 @@ void energy_conservation3(void)
 /* computes intermediate energies, and transfers "new" dynamical params to the standard variables */
 void ComputeIntermediateEnergy(void)
 {
-	int j = 1, g_j; 
+	int j = 1; 
 	/* compute intermediate energies for stars due to change in pot */ 
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
 		/* but do only for NON-Escaped stars */
 		if (star[j].rnew < 1.0e6) {
 #ifdef USE_MPI
-			g_j = get_global_idx(j);
+			int g_j = get_global_idx(j);
 			star[j].EI = sqr(star[j].vr) + sqr(star[j].vt) + star_phi[g_j] - potential(star[j].rnew);
 #else
 			star[j].EI = sqr(star[j].vr) + sqr(star[j].vt) + star[j].phi - potential(star[j].rnew);
@@ -411,7 +411,7 @@ void ComputeIntermediateEnergy(void)
 	/* Transferring new positions to .r, .vr, and .vt from .rnew, .vrnew, and .vtnew */
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
 #ifdef USE_MPI
-		g_j = get_global_idx(j);
+		int g_j = get_global_idx(j);
 		star[j].rOld = star_r[g_j];
 		star[j].r = star[j].rnew;
 		//star_r[j] = star[j].rnew;
@@ -1003,7 +1003,6 @@ void comp_mass_percent(){
 		mprev= 0.;
 		mcount=0;
 	}
-
 
 #ifdef USE_MPI
     double *ke_rad_prev_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
@@ -1823,9 +1822,9 @@ void timeStart2(double *st)
 
 void timeEnd2(char* fileName, char *funcName, double *st, double *end, double *tot)
 {
-	double temp;
 	//FILE *file;
 #ifdef USE_MPI
+	double temp;
 	*end = MPI_Wtime();
 	temp = *end - *st;
    MPI_Reduce(&temp, tot, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -1903,6 +1902,7 @@ void set_global_vars2()
 	Echeck = 0; 		
 	se_file_counter = 0; 	
 	snap_num = 0; 		
+	bh_snap_num = 0;
 	StepCount = 0; 		
 	tcount = 1;
 	TotalTime = 0.0;
@@ -1915,9 +1915,9 @@ void calc_sigma_new()
 	//MPI2: mpi_calc_sigma_r(): Tests for precision: Biggest errors are ~ 1e-13. Might be because of catastrphic cancellation/rounding errors?. This might be due to the already imprecise but faster serial code . In a sense, the MPI version might be more precise, because for every processor, actual average is performed for the 1st local star which means errors dont carry over from the previous set of stars which are handled by another processor.
 	//MPI3: HASNT BEEN TESTED YET!
 #ifdef USE_MPI
-	mpi_calc_sigma_r();
+	mpi_calc_sigma_r(AVEKERNEL, mpiEnd-mpiBegin+1, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
 #else
-	calc_sigma_r(); //requires data from some neighbouring particles. must be handled during data read. look inside function for more comments
+	calc_sigma_r(AVEKERNEL, clus.N_MAX, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
 #endif
 }
 
@@ -2003,6 +2003,8 @@ void reset_interaction_flags()
 #endif
 			/* reset interacted flag */
 			star[i].interacted = 0;
+			/* Meagan - 3bb */
+			star[i].threebb_interacted = 0;
 }
 
 void calc_clusdyn_new()
@@ -2040,7 +2042,7 @@ void energy_conservation1()
 {
 	/* some numbers necessary to implement Stodolkiewicz's
 	 * energy conservation scheme */
-	int i, g_i;
+	int i;
 	for (i = 1; i <= clus.N_MAX_NEW; i++)
 	{
 		/* saving velocities */
@@ -2051,7 +2053,7 @@ void energy_conservation1()
 		 * calling potential_calculate(), needs to be saved 
 		 * now */  
 #ifdef USE_MPI
-		g_i = get_global_idx(i);
+		int g_i = get_global_idx(i);
 		star[i].Uoldrold = star_phi[g_i] + MPI_PHI_S(star_r[g_i], g_i);
 #else
 		star[i].Uoldrold = star[i].phi + PHI_S(star[i].r, i);
@@ -2230,7 +2232,7 @@ void post_sort_comm()
 	}
 
 	//MPI3: Is this required?
-	MPI_Barrier(MPI_COMM_WORLD);
+	//MPI_Barrier(MPI_COMM_WORLD);
 	free(temp_r);
 	free(temp_m);
 #endif

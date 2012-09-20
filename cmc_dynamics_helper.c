@@ -51,6 +51,11 @@ void zero_star(long j)
 	star[j].se_k = 0;
 	star[j].se_mt = 0.0;
 	star[j].se_ospin = 0.0;
+        star[j].se_B_0 = 0.0; /* PK */
+        star[j].se_bacc = 0.0;
+        star[j].se_tacc = 0.0;
+        star[j].se_scm_B = 0.0;
+        star[j].se_scm_formation = 0.0;
 	star[j].se_epoch = 0.0;
 	star[j].se_tphys = 0.0;
 	star[j].se_radius = 0.0;
@@ -80,6 +85,8 @@ void zero_binary(long j)
 	binary[j].createtime_m2 = 0.0;
 	binary[j].lifetime_m1 = GSL_POSINF;
 	binary[j].lifetime_m2 = GSL_POSINF;
+	// Meagan: to keep track of three-body binaries
+	//binary[j].threebodybinary = 0;
 }
 
 void print_interaction_status(char status_text[])
@@ -254,6 +261,541 @@ long create_binary(int idx, int dyn_0_se_1)
 	return(j);
 }
 
+
+// BEGIN functions created for three-body binary formation by Meagan
+
+void sort_three_masses(long sq, long *k1, long *k2, long *k3) {
+/* Sort by mass: k1, k2, k3 in order of most massive to least massive. */
+
+	//parafprintf(threebbfile, "beginning of sort_three_masses function" );
+	if ((star[sq].m >= star[sq+1].m) && (star[sq].m >= star[sq + 2].m)) {
+		*k1 = sq;
+		if (star[sq + 1].m >= star[sq + 2].m) {
+			*k2 = sq + 1;
+			*k3 = sq + 2;
+		}
+		else {
+			*k2 = sq + 2;
+			*k3 = sq + 1;
+		}
+	}
+	else if ((star[sq + 1].m >= star[sq].m) && (star[sq + 1].m >= star[sq + 2].m)) {
+		*k1 = sq + 1;
+		if (star[sq].m >= star[sq + 2].m) {
+			*k2 = sq;
+			*k3 = sq + 2;
+		}
+		else {
+			*k2 = sq + 2;
+			*k3 = sq;
+		}
+	}
+	else if ((star[sq + 2].m >= star[sq].m) && (star[sq + 2].m >= star[sq + 1].m)) {
+		*k1 = sq + 2;
+		if (star[sq].m > star[sq + 1].m) {
+			*k2 = sq;
+			*k3 = sq + 1;
+		}
+		else {
+			*k2 = sq + 1;
+			*k3 = sq;
+
+		}
+	}
+	//parafprintf(threebbfile, "end of sort_three_masses function" );
+}
+
+#ifdef USE_MPI
+void mpi_sort_three_masses(long sq, long *k1, long *k2, long *k3) {
+/* Sort by mass: k1, k2, k3 in order of most massive to least massive. */
+
+    long g_sq0 = get_global_idx(sq);
+    long g_sq1 = get_global_idx(sq+1);
+    long g_sq2 = get_global_idx(sq+2);
+
+	//parafprintf(threebbfile, "beginning of sort_three_masses function" );
+	if ((star_m[g_sq0] >= star_m[g_sq1]) && (star_m[g_sq0] >= star_m[g_sq2])) {
+		*k1 = sq;
+		if (star_m[g_sq1] >= star_m[g_sq2]) {
+			*k2 = sq + 1;
+			*k3 = sq + 2;
+		}
+		else {
+			*k2 = sq + 2;
+			*k3 = sq + 1;
+		}
+	}
+	else if ((star_m[g_sq1] >= star_m[g_sq0]) && (star_m[g_sq1] >= star_m[g_sq2])) {
+		*k1 = sq + 1;
+		if (star_m[g_sq0] >= star_m[g_sq2]) {
+			*k2 = sq;
+			*k3 = sq + 2;
+		}
+		else {
+			*k2 = sq + 2;
+			*k3 = sq;
+		}
+	}
+	else if ((star_m[g_sq2] >= star_m[g_sq0]) && (star_m[g_sq2] >= star_m[g_sq1])) {
+		*k1 = sq + 2;
+		if (star_m[g_sq0] > star_m[g_sq1]) {
+			*k2 = sq;
+			*k3 = sq + 1;
+		}
+		else {
+			*k2 = sq + 1;
+			*k3 = sq;
+
+		}
+	}
+	//parafprintf(threebbfile, "end of sort_three_masses function" );
+}
+#endif
+
+void calc_3bb_encounter_dyns(long k1, long k2, long k3, double v1[4], double v2[4], double v3[4], double (*vrel12)[4], double (*vrel3)[4], gsl_rng *rng) {
+	/* Function for calculating quantities relevant for three-body binary formation
+		Generates random direction for vt for all stars (so then have 3D veloc. for each)
+		Then, for the two possible binaries that could form (1,2 or 1,3) we calculate:
+		(1) COM veloc of candidate binary pair  (2) v3: veloc of 3rd star relative to binary
+		In COM frame of the system of three stars, calculate total momentum and energy
+
+	*/
+	long j;
+	double vcm12[4];
+
+#ifndef USE_MPI 
+    curr_st = &st[findProcForIndex(k1)];
+#endif
+	/* set random angle between vt's */
+	/* first store random variable */
+//	star[k].Y = rng_t113_dbl_new(curr_st);
+//	star[kp].Y = star[k].Y;
+	double angle1 = rng_t113_dbl_new(curr_st) * 2.0 * PI;
+	double angle2 = rng_t113_dbl_new(curr_st) * 2.0 * PI;
+
+//	phi = star[k].Y * 2.0 * PI;
+	
+	// Set velocities of three stars
+	// Set velocities of three stars
+	v1[1] = star[k1].vt;
+	v1[2] = 0.0;
+	v1[3] = star[k1].vr;
+	v2[1] = star[k2].vt * cos(angle1);
+	v2[2] = star[k2].vt * sin(angle1);
+	v2[3] = star[k2].vr;	
+	v3[1] = star[k3].vt * cos(angle2);
+	v3[2] = star[k3].vt * sin(angle2);
+	v3[3] = star[k3].vr;
+
+	v1[0] = sqrt(sqr(v1[1]) + sqr(v1[2]) + sqr(v1[3]));
+	v2[0] = sqrt(sqr(v2[1]) + sqr(v2[2]) + sqr(v2[3]));
+	v3[0] = sqrt(sqr(v3[1]) + sqr(v3[2]) + sqr(v3[3]));
+
+	for (j=1; j<=3; j++) {
+
+		// Quantities needed for calculating 3bb formation rate:
+		// relative veloc between the two candidates stars for binary
+		// COM velocity of candidate binary pair
+		// velocity of third star wrt com of binary pair
+
+#ifdef USE_MPI
+        vcm12[j] = (star_m[get_global_idx(k1)] * v1[j] + star_m[get_global_idx(k2)] * v2[j])/(star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)]);
+#else
+        vcm12[j] = (star[k1].m * v1[j] + star[k2].m * v2[j])/(star[k1].m + star[k2].m);
+#endif
+		(*vrel12)[j] = v2[j] - v1[j];
+		(*vrel3)[j] = v3[j] - vcm12[j];
+		//vrel12[j] = v2[j] - v1[j];
+		//vrel3[j] = v3[j] - vcm12[j];
+	}
+		// Calculate magnitudes
+		(*vrel12)[0] = sqrt(sqr((*vrel12)[1]) + sqr((*vrel12)[2]) + sqr((*vrel12)[3]));
+		(*vrel3)[0] = sqrt(sqr((*vrel3)[1]) + sqr((*vrel3)[2]) + sqr((*vrel3)[3]));
+		//vrel12[0] = sqrt(sqr(vrel12[1]) + sqr(vrel12[2]) + sqr(vrel12[3]));
+		//vcm12[0] = sqrt(sqr(vcm12[1]) + sqr(vcm12[2]) + sqr(vcm12[3]));
+		//vrel3[0] = sqrt(sqr(vrel3[1]) + sqr(vrel3[2]) + sqr(vrel3[3]));
+
+}
+
+
+double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], double vrel3[4])
+{
+	double kk, eta, norm, area_max, area, eta_test, comp_ymax, comp_y, true_y;
+	double eta_max=50.0;
+	long found_eta;
+	// choose eccentricity of new binary from thermal distribution: f(e)=2e; 
+	// e can range from zero to e_max, and for now set emax to 1; 
+	// note when we set up initial binaries, have the option to truncate the 
+	// e distribution near contact, which sets emax to something less than 1.
+	// Since we're most likely to form BH binaries, their radii are so small 
+	// that large eccentricities are possible, and maybe we don't have to worry about this?
+
+	// Tested: sampled from distribution and graphed - the distribution is properly sampled
+
+	// start by setting comp_value to something that will be rejected (above distribution for all eta)
+
+#ifdef USE_MPI
+	kk = 2.0 * ( (star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)] + star_m[get_global_idx(k3)]) / (star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)]) ) * sqr(vrel12[0] / vrel3[0]);
+#else
+	kk = 2.0 * ( (star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m) ) * sqr(vrel12[0] / vrel3[0]);
+#endif
+	comp_y=1e6;
+	found_eta = 0;
+
+	/* normalize distribution, d(Rate)/d(eta) (differential rate of 3bb formation); take abs. value*/
+	norm = fabs(1.0/(-1*(pow(eta_max, -5.5)) + (pow(eta_min, -5.5)) + (kk + 2) * ( -1*(pow(eta_max, -4.5)) + (pow(eta_min, -4.5)) ) + 2 * kk * ( -1*(pow(eta_max, -3.5)) + (pow(eta_min, -3.5)))));
+
+#ifndef USE_MPI
+    curr_st = &st[findProcForIndex(k1)];
+#endif
+	/* now start a while loop that will keep restarting as long as the last computed comp_value was rejected */
+	while (found_eta == 0) {
+
+		/* total area under comparison curve in range of eta from eta_min to eta_max */
+	//	area_max = fabs(3.25*norm*((pow(eta_max,-4.0)) - (pow(eta_min, -4.0))));
+		area_max = fabs((2.0/7.0) * norm * kk * ((pow(eta_max,-3.5)) - (pow(eta_min, -3.5))));
+		/* choose area in range (0, area_max); this area corresponds to a particular value of eta */
+		area = rng_t113_dbl_new(curr_st)*area_max;
+		/* find the eta that corresponds to chosen area */
+		/* test coordinate 1 (x) */
+	//	eta_test = pow(((-2.0*area/(13.0*norm)) + pow(eta_min, -4.0)), -0.25);
+
+	// TODO: figure out this negative sign in front of 2 below - where did it come from??
+		eta_test = pow(((-7.0*area/(2.0*norm*kk)) + pow(eta_min, -3.5)), (-2.0/7.0));
+		/* now choose second test coordinate (y) by choosing a number between zero and the value of the comparison function at eta_test, comp_ymax */
+		comp_ymax = kk * norm * pow(eta_test, -4.5);
+		comp_y = rng_t113_dbl_new(curr_st)*comp_ymax;
+		/* now accept or reject the point if it lies below/above true distribution: 
+		d(rate)/d(eta) ~ norm*(5*eta^-6 + 8*eta^-5) */
+	//	true_y = norm*(5.0*pow(eta_test, -6.0) + 8.0*pow(eta_test, -5.0));
+		true_y = norm*(5.5*pow(eta_test, -6.5) + (4.5 * kk +9.0) * (pow(eta_test, -5.5)) +7.0 * kk * (pow(eta_test, -4.5)));
+		if (comp_y < true_y) { /* fall within true distribution */
+			found_eta = 1;
+			eta = eta_test;
+		}
+	}
+	return(eta);
+}
+
+
+void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_3bb, gsl_rng *rng)
+{
+	double PE_i, PE_f, KE_i, KE_f, KE_cmf_i, KE_cmf_f, delta_PE, delta_KE, delta_E, binary_cm;
+	double m1, m2, m3;
+//  double ms, mb;
+	double r1, r2, r3;
+	double cm_vel[4], v1_cmf[4], v2_cmf[4], v3_cmf[4];
+	double eta, Eb, ecc_max, ecc, r_p, semi_major;
+	double vs_cmf[4], vb_cmf[4], vs[4], vb[4], angle3, angle4;
+	long j, knew;
+	// Form new binary, set new binary/stellar properties, destroy old stars	
+	// Calculate Total potential energy of three stars (enforce cons. of potential energy at end to get new positions)
+	// Find energy of new binary
+	// Move to COM frame: for initial system of 3 stars, compute com veloc, linear momentum and Energy
+	// Choose random direction for kick to single in COM frame - given direction of vs, know that vb points oppositely
+	// Solve cons. of momentum and cons. of energy to obtain scalar velocities of binary and single, vb and vs
+
+	
+	// INITIAL VALUES
+#ifdef USE_MPI
+    m1=star_m[get_global_idx(k1)];
+    m2=star_m[get_global_idx(k2)];
+    m3=star_m[get_global_idx(k3)];
+    r1=star_r[get_global_idx(k1)];
+    r2=star_r[get_global_idx(k2)];
+    r3=star_r[get_global_idx(k3)];
+#else
+    m1=star[k1].m;
+    m2=star[k2].m;
+    m3=star[k3].m;
+    r1=star[k1].r;
+    r2=star[k2].r;
+    r3=star[k3].r;
+#endif
+
+	// Initial energy
+#ifdef USE_MPI
+    PE_i = madhoc*(m1*star_phi[get_global_idx(k1)] + m2*star_phi[get_global_idx(k2)] + m3*star_phi[get_global_idx(k3)]);
+#else
+    PE_i = madhoc*(m1*star[k1].phi + m2*star[k2].phi + m3*star[k3].phi);
+#endif
+	KE_i = 0.5*madhoc*(m1 * sqr(v1[0]) + m2 * sqr(v2[0]) + m3 * sqr(v3[0]));
+
+	// COM of candidate binary pair
+	binary_cm = (m1 * r1 + m2 * r2)/(m1 + m2);
+
+	for (j=1; j<=3; j++) {
+		cm_vel[j] = (m1 * v1[j] + m2 * v2[j] + m3 * v3[j])/(m1 + m2 + m3);
+	}
+
+	cm_vel[0] = sqrt(sqr(cm_vel[1]) + sqr(cm_vel[2]) + sqr(cm_vel[3]));
+
+	// v1, v2, v3 were calculated in function calc_3bb_encounter_dyns()
+
+	// Move to COM frame
+	for (j=1; j<=3; j++) {
+		v1_cmf[j] = v1[j] - cm_vel[j];
+		v2_cmf[j] = v2[j] - cm_vel[j];
+		v3_cmf[j] = v3[j] - cm_vel[j];
+	} 
+
+	// scalar velocities, in COM frame
+	v1_cmf[0] = sqrt(sqr(v1_cmf[1]) + sqr(v1_cmf[2]) + sqr(v1_cmf[3]));
+	v2_cmf[0] = sqrt(sqr(v2_cmf[1]) + sqr(v2_cmf[2]) + sqr(v2_cmf[3]));
+	v3_cmf[0] = sqrt(sqr(v3_cmf[1]) + sqr(v3_cmf[2]) + sqr(v3_cmf[3]));
+
+	// Initial kinetic energy of three stars in COM frame (relative to COM motion)
+	KE_cmf_i = 0.5*madhoc*(m1 * sqr(v1_cmf[0]) + m2 * sqr(v2_cmf[0]) + m3 * sqr(v3_cmf[0]));
+
+#ifndef USE_MPI
+    curr_st = &st[findProcForIndex(k1)];
+#endif
+
+	// COMPUTE NEW QUANTITIES
+		// Binary orbital properties: 
+		//	binding energy: choose eta, then Eb = eta * <m> / sigma^2
+		//	eccentricity: chosen from thermal distribution
+	eta = get_eta(eta_min, k1, k2, k3, vrel12, vrel3);
+	Eb = -0.5*eta * ave_local_mass * sqr(sigma_local); //Note: ave_local_mass is already multiplied by madhoc
+	// **Note binding energy is NEGATIVE
+	ecc_max = 1.0;
+	ecc = ecc_max * sqrt(rng_t113_dbl_new(curr_st)); 					
+	r_p = m1 * m2 * madhoc / (eta * sqr(sigma_local)); //note, for units, have madhoc^2 in numerator, and madhoc in the denominator ====> single power madhoc in numerator
+	semi_major = m1 * m2 * sqr(madhoc) / (-2*Eb);
+	// Using cons. of momentum and energy, can calculate scalar velocities of binary and single
+	vs_cmf[0] = sqrt((2.0*(KE_cmf_i-Eb)*((m1 + m2)/m3))/((madhoc)*(m1 + m2 + m3)));
+	vb_cmf[0] = 1.0*vs_cmf[0]*m3/(m1 + m2);
+
+	// Choose random direction for motion of single star
+	angle3 = rng_t113_dbl_new(curr_st) * PI; // polar angle - [0, PI)
+	angle4 = rng_t113_dbl_new(curr_st) * 2.0 * PI; // azimuthal angle - [0, 2*PI)
+	// Compute vector velocities of single and binary
+	vs_cmf[1] = vs_cmf[0] * sin(angle3) * cos(angle4);
+	vs_cmf[2] = vs_cmf[0] * sin(angle3) * sin(angle4);
+	vs_cmf[3] = vs_cmf[0] * cos(angle3);
+
+	/* Fix direction of velocity of binary to be opposite to that of single - add Pi to each of the angles 
+		(polar angle and azimuthal) that were used to orient the velocity of the single  */
+	vb_cmf[1] = vb_cmf[0] * sin(PI - angle3) * cos(angle4 + PI);
+	vb_cmf[2] = vb_cmf[0] * sin(PI - angle3) * sin(angle4 + PI);
+	vb_cmf[3] = vb_cmf[0] * cos(PI - angle3);
+
+	vs_cmf[0] = sqrt(sqr(vs_cmf[1]) + sqr(vs_cmf[2]) + sqr(vs_cmf[3]));
+	vb_cmf[0] = sqrt(sqr(vb_cmf[1]) + sqr(vb_cmf[2]) + sqr(vb_cmf[3]));
+
+	/* Final COM energy - Binding energy of new binary plus kinetic energy of single and binary, 
+		calculated using the magnitudes of their velocities (vs_cmf[0] and vb_cmf[0]) */
+	KE_cmf_f = Eb + 0.5*madhoc*(m3*sqr(vs_cmf[0]) + (m1 + m2)*sqr(vb_cmf[0]));
+
+	// Transform back to lab frame: final velocities of single and binary are vs and vb
+	for (j=1; j<=3; j++) {
+		vs[j] = vs_cmf[j] + cm_vel[j];
+		vb[j] = vb_cmf[j] + cm_vel[j];	
+	}
+	// magnitudes
+	vs[0] = sqrt(sqr(vs[1]) + sqr(vs[2]) + sqr(vs[3]));
+	vb[0] = sqrt(sqr(vb[1]) + sqr(vb[2]) + sqr(vb[3]));
+
+	// IF binary should NOT actually be formed, make sure stars are not marked as interacted,
+	// so that they will interact in two-body loop
+	if (form_binary == 0) { 
+		star[k1].threebb_interacted = 0;
+		star[k2].threebb_interacted = 0;
+		star[k3].threebb_interacted = 0;
+
+		parafprintf(lightcollisionfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %d %d %d %g %g %g %g %g %g %g\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2 * (units.m / clus.N_STAR / MSUN), m3 *(units.m / clus.N_STAR / MSUN), star[k1].se_k, star[k2].se_k, star[k3].se_k, star[k1].rad * units.l / AU, star[k2].rad * units.l / AU, star[k3].rad * units.l / AU, Eb, ecc, semi_major * units.l / AU, r_p * units.l / AU);
+	}
+	// IF binary IS TO BE FORMED, set star and binary properties for new binary, as well as properties of single star
+	else if (form_binary == 1) {
+
+		knew = create_binary(k1, 0); /* returns an unused binary id */
+
+		star[knew].threebb_interacted = 1;
+		star[k1].threebb_interacted = 1;
+		star[k2].threebb_interacted = 1;
+		star[k3].threebb_interacted = 1;
+
+		star[knew].interacted = 1;
+		star[k1].interacted = 1;
+		star[k2].interacted = 1;
+		star[k3].interacted = 1;
+
+		binary[star[knew].binind].id1 = star[k1].id;
+		binary[star[knew].binind].id2 = star[k2].id;
+		binary[star[knew].binind].rad1 = star[k1].rad;
+		binary[star[knew].binind].rad2 = star[k2].rad;
+		binary[star[knew].binind].m1 = m1;
+		binary[star[knew].binind].m2 = m2;
+		binary[star[knew].binind].Eint1 = star[k1].Eint;
+		binary[star[knew].binind].Eint2 = star[k2].Eint;
+		binary[star[knew].binind].a = semi_major;
+		binary[star[knew].binind].e = ecc;
+		//Sourav: toy rejuvenation- some new variables
+		//binary[knew].createtime_m1 = star[k1].createtime; // These are all set in cp_SEvars_to_newbinary()
+		//binary[knew].createtime_m2 = star[k2].createtime;
+		//binary[knew].lifetime_m1 = star[k1].lifetime;;
+		//binary[knew].lifetime_m2 = star[k2].lifetime;
+			// ????? For star properties that do not apply for binary (such as rad...since we don't 
+			// have a single star with a single radius), what do I set to? These are quantities
+			// that are printed as "-100" in the output files. 
+
+		// star properties for the new binary
+#ifdef USE_MPI
+        star_r[get_global_idx(knew)] = binary_cm;
+        star_m[get_global_idx(knew)] = m1 + m2;
+#else
+		star[knew].r = binary_cm;
+		star[knew].m = m1 + m2;
+#endif
+
+		star[knew].vr = vb[3];
+		star[knew].vt = sqrt(sqr(vb[1]) + sqr(vb[2]));
+		star[knew].Eint = star[k1].Eint + star[k2].Eint;  // Set new internal energy for the binary, sum of Eint1 and Eint2 of the two components
+
+
+	//	star[knew].E = 0.0;
+	//	star[knew].J = 0.0;
+	//	star[knew].EI = 0.0; 		// Intermediate energy: seems that I can leave this set to zero?
+	//	star[knew].Eint = 0.0;
+	//	star[knew].rnew = 0.0;		// set in set_star_news() function
+	//	star[knew].vrnew = 0.0;
+	//	star[knew].vtnew = 0.0;
+	//	star[knew].rOld = 0.0;		// do I have to set this? What is it?
+	//	star[knew].X = 0.0;
+	//	star[knew].Y = 0.0;
+	//	star[knew].r_peri = 0.0; 	// these are set later
+	//	star[knew].r_apo = 0.0;
+	//	star[knew].phi = 0.0;
+	//	star[knew].interacted = 0;
+	//	star[knew].id = 0;		// what do I set ID to in binary
+	//	star[knew].rad = 0.0;		// what about Uoldrold and Uoldrnew?
+	//	star[knew].Uoldrold = 0.0;
+	//	star[knew].Uoldrnew = 0.0;
+
+	//Sourav: toy rejuvenation- some more variables
+	//	star[knew].vtold = 0.0;		// What about these?
+	//	star[knew].vrold = 0.0;
+
+	//	parafprintf(threebbfile, "new binary properties for object 'knew':  r=%g  vr=%g  vt=%g\n", star[knew].r, star[knew].vr, star[knew].vt);
+
+		// Set new properties of single star
+	//		star[k3].interacted = 1;
+	//	star[k3].r = star[k3].r;  // later I can adjust the positions/potentials
+		star[k3].vr = vs[3];
+		star[k3].vt = sqrt(sqr(vs[1]) + sqr(vs[2]));
+
+		// copy SE variables over to new binary from old single stars
+		cp_SEvars_to_newbinary(k1, -1, knew, 0);
+		cp_SEvars_to_newbinary(k2, -1, knew, 1);
+
+		// radii, and tb : rhs was set in calls to cp_SEvars_to_newbinary()
+		binary[star[knew].binind].rad1 = binary[star[knew].binind].bse_radius[0] * RSUN / units.l;
+		binary[star[knew].binind].rad2 = binary[star[knew].binind].bse_radius[1] * RSUN / units.l;
+		binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
+
+		/* track binding energy */
+		//BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc)
+		// Do I need to worry about this binding energy??
+
+#ifdef USE_MPI
+		star_phi[get_global_idx(knew)] = potential(star_r[get_global_idx(knew)]); // set potential for binary to be potential at its new cm location (r)
+//		star_phi[get_global_idx(k3)] = potential(r3); // set potential for single to be same as original...should I adjust?
+		PE_f = madhoc*(star_m[get_global_idx(knew)]*star_phi[get_global_idx(knew)] + m3*star_phi[get_global_idx(k3)]);
+		KE_f = Eb + 0.5*madhoc*(star_m[get_global_idx(knew)] * sqr(vb[0]) + m3 * sqr(vs[0]));
+#else
+		star[knew].phi = potential(star[knew].r); // set potential for binary to be potential at its new cm location (r)
+//		star[k3].phi = potential(star[k3].r); // set potential for single to be same as original...should I adjust?
+		PE_f = madhoc*(star[knew].m*star[knew].phi + m3*star[k3].phi);
+		KE_f = Eb + 0.5*madhoc*(star[knew].m * sqr(vb[0]) + m3 * sqr(vs[0]));
+#endif
+
+
+		// In the right units for comparing to the Energies computed in cmc_utils.c ComputeEnergy(), and plotted in quick_cluster_plot
+		delta_PE = (PE_f - PE_i);
+		delta_KE = (KE_f - KE_i);
+		delta_E = delta_KE + delta_PE;
+
+		parafprintf(threebbdebugfile, "%ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g", k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, r1, r2, r3, m1, m2, m3, v1[0], v1[1], v1[2], v1[3], v2[0], v2[1], v2[2], v2[3], v3[0], v3[1], v3[2], v3[3], v1_cmf[0], v1_cmf[1], v1_cmf[2], v1_cmf[3], v2_cmf[0], v2_cmf[1], v2_cmf[2], v2_cmf[3], v3_cmf[0], v3_cmf[1], v3_cmf[2], v3_cmf[3]);
+
+		parafprintf(threebbdebugfile, "%ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", knew, star[knew].id, star[knew].r, star[knew].m, vs_cmf[0], vs_cmf[1], vs_cmf[2], vs_cmf[3], vb_cmf[0], vb_cmf[1], vb_cmf[2], vb_cmf[3], vs[0], vs[1], vs[2], vs[3], vb[0], vb[1], vb[2], vb[3], ave_local_mass, n_local,sigma_local, eta, Eb, ecc, r_p, semi_major, PE_i, PE_f, KE_cmf_i, KE_cmf_f, KE_i, KE_f, delta_PE, delta_KE, delta_E);
+		//parafprintf(threebbdebugfile, "Internal Energies:  Eint1=%g  Eint2=%g  Eint_binary=%g\n", star[k1].Eint, star[k2].Eint, star[knew].Eint);
+
+		// running total for simulation - change in energy occuring during 3bb formation procedure
+		delta_E_3bb += delta_E;
+
+		// Set E and J for new objects
+		set_star_EJ(knew);	// binary
+		set_star_EJ(k3);	// single
+
+		// Set binary properties
+		binary[star[knew].binind].a = semi_major;
+		binary[star[knew].binind].e = ecc;
+
+		// destroy the two former single stars (which have now formed a binary)
+		// leave the remaining single star (properties have already been updated)
+		parafprintf(threebbfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %ld\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2*(units.m / clus.N_STAR / MSUN), m3*(units.m / clus.N_STAR / MSUN), ave_local_mass, n_local, sigma_local, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star[knew].r, r3, star[knew].vr, star[knew].vt, star[k3].vr, star[k3].vt, star[knew].phi, star[k3].phi, delta_PE, delta_KE, delta_E, delta_E_3bb, N3bbformed);
+
+		ComputeEnergy();
+		destroy_obj(k1);
+		destroy_obj(k2);
+	//	parafprintf(threebbfile, "KE_cmf_i=%g  eta=%g  Eb=%g\n", KE_cmf_i, eta, Eb);
+	//	parafprintf(threebbfile, "vs_cmf[0]=%g  vb_cmf[0]=%g  cm_vel[0]=%g\n", vs_cmf[0], vb_cmf[0], cm_vel[0]);
+	//	parafprintf(threebbfile, "new binary properties for object 'knew':  r=%g  vr=%g  vt=%g\n", star[knew].r, star[knew].vr, star[knew].vt);
+
+		// DEBUG extra output
+		//parafprintf(threebbdebugfile, "Phi_f=%g  E_f-phi_f=%g\n", star[knew].phi + star[k3].phi, Eb + 0.5*madhoc*(m3*(sqr(star[k3].vr) + sqr(star[k3].vt)) + star[knew].m*(sqr(star[knew].vr) + sqr(star[knew].vt))));
+
+		//parafprintf(threebbdebugfile, "ms=%g  mb=%g  vs_r=%g  vs_t=%g  vb_r=%g  vb_t=%g\n\n\n", m3, star[knew].m, star[k3].vr, star[k3].vt, star[knew].vr, star[knew].vt);
+		//parafprintf(threebbdebugfile, "binary[star[knew].binind].inuse=%ld\n", binary[star[knew].binind].inuse);
+		//parafprintf(threebbfile, "%g %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", TotalTime, k1, k2, k3, m1, m2, m3, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star[knew].r, star[knew].vr, star[knew].vt, star[knew].phi, r3, star[k3].vr, star[k3].vt, star[k3].phi, delta_PE, delta_E, delta_E_3bb);
+
+
+		}
+
+}
+
+
+void calc_sigma_local(long k, long p, long N_LIMIT, double *ave_local_mass, double *sigma_local)
+// Modified by Meagan 2/10/12. Needed to calculate average local mass for 3bb formation, as well as sigma
+// Now function passes both values back as global variables: ave_local_mass, sigma_local
+{
+    long si, simin, simax;
+    double Mv2ave, Mave, M2ave, sigma;
+
+    //        N_LIMIT = clus.N_MAX;
+    simin = k - p;
+    simax = simin + (2 * p + 1);
+    if (simin < 1) {
+        simin = 1;
+        simax = simin + (2 * p + 1);
+    } else if (simax > N_LIMIT) {
+        simax = N_LIMIT;
+        simin = simax - (2 * p + 1);
+    }
+
+    Mv2ave = 0.0;
+    Mave = 0.0;
+    M2ave = 0.0;
+    for (si=simin; si<=simax; si++) {
+        Mv2ave += star[si].m * madhoc * (sqr(star[si].vr) + sqr(star[si].vt));
+        Mave += star[si].m * madhoc;
+        M2ave += sqr(star[si].m * madhoc);
+    }
+    Mv2ave /= (double) (2 * p);
+    Mave /= (double) (2 * p);
+    M2ave /= (double) (2 * p);
+
+    /* sigma is the 3D velocity dispersion */
+    sigma = sqrt(Mv2ave/Mave);
+
+	*sigma_local = sigma;
+	*ave_local_mass = Mave;
+}
+
+
+// end functions created for three-body binary formation
+
+
 /* generate unique star id's */
 long star_get_id_new(void)
 {
@@ -341,7 +883,7 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	for (j=1; j<=3; j++) {
 		w[j] = vp[j] - v[j];
 	}
-
+	
 	*W = sqrt(sqr(w[1]) + sqr(w[2]) + sqr(w[3]));
 
 	if (*W == 0.0) {
@@ -1547,6 +2089,20 @@ double simul_relax(gsl_rng *rng)
 		   inputting locally-averaged quantities */
 		dt = sqr(2.0*THETASEMAX/PI) * (PI/32.0) * 
 			cub(W) / ( ((double) clus.N_STAR) * n_local * (4.0 * M2ave) );
+
+		// Meagan: shorten timestep while in core-collapsed state
+		//if (rho_core > 50.0) {
+		//if (rho_core > 35.0) {
+		//	dt = sqr(2.0*0.707106781*THETASEMAX/PI) * (PI/32.0) *
+		//	dt = sqr(2.0*0.5*THETASEMAX/PI) * (PI/32.0) *
+		//		cub(W) / ( ((double) clus.N_STAR) * n_local * (4.0 * M2ave) );
+		//}
+		//if (N_core < 100) {
+		//	dt = sqr(2.0*0.707106781*THETASEMAX/PI) * (PI/32.0) *
+		//		cub(W) / ( ((double) clus.N_STAR) * n_local * (4.0 * M2ave) );
+		//}
+
+
 		dtmin = MIN(dtmin, dt);
 	}
 
@@ -1633,13 +2189,13 @@ void break_wide_binaries(void)
 }
 
 #ifdef USE_MPI
-void mpi_calc_sigma_r(void)
+void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_sigma, long* sig_n, int r_0_mave_1)
 {
-	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
+	long si, k, simin, simax, siminlast, simaxlast;
 	double Mv2ave, Mave;
 	
-	N_LIMIT = mpiEnd-mpiBegin+1;
-	sigma_array.n = N_LIMIT;
+//	N_LIMIT = mpiEnd-mpiBegin+1; //Its an input now.
+	*sig_n = N_LIMIT;
 
 	struct ghost_pts {
 		double* prev;
@@ -1766,8 +2322,11 @@ void mpi_calc_sigma_r(void)
 		
 		/* store sigma (sigma is the 3D velocity dispersion) */
 		/*MPI3: Using the global r array*/
-		sigma_array.r[si] = star_r[g_si];
-		sigma_array.sigma[si] = sqrt(Mv2ave/Mave);
+        if(r_0_mave_1 == 0)
+            sig_r_or_mave[si] = star_r[g_si];
+        else
+            sig_r_or_mave[si] = Mave;
+		sig_sigma[si] = sqrt(Mv2ave/Mave);
 		
 		siminlast = simin;
 		simaxlast = simax;
@@ -1780,14 +2339,12 @@ void mpi_calc_sigma_r(void)
 #endif
 
 /* calculate and store the velocity dispersion profile */
-void calc_sigma_r(void)
+void calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_sigma, long *sig_n, int r_0_mave_1)
 {
-	long si, k, p=AVEKERNEL, N_LIMIT, simin, simax, siminlast, simaxlast;
+	long si, k, simin, simax, siminlast, simaxlast;
 	double Mv2ave, Mave;
 	
-	N_LIMIT = clus.N_MAX;
-
-	sigma_array.n = N_LIMIT;
+	*sig_n = N_LIMIT;
 
 	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
 
@@ -1828,9 +2385,14 @@ void calc_sigma_r(void)
 			//Mv2ave /= (double) (2 * p);
 			//Mave /= (double) (2 * p);
 
+            /* depending on what is needed as the output, either r(for 2body dynamics), or mave(for 3bb stuff) is store */
+            if(r_0_mave_1 == 0)
+                sig_r_or_mave[si] = star[si].r;
+            else
+                sig_r_or_mave[si] = Mave;
+
 			/* store sigma (sigma is the 3D velocity dispersion) */
-			sigma_array.r[si] = star[si].r;
-			sigma_array.sigma[si] = sqrt(Mv2ave/Mave);
+			sig_sigma[si] = sqrt(Mv2ave/Mave);
 
 			siminlast = simin;
 			simaxlast = simax;

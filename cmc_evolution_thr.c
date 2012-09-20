@@ -544,6 +544,9 @@ void tidally_strip_stars(void) {
 					}
 					parafprintf (escfile, "\n");
 
+					// Meagan - check for, and count, escaping BHs
+					count_esc_bhs(j);
+
 					/* perhaps this will fix the problem wherein stars are ejected (and counted)
 					   multiple times */
 					dprintf ("before SE: id=%ld k=%ld kw=%d m=%g mt=%g R=%g L=%g mc=%g rc=%g menv=%g renv=%g ospin=%g epoch=%g tms=%g tphys=%g phi=%g r=%g\n",
@@ -716,6 +719,47 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	destroy_obj(j);
 }
 
+// Meagan: output file for escaping BHs
+void count_esc_bhs(long j) {
+	long k;
+	k = star[j].binind;
+	if (k>0) {
+		if (binary[k].bse_kw[0]==14 && binary[k].bse_kw[1]==14) {
+			esc_bhbinary += 1;
+			esc_bhbh += 1;
+		} else if (binary[k].bse_kw[0]==14 || binary[k].bse_kw[1]==14) {
+			esc_bhbinary += 1;
+			esc_bhnonbh += 1;
+			if (binary[k].bse_kw[0]==13 || binary[k].bse_kw[1]==13) {
+				esc_bh13 += 1;
+			} else if (binary[k].bse_kw[0]==10 || binary[k].bse_kw[1]==10) { 
+				esc_bh10 += 1;
+			} else if (binary[k].bse_kw[0]==11 || binary[k].bse_kw[1]==11) { 
+				esc_bh11 += 1;
+			} else if (binary[k].bse_kw[0]==12 || binary[k].bse_kw[1]==12) {
+				esc_bh12 += 1;
+			} else if (binary[k].bse_kw[0]==9 || binary[k].bse_kw[1]==9 || 
+				   binary[k].bse_kw[0]==8 || binary[k].bse_kw[1]==8) {
+				esc_bh89 += 1;
+			} else if (binary[k].bse_kw[0]==7 || binary[k].bse_kw[1]==7) { 
+				esc_bh7 += 1;
+			} else if ((binary[k].bse_kw[0]>=2 && binary[k].bse_kw[0]<=6) || 
+				   (binary[k].bse_kw[1]>=2 && binary[k].bse_kw[1]<=6)) {
+				esc_bh26 += 1;
+			} else if ((binary[k].bse_kw[0]>=0 && binary[k].bse_kw[0]<=1) || 
+				   (binary[k].bse_kw[1]>=0 && binary[k].bse_kw[1]<=1)) {
+				esc_bh01 += 1;
+			}
+			esc_bhstar = esc_bh01 + esc_bh26 + esc_bh7 + esc_bh89;
+			esc_bhwd = esc_bh10 + esc_bh11 + esc_bh12;
+		}
+	} else {
+		if (star[j].se_k==14) {
+			esc_bhsingle += 1;
+		}
+	}
+}
+
 void remove_star_center(long j) {
 	star[j].rnew = SF_INFINITY;	/* send star to infinity */
 #ifdef USE_MPI
@@ -788,6 +832,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 #else
 			dprintf("index of stripped star by E = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
 #endif
+			count_esc_bhs(j);
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
 		}
