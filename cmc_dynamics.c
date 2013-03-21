@@ -255,8 +255,11 @@ are skipped if they already interacted in 3bb loop!  */
 	si = 1;
 	while (si<=(mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%2-1) {
 #else
-	si = Start[i];
-	while (si<=Start[i] + (End[i]-Start[i]+1) - (End[i]-Start[i]+1)%2-1) {
+	int m;
+	si = Start[0];
+	for (m=0; m<procs; m++, si=Start[m])
+	{
+	while (si<=Start[m] + (End[m]-Start[m]+1) - (End[m]-Start[m]+1)%2-1) {
 #endif
 		int g_k, g_kp;
 		dt = SaveDt;
@@ -499,6 +502,9 @@ are skipped if they already interacted in 3bb loop!  */
 			set_star_EJ(kp);
 		}
 	}
+#ifndef USE_MPI
+     }
+#endif
 
     //MPI3: Reduction for File IO - relaxationfile
 #ifdef USE_MPI
