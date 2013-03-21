@@ -1194,10 +1194,11 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   
   kb = star[k].binind;
 #ifdef USE_MPI
-  int g_k = get_global_idx(k);
-  star_r[knew] = star_r[g_k];
-  star_m[knew] = binary[kb].bse_mass[kbi] * MSUN / units.mstar;
-  star_phi[knew] = star_phi[g_k];
+  long g_k = get_global_idx(k);
+  long g_knew = get_global_idx(knew);
+  star_r[g_knew] = star_r[g_k];
+  star_m[g_knew] = binary[kb].bse_mass[kbi] * MSUN / units.mstar;
+  star_phi[g_knew] = star_phi[g_k];
 #else
   /* and set the stars' dynamical properties */
   star[knew].r = star[k].r;
