@@ -227,7 +227,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 		  free(sigma_local_arr);
 	} 
 			
-
 /***********************************************/	
 
 
@@ -265,14 +264,6 @@ are skipped if they already interacted in 3bb loop!  */
 		k = si;
 		kp = si + 1;
 
-#ifdef USE_MPI
-		g_k = get_global_idx(k);
-		g_kp = get_global_idx(kp);
-#else
-		g_k = k;
-		g_kp = kp;
-#endif
-
 		//MPI2: Involves rng. To be handled later.	
 		// only let those stars that did not participate in 3bb formation interact/relax
 		while (star[si].threebb_interacted == 1) {
@@ -290,6 +281,13 @@ are skipped if they already interacted in 3bb loop!  */
 		si += 1; // iterate for the next interaction
 
 		/* The indices for the 2 stars that will interact are k and kp  */
+#ifdef USE_MPI
+		g_k = get_global_idx(k);
+		g_kp = get_global_idx(kp);
+#else
+		g_k = k;
+		g_kp = kp;
+#endif
 
 		/* set dynamical params for this pair */
 		calc_encounter_dyns(k, kp, v, vp, w, &W, &rcm, vcm, rng, 1);
