@@ -163,7 +163,9 @@ void dynamics_apply(double dt, gsl_rng *rng)
 						// Calculate RATE of binary formation
 
 						// Below is rate_3bb with all the velocity terms vrel_3 and vrel_12 replaced with the averaged local relative velocity, vrel_ave. We did this because we were finding that when we used the actual relative velocities, vrel12, if too large, the 3bb rate would be extremely low and binaries would not form (since it depends strongly on v: v^-9). When we replaced vrel12 with the average relative velocity (over 20 stars), the 3bb formation rate was high enough that binaries would form. We decided to use the average relative velocity for all relative velocity terms, vrel_3 and vrel_12.
-						rate_3bb = sqrt(2) * sqr(PI) * sqr(n_local) *  pow(vrel_ave, -9) * pow(((star[k1].m + star[k2].m) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m)) * eta_min);
+
+					// *Note* Factor of 0.5 in front of rate_3bb ensures that our sampling method produces the correct overall analytic 3bb rate
+					rate_3bb = 0.5 * sqrt(2) * sqr(PI) * sqr(n_local) *  pow(vrel_ave, -9) * pow(((star[k1].m + star[k2].m) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m)) * eta_min);
 
 						// Calculate PROBABILITY of binary formation
 						P_3bb = rate_3bb * (dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)));
