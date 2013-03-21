@@ -257,6 +257,66 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
   }
 }
 
+void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum,
+		double *mc, double *rc, double *menv, double *renv, double *ospin,
+		double *epoch, double *tms, double *tphys, double *tphysf,
+		double *dtp, double *z, double *zpars, double *vs) {
+  bse_binary tempbinary;
+
+  tempbinary.bse_mass0[0] = *mass;
+  tempbinary.bse_mass0[1] = 0.0;
+  tempbinary.bse_kw[0] = *kw;
+  tempbinary.bse_kw[1] = 15;
+  tempbinary.bse_mass[0] = *mt;
+  tempbinary.bse_mass[1] = 0.0;
+  tempbinary.bse_radius[0] = *r;
+  tempbinary.bse_radius[1] = 0.0;
+  tempbinary.bse_lum[0] = *lum;
+  tempbinary.bse_lum[1] = 0.0;
+  tempbinary.bse_massc[0] = *mc;
+  tempbinary.bse_massc[1] = 0.0;
+  tempbinary.bse_radc[0] = *rc;
+  tempbinary.bse_radc[1] = 0.0;
+  tempbinary.bse_menv[0] = *menv;
+  tempbinary.bse_menv[1] = 0.0;
+  tempbinary.bse_renv[0] = *renv;
+  tempbinary.bse_renv[1] = 0.0;
+  tempbinary.bse_ospin[0] = *ospin;
+  tempbinary.bse_ospin[1] = 0.0;
+  tempbinary.bse_B_0[0] = 0.0;
+  tempbinary.bse_B_0[1] = 0.0;
+  tempbinary.bse_bacc[0] = 0.0;
+  tempbinary.bse_bacc[1] = 0.0;
+  tempbinary.bse_tacc[0] = 0.0;
+  tempbinary.bse_tacc[1] = 0.0;
+  tempbinary.bse_epoch[0] = *epoch;
+  tempbinary.bse_epoch[1] = 0.0;
+  tempbinary.bse_tms[0] = *tms;
+  tempbinary.bse_tms[1] = 0.0;
+  tempbinary.bse_tb = 0.0;
+  tempbinary.e = 0.0;
+
+  bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]),
+      &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]),
+      &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]),
+      &(tempbinary.bse_ospin[0]), &(tempbinary.bse_B_0[0]), &(tempbinary.bse_bacc[0]), &(tempbinary.bse_tacc[0]),
+      &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]),
+      tphys, tphysf, dtp, z, zpars, &(tempbinary.bse_tb), &(tempbinary.e), vs);
+
+  *mass = tempbinary.bse_mass0[0];
+  *kw = tempbinary.bse_kw[0];
+  *mt = tempbinary.bse_mass[0];
+  *r = tempbinary.bse_radius[0];
+  *lum = tempbinary.bse_lum[0];
+  *mc = tempbinary.bse_massc[0];
+  *rc = tempbinary.bse_radc[0];
+  *menv = tempbinary.bse_menv[0];
+  *renv = tempbinary.bse_renv[0];
+  *ospin = tempbinary.bse_ospin[0];
+  *epoch = tempbinary.bse_epoch[0];
+  *tms = tempbinary.bse_tms[0];
+}
+
 /* set collision matrix */
 void bse_instar(void)
 {

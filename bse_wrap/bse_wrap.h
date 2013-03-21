@@ -83,6 +83,10 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
 		       double *mc, double *rc, double *menv, double *renv, double *ospin,
 		       double *epoch, double *tms, double *tphys, double *tphysf, 
 		       double *dtp, double *z, double *zpars, double *vs);
+void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum,
+		double *mc, double *rc, double *menv, double *renv, double *ospin,
+		double *epoch, double *tms, double *tphys, double *tphysf,
+		double *dtp, double *z, double *zpars, double *vs);
 void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
                 double *B_0, double *bacc, double *tacc,
