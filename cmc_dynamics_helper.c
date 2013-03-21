@@ -2094,11 +2094,7 @@ void break_wide_binaries(void)
 			j = star[k].binind;
 			
 			/* get relative velocity from velocity dispersion at binary's radial position */
-#ifdef USE_MPI
-			W = 4.0 * sigma_array.sigma[g_k] / sqrt(3.0 * PI);
-#else
 			W = 4.0 * sigma_array.sigma[k] / sqrt(3.0 * PI);
-#endif	
 		
 			/* this is an order of magnitude estimate for the orbital speed */
 #ifdef USE_MPI
