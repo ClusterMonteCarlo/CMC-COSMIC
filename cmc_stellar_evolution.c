@@ -230,6 +230,7 @@ void stellar_evolution_init(void){
 #ifndef USE_MPI
       curr_st = &st[findProcForIndex(k)];
 #endif
+      bse_set_taus113state(*curr_st, 0);
       bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
               &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
               &(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), 
