@@ -1064,11 +1064,14 @@ void comp_mass_percent(){
                     v2_tan_r[mcount] = buf_comm_recv[3];
                 }
             } else {
-                ke_rad_r[mcount] = ke_rad_prev_arr[k];
-                ke_tan_r[mcount] = ke_tan_prev_arr[k];
-                v2_rad_r[mcount] = v2_rad_prev_arr[k];
-                v2_tan_r[mcount] = v2_tan_prev_arr[k];
-            }
+					if(myid==0)
+					{
+						ke_rad_r[mcount] = ke_rad_prev_arr[k];
+						ke_tan_r[mcount] = ke_tan_prev_arr[k];
+						v2_rad_r[mcount] = v2_rad_prev_arr[k];
+						v2_tan_r[mcount] = v2_tan_prev_arr[k];
+					} 
+           }
 
 			mcount++;
 			if (mcount == MASS_PC_COUNT)
