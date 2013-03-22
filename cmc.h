@@ -311,6 +311,8 @@ typedef struct{
 #define PARAMDOC_AVEKERNEL "one half the number of stars over which to average certain quantities"
         int AVEKERNEL;
 #endif
+#define PARAMDOC_MIN_CHUNK_SIZE "minimum size of chunks that get partitioned across processors in the parallel code"
+        int MIN_CHUNK_SIZE;
 #define PARAMDOC_APSIDES_PRECISION "absolute precision of the roots of vr^2 for the numerical root finding algorithm."
         int APSIDES_PRECISION;
 #define PARAMDOC_APSIDES_MAX_ITER "maximum number of iterations to find the roots of vr^2 numerically"

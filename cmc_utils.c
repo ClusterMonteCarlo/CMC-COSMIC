@@ -1983,7 +1983,7 @@ void calc_potential_new()
 	mpi_potential_calculate();
 
 	//MPI2: Calculating indices which will be used in all loops till beginning of the main loop. The value 20 depends on the p value used in calc_sigma_new()
-	mpiFindIndicesCustom( clus.N_MAX, 20, myid, &mpiBegin, &mpiEnd );
+	mpiFindIndicesCustom( clus.N_MAX, MIN_CHUNK_SIZE, myid, &mpiBegin, &mpiEnd );
 #else
 	potential_calculate();
 #endif
@@ -2154,7 +2154,7 @@ void pre_sort_comm()
 #ifdef USE_MPI
 	int i;
 
-	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
+	mpiFindDispAndLenCustom( clus.N_MAX, MIN_CHUNK_SIZE, mpiDisp, mpiLen );
 
 	MPI_Datatype startype;
 	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
@@ -2235,7 +2235,7 @@ void post_sort_comm()
 #ifdef USE_MPI
 	double tmpTimeStart = timeStartSimple();
 	int i;
-	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
+	mpiFindDispAndLenCustom( clus.N_MAX, MIN_CHUNK_SIZE, mpiDisp, mpiLen );
 
 	double *temp_r = (double *) malloc( ((int)clus.N_MAX_NEW+1) * sizeof(double) );
 	double *temp_m = (double *) malloc( ((int)clus.N_MAX_NEW+1) * sizeof(double) );

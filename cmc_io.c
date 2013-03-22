@@ -1118,6 +1118,10 @@ if(myid==0) {
 				sscanf(values, "%li", &AVEKERNEL);
 				parsed.AVEKERNEL = 1;
 #endif
+			} else if (strcmp(parameter_name, "MIN_CHUNK_SIZE")== 0) {
+				PRINT_PARSED(PARAMDOC_MIN_CHUNK_SIZE);
+				sscanf(values, "%li", &MIN_CHUNK_SIZE);
+				parsed.MIN_CHUNK_SIZE = 1;
 			} else if (strcmp(parameter_name, "APSIDES_PRECISION")== 0) {
 				PRINT_PARSED(PARAMDOC_APSIDES_PRECISION);
 				sscanf(values, "%lf", &APSIDES_PRECISION);
@@ -1352,6 +1356,7 @@ if(myid==0) {
 	CHECK_PARSED(BH_LC_FDT, 0.0, PARAMDOC_BH_LC_FDT);
 	CHECK_PARSED(AVEKERNEL, 20, PARAMDOC_AVEKERNEL);
 #endif
+	CHECK_PARSED(MIN_CHUNK_SIZE, 20, PARAMDOC_MIN_CHUNK_SIZE);
 	CHECK_PARSED(APSIDES_PRECISION, 1.0e-11, PARAMDOC_APSIDES_PRECISION);
 	CHECK_PARSED(APSIDES_MAX_ITER, 100, PARAMDOC_APSIDES_MAX_ITER);
 	CHECK_PARSED(APSIDES_CONVERGENCE, 5.e-13, PARAMDOC_APSIDES_CONVERGENCE);
@@ -2298,10 +2303,10 @@ void print_denprof_snapshot(char* infile)
 	int i, j;
 	double m, den;
 	//fprintf(fp_denprof, "%ld\t", tcount);
-	for(i=1; i<clus.N_MAX-20; i+=20)
+	for(i=1; i<clus.N_MAX-MIN_CHUNK_SIZE; i+=MIN_CHUNK_SIZE)
 	{
 		m=0;
-		for(j=i; j<i+20; j++)
+		for(j=i; j<i+MIN_CHUNK_SIZE; j++)
 			m += star_m[j];
 
 		den = m * madhoc / (4 * PI * ( cub(star_r[i+19]) - cub(star_r[i]) ) / 3);

@@ -224,7 +224,7 @@ int compare_type (const void * a, const void * b)
 
 void find_expected_count( int* expected_count, int N, int numprocs )
 {
-	findLimits( N, 20 );
+	findLimits( N, MIN_CHUNK_SIZE );
 	int i;
 	for(i=0; i<procs; i++)
 		expected_count[i] = End[i] - Start[i] + 1;

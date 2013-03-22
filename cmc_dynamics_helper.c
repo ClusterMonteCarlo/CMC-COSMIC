@@ -1912,7 +1912,7 @@ double mpi_simul_relax_new(void)
 	double Mv2ave, Mave, M2ave, sigma;
 
 	N_LIMIT = clus.N_MAX;
-	p = 10; //For this value, the results are very close to the original simul_relax() function.
+	p = AVEKERNEL; //For this value, the results are very close to the original simul_relax() function.
 
 	//MPI2: Earlier the divion of stars among processors for this part was different, and the one for the main code was different to achieve maximum load balancing. But, in that case this function required communication with neighbors. So, it was changed such that both the main code and this function use the same kind of division of stars among processors. Now, stars are divided in sets of 20 to avoid communication caused due to this function.
 	//for (si=mpiBegin+p; si<mpiEnd-p; si+=2*p) {

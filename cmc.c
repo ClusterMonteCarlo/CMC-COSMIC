@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 	End = (int *) calloc(procs, sizeof(int));
 
 	/* MPI2: Calculating Start and End for mimcking parallel rng */
-	findLimits( cfd.NOBJ, 20 );
+	findLimits( cfd.NOBJ, MIN_CHUNK_SIZE );
 
 	//MPI3: Allocate N/procs + 10% for each node. Also allocate a separate buffer array for receiving ghost particles. File I/O, each process takes its slice of data. Also, assemble the global arrays - _m, and _r.
 	get_star_data(argc, argv, rng);
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 #ifdef USE_MPI
 	tmpTimeStart = timeStartSimple();
 	if (STELLAR_EVOLUTION > 0) {
-		mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
+		mpiFindDispAndLenCustom( clus.N_MAX, MIN_CHUNK_SIZE, mpiDisp, mpiLen );
 
 		for(i=0;i<procs;i++)
 			mpiLen[i] *= sizeof(double); 
@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
 
 		//Calculating Start and End values for each processor.
 		tmpTimeStart = timeStartSimple();
-		findLimits( clus.N_MAX, 20 );
+		findLimits( clus.N_MAX, MIN_CHUNK_SIZE );
 		timeEndSimple(tmpTimeStart, &t_oth);
 
 		tmpTimeStart = timeStartSimple();

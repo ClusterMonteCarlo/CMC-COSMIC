@@ -218,6 +218,7 @@ _EXTERN_ int CALCULATE10;
 _EXTERN_ double BH_LC_FDT;
 _EXTERN_ long AVEKERNEL;
 #endif
+_EXTERN_ long MIN_CHUNK_SIZE;
 _EXTERN_ long N_Q_TRACE;
 #ifdef DEBUGGING
 _EXTERN_ GHashTable *star_ids;
