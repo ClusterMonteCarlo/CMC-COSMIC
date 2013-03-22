@@ -317,7 +317,7 @@ void PrintFileOutput(void) {
 		m_sing_10 = 0.0;
 		m_10 = m_10_prev;
 
-		while (m_10 < 0.1 * Mtotal) {
+		while (m_10 < 0.1 * Mtotal && n_10 <= clus.N_MAX_NEW) {
             int g_n_10 = get_global_idx(n_10);
 			m_10 += star_m[g_n_10] / clus.N_STAR;
 
@@ -334,7 +334,9 @@ void PrintFileOutput(void) {
 
         n_10--; //since n_10 is initialized to 1 for all procs. So if summed, it'll give the wrong index.
         long buf_comm_long[3];
+        long buf_comm_long_recv[3];
         double buf_comm_dbl[3];
+        double buf_comm_dbl_recv[3];
 
         buf_comm_long[0] = n_sing_10;
         buf_comm_long[1] = n_bin_10;
@@ -342,19 +344,19 @@ void PrintFileOutput(void) {
 
         buf_comm_dbl[0] = m_sing_10;
         buf_comm_dbl[1] = m_bin_10;
-        buf_comm_dbl[2] = m_10;
+        buf_comm_dbl[2] = m_10 - m_10_prev; //bugfix: subrtaction is reqd, otherwise m_10 of proc 0 will be added proc times, of proc 1 added proc-1 times and so on.
 
         //MPI3: Since only root node is printing Allreduce is not reqd.
-        MPI_Reduce(MPI_IN_PLACE, buf_comm_long, 3, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-        MPI_Reduce(MPI_IN_PLACE, buf_comm_dbl, 3, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(buf_comm_long, buf_comm_long_recv, 3, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(buf_comm_dbl, buf_comm_dbl_recv, 3, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
-        n_sing_10 = buf_comm_long[0];
-        n_bin_10 = buf_comm_long[1];
-        n_10 = buf_comm_long[2];
+        n_sing_10 = buf_comm_long_recv[0];
+        n_bin_10 = buf_comm_long_recv[1];
+        n_10 = buf_comm_long_recv[2];
 
-        m_sing_10 = buf_comm_dbl[0];
-        m_bin_10 = buf_comm_dbl[1];
-        m_10 = buf_comm_dbl[2];
+        m_sing_10 = buf_comm_dbl_recv[0];
+        m_bin_10 = buf_comm_dbl_recv[1];
+        m_10 = buf_comm_dbl_recv[2];
 
 		/* exit if not enough stars */
         if(myid==0)
