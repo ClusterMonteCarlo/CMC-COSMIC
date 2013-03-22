@@ -462,6 +462,10 @@ void do_stellar_evolution(gsl_rng *rng)
         /*  set_star_EJ(k); */
         /* } */
 		
+	/* PDK search for boom stuff and write pulsar data. */
+		//bcm_boom_search(k, vs, getCMCvalues);
+		pulsar_write(k, VKO);
+
 		if (WRITE_BH_INFO) {
 			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
 				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g\n", TotalTime, star[k].r, star[k].id,star[k].se_mass, star[k].se_mt, VKO); 
@@ -1131,12 +1135,84 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     destroy_obj(k);
   } else {
     dprintf("unhandled binary outcome!\n");
+  /* End by looking for boom stuff to log and log pulsar info */
+  if (knew) {
+    //bcm_boom_search(knew, vs, getCMCvalues);
+    pulsar_write(knew, VKO);
+  } else {
+    //bcm_boom_search(k, vs, getCMCvalues);
+    pulsar_write(k, VKO);
+  }
     dprintf("bse_mass0=%g bse_mass1=%g tb=%g\n", 
       binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_tb);
     exit_cleanly(-1, __FUNCTION__);
   }
 }
 
+/* Output info of pulsars */
+void pulsar_write(long k, double kick)
+{
+	long b;
+	double phi_r0, phi_rt, spin, twopi=6.283185307179586, yearsc=31557600;
+	int g_k;
+	double r, phi;
+
+#ifdef USE_MPI
+	g_k = get_global_idx(k);
+	r = star_r[g_k];
+	phi = star_phi[g_k];
+#else
+	g_k = k;
+	r = star[k].r;
+	phi = star[k].phi;
+#endif
+
+	phi_r0 = potential(0.0);
+	phi_rt = potential(Rtidal);
+	b = star[k].binind;
+	if(b>0) {
+		//BINARIES
+		if(binary[b].bse_kw[0]==13){
+			spin = (twopi*yearsc)/binary[b].bse_ospin[0];
+	  		parafprintf(pulsarfile,"%ld %.8g %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld %d %.8g %g %g %g %g %g %g %g %g %g %g %g\n", tcount, TotalTime, star[k].id, star[k].r_peri, star[k].r_apo, r, star[k].vr, star[k].vt, phi, phi_r0, phi_rt, kick, binary[b].id1, binary[b].id2, binary[b].bse_kw[1], spin, binary[b].bse_bcm_B[0], binary[b].bse_bcm_formation[0], binary[b].bse_bacc[0], binary[b].bse_tacc[0], binary[b].bse_B_0[0], binary[b].bse_tb, binary[b].bse_mass[1], binary[b].bse_mass[0], binary[b].e, binary[b].bse_bcm_radrol[1], binary[b].bse_bcm_dmdt[0]);
+		}
+		if(binary[b].bse_kw[1]==13){
+		        spin = (twopi*yearsc)/binary[b].bse_ospin[0];
+	  		parafprintf(pulsarfile,"%ld %.8g %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld %d %.8g %g %g %g %g %g %g %g %g %g %g %g\n", tcount, TotalTime, star[k].id, star[k].r_peri, star[k].r_apo, r, star[k].vr, star[k].vt, phi, phi_r0, phi_rt, kick, binary[b].id2, binary[b].id1, binary[b].bse_kw[0], spin, binary[b].bse_bcm_B[1], binary[b].bse_bcm_formation[1], binary[b].bse_bacc[1], binary[b].bse_tacc[1], binary[b].bse_B_0[1], binary[b].bse_tb, binary[b].bse_mass[0], binary[b].bse_mass[1], binary[b].e, binary[b].bse_bcm_radrol[0], binary[b].bse_bcm_dmdt[1]);
+
+		}
+	} else {
+		//ISOLATED
+		if(star[k].se_k==13){
+		  spin = (twopi*yearsc)/star[k].se_ospin;
+		  parafprintf(pulsarfile,"%ld %.8g %ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g  0  0  0 %.8g %g %g %g %g %g  0.0  0.0 %g  0.0  0.0  0.0\n", tcount, TotalTime, star[k].id, star[k].r_peri, star[k].r_apo, r, star[k].vr, star[k].vt, phi, phi_r0, phi_rt, kick, spin, star[k].se_scm_B, star[k].se_scm_formation, star[k].se_bacc, star[k].se_tacc, star[k].se_B_0, star[k].se_mt);
+
+		}
+	}
+}
+
+/* outputs boom information */
+//void boomoutput(long int s_id, double kick, double remtype, int(*getCMCvalues)(long int s_id, *double TC, *double TT, *long ID, *int )
+
+void getCMCvalues(long s_id, double kick, int remtype1, int remtype2, int progtype1, int progtype2, double formation, int boomtype, int boomstar)
+{
+// here kick should be total kick(s) received by that star in the timestep that the star exploded. It might be that two stars exploded in the one timestep. Then kick (for that star) is magnitude of both kicks (direct and indirect) that star received...
+	double phi_r0, phi_rt;
+	phi_r0 = potential(0.0);
+	phi_rt = potential(Rtidal);
+	if(boomtype==1){
+// 	  fprintf(boomlog,"%s %ld %.8g %ld %d %d %d %d %d %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld %g %d\n", "NS", tcount, TotalTime, star[s_id].id, star[s_id].se_k, remtype1, remtype2, progtype1, progtype2, star[s_id].r_peri, star[s_id].r_apo, star[s_id].r, star[s_id].vr, star[s_id].vt, kick, star[s_id].phi, phi_r0, phi_rt, binary[star[s_id].binind].id1, binary[star[s_id].binind].id2, formation, boomstar);
+	} else if (boomtype==2){
+//		fprintf(boomlog,"%s %ld %.8g %ld %d %d %d %d %d %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld %g %d\n", "SDS_1a", tcount, TotalTime, star[s_id].id, star[s_id].se_k, remtype1, remtype2, progtype1, progtype2, star[s_id].r_peri, star[s_id].r_apo, star[s_id].r, star[s_id].vr, star[s_id].vt, kick, star[s_id].phi, phi_r0, phi_rt, binary[star[s_id].binind].id1, binary[star[s_id].binind].id2, formation, boomstar);
+	} else if (boomtype==3){
+//		fprintf(boomlog,"%s %ld %.8g %ld %d %d %d %d %d %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld %g %d\n", "DDS_1a", tcount, TotalTime, star[s_id].id, star[s_id].se_k, remtype1, remtype2, progtype1, progtype2, star[s_id].r_peri, star[s_id].r_apo, star[s_id].r, star[s_id].vr, star[s_id].vt, kick, star[s_id].phi, phi_r0, phi_rt, binary[star[s_id].binind].id1, binary[star[s_id].binind].id2, formation, boomstar);
+	} else if (boomtype==4){
+//		fprintf(boomlog,"%s %ld %.8g %ld %d %d %d %d %d %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld %g %d\n", "BH", tcount, TotalTime, star[s_id].id, star[s_id].se_k, remtype1, remtype2, progtype1, progtype2, star[s_id].r_peri, star[s_id].r_apo, star[s_id].r, star[s_id].vr, star[s_id].vt, kick, star[s_id].phi, phi_r0, phi_rt, binary[star[s_id].binind].id1, binary[star[s_id].binind].id2, formation, boomstar);
+	} else {
+//		fprintf(boomlog,"%s %ld %.8g %ld %d %d %d %d %d %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld %g %d\n", "DBUG", tcount, TotalTime, star[s_id].id, star[s_id].se_k, remtype1, remtype2, progtype1, progtype2, star[s_id].r_peri, star[s_id].r_apo, star[s_id].r, star[s_id].vr, star[s_id].vt, kick, star[s_id].phi, phi_r0, phi_rt, binary[star[s_id].binind].id1, binary[star[s_id].binind].id2, formation, boomstar);
+        }
+}
+// Meagan: count different types of bh-objects; at end of timestep, we'll print these totals
 // Meagan: count different types of bh-objects; at end of timestep, we'll print these totals
 void bh_count(long k) {
 	long b;

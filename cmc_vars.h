@@ -71,24 +71,24 @@ _EXTERN_ binary_t *binary;
 /* file pointers */
 _EXTERN_ FILE *lagradfile, *dynfile, *lagrad10file, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
-_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
+_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *pulsarfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
 _EXTERN_ FILE *fp_lagrad, *fp_log, *fp_denprof;
 // Meagan: file for tracking potential fluctuations for innermost 1000 stars
 
 #ifdef USE_MPI
 /* Corresponding MPI File(pointer)s */
-_EXTERN_ MPI_File mpi_logfile, mpi_binintfile, mpi_escfile, mpi_collisionfile, mpi_tidalcapturefile, mpi_semergedisruptfile, mpi_removestarfile, mpi_relaxationfile;
+_EXTERN_ MPI_File mpi_logfile, mpi_binintfile, mpi_escfile, mpi_collisionfile, mpi_pulsarfile, mpi_tidalcapturefile, mpi_semergedisruptfile, mpi_removestarfile, mpi_relaxationfile;
 
 /* String buffers and int's to store their lengths which save intermediate values and finally flush it out to files usin MPI-IO */
-_EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_binintfile_buf[STR_BUF_LEN], mpi_collisionfile_buf[STR_BUF_LEN], mpi_tidalcapturefile_buf[STR_BUF_LEN], mpi_semergedisruptfile_buf[STR_BUF_LEN], mpi_removestarfile_buf[STR_BUF_LEN], mpi_relaxationfile_buf[STR_BUF_LEN];
+_EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_binintfile_buf[STR_BUF_LEN], mpi_collisionfile_buf[STR_BUF_LEN], mpi_pulsarfile_buf[STR_BUF_LEN], mpi_tidalcapturefile_buf[STR_BUF_LEN], mpi_semergedisruptfile_buf[STR_BUF_LEN], mpi_removestarfile_buf[STR_BUF_LEN], mpi_relaxationfile_buf[STR_BUF_LEN];
 
-_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
+_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
 
 /* Variables to maintail the length of the buffers until the next flush, and the total offset of the file */
-_EXTERN_ int mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_tidalcapturefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
+_EXTERN_ int mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_pulsarfile_len, mpi_tidalcapturefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
 
-_EXTERN_ int mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
+_EXTERN_ int mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_pulsarfile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
 
 /* Meagan's 3bb files */
 _EXTERN_ MPI_File mpi_bhsummaryfile, mpi_escbhsummaryfile, mpi_newbhfile, mpi_threebbfile, mpi_threebbprobabilityfile, mpi_lightcollisionfile, mpi_threebbdebugfile;

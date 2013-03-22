@@ -704,6 +704,7 @@ void PrintParaFileOutput(void)
     mpi_para_file_write(mpi_semergedisruptfile_wrbuf, &mpi_semergedisruptfile_len, &mpi_semergedisruptfile_ofst_total, &mpi_semergedisruptfile);
     mpi_para_file_write(mpi_removestarfile_wrbuf, &mpi_removestarfile_len, &mpi_removestarfile_ofst_total, &mpi_removestarfile);
     mpi_para_file_write(mpi_relaxationfile_wrbuf, &mpi_relaxationfile_len, &mpi_relaxationfile_ofst_total, &mpi_relaxationfile);
+    mpi_para_file_write(mpi_pulsarfile_wrbuf, &mpi_pulsarfile_len, &mpi_pulsarfile_ofst_total, &mpi_pulsarfile);
 
     /* Meagan's 3bb files */
     if (WRITE_BH_INFO)
@@ -1685,6 +1686,10 @@ if(myid==0)
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_relaxationfile);
     MPI_File_set_size(mpi_relaxationfile, 0);
 
+    sprintf(outfile, "%s.pulsars.dat", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_pulsarfile);
+    MPI_File_set_size(mpi_pulsarfile, 0);
+
     if (THREEBODYBINARIES)
     {
         sprintf(outfile, "%s.3bb.log", outprefix);
@@ -1770,6 +1775,14 @@ if(myid==0)
 		exit(1);
 	}
 
+	/* Pulsar log file */
+	sprintf(outfile, "%s.pulsars.dat", outprefix);
+	//if ((pulsarfile = gzopen(outfile, outfilemode)) == NULL) {
+	if ((pulsarfile = fopen(outfile, outfilemode)) == NULL) {
+		eprintf("cannot create pulsar file \"%s\".\n", outfile);
+		exit(1);
+	}
+
     if (THREEBODYBINARIES)
     {
         /* Meagan: output file for three-body binary formation */
@@ -1840,6 +1853,8 @@ if(myid==0)
 		pararootfprintf(newbhfile,"#:time #:r #:ID #:m_progenitor #:bh mass #:kick[km/s]\n");
 //"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
 
+	/* print header */
+	pararootfprintf(pulsarfile, "tcount    TotalTime    Star_id      Rperi    Rapo    R     VR    VT    PHI    PHIr0    PHIrt    kick    Binary_id1    Binary_id2    kw2     P     B    formation     bacc    tacc    B0   TB     M2    M1     e     R2/RL2     dm1/dt   \n");
 }
 
 
@@ -1894,6 +1909,7 @@ void close_node_buffers(void)
 	fclose(tidalcapturefile);
 	fclose(semergedisruptfile);
 	fclose(relaxationfile);
+	fclose(pulsarfile);
 	/*Sourav: closing the file I opened*/
 	fclose(removestarfile);
     /* Meagan: close 3bb log file */
@@ -1920,6 +1936,7 @@ void mpi_close_node_buffers(void)
 	MPI_File_close(&mpi_tidalcapturefile);
 	MPI_File_close(&mpi_semergedisruptfile);
 	MPI_File_close(&mpi_relaxationfile);
+	MPI_File_close(&mpi_pulsarfile);
 	/*Sourav: closing the file I opened*/
 	MPI_File_close(&mpi_removestarfile);
     /* Meagan: close 3bb log file */
