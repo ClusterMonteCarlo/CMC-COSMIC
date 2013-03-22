@@ -415,35 +415,25 @@ int main(int argc, char *argv[])
 
 
 		print_results();
-/*
 
-#ifdef USE_MPI
-		if(myid==0)
-#endif
-			print_snapshot_windows();
-*/
+		print_snapshot_windows();
+
 		tcount++;
 		timeEndSimple(tmpTimeStart, &t_oth);
-
 
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
 		 */
-/*
-#ifdef USE_MPI
-	if(myid==0)
-#endif
 		if(tcount%SNAPSHOT_DELTACOUNT==0) {
 			print_2Dsnapshot();
 			if (WRITE_STELLAR_INFO) {
 				write_stellar_data();
 			}
-		}		
+		}
 		// Meagan - bh snapshot
 		if(tcount%BH_SNAPSHOT_DELTACOUNT==0) {
 			print_bh_snapshot();
-		}		
-*/
+		}
 
 	} /* End FOR (time step iteration loop) */
 

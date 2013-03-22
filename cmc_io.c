@@ -47,58 +47,17 @@ void print_results(void){
 /*********** Output 2D/3D snapshots **************/
 void print_2Dsnapshot(void)
 {
-/*
 	long i, j;
 	j=0;
 	char outfile[100];
-	
+
 	if (SNAPSHOTTING) {
 		// open file for 2D snapshot 
 		sprintf(outfile, "%s.snap%04ld.dat.gz", outprefix, snap_num);
-		if ((snapfile = (FILE *) gzopen(outfile, "wb")) == NULL) {
-			eprintf("cannot create 2D snapshot file %s\n", outfile);
-			exit_cleanly(1);
-		}
-		
-		// print useful header 
-		gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
-		gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.star.phi\n");
-
-		// then print data 
-		for (i=1; i<=clus.N_MAX; i++) {
-			gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
-				 star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, 
-				 star[i].r, star[i].vr, star[i].vt, 
-				 star[i].E, star[i].J);
-			if (star[i].binind) {
-				j = star[i].binind;
-				gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
-					 binary[j].m1 * (units.m / clus.N_STAR) / MSUN, 
-					 binary[j].m2 * (units.m / clus.N_STAR) / MSUN, 
-					 binary[j].id1, binary[j].id2,
-					 binary[j].a * units.l / AU, binary[j].e);
-			} else {
-				gzprintf(snapfile, "0 0 0 0 0 0 0 ");	
-			}
-			
-			if (star[i].binind == 0) {
-				gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 ", 
-					 star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
-			} else {
-				gzprintf(snapfile, "0 0 0 %d %d %.8g %.8g %.8g %.8g ",
-					binary[j].bse_kw[0], binary[j].bse_kw[1], 
-					binary[j].bse_lum[0], binary[j].bse_lum[1],
-					binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN);
-			}
-			gzprintf(snapfile, "%0.12g\n", star[i].phi);
-		}
-		
-		gzclose(snapfile);
-		
+		write_snapshot(outfile, 0);
 		// global counter for snapshot output file 
 		snap_num++;
 	}
-*/
 }
 
 
@@ -110,46 +69,7 @@ void print_bh_snapshot(void) {
 		/* open file for BH snapshot */
 	
 		sprintf(outfile, "%s.bhinfo%04ld.dat.gz", outprefix, bh_snap_num);
-		if ((snapfile = (FILE *) gzopen(outfile, "wb")) == NULL) {
-			eprintf("cannot create bh snapshot file %s\n", outfile);
-			exit_cleanly(1, __FUNCTION__);
-		}
-		
-		/* print useful header */
-		gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
-		gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] #24:star.phi\n");
-
-		/* then print data */
-		for (i=1; i<=clus.N_MAX; i++) {
-			j=star[i].binind;
-			if (star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14) { // object contains a BH (either single BH or a binary with at least one BH)
-				gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
-					 star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, 
-					 star[i].r, star[i].vr, star[i].vt, 
-					 star[i].E, star[i].J);
-				if (j) {
-					gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
-						 binary[j].m1 * (units.m / clus.N_STAR) / MSUN, 
-						 binary[j].m2 * (units.m / clus.N_STAR) / MSUN, 
-						 binary[j].id1, binary[j].id2,
-						 binary[j].a * units.l / AU, binary[j].e);
-				} else {
-					gzprintf(snapfile, "0 0 0 0 0 0 0 ");	
-				}
-			
-				if (star[i].binind == 0) {
-					gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 ", 
-						 star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
-				} else {
-					gzprintf(snapfile, "0 0 0 %d %d %.8g %.8g %.8g %.8g ",
-						binary[j].bse_kw[0], binary[j].bse_kw[1], 
-						binary[j].bse_lum[0], binary[j].bse_lum[1],
-						binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN);
-				}
-				gzprintf(snapfile, "%0.12g\n", star[i].phi);
-			}
-		}
-		gzclose(snapfile);
+		write_snapshot(outfile, 1);
 
 		/* global counter for snapshot output file */
 		bh_snap_num++;
@@ -2199,8 +2119,8 @@ void print_snapshot_windows(void) {
     if (total_time>= start+step_counter*step && total_time<=stop) {
       char outfile[100];
       sprintf(outfile, "%s.w%02i_snap%04d.dat.gz", outprefix, i+1, step_counter+1);
-      //write_snapshot(outfile);
-		print_denprof_snapshot(outfile);
+      write_snapshot(outfile, 0);
+//		print_denprof_snapshot(outfile);
 
       snapshot_window_counters[i]++;
       dprintf("Wrote snapshot #%i for time window %i (%s) at time %g %s.\n", step_counter+1, i+1, outfile, 
@@ -2224,51 +2144,94 @@ int valid_snapshot_window_units(void) {
   return (valid);
 }
 
-void write_snapshot(char *filename) {
-  long i, j;
+// if bh_only>0 this'll print only BHs.
+void write_snapshot(char *filename, int bh_only) {
+	long i, j;
 	j=0;
+	double m, r, phi;
 
-  if ((snapfile = (FILE *) gzopen(filename, "wb")) == NULL) {
-    eprintf("cannot create 2D snapshot file %s\n", filename);
-    exit_cleanly(1, __FUNCTION__);
-  }
+#ifdef USE_MPI
+	//Serializing the snapshot printing.
+	int k;
+	for(k=0; k<procs; k++)
+	{
+		if(myid==k)
+		{
+			//removing file if already exists.
+			if(myid==0)
+				remove(filename);
+#endif
 
-  /* print useful header */
-  gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
-  gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.star.phi\n");
+			if ((snapfile = (FILE *) gzopen(filename, "ab")) == NULL) {
+				eprintf("cannot create 2D snapshot file %s\n", filename);
+				exit_cleanly(1, __FUNCTION__);
+			}
 
-  /* then print data */
-  for (i=1; i<=clus.N_MAX; i++) {
-    gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ", 
-        star[i].id, star[i].m * (units.m / clus.N_STAR) / MSUN, 
-        star[i].r, star[i].vr, star[i].vt, 
-        star[i].E, star[i].J);
-    if (star[i].binind) {
-      j = star[i].binind;
-      gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ", 
-          binary[j].m1 * (units.m / clus.N_STAR) / MSUN, 
-          binary[j].m2 * (units.m / clus.N_STAR) / MSUN, 
-          binary[j].id1, binary[j].id2,
-          binary[j].a * units.l / AU, binary[j].e);
-    } else {
-      gzprintf(snapfile, "0 0 0 0 0 0 0 ");	
-    }
+#ifdef USE_MPI
+			//Header printed only by root node.
+			if(myid==0)
+			{
+#endif
+				// print useful header
+				gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
+				gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.star.phi\n");
+#ifdef USE_MPI
+			}
+#endif
 
-    if (star[i].binind == 0) {
-      gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 ", 
-          star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
-    } else {
-      gzprintf(snapfile, "0 0 0 %d %d %.8g %.8g %.8g %.8g ",
-          binary[j].bse_kw[0], binary[j].bse_kw[1], 
-          binary[j].bse_lum[0], binary[j].bse_lum[1],
-          binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN);
-    }
-    gzprintf(snapfile, "%0.12g\n", star[i].phi);
-  }
+			// then print data
+#ifdef USE_MPI
+			for (i=1; i<=clus.N_MAX_NEW; i++) {
+				long g_i = get_global_idx(i);
+				m = star_m[g_i];
+				r = star_r[g_i];
+				phi = star_phi[g_i];
+#else
+			for (i=1; i<=clus.N_MAX; i++) {
+				m = star[i].m;
+				r = star[i].r;
+				phi = star[i].phi;
+#endif
+				j=star[i].binind;
+				if( (bh_only==0) || ( (bh_only!=0) && (star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14) ) )
+				{
+					gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ",
+							star[i].id, m * (units.m / clus.N_STAR) / MSUN,
+							r, star[i].vr, star[i].vt,
+							star[i].E, star[i].J);
+					if (j) {
+						gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ",
+								binary[j].m1 * (units.m / clus.N_STAR) / MSUN,
+								binary[j].m2 * (units.m / clus.N_STAR) / MSUN,
+								binary[j].id1, binary[j].id2,
+								binary[j].a * units.l / AU, binary[j].e);
+					} else {
+						gzprintf(snapfile, "0 0 0 0 0 0 0 ");
+					}
 
-  gzclose(snapfile);
+					if (j == 0) {
+						gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 ",
+								star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
+					} else {
+						gzprintf(snapfile, "0 0 0 %d %d %.8g %.8g %.8g %.8g ",
+								binary[j].bse_kw[0], binary[j].bse_kw[1],
+								binary[j].bse_lum[0], binary[j].bse_lum[1],
+								binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN);
+					}
+					gzprintf(snapfile, "%0.12g\n", phi);
+				}
+			}
+			gzclose(snapfile);
+
+#ifdef USE_MPI
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+	}
+#endif
+
 }
 
+// smaller snapshot outputting limited data.
 void print_denprof_snapshot(char* infile)
 {
 #ifdef USE_MPI

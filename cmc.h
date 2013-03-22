@@ -852,7 +852,7 @@ void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_
 void parse_snapshot_windows(char *option_string);
 void print_snapshot_windows(void);
 int valid_snapshot_window_units(void);
-void write_snapshot(char *filename);
+void write_snapshot(char *filename, int bh_only);
 
 #include "cmc_bse_utils.h"
 
