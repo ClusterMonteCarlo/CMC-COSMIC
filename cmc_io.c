@@ -502,16 +502,15 @@ void PrintFileOutput(void) {
 #endif
 
 	/* also saves INITIAL snapshot (StepCount=0) */
-/*
 	if (TotalTime >= SNAPSHOT_DELTAT * StepCount) {
 		StepCount++;
-		//print_2Dsnapshot();
+		print_2Dsnapshot();
 		if (WRITE_STELLAR_INFO){
 			write_stellar_data();	
 		}
 	}
 	print_snapshot_windows();
-*/
+
 	free(multimassr_empty);
 
 	/* Meagan - extra output for bhs */
