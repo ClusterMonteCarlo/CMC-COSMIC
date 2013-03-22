@@ -250,10 +250,12 @@ void stellar_evolution_init(void){
   }
 
 #ifdef USE_MPI
+	double tmpTimeStart = timeStartSimple();
   //if(myid==0)
     MPI_Allreduce(MPI_IN_PLACE, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   //else
   //  MPI_Allreduce(&DMse, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	timeEndSimple(tmpTimeStart, &t_comm);
 #else
   for(i=0; i<procs; i++)
     DMse += DMse_mimic[i];
@@ -536,6 +538,7 @@ void do_stellar_evolution(gsl_rng *rng)
   }
 
 #ifdef USE_MPI
+  double tmpTimeStart = timeStartSimple();
   double temp = 0.0;
 
   MPI_Status stat;
@@ -549,6 +552,7 @@ void do_stellar_evolution(gsl_rng *rng)
       MPI_Recv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &stat);
       DMse += temp;
     }
+	timeEndSimple(tmpTimeStart, &t_comm);
 #else
   for(i=0; i<procs; i++)
     DMse += DMse_mimic[i];

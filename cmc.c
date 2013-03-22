@@ -28,14 +28,16 @@ int main(int argc, char *argv[])
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
 	//MPI3: There might be overhead if timing is done due to MPI_Barriers.
-	double tmpTimeStart, tmpTimeStart_full;
-	double t_full=0.0, t_init=0.0, t_sort=0.0, t_ener=0.0, t_se=0.0, t_dyn=0.0, t_orb=0.0, t_oth=0.0;
+	double tmpTimeStart, tmpTimeStart_init, tmpTimeStart_full;
+	double t_full=0.0, t_init=0.0, t_cen_calc=0.0, t_timestep=0.0, t_dyn=0.0, t_se=0.0, t_orb=0.0, t_tid_str=0.0, t_sort=0.0, t_postsort_comm=0.0, t_pot_cal=0.0, t_ener_con3=0.0, t_calc_io_vars1=0.0, t_calc_io_vars2=0.0, t_io=0.0, t_io_ignore=0.0, t_comp_ener=0.0, t_upd_vars=0.0, t_oth=0.0;
 	t_sort_only=0.0;
-	t_load_bal=0.0;
-	t_sort1=0.0;
-	t_sort2=0.0;
-	t_sort3=0.0;
-	t_sort4=0.0;
+	t_sort_lb=0.0;
+	t_sort_lsort1=0.0;
+	t_sort_splitters=0.0;
+	t_sort_a2a=0.0;
+	t_sort_lsort2=0.0;
+	t_sort_oth=0.0;
+	t_comm=0.0;
 
 #ifdef USE_MPI
 	//MPI2: Some code from the main branch might have been removed in the MPI version. Please check.
@@ -54,7 +56,13 @@ int main(int argc, char *argv[])
 	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
 
-	tmpTimeStart = timeStartSimple();
+#ifdef USE_MPI
+	tmpTimeStart_init = MPI_Wtime();
+#else
+	struct timeval tim;
+	gettimeofday(&tim, NULL);
+	tmpTimeStart_init=tim.tv_sec+(tim.tv_usec/1000000.0);
+#endif
 
 	/* set some important global variables */
 	set_global_vars1();
@@ -69,6 +77,7 @@ int main(int argc, char *argv[])
 	//Currently doing on all nodes to avoid broadcasting of global variables. Later, might have to be split into 2 or more functions, and store all global variables into a structure for easy broadcast.
 	/* parse input */
 	parser(argc, argv, rng); //to do parallel i/o
+
 
 	Start = (int *) calloc(procs, sizeof(int));
 	End = (int *) calloc(procs, sizeof(int));
@@ -223,6 +232,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef USE_MPI
+	tmpTimeStart = timeStartSimple();
 	if (STELLAR_EVOLUTION > 0) {
 		mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
@@ -239,9 +249,17 @@ int main(int argc, char *argv[])
 				MPI_Recv(&star_m[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
 		MPI_Bcast(star_m, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	}
+	timeEndSimple(tmpTimeStart, &t_comm);
 #endif
-	timeEndSimple(tmpTimeStart, &t_init);
-	tmpTimeStart_full = timeStartSimple();
+
+#ifdef USE_MPI
+	t_init = MPI_Wtime() - tmpTimeStart_init;
+	tmpTimeStart_full = MPI_Wtime();
+#else
+	gettimeofday(&tim, NULL);
+	t_init += tim.tv_sec+(tim.tv_usec/1000000.0) - tmpTimeStart_init;
+	tmpTimeStart_full=tim.tv_sec+(tim.tv_usec/1000000.0);
+#endif
 
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
@@ -272,30 +290,38 @@ int main(int argc, char *argv[])
 		TidalMassLoss = 0.0;
 		Etidal = 0.0;
 #endif
+		timeEndSimple(tmpTimeStart, &t_oth);
 
 		/* calculate central quantities */
+		tmpTimeStart = timeStartSimple();
 		central_calculate();
+		timeEndSimple(tmpTimeStart, &t_cen_calc);
 
+		/* calculate timestep */
+		tmpTimeStart = timeStartSimple();
 		calc_timestep(rng);
+		timeEndSimple(tmpTimeStart, &t_timestep);
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
+		tmpTimeStart = timeStartSimple();
 #ifdef USE_MPI
 		clus.N_MAX_NEW = mpiEnd-mpiBegin+1;
 #else
 		clus.N_MAX_NEW = clus.N_MAX;
 #endif
+		timeEndSimple(tmpTimeStart, &t_oth);
 
-		tmpTimeStart = timeStartSimple();
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
 		//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
+		tmpTimeStart = timeStartSimple();
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 		timeEndSimple(tmpTimeStart, &t_dyn);
 
-		tmpTimeStart = timeStartSimple();
 
 		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
+		tmpTimeStart = timeStartSimple();
 		if (STELLAR_EVOLUTION > 0)
 			do_stellar_evolution(rng);
 		timeEndSimple(tmpTimeStart, &t_se);
@@ -326,42 +352,50 @@ int main(int argc, char *argv[])
 		toy_rejuvenation();
 		timeEndSimple(tmpTimeStart, &t_oth);
 
-		tmpTimeStart = timeStartSimple();
 		/* this calls get_positions() */
+		tmpTimeStart = timeStartSimple();
 		new_orbits_calculate();
 		timeEndSimple(tmpTimeStart, &t_orb);
 
-		tmpTimeStart = timeStartSimple();
 		/* more numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
+		tmpTimeStart = timeStartSimple();
 		energy_conservation2();
+		timeEndSimple(tmpTimeStart, &t_oth);
 
+		tmpTimeStart = timeStartSimple();
 		tidally_strip_stars();
+		timeEndSimple(tmpTimeStart, &t_tid_str);
 
 		/* Compute Intermediate Energies of stars. 
 		 * Also transfers new positions and velocities from srnew[], 
 		 * svrnew[], svtnew[] to sr[], svr[], svt[], and saves srOld[] 
 		 */
+		tmpTimeStart = timeStartSimple();
 		ComputeIntermediateEnergy();
-
 		timeEndSimple(tmpTimeStart, &t_oth);
+
 
 		tmpTimeStart = timeStartSimple();
 		qsorts_new();
-
-		post_sort_comm();
 		timeEndSimple(tmpTimeStart, &t_sort);
 
 		tmpTimeStart = timeStartSimple();
+		post_sort_comm();
+		timeEndSimple(tmpTimeStart, &t_postsort_comm);
+
+		tmpTimeStart = timeStartSimple();
 		calc_potential_new();
+		timeEndSimple(tmpTimeStart, &t_pot_cal);
 
 		//Calculating Start and End values for each processor.
+		tmpTimeStart = timeStartSimple();
 		findLimits( clus.N_MAX, 20 );
 		timeEndSimple(tmpTimeStart, &t_oth);
 
 		tmpTimeStart = timeStartSimple();
 		energy_conservation3();
-		timeEndSimple(tmpTimeStart, &t_ener);
+		timeEndSimple(tmpTimeStart, &t_ener_con3);
 
 		//commenting out for MPI
 		/*
@@ -369,19 +403,31 @@ int main(int argc, char *argv[])
 			search_grid_update(r_grid);
 		 */
 	
+		tmpTimeStart = timeStartSimple();
 		comp_mass_percent();
+		timeEndSimple(tmpTimeStart, &t_calc_io_vars1);
+
+		tmpTimeStart = timeStartSimple();
 		comp_multi_mass_percent();
+		timeEndSimple(tmpTimeStart, &t_calc_io_vars2);
 
 		tmpTimeStart = timeStartSimple();
 		compute_energy_new();
+		timeEndSimple(tmpTimeStart, &t_comp_ener);
 
+		tmpTimeStart = timeStartSimple();
 		reset_interaction_flags();
+		timeEndSimple(tmpTimeStart, &t_oth);
 
 		//MPI2: Commenting out for MPI
 		/* update variables, then print */
+		tmpTimeStart = timeStartSimple();
 		update_vars();
+		timeEndSimple(tmpTimeStart, &t_upd_vars);
 
+		tmpTimeStart = timeStartSimple();
 		calc_clusdyn_new();
+		timeEndSimple(tmpTimeStart, &t_oth);
 
 		//MPI2: Commenting out for MPI
 		/*
@@ -414,12 +460,12 @@ int main(int argc, char *argv[])
 */
 
 
+		tmpTimeStart = timeStartSimple();
 		print_results();
 
 		print_snapshot_windows();
 
 		tcount++;
-		timeEndSimple(tmpTimeStart, &t_oth);
 
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
@@ -434,27 +480,47 @@ int main(int argc, char *argv[])
 		if(tcount%BH_SNAPSHOT_DELTACOUNT==0) {
 			print_bh_snapshot();
 		}
+		timeEndSimple(tmpTimeStart, &t_io);
+
+		tmpTimeStart = timeStartSimple();
+		if(TIMER)
+		{
+			rootfprintf(timerfile, "%d\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\n", tcount, t_cen_calc, t_timestep, t_dyn, t_se, t_orb, t_tid_str, t_sort, t_postsort_comm, t_pot_cal, t_ener_con3, t_calc_io_vars1, t_calc_io_vars2, t_comp_ener, t_upd_vars, t_io, t_io_ignore, t_oth, t_sort_lsort1, t_sort_splitters, t_sort_a2a, t_sort_lsort2, t_sort_oth, t_sort_lb, t_sort_only);
+		}
+		timeEndSimple(tmpTimeStart, &t_io_ignore);
 
 	} /* End FOR (time step iteration loop) */
 
 	times(&tmsbuf);
-	timeEndSimple(tmpTimeStart_full, &t_full);
+#ifdef USE_MPI
+	t_full = MPI_Wtime() - tmpTimeStart_full;
+#else
+	gettimeofday(&tim, NULL);
+	t_full += tim.tv_sec+(tim.tv_usec/1000000.0) - tmpTimeStart_full;
+#endif
 
-    rootprintf("******************************************************************************\n");
-    rootprintf("Time Taken:\n------------------------\n");
-    rootprintf("%.4lf:\tInitialization\n------------------------\n", t_init);
-    rootprintf("%.4lf:\tDynamics\n%.4lf:\tStellar Evolution\n%.4lf:\tOrbit Calculation\n%.4lf:\tSorting\t \(%lf: Sort %lf: Load bal.\)\n%.4lf:\tEnergy Conservation\n%.4lf:\tOthers\n------------------------\n%.4lf:\tTotal\n------------------------\n", t_dyn, t_se, t_orb, t_sort, t_sort_only, t_load_bal, t_ener, t_oth, t_full);
-    rootprintf("%.4lf:\t%.4lf:\t%.4lf:\t%.4lf:\t\n------------------------\n", t_sort1, t_sort2, t_sort3, t_sort4);
+	rootprintf("******************************************************************************\n");
+	rootprintf("Time for Initialization: %.4lf\n", t_init);
+	rootprintf("Total Time Taken: %.4lf\n", t_full);
+	rootprintf("Time for Communication: %.4lf\n", t_comm);
+	rootprintf("******************************************************************************\n");
+	if(TIMER)
+	{
+		rootfprintf(timerfile, "******************************************************************************\n");
+		rootfprintf(timerfile, "Time for Initialization: %.4lf\n", t_init);
+		rootfprintf(timerfile, "Total Time Taken: %.4lf\n", t_full);
+		rootfprintf(timerfile, "Time for Communication: %.4lf\n", t_comm);
+		rootfprintf(timerfile, "******************************************************************************\n");
+	}
 
-
-    dprintf("Usr time = %.6e ", (double)
-            (tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
-    dprintf("Sys time = %.6e\n", (double)
-            (tmsbuf.tms_stime-tmsbufref.tms_stime)/sysconf(_SC_CLK_TCK));
-    dprintf("Usr time (ch) = %.6e ", (double)
-            (tmsbuf.tms_cutime-tmsbufref.tms_cutime)/sysconf(_SC_CLK_TCK));
-    dprintf("Sys time (ch)= %.6e seconds\n", (double)
-            (tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
+	dprintf("Usr time = %.6e ", (double)
+			(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
+	dprintf("Sys time = %.6e\n", (double)
+			(tmsbuf.tms_stime-tmsbufref.tms_stime)/sysconf(_SC_CLK_TCK));
+	dprintf("Usr time (ch) = %.6e ", (double)
+			(tmsbuf.tms_cutime-tmsbufref.tms_cutime)/sysconf(_SC_CLK_TCK));
+	dprintf("Sys time (ch)= %.6e seconds\n", (double)
+			(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
 
 	/* free RNG */
 	//gsl_rng_free(rng);

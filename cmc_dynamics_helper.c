@@ -1954,7 +1954,9 @@ double mpi_simul_relax_new(void)
 		dtmin = MIN(dtmin, dt);
 	}
 
+	double tmpTimeStart = timeStartSimple();
 	MPI_Allreduce(&dtmin, &DTrel, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);     
+	timeEndSimple(tmpTimeStart, &t_comm);
 
 	return(DTrel);
 }
@@ -2177,6 +2179,7 @@ void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_s
 	/* MPI2: Communicating ghost particles */
 	/* Testing has been done. The parallel version is more accurate than the serial one since there are less round off errors because at nproc points among N_MAX, the actual sliding sum is calculated freshly rather than the way it is done in the serial version - adding and subtracting the extreme neighbors. Differences between serial and parallel version starts at N_MAX/nproc +1 th star and increases as expected.
 */
+	double tmpTimeStart = timeStartSimple();
 
 	for(k=0; k<2*p; k++)
 		if( k < p )
@@ -2218,6 +2221,7 @@ void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_s
 		}
 
 	free(buf_v);
+	timeEndSimple(tmpTimeStart, &t_comm);
 	/* End of communication */
 
 	siminlast = 1;//set to min index

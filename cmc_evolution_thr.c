@@ -620,7 +620,9 @@ void tidally_strip_stars(void) {
 		j++;
 
 #ifdef USE_MPI
-        MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		double tmpTimeStart = timeStartSimple();
+		MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		timeEndSimple(tmpTimeStart, &t_comm);
 #endif
 		TidalMassLoss += DTidalMassLoss;
 
@@ -642,7 +644,9 @@ void tidally_strip_stars(void) {
 	//buf_reduce[4] = TidalMassLoss;
 	buf_reduce[4] = Etidal;
 
+	double tmpTimeStart = timeStartSimple();
 	MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 5, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	timeEndSimple(tmpTimeStart, &t_comm);
 
 	Eescaped = buf_reduce[0];
 	Jescaped = buf_reduce[1];

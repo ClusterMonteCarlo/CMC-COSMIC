@@ -105,8 +105,10 @@ struct core_t mpi_density_and_core(int n_points, int *startypes, int len) {
   }
 
   m_cum=0.0;
+  double tmpTimeStart = timeStartSimple();
   MPI_Exscan(MPI_IN_PLACE, &m_cum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce(MPI_IN_PLACE, &m_tot, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  timeEndSimple(tmpTimeStart, &t_comm);
 
 
   rhoj.idx= calloc(80, sizeof(long));

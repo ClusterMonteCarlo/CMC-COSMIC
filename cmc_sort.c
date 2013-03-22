@@ -323,19 +323,23 @@ int sample_sort( type	      *buf,
 	MPI_Comm_rank(commgroup, &myid);
 	MPI_Type_size(dataType, &dataSize);
 
-	double tmpTimeStart2 = timeStartSimple();
 	/* local in-place sort */
+	double tmpTimeStart2 = timeStartSimple();
 	qsort( buf, *local_N, sizeof(type), compare_type );
+	timeEndSimple(tmpTimeStart2, &t_sort_lsort1);
 
 	// Fixing local_N to account for lost stars.
+	tmpTimeStart2 = timeStartSimple();
 	remove_stripped_stars(buf, local_N);
 
 	// Find global total number of elements to be sorted in parallel
+	double tmpTimeStart3 = timeStartSimple();
 	MPI_Allreduce(local_N, &global_N, 1, MPI_INT, MPI_SUM, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	expected_count = (int*) malloc(procs * sizeof(int));
 	find_expected_count( expected_count, global_N, procs );
-	timeEndSimple(tmpTimeStart2, &t_sort1);
+	timeEndSimple(tmpTimeStart2, &t_sort_oth);
 
 	tmpTimeStart2 = timeStartSimple();
 	/* Picking random/uniform samples and sending to root */
@@ -344,7 +348,9 @@ int sample_sort( type	      *buf,
 
 	/* Sample arrays to collect samples from each node and send to root */
 	sampleKeyArray_all = (keyType*) malloc(procs * n_samples * sizeof(keyType));
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Gather(sampleKeyArray_local, n_samples * sizeof(keyType), MPI_BYTE, sampleKeyArray_all, n_samples * sizeof(keyType), MPI_BYTE, 0, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	/* procs-1 numbers are enough to determine which elements belong to which bucket/proc. */
 	splitterArray = (keyType*) malloc((procs-1) * sizeof(keyType));
@@ -358,7 +364,9 @@ int sample_sort( type	      *buf,
 			splitterArray[i] = sampleKeyArray_all[ (i+1) * n_samples - 1 ];
 	}
 
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Bcast(splitterArray, (procs-1) * sizeof(keyType), MPI_BYTE, 0, MPI_COMM_WORLD);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	/* find the offset index for each send using binary search on splitter array */
 	send_index = (int *) calloc(procs, sizeof(int));
@@ -379,7 +387,9 @@ int sample_sort( type	      *buf,
 
 	send_count[procs-1] = (*local_N) - send_index[procs-1]; // + 1;
 
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoall(send_count, 1, MPI_INT, recv_count, 1, MPI_INT, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	total_recv_count = 0;
 	for (i=0; i<procs; i++) total_recv_count += recv_count[i];
@@ -390,11 +400,13 @@ int sample_sort( type	      *buf,
 		recv_displ[i] = recv_displ[i-1] + recv_count[i-1];
 
 	actual_count = (int*) malloc(procs * sizeof(int));
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Allgather( &total_recv_count, 1, MPI_INT, actual_count, 1, MPI_INT, commgroup );
-	timeEndSimple(tmpTimeStart2, &t_sort2);
-	tmpTimeStart2 = timeStartSimple();
+	timeEndSimple(tmpTimeStart3, &t_comm);
+	timeEndSimple(tmpTimeStart2, &t_sort_splitters);
 
 	//Finding the maximum size of resultBuf to be allocated.
+	tmpTimeStart2 = timeStartSimple();
 	max_alloc_outbuf_size = 0;
 	for(i=0; i<procs; i++)
 		max_alloc_outbuf_size = (actual_count[i] > max_alloc_outbuf_size) ? actual_count[i] : max_alloc_outbuf_size;
@@ -404,7 +416,9 @@ int sample_sort( type	      *buf,
 	resultBuf = (type*) malloc(actual_count[myid] * sizeof(type)); 
 
 	//MPI3: All to all communication
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoallv(buf, send_count, send_index, dataType, resultBuf, recv_count, recv_displ, dataType, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	dprintf("new no.of stars in proc %d = %d\n", myid, total_recv_count);
 
@@ -436,7 +450,9 @@ int sample_sort( type	      *buf,
 	//MPI3: Set binary array to zeros, if not might cause problems when new stars are created in the next timestep. So it's best to wipe out the older data.
 	memset (b_buf, 0, (N_BIN_DIM_OPT-1) * sizeof(binary_t));
 
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoall(b_send_count, 1, MPI_INT, b_recv_count, 1, MPI_INT, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	int b_total_recv_count = 0;
 	for (i=0; i<procs; i++) b_total_recv_count += b_recv_count[i];
@@ -449,7 +465,9 @@ int sample_sort( type	      *buf,
 	binary_t* b_resultBuf = (binary_t*) malloc(N_BIN_DIM_OPT * sizeof(binary_t));
 
 	//MPI3: All to All Communication
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoallv(b_tmp_buf, b_send_count, b_send_index, b_dataType, b_resultBuf+1, b_recv_count, b_recv_displ, b_dataType, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	//MPI3: Before we do local sort, we need to fix the binary addressing.
 	//Test thoroughly. Before alltoall use the id value of star elements to one of the ids of binaries, and check post sort - for testing.
@@ -475,25 +493,26 @@ int sample_sort( type	      *buf,
 		eprintf("Binary numbers mismatch in proc %d j = %d recv_cnt = %d\n", myid, k-1, b_total_recv_count);
 
 	/***** End binary data *****/
+	timeEndSimple(tmpTimeStart2, &t_sort_a2a);
 
 
 
 
-	timeEndSimple(tmpTimeStart2, &t_sort3);
 	tmpTimeStart2 = timeStartSimple();
 	qsort(resultBuf, total_recv_count, sizeof(type), compare_type);
-	timeEndSimple(tmpTimeStart2, &t_sort4);
+	timeEndSimple(tmpTimeStart2, &t_sort_lsort2);
 	timeEndSimple(tmpTimeStart, &t_sort_only);
 
 
 
 	tmpTimeStart = timeStartSimple();
 	load_balance(resultBuf, buf, b_resultBuf, b_buf, expected_count, actual_count, myid, procs, dataType, b_dataType, commgroup);
-	timeEndSimple(tmpTimeStart, &t_load_bal);
-
-	MPI_Barrier(commgroup);
+	timeEndSimple(tmpTimeStart, &t_sort_lb);
 
 	tmpTimeStart = timeStartSimple();
+	tmpTimeStart2 = timeStartSimple();
+	MPI_Barrier(commgroup);
+
 	*local_N = actual_count[myid];
 
 	free(expected_count);
@@ -510,7 +529,8 @@ int sample_sort( type	      *buf,
 	free(b_recv_count);
 	free(b_recv_displ);
 	free(b_tmp_buf);
-	timeEndSimple(tmpTimeStart, &t_sort_only);
+	timeEndSimple(tmpTimeStart, &t_sort_oth);
+	timeEndSimple(tmpTimeStart2, &t_sort_only);
 
 	return global_N;
 }
@@ -571,7 +591,9 @@ void load_balance( 	type 				*inbuf,
 
 	send_count[i-1] = local_count - send_index[i-1];
 
+	double tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoall(send_count, 1, MPI_INT, recv_count, 1, MPI_INT, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	total_recv_count = 0;
 	for (i=0; i<procs; i++) total_recv_count += recv_count[i];
@@ -582,7 +604,9 @@ void load_balance( 	type 				*inbuf,
 	for(i=1; i<procs; i++)
 		recv_displ[i] = recv_displ[i-1] + recv_count[i-1];
 
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoallv(inbuf, send_count, send_index, dataType, outbuf, recv_count, recv_displ, dataType, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	actual_count[myid] = total_recv_count;
 
@@ -607,7 +631,9 @@ void load_balance( 	type 				*inbuf,
 			}
 		b_send_count[i] = k - b_send_index[i];
 	}
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoall(b_send_count, 1, MPI_INT, b_recv_count, 1, MPI_INT, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	int b_total_recv_count = 0;
 	for (i=0; i<procs; i++) b_total_recv_count += b_recv_count[i];
@@ -619,7 +645,9 @@ void load_balance( 	type 				*inbuf,
 		b_recv_displ[i] = b_recv_displ[i-1] + b_recv_count[i-1];
 
 	//MPI3: All to All Communication
+	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoallv(b_tmp_buf, b_send_count, b_send_index, b_dataType, b_outbuf, b_recv_count, b_recv_displ, b_dataType, commgroup);
+	timeEndSimple(tmpTimeStart3, &t_comm);
 
 	//MPI3: k starts from 1 because binind has to be > 0 for binaries. and also the 0th element in the binary array is not to be used.
 	k=1;

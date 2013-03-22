@@ -67,6 +67,8 @@ _EXTERN_ double BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_MXN
 _EXTERN_ long N_b, N_bb, N_bs, N_b_OLD, N_b_NEW, last_hole;
 _EXTERN_ double M_b, E_b;
 _EXTERN_ binary_t *binary;
+/* timer */
+_EXTERN_ int TIMER;
 
 /* file pointers */
 _EXTERN_ FILE *lagradfile, *dynfile, *lagrad10file, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
@@ -74,6 +76,7 @@ _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
 _EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *pulsarfile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
 _EXTERN_ FILE *fp_lagrad, *fp_log, *fp_denprof;
+_EXTERN_ FILE *timerfile;
 // Meagan: file for tracking potential fluctuations for innermost 1000 stars
 
 #ifdef USE_MPI
@@ -158,9 +161,9 @@ _EXTERN_ int *disp, *len;
 FILE *ftest;
 //MPI2: Some variables to assist debugging
 char num[5],filename[20], tempstr[20];
-_EXTERN_ double t_sort_only, t_load_bal;
-_EXTERN_ double t_sort1, t_sort2, t_sort3, t_sort4;
-
+_EXTERN_ double t_sort_only, t_sort_lb;
+_EXTERN_ double t_sort_lsort1, t_sort_splitters, t_sort_a2a, t_sort_lsort2, t_sort_oth;
+_EXTERN_ double t_comm;
 
 /* debugging */
 _EXTERN_ int debug;

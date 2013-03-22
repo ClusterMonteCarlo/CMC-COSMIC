@@ -291,12 +291,15 @@ void mpi_set_velocities3(void){
 	if(Eexcess > 0)
 		printf("id=%d WARNING!!!!! -------> Excess = %g\n", myid, Eexcess);
 
+	double tmpTimeStart;
 	Eexcess_prev = 0.0;
 	do {
+		tmpTimeStart = timeStartSimple();
 		if(myid != procs-1)
 			MPI_Send(&Eexcess, 1, MPI_DOUBLE, ( myid + 1 ), 0, MPI_COMM_WORLD);
 		if(myid != 0)
 			MPI_Recv(&Eexcess_prev, 1, MPI_DOUBLE, ( myid - 1), 0, MPI_COMM_WORLD, &stat);
+		timeEndSimple(tmpTimeStart, &t_comm);
 
 		Eexcess = Eexcess_prev;
 		for (i = 1; i <= clus.N_MAX_NEW; i++) {
@@ -318,7 +321,9 @@ void mpi_set_velocities3(void){
 				}
 			}
 		}
+		tmpTimeStart = timeStartSimple();
 		MPI_Allreduce(&Eexcess, &Eexcess_check, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+		timeEndSimple(tmpTimeStart, &t_comm);
 	} while(Eexcess_check > 0);
 
 	free(vnew2_arr);
@@ -635,7 +640,9 @@ void mpi_ComputeEnergy(void)
 	buf_reduce[2] *= 0.5;
 	buf_reduce[0] = buf_reduce[1] + buf_reduce[2] + buf_reduce[3] + buf_reduce[4];
 
+	double tmpTimeStart = timeStartSimple();
 	MPI_Allreduce(MPI_IN_PLACE, buf_reduce, 5, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+	timeEndSimple(tmpTimeStart, &t_comm);
 
 	Etotal.tot = buf_reduce[0];
 	Etotal.K = buf_reduce[1];
@@ -1026,7 +1033,8 @@ void comp_mass_percent(){
     buf_comm[2] = v2_rad_prev_arr[clus.N_MAX_NEW];
     buf_comm[3] = v2_tan_prev_arr[clus.N_MAX_NEW];
 
-    MPI_Exscan(buf_comm, buf_comm_recv, 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	 double tmpTimeStart = timeStartSimple();
+	 MPI_Exscan(buf_comm, buf_comm_recv, 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     ke_rad_prev = buf_comm_recv[0];
     ke_tan_prev = buf_comm_recv[1];
@@ -1078,6 +1086,7 @@ void comp_mass_percent(){
 				break;
 		}
 	}
+	timeEndSimple(tmpTimeStart, &t_comm);
 
     free(ke_rad_prev_arr);
     free(ke_tan_prev_arr);
@@ -1258,9 +1267,11 @@ void update_vars(void)
 		}
 	}
 #ifdef USE_MPI
+	double tmpTimeStart = timeStartSimple();
 	MPI_Allreduce(MPI_IN_PLACE, &M_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 	MPI_Allreduce(MPI_IN_PLACE, &E_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 	MPI_Allreduce(MPI_IN_PLACE, &N_b, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD);		
+	timeEndSimple(tmpTimeStart, &t_comm);
 #endif
 }
 
@@ -1385,7 +1396,9 @@ void central_calculate(void)
 
 //MPI3: This reduce gives round-off errors which might affect the timestep mildly. Consult Stefan and see if it needs to be changed to be summed up in order.
 #ifdef USE_MPI
+	double tmpTimeStart = timeStartSimple();
 		MPI_Allreduce(MPI_IN_PLACE, &central.v_rms, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	timeEndSimple(tmpTimeStart, &t_comm);
 #endif
 
 	central.rho /= rhojsum;
@@ -1490,6 +1503,7 @@ void central_calculate(void)
 	}
 
 #ifdef USE_MPI
+	tmpTimeStart = timeStartSimple();
 	//MPI3: Packing into array to optimize communication.
 	double *buf_bcast_dbl = (double*) malloc(10 * sizeof(double));
 	buf_bcast_dbl[0] = central.w2_ave;
@@ -1529,6 +1543,7 @@ void central_calculate(void)
 	central.N_bin = buf_bcast_long[2];
 
 	free(buf_bcast_long);
+	timeEndSimple(tmpTimeStart, &t_comm);
 #endif
 
 	/* object quantities */
@@ -1746,31 +1761,37 @@ inline double function_q(long j, long double r, long double pot, long double E, 
 
 double timeStartSimple()
 {
-double timeStart=0;
+	double timeStart=0;
+	if(TIMER)
+	{
 #ifdef USE_MPI
-	MPI_Barrier(MPI_COMM_WORLD);
-	timeStart = MPI_Wtime();
+		MPI_Barrier(MPI_COMM_WORLD);
+		timeStart = MPI_Wtime();
 #else
-	struct timeval tim;
-	gettimeofday(&tim, NULL);
-	timeStart=tim.tv_sec+(tim.tv_usec/1000000.0);
+		struct timeval tim;
+		gettimeofday(&tim, NULL);
+		timeStart=tim.tv_sec+(tim.tv_usec/1000000.0);
 #endif
-return timeStart;
+	}
+	return timeStart;
 }
 
 void timeEndSimple(double timeStart, double *timeAccum)
 {
+	if(TIMER)
+	{
 #ifdef USE_MPI
-	MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Barrier(MPI_COMM_WORLD);
 
-	double timeEnd = MPI_Wtime();
-	*timeAccum += timeEnd - timeStart;
+		double timeEnd = MPI_Wtime();
+		*timeAccum += timeEnd - timeStart;
 #else
-	struct timeval tim;
-	gettimeofday(&tim, NULL);
-	double timeEnd=tim.tv_sec+(tim.tv_usec/1000000.0);
-	*timeAccum += timeEnd - timeStart;
+		struct timeval tim;
+		gettimeofday(&tim, NULL);
+		double timeEnd=tim.tv_sec+(tim.tv_usec/1000000.0);
+		*timeAccum += timeEnd - timeStart;
 #endif
+	}
 }
 
 void timeStart()
@@ -1949,8 +1970,10 @@ void bin_vars_calculate()
 		}
 	}
 #ifdef USE_MPI
+	double tmpTimeStart = timeStartSimple();
 	MPI_Allreduce(MPI_IN_PLACE, &M_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 	MPI_Allreduce(MPI_IN_PLACE, &E_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+	timeEndSimple(tmpTimeStart, &t_comm);
 #endif
 }
 
@@ -2097,8 +2120,10 @@ void new_orbits_calculate()
 
 		//MPI2: Since max_r will be used only be the root node, hopefully the Bcast wont be reqd.
 		//MPI3: Should it be AllReduce?
+		double tmpTimeStart = timeStartSimple();
 		MPI_Allreduce(MPI_IN_PLACE, &max_r, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);		
 		MPI_Allreduce(MPI_IN_PLACE, &TidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+		timeEndSimple(tmpTimeStart, &t_comm);
 
 		TidalMassLoss += TidalMassLoss_old;
 #else
@@ -2178,7 +2203,6 @@ void pre_sort_comm()
 void qsorts_new(void)
 {
 #ifdef USE_MPI
-	double tmpTimeStart = timeStartSimple();
 	MPI_Datatype startype;
 	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
 	MPI_Type_commit( &startype );
@@ -2197,7 +2221,6 @@ void qsorts_new(void)
 	clus.N_MAX_NEW = temp;
 
 	//MPI_Type_free(startype);
-	timeEndSimple(tmpTimeStart, &t_sort_only);
 #else
 	/* Sorting stars by radius. The 0th star at radius 0 
 		and (N_STAR+1)th star at SF_INFINITY are already set earlier.
@@ -2209,6 +2232,7 @@ void qsorts_new(void)
 void post_sort_comm()
 {
 #ifdef USE_MPI
+	double tmpTimeStart = timeStartSimple();
 	int i;
 	mpiFindDispAndLenCustom( clus.N_MAX, 20, mpiDisp, mpiLen );
 
@@ -2240,6 +2264,7 @@ void post_sort_comm()
 	//MPI_Barrier(MPI_COMM_WORLD);
 	free(temp_r);
 	free(temp_m);
+	timeEndSimple(tmpTimeStart, &t_comm);
 #endif
 }
 

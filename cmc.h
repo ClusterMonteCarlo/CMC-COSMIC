@@ -377,6 +377,8 @@ typedef struct{
 	int BSE_EDDFAC;
 #define PARAMDOC_BSE_GAMMA "gamma is the angular momentum factor for mass lost during Roche (-1.0, see evolv2.f for more details)."
 	int BSE_GAMMA;
+#define PARAMDOC_TIMER "enable or disable timers. This would return a detailed profiling of the code, but uses barriers, so might slow down the code a bit."
+	int TIMER;
 } parsed_t;
 
 /* a struct containing the units used */

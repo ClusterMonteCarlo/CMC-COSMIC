@@ -508,6 +508,7 @@ are skipped if they already interacted in 3bb loop!  */
 
     //MPI3: Reduction for File IO - relaxationfile
 #ifdef USE_MPI
+	double tmpTimeStart = timeStartSimple();
     double buf_comm_dbl[3][4];
     double buf_comm_dbl_recv[3][4];
     long buf_comm_long[5];
@@ -524,6 +525,7 @@ are skipped if they already interacted in 3bb loop!  */
     MPI_Reduce(buf_comm_dbl, buf_comm_dbl_recv, 12, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(buf_comm_long, buf_comm_long_recv, 5, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
     Nrel = buf_comm_long_recv[4];
+	 timeEndSimple(tmpTimeStart, &t_comm);
 #endif
 
     /* print relaxation information */

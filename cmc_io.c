@@ -121,14 +121,18 @@ void PrintLogOutput(void)
 
     //MPI3: Since only the root node will print out these stuff, Allreduce is not reqd.
     //MPI_Allreduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	 double tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	 timeEndSimple(tmpTimeStart, &t_comm);
     if(myid==0)
     {
         m_binary = buf_comm_recv[0];
         m_single = buf_comm_recv[1];
     }
 
+	 tmpTimeStart = timeStartSimple();
     MPI_Exscan(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	 timeEndSimple(tmpTimeStart, &t_comm);
 
 	for (ih=1; ih<=clus.N_MAX_NEW; ih++) {
 		k = ih;
@@ -151,7 +155,9 @@ void PrintLogOutput(void)
 
     //MPI3: Since r's are always monotonically increasing since they are sorted, I can just take the max.
     //MPI_Allreduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+	 tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+	 timeEndSimple(tmpTimeStart, &t_comm);
 
     rh_binary = buf_comm_recv[0];
     rh_single = buf_comm_recv[1];
@@ -347,8 +353,10 @@ void PrintFileOutput(void) {
         buf_comm_dbl[2] = m_10 - m_10_prev; //bugfix: subrtaction is reqd, otherwise m_10 of proc 0 will be added proc times, of proc 1 added proc-1 times and so on.
 
         //MPI3: Since only root node is printing Allreduce is not reqd.
+		  double tmpTimeStart = timeStartSimple();
         MPI_Reduce(buf_comm_long, buf_comm_long_recv, 3, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(buf_comm_dbl, buf_comm_dbl_recv, 3, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+		  timeEndSimple(tmpTimeStart, &t_comm);
 
         n_sing_10 = buf_comm_long_recv[0];
         n_bin_10 = buf_comm_long_recv[1];
@@ -447,7 +455,9 @@ void PrintFileOutput(void) {
     buf_comm[5] = n_binary;
 
     //MPI3: Since only root node is printing Allreduce is not reqd.
+	 double tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 6, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+	 timeEndSimple(tmpTimeStart, &t_comm);
 
     if(myid==0)
     {
@@ -540,7 +550,9 @@ void print_bh_summary() {
     buf_comm[11] = bh89;
 
     //MPI3: bhstar, and bhwd might be calculated after the reduce instead of in bh_count to save 2 communication calls.
+	 double tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 12, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+	 timeEndSimple(tmpTimeStart, &t_comm);
 
     bhsingle = buf_comm_recv[0];
     bhbinary = buf_comm_recv[1];
@@ -605,7 +617,9 @@ void print_esc_bh_summary() {
     buf_comm[11] = esc_bh89;
 
     //MPI3: esc_bhstar, and esc_bhwd might be calculated after the reduce instead of in bh_count to save 2 communication calls.
+	 double tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 12, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+	 timeEndSimple(tmpTimeStart, &t_comm);
 
     esc_bhsingle = buf_comm_recv[0];
     esc_bhbinary = buf_comm_recv[1];
@@ -1237,6 +1251,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_GAMMA);
 				sscanf(values, "%lf", &BSE_GAMMA);
 				parsed.BSE_GAMMA = 1;
+			} else if (strcmp(parameter_name, "TIMER")== 0) {
+				PRINT_PARSED(PARAMDOC_TIMER);
+				sscanf(values, "%d", &TIMER);
+				parsed.TIMER = 1;
 			} else {
 				wprintf("unknown parameter: \"%s\".\n", line);
 			}
@@ -1361,6 +1379,7 @@ if(myid==0) {
 	CHECK_PARSED(BSE_BETA, 0.12500, PARAMDOC_BSE_BETA);
 	CHECK_PARSED(BSE_EDDFAC, 1.00, PARAMDOC_BSE_EDDFAC);
 	CHECK_PARSED(BSE_GAMMA, -1.00, PARAMDOC_BSE_GAMMA);
+	CHECK_PARSED(TIMER, 0, PARAMDOC_TIMER);
 #undef CHECK_PARSED
 
 	/* exit if something is not set */
@@ -1578,6 +1597,15 @@ if(myid==0)
 			exit(1);
 		}
 	
+		if(TIMER)
+		{
+			sprintf(outfile, "%s.timer.dat", outprefix);
+			if ((timerfile = fopen(outfile, outfilemode)) == NULL) {
+				eprintf("cannot create output file \"%s\".\n", outfile);
+				exit(1);
+			}
+		}
+
         /* Printing our headers */
         fprintf(lagradfile, "# Lagrange radii [code units]\n");
         fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
@@ -1645,6 +1673,9 @@ if(myid==0)
 		// print header
 		fprintf(bhsummaryfile, "#1:tcount  #2:TotalTime  #3:N_bh  #4:N_bh_single  #5:N_bh_binary  #6:N_bh-bh  #7:N_bh-ns  #8:N_bh-wd  #9:N_bh-star  #10:N_bh-nonbh  #11:fb_bh\n");
 //#10:  #11:Binary_id1  #12:Binary_id2  #13:kw1  #14:kw2  #15:M1   #16:M2   #17:P  #18:a  #19:e  #20:R2/RL2  #21:dm1/dt\n");
+
+		if(TIMER)
+			fprintf(timerfile, "#1:tcount\t#2:t_cen_calc\t#3:t_timestep\t#4:t_dyn\t#5:t_se\t#6:t_orb\t#7:t_tid_str\t#8:t_sort\t#9:t_postsort_comm\t#10:t_pot_cal\t#11:t_ener_con3\t#12:t_calc_io_vars1\t#13:t_calc_io_vars1\t#14:t_comp_ener\t#15:t_upd_vars\t#16:t_io\t#17:t_io_ignore\t#18:t_oth\t#19:t_sort_lsort1\t#20:t_sort_splitters\t#21:t_sort_a2a\t#22:t_sort_lsort2\t#23:t_sort_oth\t#24:t_sort_lb\t#25:t_sort_only\n");
 
 #ifdef USE_MPI
     }
@@ -1898,6 +1929,8 @@ void close_root_buffers(void)
     /* Meagan's 3bb stuff */
     fclose(bhsummaryfile);
     fclose(escbhsummaryfile);
+	 if(TIMER)
+		 fclose(timerfile);
 }
 
 void close_node_buffers(void)
