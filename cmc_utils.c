@@ -2029,10 +2029,12 @@ void reset_interaction_flags()
 #else
 		for (i = 1; i <= clus.N_MAX; i++) 
 #endif
+		{
 			/* reset interacted flag */
 			star[i].interacted = 0;
 			/* Meagan - 3bb */
 			star[i].threebb_interacted = 0;
+		}
 }
 
 void calc_clusdyn_new()
