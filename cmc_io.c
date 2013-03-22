@@ -677,7 +677,7 @@ void find_nstars_within_r(double r, long *ns, long *nb)
 {
     long i;
 #ifdef USE_MPI
-	for (i=1; star_r[get_global_idx(i)]<=r; i++) {
+	for (i=1; star_r[get_global_idx(i)]<=r && i<=clus.N_MAX_NEW; i++) {
 #else
 	for (i=1; star[i].r<=r; i++) {
 #endif
