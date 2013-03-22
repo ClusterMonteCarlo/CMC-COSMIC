@@ -155,6 +155,9 @@ void PrintLogOutput(void)
 
     rh_binary = buf_comm_recv[0];
     rh_single = buf_comm_recv[1];
+
+	 free(m_binary_arr);
+	 free(m_single_arr);
 #else
 	for (ih=1; ih<=clus.N_MAX; ih++) {
 		k = ih;

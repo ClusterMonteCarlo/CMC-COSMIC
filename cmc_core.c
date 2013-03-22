@@ -193,6 +193,8 @@ struct core_t mpi_density_and_core(int n_points, int *startypes, int len) {
   /* core relaxation time, Spitzer (1987) eq. (2-62) */
   core.Trc = 0.065 * cub(core.v_rms) / (core.rho * core.m_ave);
 
+  free(Vrj);
+  free(rhoj.rho);
   return(core);
 }
 #endif

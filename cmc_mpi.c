@@ -103,6 +103,7 @@ MPI_Comm inv_comm_create(int procs, MPI_Comm old_comm)
 	MPI_Group_incl(orig_group, procs, newranks, &new_group);
 	MPI_Comm_create(old_comm, new_group, &new_comm);
 
+	free (newranks);
 	return new_comm;
 }
 
