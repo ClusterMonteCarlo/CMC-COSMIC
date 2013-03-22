@@ -20,18 +20,25 @@
 long get_positive_Q_index(long index, double E, double J) {
   long ktemp, fevals;
   double Qtemp;
+#ifdef USE_MPI
+	int g_si = get_global_idx(index);
+    long newpartstart= mpiEnd-mpiBegin+1;
+#else
+	int g_si = index;
+    long newpartstart= clus.N_MAX;
+#endif
 
-  ktemp= index;
+  ktemp= g_si;
   fevals=1;
 
-  if (index > clus.N_MAX) {
+  if (index > newpartstart) {
     ktemp = FindZero_r(0, clus.N_MAX, star[index].rnew) + 1;
   };
 
 #ifdef USE_MPI
-  Qtemp = function_q(index, star_r[ktemp], star_phi[ktemp], E, J);
+  Qtemp = function_q(g_si, star_r[ktemp], star_phi[ktemp], E, J);
 #else
-  Qtemp = function_q(index, star[ktemp].r, star[ktemp].phi, E, J);
+  Qtemp = function_q(g_si, star[ktemp].r, star[ktemp].phi, E, J);
 #endif
 
   /* check for nearly circular orbit and do linear search */
@@ -40,9 +47,9 @@ long get_positive_Q_index(long index, double E, double J) {
     do {
       ktemp++; fevals++;
 #ifdef USE_MPI
-      Qtemp = function_q(index, star_r[ktemp], star_phi[ktemp], E, J);
+      Qtemp = function_q(g_si, star_r[ktemp], star_phi[ktemp], E, J);
 #else
-      Qtemp = function_q(index, star[ktemp].r, star[ktemp].phi, E, J);
+      Qtemp = function_q(g_si, star[ktemp].r, star[ktemp].phi, E, J);
 #endif
     } while (Qtemp <= 0.0 && ktemp <= clus.N_MAX);		
     if (ktemp >= clus.N_MAX) {
@@ -315,13 +322,73 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
   return(new_pos);
 };
 
+void debug_msg_orbit_new_inside_sqrt(double actual_rmin, double rmin, double inside_sqrt,
+    long k, int ismin) {
+  double rk, rk1;
+  char *label;
+
+  label= ismin? "min": "max";
+
+#ifdef USE_MPI
+  rk= star_r[k];
+  rk1= star_r[k+1];
+#else
+  rk= star[k].r;
+  rk1= star[k+1].r;
+#endif
+
+  dprintf("The sqrt in the expression for rmin has a negative argument!");
+  dprintf("It is, therefore, set to zero.\n");
+  dprintf("r%s_old= %g r%s_new= %g r%s_sqrt= %g\n", label, actual_rmin, label, rmin, label, inside_sqrt);
+  dprintf("star[k%s+1].r= %g star[k%s].r= %g star[k%s+1].r-star[k%s].r= %g\n",
+      label, rk1, label, rk, label, label, rk1-rk);
+  dprintf("star[k%s+1].r-r%s= %g, r%s-star[k%s].r= %g\n", label, label,
+      rk1-rmin, label, label, rmin-rk);
+}
+
+
+/**
+ * @brief Print supplementary information related to MPI parallelization.
+ *
+ * @param msg Message context string
+ * @param proc Current processor
+ * @param g_si Global particle index
+ * @param si  Local particle index
+ * @param mpiBegin Start of memory partition in global address space
+ * @param mpiEnd  End of memory partition in global address space
+ */
+void debug_msg_supp_mpi_info(char *msg, int proc, long g_si, long si,
+    int mpiBegin, int mpiEnd) {
+    dprintf("%s: mpiBegin=%i, mpiEnd=%i, global index=%li, local index=%li, myid=%i\n",
+        msg, mpiBegin, mpiEnd, g_si, si, myid);
+}
+
+void debug_msg_orbit_new_outside_interval(long si, double rmin, double rmin_new,
+    long k, double rk, double rk1, int ismin, double E, double J) {
+  char *label;
+
+  label= ismin? "min": "max";
+
+  dprintf("r%s=%g outside of interval (%g,%g)@%li, using bisection to get root.\n",
+      label, rmin, rk, rk1, k);
+  dprintf("r%s outside: si=%ld, E=%g, J=%g\n", label, si, E, J);
+
+  dprintf("new r%s=%g, r%s in interval? %s\n", label, rmin_new, label,
+      (rmin_new>=rk)&&(rmin_new<=rk1)? "Yes": "No");
+}
+
 orbit_rs_t calc_orbit_new(long index, double E, double J) {
   orbit_rs_t orbit_rs;
   long ktemp, kmin, kmax;
-  double rmin, rmax;
+  double rmin, rmax, rkmin, rk1min, rkmax, rk1max;
   double a, b, dQdr_min, dQdr_max;
   double dQdr_min_num, dQdr_max_num;
   int circular;
+#ifdef USE_MPI
+	int g_si = get_global_idx(index);
+#else
+	int g_si = index;
+#endif
 
   circular=0;
 
@@ -331,14 +398,14 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
     dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
         index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E);
 #ifdef USE_MPI
-    orbit_rs.rp = star_r[index];
-    orbit_rs.ra = star_r[index];
+    orbit_rs.rp = star_r[g_si];
+    orbit_rs.ra = star_r[g_si];
 #else
     orbit_rs.rp = star[index].r;
     orbit_rs.ra = star[index].r;
 #endif
-    orbit_rs.kmin = index;
-    orbit_rs.kmax = index;
+    orbit_rs.kmin = g_si;
+    orbit_rs.kmax = g_si;
     orbit_rs.dQdrp = 0.0;
     orbit_rs.dQdra = 0.0;
     orbit_rs.circular_flag = 1;
@@ -346,31 +413,49 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   }
 
   /* calculate new kmin */
-  kmin= find_zero_Q(index, 0, ktemp, E, J);
+  kmin= find_zero_Q(g_si, 0, ktemp, E, J);
 
   /* calculate new kmax */
-  kmax= find_zero_Q(index, ktemp, clus.N_MAX +1, E, J);
+  kmax= find_zero_Q(g_si, ktemp, clus.N_MAX +1, E, J);
+
+#ifdef USE_MPI
+  rkmin= star_r[kmin];
+  rk1min= star_r[kmin+1];
+  rkmax= star_r[kmax];
+  rk1max= star_r[kmax+1];
+#else
+  rkmin= star[kmin].r;
+  rk1min= star[kmin+1].r;
+  rkmax= star[kmax].r;
+  rk1max= star[kmax+1].r;
+#endif
 
   /* calculate rmin and rmax */
   if (!circular) {
-    int rmax_in_interval, rmin_in_interval, vr_rmax_positive, vr_rmin_positive;
     double inside_sqrt, actual_rmin, actual_rmax; 
 
-    vr_rmax_positive= 0; vr_rmin_positive= 0;
-
     /* First we try Henon's method. If it fails we use bisection. */
-    set_a_b(index, kmin, &a, &b);
+    set_a_b(g_si, kmin, &a, &b);
     inside_sqrt= a * a - 2.0 * J * J * (b - E);
 
     if (inside_sqrt<0.0) {
       rmin = -1.0 *J * J / a ;
       actual_rmin = J * J / (-a + sqrt(a * a - 2.0 * J * J * (b - E)));
-      dprintf("The sqrt in the expression for rmin has a negative argument!");
-      dprintf("It is, therefore, set to zero.\n");
-      dprintf("rmin_old= %g rmin_new= %g rmin_sqrt= %g\n", actual_rmin, rmin, inside_sqrt);
-      dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
-	  star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
-      dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+
+      debug_msg_orbit_new_inside_sqrt(actual_rmin, rmin, inside_sqrt, kmin, 1);
+
+      if ((rmin<rkmin) || (rmin>rk1min)) {
+        double rmin_new;
+
+        rmin_new= find_root_vr(g_si, kmin, E, J);
+
+        debug_msg_orbit_new_outside_interval(index, rmin, rmin_new, kmin,
+            rkmin, rk1min, 1, E, J);
+#ifdef USE_MPI
+        debug_msg_supp_mpi_info("rmin outside", myid, g_si, index, mpiBegin, mpiEnd);
+#endif
+        rmin= rmin_new;
+      }
     } else {
       rmin = J * J / (-a + sqrt(inside_sqrt));
     }
@@ -382,18 +467,27 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
     dQdr_min_num = (function_Q(index, kmin+1, E, J)-function_Q(index, kmin, E, J))/(star[kmin+1].r-star[kmin].r);
 #endif
 
-    set_a_b(index, kmax, &a, &b);
+    set_a_b(g_si, kmax, &a, &b);
     inside_sqrt= a * a - 2.0 * J * J * (b - E);
 
     if (inside_sqrt<0.0){
       rmax = -a / (2.0 * (b - E));
       actual_rmax = (-a + sqrt(a * a - 2.0 * J * J * (b - E))) / (2.0 * (b - E));
-      dprintf("The sqrt in the expression for rmax has a negative argument!");
-      dprintf("It is, therefore, set to zero.\n");
-      dprintf("rmax_old= %g rmax_new= %g rmax_sqrt= %g\n", actual_rmax, rmax, inside_sqrt);
-      dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
-	  star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
-      dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
+
+      debug_msg_orbit_new_inside_sqrt(actual_rmax, rmax, inside_sqrt, kmax, 0);
+
+      if ((rmax<rkmax) || (rmax>rk1max)) {
+        double rmax_new;
+
+        rmax_new= find_root_vr(g_si, kmax, E, J);
+
+        debug_msg_orbit_new_outside_interval(index, rmax, rmax_new, kmax,
+            rkmax, rk1max, 0, E, J);
+#ifdef USE_MPI
+        debug_msg_supp_mpi_info("rmax outside", myid, g_si, index, mpiBegin, mpiEnd);
+#endif
+        rmax= rmax_new;
+      }
     } else {
       rmax = (-a + sqrt(inside_sqrt)) / (2.0 * (b - E));
     }
@@ -404,39 +498,6 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
 #else
     dQdr_max_num = (function_Q(index, kmax+1, E, J)- function_Q(index, kmax, E, J))/(star[kmax+1].r-star[kmax].r);
 #endif
-
-    /* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
-#ifdef USE_MPI
-    rmin_in_interval= rmin < star_r[kmin+1] && rmin > star_r[kmin];
-    rmax_in_interval= rmax < star_r[kmax+1] && rmax > star_r[kmax];
-#else
-    rmin_in_interval= rmin < star[kmin+1].r && rmin > star[kmin].r;
-    rmax_in_interval= rmax < star[kmax+1].r && rmax > star[kmax].r;
-#endif
-    if (rmin_in_interval) 
-      vr_rmin_positive= calc_vr_in_interval(rmin, index, kmin, E, J)>= 0.;
-    if (rmax_in_interval) 
-      vr_rmax_positive= calc_vr_in_interval(rmax, index, kmax, E, J)>= 0.;
-
-    if (!(rmax_in_interval && vr_rmax_positive)) {
-      //dprintf("rmax is out of interval (%i) or vr is negative (%i)\n",
-      //    !rmax_in_interval, !vr_rmax_positive);
-      //dprintf("Old rmax= %g and residual vr= %g\n", rmax, calc_vr(rmax, index, E, J)); 
-      rmax= find_root_vr(index, kmax, E, J);
-      //dprintf("New rmax= %g and residual vr= %g\n", rmax, calc_vr(rmax, index, E, J)); 
-      set_a_b(index, kmax, &a, &b);
-      dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
-    };
-
-    if (!(rmin_in_interval && vr_rmin_positive)) {
-      //dprintf("rmin is out of interval (%i) or vr is negative (%i)\n",
-      //  !rmin_in_interval, !vr_rmin_positive);
-      //dprintf("Old rmin= %g and residual vr= %g\n", rmin, calc_vr(rmin, index, E, J)); 
-      rmin= find_root_vr(index, kmin, E, J);
-      //dprintf("New rmin= %g and residual vr= %g\n", rmin, calc_vr(rmin, index, E, J)); 
-      set_a_b(index, kmin, &a, &b);
-      dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
-    };
   };
  
   /* another case of a circular orbit */
@@ -454,14 +515,14 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
     dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
         index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E);
 #ifdef USE_MPI
-    orbit_rs.rp = star_r[index];
-    orbit_rs.ra = star_r[index];
+    orbit_rs.rp = star_r[g_si];
+    orbit_rs.ra = star_r[g_si];
 #else
     orbit_rs.rp = star[index].r;
     orbit_rs.ra = star[index].r;
 #endif
-    orbit_rs.kmin = index;
-    orbit_rs.kmax = index;
+    orbit_rs.kmin = g_si;
+    orbit_rs.kmax = g_si;
     orbit_rs.dQdrp = 0.0;
     orbit_rs.dQdra = 0.0;
     orbit_rs.circular_flag = 1;
@@ -476,6 +537,7 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   };
   return(orbit_rs);
 };
+
 
 /* Do not use for newly created stars! */
 orbit_rs_t calc_orbit_new_J(long index, double J, struct star_coords pos_old, orbit_rs_t orbit_old) {
@@ -649,7 +711,6 @@ void set_a_b(long index, long k, double *a, double *b) {
 #else
     *b= star[1].phi+ cenma.m*madhoc/star[1].r+ star[index].m*madhoc/star[index].r;
 #endif
-    dprintf("Inner Henon coefficient: a= %g, b= %g\n", *a, *b);
   } else {
     i = k;
     i1 = k + 1;

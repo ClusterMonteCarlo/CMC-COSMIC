@@ -22,7 +22,6 @@ AC_ARG_ENABLE(static-linking, [AC_HELP_STRING([--enable-static-linking],
 AC_ARG_ENABLE(experimental, [AC_HELP_STRING([--enable-experimental], 
               [Enable a more accurate (but slower) orbit determination.])],
               [], [enable_experimental=no])
-AS_IF([test "x$enable_experimental" == "xyes"], [CFLAGS="$CFLAGS -DEXPERIMENTAL"], [])
 
 AC_ARG_ENABLE([cuda], [AC_HELP_STRING([--enable-cuda],
               [Enable GPU acceleration for nVidia cards using CUDA C])],
@@ -76,6 +75,8 @@ AS_IF([test "$enable_tausworth" == "yes" && test "$enable_ran3" == "yes"],
 AC_PROG_CC([gcc pathcc icc cc cl.exe /usr/ucb/cc])
 # Set the maximum optimization
 AX_CC_MAXOPT
+
+AS_IF([test "x$enable_experimental" == "xyes"], [CFLAGS="$CFLAGS -DEXPERIMENTAL"], [])
 
 AS_IF([ test "x$enable_mpi" == "xyes" ], [
     AX_MPI([])
