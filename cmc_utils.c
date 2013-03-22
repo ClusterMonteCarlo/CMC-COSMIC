@@ -1536,7 +1536,7 @@ void central_calculate(void)
 	buf_bcast_long[1] = central.N_sin;
 	buf_bcast_long[2] = central.N_bin;
 
-	MPI_Bcast( buf_bcast_long, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+	MPI_Bcast( buf_bcast_long, 3, MPI_LONG, 0, MPI_COMM_WORLD );
 
 	Ncentral = buf_bcast_long[0];
 	central.N_sin = buf_bcast_long[1];
