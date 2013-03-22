@@ -2290,7 +2290,7 @@ void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_s
         if(r_0_mave_1 == 0)
             sig_r_or_mave[si] = star_r[g_si];
         else
-            sig_r_or_mave[si] = Mave;
+            sig_r_or_mave[si] = Mave/2./p;
 		sig_sigma[si] = sqrt(Mv2ave/Mave);
 		
 		siminlast = simin;
@@ -2354,7 +2354,7 @@ void calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_sigma
             if(r_0_mave_1 == 0)
                 sig_r_or_mave[si] = star[si].r;
             else
-                sig_r_or_mave[si] = Mave;
+                sig_r_or_mave[si] = Mave/2./p;
 
 			/* store sigma (sigma is the 3D velocity dispersion) */
 			sig_sigma[si] = sqrt(Mv2ave/Mave);
