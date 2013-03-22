@@ -2220,7 +2220,8 @@ void qsorts_new(void)
                 				SAMPLESIZE );
 	clus.N_MAX_NEW = temp;
 
-	//MPI_Type_free(startype);
+	MPI_Type_free(&startype);
+	MPI_Type_free(&binarytype);
 #else
 	/* Sorting stars by radius. The 0th star at radius 0 
 		and (N_STAR+1)th star at SF_INFINITY are already set earlier.
