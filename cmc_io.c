@@ -139,7 +139,8 @@ void PrintLogOutput(void)
         int g_k = get_global_idx(k);
 
 		if ((m_single_arr[k] + buf_comm_recv[1]) / (Mtotal - (M_b / clus.N_STAR)) <= 0.5) {
-			rh_single = (m_single_arr[k] + buf_comm_recv[1]) / (Mtotal - (M_b / clus.N_STAR));//star_r[g_k];
+//			rh_single = (m_single_arr[k] + buf_comm_recv[1]) / (Mtotal - (M_b / clus.N_STAR));//star_r[g_k];
+			rh_single = star_r[g_k];
 		}
 
 		// avoid dividing by zero if there are no binaries
