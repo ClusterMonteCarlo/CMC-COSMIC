@@ -1969,7 +1969,7 @@ double simul_relax_new(void)
 	double Mv2ave, Mave, M2ave, sigma;
 	
 	N_LIMIT = clus.N_MAX;
-	p = 10; //For this value, the results are very close to the original simul_relax() function.
+	p = AVEKERNEL; //For this value, the results are very close to the original simul_relax() function.
 
 	for (si=p+1; si<N_LIMIT-p; si+=2*p) {
 		simin = si - p;
