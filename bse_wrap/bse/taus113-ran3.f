@@ -16,7 +16,7 @@ c$      integer OMP_GET_THREAD_NUM
 !$OMP THREADPRIVATE(/Taus113State/)
         EXTERNAL taus113_gen_int
 
-        if(IDUM.le.0) then
+        if(IDUM.lt.0) then
           call taus113_seeding(state, -IDUM)
 C         The "warm-up" that has been left out in the seeding routine:
           print*, "Combined Tausworth 113 Generator warming up."

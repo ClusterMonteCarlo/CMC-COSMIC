@@ -39,6 +39,12 @@ void stellar_evolution_init(void){
   bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
   bse_set_bconst(BSE_BCONST);
   bse_set_CK(BSE_CK);
+#ifdef USE_TAUS
+  /* need to suppress the self-initialization of the Fortran Tausworthe generator */
+  if (BSE_IDUM<0) {
+    BSE_IDUM= -BSE_IDUM;
+  }
+#endif
   bse_set_idum(BSE_IDUM);
   bse_set_pts1(0.05);
   bse_set_pts2(0.01);
