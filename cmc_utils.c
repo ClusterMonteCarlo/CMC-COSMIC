@@ -1387,18 +1387,52 @@ void central_calculate(void)
 		rc_nb += sqr(rhoj[i] * star_r[i]);
 		central.m_ave += rhoj[i] * star_m[i] * madhoc;
 #else
-      central.v_rms += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
 		central.rc += rhoj[i] * star[i].r;
 		rc_nb += sqr(rhoj[i] * star[i].r);
 		central.m_ave += rhoj[i] * star[i].m * madhoc;
 #endif
 	}
 
+#ifndef USE_MPI
+    //MPI3: Calculating v_rms separately to emulate parallel reduction.
+    double *temp_v_rms = (double*) calloc(procs, sizeof(double));
+    for(j=0; j<procs; j++)
+    {
+        for(i=Start[j]; i<=End[j]; i++)
+        {
+            if(i>nave) break;
+            temp_v_rms[j] += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
+        }
+    }
+    for(j=0; j<procs; j++)
+    central.v_rms += temp_v_rms[j];
+#endif
+
 //MPI3: This reduce gives round-off errors which might affect the timestep mildly. Consult Stefan and see if it needs to be changed to be summed up in order.
 #ifdef USE_MPI
+/*
 	double tmpTimeStart = timeStartSimple();
 		MPI_Allreduce(MPI_IN_PLACE, &central.v_rms, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	timeEndSimple(tmpTimeStart, &t_comm);
+*/
+    //MPI2: Avoiding reduce to improve accuracy, and comparison with serial version.
+    double tmpTimeStart = timeStartSimple();
+    double temp = 0.0;
+    double v_rms = central.v_rms;
+
+    MPI_Status stat;
+
+    if(myid!=0)
+    MPI_Send(&central.v_rms, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+    else
+        for(i=1;i<procs;i++)
+        {
+            MPI_Recv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &stat);
+            v_rms += temp;
+        }
+    central.v_rms = v_rms;
+    MPI_Bcast(&central.v_rms, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    timeEndSimple(tmpTimeStart, &t_comm);
 #endif
 
 	central.rho /= rhojsum;
