@@ -835,7 +835,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     cp_binmemb_to_star(k, 1, knewp);
 #ifdef USE_MPI
    //MPI3: There are going to be problems when new stars are created! _m refers to global array, what index should be used?
-    DMse -= (star_m[knew] + star_m[knewp]) * madhoc;
+    DMse -= (star_m[get_global_idx(knew)] + star_m[get_global_idx(knewp)]) * madhoc;
 #else
     DMse_mimic[findProcForIndex(k)] -= (star[knew].m + star[knewp].m) * madhoc;
 #endif
@@ -1023,8 +1023,8 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     
     star[knew].rad = star[knew].se_radius * RSUN / units.l;
 #ifdef USE_MPI
-    star_m[knew] = star[knew].se_mt * MSUN / units.mstar;
-    DMse -= star_m[knew] * madhoc;
+    star_m[get_global_idx(knew)] = star[knew].se_mt * MSUN / units.mstar;
+    DMse -= star_m[get_global_idx(knew)] * madhoc;
 #else
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
     DMse_mimic[findProcForIndex(k)] -= star[knew].m * madhoc;
@@ -1117,8 +1117,8 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     
     star[knew].rad = star[knew].se_radius * RSUN / units.l;
 #ifdef USE_MPI
-    star_m[knew] = star[knew].se_mt * MSUN / units.mstar;
-    DMse -= star_m[knew] * madhoc; 
+    star_m[get_global_idx(knew)] = star[knew].se_mt * MSUN / units.mstar;
+    DMse -= star_m[get_global_idx(knew)] * madhoc;
 #else
     star[knew].m = star[knew].se_mt * MSUN / units.mstar;
     DMse_mimic[findProcForIndex(k)] -= star[knew].m * madhoc; 
