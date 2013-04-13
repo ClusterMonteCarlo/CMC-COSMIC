@@ -80,8 +80,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		Einit = star[k].Eint + 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
 			star[kp].Eint + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
 			0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
-		//MPI2: Reduce?
+#ifdef USE_MPI
 		DMse += mass_kp * madhoc;
+#else
+        DMse_mimic[findProcForIndex(k)] += mass_kp * madhoc;
+#endif
 
 		aj = star[kp].se_tphys - star[kp].se_epoch;
 		star[kp].se_mt = star[kp].se_mc;
@@ -92,7 +95,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		star[kp].se_epoch = star[kp].se_tphys - aj;
 		star[kp].rad = star[kp].se_radius * RSUN / units.l;
 		mass_kp = star[kp].se_mt * MSUN / units.mstar;
+#ifdef USE_MPI
 		DMse -= mass_kp * madhoc;
+#else
+        DMse_mimic[findProcForIndex(k)] -= mass_kp * madhoc;
+#endif
 
 		/* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
 		if (star[k].se_k <= 1 && star[k].se_radius*RSUN/units.l >= bse_rl(mass_k/mass_kp)*(1.0-efinal)*afinal) {
@@ -220,7 +227,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		Einit = star[k].Eint + 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
 			star[kp].Eint + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
 			0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
+#ifdef USE_MPI
 		DMse += mass_k * madhoc;
+#else
+        DMse_mimic[findProcForIndex(k)] += mass_k * madhoc;
+#endif
 		aj = star[k].se_tphys - star[k].se_epoch;
 		star[k].se_mt = star[k].se_mc;
 		bse_star(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars);
@@ -230,7 +241,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		star[k].se_epoch = star[k].se_tphys - aj;
 		star[k].rad = star[k].se_radius * RSUN / units.l;
 		mass_k = star[k].se_mt * MSUN / units.mstar;
+#ifdef USE_MPI
 		DMse -= mass_k * madhoc;
+#else
+        DMse_mimic[findProcForIndex(k)] -= mass_k * madhoc;
+#endif
 
 		/* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
 		if (star[kp].se_k <= 1 && star[kp].se_radius*RSUN/units.l >= bse_rl(mass_kp/mass_k)*(1.0-efinal)*afinal) {
