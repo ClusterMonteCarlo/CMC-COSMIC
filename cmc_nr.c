@@ -8,13 +8,22 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
+/**
+* @brief 
+* binary search (pure serial version):
+* given the array star[].r and the two indices kmin and kmax,
+* with the conditions 
+* 1) array is monotonic in its indices,
+* 2) kmin<kmax,
+* find and return the index k, such that star[k].r<r<star[k+1].r
+*
+* @param kmin min start index for bisection
+* @param kmax max start index for bisection
+* @param r target value
+*
+* @return index k, such that star[k].r<r<star[k+1].r
+*/
 long FindZero_r_serial(long kmin, long kmax, double r){
-	/* binary search:
-	 * given the array star[].r and the two indices kmin and kmax,
-	 * with the conditions 
-	 * 1) array is monotonic in its indices,
-	 * 2) kmin<kmax,
-	 * find and return the index k, such that star[k].r<r<star[k+1].r */
 	long ktry;
 
 	if ((star[kmin].r>r && kmin>1) || star[kmax].r<r) {
@@ -36,13 +45,22 @@ long FindZero_r_serial(long kmin, long kmax, double r){
 	return kmin;
 }
 
+/**
+* @brief 
+* binary search:
+* given the array star[].r and the two indices kmin and kmax,
+* with the conditions 
+* 1) array is monotonic in its indices,
+* 2) kmin<kmax,
+* find and return the index k, such that star[k].r<r<star[k+1].r
+*
+* @param kmin min start index for bisection
+* @param kmax max start index for bisection
+* @param r target value
+*
+* @return index k, such that star[k].r<r<star[k+1].r
+*/
 long FindZero_r(long kmin, long kmax, double r){
-	/* binary search:
-	 * given the array star[].r and the two indices kmin and kmax,
-	 * with the conditions 
-	 * 1) array is monotonic in its indices,
-	 * 2) kmin<kmax,
-	 * find and return the index k, such that star[k].r<r<star[k+1].r */
 	long ktry;
 
 #ifdef USE_MPI
@@ -61,7 +79,6 @@ long FindZero_r(long kmin, long kmax, double r){
 
 	do {
 		ktry = (kmin+kmax+1)/2;
-		//printf("ktry=%ld\n",ktry);
 #ifdef USE_MPI
 		if (star_r[ktry]<r)
 #else
@@ -164,8 +181,28 @@ long FindZero_r(long x1, long x2, double r)
 */
 
 #ifdef USE_MPI
+/**
+* @brief Parallel version of FUNC macro, requires global indices as input after index transformation
+*
+* @param j ?
+* @param k ?
+* @param E energy
+* @param J angular momentum
+*
+* @return ? 
+*/
 #define FUNC(j, k, E, J) (2.0 * ((E) - (star_phi[(k)] + MPI_PHI_S(star_r[k], j))) - SQR((J)/star_r[(k)]))
 #else
+/**
+* @brief ?
+*
+* @param j ?
+* @param k ?
+* @param E energy
+* @param J angular momentum
+*
+* @return ? 
+*/
 #define FUNC(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR((J)/star[(k)].r))
 #endif
 
@@ -475,14 +512,19 @@ double find_root_vr(long index, long k, double E, double J) {
   /* check if the values of F at the interval boundaries have different signs */
 #ifdef USE_MPI
   if (GSL_SIGN(GSL_FN_EVAL(&F, star_r[k]))==GSL_SIGN(GSL_FN_EVAL(&F, star_r[k+1]))) {
+    eprintf("The signs of F[k] and F[k+1] are the same!\n");
+    eprintf("k= %li, F[k]= %g, F[k+1]= %g, r[k]= %g, r[k+1]= %g\n", k, 
+        GSL_FN_EVAL(&F, star_r[k]), GSL_FN_EVAL(&F, star_r[k+1]), star_r[k], star_r[k+1]);
+    eprintf("FUNC[k]= %g, FUNC[k+1]= %g\n", FUNC(index, k, E, J), FUNC(index, k+1, E, J));
+    eprintf("DBL_EPSILON= %g, r[k]= %g\n", DBL_EPSILON, star_r[k]);
 #else
   if (GSL_SIGN(GSL_FN_EVAL(&F, star[k].r))==GSL_SIGN(GSL_FN_EVAL(&F, star[k+1].r))) {
-#endif
     eprintf("The signs of F[k] and F[k+1] are the same!\n");
     eprintf("k= %li, F[k]= %g, F[k+1]= %g, r[k]= %g, r[k+1]= %g\n", k, 
         GSL_FN_EVAL(&F, star[k].r), GSL_FN_EVAL(&F, star[k+1].r), star[k].r, star[k+1].r);
     eprintf("FUNC[k]= %g, FUNC[k+1]= %g\n", FUNC(index, k, E, J), FUNC(index, k+1, E, J));
     eprintf("DBL_EPSILON= %g, r[k]= %g\n", DBL_EPSILON, star[k].r);
+#endif
     exit(1);
   }
 
@@ -518,7 +560,11 @@ double find_root_vr(long index, long k, double E, double J) {
       dprintf("Iterated %li times and did not get apside error down to %g!\n", APSIDES_MAX_ITER-iter, APSIDES_PRECISION);
       dprintf("The current interval is [%.16g,%.16g]\n", r_low, r_high);
       dprintf("Interval width is %.14g\n", r_high-r_low);
+#ifdef USE_MPI
+      dprintf("Distance between the stars is %g\n", star_r[k]- star_r[k+1]);
+#else
       dprintf("Distance between the stars is %g\n", star[k].r- star[k+1].r);
+#endif
       dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
       if (prev_apsis< 0.) {
 	dprintf("Consider now APSIDES_CONVERGENCE= %g.\n", APSIDES_CONVERGENCE);
@@ -543,7 +589,11 @@ double find_root_vr(long index, long k, double E, double J) {
   } else {
     dprintf("Found NO zero in interval [%.12g,%.12g]\n", r_low, r_high);
     dprintf("Interval width is %g\n", r_high-r_low);
+#ifdef USE_MPI
+    dprintf("Distance between the stars is %g\n", star_r[k]- star_r[k+1]);
+#else
     dprintf("Distance between the stars is %g\n", star[k].r- star[k+1].r);
+#endif
     dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
     exit(1);
   };

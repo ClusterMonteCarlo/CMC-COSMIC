@@ -41,6 +41,7 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
     double P_orb, double n_orb) {
 
 #ifdef USE_MPI
+	double r = star_r[get_global_idx(index)];
     MPI_File mpi_rwalk_file;
     char mpi_rwalk_file_buf[10000];
     char mpi_rwalk_file_wrbuf[10000000];
@@ -49,12 +50,13 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
 	 if(tcount==1)
 		 MPI_File_set_size(mpi_rwalk_file, 0);
 #else
+	 double r = star[index].r;
   FILE *rwalk_file= NULL;
   rwalk_file= fopen(fname, "a");
 #endif
 
   parafprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
-      index, TotalTime, star[index].r, Trel, dt, sqrt(l2_scale), n_steps, beta, n_local, W, P_orb, n_orb);
+      index, TotalTime, r, Trel, dt, sqrt(l2_scale), n_steps, beta, n_local, W, P_orb, n_orb);
 
 #ifdef USE_MPI
   mpi_para_file_write(mpi_rwalk_file_wrbuf, &mpi_rwalk_file_len, &mpi_rwalk_file_ofst_total, &mpi_rwalk_file);
@@ -146,7 +148,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	while (L2 > 0.0) { 
 		L2 -= fb_sqr(delta); 
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
-			dprintf("index=%ld, id=%ld: star eaten by BH\n", index, star[index].id);
+			dprintf("index=%ld, id=%ld: star eaten by BH\n", get_global_idx(index), star[index].id);
 #ifdef USE_MPI
 			cenma.m_new += star_m[g_index]; 
 #else
@@ -178,7 +180,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	}; 
 #ifdef EXPERIMENTAL
 	if (TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING && WRITE_RWALK_INFO) {
-		write_rwalk_data(fname, index, Trel, dt, l2_scale, n_steps, beta, 
+		write_rwalk_data(fname, get_global_idx(index), Trel, dt, l2_scale, n_steps, beta, 
 				n_local, W, P_orb, n_orb);
 	}
 #endif
@@ -225,7 +227,13 @@ double check_angle_w_w_new(double *w, double *w_new, double delta) {
    return(angle-delta);
 };
 
-/* calculate star's radial orbital period */
+/**
+* @brief calculate star's radial orbital period
+*
+* @param index star index
+*
+* @return  star's radial orbital period
+*/
 double calc_P_orb(long index)
 {
 	double E, J, Porb, error, Porbapproxmin, Porbapproxmax, Porbapprox;
@@ -374,7 +382,14 @@ double calc_p_orb_f(double x, void *params) {
 	return(2.0 / sqrt(radicand));
 }
 
-/* integrand for calc_P_orb */
+/**
+* @brief integrand for calc_P_orb
+*
+* @param x ?
+* @param params ?
+*
+* @return ?
+*/
 double calc_p_orb_f2(double x, void *params) {
 	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
 	double radicand;
@@ -389,7 +404,14 @@ double calc_p_orb_f2(double x, void *params) {
 	return(2.0 / sqrt(radicand));
 }
 
-/* integrand for calc_P_orb, using Gauss-Chebyshev for regularizing the integrand near the endpoints */
+/**
+* @brief integrand for calc_P_orb, using Gauss-Chebyshev for regularizing the integrand near the endpoints
+*
+* @param x ?
+* @param params ?
+*
+* @return ?
+*/
 double calc_p_orb_gc(double x, void *params) {
 	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
 	double radicand;

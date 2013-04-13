@@ -205,8 +205,23 @@ void qsorts(star_t *s, long N){
 // ************************************************************** //
 //typedef star_t type;
 
+/**
+* @brief returns the key of a given data element
+*
+* @param buf input data element
+*
+* @return key of the data element
+*/
 keyType getKey(type* buf) { return (buf->r); }
 
+/**
+* @brief comparison function for sort.
+*
+* @param a first key
+* @param b second key
+*
+* @return returns 1 if a > b, -1 if a < b, 0 if equal.
+*/
 int compare_keyType (const void * a, const void * b) 
 {
 	if( *((keyType*)a) < *((keyType*)b) ) return -1;
@@ -214,6 +229,14 @@ int compare_keyType (const void * a, const void * b)
 	return 0;
 }
 
+/**
+* @brief comparison function for sort
+*
+* @param a first data element
+* @param b second data element
+*
+* @return returns 1 if a > b, -1 if a < b, 0 if equal.
+*/
 int compare_type (const void * a, const void * b)
 {
 	if( getKey((type*)a) < getKey((type*)b) ) return -1;
@@ -222,6 +245,13 @@ int compare_type (const void * a, const void * b)
 }
 
 
+/**
+* @brief given the total number of data elements, number or processors, computes the expected count based on the data partitioning scheme
+*
+* @param expected_count array where the expected count will be store after computation
+* @param N total number of data elements
+* @param numprocs number of processors
+*/
 void find_expected_count( int* expected_count, int N, int numprocs )
 {
 	findLimits( N, MIN_CHUNK_SIZE );
@@ -237,12 +267,23 @@ void find_expected_count( int* expected_count, int N, int numprocs )
 */
 }
 
+/**
+* @brief returns n_samples samples from the given N data elements in array buf
+*
+* @param buf array that needs to be sampled
+* @param sample_array array in which samples will be stored
+* @param N number of data elements in buf
+* @param n_samples number of samples required
+*
+* @return 
+*/
 keyType* sample(type *buf, keyType *sample_array, int N, int n_samples)
 {
 	//srand ( time(NULL) );
 	if(n_samples > N)
 		eprintf("Oversampling occurred! id = %d num samples = %d local no. of stars = %d", myid, n_samples, N);
 
+	//MPI: For now, we do regular sampling. In future we might want to explore random sampling.
 	int i;
 	for(i=1; i<=n_samples; i++)
 		// RANDOM
@@ -254,7 +295,16 @@ keyType* sample(type *buf, keyType *sample_array, int N, int n_samples)
 	return sample_array;
 }
 
-//Re-write using compare fn.
+/**
+* @brief binary search on buf for r
+*
+* @param buf input array on which search is done
+* @param r target value
+* @param kmin left start index
+* @param kmax right start index
+*
+* @return index k such that buf[k] < r < buf[k+1]
+*/
 int binary_search( type* buf, keyType r, int kmin, int kmax )
 {
    int ktry;
@@ -279,6 +329,12 @@ int binary_search( type* buf, keyType r, int kmin, int kmax )
    return kmin+1;
 }
 
+/**
+* @brief Stripped stars have their r values set to SF_INFINITY. The first step of the parallel sort is a local sort by each processor. During this, these stars are pushed to the end of the local array. This routine removes all of these stars starting from the end of the sorted array.
+*
+* @param buf array sorted by r
+* @param local_N number of stars in the array
+*/
 void remove_stripped_stars(type* buf, int* local_N)
 {
 	// Fixing local_N to account for lost stars.
@@ -293,6 +349,24 @@ void remove_stripped_stars(type* buf, int* local_N)
 }
 
 // NEWER VERSION OF SAMPLE SORT WITH CLEANER LOAD BALANCING FUNCTION
+/**
+* @brief Parallel sample sort. Following are the steps:
+* 1. Local sort - each processor sorts the local data using sequential sort
+* 2. Sampling - each processor samples s keys from the local dataset and sends them to the root node. The root node sorts these s*p keys, and picks p regularly sampled keys/points among these, called splitter points which are broadcasted to all processors. These points are supposed to divide the entire dataset into p buckets with approximately equaly number of points in them. This extent to which this division will be equal is a factor of the number of samples s contributed by each processor. If s=p, and regular sampling is used, the load balance will be ideal i.e. the maximum number of points ending up in a processor would be at most ~ 2*N/p. If s < p, it'll be worse, and is s > p, it'll be better.
+* 3. Each processor places these splitter points into their sorted local array using binary search.
+* 4. All processors have an all-to-all communication and exchange data
+* 5. Each processor sorts the received chunks of data which completes the sort
+* 6. Since the number of points ending up on each processor is non-deterministic, an optional phase is to exchange data between processors so that the number of data points on each processor is in accordance with out data partitioning scheme.
+* @param buf the local data set (star) which is a part of the entire data set which is divided among many processors which is to be sorted in parallel
+* @param local_N number of local data points
+* @param dataType MPI datatype for the star data structure
+* @param b_buf binary local data set
+* @param b_dataType  MPI datatype for the binary data structure
+* @param commgroup MPI communication group
+* @param n_samples number of samples to be contributed by each processor
+*
+* @return total number of stars that were sorted
+*/
 int sample_sort( type	      *buf,
                  int	      *local_N,
                  MPI_Datatype dataType,
@@ -328,34 +402,35 @@ int sample_sort( type	      *buf,
 	qsort( buf, *local_N, sizeof(type), compare_type );
 	timeEndSimple(tmpTimeStart2, &t_sort_lsort1);
 
-	// Fixing local_N to account for lost stars.
+	/* some stars are destroyed during the timestep, and their r values are set to infinity. Using this, we here remove them, and fix local_N to account for these lost stars. */
 	tmpTimeStart2 = timeStartSimple();
 	remove_stripped_stars(buf, local_N);
 
-	// Find global total number of elements to be sorted in parallel
+	/* find total number of elements to be sorted in parallel */
 	double tmpTimeStart3 = timeStartSimple();
 	MPI_Allreduce(local_N, &global_N, 1, MPI_INT, MPI_SUM, commgroup);
 	timeEndSimple(tmpTimeStart3, &t_comm);
 
+	/* find the expected number of elements each processor should have as per the data partitioninig scheme */
 	expected_count = (int*) malloc(procs * sizeof(int));
 	find_expected_count( expected_count, global_N, procs );
 	timeEndSimple(tmpTimeStart2, &t_sort_oth);
 
+	/* Picking samples from the local data set */
 	tmpTimeStart2 = timeStartSimple();
-	/* Picking random/uniform samples and sending to root */
 	sampleKeyArray_local = (keyType*) malloc(n_samples * sizeof(keyType));
 	sample(buf, sampleKeyArray_local, *local_N, n_samples);
 
-	/* Sample arrays to collect samples from each node and send to root */
+	/* root node gathers the samples from all nodes */
 	sampleKeyArray_all = (keyType*) malloc(procs * n_samples * sizeof(keyType));
 	tmpTimeStart3 = timeStartSimple();
 	MPI_Gather(sampleKeyArray_local, n_samples * sizeof(keyType), MPI_BYTE, sampleKeyArray_all, n_samples * sizeof(keyType), MPI_BYTE, 0, commgroup);
 	timeEndSimple(tmpTimeStart3, &t_comm);
 
-	/* procs-1 numbers are enough to determine which elements belong to which bucket/proc. */
+	/* procs-1 numbers are enough for p buckets (1 bucket/processor) */
 	splitterArray = (keyType*) malloc((procs-1) * sizeof(keyType));
 
-	/* Sorting the collected samples, and sending back splitters */
+	/* Sorting the collected samples and determining splitters */
 	if(myid==0)
 	{
 		qsort( sampleKeyArray_all, procs*n_samples, sizeof(keyType), compare_keyType );
@@ -364,6 +439,7 @@ int sample_sort( type	      *buf,
 			splitterArray[i] = sampleKeyArray_all[ (i+1) * n_samples - 1 ];
 	}
 
+	/* sending back splitters to all nodes */
 	tmpTimeStart3 = timeStartSimple();
 	MPI_Bcast(splitterArray, (procs-1) * sizeof(keyType), MPI_BYTE, 0, MPI_COMM_WORLD);
 	timeEndSimple(tmpTimeStart3, &t_comm);
@@ -378,7 +454,9 @@ int sample_sort( type	      *buf,
 	free(sampleKeyArray_all);
 	free(sampleKeyArray_local);
 	free(splitterArray);
+	timeEndSimple(tmpTimeStart2, &t_sort_splitters);
 
+	tmpTimeStart2 = timeStartSimple();
 	/* find send/recv count for each send/recv */
 	send_count = (int*) malloc(procs * sizeof(int));
 	recv_count = (int*) malloc(procs * sizeof(int));
@@ -387,35 +465,36 @@ int sample_sort( type	      *buf,
 
 	send_count[procs-1] = (*local_N) - send_index[procs-1]; // + 1;
 
+	/* exchange the send counts to know how many stars are to be received */
 	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoall(send_count, 1, MPI_INT, recv_count, 1, MPI_INT, commgroup);
 	timeEndSimple(tmpTimeStart3, &t_comm);
 
+	/* calculate total number of stars to be received on this node */
 	total_recv_count = 0;
 	for (i=0; i<procs; i++) total_recv_count += recv_count[i];
 
+	/* calculate the receive displacements for the mpi communication */
 	int* recv_displ = (int*) malloc(procs * sizeof(int));
 	recv_displ[0] = 0;
 	for(i=1; i<procs; i++)
 		recv_displ[i] = recv_displ[i-1] + recv_count[i-1];
 
+	/* find the actual counts on each processor - to be used later too */
 	actual_count = (int*) malloc(procs * sizeof(int));
 	tmpTimeStart3 = timeStartSimple();
 	MPI_Allgather( &total_recv_count, 1, MPI_INT, actual_count, 1, MPI_INT, commgroup );
 	timeEndSimple(tmpTimeStart3, &t_comm);
-	timeEndSimple(tmpTimeStart2, &t_sort_splitters);
 
-	//Finding the maximum size of resultBuf to be allocated.
-	tmpTimeStart2 = timeStartSimple();
+	/* finding the maximum size of resultBuf to be allocated */
 	max_alloc_outbuf_size = 0;
 	for(i=0; i<procs; i++)
 		max_alloc_outbuf_size = (actual_count[i] > max_alloc_outbuf_size) ? actual_count[i] : max_alloc_outbuf_size;
 
 	/* allocate recv buffer */
-	//MPI3: Hopefully allocating actual_count[myid] elements would be sufficient.
 	resultBuf = (type*) malloc(actual_count[myid] * sizeof(type)); 
 
-	//MPI3: All to all communication
+	/* all to all communication */
 	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoallv(buf, send_count, send_index, dataType, resultBuf, recv_count, recv_displ, dataType, commgroup);
 	timeEndSimple(tmpTimeStart3, &t_comm);
@@ -426,37 +505,46 @@ int sample_sort( type	      *buf,
 
 
 	/***** Binary data *****/
+	/* Now, we also have to send the binaries to the appropriate processor. For each bucket, we go over the single stars, and using their binind values, pack together all binaries that need to go to the appropriate processor. Once this is done for all buckets in each processor, we do an all to all communication and we're done. We also make sure the binind values are set appropriately. */
 	int* b_send_index = (int*) malloc(procs * sizeof(int));
 	int* b_send_count = (int*) malloc(procs * sizeof(int));
 	int* b_recv_count = (int*) malloc(procs * sizeof(int));
+/* buffer to pack binaries such that the binaries of each bucket are packet together and in sequence*/
 	binary_t* b_tmp_buf = (binary_t*) malloc(N_BIN_DIM_OPT * sizeof(binary_t));
 
 	int j, k=0;
+	//Iterate over each bucket
 	for(i=0; i<procs;i++)
 	{
 		b_send_index[i] = k;
+		//Go over the single stars in the bucket
 		for(j=send_index[i]; j<send_index[i]+send_count[i]; j++)
 		{
+			//If it is a binary, copy it to the buffer
 			if(buf[j].binind > 0)
 			{
-				//MPI3: binind-1 is used as binary+1 is passed as input to this sorting function.
+				//MPI: binind-1 is used since binary+1 is passed as input to this sorting function.
 				memcpy(&b_tmp_buf[k], &b_buf[buf[j].binind-1], sizeof(binary_t));
 				k++;
 			}
 		}
+		//Set the send count for this bucket
 		b_send_count[i] = k - b_send_index[i];
 	}
 
-	//MPI3: Set binary array to zeros, if not might cause problems when new stars are created in the next timestep. So it's best to wipe out the older data.
+	//MPI: Set binary array to zeros, if not might cause problems when new stars are created in the next timestep. So it's best to wipe out the older data.
 	memset (b_buf, 0, (N_BIN_DIM_OPT-1) * sizeof(binary_t));
 
+	/* exchange send counts to know how many binaries to receive from each node */
 	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoall(b_send_count, 1, MPI_INT, b_recv_count, 1, MPI_INT, commgroup);
 	timeEndSimple(tmpTimeStart3, &t_comm);
 
+	/* total receive count for this node */
 	int b_total_recv_count = 0;
 	for (i=0; i<procs; i++) b_total_recv_count += b_recv_count[i];
 
+	/* receive displacement for all to all communication */
 	int* b_recv_displ = (int*) malloc(procs * sizeof(int));
 	b_recv_displ[0] = 0;
 	for(i=1; i<procs; i++)
@@ -464,14 +552,13 @@ int sample_sort( type	      *buf,
 
 	binary_t* b_resultBuf = (binary_t*) malloc(N_BIN_DIM_OPT * sizeof(binary_t));
 
-	//MPI3: All to All Communication
+	/* all to all communication */
 	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoallv(b_tmp_buf, b_send_count, b_send_index, b_dataType, b_resultBuf+1, b_recv_count, b_recv_displ, b_dataType, commgroup);
 	timeEndSimple(tmpTimeStart3, &t_comm);
 
-	//MPI3: Before we do local sort, we need to fix the binary addressing.
-	//Test thoroughly. Before alltoall use the id value of star elements to one of the ids of binaries, and check post sort - for testing.
-	//MPI3: k starts from 1 because binind has to be > 0 for binaries. and also the 0th element in the binary array is not to be used.
+	//MPI: Before we do local sort, we need to fix the binary addressing i.e. the binind values.
+	//MPI: k starts from 1 because binind has to be > 0 for binaries. and also the 0th element in the binary array is not to be used.
 	k=1; 
 	int kprev;
 	for(i=0; i<procs; i++)
@@ -485,10 +572,10 @@ int sample_sort( type	      *buf,
 				k++;
 			}
 		}
-		//MPI3: Checks to make sure the right number of binaries are recd.
+		//MPI: Checks to make sure the right number of binaries are recd.
 		if(k-kprev!=b_recv_count[i]) eprintf("mismatch in proc %d j = %d recv_cnt = %d\n", myid, k-kprev, b_recv_count[i]);
 	}
-	//MPI3: Additional checks.
+	//MPI: Additional checks.
 	if(k-1!=b_total_recv_count)
 		eprintf("Binary numbers mismatch in proc %d j = %d recv_cnt = %d\n", myid, k-1, b_total_recv_count);
 
@@ -498,13 +585,14 @@ int sample_sort( type	      *buf,
 
 
 
+	/* merge chunks recieved and local sort */
 	tmpTimeStart2 = timeStartSimple();
 	qsort(resultBuf, total_recv_count, sizeof(type), compare_type);
 	timeEndSimple(tmpTimeStart2, &t_sort_lsort2);
 	timeEndSimple(tmpTimeStart, &t_sort_only);
 
 
-
+	/* exchange stars between processors to stay consistent with data partitioning scheme */
 	tmpTimeStart = timeStartSimple();
 	load_balance(resultBuf, buf, b_resultBuf, b_buf, expected_count, actual_count, myid, procs, dataType, b_dataType, commgroup);
 	timeEndSimple(tmpTimeStart, &t_sort_lb);
@@ -535,7 +623,9 @@ int sample_sort( type	      *buf,
 	return global_N;
 }
 
-
+/**
+* @brief after sample sort, exchanges data between processors to make sure the number of stars in each processor is in accordance with the data partitioning scheme
+*/
 void load_balance( 	type 				*inbuf,
 							type 				*outbuf,
 							binary_t			*b_inbuf,
@@ -563,10 +653,12 @@ void load_balance( 	type 				*inbuf,
 	actual_cum_count[0] = 0;
 	splitter[0] = 0;
 
+	//Finding the expected and actual cumulative counts until the processors before this processor
 	for(i=1; i<procs; i++)
 	{
 		expected_cum_count[i] = expected_count[i-1] + expected_cum_count[i-1];
 		actual_cum_count[i] = actual_count[i-1] + actual_cum_count[i-1];
+		//If you imagine an array putting together all the data, then this would be the splitter that would ideally divide this array into near-equal pieces (or as per the data partitioning scheme)
 		splitter[i] = expected_cum_count[i];
 	}
 
@@ -579,6 +671,7 @@ void load_balance( 	type 				*inbuf,
 	{
 		if(local_count == 0) break;
 
+		//Based on the relative position between the each splitter and actual cumulative count for this processor, we decide which chunk of data goes to which processor. For a not so bad distribution of stars among processors, this will essentially be communication between neighbors, but in worse cases, this might need much more than that - an all to all communication, which is what we do here.
 		if(splitter[i] >= actual_cum_count[myid] && splitter[i] < actual_cum_count[myid] + local_count)
 		{
 			send_index[i] = splitter[i] - actual_cum_count[myid];
@@ -589,6 +682,7 @@ void load_balance( 	type 				*inbuf,
 			break;
 	}
 
+	//figure out send and receive parameters
 	send_count[i-1] = local_count - send_index[i-1];
 
 	double tmpTimeStart3 = timeStartSimple();
@@ -604,6 +698,7 @@ void load_balance( 	type 				*inbuf,
 	for(i=1; i<procs; i++)
 		recv_displ[i] = recv_displ[i-1] + recv_count[i-1];
 
+	//all to all communication
 	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoallv(inbuf, send_count, send_index, dataType, outbuf, recv_count, recv_displ, dataType, commgroup);
 	timeEndSimple(tmpTimeStart3, &t_comm);
@@ -614,6 +709,7 @@ void load_balance( 	type 				*inbuf,
 
 
 	/***** Binary data *****/
+	//binary data is handled similar to th sorting routine
 	int* b_send_index = (int*) malloc(procs * sizeof(int));
 	int* b_send_count = (int*) malloc(procs * sizeof(int));
 	int* b_recv_count = (int*) malloc(procs * sizeof(int));
@@ -644,12 +740,12 @@ void load_balance( 	type 				*inbuf,
 	for(i=1; i<procs; i++)
 		b_recv_displ[i] = b_recv_displ[i-1] + b_recv_count[i-1];
 
-	//MPI3: All to All Communication
+	//MPI: All to All Communication
 	tmpTimeStart3 = timeStartSimple();
 	MPI_Alltoallv(b_tmp_buf, b_send_count, b_send_index, b_dataType, b_outbuf, b_recv_count, b_recv_displ, b_dataType, commgroup);
 	timeEndSimple(tmpTimeStart3, &t_comm);
 
-	//MPI3: k starts from 1 because binind has to be > 0 for binaries. and also the 0th element in the binary array is not to be used.
+	//MPI: k starts from 1 because binind has to be > 0 for binaries. and also the 0th element in the binary array is not to be used.
 	k=1;
 	int kprev;
 	for(i=0; i<procs; i++)

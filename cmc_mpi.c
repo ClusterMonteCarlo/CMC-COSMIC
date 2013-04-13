@@ -46,11 +46,18 @@ void mpiFindIndicesSpecialGen( long N, int i, int* mpiStart, int* mpiEnd )
 	}
 }
 
-/**************************************************************************
-Function to find start and end indices for each processor for a loop over N.
-If blkSize is 1, N is divided equally amond procs. If blkSize > 0, N*blkSize
-stars are divided among procs making sure each contains multiples of blkSize.
-**************************************************************************/
+/**
+* @brief
+Function to find start and end indices for the given processor i.
+If blkSize is 1, N is divided equally among processors. If blkSize > 0, N*blkSize
+stars are divided among procs in such a way that each contain multiples of blkSize.
+*
+* @param N the number of blocks of size blkSize to be divided among processors
+* @param blkSize size of blocks
+* @param i processor id
+* @param mpiStart indices
+* @param mpiEnd
+*/
 void mpiFindIndices( long N, int blkSize, int i, int* mpiStart, int* mpiEnd )
 {
 	long chunkSize =  ( N / procs ) * blkSize;
@@ -64,6 +71,14 @@ void mpiFindIndices( long N, int blkSize, int i, int* mpiStart, int* mpiEnd )
    }
 }
 
+/**
+* @brief Populates the mpiStart and mpiEnd values given the initial data size N, and the factor blkSize which data in each processor is required to be a multiple of (except the last processor). Followin is the data partitioning scheme - Each processor gets data that is a multiple of blkSize, and the remainder after division goes to the last processor. For more details, refer to: http://adsabs.harvard.edu/abs/2013ApJS..204...15P.
+*
+* @param N data size that needs to be partitioned
+* @param blkSize the factor blkSize which data in each processor is required to be a multiple of (except the last one).
+* @param mpiStart start index of the data elements in the global array belonging to processor i.
+* @param mpiEnd array end index of the data elements in the global array belonging to processor i.
+*/
 void mpiFindIndicesCustom( long N, int blkSize, int i, int* mpiStart, int* mpiEnd )
 {
 	int blocks, remain;

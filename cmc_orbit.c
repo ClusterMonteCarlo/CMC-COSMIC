@@ -394,9 +394,16 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
 
   ktemp= get_positive_Q_index(index, E, J);
   if (ktemp<=-1) {
+#ifdef USE_MPI
+    dprintf("Did not find a single positive Q value! index= %li\n", g_si);
+    dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
+        g_si, star_r[g_si], star[index].vr, star[index].vt, star[index].J, star[index].E);
+#else
     dprintf("Did not find a single positive Q value! index= %li\n", index);
     dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
         index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E);
+#endif
+
 #ifdef USE_MPI
     orbit_rs.rp = star_r[g_si];
     orbit_rs.ra = star_r[g_si];
@@ -503,21 +510,30 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   /* another case of a circular orbit */
   if (!circular && ((rmin > rmax)||(dQdr_min<=0.)||(dQdr_max>=0.))) {
     eprintf("circular orbit found!\n");
+#ifdef USE_MPI
+    eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
+	rmin, rmax, kmin, kmax, index, star_r[index], star[index].vr, star[index].vt, star[index].J, star[index].E,
+	function_Q(index, kmin, star[index].E, star[index].J), function_Q(index, kmax, star[index].E, star[index].J),
+	dQdr_min,dQdr_max,dQdr_min_num,dQdr_max_num);
+#else
     eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
 	rmin, rmax, kmin, kmax, index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E,
 	function_Q(index, kmin, star[index].E, star[index].J), function_Q(index, kmax, star[index].E, star[index].J),
 	dQdr_min,dQdr_max,dQdr_min_num,dQdr_max_num);
+#endif
     circular= 1;
   }
 
   /* Set the return variables. */
   if (circular) {
-    dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
-        index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E);
 #ifdef USE_MPI
+    dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
+        index, star_r[index], star[index].vr, star[index].vt, star[index].J, star[index].E);
     orbit_rs.rp = star_r[g_si];
     orbit_rs.ra = star_r[g_si];
 #else
+    dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
+        index, star[index].r, star[index].vr, star[index].vt, star[index].J, star[index].E);
     orbit_rs.rp = star[index].r;
     orbit_rs.ra = star[index].r;
 #endif

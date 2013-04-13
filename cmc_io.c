@@ -16,13 +16,22 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/* print the version */
+/**
+* @brief print the version
+*
+* @param stream stream to be printed to
+*/
 void print_version(FILE *stream)
 {
 	fprintf(stream, "** %s %s (%s) [%s] **\n", CMCPRETTYNAME, CMCVERSION, CMCNICK, CMCDATE);
 }
 
-/* print the usage */
+/**
+* @brief print the usage
+*
+* @param stream stream to be printed to
+* @param argv[] input arg list
+*/
 void cmc_print_usage(FILE *stream, char *argv[])
 {
 	fprintf(stream, "USAGE:\n");
@@ -35,10 +44,15 @@ void cmc_print_usage(FILE *stream, char *argv[])
 	fprintf(stream, "  -h --help    : display this help text\n");
 }
 
+/**
+* @brief Writes output to stdout and all files required for post-simulation analysis.
+*/
 void print_results(void){
 #ifdef USE_MPI
+	//MPI: Writes out files that need contribution from all/many processors.
     PrintParaFileOutput();
 #endif
+	 //MPI: These two routines mostly write files that are need data only from the root node.
     PrintLogOutput();
     PrintFileOutput();
     fflush(NULL);
@@ -78,6 +92,9 @@ void print_bh_snapshot(void) {
 
 
 
+/**
+* @brief Calculates some quantities required for output and prints out log files. These are mostly files that need data only from the root node to be written out.
+*/
 void PrintLogOutput(void)
 {
 	double m, rh, trh, conc_param, m_single, m_binary;
@@ -88,6 +105,7 @@ void PrintLogOutput(void)
 	rh_binary = rh_single = m_binary = m_single = 0.0;
 
 #ifdef USE_MPI
+	//MPI: Do computations on duplicated arrays separately.
 	for (ih=1; ih<=clus.N_MAX; ih++) {
 		k = ih;
 
@@ -98,19 +116,20 @@ void PrintLogOutput(void)
 		}
     }
 
-    double *m_binary_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
-    double *m_single_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
+	//MPI: Arrays to store all intermediate values while cumulating these sums.
+	double *m_binary_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
+	double *m_single_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
 
 	for (ih=1; ih<=clus.N_MAX_NEW; ih++) {
 		k = ih;
-        int g_k = get_global_idx(k);
+		int g_k = get_global_idx(k);
 
 		if (star[k].binind > 0) {
 			m_binary_arr[k] = m_binary_arr[k-1] + star_m[g_k] / clus.N_STAR;
-            m_single_arr[k] = m_single_arr[k-1];
+			m_single_arr[k] = m_single_arr[k-1];
 		} else {
 			m_single_arr[k] = m_single_arr[k-1] + star_m[g_k] / clus.N_STAR;
-            m_binary_arr[k] = m_binary_arr[k-1];
+			m_binary_arr[k] = m_binary_arr[k-1];
 		}
     }
 
@@ -119,7 +138,8 @@ void PrintLogOutput(void)
     buf_comm[0] = m_binary_arr[clus.N_MAX_NEW];
     buf_comm[1] = m_single_arr[clus.N_MAX_NEW];
 
-    //MPI3: Since only the root node will print out these stuff, Allreduce is not reqd.
+	 //MPI: Reduce to find out the total sums.
+    //MPI: Since only the root node will print out these stuff, Allreduce is not reqd, just Reduce will do.
     //MPI_Allreduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	 double tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -130,16 +150,17 @@ void PrintLogOutput(void)
         m_single = buf_comm_recv[1];
     }
 
+	 //MPI: Find out cumulative sums of values in all processors with ids less than current processor.
 	 tmpTimeStart = timeStartSimple();
     MPI_Exscan(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	 timeEndSimple(tmpTimeStart, &t_comm);
 
-	for (ih=1; ih<=clus.N_MAX_NEW; ih++) {
+	 for (ih=1; ih<=clus.N_MAX_NEW; ih++) {
 		k = ih;
-        int g_k = get_global_idx(k);
+		int g_k = get_global_idx(k);
 
+		//MPI: Now, we can find out when this condition is satisfied in each processor with the intermediate values.
 		if ((m_single_arr[k] + buf_comm_recv[1]) / (Mtotal - (M_b / clus.N_STAR)) <= 0.5) {
-//			rh_single = (m_single_arr[k] + buf_comm_recv[1]) / (Mtotal - (M_b / clus.N_STAR));//star_r[g_k];
 			rh_single = star_r[g_k];
 		}
 
@@ -149,12 +170,12 @@ void PrintLogOutput(void)
 				rh_binary = star_r[g_k];
 			}
 		}
-    }
+	 }
 
     buf_comm[0] = rh_binary;
     buf_comm[1] = rh_single;
 
-    //MPI3: Since r's are always monotonically increasing since they are sorted, I can just take the max.
+    //MPI: Since r's are always monotonically increasing since they are sorted, I can just take the max.
     //MPI_Allreduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 	 tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 2, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -209,6 +230,7 @@ void PrintLogOutput(void)
 		conc_param = (max_r / core_radius);
 	}
 
+	//MPI: Print out files.
 	rootgprintf("******************************************************************************\n");
 	pararootfprintf(logfile, "******************************************************************************\n");
 
@@ -239,11 +261,15 @@ void PrintLogOutput(void)
 	pararootfprintf(logfile, "******************************************************************************\n");
 
 #ifdef USE_MPI
+	//MPI: The log file is written both in parallel in PrintParaFileOutput before this where details of interactions between stars etc are printed out, as well as here by the root node where the summary of the timestep is printed out.
     mpi_para_file_write(mpi_logfile_wrbuf, &mpi_logfile_len, &mpi_logfile_ofst_total, &mpi_logfile);
 #endif
 
 }
 
+/**
+* @brief prints out some more files
+*/
 void PrintFileOutput(void) {
 	long i, j, n_single, n_binary, n_single_c, n_binary_c, n_single_nb, n_binary_nb, N_core_binary, N_core_binary_nb, n_10=1, n_sing_10=0, n_bin_10=0;
 	double fb, fb_core, fb_core_nb, m_sing_10=0.0, m_bin_10=0.0, m_10=0.0, r_10=0.0, rho_10=0.0;
@@ -339,7 +365,7 @@ void PrintFileOutput(void) {
 			n_10++;
 		}
 
-        n_10--; //since n_10 is initialized to 1 for all procs. So if summed, it'll give the wrong index.
+        n_10--; //MPI: since n_10 is initialized to 1 for all procs. So if summed, it'll give the wrong index.
         long buf_comm_long[3];
         long buf_comm_long_recv[3];
         double buf_comm_dbl[3];
@@ -351,9 +377,9 @@ void PrintFileOutput(void) {
 
         buf_comm_dbl[0] = m_sing_10;
         buf_comm_dbl[1] = m_bin_10;
-        buf_comm_dbl[2] = m_10 - m_10_prev; //bugfix: subrtaction is reqd, otherwise m_10 of proc 0 will be added proc times, of proc 1 added proc-1 times and so on.
+        buf_comm_dbl[2] = m_10 - m_10_prev; //MPI: bugfix: subrtaction is reqd, otherwise m_10 of proc 0 will be added proc times, of proc 1 added proc-1 times and so on.
 
-        //MPI3: Since only root node is printing Allreduce is not reqd.
+        //MPI: Since only root node is printing Allreduce is not reqd, just Reduce will do.
 		  double tmpTimeStart = timeStartSimple();
         MPI_Reduce(buf_comm_long, buf_comm_long_recv, 3, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(buf_comm_dbl, buf_comm_dbl_recv, 3, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -414,7 +440,6 @@ void PrintFileOutput(void) {
 #endif
 	}
 
-	//MPI3: Commenting out since it is throwing seg fault. Later needs to be fixed.
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
 	   whereas N_b only counts EXISTING BOUND binaries. */
 	/* calculate core binary fraction */
@@ -455,7 +480,7 @@ void PrintFileOutput(void) {
     buf_comm[4] = n_single;
     buf_comm[5] = n_binary;
 
-    //MPI3: Since only root node is printing Allreduce is not reqd.
+    //MPI: Since only root node is printing Allreduce is not reqd.
 	 double tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 6, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
 	 timeEndSimple(tmpTimeStart, &t_comm);
@@ -531,7 +556,9 @@ void PrintFileOutput(void) {
 	}
 }
 
-/* Meagan: extra output for bhs */
+/**
+* @brief Meagan: extra output for bhs
+*/
 void print_bh_summary() {
 
 #ifdef USE_MPI
@@ -597,7 +624,9 @@ void print_bh_summary() {
 	bh89=0;
 }
 
-/* Meagan - extra output for bhs */
+/**
+* @brief Meagan - extra output for bhs
+*/
 void print_esc_bh_summary() {
         // Meagan: log info about escaped bhs
 
@@ -617,7 +646,7 @@ void print_esc_bh_summary() {
     buf_comm[10] = esc_bh26;
     buf_comm[11] = esc_bh89;
 
-    //MPI3: esc_bhstar, and esc_bhwd might be calculated after the reduce instead of in bh_count to save 2 communication calls.
+    //MPI: esc_bhstar, and esc_bhwd might be calculated after the reduce instead of in bh_count to save 2 communication calls.
 	 double tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 12, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
 	 timeEndSimple(tmpTimeStart, &t_comm);
@@ -692,6 +721,13 @@ void print_esc_bh_summary() {
     esc_fb_bh = 0.0;
 }
 
+/**
+* @brief finds number of single and binary stars within a given radial position
+*
+* @param r radial position
+* @param ns variable to hold/return number of single stars
+* @param nb variable to hold/return number of binary stars
+*/
 void find_nstars_within_r(double r, long *ns, long *nb)
 {
     long i;
@@ -709,8 +745,12 @@ void find_nstars_within_r(double r, long *ns, long *nb)
 }
 
 #ifdef USE_MPI
+/**
+* @brief This is the function which actually writes the parallel file buffers into the file in parallel using MPI IO.
+*/
 void PrintParaFileOutput(void)
 {
+	//This macro writes out the corresponding buffer into the corresponding file in parallel using MPI-IO. Here we write out all the files that need contribution from more than one processor.
     mpi_para_file_write(mpi_logfile_wrbuf, &mpi_logfile_len, &mpi_logfile_ofst_total, &mpi_logfile);
     mpi_para_file_write(mpi_escfile_wrbuf, &mpi_escfile_len, &mpi_escfile_ofst_total, &mpi_escfile);
     mpi_para_file_write(mpi_binintfile_wrbuf, &mpi_binintfile_len, &mpi_binintfile_ofst_total, &mpi_binintfile);
@@ -733,23 +773,42 @@ void PrintParaFileOutput(void)
     }
 }
 
+/**
+* @brief Flushes out data in parallel present in the char buffer to the corresponding file using MPI-IO
+*
+* @param wrbuf write buffer containing the data to be flushed out
+* @param len length/size of the data in the buffer
+* @param prev_cum_offset offset of the file where the data needs to be written
+* @param fh MPI-IO File handle
+*/
 void mpi_para_file_write(char* wrbuf, int *len, int *prev_cum_offset, MPI_File* fh)
 {
     int offset=0, tot_offset=0;
     MPI_Status mpistat;
+	 //First find out the offset for this processor based on the buffer lengths of other procecessors
     MPI_Exscan(len, &offset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+	 //Add this offset to the previous cumulative file offset
     offset += *prev_cum_offset;
+	 //Write data to file in parallel
     MPI_File_write_at_all(*fh, offset, wrbuf, *len, MPI_CHAR, &mpistat);
 
+	 //Update cumulative file offset for next flush
     MPI_Allreduce (len, &tot_offset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     *prev_cum_offset += tot_offset;
 
+	 //Reset buffer and length variables
     wrbuf[0] = '\0';
     *len=0;
 }
 #endif
 
-/*** Parsing of Input Parameters / Memory allocation / File I/O ***/
+/**
+* @brief Parsing of Input Parameters / Memory allocation / File I/O
+*
+* @param argc Input argument count from main()
+* @param argv[] Input argument list from main()
+* @param r gsl rng
+*/
 void parser(int argc, char *argv[], gsl_rng *r)
 {
 	char inputfile[1024], outfile[1024], outfilemode[5];
@@ -825,6 +884,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		exit(1);
 	}
 	
+//MPI: File printed out only by the root node.
 #ifdef USE_MPI
 if(myid==0) {
 #endif
@@ -1402,6 +1462,7 @@ if(myid==0)
         parse_snapshot_windows(SNAPSHOT_WINDOWS);
 
 	/* read the number of stars and possibly other parameters */
+	/* MPI: Currently, all processors read the entire data (entire list of stars and binaries) from the file. The data partitioning is done in load_fits_file_data(). This might limit scalability since each node requires enough memory to store the entire data set. */
 	cmc_read_fits_file(INPUT_FILE, &cfd);
 	clus.N_STAR = cfd.NOBJ;
 	clus.N_BINARY = cfd.NBINARY;
@@ -1439,20 +1500,23 @@ if(myid==0)
 	sigma_array.n = 0;
 
 #ifdef USE_MPI
-	//MPI3: Allocating only enough memory per processor.
+	//MPI: Allocating only enough memory per processor.
 	N_STAR_DIM_OPT = 1 + clus.N_STAR / procs + 2 * clus.N_BINARY / procs;
 	N_BIN_DIM_OPT = clus.N_STAR / (2 * procs) + clus.N_BINARY / procs;
-	//MPI3: Giving a larger safety factor for the parallel version.
+	//MPI: Giving a larger safety factor for the parallel version.
 	N_STAR_DIM_OPT = (long) floor(1.5 * ((double) N_STAR_DIM_OPT));
 	N_BIN_DIM_OPT = (long) floor(1.5 * ((double) N_BIN_DIM_OPT));
 
+	/* the main star array containing all star parameters */
 	star = (star_t *) calloc(N_STAR_DIM_OPT, sizeof(star_t));
+	/* the binary array containing all binary parameters */
 	binary = (binary_t *) calloc(N_BIN_DIM_OPT, sizeof(binary_t));
 	sigma_array.r = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
 	sigma_array.sigma = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
 #else
 	/* the main star array containing all star parameters */
 	star = (star_t *) calloc(N_STAR_DIM, sizeof(star_t));
+	/* the binary array containing all binary parameters */
 	binary = (binary_t *) calloc(N_BIN_DIM, sizeof(binary_t));
 	sigma_array.r = (double *) calloc(N_STAR_DIM, sizeof(double));
 	sigma_array.sigma = (double *) calloc(N_STAR_DIM, sizeof(double));
@@ -1494,8 +1558,12 @@ if(myid==0)
 	/*======= Opening of output files =======*/
 	sscanf("w", "%s", outfilemode);
 	
+/*
+MPI: In the parallel version, IO is done in the following way. Some files require data only from the root node, and others need data from all nodes. The former are opened and written to only by the root node using C IO APIs. However, for the latter, the files are opened by all processors using MPI-IO. At places when the files are suposed to be written to in the serial version, in the parallel version, each processor writes the data into a string/char buffer. At the end of the timestep, all processors flush the data from the buffers into the corresponding files in parallel using MPI-IO. The code uses 5 variables for this process - the MPI-IO file pointer, which follows the format mpi_<serial fptr name>, 2 char buffers, which hav the format mpi_<serial fptr name>_buf and mpi_<ser fptr name>_wrbuf, and an int/longlong variables to maintain the length of the buffer (format mpi_<ser fptr name>_len) and the offset in the file (format mpi_<ser fptr name>_ofst_total) where data has to be written.
+*/
+
 #ifdef USE_MPI
-    //MPI3-IO: Following are files that are written only by the root node.
+    //MPI-IO: Following are files that require data only from the root node, and are opened only by the root node using standard C IO APIs.
     if(myid==0) {
 #endif
 
@@ -1689,7 +1757,7 @@ if(myid==0)
 
 
 #ifdef USE_MPI
-    //MPI3-IO: Files that might be written by nodes are opened by all procs using MPI-IO.
+    //MPI3-IO: Files that might require data from all nodes, and are opened by all procs using MPI-IO. In the serial version, these are just opened as normal (see under #else below).
     sprintf(outfile, "%s.log", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_logfile);
     MPI_File_set_size(mpi_logfile, 0);
@@ -1754,7 +1822,6 @@ if(myid==0)
     }
 #else
 
-    //MPI3: In the serial version, these are just opened as normal.
 	/* output files for binaries */
 	/* file for binary interaction information */
 	sprintf(outfile, "%s.binint.log", outprefix);
@@ -1859,15 +1926,16 @@ if(myid==0)
     }
 #endif
 
-    // print header
+	//MPI: Headers are written out only by the root node.
+   // print header
 	pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1\n");
-    // print header
+   // print header
 	pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
-    // print header
+   // print header
 	pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]\n");
-    // print header
+   // print header
 	pararootfprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
-    //Sourav:  print header
+   //Sourav:  print header
 	pararootfprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 	pararootfprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 
@@ -1898,13 +1966,13 @@ if(myid==0)
 /* close buffers */
 void close_buffers(void)
 {
-//MPI3: These files are written to only by the root
+//MPI: These files are written to only by the root, and hence are closed only by root.
 #ifdef USE_MPI
     if(myid==0)
 #endif
         close_root_buffers();
 
-//MPI3: These include the rest that are written to by all procs.
+	 //MPI: These include the rest that are written to by all procs, and hence depending on whether the serial or parallel version is being compiled, close the corresponding file pointers.
 #ifdef USE_MPI
     mpi_close_node_buffers();
 #else
@@ -1912,6 +1980,9 @@ void close_buffers(void)
 #endif
 }
 
+/**
+* @brief Closes some of the file pointers - of files which require writing only by the root node.
+*/
 void close_root_buffers(void)
 {
 	int i;
@@ -1939,6 +2010,9 @@ void close_root_buffers(void)
 		 fclose(timerfile);
 }
 
+/**
+* @brief Closes some of the file pointers - of files which require writing by the all nodes.
+*/
 void close_node_buffers(void)
 {
 	fclose(logfile);
@@ -1965,7 +2039,9 @@ void close_node_buffers(void)
 }
 
 #ifdef USE_MPI
-/* MPI3-IO: close buffers */
+/**
+* @brief Closes the MPI file pointers - of files which require writing only by the all nodes.
+*/
 void mpi_close_node_buffers(void)
 {
 	MPI_File_close(&mpi_logfile);
@@ -2003,7 +2079,9 @@ void mpi_close_node_buffers(void)
 }
 #endif
 
-/* trap signals */
+/**
+* @brief traps signals
+*/
 void trap_sigs(void)
 {
 	/* Catch some signals */
@@ -2016,9 +2094,12 @@ void trap_sigs(void)
 	//gsl_set_error_handler(&sf_gsl_errhandler);
 }
 
-/* print handy script for converting output files to physical units */
+/**
+* @brief print handy script for converting output files to physical units
+*/
 void print_conversion_script(void)
 {
+//MPI: Just letting the root node handle this.
 #ifdef USE_MPI
 if(myid==0)
 {
@@ -2093,10 +2174,11 @@ if(myid==0)
 /* routines for printing star/binary info in a unified log format */
 char *sprint_star_dyn(long k, char string[MAX_STRING_LENGTH])
 {
-	snprintf(string, MAX_STRING_LENGTH, "(%ld,%.3g,%d)", 
 #ifdef USE_MPI
-		 star[k].id, star_m[k]*units.mstar/FB_CONST_MSUN, star[k].se_k);
+	snprintf(string, MAX_STRING_LENGTH, "(%ld,%.3g,%d)",
+		 star[k].id, star_m[get_global_idx(k)]*units.mstar/FB_CONST_MSUN, star[k].se_k);
 #else
+	snprintf(string, MAX_STRING_LENGTH, "(%ld,%.3g,%d)",
 		 star[k].id, star[k].m*units.mstar/FB_CONST_MSUN, star[k].se_k);
 #endif
 	return(string);
@@ -2204,7 +2286,12 @@ int valid_snapshot_window_units(void) {
   return (valid);
 }
 
-// if bh_only>0 this'll print only BHs.
+/**
+* @brief writes out snapshot to the given file
+*
+* @param filename name of the file
+* @param bh_only if bh_only>0 this'll print only BHs.
+*/
 void write_snapshot(char *filename, int bh_only) {
 	long i, j;
 	j=0;
@@ -2253,6 +2340,7 @@ void write_snapshot(char *filename, int bh_only) {
 				phi = star[i].phi;
 #endif
 				j=star[i].binind;
+				//if bh_only>0, print only BHs
 				if( (bh_only==0) || ( (bh_only!=0) && (star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14) ) )
 				{
 					gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ",
@@ -2291,7 +2379,11 @@ void write_snapshot(char *filename, int bh_only) {
 
 }
 
-// smaller snapshot outputting limited data.
+/**
+* @brief smaller snapshot outputting limited data.
+*
+* @param infile file name
+*/
 void print_denprof_snapshot(char* infile)
 {
 #ifdef USE_MPI
@@ -2318,6 +2410,13 @@ void print_denprof_snapshot(char* infile)
 #endif
 }
 
+/**
+* @brief Does a miscellaneous set of things, primarily copying the data read from the input file into the star and binary data structures. Also allocates duplicate array for the parallel version. Also, initializes a few global variables and the random number generator.
+*
+* @param argc input arg count
+* @param argv[] input arg list
+* @param rng random number generator
+*/
 void get_star_data(int argc, char *argv[], gsl_rng *rng)
 {
 	/* print version information to log file */
@@ -2343,17 +2442,17 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 	//load_id_table(star_ids, "trace_list");
 #endif
 
+	/* MPI: Allocate global arrays */
 	mpiInitGlobArrays();
 
 	/* Set up initial conditions */
-	//MPI2: can be done on all nodes? which means no need to broadcast star structure.
-	//MPI2: This fn populates the star array with the the data obtained after parsing
+	//MPI: This function populates the star and binary arrays with the cfd struct data.
 	load_fits_file_data(); 
 
 	/* set some important global variables */
 	set_global_vars2();
 
-	//Step 2:currently do on all nodes. But all procs will use same random numbers. So, comparing with host code might be a problem
+	//Resets the global rng based on input seed. Does not alter the parallel rng.
 	reset_rng_t113(IDUM);
 
 	/* binary remainders */
@@ -2364,6 +2463,9 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 	//star[clus.N_MAX+1].E = star[clus.N_MAX+1].J = 0.0;
 }
 
+/**
+* @brief Allocate global arrays based on total number of stars
+*/
 void mpiInitGlobArrays()
 {
 #ifdef USE_MPI
@@ -2375,19 +2477,22 @@ void mpiInitGlobArrays()
 #endif
 }
 
+/*
 void alloc_bin_buf()
 {
 #ifdef USE_MPI
 	size_bin_buf = N_BIN_DIM / procs; //this is much more than what would be practically reqd. worst case scenario is N_BIN_DIM.
 
 	//OPT: Modularize by declaring variables in main fn, and pass as argument to reqd functions.
-	/* the local binary array */
+	//the local binary array
 	binary_buf = (binary_t *) calloc( size_bin_buf, sizeof(binary_t) );
 
-	/* array to store the indices of the local binary members in the original binary array */
+	//array to store the indices of the local binary members in the original binary array
 	num_bin_buf = (int *) calloc( size_bin_buf, sizeof(int) );
 #endif
 }
+*/
+
 /*
 void mpi_merge_files()
 {

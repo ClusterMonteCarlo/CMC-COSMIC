@@ -20,6 +20,42 @@
 #endif
 
 
+/**
+* @brief The main function.
+* @detailed
+Monte Carlo (MC) methods calculate the dynamical evolution of a collisional system of N stars in the Fokker–Planck approximation, which applies when the evolution of the cluster is dominated by two-body relaxation, and the relaxation time is much larger than the dynamical time. In practice, further assumptions of spherical symmetry and dynamical equilibrium have to be made. The Henon MC technique (Henon 1971), which is based on orbit averaging, represents a balanced compromise between realism and speed. The MC method allows for a star-by-star realization of the cluster, with its N particles representing the N stars in the cluster. Integration is done on the relaxation timescale, and the total computational cost scales as O(NlogN) (Henon 1971).
+
+Our code here is based on the Henon-type MC cluster evolution code CMC (“Cluster Monte Carlo”), developed over many years by Joshi et al. (2000, 2001), Fregeau et al. (2003), Fregeau & Rasio (2007), Chatterjee et al. (2010), and Umbreit et al. (2012). CMC includes a detailed treatment of strong binary star interactions and physical stellar collisions (Fregeau & Rasio 2007), as well as an implementation of single and binary star evolution (Chatterjee et al. 2010) and the capability of handling the dynamics around a central massive black hole (Umbreit et al. 2012).
+
+Code Overview:\n
+The principal data structure is an array of structures of type star_t. One or more of these stars can be binaries. Binaries are stored in a separate array of structures of type binary_t. If an element in the star array is a binary, it's binind property/variable is assigned a non-zero value. Moreover, the value of this variable is assigned in such a way that it indicates the index of the binary array which holds the properties of this binary.
+
+CMC can be run both serially as well as parallely.\n
+
+Parallelization Strategy:\n
+There are various routines which have varying dependencies and accesses between elements of the data structures. To minmize inter-process communication required by these routines as much as possible, we partition the data such that the number of stars held by each processor is a multiple of MIN_CHUNK_SIZE (input parameter, defaults to 20, refer http://adsabs.harvard.edu/abs/2013ApJS..204...15P for a justification for the choice of this value, and detailed explanation). The remainder of stars which is < MIN_CHUNK_SIZE after division goes to the last processor.
+
+Most routines do computations on a star by star basis, and access only the properties of the star being processed. However, the values of gravitational potential, masses of the stars and radial positions of the stars are accessed in a complex, data-dependent manner throughout the code. Hence, we store these values in separate arrays and duplicate/copy these across all processors. Since these properties change during a timestep, we synchronize these arrays at the end of each time step.
+
+Like mentioned above, most routines perform computations on a star by star basis. The only routine that differs from this pattern is the sorting routine that sorts all the stars by their radial positions. We use a parallel sorting algorithm called Sample Sort (see http://adsabs.harvard.edu/abs/2013ApJS..204...15P for a detailed discussion).
+
+The parallel sorting routine does the sorting and automatically redistributes the data to the processors, however, there is no control over the number of stars that will end up on each processor. So, after the sorting takes place, we exchange data between processors to adhere to the data partitioning scheme mentioned above.
+*
+* @param argc Input argument count
+* @param argv[] Input argument list:
+USAGE:
+  <path>/cmc [options...] <input_file> <output_file_prefix>
+  mpirun -np <procs> <path>/cmc  <input_file> <output_file_prefix>
+
+OPTIONS:
+  -q --quiet   : do not print diagnostic info to stdout
+  -d --debug   : turn on debugging
+  -V --version : print version info
+  -h --help    : display this help text
+  -s --streams	:Run with multiple random streams. To mimic the parallel version with the given number of processors
+*
+* @return indicates how the program exited. 0 implies normal exit, and nonzero value implies abnormal termination.
+*/
 int main(int argc, char *argv[])
 {
 	struct tms tmsbuf, tmsbufref;
@@ -27,7 +63,7 @@ int main(int argc, char *argv[])
 	gsl_rng *rng;
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
-	//MPI3: There might be overhead if timing is done due to MPI_Barriers.
+	//Variables used for measuring timing if the input parameter TIMER is set to 1. Caveat: There might be some small overhead if the parallel code is timed due to the barriers used.
 	double tmpTimeStart, tmpTimeStart_init, tmpTimeStart_full;
 	double t_full=0.0, t_init=0.0, t_cen_calc=0.0, t_timestep=0.0, t_dyn=0.0, t_se=0.0, t_orb=0.0, t_tid_str=0.0, t_sort=0.0, t_postsort_comm=0.0, t_pot_cal=0.0, t_ener_con3=0.0, t_calc_io_vars1=0.0, t_calc_io_vars2=0.0, t_io=0.0, t_io_ignore=0.0, t_comp_ener=0.0, t_upd_vars=0.0, t_oth=0.0;
 	t_sort_only=0.0;
@@ -40,22 +76,20 @@ int main(int argc, char *argv[])
 	t_comm=0.0;
 
 #ifdef USE_MPI
-	//MPI2: Some code from the main branch might have been removed in the MPI version. Please check.
-	//MPI2: At some point, change all loops to run between 2 variables: Begin to End, which will be decided based on if it is MPI or not.
+	//MPI: Some code from the main branch might have been removed in the MPI version. Please check.
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD,&procs);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 
-	//MPI2: Used for Gathering particles on root node before sorting
+	/* MPI: These variables are used for storing data partitioning related information in the parallel version. These are in particular useful for some MPI communication calls. */
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
 #else
+	//If the serial version is being compiled, setting procs to 1.
 	procs = 1;
-	created_star_dyn_node = (int *) calloc(procs, sizeof(int));
-	created_star_se_node = (int *) calloc(procs, sizeof(int));
-	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
 
+	/* Starting timer to measure the overall time taken */
 #ifdef USE_MPI
 	tmpTimeStart_init = MPI_Wtime();
 #else
@@ -64,37 +98,52 @@ int main(int argc, char *argv[])
 	tmpTimeStart_init=tim.tv_sec+(tim.tv_usec/1000000.0);
 #endif
 
-	/* set some important global variables */
+
+	/* sets some important global variables */
 	set_global_vars1();
 
-	/* trap signals */
-	trap_sigs(); //captures i/o signals to close
+	/* captures i/o signals to close */
+	trap_sigs();
 
 	/* initialize GSL RNG */
 	gsl_rng_env_setup();
 	rng = gsl_rng_alloc(rng_type);
 
-	//Currently doing on all nodes to avoid broadcasting of global variables. Later, might have to be split into 2 or more functions, and store all global variables into a structure for easy broadcast.
-	/* parse input */
-	parser(argc, argv, rng); //to do parallel i/o
+	/* parse input parameter file, and read input data */
+	parser(argc, argv, rng);
 
-
+	/* MPI: These variables are used for storing data partitioning related information in the parallel version. These arrays store the start and end indices in the global array that each processor is responsible for processing. In the serial version, these are used to mimic the parallel version to obtain comparable results. */
 	Start = (int *) calloc(procs, sizeof(int));
 	End = (int *) calloc(procs, sizeof(int));
 
-	/* MPI2: Calculating Start and End for mimcking parallel rng */
+#ifndef USE_MPI
+/*
+MPI: These are arrays used for mimicking the parallel version. In the parallel version new stars created are stored at the end of the local star array of each processor. In the serial version, the same is done i.e. they are placed at the end of the star array beyond the sentinel (which is a nullified star indicating the end of old stars and beginning of newly created ones). However, in order for the serial version to mimic the parallel, it is essential to know which node would have created these stars in a corresponding parallel run so as to draw a random number from the appropriate stream. Although this is trivial for the old stars since it is a just function of the index of the star, for newly created stars it is not, since they are stored at the end of the array and are mixed up.
+
+We use these two arrays to store the number of stars created by each node during a timestep. Stars can be created in two routines - dynamics, or stellar evolution, so we have an array for each of the two. These arrays are as large as the number of processors and their elements are used to store the number or stars that would have been created by each processor in a corresponding parallel run. With this supplementary information, we can deduce which proc would be having a given star, in the parallel version, and draw a random number from an appropriate stream.
+*/
+	created_star_dyn_node = (int *) calloc(procs, sizeof(int));
+	created_star_se_node = (int *) calloc(procs, sizeof(int));
+	/* MPI: Used to mimic the DMse quantity of the parallel version. */
+	DMse_mimic = (double *) calloc(procs, sizeof(double));
+#endif
+
+	/* MPI: Populating Start and End arrays based on data partitioning scheme */
 	findLimits( cfd.NOBJ, MIN_CHUNK_SIZE );
 
-	//MPI3: Allocate N/procs + 10% for each node. Also allocate a separate buffer array for receiving ghost particles. File I/O, each process takes its slice of data. Also, assemble the global arrays - _m, and _r.
+	/* copy the input data which has been read from the input file into the cfd struct in parser() into the star and binary data structures */
 	get_star_data(argc, argv, rng);
 
-	N_b_OLD = N_b;
-	N_b_NEW = N_b;
+//Probably not needed anymore
+//	N_b_OLD = N_b;
+//	N_b_NEW = N_b;
 
+	/* Initializes rng states for parallel version and serial mimic */
 	set_rng_states();
 
 	orbit_r = R_MAX;
 
+	/* compute the potential */
 	calc_potential_new();
 
 	calc_sigma_new();
@@ -102,7 +151,7 @@ int main(int argc, char *argv[])
 	/* calculate central quantities */
 	central_calculate();
 
-	//MPI2: Setting this because in the MPI version only _r is set, and will create problem while sorting.
+	//MPI: Setting this because in the MPI version only _r is set, and will create problem while sorting.
 #ifndef USE_MPI
 	star[clus.N_MAX + 1].r = SF_INFINITY;
 	star[clus.N_MAX + 1].phi = 0.0;
@@ -156,6 +205,7 @@ int main(int argc, char *argv[])
 	esc_bh7_tot = 0;
 	esc_bh89_tot = 0;
 
+	/* Calculates some global binary variables - total binary mass,and E. */
 	bin_vars_calculate();
 
 	/*
@@ -201,7 +251,7 @@ int main(int argc, char *argv[])
 		created_star_se_node[i] = 0;
 #endif
 
-	//OPT: M_b E_b calculated twice? Check for redundancy.
+	//OPT: M_b E_b calculated twice, also in bin_vars_calculate? Check for redundancy.
 	update_vars();
 
 	times(&tmsbufref);
@@ -233,14 +283,14 @@ int main(int argc, char *argv[])
 
 #ifdef USE_MPI
 	tmpTimeStart = timeStartSimple();
+	//MPI: Apparently there are changes to the masses of the stars in stellar_evolution_init, so here before we start the timestep loop, we synchronize the mass array across all processors.
 	if (STELLAR_EVOLUTION > 0) {
 		mpiFindDispAndLenCustom( clus.N_MAX, MIN_CHUNK_SIZE, mpiDisp, mpiLen );
 
 		for(i=0;i<procs;i++)
 			mpiLen[i] *= sizeof(double); 
 
-		//MPI3: THis needs to be done only if SE is on? If yes, put a condition.
-		//MPI3: Can be replaced by AllGatherv. For now, keep it the way it is. The same problem will reappear after sorting, where we need to do the same for the 3 global arrays, r, phi, and m. Have to think abt a novel solution.
+		//MPI: Can be replaced by AllGatherv similar to the way it's done after sorting in post_sort_comm.
 		MPI_Status stat;
 		if(myid!=0)
 			MPI_Send(&star_m[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
@@ -276,6 +326,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef USE_MPI
+//MPI: These are some global variables that are update at various places during the timestep, and towards the end need to be summed up across all processors. So, we store the values of these variables from the previous timestep into corresponding _old variables, and reset the actual variables to zero. At the end of the timestep, we cumulate/reduce the actual variables across processors and finally add them to the _old value i.e. total value of the variable from the previous timestep to obtain the updated values for these variables.
 		Eescaped_old = Eescaped;
 		Jescaped_old = Jescaped;
 		Eintescaped_old = Eintescaped;
@@ -304,6 +355,7 @@ int main(int argc, char *argv[])
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		tmpTimeStart = timeStartSimple();
+		//MPI: Note that N_MAX_NEW is the number of local stars (including newly created ones) in the parallel version, whereas in the serial it refers to the total number of stars including newly created ones. N_MAX is the total number of stars excluding newly created ones in both serial and parallel versions.
 #ifdef USE_MPI
 		clus.N_MAX_NEW = mpiEnd-mpiBegin+1;
 #else
@@ -313,14 +365,11 @@ int main(int argc, char *argv[])
 
 		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
-		//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
 		tmpTimeStart = timeStartSimple();
 		if (PERTURB > 0)
 			dynamics_apply(Dt, rng);
 		timeEndSimple(tmpTimeStart, &t_dyn);
 
-
-		//MPI2: Tested for outputs: rad, m E. Check if rng is used at all. Testing done only for proc 0.
 		tmpTimeStart = timeStartSimple();
 		if (STELLAR_EVOLUTION > 0)
 			do_stellar_evolution(rng);
@@ -336,10 +385,10 @@ int main(int argc, char *argv[])
 			DMse_mimic[i] = 0.0;
 #endif
 
+#ifndef USE_MPI
 		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
 			will disappear! */
-#ifndef USE_MPI
-        /* This really has to come after SE otherwise merger products will disappear. */
+		/* This really has to come after SE otherwise merger products will disappear. */
 		clus.N_MAX_NEW++;
 #endif
 
@@ -375,7 +424,7 @@ int main(int argc, char *argv[])
 		ComputeIntermediateEnergy();
 		timeEndSimple(tmpTimeStart, &t_oth);
 
-
+		/* sort stars by radial positions */
 		tmpTimeStart = timeStartSimple();
 		qsorts_new();
 		timeEndSimple(tmpTimeStart, &t_sort);
@@ -384,11 +433,12 @@ int main(int argc, char *argv[])
 		post_sort_comm();
 		timeEndSimple(tmpTimeStart, &t_postsort_comm);
 
+		/* compute the potential */
 		tmpTimeStart = timeStartSimple();
 		calc_potential_new();
 		timeEndSimple(tmpTimeStart, &t_pot_cal);
 
-		//Calculating Start and End values for each processor.
+		//MPI: Since N_MAX is updated during potential calculation, we update Start and End values for each processor based on new number of stars.
 		tmpTimeStart = timeStartSimple();
 		findLimits( clus.N_MAX, MIN_CHUNK_SIZE );
 		timeEndSimple(tmpTimeStart, &t_oth);
@@ -483,13 +533,14 @@ int main(int argc, char *argv[])
 		timeEndSimple(tmpTimeStart, &t_io);
 
 		tmpTimeStart = timeStartSimple();
+		//Print out timer file
 		if(TIMER)
 		{
 			rootfprintf(timerfile, "%d\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\n", tcount, t_cen_calc, t_timestep, t_dyn, t_se, t_orb, t_tid_str, t_sort, t_postsort_comm, t_pot_cal, t_ener_con3, t_calc_io_vars1, t_calc_io_vars2, t_comp_ener, t_upd_vars, t_io, t_io_ignore, t_oth, t_sort_lsort1, t_sort_splitters, t_sort_a2a, t_sort_lsort2, t_sort_oth, t_sort_lb, t_sort_only);
 		}
 		timeEndSimple(tmpTimeStart, &t_io_ignore);
 
-	} /* End FOR (time step iteration loop) */
+	} /* End time step iteration loop */
 
 	times(&tmsbuf);
 #ifdef USE_MPI
@@ -499,11 +550,14 @@ int main(int argc, char *argv[])
 	t_full += tim.tv_sec+(tim.tv_usec/1000000.0) - tmpTimeStart_full;
 #endif
 
+	//Print overall timings to stdout
 	rootprintf("******************************************************************************\n");
 	rootprintf("Time for Initialization: %.4lf\n", t_init);
 	rootprintf("Total Time Taken: %.4lf\n", t_full);
 	rootprintf("Time for Communication: %.4lf\n", t_comm);
 	rootprintf("******************************************************************************\n");
+
+	//Print overall timings to file
 	if(TIMER)
 	{
 		rootfprintf(timerfile, "******************************************************************************\n");
@@ -537,8 +591,9 @@ int main(int argc, char *argv[])
 	free(mpiDisp);
 	free(mpiLen);
 	free(curr_st);
-	free(binary_buf);
-	free(num_bin_buf);
+//Probably not needed anymore
+//	free(binary_buf);
+//	free(num_bin_buf);
 #else
 	free(st);
 #endif

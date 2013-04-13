@@ -40,8 +40,14 @@ _EXTERN_ char MASS_PC[1000], MASS_BINS[1000], INPUT_FILE[1000];
 _EXTERN_ char *SNAPSHOT_WINDOWS;
 _EXTERN_ char *SNAPSHOT_WINDOW_UNITS;
 _EXTERN_ int MASS_PC_BH_INCLUDE;
+/**
+* @brief Variable to store the input parameter which indicates the number of samples per processor to be used for Sample Sort. Defaults to the number of processors if not set.
+*/
 _EXTERN_ int SAMPLESIZE;
 _EXTERN_ int BINSINGLE, BINBIN;
+/**
+* @brief Variable specified as command line argument or input parameter which indicates the number or streams (or number of processors to mimic) to be used in a serial run in order to mimic a parallel run.
+*/
 _EXTERN_ int STREAMS;
 _EXTERN_ int BININITKT, STOPATCORECOLLAPSE;
 /* Meagan - 3bb */
@@ -64,10 +70,18 @@ _EXTERN_ FILE *bhsummaryfile, *escbhsummaryfile, *newbhfile;
 _EXTERN_ int BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_IDUM, BSE_WINDFLAG;
 _EXTERN_ double BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_MXNS, BSE_BCONST, BSE_CK, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA;
 /* binary stuff */
-_EXTERN_ long N_b, N_bb, N_bs, N_b_OLD, N_b_NEW, last_hole;
+_EXTERN_ long N_b, N_bb, N_bs, last_hole;
+//Probably not needed anymore
+//_EXTERN_ long N_b_OLD, N_b_NEW;
 _EXTERN_ double M_b, E_b;
+/**
+* @brief Array to store data of binaries
+*/
 _EXTERN_ binary_t *binary;
 /* timer */
+/**
+* @brief Variable to store the input parameter which triggers the functionality to profile/time in detal, individual parts of the code.
+*/
 _EXTERN_ int TIMER;
 
 /* file pointers */
@@ -80,28 +94,55 @@ _EXTERN_ FILE *timerfile;
 // Meagan: file for tracking potential fluctuations for innermost 1000 stars
 
 #ifdef USE_MPI
-/* Corresponding MPI File(pointer)s */
+/**
+* @brief MPI: MPI-IO file pointers corresponding to the C File(pointer)s used in the serial code for files that are needed to be written out using MPI-IO
+*/
 _EXTERN_ MPI_File mpi_logfile, mpi_binintfile, mpi_escfile, mpi_collisionfile, mpi_pulsarfile, mpi_tidalcapturefile, mpi_semergedisruptfile, mpi_removestarfile, mpi_relaxationfile;
 
-/* String buffers and int's to store their lengths which save intermediate values and finally flush it out to files usin MPI-IO */
+/**
+* @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
+*/
 _EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_binintfile_buf[STR_BUF_LEN], mpi_collisionfile_buf[STR_BUF_LEN], mpi_pulsarfile_buf[STR_BUF_LEN], mpi_tidalcapturefile_buf[STR_BUF_LEN], mpi_semergedisruptfile_buf[STR_BUF_LEN], mpi_removestarfile_buf[STR_BUF_LEN], mpi_relaxationfile_buf[STR_BUF_LEN];
 
+/**
+* @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
+*/
 _EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
 
-/* Variables to maintail the length of the buffers until the next flush, and the total offset of the file */
+/**
+* @brief MPI: Variables to maintail the length of the buffers until the next flush
+*/
 _EXTERN_ int mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_pulsarfile_len, mpi_tidalcapturefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
 
+/**
+* @brief MPI: Variables to maintain the total offset of the file
+*/
 _EXTERN_ int mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_pulsarfile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
 
 /* Meagan's 3bb files */
+/**
+* @brief MPI: MPI-IO file pointers corresponding to the C File(pointer)s used in the serial code for files that are needed to be written out using MPI-IO
+*/
 _EXTERN_ MPI_File mpi_bhsummaryfile, mpi_escbhsummaryfile, mpi_newbhfile, mpi_threebbfile, mpi_threebbprobabilityfile, mpi_lightcollisionfile, mpi_threebbdebugfile;
 
+/**
+* @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
+*/
 _EXTERN_ char mpi_bhsummaryfile_buf[STR_BUF_LEN], mpi_escbhsummaryfile_buf[STR_BUF_LEN], mpi_newbhfile_buf[STR_BUF_LEN], mpi_threebbfile_buf[STR_BUF_LEN], mpi_threebbprobabilityfile_buf[STR_BUF_LEN], mpi_lightcollisionfile_buf[STR_BUF_LEN], mpi_threebbdebugfile_buf[STR_BUF_LEN];
 
+/**
+* @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
+*/
 _EXTERN_ char mpi_bhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_escbhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_newbhfile_wrbuf[STR_WRBUF_LEN], mpi_threebbfile_wrbuf[STR_WRBUF_LEN], mpi_threebbprobabilityfile_wrbuf[STR_WRBUF_LEN], mpi_lightcollisionfile_wrbuf[STR_WRBUF_LEN], mpi_threebbdebugfile_wrbuf[STR_WRBUF_LEN];
 
+/**
+* @brief MPI: Variables to maintail the length of the buffers until the next flush
+*/
 _EXTERN_ int mpi_bhsummaryfile_len, mpi_escbhsummaryfile_len, mpi_newbhfile_len, mpi_threebbfile_len, mpi_threebbprobabilityfile_len, mpi_lightcollisionfile_len, mpi_threebbdebugfile_len;
 
+/**
+* @brief MPI: Variables to maintain the total offset of the file
+*/
 _EXTERN_ int mpi_bhsummaryfile_ofst_total, mpi_escbhsummaryfile_ofst_total, mpi_newbhfile_ofst_total, mpi_threebbfile_ofst_total, mpi_threebbprobabilityfile_ofst_total, mpi_lightcollisionfile_ofst_total, mpi_threebbdebugfile_ofst_total;
 
 #endif
@@ -118,6 +159,9 @@ _EXTERN_ double rho_core_single, rho_core_bin, rh_single, rh_binary;
 _EXTERN_ double TotalTime, Dt;
 _EXTERN_ double Sin2Beta;
 /* arrays */
+/**
+* @brief Array to store data of all stars in the simulated system. Binaries are stored in a separate array name binary. If an element in the star array is a binary, it's binind property/variable is a non-zero value. Moreover, the value of this variable indicates the index of the binary array which holds the properties of this binary.
+*/
 _EXTERN_ star_t *star;
 _EXTERN_ double *mass_pc, *mass_r, *ave_mass_r, *densities_r, *no_star_r;
 _EXTERN_ double *ke_rad_r, *ke_tan_r, *v2_rad_r, *v2_tan_r;
@@ -126,48 +170,94 @@ _EXTERN_ int quiet;
 
 /* mpi parallelization stuff */
 #ifdef USE_MPI
+/**
+* @brief MPI: Array to store the entire list of stellar positions. This is duplicated across processors in the beginning, and is synchronized at the end of each timestep.
+*/
 _EXTERN_ double *star_r;
+/**
+* @brief MPI: Array to store the entire list of stellar masses. This is duplicated across processors in the beginning, and is synchronized at the end of each timestep.
+*/
 _EXTERN_ double *star_m;
+/**
+* @brief MPI: Array to store the gravitaional potential at the stellar positions. This is duplicated across processors in the beginning, and is synchronized at the end of each timestep.
+*/
 _EXTERN_ double *star_phi;
+/**
+* @brief MPI: These variables are used for storing data partitioning related information in the parallel version. These variables store the start and end indices of the (hypothetical) global array that each processor is responsible for processing.
+*/
 _EXTERN_ int mpiBegin, mpiEnd;
 _EXTERN_ int *mpiDisp, *mpiLen;
+/**
+* @brief MPI: There are some global variables that are updated at various places during a timestep, and towards the end need to be summed up across all processors. So, we store the values of these variables from the previous timestep into corresponding _old variables, and reset the actual variables to zero. At the end of the timestep, we cumulate/reduce the actual variables across processors and finally add them to the _old value i.e. total value of the variable from the previous timestep to obtain the updated values for these variables.
+*/
 _EXTERN_ double Eescaped_old, Jescaped_old, Eintescaped_old, Ebescaped_old, TidalMassLoss_old, Etidal_old;
 #endif
-_EXTERN_ int myid, procs;
+/**
+* @brief Processor id of THIS processor.
+*/
+_EXTERN_ int myid;
+/**
+* @brief Total number of processors or streams (in case of serial mimic).
+*/
+_EXTERN_ int procs;
 _EXTERN_ double timeT, startTime, endTime; 
 _EXTERN_ char funcName[64];
 _EXTERN_ char fileTime[64];
-/* to mimic parallel rng */
+
+/**
+* @brief These variables are used for storing data partitioning related information in the parallel version. These arrays store the start and end indices in the global array that each processor is responsible for processing. In the serial version, these are used to mimic the parallel version to obtain comparable results.
+*/
 _EXTERN_ int *Start, *End; 
+/**
+* @brief This pointer is used in different ways in the serial and parallel versions. In the serial version, this is used to switch between different random states corresponding to the different streams used to mimic the parallel version, and draw an appropriate random number for each star when needed. In the parallel version this is THE random state of the respective processor.
+*/
 _EXTERN_ struct rng_t113_state *curr_st;
+/**
+* @brief Array used to mimic the parallel random number generator. This array stores the states of all the processors as in a corresponding parallel run.
+*/
 _EXTERN_ struct rng_t113_state *st;
 /* to handle binaries */
+/*
+//Probably not needed anymore
 _EXTERN_ binary_t *binary_buf;
 _EXTERN_ int *num_bin_buf;
 _EXTERN_ int size_bin_buf;
+*/
 _EXTERN_ int N_b_local;
 
 /* for newly created stars - mimicking rng */
 #ifndef USE_MPI
+/**
+* @brief An array as big as the number of processors - during each timestep, this array stores the number stars created during dynamics by each processor.
+*/
 _EXTERN_ int *created_star_dyn_node;
+/**
+* @brief Array as big as the number of processors - during each timestep, this array stores the number stars created during stellar evolution by each processor.
+*/
 _EXTERN_ int *created_star_se_node;
+/**
+* @brief Array as big as the number or processors - to achieve comparability with the parallel version, we maintain an array of DMse values storing the value for each processor and then finally cumulate to avoid round-off errors.
+*/
 _EXTERN_ double *DMse_mimic;
 #endif
 _EXTERN_ FILE* ftest2;
 _EXTERN_ char num2[5],filename2[20], tempstr2[20];
-_EXTERN_ long *new_size;
-_EXTERN_ int *disp, *len;
+//Probably not needed anymore
+//_EXTERN_ long *new_size;
+//_EXTERN_ int *disp, *len;
 //Temp file handle for debugging
 FILE *ftest;
-//MPI2: Some variables to assist debugging
+//MPI: Some variables to assist debugging
 char num[5],filename[20], tempstr[20];
+//MPI: Variables for detailed timing of the sorting routine and total communication
 _EXTERN_ double t_sort_only, t_sort_lb;
 _EXTERN_ double t_sort_lsort1, t_sort_splitters, t_sort_a2a, t_sort_lsort2, t_sort_oth;
 _EXTERN_ double t_comm;
 
 /* debugging */
 _EXTERN_ int debug;
-_EXTERN_ int mpi_debug;
+//Probably not needed anymore
+//_EXTERN_ int mpi_debug;
 /* units */
 _EXTERN_ units_t units;
 _EXTERN_ double madhoc;

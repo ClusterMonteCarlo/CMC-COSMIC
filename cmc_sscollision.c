@@ -7,15 +7,27 @@
 #include "cmc_vars.h"
 #include "bse_wrap/bse_wrap.h"
 
+/**
+* @brief Does single single collision
+*
+* @param k index of first star
+* @param kp index of second star
+* @param rperimax ?
+* @param w[4] ?
+* @param W ?
+* @param rcm ?
+* @param vcm[4] ?
+* @param rng gsl rng
+*/
 void sscollision_do(long k, long kp, double rperimax, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng)
 {
-        int ST_tide; //PDK addition for hrdiag, will eventually make it an input from cmc_stelar_evolution.c
+	int ST_tide; //PDK addition for hrdiag, will eventually make it an input from cmc_stelar_evolution.c
 	long knew;
 	double vs[12], bmax, b, rperi, Eorbnew, acoll, ecoll, ace, ece, anew, enew, efinal, afinal;
 	double aj, tm, tn, tscls[20], lums[10], GB[10], k2;
 	double Einit;
 	double mass_k, mass_kp, phi_k, phi_kp, r_k, r_kp;
-        double ecsnp,ecsn_mlow; //PDK additino for hrdiag.
+	double ecsnp,ecsn_mlow; //PDK additino for hrdiag.
 
 #ifdef USE_MPI
 	int g_knew;
@@ -35,6 +47,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	r_k = star[k].r;
 	r_kp = star[kp].r;
 #endif
+
 /* PDK addition for hrdiag... For now these are placed in by hand here and must match values given in evolv2.f.
    Will update later to be inputs within cmc_stellar_evolution.c. This will mean they must become a COMMON. */
         ST_tide = 0;
@@ -166,7 +179,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			binary[star[knew].binind].Eint2 = star[kp].Eint;
 
 			/* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
-
 #ifdef USE_MPI
 			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
 				 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
@@ -1117,15 +1129,18 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
   *curr_st= bse_get_taus113state();
 }
 
-/* calculate resulting semi-major axis from collisional common envelope event */
-double coll_CE(double Mrg, double Mint, double Mwd, double Rrg, double vinf)
-/* 
-   Mrg = mass of red giant
-   Mint = mass of intruder (NS, BH, MS, etc.)
-   Mwd = mass of RG core that will become WD
-   Rrg = radius of RG
-   vinf = relative velocity at infinity between RG and intruder
+/**
+* @brief calculate resulting semi-major axis from collisional common envelope event
+*
+* @param Mrg mass of red giant
+* @param Mint mass of intruder (NS, BH, MS, etc.)
+* @param Mwd mass of RG core that will become WD
+* @param Rrg radius of RG
+* @param vinf relative velocity at infinity between RG and intruder
+*
+* @return resulting semi-major axis from collisional common envelope event
 */
+double coll_CE(double Mrg, double Mint, double Mwd, double Rrg, double vinf)
 {
 	double alpha, lambda;
 	

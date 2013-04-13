@@ -12,6 +12,12 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
+/**
+* @brief Copies the properties corresponding to index s_k of the cfd structure to the index d_k of the binary array.
+*
+* @param d_k destination index in the binary array where the data needs to be copied to
+* @param s_k source index in the cfd structure from where data needs to be copied
+*/
 void load_binary_data(int d_k, int s_k) {
 		binary[d_k].id1 = cfd.bs_id1[s_k];
 		binary[d_k].id2 = cfd.bs_id2[s_k];
@@ -48,9 +54,13 @@ void load_binary_data(int d_k, int s_k) {
 		}
 }
 
+/**
+* @brief Populates the star and binary arrays from the data obtained from the cfd structure. Each processor just reads and stores the corresponding data from the cfd structure it is responsible for, and ignores the rest.
+*/
 void load_fits_file_data(void)
 {
 	long i, g_i=0;
+	//0th element of the binary holds nothing
 	int b_i=1;
 
 	newstarid = 0;
@@ -62,9 +72,9 @@ void load_fits_file_data(void)
 	load_binary_data(0, 0);
 
 #ifdef USE_MPI
-	//MPI3: Copying only the data each process needs.
+	//MPI: Copying only the data each process needs.
 	for (i=0; i<=End[myid] - Start[myid]+1; i++) {
-		//MPI3: Getting global index to read only stars that belong to this processor.
+		//MPI: Getting global index to read only stars that belong to this processor.
 		if(i==0) g_i = 0;
 		else g_i = get_global_idx(i);
 #else
@@ -81,6 +91,7 @@ void load_fits_file_data(void)
 		star[i].vr = cfd.obj_vr[g_i];
 		star[i].vt = cfd.obj_vt[g_i];
 
+		//Copying binary info
       if(cfd.obj_binind[g_i])
       {
 #ifdef USE_MPI
@@ -119,7 +130,7 @@ void load_fits_file_data(void)
 #endif
 
 #ifdef USE_MPI
-	//MPI3: All procs read data for global arrays.
+	//MPI: All procs read data for global arrays.
 	for (i=0; i<=cfd.NOBJ+1; i++) {
 		star_m[i] = cfd.obj_m[i] * ((double) clus.N_STAR);
 		star_r[i] = cfd.obj_r[i];
@@ -142,7 +153,7 @@ void load_fits_file_data(void)
 	cenma.m = star_m[0];
 	cenma.m_new= star_m[0];
 	star_m[0] = 0.0;
-	//MPI3: The way newstarid is assigned above, it wont be the same on all procs. Assuming it will be the sum of N_STAR and N_BINARY.
+	//MPI: The way newstarid is assigned above works in the serial version, but it wont be the same on all procs in the parallel version. Assuming it will be the sum of N_STAR and N_BINARY.
 	newstarid = clus.N_STAR+clus.N_BINARY;
 #else
 	cenma.m = star[0].m;

@@ -82,8 +82,13 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		
 		/* check to see if star is on almost circular orbit */
 		if (function_Q(g_si, ktemp, E, J) < 0) {
+#ifdef USE_MPI
+			dprintf("circular orbit found: si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
+				g_si, star_r[g_si], star[si].vr, star[si].vt, star[si].J, star[si].E);
+#else
 			dprintf("circular orbit found: si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
 				si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E);
+#endif
 		}
 		
 #ifdef USE_MPI
@@ -138,6 +143,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			dprintf("The sqrt in the expression for rmin has a negative argument!");
 			dprintf("It is, therefore, set to zero.\n");
 			dprintf("rmin_old= %g rmin_new= %g rmin_sqrt= %g\n", actual_rmin, rmin, inside_sqrt);
+
 #ifdef USE_MPI
             dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
                      star_r[kmin+1],star_r[kmin],star_r[kmin+1]-star_r[kmin]);
@@ -202,6 +208,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			dprintf("The sqrt in the expression for rmax has a negative argument!");
 			dprintf("It is, therefore, set to zero.\n");
 			dprintf("rmax_old= %g rmax_new= %g rmax_sqrt= %g\n", actual_rmax, rmax, inside_sqrt);
+
 #ifdef USE_MPI
 			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
                     star_r[kmin+1],star_r[kmin],star_r[kmin+1]-star_r[kmin]);
@@ -234,10 +241,17 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		/* another case of a circular orbit */
 		if ((rmin > rmax)||(dQdr_min<=0.)||(dQdr_max>=0.)) {
 		        eprintf("circular orbit found!\n");
+#ifdef USE_MPI
+		 	eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
+				rmin, rmax, kmin, kmax, g_si, star_r[g_si], star[si].vr, star[si].vt, star[si].J, star[si].E,
+				function_Q(g_si, kmin, star[si].E, star[si].J), function_Q(g_si, kmax, star[si].E, star[si].J),
+				dQdr_min,dQdr_max,dQdr_min_num,dQdr_max_num);
+#else
 		 	eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
 				rmin, rmax, kmin, kmax, si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E,
 				function_Q(si, kmin, star[si].E, star[si].J), function_Q(si, kmax, star[si].E, star[si].J),
 				dQdr_min,dQdr_max,dQdr_min_num,dQdr_max_num);
+#endif
 
 #ifdef USE_MPI
 			orbit_rs.rp = star_r[g_si];
@@ -336,6 +350,13 @@ double get_Tbs(central_t central) {
   return(Tbs);
 }
 
+/**
+* @brief Computes the timesteps for relaxation, collision, binary interactions, stellar evolution etc, and returns the minimum of them as the timestep for the current iteration.
+*
+* @param rng gsl rng
+*
+* @return the timestep
+*/
 double GetTimeStep(gsl_rng *rng) {
 	double DTrel, Tcoll, DTcoll, Tbb, DTbb= GSL_POSINF, Tbs, DTbs=GSL_POSINF, 
                Tse, DTse, Trejuv, DTrejuv, xcoll;
@@ -350,7 +371,7 @@ double GetTimeStep(gsl_rng *rng) {
 #ifdef USE_MPI
 		DTrel = mpi_simul_relax_new();
 #else
-		//Optimized version of simul_relax()
+		//Optimized version of simul_relax(), adapted to ease parallelization and comparison with parallel runs
 		DTrel = simul_relax_new();
 #endif
 	} else {
@@ -447,15 +468,14 @@ double GetTimeStep(gsl_rng *rng) {
 	}
 
 	/* debugging */
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-		dprintf("Dt=%.18g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
+	rootdprintf("Dt=%.18g DTrel=%.18g DTcoll=%.18g DTbb=%.18g DTbs=%.18g DTse=%.18g DTrejuv=%.18g\n", Dt, DTrel, DTcoll, DTbb, DTbs, DTse, DTrejuv);
 
 	return (Dt);
 }
 
-/* removes tidally-stripped stars */
+/**
+* @brief removes tidally-stripped stars
+*/
 void tidally_strip_stars(void) {
 	double phi_rtidal, phi_zero, gierszalpha;
 	double m, r, phi;
@@ -619,6 +639,7 @@ void tidally_strip_stars(void) {
 
 		j++;
 
+		//MPI: Here, we have to sum up the value across all processors for the condition in the while loop.
 #ifdef USE_MPI
 		double tmpTimeStart = timeStartSimple();
 		MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -635,7 +656,7 @@ void tidally_strip_stars(void) {
 	} while (DTidalMassLoss > 0);
 
 #ifdef USE_MPI
-	//MPI3: Packing into array to optimize communication.
+	//MPI: Packing into array to optimize communication.
 	double buf_reduce[5];
 	buf_reduce[0] = Eescaped;
 	buf_reduce[1] = Jescaped;
@@ -764,6 +785,11 @@ void count_esc_bhs(long j) {
 	}
 }
 
+/**
+* @brief sents star's position to infinity, sets mass to a very small number, and sets up vr and vt for future calculations.
+*
+* @param j index of star
+*/
 void remove_star_center(long j) {
 	star[j].rnew = SF_INFINITY;	/* send star to infinity */
 #ifdef USE_MPI
@@ -776,11 +802,16 @@ void remove_star_center(long j) {
 }
 
 /**************** Get Positions and Velocities ***********************/
-/*	Requires indexed (sorted in increasing r) stars with potential
+/**
+* @brief 
+	Requires indexed (sorted in increasing r) stars with potential
 	computed in star[].phi and N_MAX set. Uses sE[], sJ[] and sr[]
 	from previous iteration. Returns positions and velocities in
 	srnew[], svrnew[], and svtnew[]. Returns Max r for all stars, or
-	-1 on error. */
+	-1 on error.
+*
+* @param get_pos_dat ?
+*/
 void get_positions_loop(struct get_pos_str *get_pos_dat){
 	long j, g_j, k, si;
 	double r=0.0, vr=0.0, vt, rmin, rmax, E, J;
@@ -819,7 +850,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		   at the time of mass loss in DoStellarEvolution */
 #ifdef USE_MPI
 		if (star_m[g_j] < ZERO) {
-			dprintf("id = %d\tindex of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid, j,star[j].E,star_m[j],star_r[j],star[j].vr,star[j].vt);
+			dprintf("id = %d\tindex of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid, j,star[j].E,star_m[g_j],star_r[g_j],star[j].vr,star[j].vt);
 #else
 		if (star[j].m < ZERO) {
 			dprintf("index of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n", j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
@@ -832,7 +863,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (E >= 0.0) {
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 #ifdef USE_MPI
-			dprintf("id = %d\tindex of stripped star by energy = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid,j,star[j].E,star_m[j],star_r[j],star[j].vr,star[j].vt);
+			dprintf("index of stripped star by energy = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",j,star[j].E,star_m[g_j],star_r[g_j],star[j].vr,star[j].vt);
 #else
 			dprintf("index of stripped star by E = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
 #endif
@@ -868,7 +899,11 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {
 			/* dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
+#ifdef USE_MPI
+			dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", g_j, star[j].id, star_m[j], star[j].E, star[j].binind);
+#else
 			dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind);
+#endif
 			star[j].r_apo= rmax;
 			star[j].r_peri= rmin;
 			remove_star(j, phi_rtidal, phi_zero);
@@ -967,7 +1002,11 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 	get_pos_dat->max_rad = max_rad;
 }
 
-/* return maximum stellar radius, get r_p and r_a for all objects */
+/**
+* @brief return maximum stellar radius, get r_p and r_a for all objects
+*
+* @return  maximum stellar radius
+*/
 double get_positions(){
 #ifdef USE_THREADS
 	pthread_t threads[NUM_THREADS];

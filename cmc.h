@@ -77,49 +77,166 @@
 
 
 
-/* binaries */
+/**
+* @brief Data structure for storing binary properties.
+* @details One or more stars in the star data structure can be binary stars. To store all the binaries, an array of this structure is used. A binary in the star data structure has a non-zero value for the variable binind. Moreover, the value of binind indicates the index in the binary array which holds the properties of that binary. For example, if star[213].binind has the value 56, binary[56] contains the properties of that binary.
+*/
 typedef struct{
-	long id1; /* unique id of star 1 */
-	long id2; /* unique id of star 2 */
-	double rad1; /* radius of star 1 */
-	double rad2; /* radius of star 2 */
-	double m1; /* mass of star 1 */
-	double m2; /* mass of star 2 */
-	double Eint1; /* internal energy of star 1 */
-	double Eint2; /* internal energy of star 2 */
-	double a; /* semimajor axis */
-	double e; /* eccentricity */
-	int inuse; /* whether or not binary exists */
-	int bse_kw[2]; /* star types */
-	double bse_mass0[2]; /* initial masses */
-	double bse_mass[2]; /* masses */
-	double bse_radius[2]; /* radii */
-	double bse_lum[2]; /* luminosity */
+/**
+* @brief  unique id of star 1
+*/
+	long id1;
+/**
+* @brief  unique id of star 2
+*/
+	long id2;
+/**
+* @brief  radius of star 1
+*/
+	double rad1;
+/**
+* @brief  radius of star 2
+*/
+	double rad2;
+/**
+* @brief  mass of star 1
+*/
+	double m1;
+/**
+* @brief  mass of star 2
+*/
+	double m2;
+/**
+* @brief  internal energy of star 1
+*/
+	double Eint1;
+/**
+* @brief  internal energy of star 2
+*/
+	double Eint2;
+/**
+* @brief  semimajor axis
+*/
+	double a;
+/**
+* @brief  eccentricity
+*/
+	double e;
+/**
+* @brief  whether or not binary exists
+*/
+	int inuse;
+/**
+* @brief  star types
+*/
+	int bse_kw[2];
+/**
+* @brief  initial masses
+*/
+	double bse_mass0[2];
+/**
+* @brief  masses
+*/
+	double bse_mass[2];
+/**
+* @brief  radii
+*/
+	double bse_radius[2];
+/**
+* @brief  luminosity
+*/
+	double bse_lum[2];
+/**
+* @brief ?
+*/
 	double bse_massc[2];
+/**
+* @brief ?
+*/
 	double bse_radc[2];
+/**
+* @brief ?
+*/
 	double bse_menv[2];
+/**
+* @brief ?
+*/
 	double bse_renv[2];
-	double bse_ospin[2]; /* original spin */
-        double bse_B_0[2]; /* Pulsar magnetic field */
-        double bse_bacc[2]; /* Amount of mass pulsar has accreted */
-        double bse_tacc[2]; /* Amount of time pulsar has spent accreting */
+/**
+* @brief  original spin
+*/
+	double bse_ospin[2];
+/**
+* @brief  Pulsar magnetic field
+*/
+	double bse_B_0[2];
+/**
+* @brief  Amount of mass pulsar has accreted
+*/
+	double bse_bacc[2];
+/**
+* @brief  Amount of time pulsar has spent accreting
+*/
+	double bse_tacc[2];
+/**
+* @brief ?
+*/
 	double bse_epoch[2];
+/**
+* @brief ?
+*/
 	double bse_tms[2];
-	double bse_tphys; /* physical time */
-	double bse_tb; /* binary orbital period */
-	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
-	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
-        double bse_bcm_B[2]; /* Pulsar magnetic field strength at surface */
-        double bse_bcm_formation[2]; /* provides formation pathway of NS */
+/**
+* @brief  physical time
+*/
+	double bse_tphys;
+/**
+* @brief  binary orbital period
+*/
+	double bse_tb;
+/**
+* @brief  mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)]
+*/
+	double bse_bcm_dmdt[2];
+/**
+* @brief  radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)]
+*/
+	double bse_bcm_radrol[2];
+/**
+* @brief  Pulsar magnetic field strength at surface
+*/
+	double bse_bcm_B[2];
+/**
+* @brief  provides formation pathway of NS
+*/
+	double bse_bcm_formation[2];
 	//Sourav:toy rejuvenation variables
-	double lifetime_m1; /*Sourav: lifetime of star1*/
-	double lifetime_m2; /*Sourav: lifetime of star2*/
-	double createtime_m1; /*Sourav: createtime of star1*/
-	double createtime_m2; /*Sourav: createtime of star2*/
+/**
+* @brief  Sourav: lifetime of star1
+*/
+	double lifetime_m1;
+/**
+* @brief  Sourav: lifetime of star2
+*/
+	double lifetime_m2;
+/**
+* @brief  Sourav: createtime of star1
+*/
+	double createtime_m1;
+/**
+* @brief  Sourav: createtime of star2
+*/
+	double createtime_m2;
 	// Meagan: to keep track of three-body binaries
-	//int threebodybinary; /* whether binary was formed via three-body encounter */
+/**
+* @brief  whether binary was formed via three-body encounter
+*/
+	//int threebodybinary;
 } binary_t;
 
+/**
+* @brief ?
+*/
 struct star_coords {
   long index;
   long field_index;
@@ -130,52 +247,182 @@ struct star_coords {
   double pot;
 };
 
-/* single stars/objects */
+/**
+* @brief Data structure for storing single star properties.
+* @details An array of this structure serves as the principal data structure to store the data of the cluster being simulated by CMC. One or more stars in the star array can be binary stars.
+*/
 typedef struct{
 	/* dynamical evolution variables */
-	double r;  /* radial coordinate */
-	double vr; /* radial velocity */
-	double vt; /* tangential velocity */
-	double m; /* mass */
-	double E; /* kinetic plus potential energy per unit mass */
-	double J; /* angular momentum per unit mass */
-	double EI; /* "intermediate" energy per unit mass */
-	double Eint; /* internal energy (due to collisions, e.g.) */
-	double rnew; /* new radial coordinate */
-	double vrnew; /* new radial velocity */
-	double vtnew; /* new tangential velocity */
-	double rOld; /* ? */
-	double X; /* ? */
-	double Y; /* random variable that must be stored */
-	double r_peri; /* pericenter distance */
-	double r_apo; /* apocenter distance */
-	double phi; /* value of potential at position of star (only updated at end of timestep) */
-	long   interacted; /* whether or not the star has undergone a strong interaction (i.e., not relaxation) */
-	long   threebb_interacted;/*whether or not object was involved in three-body binary formation*/
-	long   binind; /* index to the binary */
-	long   id; 	/* the star's unique identifier */
-	double rad; /* radius */
-	double Uoldrold, Uoldrnew; /* variables for Stodolkiewicz */
-	double vtold, vrold;       /* energy conservation scheme  */
+/**
+* @brief   radial coordinate
+*/
+	double r;
+/**
+* @brief  radial velocity
+*/
+	double vr;
+/**
+* @brief  tangential velocity
+*/
+	double vt;
+/**
+* @brief  mass
+*/
+	double m;
+/**
+* @brief  kinetic plus potential energy per unit mass
+*/
+	double E;
+/**
+* @brief  angular momentum per unit mass
+*/
+	double J;
+/**
+* @brief  "intermediate" energy per unit mass
+*/
+	double EI;
+/**
+* @brief  internal energy (due to collisions, e.g.)
+*/
+	double Eint;
+/**
+* @brief  new radial coordinate
+*/
+	double rnew;
+/**
+* @brief  new radial velocity
+*/
+	double vrnew;
+/**
+* @brief  new tangential velocity
+*/
+	double vtnew;
+/**
+* @brief  ?
+*/
+	double rOld;
+/**
+* @brief  ?
+*/
+	double X;
+/**
+* @brief  random variable that must be stored
+*/
+	double Y;
+/**
+* @brief  pericenter distance
+*/
+	double r_peri;
+/**
+* @brief  apocenter distance
+*/
+	double r_apo;
+/**
+* @brief  value of potential at position of star (only updated at end of timestep)
+*/
+	double phi;
+/**
+* @brief  whether or not the star has undergone a strong interaction (i.e., not relaxation)
+*/
+	long   interacted;
+/**
+* @brief whether or not object was involved in three-body binary formation
+*/
+	long   threebb_interacted;
+/**
+* @brief  index to the binary
+* @details If the star is a binary, this variable has a non-zero value. Moreover, the value of this variable indicates the index of the binary array which holds the properties of this binary. For example, if star[213].binind has the value 56, binary[56] contains the properties of that binary.
+*/
+	long   binind;
+/**
+* @brief  the star's unique identifier
+*/
+	long   id;
+/**
+* @brief  radius
+*/
+	double rad;
+/**
+* @brief  variables for Stodolkiewicz
+*/
+	double Uoldrold, Uoldrnew;
+/**
+* @brief  energy conservation scheme
+*/
+	double vtold, vrold;
 	/* TODO: stellar evolution variables */
+/**
+* @brief ?
+*/
 	double se_mass;
+/**
+* @brief ?
+*/
 	int se_k;
+/**
+* @brief ?
+*/
 	double se_mt;
+/**
+* @brief ?
+*/
 	double se_ospin;
-        double se_B_0; /* Pulsar initial magentif field */
-        double se_bacc;
-        double se_tacc;
+/**
+* @brief  Pulsar initial magentif field
+*/
+	double se_B_0;
+/**
+* @brief ?
+*/
+	double se_bacc;
+/**
+* @brief ?
+*/
+	double se_tacc;
+/**
+* @brief ?
+*/
 	double se_epoch;
+/**
+* @brief ?
+*/
 	double se_tphys;
+/**
+* @brief ?
+*/
 	double se_radius;
+/**
+* @brief ?
+*/
 	double se_lum;
+/**
+* @brief ?
+*/
 	double se_mc;
+/**
+* @brief ?
+*/
 	double se_rc;
+/**
+* @brief ?
+*/
 	double se_menv;
+/**
+* @brief ?
+*/
 	double se_renv;
+/**
+* @brief ?
+*/
 	double se_tms;
-        double se_scm_B; /* Pulsar surface magnetic field */
-        double se_scm_formation; /* formation pathway of NS */
+/**
+* @brief  Pulsar surface magnetic field
+*/
+	double se_scm_B;
+/**
+* @brief  formation pathway of NS
+*/
+	double se_scm_formation;
 	//Sourav: toy rejuvenation variables
 	double createtime, createtimenew, createtimeold;
 	double lifetime, lifetimeold, lifetimenew;
@@ -198,238 +445,611 @@ struct get_pos_str {
 };
 
 // This is a total hack for including parameter documentation
+/**
+* @brief Struct to store the input parameters parsed from the input .cmc file
+*/
 typedef struct{
 #define PARAMDOC_SAMPLESIZE "no.of sample keys contributed per processor for sample sort--binary interactions. Applicable only for the parallel version"
+/**
+* @brief no.of sample keys contributed per processor for sample sort. By default (if not specified), equal to the number of processors. Applicable only for the parallel version
+* @cite [Pattabiraman et al.(2013)]{2013ApJS..204...15P} Pattabiraman, B., Umbreit, S., Liao, W.-k., et al.\ 2013, \apjs, 204, 15
+*/
 	int SAMPLESIZE;
 #define PARAMDOC_BINBIN "toggles binary--binary interactions (0=off, 1=on)"
+/**
+* @brief toggles binary--binary interactions (0=off, 1=on)
+*/
 	int BINBIN;
 #define PARAMDOC_BINSINGLE "toggles binary--single interactions (0=off, 1=on)"
+/**
+* @brief toggles binary--single interactions (0=off, 1=on)
+*/
 	int BINSINGLE;
 #define PARAMDOC_STREAMS "to run the serial version with the given number of random streams - primarily used to mimic the parallel version running with the same no.of processors"
 	int STREAMS;
 /* Meagan - 3bb */
 #define PARAMDOC_THREEBODYBINARIES "toggles three-body binary formation (0=off, 1=on)"
+/**
+* @brief toggles three-body binary formation (0=off, 1=on)
+*/
 	int THREEBODYBINARIES;
 #define PARAMDOC_MIN_BINARY_HARDNESS "minimum hardness for newly formed three-body binaries"
+/**
+* @brief minimum hardness for newly formed three-body binaries
+*/
 	int MIN_BINARY_HARDNESS;
 #define PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES "allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)"
+/**
+* @brief allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)
+*/
 	int ONLY_FORM_BH_THREEBODYBINARIES;
 #define PARAMDOC_BH_SNAPSHOTTING "toggles output bh snapshotting (0=off, 1=on)"
+/**
+* @brief toggles output bh snapshotting (0=off, 1=on)
+*/
 	int BH_SNAPSHOTTING;
 #define PARAMDOC_BH_SNAPSHOT_DELTACOUNT "BH snapshotting interval in time steps"
+/**
+* @brief BH snapshotting interval in time steps
+*/
 	int BH_SNAPSHOT_DELTACOUNT;
 #define PARAMDOC_SNAPSHOTTING "toggles output snapshotting (0=off, 1=on)"
+/**
+* @brief toggles output snapshotting (0=off, 1=on)
+*/
 	int SNAPSHOTTING;
 #define PARAMDOC_SNAPSHOT_DELTAT "snapshotting time interval (FP units)"
+/**
+* @brief snapshotting time interval (FP units)
+*/
 	int SNAPSHOT_DELTAT;
 #define PARAMDOC_SNAPSHOT_DELTACOUNT "snapshotting interval in time steps"
+/**
+* @brief snapshotting interval in time steps
+*/
 	int SNAPSHOT_DELTACOUNT;
 #define PARAMDOC_SNAPSHOT_CORE_COLLAPSE "output extra snapshotting information during core collapse (0=off, 1=on)"
+/**
+* @brief output extra snapshotting information during core collapse (0=off, 1=on)
+*/
         int SNAPSHOT_CORE_COLLAPSE;
 #define PARAMDOC_SNAPSHOT_CORE_BOUNCE "output extra snapshotting information during core bounce (0=off, 1=on)"
+/**
+* @brief output extra snapshotting information during core bounce (0=off, 1=on)
+*/
         int SNAPSHOT_CORE_BOUNCE;
 #define PARAMDOC_SNAPSHOT_WINDOWS "Output extra snapshots within time windows. \n#The format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc." 
+/**
+* @brief Output extra snapshots within time windows. The format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc.
+*/
         int SNAPSHOT_WINDOWS;
 #define PARAMDOC_SNAPSHOT_WINDOW_UNITS "Units used for time window parameters. Possible choices: Gyr, Trel, and Tcr"
+/**
+* @brief Units used for time window parameters. Possible choices: Gyr, Trel, and Tcr
+*/
         int SNAPSHOT_WINDOW_UNITS;
 #define PARAMDOC_IDUM "random number generator seed"
+/**
+* @brief random number generator seed
+*/
 	int IDUM;
 #define PARAMDOC_INPUT_FILE "input FITS file"
+/**
+* @brief input FITS file
+*/
 	int INPUT_FILE;
 #define PARAMDOC_MASS_PC "mass fractions for Lagrange radii"
+/**
+* @brief mass fractions for Lagrange radii
+*/
 	int MASS_PC;
 #define PARAMDOC_MASS_PC_BH_INCLUDE "Shall the central black hole be included for the calculation of the Lagrange radii? (1=yes, 0=no)"
-        int MASS_PC_BH_INCLUDE;
+/**
+* @brief Shall the central black hole be included for the calculation of the Lagrange radii? (1=yes, 0=no)
+*/
+	int MASS_PC_BH_INCLUDE;
 #define PARAMDOC_MASS_BINS "mass ranges for calculating derived quantities"
+/**
+* @brief mass ranges for calculating derived quantities
+*/
 	int MASS_BINS;
 #define PARAMDOC_MINIMUM_R "radius of central mass"
+/**
+* @brief radius of central mass
+*/
 	int MINIMUM_R;
 #define PARAMDOC_STOPATCORECOLLAPSE "stop calculation at core collapse (0=no, 1=yes)"
+/**
+* @brief stop calculation at core collapse (0=no, 1=yes)
+*/
 	int STOPATCORECOLLAPSE;
 #define PARAMDOC_NUM_CENTRAL_STARS "number of central stars used to calculate certain averages"
+/**
+* @brief number of central stars used to calculate certain averages
+*/
 	int NUM_CENTRAL_STARS;
 #define PARAMDOC_PERTURB "perform dynamical perturbations on objects (0=off, 1=on)"
+/**
+* @brief perform dynamical perturbations on objects (0=off, 1=on)
+*/
 	int PERTURB;
 #define PARAMDOC_RELAXATION "perform two-body relaxation (0=off, 1=on)"
+/**
+* @brief perform two-body relaxation (0=off, 1=on)
+*/
 	int RELAXATION;
 #define PARAMDOC_THETASEMAX "maximum super-encounter scattering angle (radians)"
+/**
+* @brief maximum super-encounter scattering angle (radians)
+*/
 	int THETASEMAX;
 #define PARAMDOC_STELLAR_EVOLUTION "stellar evolution (0=off, 1=on)"
+/**
+* @brief stellar evolution (0=off, 1=on)
+*/
 	int STELLAR_EVOLUTION;
 #define PARAMDOC_TIDAL_TREATMENT "choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)"
+/**
+* @brief choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)
+*/
 	int TIDAL_TREATMENT;
 #define PARAMDOC_SS_COLLISION "perform physical stellar collisions (0=off, 1=on)"
+/**
+* @brief perform physical stellar collisions (0=off, 1=on)
+*/
 	int SS_COLLISION;
 #define PARAMDOC_TIDAL_CAPTURE "allow for tidal capture in single-single interactions, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)"
+/**
+* @brief allow for tidal capture in single-single interactions, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)
+*/
 	int TIDAL_CAPTURE;
 	//Sourav: toy rejuvenation flags
 #define PARAMDOC_STAR_AGING_SCHEME "the aging scheme of the stars (0=infinite age of all stars, 1=rejuvenation, 2=zero lifetime of collision stars, 3=arbitrary lifetime)"
+/**
+* @brief the aging scheme of the stars (0=infinite age of all stars, 1=rejuvenation, 2=zero lifetime of collision stars, 3=arbitrary lifetime)
+*/
 	int STAR_AGING_SCHEME;
 #define PARAMDOC_PREAGING "preage the cluster (0=off, 1=on)"
+/**
+* @brief preage the cluster (0=off, 1=on)
+*/
 	int PREAGING;
 #define PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT "energy change calculation stopping criterion"
+/**
+* @brief energy change calculation stopping criterion
+*/
 	int TERMINAL_ENERGY_DISPLACEMENT;
 #define PARAMDOC_T_MAX "maximum integration time (FP units)"
+/**
+* @brief maximum integration time (FP units)
+*/
 	int T_MAX;
 #define PARAMDOC_T_MAX_PHYS "maximum integration time (Gyr)"
+/**
+* @brief maximum integration time (Gyr)
+*/
 	int T_MAX_PHYS;
 #define PARAMDOC_T_MAX_COUNT "maximum number of time steps"
+/**
+* @brief maximum number of time steps
+*/
 	int T_MAX_COUNT;
 #define PARAMDOC_MAX_WCLOCK_TIME "maximum wall clock time (seconds)"
+/**
+* @brief maximum wall clock time (seconds)
+*/
 	int MAX_WCLOCK_TIME;
 #define PARAMDOC_WIND_FACTOR "stellar evolution wind mass loss factor (0.5-2)"
+/**
+* @brief stellar evolution wind mass loss factor (0.5-2)
+*/
 	int WIND_FACTOR;
 #define PARAMDOC_GAMMA "gamma in Coulomb logarithm"
+/**
+* @brief gamma in Coulomb logarithm
+*/
 	int GAMMA;
 #define PARAMDOC_SEARCH_GRID "search grid (0=off, 1=on)"
+/**
+* @brief search grid (0=off, 1=on)
+*/
         int SEARCH_GRID;
 #define PARAMDOC_SG_STARSPERBIN "number of stars that should ideally be in each search bin"
+/**
+* @brief number of stars that should ideally be in each search bin
+*/
         int SG_STARSPERBIN;
 #define PARAMDOC_SG_MAXLENGTH "maximum length of the search grid"
+/**
+* @brief maximum length of the search grid
+*/
         int SG_MAXLENGTH;
 #define PARAMDOC_SG_MINLENGTH "minimum length of the search grid"
+/**
+* @brief minimum length of the search grid
+*/
         int SG_MINLENGTH;
 #define PARAMDOC_SG_POWER_LAW_EXPONENT "slope of the assumed power-law for r(N), where N is the number of stars within r. (0.5 hard coded)"
+/**
+* @brief slope of the assumed power-law for r(N), where N is the number of stars within r. (0.5 hard coded)
+*/
         int SG_POWER_LAW_EXPONENT;
 #define PARAMDOC_SG_MATCH_AT_FRACTION "fraction frac that adjusts the constant factor in the power-law for r(N) such that r_pl(frac*N_tot)=r(frac*N_tot) (0.5)"
+/**
+* @brief fraction frac that adjusts the constant factor in the power-law for r(N) such that r_pl(frac*N_tot)=r(frac*N_tot) (0.5)
+*/
         int SG_MATCH_AT_FRACTION;
 #define PARAMDOC_SG_PARTICLE_FRACTION "frac_p that defines the maximum Np= frac_p*N_tot for which r(N<Np) can be reasonably approximated as a power-law (0.95)"
+/**
+* @brief frac_p that defines the maximum Np= frac_p*N_tot for which r(N<Np) can be reasonably approximated as a power-law (0.95)
+*/
         int SG_PARTICLE_FRACTION;
 #define PARAMDOC_BH_LOSS_CONE "perform loss-cone physics for central black hole (0=off, 1=on)"
+/**
+* @brief perform loss-cone physics for central black hole (0=off, 1=on)
+*/
         int BH_LOSS_CONE;
 #define PARAMDOC_BH_R_DISRUPT_NB "central black hole disruption radius (N-body units)"
+/**
+* @brief central black hole disruption radius (N-body units)
+*/
         int BH_R_DISRUPT_NB;
 #define PARAMDOC_FORCE_RLX_STEP "force a relaxation step (useful when RELAXATION=0) (0=off, 1=on)"
+/**
+* @brief force a relaxation step (useful when RELAXATION=0) (0=off, 1=on)
+*/
         int FORCE_RLX_STEP; 
 #define PARAMDOC_DT_HARD_BINARIES "calculate the binary interaction time steps by only considering hard binaries (0=off, 1=on)"
+/**
+* @brief calculate the binary interaction time steps by only considering hard binaries (0=off, 1=on)
+*/
         int DT_HARD_BINARIES; 
 #define PARAMDOC_HARD_BINARY_KT "The minimum binary binding energy (in units of kT) for a binary to be considered 'hard' for the time step calculation."
+/**
+* @brief The minimum binary binding energy (in units of kT) for a binary to be considered 'hard' for the time step calculation.
+*/
         int HARD_BINARY_KT; 
 #ifdef EXPERIMENTAL
 #define PARAMDOC_BH_LC_FDT "sub time step size on which the code tries to approximately advance particles that have a MC time step larger than BH_LC_FDT times the local relaxation time. In some versions of the code the particles are literally advanced while in other a simple scaling is used. None of them really work. (0)"
+/**
+* @brief sub time step size on which the code tries to approximately advance particles that have a MC time step larger than BH_LC_FDT times the local relaxation time. In some versions of the code the particles are literally advanced while in other a simple scaling is used. None of them really work. (0)
+*/
         int BH_LC_FDT;
 #define PARAMDOC_AVEKERNEL "one half the number of stars over which to average certain quantities"
+/**
+* @brief one half the number of stars over which to average certain quantities
+*/
         int AVEKERNEL;
 #endif
 #define PARAMDOC_MIN_CHUNK_SIZE "minimum size of chunks that get partitioned across processors in the parallel code"
+/**
+* @brief minimum size of chunks that get partitioned across processors in the parallel code
+*/
         int MIN_CHUNK_SIZE;
 #define PARAMDOC_APSIDES_PRECISION "absolute precision of the roots of vr^2 for the numerical root finding algorithm."
+/**
+* @brief absolute precision of the roots of vr^2 for the numerical root finding algorithm.
+*/
         int APSIDES_PRECISION;
 #define PARAMDOC_APSIDES_MAX_ITER "maximum number of iterations to find the roots of vr^2 numerically"
+/**
+* @brief maximum number of iterations to find the roots of vr^2 numerically
+*/
         int APSIDES_MAX_ITER;
 #define PARAMDOC_APSIDES_CONVERGENCE "difference of the roots between two consecutive iterations of the numerical root finding algorithm below which the result is considered to be converged."
+/**
+* @brief difference of the roots between two consecutive iterations of the numerical root finding algorithm below which the result is considered to be converged.
+*/
         int APSIDES_CONVERGENCE;
 #define PARAMDOC_CIRC_PERIOD_THRESHOLD "A threshold value for the difference between apastron and periastron below which an orbit is considered to be circular. Currently this is only used for the period calculation in the loss-cone routine."
+/**
+* @brief A threshold value for the difference between apastron and periastron below which an orbit is considered to be circular. Currently this is only used for the period calculation in the loss-cone routine.
+*/
         int CIRC_PERIOD_THRESHOLD;
 #define PARAMDOC_WRITE_STELLAR_INFO "Write out information about stellar evolution for each single and binary star, (0=off, 1=on)"
+/**
+* @brief Write out information about stellar evolution for each single and binary star, (0=off, 1=on)
+*/
         int WRITE_STELLAR_INFO;
 #define PARAMDOC_WRITE_BH_INFO "Write out information about BHs each timestep, (0=off, 1=on)"
+/**
+* @brief Write out information about BHs each timestep, (0=off, 1=on)
+*/
         int WRITE_BH_INFO;
 #define PARAMDOC_WRITE_RWALK_INFO "Write out information about the random walk in J-space around the central black hole, (0=off, 1=on)"
+/**
+* @brief Write out information about the random walk in J-space around the central black hole, (0=off, 1=on)
+*/
         int WRITE_RWALK_INFO;
 #define PARAMDOC_WRITE_EXTRA_CORE_INFO "Write out information about cores that are defined differently from the standard (0=off, 1=on)"
+/**
+* @brief Write out information about cores that are defined differently from the standard (0=off, 1=on)
+*/
         int WRITE_EXTRA_CORE_INFO;
 #define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"
+/**
+* @brief Write out information about 10\% lagrange radius (0=off, 1=on)
+*/
         int CALCULATE10;
 #define PARAMDOC_OVERWRITE_RVIR "Instead of reading the virial radius from the fits file use this value [pc]"
+/**
+* @brief Instead of reading the virial radius from the fits file use this value [pc]
+*/
         int OVERWRITE_RVIR;
 #define PARAMDOC_OVERWRITE_Z "Instead of reading the metallicity from the fits file use this value"
+/**
+* @brief Instead of reading the metallicity from the fits file use this value
+*/
         int OVERWRITE_Z;
 #define PARAMDOC_OVERWRITE_RTID "Instead of reading the tidal radius from the fits file use this value [pc]"
         int OVERWRITE_RTID;
 #define PARAMDOC_OVERWRITE_MCLUS "Instead of reading the cluster mass from the fits file use this value [Msun]"
+/**
+* @brief Instead of reading the cluster mass from the fits file use this value [Msun]
+*/
         int OVERWRITE_MCLUS;
 #define PARAMDOC_BSE_NETA "neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally)."
+/**
+* @brief neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
+*/
 	int BSE_NETA;
 #define PARAMDOC_BSE_BWIND "bwind is the binary enhanced mass-loss parameter (inactive for single, and normally 0.0 anyway)."
+/**
+* @brief bwind is the binary enhanced mass-loss parameter (inactive for single, and normally 0.0 anyway).
+*/
 	int BSE_BWIND;
 #define PARAMDOC_BSE_HEWIND "hewind is a helium star mass-loss factor (0.5 normally)."
+/**
+* @brief hewind is a helium star mass-loss factor (0.5 normally).
+*/
 	int BSE_HEWIND;
 #define PARAMDOC_BSE_WINDFLAG "windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink)."
+/**
+* @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink).
+*/
 	int BSE_WINDFLAG;
 #define PARAMDOC_BSE_ALPHA1 "alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)"
+/**
+* @brief alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)
+*/
 	int BSE_ALPHA1;
 #define PARAMDOC_BSE_LAMBDA "labmda is the stellar binding energy factor for common-envelope evolution (0.5; +'ve allows it to vary, -'ve holds it constant at that value always)."
+/**
+* @brief labmda is the stellar binding energy factor for common-envelope evolution (0.5; +'ve allows it to vary, -'ve holds it constant at that value always).
+*/
 	int BSE_LAMBDA;
 #define PARAMDOC_BSE_CEFLAG "ceflag sets CE prescription used. = 0 sets Tout et al. method, = 3 activates de Kool common-envelope models (normally 0)."
+/**
+* @brief ceflag sets CE prescription used. = 0 sets Tout et al. method, = 3 activates de Kool common-envelope models (normally 0).
+*/
 	int BSE_CEFLAG;
 #define PARAMDOC_BSE_TFLAG "tflag > 0 activates tidal circularisation (1)."
+/**
+* @brief tflag > 0 activates tidal circularisation (1).
+*/
 	int BSE_TFLAG;
 #define PARAMDOC_BSE_IFFLAG "ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0)."
+/**
+* @brief ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0).
+*/
 	int BSE_IFFLAG;
 #define PARAMDOC_BSE_WDFLAG "wdflag > 0 uses modified-Mestel cooling for WDs (1)."
+/**
+* @brief wdflag > 0 uses modified-Mestel cooling for WDs (1).
+*/
 	int BSE_WDFLAG;
 #define PARAMDOC_BSE_BHFLAG "bhflag > 0 allows velocity kick at BH formation (1)."
+/**
+* @brief bhflag > 0 allows velocity kick at BH formation (1).
+*/
 	int BSE_BHFLAG;
 #define PARAMDOC_BSE_NSFLAG "nsflag > 0 takes NS/BH mass distribution of Belczynski et al. 2002, ApJ, 572, 407 (1)."
+/**
+* @brief nsflag > 0 takes NS/BH mass distribution of Belczynski et al. 2002, ApJ, 572, 407 (1).
+*/
 	int BSE_NSFLAG;
 #define PARAMDOC_BSE_MXNS "mxns is the maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1)."
+/**
+* @brief mxns is the maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1).
+*/
 	int BSE_MXNS;
 #define PARAMDOC_BSE_BCONST "bconst is the magnetic field decay timescale (-3000, although value and decay rate not really established...)."
+/**
+* @brief bconst is the magnetic field decay timescale (-3000, although value and decay rate not really established...).
+*/
 	int BSE_BCONST;
 #define PARAMDOC_BSE_CK "CK is an accretion induced field decay constant (-1000, although again this isn't well established...)."
+/**
+* @brief CK is an accretion induced field decay constant (-1000, although again this isn't well established...).
+*/
 	int BSE_CK;
 #define PARAMDOC_BSE_IDUM "idum in the random number seed used by kick.f and setting initial pulsar spin period and magnetic field."
+/**
+* @brief idum in the random number seed used by kick.f and setting initial pulsar spin period and magnetic field.
+*/
 	int BSE_IDUM;
 #define PARAMDOC_BSE_SIGMA "sigma is the Maxwellian dispersion for SN kick speeds (265 km/s)."
+/**
+* @brief sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).
+*/
 	int BSE_SIGMA;
 #define PARAMDOC_BSE_BETA "beta is the wind velocity factor: proprotinal to vwind^2 (1/8)."
+/**
+* @brief beta is the wind velocity factor: proprotinal to vwind^2 (1/8).
+*/
 	int BSE_BETA;
 #define PARAMDOC_BSE_EDDFAC "eddfac is Eddington limit factor for mass transfer (1.0, 10 turns Eddlimitation off)."
+/**
+* @brief eddfac is Eddington limit factor for mass transfer (1.0, 10 turns Eddlimitation off).
+*/
 	int BSE_EDDFAC;
 #define PARAMDOC_BSE_GAMMA "gamma is the angular momentum factor for mass lost during Roche (-1.0, see evolv2.f for more details)."
+/**
+* @brief gamma is the angular momentum factor for mass lost during Roche (-1.0, see evolv2.f for more details).
+*/
 	int BSE_GAMMA;
 #define PARAMDOC_TIMER "enable or disable timers. This would return a detailed profiling of the code, but uses barriers, so might slow down the code a bit."
+/**
+* @brief enable or disable timers. This would return a detailed profiling of the code, but uses barriers, so might slow down the code a bit.
+*/
 	int TIMER;
 } parsed_t;
 
-/* a struct containing the units used */
+
+/**
+* @brief  struct containing the units used
+*/
 typedef struct{
-	double t; /* time */
-	double m; /* mass */
-	double l; /* length */
-	double E; /* energy */
-	double mstar; /* stars' masses are kept in different units */
+/**
+* @brief  time
+*/
+	double t;
+/**
+* @brief  mass
+*/
+	double m;
+/**
+* @brief  length
+*/
+	double l;
+/**
+* @brief  energy
+*/
+	double E;
+/**
+* @brief  stars' masses are kept in different units
+*/
+	double mstar;
 } units_t;
 
-/* a struct for the potential, must be malloc'ed */
+/**
+* @brief  a struct for the potential, must be malloc'ed
+*/
 typedef struct{
-	long n; /* number of elements */
-	double *r; /* radius */
-	double *phi; /* potential */
+/**
+* @brief  number of elements
+*/
+	long n;
+/**
+* @brief  radius
+*/
+	double *r;
+/**
+* @brief  potential
+*/
+	double *phi;
 } potential_t;
 
-/* a struct for the force, must be malloc'ed */
+/**
+* @brief a struct for the force, must be malloc'ed
+*/
 typedef struct{
-	long n; /* number of elements */
-	double *r; /* radius */
-	double *force; /* force */
+/**
+* @brief  number of elements
+*/
+	long n;
+/**
+* @brief  radius
+*/
+	double *r;
+/**
+* @brief  force
+*/
+	double *force;
 } force_t;
 
-/* useful structure for central quantities */
+/**
+* @brief useful structure for central quantities
+*/
 typedef struct{
-	double rho; /* central mass density */
-	double v_rms; /* rms object velocity */
-	double rc; /* core radius */
-	double m_ave; /* average object mass */
-	double n; /* number density of objects */
-	double rc_spitzer; /* Spitzer definition of core radius */
-	long N_sin; /* number of objects that are single */
-	long N_bin; /* number of objects that are binary */
-	double n_sin; /* single star number density */
-	double n_bin; /* binary star number density */
-	double rho_sin; /* central single star mass density */
-	double rho_bin; /* central binary star mass density */
-	double m_sin_ave; /*average single star mass */
-	double m_bin_ave; /* average binary star mass */
-	double v_sin_rms; /* rms single star velocity */
-	double v_bin_rms; /* rms binary star velocity */
-	double w2_ave; /* average of 2*m*v^2 per average mass for all objects */
-	double R2_ave; /* average of R^2 for single stars */
-	double mR_ave; /* average of m*R for single stars */
-	double a_ave; /* average of a for binaries */
-	double a2_ave; /* average of a^2 for binaries */
-	double ma_ave; /* average of m*a for binaries */
+/**
+* @brief  central mass density
+*/
+	double rho;
+/**
+* @brief  rms object velocity
+*/
+	double v_rms;
+/**
+* @brief  core radius
+*/
+	double rc;
+/**
+* @brief  average object mass
+*/
+	double m_ave;
+/**
+* @brief  number density of objects
+*/
+	double n;
+/**
+* @brief  Spitzer definition of core radius
+*/
+	double rc_spitzer;
+/**
+* @brief  number of objects that are single
+*/
+	long N_sin;
+/**
+* @brief  number of objects that are binary
+*/
+	long N_bin;
+/**
+* @brief  single star number density
+*/
+	double n_sin;
+/**
+* @brief  binary star number density
+*/
+	double n_bin;
+/**
+* @brief  central single star mass density
+*/
+	double rho_sin;
+/**
+* @brief  central binary star mass density
+*/
+	double rho_bin;
+/**
+* @brief  average single star mass
+*/
+	double m_sin_ave;
+/**
+* @brief  average binary star mass
+*/
+	double m_bin_ave;
+/**
+* @brief  rms single star velocity
+*/
+	double v_sin_rms;
+/**
+* @brief  rms binary star velocity
+*/
+	double v_bin_rms;
+/**
+* @brief average of 2*m*v^2 per average mass for all objects
+*/
+	double w2_ave;
+/**
+* @brief  average of R^2 for single stars
+*/
+	double R2_ave;
+/**
+* @brief  average of m*R for single stars
+*/
+	double mR_ave;
+/**
+* @brief  average of a for binaries
+*/
+	double a_ave;
+/**
+* @brief  average of a^2 for binaries
+*/
+	double a2_ave;
+/**
+* @brief  average of m*a for binaries
+*/
+	double ma_ave;
 } central_t;
 
 /* useful structure for core quantities */
@@ -438,56 +1058,161 @@ typedef struct{
 	double kT;
 } core_t;*/
 
-/* to store the velocity dispersion profile */
+/**
+* @brief  to store the velocity dispersion profile
+*/
 typedef struct{
+/**
+* @brief ?
+*/
 	long n;
+/**
+* @brief ?
+*/
 	double *r;
+/**
+* @brief ?
+*/
 	double *sigma;
 } sigma_t;
 
-/* parameters for orbit */
+/**
+* @brief parameters for orbit
+*/
 typedef struct{
+/**
+* @brief ?
+*/
 	double rp;
+/**
+* @brief ?
+*/
 	double ra;
+/**
+* @brief ?
+*/
 	double dQdrp;
+/**
+* @brief ?
+*/
 	double dQdra;
+/**
+* @brief ?
+*/
 	long kmax;
+/**
+* @brief ?
+*/
 	long kmin;
+/**
+* @brief ?
+*/
 	int circular_flag;
 } orbit_rs_t;
 
-/* parameters for calc_p_orb function */
+/**
+* @brief  parameters for calc_p_orb function
+*/
 typedef struct{
+/**
+* @brief ?
+*/
 	double E;
+/**
+* @brief ?
+*/
 	double J;
+/**
+* @brief ?
+*/
 	long index;
+/**
+* @brief ?
+*/
 	long kmin;
+/**
+* @brief ?
+*/
 	long kmax;
+/**
+* @brief ?
+*/
 	double rp;
+/**
+* @brief ?
+*/
 	double ra;
 } calc_p_orb_params_t;
 
 /* other useful structs */
+/**
+* @brief ?
+*/
 typedef struct{
+/**
+* @brief ?
+*/
 	long N_MAX;
+/**
+* @brief ?
+*/
 	long N_MAX_NEW;
+/**
+* @brief ?
+*/
 	long N_STAR;
+/**
+* @brief ?
+*/
 	long N_STAR_NEW;
+/**
+* @brief ?
+*/
 	long N_BINARY;
 } clus_struct_t;
 
+/**
+* @brief ?
+*/
 typedef struct{
-	double tot; /* total = kinetic + potential + internal + binary binding + central mass energy */
-	double New; /* ??? */
-	double ini; /* initial total energy */
-	double K; /* total kinetic */
-	double P; /* total potential */
-	double Eint; /* total internal */
-	double Eb; /* total binary binding energy */
+/**
+* @brief  total = kinetic + potential + internal + binary binding + central mass energy
+*/
+	double tot;
+/**
+* @brief  ???
+*/
+	double New;
+/**
+* @brief  initial total energy
+*/
+	double ini;
+/**
+* @brief  total kinetic
+*/
+	double K;
+/**
+* @brief  total potential
+*/
+	double P;
+/**
+* @brief  total internal
+*/
+	double Eint;
+/**
+* @brief  total binary binding energy
+*/
+	double Eb;
 } Etotal_struct_t;
 
+/**
+* @brief ?
+*/
 typedef struct{
-	double rh; /* half-mass radius */
+/**
+* @brief  half-mass radius
+*/
+	double rh;
 } clusdyn_struct_t;
 
 /********************** Function Declarations ************************/
@@ -885,8 +1610,10 @@ void write_snapshot(char *filename, int bh_only);
 
 #ifdef USE_MPI
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: in proc %d, %s(): ", myid, __FUNCTION__); fprintf(stderr, args);}
+#define rootdprintf(args...) if (debug && myid==0) {fprintf(stderr, "DEBUG: in proc %d, %s(): ", myid, __FUNCTION__); fprintf(stderr, args);}
 #else
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
+#define rootdprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 #endif
 
 #define dmpiprintf(args...) if (mpi_debug) { fprintf(stderr, "DEBUG: in proc %d, %s(): ", myid, __FUNCTION__); fprintf(stderr, args); }
@@ -897,23 +1624,56 @@ void write_snapshot(char *filename, int bh_only);
 #define wprintf(args...) { fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}
 #endif
 
+#ifdef USE_MPI
+#define eprintf(args...) {fprintf(stderr, "ERROR: in proc %d: %s:%d in %s(): ", myid, __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}
+#else
 #define eprintf(args...) {fprintf(stderr, "ERROR: %s:%d in %s(): ", __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}
+#endif
 
 //MPI3-IO: This was the easiest way to convert hundreds of fprintf statements to do parallel IO without manually changing each one of them.
 #ifdef USE_MPI
 
+/**
+* @brief Macro that prints given args into char buffer of the corresponding file.
+*
+* @param file File to be written to. This macro does not actually write to the file, but instead stores the data into the corresponding char buffer.
+* @param args... arguments for standard printf
+*/
 #define parafprintf(file, args...)                       \
 do { sprintf(mpi_ ## file ## _buf, args);               \
 strcat(mpi_ ## file ## _wrbuf, mpi_ ## file ## _buf);   \
 mpi_ ## file ## _len += strlen(mpi_ ## file ## _buf); }         \
 while(0)
 
+/**
+* @brief Prints out given arguments into char buffer corresponding to given file, done only by the root node.
+*
+* @param file File to be written to
+* @param args... arguments for standard printf
+*/
 #define pararootfprintf(file, args...) { if(myid==0) parafprintf(file, args); }
 
+/**
+* @brief Prints given arguments to given file only by the root node. Translates to regular printf in the serial version.
+*
+* @param file File to be written to
+* @param args... arguments for standard printf
+*/
 #define rootfprintf(file, args...) { if(myid==0) fprintf(file, args); }
 
+/**
+* @brief Calls gprintf only for root node with given arguments.
+*
+* @param file File to be written to
+* @param args... arguments for standard printf
+*/
 #define rootgprintf(args...) if (!quiet) {if(myid==0) fprintf(stdout, args);}
 
+/**
+* @brief Prints given arguments to stdout only by the root node. Translates to regular printf in the serial version.
+*
+* @param args... arguments for standard printf
+*/
 #define rootprintf(args...) {if(myid == 0) { fprintf(stdout, args); }}
 
 #else

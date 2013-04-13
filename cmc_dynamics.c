@@ -8,10 +8,14 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/* core of the code: applies relaxation, does single-single collisions and binary interactions */
+/**
+* @brief core of the code: applies relaxation, does single-single collisions and binary interactions
+*
+* @param dt timestep
+* @param rng gsl rng
+*/
 void dynamics_apply(double dt, gsl_rng *rng)
 {
-	//MPI2: Tested for outputs: vr, vt, E and J. Tests performed with same seed for rng of all procs. Check done only for proc 0's values as others cant be tested due to rng. Must test after rng is replaced.
 	long j, si, p=AVEKERNEL, N_LIMIT, k, kp, ksin, kbin;
 	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
 	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi=0;
@@ -29,8 +33,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	double ave_local_mass, sigma_local, vrel_ave, v1[4], v2[4], v3[4], vrel12[4], vrel3[4]; 
 	double eta_min=MIN_BINARY_HARDNESS, Y1, rate_3bb, rate_ave=0.0, P_3bb, P_ave=0.0;
 
-//OPT:Check if removing this changes results. If not, get rid of it.
-//MPI3: Removing calc_sigma as per Stefan's suggestion.
 #ifdef USE_MPI
     mpi_calc_sigma_r(AVEKERNEL, mpiEnd-mpiBegin+1, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
 #else
@@ -47,7 +49,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
         pararootfprintf(relaxationfile, "\n");
     }
 
-    // MPI2: This hopefully does not execute, so dont have to worry abt binaries here.
+    // MPI: This does not execute, but parallelizing anyway.
     /* DEBUG: print out binary information every N steps */
     if (0) {
         /* if (tcount%50==0 || tcount==1) { */
@@ -117,13 +119,17 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	//=====================================================================================
 
 	if (THREEBODYBINARIES) { // Flag for turning on three-body binary formation
+		//MPI: Computing the average sigma and average local mass for each star and storing into arrays. In the original serial version by Meagan, these averages were computed as required inside the loop for each star, but for the parallel version it's simpler and more efficient if these were pre-computed and then just accessed from inside the loop.
         double *ave_local_mass_arr = (double *) malloc( ((int)(clus.N_MAX_NEW+1)) * sizeof(double) );
         double *sigma_local_arr = (double *) malloc( ((int)(clus.N_MAX_NEW+1)) * sizeof(double) );
-        long temp; //never used, but just for calc_sig function generalization.
+        long temp; //the value in this is never used, but just for calc_sig function generalization.
 #ifdef USE_MPI
+		  //MPI: This loop isn't identical to the actual serial loop (commented out below) which would ignore at most 2 stars (the last 2 which won't be able to undergo a 3bb interaction). However, parallelization would be more tricky, so here we fixed this the quick and dirty way - by skipping at most 2 stars in each processor.
+		  // Local density about star k1, nearest 20 stars (10 inside, 10 outside)
         mpi_calc_sigma_r(10, clus.N_MAX_NEW, ave_local_mass_arr, sigma_local_arr, &temp, 1);
 		  for (sq=1; sq<=(mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%3-2; sq+=3) // loop through objects, 3 at a time
 #else
+		  // Local density about star k1, nearest 20 stars (10 inside, 10 outside)
 		  calc_sigma_r(10, N_LIMIT, ave_local_mass_arr, sigma_local_arr, &temp, 1);
 		  //for (sq=1; sq<=N_LIMIT-N_LIMIT%3-2; sq+=3) // loop through objects, 3 at a time
 		  for(i=0; i<procs; i++)
@@ -132,7 +138,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			{
 				dt = SaveDt;
 				form_binary = 0; // reset this to zero; later we decide whether to form a binary, and if so, set form_binary=1
-				// Local density about star k1, nearest 20 stars (10 inside, 10 outside)
 				// Sort stars by mass (k1 is most massive)
 #ifdef USE_MPI
 				n_local = calc_n_local(get_global_idx(k1), 10, N_LIMIT);
@@ -146,8 +151,9 @@ void dynamics_apply(double dt, gsl_rng *rng)
 					// Are all stars singles? If not, exit loop - don't do binary formation
 					if (star[k1].binind == 0 && star[k2].binind == 0 && star[k3].binind == 0) {
 						triplet_count ++;
+						//MPI: Since we pre-computed the velocity dispersion and average local mass, now we just get it from the array where we stored it.
 						// Calc local velocity dispersion, nearest 20 stars	
-						//					calc_sigma_local(k1, 10, N_LIMIT, &ave_local_mass, &sigma_local);
+						//	calc_sigma_local(k1, 10, N_LIMIT, &ave_local_mass, &sigma_local);
 						ave_local_mass = ave_local_mass_arr[k1];
 						sigma_local = sigma_local_arr[k1];
 						// Average relative speed for a Maxwellian, from Binney & Tremaine
@@ -229,7 +235,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			} 
 		  free(ave_local_mass_arr);
 		  free(sigma_local_arr);
-	} 
+	}
 			
 /***********************************************/	
 
@@ -271,7 +277,6 @@ are skipped if they already interacted in 3bb loop!  */
 		k = si;
 		kp = si + 1;
 
-		//MPI2: Involves rng. To be handled later.	
 		// only let those stars that did not participate in 3bb formation interact/relax
 		while (star[si].threebb_interacted == 1) {
 			si += 1; // iterate until non-interacted object found
@@ -510,7 +515,7 @@ are skipped if they already interacted in 3bb loop!  */
      }
 #endif
 
-    //MPI3: Reduction for File IO - relaxationfile
+    //MPI: Reduction for File IO - relaxationfile
 #ifdef USE_MPI
 	double tmpTimeStart = timeStartSimple();
     double buf_comm_dbl[3][4];
@@ -525,7 +530,7 @@ are skipped if they already interacted in 3bb loop!  */
     }
     buf_comm_long[4] = Nrel;
 
-    //MPI3: Since only root node is printing Allreduce is not reqd.
+    //MPI: Since only root node is printing Allreduce is not reqd, just Reduce will do.
     MPI_Reduce(buf_comm_dbl, buf_comm_dbl_recv, 12, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(buf_comm_long, buf_comm_long_recv, 5, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
     Nrel = buf_comm_long_recv[4];
@@ -553,7 +558,6 @@ are skipped if they already interacted in 3bb loop!  */
 	rootgprintf("\n");
 	pararootfprintf(logfile, "\n");
 
-	//MPI2: Binaries, ignoring for now.
 	/* break pathologically wide binaries */
 	break_wide_binaries();
 }

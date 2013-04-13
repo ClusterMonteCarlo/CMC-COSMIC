@@ -9,7 +9,9 @@
 #include "cmc_vars.h"
 
 
-/* print out initial binary paramaeters to data file */
+/**
+* @brief print out initial binary paramaeters to data file
+*/
 void print_initial_binaries(void)
 {
 	long i, j;
@@ -18,6 +20,7 @@ void print_initial_binaries(void)
     sprintf(outfile, "%s.initbin.dat", outprefix);
 
 #ifdef USE_MPI
+	 //MPI: Open corresponding MPI files, and declare buffers reqd for parallel write.
     MPI_File mpi_initbinfile;
     char mpi_initbinfile_buf[10000], mpi_initbinfile_wrbuf[10000000];
     int mpi_initbinfile_len=0, mpi_initbinfile_ofst_total=0;
@@ -33,6 +36,7 @@ void print_initial_binaries(void)
 #endif
 
 	/* and write data */
+	//MPI: Header printed only by the root node.
 	pararootfprintf(initbinfile, "# m0 [MSUN]  m1 [MSUN]  R0 [RSUN]  R1 [RSUN]  id0  id1  a [AU]  e\n");
 
 	for (i=1; i<=clus.N_MAX_NEW; i++) {
@@ -48,6 +52,7 @@ void print_initial_binaries(void)
 	}
 
 #ifdef USE_MPI
+	 //MPI: Write in parallel
     mpi_para_file_write(mpi_initbinfile_wrbuf, &mpi_initbinfile_len, &mpi_initbinfile_ofst_total, &mpi_initbinfile);
     MPI_File_close(&mpi_initbinfile);
 #else

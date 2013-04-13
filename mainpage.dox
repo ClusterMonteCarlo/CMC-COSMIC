@@ -1,0 +1,29 @@
+/**
+@mainpage CMC documentation
+
+Welcome to CMC.
+
+Monte Carlo (MC) methods calculate the dynamical evolution of a collisional system of N stars in the Fokker–Planck approximation, which applies when the evolution of the cluster is dominated by two-body relaxation, and the relaxation time is much larger than the dynamical time. In practice, further assumptions of spherical symmetry and dynamical equilibrium have to be made. The Henon MC technique (Henon 1971), which is based on orbit averaging, represents a balanced compromise between realism and speed. The MC method allows for a star-by-star realization of the cluster, with its N particles representing the N stars in the cluster. Integration is done on the relaxation timescale, and the total computational cost scales as O(NlogN) (Henon 1971). 
+
+Our code here is based on the Henon-type MC cluster evolution code CMC (“Cluster Monte Carlo”), developed over many years by Joshi et al. (2000, 2001), Fregeau et al. (2003), Fregeau & Rasio (2007), Chatterjee et al. (2010), and Umbreit et al. (2012). CMC includes a detailed treatment of strong binary star interactions and physical stellar collisions (Fregeau & Rasio 2007), as well as an implementation of single and binary star evolution (Chatterjee et al. 2010) and the capability of handling the dynamics around a central massive black hole (Umbreit et al. 2012).
+
+Code Overview:\n
+The principal data structure is an array of structures of type star_t. One or more of these stars can be binaries. Binaries are stored in a separate array of structures of type binary_t. If an element in the star array is a binary, it's binind property/variable is assigned a non-zero value. Moreover, the value of this variable is assigned in such a way that it indicates the index of the binary array which holds the properties of this binary.
+
+Prerequisites:\n
+The code can be run both serially as well as parallely. It requires the following libraries:\n
+cfitsio (http://heasarc.gsfc.nasa.gov/fitsio/)\n
+gsl (http://www.gnu.org/software/gsl/)\n
+For parallel runs:\n
+MPI (http://www.mcs.anl.gov/research/projects/mpi/)\n
+pNetCDF (Optional, http://trac.mcs.anl.gov/projects/parallel-netcdf)\n
+
+Parallelization Strategy:\n
+There are various routines which have varying dependencies and accesses between elements of the data structures. To minmize inter-process communication required by these routines as much as possible, we partition the data such that the number of stars held by each processor is a multiple of MIN_CHUNK_SIZE (input parameter, defaults to 20, refer http://adsabs.harvard.edu/abs/2013ApJS..204...15P for a justification for the choice of this value, and detailed explanation). The remainder of stars which is < MIN_CHUNK_SIZE after division goes to the last processor.
+
+Most routines do computations on a star by star basis, and access only the properties of the star being processed. However, the values of gravitational potential, masses of the stars and radial positions of the stars are accessed in a complex, data-dependent manner throughout the code. Hence, we store these values in separate arrays and duplicate/copy these across all processors. Since these properties change during a timestep, we synchronize these arrays at the end of each time step.
+
+Like mentioned above, most routines perform computations on a star by star basis. The only routine that differs from this pattern is the sorting routine that sorts all the stars by their radial positions. We use a parallel sorting algorithm called Sample Sort (see http://adsabs.harvard.edu/abs/2013ApJS..204...15P for a detailed discussion).
+
+The parallel sorting routine does the sorting and automatically redistributes the data to the processors, however, there is no control over the number of stars that will end up on each processor. So, after the sorting takes place, we exchange data between processors to adhere to the data partitioning scheme mentioned above.
+*/

@@ -25,7 +25,11 @@ void cmc_fits_printerror(int status)
 	return;
 }
 
-/* malloc big data structure; NOBJ and NBINARY must be set first */
+/**
+* @brief malloc the input cmc_fits_data_t structure based on the NOBJ and NBINARY parameters of the struct.
+*
+* @param cfd Structure of type cmc_fits_data_t which needs to be malloc'ed. Please note that the NOBJ and NBINARY parameters must of the input struct must be set first.
+*/
 void cmc_malloc_fits_data_t(cmc_fits_data_t *cfd){
 	long NSS = cfd->NOBJ+2;
 	long NBS = cfd->NBINARY+1;
@@ -86,7 +90,11 @@ void cmc_malloc_fits_data_t(cmc_fits_data_t *cfd){
 	cfd->bs_e[0] = 0.0;
 }
 
-/* free big data structure */
+/**
+* @brief  frees the given cmc_fits_data_t data structure
+*
+* @param cfd Structure of type cmc_fits_data_t which needs to be freed.
+*/
 void cmc_free_fits_data_t(cmc_fits_data_t *cfd){
 	free(cfd->obj_id);
 	free(cfd->obj_k);
@@ -109,6 +117,12 @@ void cmc_free_fits_data_t(cmc_fits_data_t *cfd){
 	free(cfd->bs_e);
 }
 
+/**
+* @brief Writes the given cmc_fits_data_t data into the given fits file
+*
+* @param cfd Struct of type cmc_fits_data_t containing the input data to be writted
+* @param filename fits file to which the data needs to be written to
+*/
 void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 	fitsfile *fptr;
 	int status=0;
@@ -178,6 +192,12 @@ void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 	cmc_fits_printerror(status);
 }
 
+/**
+* @brief Reads from the given fits file and stores into the corrsponding members of the given cmc_fits_data_t data structure
+*
+* @param cfd Struct of type cmc_fits_data_t where the data is stored after reading from the file
+* @param filename input fits file that needs to be read
+*/
 void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd){
 	int status=0, hdunum, hdutype, anynull;
 	fitsfile *fptr;

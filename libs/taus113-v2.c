@@ -60,10 +60,24 @@
 #define MASK 0xffffffffUL
 #define LCG(n) ((69069UL * n) & 0xffffffffUL)
 
+/**
+* @brief Global rng state
+*/
 static struct rng_t113_state state_static;
+/**
+* @brief Jump displacement corresponding to 2^20
+*/
 unsigned int JPoly_2_20[4] = {0x0c382e31, 0x1b040425, 0x0b49a509, 0x0173f6b0};
+/**
+* @brief Jump displacement corresponding to 2^80
+*/
 unsigned int JPoly_2_80[4] = {0x487cf69c, 0x00be6310, 0x04bfe2bb, 0x000824f9};
 
+/**
+* @brief Sets the global rng state variables to the ones of the input state
+*
+* @param st Input state
+*/
 void set_rng_t113(struct rng_t113_state st){
 	state_static.z[0] = st.z[0];
 	state_static.z[1] = st.z[1];
@@ -71,6 +85,11 @@ void set_rng_t113(struct rng_t113_state st){
 	state_static.z[3] = st.z[3];
 }
 
+/**
+* @brief Sets the state variabls of the input state to the ones of the global rng
+*
+* @param st Input state
+*/
 void get_rng_t113(struct rng_t113_state *st){
 	st->z[0] = state_static.z[0];
 	st->z[1] = state_static.z[1];
@@ -78,6 +97,11 @@ void get_rng_t113(struct rng_t113_state *st){
 	st->z[3] = state_static.z[3];
 }
 
+/**
+* @brief Returns a random unsigned int value using the global rng state
+*
+* @return unsigned int random value
+*/
 unsigned long rng_t113_int() {
 	unsigned long b;
 
@@ -92,10 +116,20 @@ unsigned long rng_t113_int() {
   	return (state_static.z[0] ^ state_static.z[1] ^ state_static.z[2] ^ state_static.z[3]);
 }
 
+/**
+* @brief Returns a random double value between 0 and 1 using the global rng state
+*
+* @return double precision random number between 0 and 1
+*/
 double rng_t113_dbl() {
 	return rng_t113_int() / 4294967296.0 ;
 }
 
+/**
+* @brief Resets global rng using the given seed.
+*
+* @param s seed
+*/
 void reset_rng_t113(unsigned long int s) {
 
 	if (s == 0) s = 1UL;	/* default seed is 1 */
@@ -122,6 +156,13 @@ void reset_rng_t113(unsigned long int s) {
 /* New rng functions without implicit private state variable */
 /*************************************************************/
 /*************************************************************/
+/**
+* @brief Returns a random unsigned int value
+*
+* @param state given rng state
+*
+* @return unsigned int random value
+*/
 unsigned long rng_t113_int_new(struct rng_t113_state *state) {
 	unsigned long b;
 
@@ -136,10 +177,23 @@ unsigned long rng_t113_int_new(struct rng_t113_state *state) {
   	return (state->z[0] ^ state->z[1] ^ state->z[2] ^ state->z[3]);
 }
 
+/**
+* @brief Returns a random double value between 0 and 1
+*
+* @param state given rng state
+*
+* @return double precision random number between 0 and 1
+*/
 double rng_t113_dbl_new(struct rng_t113_state *state) {
 	return rng_t113_int_new(state) / 4294967296.0 ;
 }
 
+/**
+* @brief Resets given rng using the given seed.
+*
+* @param s seed
+* @param state given rng state
+*/
 void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state) {
 
 	if (s == 0) s = 1UL;	/* default seed is 1 */
@@ -164,6 +218,13 @@ void reset_rng_t113_new(unsigned long int s, struct rng_t113_state *state) {
 //========================================================================
 // Functions for jump polynomials
 //========================================================================
+/**
+* @brief Returns the next state of the given rng state
+*
+* @param state given rng state
+*
+* @return the next state
+*/
 struct rng_t113_state
 rng_t113_next_state(struct rng_t113_state state) {
   unsigned long b;
@@ -180,8 +241,14 @@ rng_t113_next_state(struct rng_t113_state state) {
   return (state);
 }
 
-/*
-Implementation from "Testing, Selection, and Implementation of Random Number Generators" by Joseph C. Collins, Army Research Laboratory.
+/**
+* @brief Implementation from "Testing, Selection, and Implementation of Random Number Generators" by Joseph C. Collins, Army Research Laboratory.
+Given an state, jumps an amount of states corresponding to the jump displacement jpoly, and returns the new state.
+*
+* @param st given rng state
+* @param jpoly jump displacement
+*
+* @return rng state after jumping
 */
 struct rng_t113_state
 rng_t113_jump(struct rng_t113_state st, unsigned int *jpoly) {

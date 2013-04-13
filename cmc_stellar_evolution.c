@@ -144,6 +144,8 @@ void stellar_evolution_init(void){
         &(star[k].se_renv), &(star[k].se_ospin), &(star[k].se_epoch), &(star[k].se_tms), 
         &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
        */
+
+//MPI: To allow the serial version to mimic the parallel, we draw random numbers from the appropriate streams. And hence, we switch the current random state to appropriate state as in a parallel run.
 #ifndef USE_MPI
       curr_st = &st[findProcForIndex(k)];
 #endif
@@ -192,7 +194,6 @@ void stellar_evolution_init(void){
 
 #ifndef USE_MPI
       curr_st = &st[findProcForIndex(k)];
-      //printf("starid = %d proc = %d start = %d end = %d\n", k, findProcForIndex(k), Start[findProcForIndex(k)], End[findProcForIndex(k)]);
 #endif
 
       vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
@@ -269,6 +270,11 @@ void stellar_evolution_init(void){
 }
 
 /* note that this routine is called after perturb_stars() and get_positions() */
+/**
+* @brief does stellar evolution using sse and bse packages.
+*
+* @param rng gsl rng
+*/
 void do_stellar_evolution(gsl_rng *rng)
 {
   long k, kb, j, jj;
@@ -283,8 +289,7 @@ void do_stellar_evolution(gsl_rng *rng)
   bse_set_merger(-1.0);
   /* double vk, theta; */
 
-  //MPI2: Running till N_MAX_NEW+1 following the bugfix of incrementing N_MAX_NEW after SE.
-  //MPI3: Why to run till N_MAX_NEW+1?! I guess it is to account for the sentinel. But now, we have no sentinel.
+  //MPI: The serial version runs till N_MAX_NEW+1 to account for the sentinel. But in the parallel version, there is no sentinel, so runs only till N_MAX_NEW.
 #ifdef USE_MPI
   for(k=1; k<=clus.N_MAX_NEW; k++){ 
     int g_k = get_global_idx(k);
@@ -300,7 +305,7 @@ void do_stellar_evolution(gsl_rng *rng)
 #ifdef USE_MPI
       if (star_m[get_global_idx(k)]<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
         dprintf ("zeroed out star: skipping SE:\n"); 
-        dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star_m[k], star_r[k], star_phi[k], star[k].vr, star[k].vt, star[k].E, star[k].J); 
+        dprintf ("k=%ld m=%g r=%g phi=%g vr=%g vt=%g E=%g J=%g\n", k, star_m[g_k], star_r[g_k], star_phi[g_k], star[k].vr, star[k].vt, star[k].E, star[k].J);
 #else
       if (star[k].m<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
           dprintf ("zeroed out star: skipping SE:\n"); 
@@ -489,10 +494,8 @@ void do_stellar_evolution(gsl_rng *rng)
       dtp = 0.0;
 #ifdef USE_MPI
       if (star_m[g_k]<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
-        if(myid==0) {
           dprintf ("zeroed out star: skipping SE:\n");  
-          dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[k], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star_r[k]);
-        }
+          dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[get_global_idx(k)], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star_r[get_global_idx(k)]);
 #else
       if (star[k].m<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
             dprintf ("zeroed out star: skipping SE:\n");  
@@ -549,7 +552,7 @@ void do_stellar_evolution(gsl_rng *rng)
 
   MPI_Status stat;
   
-  //MPI2: Avoiding reduce to improve accuracy.
+  //MPI: If we use the MPI_Reduce call, we have no control over the order in which the summing is done, so, we avoid that by using send/recv calls and sum up in order to avoid round-off errors and comparison with serial version.
   if(myid!=0)
     MPI_Send(&DMse, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
   else
@@ -614,7 +617,7 @@ void write_stellar_data(void){
     parafprintf(stel_file, "%g ", star[k].se_bacc);
     parafprintf(stel_file, "%g ", star[k].se_tacc);
     parafprintf(stel_file, "\n");
-    parafprintf(stel_file, "%08ld ", k);
+    parafprintf(stel_file, "%08ld ", get_global_idx(k));
   }
 
 #ifdef USE_MPI
@@ -834,17 +837,24 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     cp_binmemb_to_star(k, 0, knew);
     cp_binmemb_to_star(k, 1, knewp);
 #ifdef USE_MPI
-   //MPI3: There are going to be problems when new stars are created! _m refers to global array, what index should be used?
     DMse -= (star_m[get_global_idx(knew)] + star_m[get_global_idx(knewp)]) * madhoc;
 #else
     DMse_mimic[findProcForIndex(k)] -= (star[knew].m + star[knewp].m) * madhoc;
 #endif
 
+#ifdef USE_MPI
+    parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g)\n",
+      TotalTime,
+      star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
+      star[knewp].id, star_m[get_global_idx(knewp)] * units.mstar / FB_CONST_MSUN,
+      star_r[get_global_idx(k)]);
+#else
     parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g)\n", 
-      TotalTime, 
+      TotalTime,
       star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
       star[knewp].id, star[knewp].m * units.mstar / FB_CONST_MSUN,
       star[k].r);
+#endif
 
     destroy_obj(k);
     /* in this case vs is relative speed between stars at infinity */
@@ -957,13 +967,21 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     knew = create_star(k, 1);
     cp_binmemb_to_star(k, 0, knew);
 
+#ifdef USE_MPI
+    parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n",
+      TotalTime,
+      star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
+      binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
+      binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
+      star_r[get_global_idx(k)]);
+#else
     parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
       TotalTime, 
       star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
       star[k].r);
-
+#endif
     destroy_obj(k);
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
@@ -1051,13 +1069,22 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     knew = create_star(k, 1);
     cp_binmemb_to_star(k, 1, knew);
 
+#ifdef USE_MPI
+    parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n",
+      TotalTime,
+      star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
+      binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
+      binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
+      star_r[get_global_idx(k)]);
+#else
     parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
       TotalTime, 
       star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
       star[k].r);
-    
+#endif
+
     destroy_obj(k);
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
@@ -1159,7 +1186,12 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
   }
 }
 
-/* Output info of pulsars */
+/**
+* @brief Output info of pulsars
+*
+* @param k star index
+* @param kick ?
+*/
 void pulsar_write(long k, double kick)
 {
 	long b;
@@ -1273,7 +1305,13 @@ void bh_count(long k) {
     }
 }
 
-/* k=star index, kbi=0 or 1, knew=index of new star */
+/**
+* @brief copies corresponding binary member variables of given star to the star variables of new star
+*
+* @param k star index
+* @param kbi 0 or 1 based on which binary member
+* @param knew index of new star
+*/
 void cp_binmemb_to_star(long k, int kbi, long knew)
 {
   long kb;
@@ -1334,7 +1372,13 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   }
 }
 
-/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+/**
+* @brief copies variables of old star to stellar evolution variables of new star
+*
+* @param oldk old star index
+* @param kbi 0 or 1 for binary, -1 for non-binary
+* @param knew index of new star
+*/
 void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
 {
   long kb;
@@ -1396,7 +1440,13 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
   }
 }
 
-/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+/**
+* @brief copies mass from old to new star
+*
+* @param oldk old star index
+* @param kbi 0 or 1 for binar, -1 for non-binary
+* @param knew index of new star
+*/
 void cp_m_to_newstar(long oldk, int kbi, long knew)
 {
   long kb;
@@ -1424,7 +1474,13 @@ void cp_m_to_newstar(long oldk, int kbi, long knew)
   }
 }
 
-/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+/**
+* @brief same as cpSEvars_to_newstar, only difference in function signature
+*
+* @param oldk old star index
+* @param kbi 0 or 1 for binary, -1 for non-binary
+* @param target_star pointer to target star
+*/
 void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
 {
   long kb;
@@ -1487,7 +1543,13 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
   }
 }
 
-/* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
+/**
+* @brief same as cp_m_to_newstar, only difference in function signature
+*
+* @param oldk old star index
+* @param kbi 0 or 1 for binary, -1 for non-binary
+* @param target_star pointer to target star
+*/
 void cp_m_to_star(long oldk, int kbi, star_t *target_star)
 {
   long kb;
@@ -1510,7 +1572,14 @@ void cp_m_to_star(long oldk, int kbi, star_t *target_star)
 }
 
 /* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
-/* set everything except tb */
+/**
+* @brief copies stellar evoltion variables to new binary (set everything except tb)
+*
+* @param oldk old star index
+* @param oldkbi 0 or 1 for binary, -1 for non-binary
+* @param knew index of new star
+* @param kbinew ?
+*/
 void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
 {
   long kbold, kbnew;
@@ -1595,6 +1664,13 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
 
 /* olsk=old star index; kbi=0,1 for binary, -1 for non-binary; knew=index of new star */
 /* set everything except tb */
+/**
+* @brief ?
+*
+* @param instar ?
+* @param binindex ?
+* @param bid ?
+*/
 void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid)
 {
   binary[binindex].bse_mass0[bid] = instar.se_mass;
