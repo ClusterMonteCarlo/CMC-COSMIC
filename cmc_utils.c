@@ -2141,9 +2141,11 @@ void toy_rejuvenation()
 	int i;
 	DMrejuv = 0.0;
 	if (STAR_AGING_SCHEME > 0) {
-		//MPI2: Why is this only till N_MAX?
-		//MPI3: This hasnt been changed to take global/local indices. For later.
+#ifdef USE_MPI
+		for (i=1; i<=mpiEnd-mpiBegin+1; i++)
+#else
 		for (i=1; i<=clus.N_MAX; i++)
+#endif
 			remove_old_star(TotalTime, i);
 	}
 }

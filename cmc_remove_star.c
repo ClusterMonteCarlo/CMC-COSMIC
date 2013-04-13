@@ -23,10 +23,10 @@ int remove_old_star(double time, long k)
 			knew = create_star(k, 0);
 			/*knewp = create_star();*/
 			
-#ifdef USE_MPI
-			star_r[knew] = star_r[k];
-#else
 			/* and set the stars' properties */
+#ifdef USE_MPI
+			star_r[get_global_idx(knew)] = star_r[get_global_idx(k)];
+#else
 			star[knew].r = star[k].r;
 			/*star[knewp].r = star[k].r;*/
 #endif		
@@ -37,8 +37,8 @@ int remove_old_star(double time, long k)
 			/*star[knewp].vt = star[k].vt;*/
 			
 #ifdef USE_MPI
-			star_m[knew] = binary[star[k].binind].m2;
-			star_phi[knew] = star_phi[k];
+			star_m[get_global_idx(knew)] = binary[star[k].binind].m2;
+			star_phi[get_global_idx(knew)] = star_phi[get_global_idx(k)];
 #else
 			star[knew].m = binary[star[k].binind].m2;
 			star[knew].phi = star[k].phi;
@@ -85,7 +85,7 @@ int remove_old_star(double time, long k)
 			removed_birth_time = binary[star[k].binind].createtime_m1 ;
 			removed_life_time = binary[star[k].binind].lifetime_m1;
 #ifdef USE_MPI
-			left_single_mass = star_m[knew];
+			left_single_mass = star_m[get_global_idx(knew)];
 #else
 			left_single_mass = star[knew].m;
 #endif
@@ -117,7 +117,7 @@ int remove_old_star(double time, long k)
 			knew = create_star(k, 0);
 			
 #ifdef USE_MPI
-			star_r[knew] = star_r[k];
+			star_r[get_global_idx(knew)] = star_r[get_global_idx(k)];
 #else
 			/* and set the stars' properties */
 			star[knew].r = star[k].r;
@@ -130,8 +130,8 @@ int remove_old_star(double time, long k)
 			/*star[knewp].vt = star[k].vt;*/
 			
 #ifdef USE_MPI
-			star_m[knew] = binary[star[k].binind].m1;
-			star_phi[knew] = star_phi[k];
+			star_m[get_global_idx(knew)] = binary[star[k].binind].m1;
+			star_phi[get_global_idx(knew)] = star_phi[get_global_idx(k)];
 #else
 			star[knew].m = binary[star[k].binind].m1;
 			star[knew].phi = star[k].phi;
@@ -178,7 +178,7 @@ int remove_old_star(double time, long k)
 			removed_birth_time = binary[star[k].binind].createtime_m2 ;
 			removed_life_time = binary[star[k].binind].lifetime_m2;
 #ifdef USE_MPI
-			left_single_mass = star_m[knew];
+			left_single_mass = star_m[get_global_idx(knew)];
 #else
 			left_single_mass = star[knew].m;
 #endif
@@ -214,8 +214,8 @@ int remove_old_star(double time, long k)
 		if ((time-star[k].createtime)>star[k].lifetime){
 			removed_id = star[k].id;
 #ifdef USE_MPI
-	 		mass = star_m[k]; 
-			DMrejuv+= star_m[k] * madhoc; //Storing DMrejuv in Nbody units since comparing with mtotal later	
+	 		mass = star_m[get_global_idx(k)];
+			DMrejuv+= star_m[get_global_idx(k)] * madhoc; //Storing DMrejuv in Nbody units since comparing with mtotal later
 #else
 	 		mass = star[k].m; 
 			DMrejuv+= star[k].m * madhoc; //Storing DMrejuv in Nbody units since comparing with mtotal later	
