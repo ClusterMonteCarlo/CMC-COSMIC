@@ -2090,8 +2090,13 @@ void calc_timestep(gsl_rng *rng)
    Dt = GetTimeStep(rng); //reduction again. Timestep needs to be communicated to all procs.
 
 	/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
-	//MPI2: root node
-	if ((TidalMassLoss - OldTidalMassLoss) > 0.01) {
+
+#ifdef USE_MPI
+	if ((TidalMassLoss_old - OldTidalMassLoss) > 0.01)
+#else
+	if ((TidalMassLoss - OldTidalMassLoss) > 0.01)
+#endif
+    {
 		diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
 		Dt = Prev_Dt * 0.8;
 	} else if (Dt > 1.1 * Prev_Dt && Prev_Dt > 0 && (TidalMassLoss - OldTidalMassLoss) > 0.02) {
