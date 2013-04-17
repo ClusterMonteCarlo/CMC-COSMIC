@@ -469,7 +469,6 @@ We use these two arrays to store the number of stars created by each node during
 		reset_interaction_flags();
 		timeEndSimple(tmpTimeStart, &t_oth);
 
-		//MPI2: Commenting out for MPI
 		/* update variables, then print */
 		tmpTimeStart = timeStartSimple();
 		update_vars();
@@ -479,12 +478,9 @@ We use these two arrays to store the number of stars created by each node during
 		calc_clusdyn_new();
 		timeEndSimple(tmpTimeStart, &t_oth);
 
-		//MPI2: Commenting out for MPI
-		/*
-			if (WRITE_EXTRA_CORE_INFO) {
-			no_remnants= no_remnants_core(6);
-			}
-		 */
+        if (WRITE_EXTRA_CORE_INFO) {
+            no_remnants= no_remnants_core(6);
+        }
 
 
 /* TESTING FOR KEVIN */

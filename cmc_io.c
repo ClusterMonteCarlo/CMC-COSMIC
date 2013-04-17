@@ -529,13 +529,10 @@ void PrintFileOutput(void) {
 		fb, E_bb, E_bs, DE_bb, DE_bs, 
 		N_core_binary_nb, fb_core_nb, N_core_binary);
 
-#ifndef USE_MPI
-        //MPI3: This hasn't been parallelized.
-        if (WRITE_EXTRA_CORE_INFO) {
-          write_core_data(corefile, no_remnants);
-          rootfprintf(corefile, "\n");
-        }
-#endif
+    if (WRITE_EXTRA_CORE_INFO) {
+        write_core_data(corefile, no_remnants);
+        rootfprintf(corefile, "\n");
+    }
 
 	/* also saves INITIAL snapshot (StepCount=0) */
 	if (TotalTime >= SNAPSHOT_DELTAT * StepCount) {

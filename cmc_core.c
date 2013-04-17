@@ -3,6 +3,15 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
+/**
+* @brief ?
+*
+* @param k ?
+* @param set ?
+* @param len ?
+*
+* @return ?
+*/
 static inline int is_member(int k, int* set, int len) {
   int member;
   int i;
@@ -64,6 +73,7 @@ struct densities density_estimators(int n_points, int *startypes, int len) {
     i++;
   }
 
+
   rhoj.rho = (double *) calloc(nave, sizeof(double));
   rhoj.nave= nave;
 
@@ -85,17 +95,30 @@ struct densities density_estimators(int n_points, int *startypes, int len) {
 }
 
 #ifdef USE_MPI
-//This function is incomplete in terms of parallelization since it seems to need to much communication of ghost particles, and too much work to actually parallelize it :)
-struct core_t mpi_density_and_core(int n_points, int *startypes, int len) {
+/**
+ * @brief Calculates density estimators including only stars with certain types. (mpi version of density_estimators)
+ *
+ *
+ * @param n_points the number of points (stars) over which the local density
+ * is estimated (Casertano & Hut '85 suggest n_points=6)
+ *
+ * @param startypes Array containing the star types that should be considered.
+ *
+ * @param len The length of the startype array.
+ *
+ * @return The array with the estimated local densities. The array is
+ * malloc'ed so you have to free it yourself.
+ */
+struct densities mpi_density_estimators(int n_points, int *startypes, int len) {
   long i, nave, ibuf;
-  double m, m_tot, mrho;
+  double m, m_tot, mrho, Vrj;
   struct densities rhoj;
   long jmin, jmax, j;
   long g_i;
   double m_cum;
-  double* Vrj;
 
   /* calculate the total mass of all stars excluding remnants */
+  //MPI: First, find the local total mass.
   m_tot= 0.;
   for (i=1; i<= clus.N_MAX_NEW; i++) {
     if (is_member(star[i].se_k, startypes, len)) {
@@ -104,66 +127,112 @@ struct core_t mpi_density_and_core(int n_points, int *startypes, int len) {
     }
   }
 
+  //MPI: find cumulative total mass in processors before this one. Also, find global total mass.
   m_cum=0.0;
   double tmpTimeStart = timeStartSimple();
-  MPI_Exscan(MPI_IN_PLACE, &m_cum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Exscan(&m_tot, &m_cum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce(MPI_IN_PLACE, &m_tot, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   timeEndSimple(tmpTimeStart, &t_comm);
 
 
-  rhoj.idx= calloc(80, sizeof(long));
+  long* rhoj_idx= calloc(80, sizeof(long));
 
   /* .. and now the number of non-remnants within their half-mass radius */
+  //MPI: Fill up the local rho idx array
   m=m_cum;
   nave= 0; i=1; ibuf=0;
   while (m< 0.5*m_tot && i<=clus.N_MAX_NEW) {
     if (is_member(star[i].se_k, startypes, len)) {
         g_i = get_global_idx(i);
         m+= star_m[g_i]*madhoc;
-        rhoj.idx[nave]= i;
+        rhoj_idx[nave]= i;
         nave++;
         ibuf++;
         if (ibuf==80) {
-            rhoj.idx= (long *) realloc(rhoj.idx, sizeof(long)*(nave+80));
+            rhoj_idx= (long *) realloc(rhoj_idx, sizeof(long)*(nave+80));
             ibuf= 0;
         }
     }
     i++;
   }
 
-  rhoj.rho = (double *) calloc(nave, sizeof(double));
-  Vrj = (double *) calloc(nave, sizeof(double));
-  rhoj.nave= nave;
+  //MPI: Now, the idx array has to be corrected based on the last index of the previous processor.
+  long idx_cum = 0;
+  long idx_cum_s = 0;
+  if(nave > 0)
+      idx_cum_s = rhoj_idx[nave-1];
 
-  for (i=0; i<nave; i++) {
+  tmpTimeStart = timeStartSimple();
+  MPI_Exscan(&idx_cum_s, &idx_cum, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD);
+  timeEndSimple(tmpTimeStart, &t_comm);
+
+  for(i=0; i<nave; i++)
+  {
+      rhoj_idx[i] += idx_cum;
+  }
+
+  //MPI: The simplest way I could think of parallelizing this is by collecting the entire rho idx array. This is definitely inefficient and not scalable, but as of now we need a working solution. So, what follows is basically this - collecting chunks of the idx array from all the processors, putting them together and sending a copy to all nodes.
+  long* nave_all_long = (long*) malloc(procs * sizeof(long));
+  int* nave_all = (int*) malloc(procs * sizeof(long));
+  int* nave_disp = (int*) calloc(procs, sizeof(int));
+
+  //MPI: Gathering the size of the idx array from all processors .
+  tmpTimeStart = timeStartSimple();
+  MPI_Allgather(&nave, 1, MPI_LONG, nave_all_long, 1, MPI_LONG, MPI_COMM_WORLD);
+  timeEndSimple(tmpTimeStart, &t_comm);
+
+  //MPI: Calculating quantities required for the mpi call - displacement and count
+  long total_nave = 0;
+  int cum_disp=0;
+  for(i=0; i<procs; i++)
+  {
+      nave_all[i] = nave_all_long[i];
+      nave_disp[i] = cum_disp;
+      cum_disp += nave_all[i];
+  }
+  total_nave = cum_disp;
+
+  //MPI: Gathering all the idx chunks and sending the entire array to all processors.
+  rhoj.idx = (long*) malloc(total_nave * sizeof(long));
+  tmpTimeStart = timeStartSimple();
+  MPI_Allgatherv(rhoj_idx, nave, MPI_LONG, rhoj.idx, nave_all, nave_disp, MPI_LONG, MPI_COMM_WORLD);
+  timeEndSimple(tmpTimeStart, &t_comm);
+
+
+  //MPI: Now we can go back and do the computations independently on each node.
+  rhoj.rho = (double *) calloc(total_nave, sizeof(double));
+  rhoj.nave= total_nave;
+
+  for (i=0; i<rhoj.nave; i++) {
     jmin= MAX(i-n_points/2, 0);
-    jmax= MIN(jmin + n_points, nave-1);
+    jmax= MIN(jmin + n_points, rhoj.nave-1);
     mrho= 0.;
     /* this is equivalent to their J-1 factor for the case of equal masses,
        and seems like a good generalization for unequal masses */
     for (j=jmin+1; j<= jmax-1; j++) {
-      mrho+= star_m[get_global_idx(rhoj.idx[j])] * madhoc;
+      mrho+= star_m[rhoj.idx[j]] * madhoc;
     }
-    Vrj[i] = 4.0/3.0  * PI * (fb_cub(star_r[get_global_idx(rhoj.idx[jmax])]) - fb_cub(star_r[get_global_idx(rhoj.idx[jmin])]));
+    Vrj = 4.0/3.0  * PI * (fb_cub(star_r[rhoj.idx[jmax]]) - fb_cub(star_r[rhoj.idx[jmin]]));
 
-    //rhoj.rho[i]= mrho/Vrj;
-    rhoj.rho[i]= mrho;
+    rhoj.rho[i]= mrho/Vrj;
   }
 
-  for (i=0; i<nave; i++)
-      rhoj.rho[i] /= Vrj[i];
+  return(rhoj);
+}
 
-
-
-
-  /* MPI3: mpi version of core_properties() */
+/**
+* @brief calculate core quantities using density weighted averages (note that in Casertano & Hut (1985) only rho and rc are analyzed and tested) (mpi version of core_properties)
+*
+* @param rhoj ?
+*
+* @return ?
+*/
+struct core_t mpi_core_properties(struct densities rhoj) {
   double rhojsum;
   double rhoj2sum;
   struct core_t core;
-  long idx;
+  long idx, i;
 
-  /* calculate core quantities using density weighted averages (note that in 
-     Casertano & Hut (1985) only rho and rc are analyzed and tested) */
   rhojsum = 0.0;
   rhoj2sum = 0.0;
   core.rho = 0.0;
@@ -175,10 +244,19 @@ struct core_t mpi_density_and_core(int n_points, int *startypes, int len) {
     rhojsum += rhoj.rho[i];
     rhoj2sum += sqr(rhoj.rho[i]);
     core.rho += sqr(rhoj.rho[i]);
-    core.v_rms += rhoj.rho[i] * (sqr(star[idx].vr) + sqr(star[idx].vt));
-    core.r += rhoj.rho[i] * star[idx].r;
-    core.m_ave += rhoj.rho[i] * star[idx].m * madhoc;
+    core.r += rhoj.rho[i] * star_r[idx];
+    core.m_ave += rhoj.rho[i] * star_m[idx] * madhoc;
+    if( idx >= mpiBegin && idx <= mpiEnd )
+        core.v_rms += rhoj.rho[i] * (sqr(star[get_local_idx(idx)].vr) + sqr(star[get_local_idx(idx)].vt));
   }
+
+  //MPI: Reducing only vrms, the other values dont have to be reduced.
+  double v_rms = core.v_rms;
+  double tmpTimeStart = timeStartSimple();
+  MPI_Reduce(&core.v_rms, &v_rms, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  timeEndSimple(tmpTimeStart, &t_comm);
+  core.v_rms = v_rms;
+
   core.rho /= rhojsum;
   /* correction for inherent bias in estimator */
   core.rho *= 4.0/5.0;
@@ -195,20 +273,25 @@ struct core_t mpi_density_and_core(int n_points, int *startypes, int len) {
   /* core relaxation time, Spitzer (1987) eq. (2-62) */
   core.Trc = 0.065 * cub(core.v_rms) / (core.rho * core.m_ave);
 
-  free(Vrj);
-  free(rhoj.rho);
   return(core);
 }
+
+
 #endif
 
+/**
+* @brief calculate core quantities using density weighted averages (note that in Casertano & Hut (1985) only rho and rc are analyzed and tested)
+*
+* @param rhoj ?
+*
+* @return ?
+*/
 struct core_t core_properties(struct densities rhoj) {
   double rhojsum;
   double rhoj2sum;
   struct core_t core;
   long idx, i;
 
-  /* calculate core quantities using density weighted averages (note that in 
-     Casertano & Hut (1985) only rho and rc are analyzed and tested) */
   rhojsum = 0.0;
   rhoj2sum = 0.0;
   core.rho = 0.0;
@@ -300,8 +383,13 @@ struct core_t no_remnants_core(int n_points) {
   struct core_t core;
   int types[11]= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
+#ifdef USE_MPI
+  rhoj= mpi_density_estimators(n_points, types, 11);
+  core= mpi_core_properties(rhoj);
+#else
   rhoj= density_estimators(n_points, types, 11);
   core= core_properties(rhoj);
+#endif
   free(rhoj.idx);
   free(rhoj.rho);
   return(core);
