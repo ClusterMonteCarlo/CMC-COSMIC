@@ -400,32 +400,49 @@ double GetTimeStep(gsl_rng *rng) {
 	DTcoll = 5.0e-3 * Tcoll;
 	Dt = MIN(Dt, DTcoll);
 
-        if (DT_HARD_BINARIES) {
-          central_hard= central_hard_binary(HARD_BINARY_KT, central);
-          dprintf("number of hard binaries with ktmin< %g: %li\n", HARD_BINARY_KT, central_hard.N_bin);
-        }
+    //MPI: Reorganizing this in order to minimize communication. If it were the way it was, the root will have to broadcast the entire central_hard struct to all nodes. This way, it only needs to broadcast the final value of Dt.
+    if (DT_HARD_BINARIES) {
+#ifdef USE_MPI
+        if(myid==0)
+        {
+#endif
+            central_hard= central_hard_binary(HARD_BINARY_KT, central);
+            dprintf("number of hard binaries with ktmin< %g: %li\n", HARD_BINARY_KT, central_hard.N_bin);
 
-	/* calculate DTbb, using a generalization of the expression for Tcoll */
-	if (BINBIN) {
-          if (DT_HARD_BINARIES) {
-            Tbb= get_Tbb(central_hard);
-          } else {
+            /* calculate DTbb, using a generalization of the expression for Tcoll */
+            if (BINBIN) {
+                Tbb= get_Tbb(central_hard);
+                DTbb = 5.0e-3 * Tbb;
+                Dt = MIN(Dt, DTbb);
+            }
+
+            /* calculate DTbs, using a generalization of the expression for Tcoll */
+            if (BINSINGLE) {
+                Tbs= get_Tbs(central_hard);
+                DTbs = 5.0e-3 * Tbs;
+                Dt = MIN(Dt, DTbs);
+            }
+#ifdef USE_MPI
+        }
+        MPI_Bcast(&Dt, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+    }
+    else
+    {
+        /* calculate DTbb, using a generalization of the expression for Tcoll */
+        if (BINBIN) {
             Tbb= get_Tbb(central);
-          }
-          DTbb = 5.0e-3 * Tbb;
-          Dt = MIN(Dt, DTbb);
+            DTbb = 5.0e-3 * Tbb;
+            Dt = MIN(Dt, DTbb);
         }
 
-	/* calculate DTbs, using a generalization of the expression for Tcoll */
-	if (BINSINGLE) {
-          if (DT_HARD_BINARIES) {
-            Tbs= get_Tbs(central_hard);
-          } else {
+        /* calculate DTbs, using a generalization of the expression for Tcoll */
+        if (BINSINGLE) {
             Tbs= get_Tbs(central);
-          }
-          DTbs = 5.0e-3 * Tbs;
-          Dt = MIN(Dt, DTbs);
-	}
+            DTbs = 5.0e-3 * Tbs;
+            Dt = MIN(Dt, DTbs);
+        }
+    }
 
 	/* calculate DTse, for now using the SE mass loss from the previous step as an indicator
 		for this step; in the future perhaps we can get an estimate of the mass loss rate

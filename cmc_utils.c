@@ -1678,7 +1678,12 @@ double local_kT(long si, int p) {
   }
   mave= 0.;
   for (j=simin; j< simax; j++) {
+    //MPI: Here we are using global indices since this whole thing will be done only by the root node, so we dont need an index transformation.
+#ifdef USE_MPI
+    mave+= star_m[j] *madhoc;
+#else
     mave+= star[j].m *madhoc;
+#endif
   }
   mave/= (double)(2 * p);
 
@@ -1717,11 +1722,24 @@ central_hard_binary(double ktmin, central_t old_cent) {
   cent.rho_bin=0.;
   cent.N_bin=0;
 
+#ifdef USE_MPI
+  if(NUM_CENTRAL_STARS > End[0] - Start[0])
+  {
+      eprintf("central_hard_binary: Central stars dont fit in root node!\n");
+      MPI_Abort(MPI_COMM_WORLD, -1);
+  }
+#endif
+
   Ncentral= MIN(NUM_CENTRAL_STARS, clus.N_MAX);
+  //MPI: Here we are using global indices since this whole thing will be done only by the root node, so we dont need an index transformation.
+#ifdef USE_MPI
+  Rcentral= star_r[Ncentral+1];
+#else
   Rcentral= star[Ncentral+1].r;
+#endif
   Vcentral= 4./3.*PI*cub(Rcentral);
   kTcore= core_kT(Ncentral, AVEKERNEL);
-  printf("kTcore is %g\n", kTcore);
+  rootprintf("kTcore is %g\n", kTcore);
 
   Mbincentral=0.;
   for (i=1; i<Ncentral+1; i++) {
@@ -1738,11 +1756,16 @@ central_hard_binary(double ktmin, central_t old_cent) {
     if (Eb< ktmin) continue;
 
     cent.N_bin++;
-    Mbincentral += star[i].m * madhoc;
     cent.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
     cent.a_ave += a;
     cent.a2_ave += a*a;
+#ifdef USE_MPI
+    Mbincentral += star_m[i] * madhoc;
+    cent.ma_ave += star_m[i] *madhoc * a;
+#else
+    Mbincentral += star[i].m * madhoc;
     cent.ma_ave += star[i].m *madhoc * a;
+#endif
   }
   if (cent.N_bin>0) {
     cent.a_ave/= cent.N_bin;
