@@ -101,8 +101,11 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	double deltamax, deltasafe, delta, dbeta;
 	double w_mag, l2_scale;
 	int i;
+    int g_index;
 #ifdef USE_MPI
-	int g_index = get_global_idx(index);
+	g_index = get_global_idx(index);
+#else
+    g_index = index;
 #endif
 
 #ifdef EXPERIMENTAL
@@ -113,9 +116,9 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 
 	is_in_ids= 0;
 	sprintf(fname, "%s.rwalk_steps.dat", outprefix);
-	n_local= calc_n_local(index, AVEKERNEL, clus.N_MAX);
+	n_local= calc_n_local(g_index, AVEKERNEL, clus.N_MAX);
 	W = 4.0 * sigma_array.sigma[index] / sqrt(3.0*PI);
-	M2ave= calc_average_mass_sqr(index, clus.N_MAX);
+	M2ave= calc_average_mass_sqr(g_index, clus.N_MAX);
 	Trel= (PI/32.)*cub(W)/ ( ((double) clus.N_STAR) * n_local * (4.0* M2ave) );
 	//if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
 	if (index==1 && TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING && WRITE_RWALK_INFO) {
@@ -124,7 +127,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	};
 #endif
 	/* simulate loss cone physics for central mass */
-	//MPI2: Yet to be parallelized.
+	//MPI: Parallelized, but might have mistakes since I am not clear as to what some functions are doing.
 	P_orb = calc_P_orb(index);
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
 	l2_scale= 1.;
@@ -175,7 +178,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	while (L2 > 0.0) { 
 		L2 -= fb_sqr(delta); 
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
-			dprintf("index=%ld, id=%ld: star eaten by BH\n", get_global_idx(index), star[index].id);
+			dprintf("index=%ld, id=%ld: star eaten by BH\n", g_index, star[index].id);
 #ifdef USE_MPI
 			cenma.m_new += star_m[g_index]; 
 #else
@@ -207,11 +210,11 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	}; 
 #ifdef EXPERIMENTAL
 	if (TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING && WRITE_RWALK_INFO) {
-		write_rwalk_data(fname, get_global_idx(index), Trel, dt, l2_scale, n_steps, beta, 
+		write_rwalk_data(fname, g_index, Trel, dt, l2_scale, n_steps, beta,
 				n_local, W, P_orb, n_orb);
 	}
 #endif
-}; 
+};
 
 
 /**
@@ -292,14 +295,20 @@ double calc_P_orb(long index)
 	gsl_integration_workspace *w;
 	gsl_integration_qaws_table *tab;
 	gsl_function F;
-        struct Interval star_interval;
-        
+    struct Interval star_interval;
+    int g_index;
+#ifdef USE_MPI
+    g_index = get_global_idx(index);
+#else
+    g_index = index;
+#endif
+
         /* default values for star_interval */
 	star_interval.min= 1;
-        star_interval.max= clus.N_MAX+1;
+    star_interval.max= clus.N_MAX+1;
 
 #ifdef USE_MPI
-	E = star[index].E + MPI_PHI_S(star_r[get_global_idx(index)], get_global_idx(index));
+	E = star[index].E + MPI_PHI_S(star_r[g_index], g_index);
 #else
 	E = star[index].E + PHI_S(star[index].r, index);
 #endif
@@ -336,7 +345,7 @@ double calc_P_orb(long index)
 		   radial period for the general cluster potential.  This shouldn't make
 		   any difference for the BH loss cone stuff, since the orbit is circular. */
 #ifdef USE_MPI
-		return(2.0 * PI * star_r[get_global_idx(index)] / star[index].vt);		
+		return(2.0 * PI * star_r[g_index] / star[index].vt);
 #else
 		return(2.0 * PI * star[index].r / star[index].vt);		
 #endif
@@ -346,7 +355,7 @@ double calc_P_orb(long index)
 
 		params.E = E;
 		params.J = J;
-		params.index = index;
+		params.index = g_index;
 		//if (SEARCH_GRID)
 		//  star_interval= search_grid_get_interval(r_grid, orbit_rs.rp);
 		//params.kmin = FindZero_r(star_interval.min, star_interval.max, orbit_rs.rp);
@@ -361,16 +370,16 @@ double calc_P_orb(long index)
 
                 /* test if the interval of rmax is the same as [kmax,kmax+1] */
 		if (!orbit_rs.circular_flag) {
-			if (function_Q(index, params.kmax, E, J)>0 || function_Q(index, params.kmax-1,E, J)<0) {
+			if (function_Q(g_index, params.kmax, E, J)>0 || function_Q(g_index, params.kmax-1,E, J)<0) {
 			  dprintf("r and phi interval do not match: id= %li, r_kmax= %li\n",
 			    star[index].id, params.kmax-1);
 			  dprintf("star index is %li\n", index);
-			  dprintf("f_Q[r_kmax]= %g; f_Q[r_kmax+1]= %g\n", function_Q(index, params.kmax-1, E, J), 
-			    function_Q(index, params.kmax, E, J));
+			  dprintf("f_Q[r_kmax]= %g; f_Q[r_kmax+1]= %g\n", function_Q(g_index, params.kmax-1, E, J),
+			    function_Q(g_index, params.kmax, E, J));
 			  dprintf("phi_kmax= %li, phi_kmax+1= %li\n", orbit_rs.kmax, orbit_rs.kmax+1);
 			  dprintf("f_Q[phi_kmax]= %g; f_Q[phi_kmax+1]= %g\n", 
-			    function_Q(index, orbit_rs.kmax, E, J), 
-			    function_Q(index, orbit_rs.kmax+1, E, J));
+			    function_Q(g_index, orbit_rs.kmax, E, J),
+			    function_Q(g_index, orbit_rs.kmax+1, E, J));
 			  dprintf("(r[r_kmax]-rmax=%g, r[r_kmax+1]-rmax)= %g\n", 
 			    star[params.kmax-1].r-orbit_rs.ra,star[params.kmax].r-orbit_rs.ra);
 			};
@@ -390,6 +399,7 @@ double calc_P_orb(long index)
                             orbit_rs.kmin, params.kmin, index, star[index].id);
 		};
 
+        //MPI: These seem to be never used, so they are not parallelized as of now. Also unclear how these functions will be used, so dont understand if index transformation is reqd or not. Might later have to double check if the parallelization is correct.
 		if (0) { /* use standard potential function with Stefan's speedup trick here */
 			F.function = &calc_p_orb_f;
 			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
@@ -428,8 +438,12 @@ double calc_p_orb_f(double x, void *params) {
 	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
 	double radicand;
 
+#ifdef USE_MPI
+	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (potential(x) + MPI_PHI_S(x, myparams.index));
+#else
 	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (potential(x) + PHI_S(x, myparams.index));
-	
+#endif
+
 	if (radicand < 0.0) {
 		dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, myparams.index);
 		radicand = 0.0;
@@ -450,8 +464,12 @@ double calc_p_orb_f2(double x, void *params) {
 	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
 	double radicand;
 
+#ifdef USE_MPI
+	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (fastpotential(x, myparams.kmin, myparams.kmax) + MPI_PHI_S(x, myparams.index));
+#else
 	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (fastpotential(x, myparams.kmin, myparams.kmax) + PHI_S(x, myparams.index));
-	
+#endif
+
 	if (radicand < 0.0) {
 		dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, myparams.index);
 		radicand = 0.0;

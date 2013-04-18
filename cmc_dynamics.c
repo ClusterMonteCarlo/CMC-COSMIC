@@ -491,6 +491,7 @@ are skipped if they already interacted in 3bb loop!  */
 			}
 			
 			/* check to see whether stars should be eaten by central BH */
+            //MPI: This function has been parallelized, but may contain bugs. I was not clear as to what some functions were doing, so wasn't sure if index transformation was reqd or not. Might need some checking by the author.
 			if (cenma.m > 0.0 && BH_LOSS_CONE) {
 				if (star[k].E < 0.0) {
 					bh_rand_walk(k, v_new, vcm, beta, dt);
