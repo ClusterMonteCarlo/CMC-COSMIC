@@ -371,13 +371,19 @@ void append_core_header(FILE *cfile, char *tag, int core_number) {
  * @param cfile The core file (open file handle).
  * @param core  The struct that holds all core data.
  */
-
 void write_core_data(FILE *cfile, struct core_t core) {
   rootfprintf(cfile, "%.12g %.12g %.12g %.12g %.12g %.12g %.12g %li %.12g ", TotalTime, core.rho, core.v_rms, core.r, 
       core.r_spitzer, core.m_ave, core.n, core.N, core.Trc);
 };
 
 /* Some convenience functions */
+/**
+* @brief ?
+*
+* @param n_points ?
+*
+* @return ?
+*/
 struct core_t no_remnants_core(int n_points) {
   struct densities rhoj;
   struct core_t core;

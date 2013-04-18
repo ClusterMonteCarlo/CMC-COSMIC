@@ -3,8 +3,17 @@
  * @brief Struct holding the indices and estimates of the local density.
  */
 struct densities {
+/**
+* @brief ?
+*/
   long *idx;
+/**
+* @brief ?
+*/
   double *rho;
+/**
+* @brief ?
+*/
   long nave;
 };
 
@@ -12,13 +21,37 @@ struct densities {
  * @brief Struct holding the properties of the cluster core.
  */
 struct core_t {
+/**
+* @brief ?
+*/
   double rho;
+/**
+* @brief ?
+*/
   double v_rms;
+/**
+* @brief ?
+*/
   double r;
+/**
+* @brief ?
+*/
   double r_spitzer;
+/**
+* @brief ?
+*/
   double m_ave;
+/**
+* @brief ?
+*/
   double n;
+/**
+* @brief ?
+*/
   long N;
+/**
+* @brief ?
+*/
   double Trc;
 };
 

@@ -71,7 +71,7 @@
 
 #define MAX_STRING_LENGTH 2048
 
-//MPI3: For MPI-IO
+//MPI: For MPI-IO
 #define STR_BUF_LEN 10000
 #define STR_WRBUF_LEN 100000000
 
@@ -423,24 +423,65 @@ typedef struct{
 * @brief  formation pathway of NS
 */
 	double se_scm_formation;
-	//Sourav: toy rejuvenation variables
+/**
+* @brief Sourav: toy rejuvenation variables
+*/
 	double createtime, createtimenew, createtimeold;
+/**
+* @brief ?
+*/
 	double lifetime, lifetimeold, lifetimenew;
 } star_t;
 
+/**
+* @brief ?
+*/
 struct CenMa{
+/**
+* @brief ?
+*/
 	double m;
+/**
+* @brief ?
+*/
 	double m_new;
+/**
+* @brief ?
+*/
 	double E;
 };
 
+/**
+* @brief ?
+*/
 struct get_pos_str {
+/**
+* @brief ?
+*/
 	double max_rad;
+/**
+* @brief ?
+*/
 	double phi_rtidal;
+/**
+* @brief ?
+*/
 	double phi_zero;
+/**
+* @brief ?
+*/
 	long N_LIMIT;
+/**
+* @brief ?
+*/
 	int taskid;
+/**
+* @brief ?
+*/
 	struct CenMa CMincr;
+/**
+* @brief ?
+*/
 	gsl_rng *thr_rng;
 };
 
@@ -1503,34 +1544,71 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 /* potential calculation speed-up*/
 long check_if_r_around_last_index(long last_index, double r);
 
+/**
+* @brief ?
+*/
 struct Search_Grid {
-   /* user modifiable parameters */
-   /* starsPerBin is the estimated (anticipated) number of stars per search
-    * bin. It is only used to calculate interpol_coeff and grid length.
-    */
+/* user modifiable parameters*/
+/**
+* @brief
+* starsPerBin is the estimated (anticipated) number of stars per search
+* bin. It is only used to calculate interpol_coeff and grid length.
+*/
    long starsPerBin;
+/**
+* @brief ?
+*/
    long max_length;
+/**
+* @brief ?
+*/
    long min_length;
-   /* fraction determines the interpol_coeff such that 
-    * grid.radius[fraction*grid->length] is approx. 
-    * star[clus.N_MAX*fraction].r. Depending how well the power_law_exponent 
-    * fits the distribution of star[i::starsPerBin].r the better this is 
-    * fulfilled*/
+/**
+* @brief
+* fraction determines the interpol_coeff such that
+* grid.radius[fraction*grid->length] is approx.
+* star[clus.N_MAX*fraction].r. Depending how well the power_law_exponent
+* fits the distribution of star[i::starsPerBin].r the better this is
+* fulfilled
+*/
    double fraction;
-   /* Only particle_fraction * clus.N_MAX stars should be used to construct the
-    * grid (i.e. we ignore a possible outer halo).*/
+/**
+* @brief
+* Only particle_fraction * clus.N_MAX stars should be used to construct the
+* grid (i.e. we ignore a possible outer halo).
+*/
    double particle_fraction;
+/**
+* @brief ?
+*/
    double power_law_exponent;
-   /* You should not change any of the following variables yourself 
-    * unless, of course, you know what you are doing.
-    */
+/**
+* @brief
+* You should not change any of the following variables yourself
+* unless, of course, you know what you are doing.
+*/
    long *radius;
+/**
+* @brief ?
+*/
    long length;
+/**
+* @brief ?
+*/
    double interpol_coeff;
 };
 
+/**
+* @brief
+*/
 struct Interval {
+/**
+* @brief ?
+*/
   long min;
+/**
+* @brief ?
+*/
   long max;
 };
 

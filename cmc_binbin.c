@@ -6,7 +6,12 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/* calculate the units used */
+/**
+* @brief calculate the units used
+*
+* @param obj[2] ?
+* @param bb_units ?
+*/
 void bb_calcunits(fb_obj_t *obj[2], fb_units_t *bb_units)
 {
 	bb_units->v = sqrt(FB_CONST_G*(obj[0]->m + obj[1]->m)/(obj[0]->m * obj[1]->m) * \
@@ -18,7 +23,19 @@ void bb_calcunits(fb_obj_t *obj[2], fb_units_t *bb_units)
 	bb_units->E = bb_units->m * fb_sqr(bb_units->v);
 }
 
-/* the main attraction */
+/**
+* @brief the main attraction
+*
+* @param t ?
+* @param k ?
+* @param kp ?
+* @param W ?
+* @param bmax ?
+* @param hier ?
+* @param rng ?
+*
+* @return ?
+*/
 fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hier, gsl_rng *rng)
 {
 	int j;

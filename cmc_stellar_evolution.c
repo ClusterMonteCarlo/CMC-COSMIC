@@ -14,6 +14,9 @@ void zero_out_array(double* ptr, int size)
     ptr[i] = 0.0;
 }
 
+/**
+* @brief ?
+*/
 void stellar_evolution_init(void){  
   double tphysf, dtp, vs[12];
   int i;
@@ -568,6 +571,9 @@ void do_stellar_evolution(gsl_rng *rng)
 #endif
 }
 
+/**
+* @brief ?
+*/
 void write_stellar_data(void){
   long k, kb;
   char filename[1024];
@@ -683,6 +689,14 @@ void write_stellar_data(void){
 #endif
 }
 
+/**
+* @brief ?
+*
+* @param k index of star 1
+* @param kb index of star 2
+* @param vs ?
+* @param tphysf ?
+*/
 void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
 {
   int j, jj;
@@ -1236,6 +1250,19 @@ void pulsar_write(long k, double kick)
 /* outputs boom information */
 //void boomoutput(long int s_id, double kick, double remtype, int(*getCMCvalues)(long int s_id, *double TC, *double TT, *long ID, *int )
 
+/**
+* @brief ?
+*
+* @param s_id ?
+* @param kick ?
+* @param remtype1 ?
+* @param remtype2 ?
+* @param progtype1 ?
+* @param progtype2 ?
+* @param formation ?
+* @param boomtype ?
+* @param boomstar ?
+*/
 void getCMCvalues(long s_id, double kick, int remtype1, int remtype2, int progtype1, int progtype2, double formation, int boomtype, int boomstar)
 {
 // here kick should be total kick(s) received by that star in the timestep that the star exploded. It might be that two stars exploded in the one timestep. Then kick (for that star) is magnitude of both kicks (direct and indirect) that star received...
@@ -1254,8 +1281,11 @@ void getCMCvalues(long s_id, double kick, int remtype1, int remtype2, int progty
 //		fprintf(boomlog,"%s %ld %.8g %ld %d %d %d %d %d %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld %ld %g %d\n", "DBUG", tcount, TotalTime, star[s_id].id, star[s_id].se_k, remtype1, remtype2, progtype1, progtype2, star[s_id].r_peri, star[s_id].r_apo, star[s_id].r, star[s_id].vr, star[s_id].vt, kick, star[s_id].phi, phi_r0, phi_rt, binary[star[s_id].binind].id1, binary[star[s_id].binind].id2, formation, boomstar);
         }
 }
-// Meagan: count different types of bh-objects; at end of timestep, we'll print these totals
-// Meagan: count different types of bh-objects; at end of timestep, we'll print these totals
+/**
+* @brief Meagan: count different types of bh-objects; at end of timestep, we'll print these totals
+*
+* @param k index of star
+*/
 void bh_count(long k) {
 	long b;
 	double phi_r0, phi_rt;
@@ -1703,6 +1733,13 @@ void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid)
   }
 }
 
+/**
+* @brief ?
+*
+* @param instar ?
+* @param binindex ?
+* @param bid ?
+*/
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid)
 {
   if (bid == 0) {

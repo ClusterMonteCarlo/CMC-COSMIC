@@ -1,46 +1,171 @@
+/**
+* @brief sse structure?
+*/
 typedef struct {
+/**
+* @brief ?
+*/
 	double se_mass;
+/**
+* @brief ?
+*/
 	int se_k;
+/**
+* @brief ?
+*/
 	double se_mt;
+/**
+* @brief ?
+*/
 	double se_ospin;
-        double se_B_0; /* Pulsar initial magentif field */
-        double se_bacc;
-        double se_tacc;
+/**
+* @brief Pulsar initial magentif field
+*/
+    double se_B_0;
+/**
+* @brief ?
+*/
+    double se_bacc;
+/**
+* @brief ?
+*/
+    double se_tacc;
+/**
+* @brief ?
+*/
 	double se_epoch;
+/**
+* @brief ?
+*/
 	double se_tphys;
+/**
+* @brief ?
+*/
 	double se_radius;
+/**
+* @brief ?
+*/
 	double se_lum;
+/**
+* @brief ?
+*/
 	double se_mc;
+/**
+* @brief ?
+*/
 	double se_rc;
+/**
+* @brief ?
+*/
 	double se_menv;
+/**
+* @brief ?
+*/
 	double se_renv;
+/**
+* @brief ?
+*/
 	double se_tms;
-        double se_scm_B; /* Pulsar surface magnetic field */
-        double se_scm_formation; /* formation pathway of NS */
+/**
+* @brief Pulsar surface magnetic field
+*/
+    double se_scm_B;
+/**
+* @brief formation pathway of NS
+*/
+    double se_scm_formation;
 } sse_t;
 
+
+
+/**
+* @brief bse structure?
+*/
 typedef struct {
-	int bse_kw[2]; /* star types */
-	double bse_mass0[2]; /* initial masses */
-	double bse_mass[2]; /* masses */
-	double bse_radius[2]; /* radii */
-	double bse_lum[2]; /* luminosity */
+/**
+* @brief star types
+*/
+	int bse_kw[2];
+/**
+* @brief initial masses
+*/
+	double bse_mass0[2];
+/**
+* @brief masses
+*/
+	double bse_mass[2];
+/**
+* @brief radii
+*/
+	double bse_radius[2];
+/**
+* @brief luminosity
+*/
+	double bse_lum[2];
+/**
+* @brief ?
+*/
 	double bse_massc[2];
+/**
+* @brief ?
+*/
 	double bse_radc[2];
+/**
+* @brief ?
+*/
 	double bse_menv[2];
+/**
+* @brief ?
+*/
 	double bse_renv[2];
-	double bse_ospin[2]; /* original spin */
-        double bse_B_0[2]; /* Pulsar magnetic field */
-        double bse_bacc[2]; /* Amount of mass pulsar has accreted */
-        double bse_tacc[2]; /* Amount of time pulsar has spent accreting */
+/**
+* @brief original spin
+*/
+	double bse_ospin[2];
+/**
+* @brief Pulsar magnetic field
+*/
+    double bse_B_0[2];
+/**
+* @brief Amount of mass pulsar has accreted
+*/
+    double bse_bacc[2];
+/**
+* @brief Amount of time pulsar has spent accreting
+*/
+    double bse_tacc[2];
+/**
+* @brief ?
+*/
 	double bse_epoch[2];
+/**
+* @brief ?
+*/
 	double bse_tms[2];
-	double bse_tphys; /* physical time */
-	double bse_tb; /* binary orbital period */
-	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
-	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
-        double bse_bcm_B[2]; /* Pulsar magnetic field strength at surface */
-        double bse_bcm_formation[2]; /* provides formation pathway of NS */
+/**
+* @brief physical time
+*/
+	double bse_tphys;
+/**
+* @brief binary orbital period
+*/
+	double bse_tb;
+/**
+* @brief mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)]
+*/
+	double bse_bcm_dmdt[2];
+/**
+* @brief radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)]
+*/
+	double bse_bcm_radrol[2];
+/**
+* @brief Pulsar magnetic field strength at surface
+*/
+    double bse_bcm_B[2];
+/**
+* @brief provides formation pathway of NS
+*/
+    double bse_bcm_formation[2];
 } bse_t;
 
 void update_bse_from_sse(bse_t *bvars, sse_t *svars, int bmember);

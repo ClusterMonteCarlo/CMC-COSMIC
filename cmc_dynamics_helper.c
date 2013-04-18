@@ -97,6 +97,11 @@ void zero_binary(long j)
 	binary[j].lifetime_m2 = GSL_POSINF;
 }
 
+/**
+* @brief prints the specified interaction status text
+*
+* @param status_text[] status text
+*/
 void print_interaction_status(char status_text[])
 {
 	gprintf(" %s", status_text);
@@ -106,6 +111,9 @@ void print_interaction_status(char status_text[])
 	parafprintf(logfile, " %s", status_text);
 }
 
+/**
+* @brief prints error message during interaction
+*/
 void print_interaction_error(void)
 {
 	gprintf("!");
@@ -477,6 +485,18 @@ void calc_3bb_encounter_dyns(long k1, long k2, long k3, double v1[4], double v2[
 }
 
 
+/**
+* @brief ?
+*
+* @param eta_min ?
+* @param k1 index of star 1
+* @param k2 index of star 2
+* @param k3 index of star 3
+* @param vrel12[4] ?
+* @param vrel3[4] ?
+*
+* @return ?
+*/
 double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], double vrel3[4])
 {
 	double kk, eta, norm, area_max, area, eta_test, comp_ymax, comp_y, true_y;
@@ -537,6 +557,26 @@ double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], doub
 }
 
 
+/**
+* @brief ?
+*
+* @param P_3bb ?
+* @param k1 index of star 1
+* @param k2 index of star 2
+* @param k3 index of star 3
+* @param form_binary ?
+* @param eta_min ?
+* @param ave_local_mass ?
+* @param n_local ?
+* @param sigma_local ?
+* @param v1[4] ?
+* @param v2[4] ?
+* @param v3[4] ?
+* @param vrel12[4] ?
+* @param vrel3[4] ?
+* @param delta_E_3bb ?
+* @param rng gsl rng
+*/
 void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_3bb, gsl_rng *rng)
 {
 	double PE_i, PE_f, KE_i, KE_f, KE_cmf_i, KE_cmf_f, delta_PE, delta_KE, delta_E, binary_cm;
@@ -781,6 +821,15 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 }
 
 
+/**
+* @brief ?
+*
+* @param k ?
+* @param p ?
+* @param N_LIMIT ?
+* @param ave_local_mass ?
+* @param sigma_local ?
+*/
 void calc_sigma_local(long k, long p, long N_LIMIT, double *ave_local_mass, double *sigma_local)
 // Modified by Meagan 2/10/12. Needed to calculate average local mass for 3bb formation, as well as sigma
 // Now function passes both values back as global variables: ave_local_mass, sigma_local
@@ -879,6 +928,17 @@ double calc_n_local(long k, long p, long N_LIMIT)
 #endif
 }
 
+/**
+* @brief ?
+*
+* @param k ?
+* @param kp ?
+* @param p ?
+* @param W ?
+* @param N_LIMIT ?
+*
+* @return ?
+*/
 double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT)
 {
 	long kmin, kmax;
@@ -901,6 +961,20 @@ double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT)
 #endif
 }
 
+/**
+* @brief ?
+*
+* @param k ?
+* @param kp ?
+* @param v[4] ?
+* @param vp[4] ?
+* @param w[4] ?
+* @param W ?
+* @param rcm ?
+* @param vcm[4] ?
+* @param rng ?
+* @param setY ?
+*/
 void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4], double *W, double *rcm, double vcm[4], gsl_rng *rng, int setY)
 {
 	int j;
@@ -968,6 +1042,11 @@ void set_star_EJ(long k)
 #endif
 }
 
+/**
+* @brief copies some variables of the star to the new variables
+*
+* @param k index of star
+*/
 void set_star_news(long k)
 {
 #ifdef USE_MPI
@@ -979,6 +1058,11 @@ void set_star_news(long k)
 	star[k].vtnew = star[k].vt;
 }
 
+/**
+* @brief copies some variables of the star to the old variables
+*
+* @param k index of star
+*/
 void set_star_olds(long k)
 {
 #ifdef USE_MPI
@@ -1044,7 +1128,15 @@ double binint_get_mass(long k, long kp, long id)
 	exit(1);
 }
 
-/*Sourav: find stellar types of merging stars from binary interaction components */
+/**
+* @brief Sourav: find stellar types of merging stars from binary interaction components
+*
+* @param k index of star 1
+* @param kp index of star 2
+* @param id star id to be matched
+*
+* @return ?
+*/
 long binint_get_startype(long k, long kp, long id)
 {
 	/* first look at k */
@@ -1080,7 +1172,15 @@ long binint_get_startype(long k, long kp, long id)
 }
 
 
-//Sourav: toy rejuvenation- finding creation times of binary interaction components
+/**
+* @brief Sourav: Sourav: toy rejuvenation- finding creation times of binary interaction components
+*
+* @param k index of star 1
+* @param kp index of star 2
+* @param id star id to be matched
+*
+* @return ?
+*/
 double binint_get_createtime(long k, long kp, long id)
 {
 	/* first look at k */
@@ -1115,7 +1215,15 @@ double binint_get_createtime(long k, long kp, long id)
 	exit(1);
 }
 
-//Sourav: toy rejuvenation- finding MS lifetimes of binary interaction components
+/**
+* @brief Sourav: Sourav: toy rejuvenation- finding MS lifetimes of binary interaction components
+*
+* @param k index of star 1
+* @param kp index of star 2
+* @param id star id to be matched
+*
+* @return ?
+*/
 double binint_get_lifetime(long k, long kp, long id)
 {
 	/* first look at k */
@@ -1151,8 +1259,16 @@ double binint_get_lifetime(long k, long kp, long id)
 }
 
 
-/* return star index of star with id "id" from binary interaction components,
-   along with which member "bi=0,1" if a binary */
+/**
+* @brief return star index of star with id "id" from binary interaction components, along with which member
+*
+* @param k index of star 1
+* @param kp index of star 2
+* @param id id of star to be matched
+* @param bi "bi=0,1" if a binary, else single
+*
+* @return return star index of star with id "id" from binary interaction components, along with which member
+*/
 long binint_get_indices(long k, long kp, long id, int *bi)
 {
 	*bi = -1;
@@ -1193,6 +1309,12 @@ long binint_get_indices(long k, long kp, long id, int *bi)
 	exit(1);
 }
 
+/**
+* @brief ?
+*
+* @param obj ?
+* @param units ?
+*/
 void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 {
 	int bid, sid, i;
@@ -1266,6 +1388,11 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 	}
 }
 
+/**
+* @brief ?
+*
+* @param retval ?
+*/
 void binint_log_status(fb_ret_t retval)
 {
 	/* must print out Nosc when upgraded to latest Fewbody */
@@ -1273,6 +1400,18 @@ void binint_log_status(fb_ret_t retval)
 		retval.DeltaEfrac, retval.DeltaE, retval.DeltaLfrac, retval.DeltaL, retval.tcpu);
 }
 
+/**
+* @brief ?
+*
+* @param interaction_type[] ?
+* @param id ?
+* @param mass ?
+* @param r ?
+* @param obj ?
+* @param k ?
+* @param kp ?
+* @param startype ?
+*/
 void binint_log_collision(const char interaction_type[], long id,
 			  double mass, double r, fb_obj_t obj, long k, long kp, long startype)
 {
@@ -2570,6 +2709,14 @@ void calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_sigma
 	}
 }
 
+/**
+* @brief calculates sliding averages of mass^2 around given index
+*
+* @param index index of star around which average is needed
+* @param N_LIMIT total number of stars
+*
+* @return average of mass^2
+*/
 double calc_average_mass_sqr(long index, long N_LIMIT) {
   long simin, simax, si, p, k;
   double M2ave;
@@ -2601,7 +2748,14 @@ double calc_average_mass_sqr(long index, long N_LIMIT) {
   return(M2ave);
 };
 
-/* generic routine for testing for approximate equality of floating point numbers */
+/**
+* @brief generic routine for testing for approximate equality of floating point numbers
+*
+* @param a first floating point number
+* @param b second floating point number
+*
+* @return ?
+*/
 double floateq(double a, double b) {
 	double diff=a-b, mean=0.5*(a+b);
 
@@ -2614,7 +2768,17 @@ double floateq(double a, double b) {
 	}
 }
 
-/* tidal capture (including merger) cross section; inputs are assumed to be in (self-consistent) code units */
+/**
+* @brief tidal capture (including merger) cross section; inputs are assumed to be in (self-consistent) code units
+*
+* @param n ?
+* @param m1 ?
+* @param r1 ?
+* @param m2 ?
+* @param vinf ?
+*
+* @return ?
+*/
 double sigma_tc_nd(double n, double m1, double r1, double m2, double vinf) {
 	double a, beta=2.2, vstar1=sqrt(2.0*m1/r1);
 
@@ -2631,7 +2795,19 @@ double sigma_tc_nd(double n, double m1, double r1, double m2, double vinf) {
 	return(a*pow(vinf/vstar1,-beta)*r1*r1);
 }
 
-/* tidal capture (including merger) cross section; inputs are assumed to be in (self-consistent) code units */
+/**
+* @brief tidal capture (including merger) cross section; inputs are assumed to be in (self-consistent) code units
+*
+* @param na ?
+* @param ma ?
+* @param ra ?
+* @param nb ?
+* @param mb ?
+* @param rb ?
+* @param vinf ?
+*
+* @return ?
+*/
 double sigma_tc_nn(double na, double ma, double ra, double nb, double mb, double rb, double vinf) {
 	double n1, m1, r1, n2, m2, r2;
 	double a, beta=2.2, gamma, vstar1;
@@ -2675,7 +2851,15 @@ double sigma_tc_nn(double na, double ma, double ra, double nb, double mb, double
 	return(a*pow(vinf/vstar1,-beta)*r1*r1);
 }
 
-/* T_l function for use in tidal capture calculations */
+/**
+* @brief T_l function for use in tidal capture calculations
+*
+* @param order ?
+* @param polytropicindex ?
+* @param eta ?
+*
+* @return ?
+*/
 double Tl(int order, double polytropicindex, double eta)
 {
 	int l=order;
@@ -2712,7 +2896,17 @@ double Tl(int order, double polytropicindex, double eta)
 	}
 }
 
-/* tidal energy of Mpert acting on Mosc, in the polytropic approximation */
+/**
+* @brief tidal energy of Mpert acting on Mosc, in the polytropic approximation
+*
+* @param rperi ?
+* @param Mosc ?
+* @param Rosc ?
+* @param nosc ?
+* @param Mpert ?
+*
+* @return ?
+*/
 double Etide(double rperi, double Mosc, double Rosc, double nosc, double Mpert)
 {
 	double eta=sqrt(Mosc/(Mosc+Mpert))*pow(rperi/Rosc, 1.5);

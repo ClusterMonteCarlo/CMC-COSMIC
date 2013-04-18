@@ -59,6 +59,9 @@ void print_results(void){
 }
 
 /*********** Output 2D/3D snapshots **************/
+/**
+* @brief prints a 2D snapshot
+*/
 void print_2Dsnapshot(void)
 {
 	long i, j;
@@ -75,6 +78,9 @@ void print_2Dsnapshot(void)
 }
 
 
+/**
+* @brief prints BH snapshots
+*/
 void print_bh_snapshot(void) {
 	long i, j;
 	char outfile[100];
@@ -625,7 +631,7 @@ void print_bh_summary() {
 * @brief Meagan - extra output for bhs
 */
 void print_esc_bh_summary() {
-        // Meagan: log info about escaped bhs
+    // Meagan: log info about escaped bhs
 
 #ifdef USE_MPI
     long buf_comm[12];
@@ -1869,7 +1875,6 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 		exit(1);
 	}
 
-    //MPI3: Files that need participation by more than one node.
 	sprintf(outfile, "%s.log", outprefix);
 	if ((logfile = fopen(outfile, outfilemode)) == NULL) {
 		eprintf("cannot create log output file \"%s\".\n", outfile);
@@ -1960,7 +1965,9 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 }
 
 
-/* close buffers */
+/**
+* @brief close file buffers/pointers
+*/
 void close_buffers(void)
 {
 //MPI: These files are written to only by the root, and hence are closed only by root.
@@ -2168,7 +2175,14 @@ if(myid==0)
 #endif
 }
 
-/* routines for printing star/binary info in a unified log format */
+/**
+* @brief routines for printing star/binary info in a unified log format
+*
+* @param k index of star
+* @param string[MAX_STRING_LENGTH] ?
+*
+* @return ?
+*/
 char *sprint_star_dyn(long k, char string[MAX_STRING_LENGTH])
 {
 #ifdef USE_MPI
@@ -2181,6 +2195,14 @@ char *sprint_star_dyn(long k, char string[MAX_STRING_LENGTH])
 	return(string);
 }
 
+/**
+* @brief ?
+*
+* @param k index of star
+* @param string[MAX_STRING_LENGTH] ?
+*
+* @return ?
+*/
 char *sprint_bin_dyn(long k, char string[MAX_STRING_LENGTH])
 {
 	long bi=star[k].binind;
@@ -2193,6 +2215,11 @@ char *sprint_bin_dyn(long k, char string[MAX_STRING_LENGTH])
 	return(string);
 }
 
+/**
+* @brief ?
+*
+* @param param_string ?
+*/
 void parse_snapshot_windows(char *param_string) {
   char *cur_window, *intern_window=NULL, *intern_param=NULL;
   char *cur_wstring, *cur_pstring;
@@ -2232,6 +2259,9 @@ void parse_snapshot_windows(char *param_string) {
   snapshot_window_counters= (int *) calloc(snapshot_window_count, sizeof(int));
 }
 
+/**
+* @brief ?
+*/
 void print_snapshot_windows(void) {
   int i, step_counter;
   double start, stop, step, total_time;
@@ -2268,6 +2298,11 @@ void print_snapshot_windows(void) {
   }
 }
 
+/**
+* @brief ?
+*
+* @return ?
+*/
 int valid_snapshot_window_units(void) {
   int valid;
 

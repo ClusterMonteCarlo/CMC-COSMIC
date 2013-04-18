@@ -17,6 +17,15 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
+/**
+* @brief ?
+*
+* @param index ?
+* @param E ?
+* @param J ?
+*
+* @return ?
+*/
 long get_positive_Q_index(long index, double E, double J) {
   long ktemp, fevals;
   double Qtemp;
@@ -61,11 +70,23 @@ long get_positive_Q_index(long index, double E, double J) {
   return(ktemp);
 };
 
-/* Calculates Q at star position kmid and follows N_Q_TRACE Q-evaluations 
- * symmetrically to both sides of kmid. If there are no positive Q-values and
- * Q has been decreasing monotonously a circular orbit is returned (-1). If 
- * there was a positive Q-value its index k is returned. Otherwise the next 
- * N_Q_TRACE points are evaluated. If the loop ends without result -2 is returned */
+/**
+* @brief
+* Calculates Q at star position kmid and follows N_Q_TRACE Q-evaluations
+* symmetrically to both sides of kmid. If there are no positive Q-values and
+* Q has been decreasing monotonously a circular orbit is returned (-1). If
+* there was a positive Q-value its index k is returned. Otherwise the next
+* N_Q_TRACE points are evaluated. If the loop ends without result -2 is returned
+*
+* @param index ?
+* @param kmid ?
+* @param E ?
+* @param J ?
+* @param kmin ?
+* @param kmax ?
+*
+* @return ?
+*/
 long symmetric_positive_Q_search(long index, long kmid, double E, double J, long kmin, long kmax) {
   long ktemp, sign, i, fevals;
   long sym_min, sym_max, sym_len;
@@ -145,6 +166,16 @@ long symmetric_positive_Q_search(long index, long kmid, double E, double J, long
 };
 
 
+/**
+* @brief ?
+*
+* @param index ?
+* @param E ?
+* @param J ?
+* @param orbit_old ?
+*
+* @return ?
+*/
 long get_positive_Q_index_new_J(long index, double E, double J, orbit_rs_t orbit_old) {
   long ktemp, fevals, kmid, i, kmin, kmax;
   long double Qtemp;
@@ -202,6 +233,17 @@ long get_positive_Q_index_new_J(long index, double E, double J, orbit_rs_t orbit
 };
 
 
+/**
+* @brief ?
+*
+* @param index ?
+* @param E ?
+* @param J ?
+* @param old_r ?
+* @param orbit ?
+*
+* @return ?
+*/
 struct star_coords get_position(long index, double E, double J, double old_r, orbit_rs_t orbit) {
   struct star_coords new_pos;
   double vr, r, pot, drds, Q;
@@ -322,6 +364,15 @@ struct star_coords get_position(long index, double E, double J, double old_r, or
   return(new_pos);
 };
 
+/**
+* @brief ?
+*
+* @param actual_rmin ?
+* @param rmin ?
+* @param inside_sqrt ?
+* @param k ?
+* @param ismin ?
+*/
 void debug_msg_orbit_new_inside_sqrt(double actual_rmin, double rmin, double inside_sqrt,
     long k, int ismin) {
   double rk, rk1;
@@ -363,6 +414,19 @@ void debug_msg_supp_mpi_info(char *msg, int proc, long g_si, long si,
         msg, mpiBegin, mpiEnd, g_si, si, myid);
 }
 
+/**
+* @brief ?
+*
+* @param si ?
+* @param rmin ?
+* @param rmin_new ?
+* @param k ?
+* @param rk ?
+* @param rk1 ?
+* @param ismin ?
+* @param E ?
+* @param J ?
+*/
 void debug_msg_orbit_new_outside_interval(long si, double rmin, double rmin_new,
     long k, double rk, double rk1, int ismin, double E, double J) {
   char *label;
@@ -377,6 +441,15 @@ void debug_msg_orbit_new_outside_interval(long si, double rmin, double rmin_new,
       (rmin_new>=rk)&&(rmin_new<=rk1)? "Yes": "No");
 }
 
+/**
+* @brief ?
+*
+* @param index ?
+* @param E ?
+* @param J ?
+*
+* @return ?
+*/
 orbit_rs_t calc_orbit_new(long index, double E, double J) {
   orbit_rs_t orbit_rs;
   long ktemp, kmin, kmax;
@@ -556,6 +629,16 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
 
 
 /* Do not use for newly created stars! */
+/**
+* @brief ?
+*
+* @param index ?
+* @param J ?
+* @param pos_old ?
+* @param orbit_old ?
+*
+* @return ?
+*/
 orbit_rs_t calc_orbit_new_J(long index, double J, struct star_coords pos_old, orbit_rs_t orbit_old) {
   orbit_rs_t orbit_rs;
   long ktemp, kmin, kmax;
@@ -716,6 +799,14 @@ orbit_rs_t calc_orbit_new_J(long index, double J, struct star_coords pos_old, or
   return(orbit_rs);
 };
 
+/**
+* @brief ?
+*
+* @param index ?
+* @param k ?
+* @param a ?
+* @param b ?
+*/
 void set_a_b(long index, long k, double *a, double *b) {
   long i, i1;
   double rk, rk1, Uk, Uk1;
@@ -747,6 +838,17 @@ void set_a_b(long index, long k, double *a, double *b) {
   }
 };
 
+/**
+* @brief ?
+*
+* @param index ?
+* @param k ?
+* @param E ?
+* @param J ?
+* @param positive ?
+*
+* @return ?
+*/
 long find_zero_Q_slope(long index, long k, double E, double J, int positive) {
   double qtemp, pos;
   long ktemp;

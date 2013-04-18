@@ -11,6 +11,16 @@
 #include "cmc_vars.h"
 
 
+/**
+* @brief ?
+*
+* @param power_law_exponent ?
+* @param fraction ?
+* @param starsPerBin ?
+* @param part_frac ?
+*
+* @return ?
+*/
 struct Search_Grid *
 search_grid_initialize(double power_law_exponent, double fraction, long starsPerBin, double part_frac) {
   /* This is somewhat trivial at the moment but makes the usage of the 
@@ -32,6 +42,13 @@ search_grid_initialize(double power_law_exponent, double fraction, long starsPer
 };
 
 /* This function is mainly used internally, but may be useful for the user */
+/**
+* @brief ?
+*
+* @param grid ?
+*
+* @return ?
+*/
 double search_grid_estimate_prop_const(struct Search_Grid *grid) {
   long i, r_index;
   double coeff, r_1, r_min;
@@ -49,6 +66,11 @@ double search_grid_estimate_prop_const(struct Search_Grid *grid) {
 
 /* This function is only used internally (i.e. private) and does not 
  * belong to the public API */
+/**
+* @brief ?
+*
+* @param grid ?
+*/
 void search_grid_allocate(struct Search_Grid *grid) {
   long prev_grid_length, max_part_index;
 
@@ -81,6 +103,11 @@ void search_grid_allocate(struct Search_Grid *grid) {
   };
 };
   
+/**
+* @brief ?
+*
+* @param grid ?
+*/
 void search_grid_update(struct Search_Grid *grid) {
   long i, r_index, star_index;
   
@@ -106,9 +133,17 @@ void search_grid_update(struct Search_Grid *grid) {
  // search_grid_print_binsizes(grid);
 };
 
-/* This function gives only the approximate radius of the search grid
- * at index "index" and cannot be used to infer the right search interval,
- * due to round-off errors.*/
+/**
+* @brief
+* This function gives only the approximate radius of the search grid
+* at index "index" and cannot be used to infer the right search interval,
+* due to round-off errors.
+*
+* @param grid ?
+* @param index ?
+*
+* @return ?
+*/
 double search_grid_get_r(struct Search_Grid *grid, long index) {
   if (index> grid->length-1) {
     index=grid->length-1;
@@ -116,7 +151,14 @@ double search_grid_get_r(struct Search_Grid *grid, long index) {
   return(star[1].r+ grid->interpol_coeff*pow(index+1., grid->power_law_exponent));
 };
 
-/* Returns the interval of particle indices such that star[min].r>r>star[max].r*/
+/**
+* @brief Returns the interval of particle indices such that star[min].r>r>star[max].r
+*
+* @param grid ?
+* @param r ?
+*
+* @return ?
+*/
 struct Interval
 search_grid_get_interval(struct Search_Grid *grid, double r) {
   long grid_index;
@@ -158,6 +200,14 @@ search_grid_get_interval(struct Search_Grid *grid, double r) {
   return(sindex);
 };
 
+/**
+* @brief ?
+*
+* @param grid ?
+* @param r ?
+*
+* @return ?
+*/
 long search_grid_get_grid_index(struct Search_Grid *grid, double r) {
   double r_to_n, n, ind_double;
   const double long_max= LONG_MAX;
@@ -181,6 +231,14 @@ long search_grid_get_grid_index(struct Search_Grid *grid, double r) {
   return (ind);
 };
 
+/**
+* @brief ?
+*
+* @param grid ?
+* @param r ?
+*
+* @return ?
+*/
 double search_grid_get_grid_indexf(struct Search_Grid *grid, double r) {
   double r_to_n, n, ind;
 
@@ -190,6 +248,11 @@ double search_grid_get_grid_indexf(struct Search_Grid *grid, double r) {
   return (ind);
 }
 
+/**
+* @brief ?
+*
+* @param grid ?
+*/
 void search_grid_free(struct Search_Grid *grid) {
   if (grid && grid->radius) {
     free(grid->radius);
@@ -201,6 +264,11 @@ void search_grid_free(struct Search_Grid *grid) {
   }
 };
 
+/**
+* @brief ?
+*
+* @param grid ?
+*/
 void search_grid_print_binsizes(struct Search_Grid *grid) {
   long i;
 

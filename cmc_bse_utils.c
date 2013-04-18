@@ -4,6 +4,13 @@
 #include "cmc_vars.h"
 #include "bse_wrap/bse_wrap.h" 
 
+/**
+* @brief ?
+*
+* @param bvars ?
+* @param svars ?
+* @param bmember ?
+*/
 void update_bse_from_sse(bse_t *bvars, sse_t *svars, int bmember) {
   bvars->bse_mass0[bmember] = svars->se_mass;
   bvars->bse_kw[bmember] = svars->se_k;
@@ -25,6 +32,13 @@ void update_bse_from_sse(bse_t *bvars, sse_t *svars, int bmember) {
   bvars->bse_bcm_formation[bmember] = svars->se_scm_formation;
 }
 
+/**
+* @brief ?
+*
+* @param bvars ?
+* @param svars ?
+* @param bmember ?
+*/
 void update_sse_from_bse(bse_t *bvars, sse_t *svars, int bmember) {
   svars->se_mass = bvars->bse_mass0[bmember];
   svars->se_k = bvars->bse_kw[bmember];
@@ -46,6 +60,12 @@ void update_sse_from_bse(bse_t *bvars, sse_t *svars, int bmember) {
   svars->se_scm_formation = bvars->bse_bcm_formation[bmember];
 }
 
+/**
+* @brief ?
+*
+* @param svars ?
+* @param star ?
+*/
 void get_sse_from_star(sse_t *svars, star_t *star) {
   svars-> se_mass   = star->se_mass;
   svars-> se_k      = star->se_k;
@@ -67,6 +87,12 @@ void get_sse_from_star(sse_t *svars, star_t *star) {
   svars-> se_scm_formation  = star->se_scm_formation;
 }
 
+/**
+* @brief ?
+*
+* @param star ?
+* @param svars ?
+*/
 void update_star_from_sse(star_t *star, sse_t svars) {
   star-> se_mass   = svars.se_mass;
   star-> se_k      = svars.se_k;
@@ -88,6 +114,12 @@ void update_star_from_sse(star_t *star, sse_t svars) {
   star-> se_scm_formation = svars.se_scm_formation;
 }
 
+/**
+* @brief ?
+*
+* @param bvars ?
+* @param star ?
+*/
 void get_bse_from_binary(bse_t *bvars, binary_t *star) {
   int i;
 
@@ -116,6 +148,12 @@ void get_bse_from_binary(bse_t *bvars, binary_t *star) {
   bvars->bse_tb           = star->bse_tb;
 }
 
+/**
+* @brief ?
+*
+* @param star ?
+* @param bvars ?
+*/
 void update_binary_from_bse(binary_t *star, bse_t *bvars) {
   int i;
 
@@ -202,6 +240,19 @@ void compress_binary(star_t *bincom, binary_t *bin) {
 }
 
 
+/**
+* @brief ?
+*
+* @param tempbinary ?
+* @param cmc_l_unit ?
+* @param RbloodySUN ?
+* @param zpars ?
+* @param vs ?
+* @param fb ?
+* @param ecsnp ?
+* @param ecsn_mlow ?
+* @param ST_tide ?
+*/
 void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide)
 		//double *M0, double *M, double *MC, double *AJ, double *OSPIN, int *KW, 
 		//                double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2,

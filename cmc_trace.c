@@ -2,6 +2,12 @@
 #include "cmc_vars.h"
 #ifdef DEBUGGING
 
+/**
+* @brief ?
+*
+* @param ids ?
+* @param filename ?
+*/
 void load_id_table(GHashTable* ids, char *filename) {
   FILE * id_file;
   long id, i;

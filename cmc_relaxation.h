@@ -1,22 +1,70 @@
+/**
+* @brief ?
+*/
 struct perturbation {
+/**
+* @brief ?
+*/
   double E[2], J[2];
+/**
+* @brief ?
+*/
   double dE[2], dJ[2];
+/**
+* @brief ?
+*/
   double vr[2], vt[2];
+/**
+* @brief ?
+*/
   double v[4], vp[4];
+/**
+* @brief ?
+*/
   long index[2];
 };
 
+/**
+* @brief ?
+*/
 struct encounter {
+/**
+* @brief ?
+*/
   long k, kp;
+/**
+* @brief ?
+*/
   double r, rp;
+/**
+* @brief ?
+*/
   double v[4], vp[4];
+/**
+* @brief ?
+*/
   double w[4], W;
+/**
+* @brief ?
+*/
   double rcm, vcm[4];
+/**
+* @brief ?
+*/
   double Y;
 };
 
+/**
+* @brief ?
+*/
 struct relaxation_params {
+/**
+* @brief ?
+*/
   double Trel12;
+/**
+* @brief ?
+*/
   double beta;
 };
 

@@ -3,9 +3,17 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/* the mass--radius relationship, from Freitag, et al. (2004) */
-/* M is expected to be input in the same units as star[].m */
-/* radius is output in code (N-body) units */
+/**
+* @brief
+* the mass--radius relationship, from Freitag, et al. (2004)
+* M is expected to be input in the same units as star[].m
+* radius is output in code (N-body) units
+*
+* @param M ?
+*
+* @return
+* radius in code (N-body) units
+*/
 double r_of_m(double M)
 {
 	if (M == 0.0) {

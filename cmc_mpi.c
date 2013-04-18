@@ -2,7 +2,14 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-//Function to find start and end indices for each processor for a loop over N. Makes sure the number of elements each proc works on is an even number. Is a generic function that does not use myid, instead it should be passed through parameter i.
+/**
+* @brief Function to find start and end indices for each processor for a loop over N. Makes sure the number of elements each proc works on is an even number. Is a generic function that does not use myid, instead it should be passed through parameter i.
+*
+* @param N data size for which data partitioning scheme needs to be found
+* @param i parameters for processor i that is needed
+* @param mpiStart start index of processor i in the global dataset
+* @param mpiEnd end index of processor i in the global dataset
+*/
 void mpiFindIndicesEvenGen( long N, int i, int* mpiStart, int* mpiEnd )
 {
 	N = N/2;
@@ -20,7 +27,13 @@ void mpiFindIndicesEvenGen( long N, int i, int* mpiStart, int* mpiEnd )
    }
 }
 
-//Function specially made for our code as dynamics_apply() takes 2 stars at a time. This function divides particles in pairs if the no.of stars is even, but if the no.of stars is odd, it gives one star to the last processor (since only this will be skipped by the serial code, and hence will help comparison) and divides the rest in pairs.
+/**
+* @brief Function specially made for our code as dynamics_apply() takes 2 stars at a time. This function divides particles in pairs if the no.of stars is even, but if the no.of stars is odd, it gives one star to the last processor (since only this will be skipped by the serial code, and hence will help comparison) and divides the rest in pairs.
+*
+* @param N data size for which data partitioning scheme needs to be found
+* @param mpiStart array for start indices
+* @param mpiEnd array for end indices
+*/
 void mpiFindIndicesSpecial( long N, int* mpiStart, int* mpiEnd )
 {
 	if( N % 2 == 0 )
@@ -33,7 +46,14 @@ void mpiFindIndicesSpecial( long N, int* mpiStart, int* mpiEnd )
 	}
 }
 
-//Same as mpiFindIndicesSpecial, but does not use myid, instead allows it to be passed through parameter i.
+/**
+* @brief Same as mpiFindIndicesSpecial, but does not use myid, instead allows it to be passed through parameter i.
+*
+* @param N data size for which data partitioning scheme needs to be found
+* @param i parameters for processor i that is needed
+* @param mpiStart start index of processor i in the global dataset
+* @param mpiEnd end index of processor i in the global dataset
+*/
 void mpiFindIndicesSpecialGen( long N, int i, int* mpiStart, int* mpiEnd )
 {
 	if( N % 2 == 0 )
@@ -92,6 +112,14 @@ void mpiFindIndicesCustom( long N, int blkSize, int i, int* mpiStart, int* mpiEn
 		*mpiEnd += remain;
 }
 
+/**
+* @brief finds displacement and count for all processors
+*
+* @param N data size
+* @param blkSize block size which each chunk has to be a multiple of
+* @param mpiDisp displacement array
+* @param mpiLen count array
+*/
 void mpiFindDispAndLenCustom( long N, int blkSize, int* mpiDisp, int* mpiLen )
 {
 	int i;
@@ -103,7 +131,14 @@ void mpiFindDispAndLenCustom( long N, int blkSize, int* mpiDisp, int* mpiLen )
 }
 
 
-/* Creates a new communicator with inverse order of processes. */
+/**
+* @brief Creates a new communicator with inverse order of processes.
+*
+* @param procs number of processors
+* @param old_comm old communicator
+*
+* @return new communicator with inverse order of ranks
+*/
 MPI_Comm inv_comm_create(int procs, MPI_Comm old_comm)
 {
 	int i, *newranks;

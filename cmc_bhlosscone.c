@@ -10,6 +10,11 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
+/**
+* @brief ?
+*
+* @param fname ?
+*/
 void create_rwalk_file(char *fname) {
 
 #ifdef USE_MPI
@@ -36,6 +41,21 @@ void create_rwalk_file(char *fname) {
 #endif
 }
 
+/**
+* @brief ?
+*
+* @param fname ?
+* @param index ?
+* @param Trel ?
+* @param dt ?
+* @param l2_scale ?
+* @param n_steps ?
+* @param beta ?
+* @param n_local ?
+* @param W ?
+* @param P_orb ?
+* @param n_orb ?
+*/
 void write_rwalk_data(char *fname, long index, double Trel, double dt, 
     double l2_scale, double n_steps, double beta, double n_local, double W, 
     double P_orb, double n_orb) {
@@ -66,10 +86,17 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
 #endif
 }
 
+/**
+* @brief This is the random walk procedure as outlined by Freitag & Benz (2002). Change of notation: beta here is theta in the paper.
+*
+* @param index ?
+* @param v[4] ?
+* @param vcm[4] ?
+* @param beta ?
+* @param dt ?
+*/
 void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt)
 { 
-	/*This is the random walk procedure as outlined by Freitag & Benz (2002).
-	  Change of notation: beta here is theta in the paper. */
 	double w[3], n_orb, P_orb, deltabeta_orb, L2, Rdisr, Jlc, vlc;
 	double deltamax, deltasafe, delta, dbeta;
 	double w_mag, l2_scale;
@@ -187,6 +214,13 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 }; 
 
 
+/**
+* @brief ?
+*
+* @param w ?
+* @param vr ?
+* @param vt ?
+*/
 void get_3d_velocities(double *w, double vr, double vt) {
    double phi;
 
@@ -198,6 +232,13 @@ void get_3d_velocities(double *w, double vr, double vt) {
 };
 
 /* here the notation of Freitag & Benz (2002) is used */
+/**
+* @brief ?
+*
+* @param w ?
+* @param beta ?
+* @param delta ?
+*/
 void do_random_step(double *w, double beta, double delta) {
    double theta, phi, w_mag, new_w_dir[3];
    double a; /* this is a variable to store an intermediate result*/ 
@@ -218,8 +259,16 @@ void do_random_step(double *w, double beta, double delta) {
    w[2]= w_mag* new_w_dir[2];
 };
 
+/**
+* @brief calculate the angle between w and w_new and compare to deltat
+*
+* @param w ?
+* @param w_new ?
+* @param delta ?
+*
+* @return ?
+*/
 double check_angle_w_w_new(double *w, double *w_new, double delta) {
-   /* calculate the angle between w and w_new and compare to deltat */
    double angle;
 
    angle=acos(w[0]*w_new[0]+w[1]*w_new[1]+w[2]*w_new[2]);
@@ -367,7 +416,14 @@ double calc_P_orb(long index)
 	}
 }
 
-/* integrand for calc_P_orb */
+/**
+* @brief integrand for calc_P_orb
+*
+* @param x ?
+* @param params ?
+*
+* @return ?
+*/
 double calc_p_orb_f(double x, void *params) {
 	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
 	double radicand;
@@ -580,6 +636,13 @@ double calc_p_orb_gc(double x, void *params) {
 	}
 }
 
+/**
+* @brief ?
+*
+* @param r ?
+*
+* @return ?
+*/
 struct Interval get_r_interval(double r) {
   long kmax, kmin, i;
   struct Interval star_interval;

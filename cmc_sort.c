@@ -142,6 +142,12 @@ void check_sort(star_t *s, long N){
 	}
 }
 
+/**
+* @brief quicksort
+*
+* @param s pointer to array of stars
+* @param N data size
+*/
 void qsorts(star_t *s, long N){
 	strcpy(funcName, __FUNCTION__);
 	pthread_t threads[NUM_THREADS_SORT];

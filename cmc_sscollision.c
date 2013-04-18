@@ -551,7 +551,15 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	}
 }
 
-/* merge two stars using stellar evolution if it's enabled */
+/**
+* @brief merge two stars using stellar evolution if it's enabled
+*
+* @param star1 pointer to star 1
+* @param star2 pointer to star 2
+* @param merged_star pointer to merged star
+* @param vs ?
+* @param s rng state
+*/
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s) {
 	double tphysf, dtp, age, temp_rad, bseaj[2], ecsnp, ecsn_mlow;
 	//double vsaddl[12], 

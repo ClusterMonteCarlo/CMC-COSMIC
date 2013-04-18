@@ -20,7 +20,15 @@
 #include "cuda/cmc_cuda.h"
 #endif
 
-/* function to calculate r_p, r_a, dQ/dr|_r_p, and dQ/dr|_r_a for an orbit */
+/**
+* @brief function to calculate r_p, r_a, dQ/dr|_r_p, and dQ/dr|_r_a for an orbit
+*
+* @param si index of star
+* @param E energy
+* @param J angular momentum
+*
+* @return orbit structure
+*/
 orbit_rs_t calc_orbit_rs(long si, double E, double J)
 {
 	orbit_rs_t orbit_rs;
@@ -323,6 +331,13 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	return(orbit_rs);
 }
 
+/**
+* @brief computes the binary-binary interaction timestep
+*
+* @param central properties of central stars of the cluster
+*
+* @return bin-bin timestep
+*/
 double get_Tbb(central_t central) {
   double Tbb;
   /* X defines pericenter needed for "strong" interaction: r_p = X (a_1+a_2) */	
@@ -336,6 +351,13 @@ double get_Tbb(central_t central) {
   return(Tbb);
 }
 
+/**
+* @brief computes the binary-single interaction timestep
+*
+* @param central properties of central stars of the cluster
+*
+* @return bin-sin timestep
+*/
 double get_Tbs(central_t central) {
   double Tbs;
   /* X defines pericenter needed for "strong" interaction: r_p = X a */
@@ -367,7 +389,6 @@ double GetTimeStep(gsl_rng *rng) {
 		//Optimize simul_relax() later 
 		//DTrel = simul_relax(rng);
 
-//MPI2: Testing: MPI and Serial versions dont match exactly because of the way the averaging and binning are done in the MPI version. However, I think it is ok since this is only an estimate of the timestep. So, doesnt have to be exactly same. Later might need to change the mpi version to exactly simulate simul_relax_new();.
 #ifdef USE_MPI
 		DTrel = mpi_simul_relax_new();
 #else
@@ -695,6 +716,13 @@ void tidally_strip_stars(void) {
 #endif
 }
 
+/**
+* @brief removes star
+*
+* @param j index of star
+* @param phi_rtidal ?
+* @param phi_zero ?
+*/
 void remove_star(long j, double phi_rtidal, double phi_zero) {
 	double E, J, m, r;
 	long k=0;

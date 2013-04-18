@@ -279,21 +279,31 @@ _EXTERN_ struct Search_Grid *r_grid;
 /* for testing the effect */
 _EXTERN_ long total_bisections;
 
-/* an optional switch to turn off black hole accretion but having a non-zero central mass */
+/**
+* @brief an optional switch to turn off black hole accretion but having a non-zero central mass
+*/
 _EXTERN_ long BH_LOSS_CONE;
 _EXTERN_ double BH_R_DISRUPT_NB;
-/* force to use the relaxation step, even if relaxation is turned off */
+/**
+* @brief force to use the relaxation step, even if relaxation is turned off
+*/
 _EXTERN_ int FORCE_RLX_STEP;
-/* calculate the binary interaction time steps by only considering hard binaries (0=off, 1=on) */
+/**
+* @brief calculate the binary interaction time steps by only considering hard binaries (0=off, 1=on)
+*/
 _EXTERN_ int DT_HARD_BINARIES;
-/* defines the minimum binary binding energy for a hard binary */
+/**
+* @brief defines the minimum binary binding energy for a hard binary
+*/
 _EXTERN_ double HARD_BINARY_KT;
-/* A threshold value for the difference between apastron and periastron below
- * which an orbit is considered to be circular. Currently this is only used 
- * for the period calculation in the loss-cone routine, as the integrator 
- * barfs when the difference between the two apsides (which form the integration
- * interval) gets too small.
- */
+/**
+* @brief
+* A threshold value for the difference between apastron and periastron below
+* which an orbit is considered to be circular. Currently this is only used
+* for the period calculation in the loss-cone routine, as the integrator
+* barfs when the difference between the two apsides (which form the integration
+* interval) gets too small.
+*/
 _EXTERN_ double CIRC_PERIOD_THRESHOLD;
 _EXTERN_ int WRITE_STELLAR_INFO;
 _EXTERN_ int WRITE_BH_INFO;
@@ -302,9 +312,11 @@ _EXTERN_ int WRITE_EXTRA_CORE_INFO;
 _EXTERN_ int CALCULATE10;
 
 #ifdef EXPERIMENTAL
-/* scale the square of the deflection angle used for testing of entry into the loss 
- * cone by Trel*BH_LC_FDT/dt 
- */
+/**
+* @brief
+* scale the square of the deflection angle used for testing of entry into the loss
+* cone by Trel*BH_LC_FDT/dt
+*/
 _EXTERN_ double BH_LC_FDT;
 _EXTERN_ long AVEKERNEL;
 #endif
@@ -314,7 +326,9 @@ _EXTERN_ long N_Q_TRACE;
 _EXTERN_ GHashTable *star_ids;
 _EXTERN_ GArray *id_array;
 #endif
-/* The root solver to find the roots of Q */
+/**
+* @brief The root solver to find the roots of Q
+*/
 _EXTERN_ gsl_root_fsolver *q_root;
 _EXTERN_ double APSIDES_PRECISION;
 _EXTERN_ long APSIDES_MAX_ITER;
@@ -328,4 +342,3 @@ _EXTERN_ double OVERWRITE_MCLUS;
 _EXTERN_ double *snapshot_windows;
 _EXTERN_ int *snapshot_window_counters;
 _EXTERN_ int snapshot_window_count;
-

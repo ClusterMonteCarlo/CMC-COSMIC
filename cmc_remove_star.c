@@ -8,8 +8,15 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/*Sourav: checks whether a star should die or not before performing dynamics*/
 
+/**
+* @brief Sourav: checks whether a star should die or not before performing dynamics
+*
+* @param time ?
+* @param k index of star
+*
+* @return ?
+*/
 int remove_old_star(double time, long k)
 {
 	long removed_id=0, knew, removed_bin_id, removed_component_id, left_component_id;	

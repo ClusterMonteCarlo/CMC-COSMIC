@@ -8,9 +8,16 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/* These routines are for calculating the orbital perturbations of a pair of 
- * stars due to relaxation. They still depend on the global 'star' array and
- * are thus not fully modular. */
+/**
+* @brief
+* These routines are for calculating the orbital perturbations of a pair of
+* stars due to relaxation. They still depend on the global 'star' array and
+* are thus not fully modular.
+*
+* @param index index of star
+*
+* @return ?
+*/
 struct star_coords
 get_star_coords_from_star(long index) {
   struct star_coords pos;
@@ -27,6 +34,11 @@ get_star_coords_from_star(long index) {
   return(pos);
 }
 
+/**
+* @brief ?
+*
+* @param pos ?
+*/
 void set_star_coords_for_star(struct star_coords pos) {
   long index;
 
@@ -40,6 +52,15 @@ void set_star_coords_for_star(struct star_coords pos) {
   star[index].phi= pos.pot;
 }
 
+/**
+* @brief ?
+*
+* @param star1 ?
+* @param star2 ?
+* @param rng ?
+*
+* @return ?
+*/
 struct encounter
 get_encounter_dyns(struct star_coords star1, struct star_coords star2, gsl_rng *rng) {
   struct encounter enc;
@@ -84,6 +105,14 @@ get_encounter_dyns(struct star_coords star1, struct star_coords star2, gsl_rng *
   return(enc);
 };
 
+/**
+* @brief ?
+*
+* @param dt ?
+* @param enc ?
+*
+* @return ?
+*/
 struct relaxation_params
 get_relaxation_params(double dt, struct encounter enc) {
   struct relaxation_params params;
@@ -101,6 +130,13 @@ get_relaxation_params(double dt, struct encounter enc) {
   return(params);
 };
 
+/**
+* @brief ?
+*
+* @param enc ?
+*
+* @return ?
+*/
 double get_relaxation_time(struct encounter enc) {
   double n_local, Trel12;
   long k, kp;
@@ -113,6 +149,14 @@ double get_relaxation_time(struct encounter enc) {
   return(Trel12);
 };
 
+/**
+* @brief ?
+*
+* @param dt ?
+* @param Trel ?
+*
+* @return ?
+*/
 double scattering_angle(double dt, double Trel) {
   double beta;
 
@@ -122,6 +166,14 @@ double scattering_angle(double dt, double Trel) {
   return(beta);
 };
 
+/**
+* @brief ?
+*
+* @param enc ?
+* @param rparams ?
+*
+* @return ?
+*/
 struct perturbation
 scatter_relax(struct encounter enc, struct relaxation_params rparams) {
   struct perturbation pert;
@@ -190,6 +242,15 @@ scatter_relax(struct encounter enc, struct relaxation_params rparams) {
   return(pert);
 }
 
+/**
+* @brief ?
+*
+* @param pos[2] ?
+* @param dt ?
+* @param rng ?
+*
+* @return ?
+*/
 struct perturbation
 scatter_relax_old(struct star_coords pos[2], double dt, gsl_rng *rng) {
   struct perturbation pert;

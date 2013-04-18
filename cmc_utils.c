@@ -14,13 +14,25 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 
-/* a fast square function */
+/**
+* @brief a fast square function
+*
+* @param x number to be squared
+*
+* @return square of x
+*/
 double sqr(double x)
 {
         return(x*x);
 }
 
-/* a fast cube function */
+/**
+* @brief a fast cube function
+*
+* @param x number to be cubed
+*
+* @return cube of x
+*/
 double cub(double x)
 {
         return(x*x*x);
@@ -181,7 +193,11 @@ double potential(double r) {
 }
 
 
-/* toggle debugging */
+/**
+* @brief toggle debugging
+*
+* @param signal signal
+*/
 void toggle_debugging(int signal)
 {
 	if (debug) {
@@ -193,6 +209,11 @@ void toggle_debugging(int signal)
 	}
 }
 
+/**
+* @brief old exit function
+*
+* @param signal signal
+*/
 void exit_cleanly_old(int signal)
 {
 
@@ -207,7 +228,13 @@ void exit_cleanly_old(int signal)
 
 	exit(signal);
 }
-/* close buffers, then exit */
+
+/**
+* @brief close buffers, then exit
+*
+* @param signal signal
+* @param fn function which called exit
+*/
 void exit_cleanly(int signal, const char* fn)
 {
 
@@ -224,6 +251,9 @@ void exit_cleanly(int signal, const char* fn)
 	exit(signal);
 }
 
+/**
+* @brief free's dynamically allocated arrays
+*/
 void free_arrays(void){
 	free(mass_pc); free(densities_r); free(no_star_r); 
 	free(ke_rad_r); free(ke_tan_r); free(v2_rad_r); free(v2_tan_r);
@@ -238,7 +268,14 @@ void free_arrays(void){
 #endif
 }
 
-/* GSL error handler */
+/**
+* @brief GSL error handler
+*
+* @param reason ?
+* @param file ?
+* @param line ?
+* @param gsl_errno ?
+*/
 void sf_gsl_errhandler(const char *reason, const char *file, int line, int gsl_errno)
 {
 	fprintf(stderr, "gsl: %s:%d: ERROR: %s\n", file, line, reason);
@@ -422,6 +459,7 @@ void energy_conservation3(void)
 	set_velocities3();
 #endif
 }
+
 /**
 * @brief computes intermediate energies, and transfers "new" dynamical params to the standard variables
 */
@@ -459,6 +497,13 @@ void ComputeIntermediateEnergy(void)
 	}
 }
 
+/**
+* @brief makes a few checks at the beginning of each timestep to make sure the simulation is proceeding normally, and expected on some abnormal activity, or if simulation reaches some of the user-specified termination conditions.
+*
+* @param tmsbufref
+*
+* @return ?
+*/
 long CheckStop(struct tms tmsbufref) {
 	struct tms tmsbuf;
 	long tspent;
@@ -878,9 +923,16 @@ long potential_calculate(void) {
 
 #include "common/gensearch.h"
 
+/**
+* @brief
+* find the star[i]'s mass bin
+* return -1 on failure
+*
+* @param smass ?
+*
+* @return ?
+*/
 int find_stars_mass_bin(double smass){
-	/* find the star[i]'s mass bin */
-	/* return -1 on failure */
 	int bn;
 
 	if ( (smass < mass_bins[0]) || 
@@ -1151,8 +1203,16 @@ void comp_mass_percent(){
 #endif
 }
 
-/* The potential computed using the star[].phi computed at the star 
-   locations in star[].r sorted by increasing r. */
+/* The potential computed using the star[].phi computed at the star locations in star[].r sorted by increasing r.*/
+/**
+* @brief pcomputes potential at position r
+*
+* @param r position at which potential is required
+* @param kmin kmin for bisection
+* @param kmax kmax for bisection
+*
+* @return potential at r
+*/
 double fastpotential(double r, long kmin, long kmax) {
 	long i;
 	double henon;
@@ -1227,8 +1287,12 @@ long check_if_r_around_last_index(long last_index, double r) {
 #define NR_END 1
 #define FREE_ARG char*
 
+/**
+* @brief Numerical Recipes standard error handler
+*
+* @param error_text[] error text
+*/
 void nrerror(char error_text[])
-/* Numerical Recipes standard error handler */
 {
 	fprintf(stderr,"Numerical Recipes run-time error...\n");
 	fprintf(stderr,"%s\n",error_text);
@@ -1236,8 +1300,16 @@ void nrerror(char error_text[])
 	exit_cleanly(1, __FUNCTION__);
 }
 
+/**
+* @brief
+* allocate a double vector with subscript range v[nl..nh]
+*
+* @param nl ?
+* @param nh ?
+*
+* @return ?
+*/
 double *vector(long nl, long nh)
-/* allocate a double vector with subscript range v[nl..nh] */
 {
 	double *v;
 
@@ -1246,8 +1318,16 @@ double *vector(long nl, long nh)
 	return v-nl+NR_END;
 }
 
+/**
+* @brief
+* allocate an int vector with subscript range v[nl..nh]
+*
+* @param nl ?
+* @param nh ?
+*
+* @return ?
+*/
 int *ivector(long nl, long nh)
-/* allocate an int vector with subscript range v[nl..nh] */
 {
 	int *v;
 
@@ -1256,14 +1336,28 @@ int *ivector(long nl, long nh)
 	return v-nl+NR_END;
 }
 
+/**
+* @brief
+* free a double vector allocated with vector()
+*
+* @param v ?
+* @param nl ?
+* @param nh ?
+*/
 void free_vector(double *v, long nl, long nh)
-/* free a double vector allocated with vector() */
 {
 	free((FREE_ARG) (v+nl-NR_END));
 }
 
+/**
+* @brief
+* free an int vector allocated with ivector()
+*
+* @param v ?
+* @param nl ?
+* @param nh ?
+*/
 void free_ivector(int *v, long nl, long nh)
-/* free an int vector allocated with ivector() */
 {
 	free((FREE_ARG) (v+nl-NR_END));
 }
@@ -1272,13 +1366,12 @@ void free_ivector(int *v, long nl, long nh)
 #undef FREE_ARG
 
 /**
-* @brief update some important global variables
+* @brief update some important global variables - total number, mass, and binding energy of binaries in cluster
 */
 void update_vars(void)
 {
 	long i, k;
 	
-	/* update total number, mass, and binding energy of binaries in cluster */
 	N_b = 0;
 	M_b = 0.0;
 	E_b = 0.0;
@@ -1574,7 +1667,7 @@ void central_calculate(void)
 
 #ifdef USE_MPI
 	tmpTimeStart = timeStartSimple();
-	//MPI3: Packing into array to optimize communication.
+	//MPI: Packing into array to optimize communication.
 	double *buf_bcast_dbl = (double*) malloc(10 * sizeof(double));
 	buf_bcast_dbl[0] = central.w2_ave;
 	buf_bcast_dbl[1] = Msincentral;
@@ -1666,6 +1759,14 @@ void central_calculate(void)
 	free(rhoj);
 }
 
+/**
+* @brief ?
+*
+* @param si ?
+* @param p ?
+*
+* @return ?
+*/
 double local_kT(long si, int p) {
   int simin, simax, j;
   double mave, kT;
@@ -1692,6 +1793,14 @@ double local_kT(long si, int p) {
   return(kT);
 }
 
+/**
+* @brief ?
+*
+* @param Ncore ?
+* @param p ?
+*
+* @return ?
+*/
 double core_kT(int Ncore, int p) {
   int i;
   double kT;
@@ -1705,6 +1814,14 @@ double core_kT(int Ncore, int p) {
   return(kT);
 }
 
+/**
+* @brief ?
+*
+* @param ktmin ?
+* @param old_cent ?
+*
+* @return ?
+*/
 central_t
 central_hard_binary(double ktmin, central_t old_cent) {
   int i, Ncentral; 
@@ -1831,6 +1948,17 @@ void clusdyn_calculate(void)
  *
  * -- Stefan, 10/01/07
  */
+/**
+* @brief ?
+*
+* @param j ?
+* @param r ?
+* @param pot ?
+* @param E ?
+* @param J ?
+*
+* @return ?
+*/
 inline double function_q(long j, long double r, long double pot, long double E, long double J) { 
   double res; 
   long double Jr, phis;
@@ -1857,6 +1985,11 @@ inline double function_q(long j, long double r, long double pot, long double E, 
 	printf("%.6lf seconds elapsed\n", t2-t1);
  */
 
+/**
+* @brief starts timer - returns double precision time when this function is called
+*
+* @return double precision time in microseconds when this function was called
+*/
 double timeStartSimple()
 {
 	double timeStart=0;
@@ -1874,6 +2007,12 @@ double timeStartSimple()
 	return timeStart;
 }
 
+/**
+* @brief ends timer - computes difference between current time and input time
+*
+* @param timeStart start time which needs to be subtracted from current time
+* @param timeAccum variable to store difference between current time and start time
+*/
 void timeEndSimple(double timeStart, double *timeAccum)
 {
 	if(TIMER)
@@ -1966,6 +2105,9 @@ void timeEnd2(char* fileName, char *funcName, double *st, double *end, double *t
 	}
 }
 
+/**
+* @brief creates timing files
+*/
 void create_timing_files()
 {
 	strcpy(fileTime, "mpi_time.dat");
@@ -2036,6 +2178,9 @@ void set_global_vars2()
 }
 
 
+/**
+* @brief wrapper function for calc_sigma_r
+*/
 void calc_sigma_new()
 {
 
@@ -2095,6 +2240,9 @@ void calc_potential_new()
 #endif
 }
 
+/**
+* @brief wrapper function for ComputeEnergy
+*/
 void compute_energy_new()
 {
 #ifdef USE_MPI
@@ -2113,6 +2261,9 @@ void compute_energy_new()
 #endif
 }
 
+/**
+* @brief initializing some energy variables
+*/
 void set_energy_vars()
 {
 	/* Noting the total initial energy, in order to set termination energy. */
@@ -2126,6 +2277,9 @@ void set_energy_vars()
 	Eoops = 0.0;
 }
 
+/**
+* @brief reset interaction flags
+*/
 void reset_interaction_flags()
 {
 	int i;
@@ -2154,16 +2308,17 @@ void calc_clusdyn_new()
 #endif
 }
 
+/**
+* @brief calculates timestep
+*
+* @param rng gsl rng
+*/
 void calc_timestep(gsl_rng *rng)
 {
 	/* Get new time step */
-	//MPI3: Do on all nodes, and remove Bcast
-	//for the next step, only simul_relax needs to be done in parallel, and DTrel needs to be broadcasted. rest can be done on each node.
-	//Step 2: Do simul_relax() on all procs and others only on root. then broadcast Dt
-   Dt = GetTimeStep(rng); //reduction again. Timestep needs to be communicated to all procs.
+   Dt = GetTimeStep(rng);
 
 	/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
-
 #ifdef USE_MPI
 	if ((TidalMassLoss_old - OldTidalMassLoss) > 0.01)
 #else
@@ -2210,10 +2365,13 @@ void energy_conservation1()
 	}
 }
 
+/**
+* @brief
+Sourav: checking all stars for their possible extinction from old age
+//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
+*/
 void toy_rejuvenation()
 {
-	/*Sourav: checking all stars for their possible extinction from old age*/
-	//Sourav: toy rejuvenation: DMrejuv storing amount of mass loss per time step
 	int i;
 	DMrejuv = 0.0;
 	if (STAR_AGING_SCHEME > 0) {
@@ -2226,6 +2384,9 @@ void toy_rejuvenation()
 	}
 }
 
+/**
+* @brief wrapper function for get_positions (first part of older tidally_strip_stars)
+*/
 void new_orbits_calculate()
 {
 #ifdef USE_MPI
@@ -2250,11 +2411,13 @@ void new_orbits_calculate()
 #endif
 }
 
+/**
+* @brief
+* more numbers necessary to implement Stodolkiewicz's energy conservation scheme
+*/
 void energy_conservation2()
 {
 	int i;
-	/* more numbers necessary to implement Stodolkiewicz's
-	 * energy conservation scheme */
 	for (i = 1; i <= clus.N_MAX_NEW; i++) 
 	{
 	/* the following cannot be calculated after sorting 
@@ -2354,6 +2517,9 @@ void qsorts_new(void)
 #endif
 }
 
+/**
+* @brief The duplicated arrays have to be collected and synchronized after the sorting. This is where this is done.
+*/
 void post_sort_comm()
 {
 #ifdef USE_MPI
@@ -2371,22 +2537,13 @@ void post_sort_comm()
 		//star_r[i] = star[i].r;
 		//star_m[i] = star[i].m;
 	}
-/*
-	printf("%d new=%ld\n",myid, clus.N_MAX_NEW);
-	if(myid==0)
-		for(i=0; i<procs; i++)
-			printf("%d %d\n", mpiDisp[i], mpiLen[i]);
-*/
-	{
-		//MPI3: No idea why this is not working. Consult Wei-keng.
-		//MPI_Allgatherv(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, star_r, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
-		//MPI_Allgatherv(MPI_IN_PLACE, mpiLen[myid], MPI_DOUBLE, star_m, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
-		MPI_Allgatherv(temp_r+1, mpiLen[myid], MPI_DOUBLE, star_r, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
-		MPI_Allgatherv(temp_m+1, mpiLen[myid], MPI_DOUBLE, star_m, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
-	}
 
-	//MPI3: Is this required?
-	//MPI_Barrier(MPI_COMM_WORLD);
+    //MPI3: No idea why this is not working. Consult Wei-keng.
+    //MPI_Allgatherv(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, star_r, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
+    //MPI_Allgatherv(MPI_IN_PLACE, mpiLen[myid], MPI_DOUBLE, star_m, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
+    MPI_Allgatherv(temp_r+1, mpiLen[myid], MPI_DOUBLE, star_r, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
+    MPI_Allgatherv(temp_m+1, mpiLen[myid], MPI_DOUBLE, star_m, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
+
 	free(temp_r);
 	free(temp_m);
 	timeEndSimple(tmpTimeStart, &t_comm);

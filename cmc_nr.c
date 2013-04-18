@@ -94,13 +94,20 @@ long FindZero_r(long kmin, long kmax, double r){
 	return kmin;
 }
 
+/**
+* @brief
+* binary search:
+* given the array sigma_array.r[] and the two indices kmin and kmax,
+* with the conditions
+* 1) array is monotonic in its indices,
+* 2) kmin<kmax,
+* find the index k, such that sigma_array.r[k]<r<sigma_array.r[k+1]
+*
+* @param r target value
+*
+* @return index k, such that sigma_array.r[k]<r<sigma_array.r[k+1]
+*/
 double sigma_r(double r){
-	/* binary search:
-	 * given the array sigma_array.r[] and the two indices kmin and kmax,
-	 * with the conditions 
-	 * 1) array is monotonic in its indices,
-	 * 2) kmin<kmax,
-	 * find the index k, such that sigma_array.r[k]<r<sigma_array.r[k+1] */
 	long ktry, kmin=1, kmax=sigma_array.n;
 	do {
 		ktry = (kmin+kmax+1)/2;
@@ -206,6 +213,17 @@ long FindZero_r(long x1, long x2, double r)
 #define FUNC(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR((J)/star[(k)].r))
 #endif
 
+/**
+* @brief ?
+*
+* @param j ?
+* @param kmin ?
+* @param kmax ?
+* @param E ?
+* @param J ?
+*
+* @return ?
+*/
 long FindZero_Q(long j, long kmin, long kmax, double E, double J){
 	/* another binary search:
 	 * anologous to above, except FUNC(k) may be decreasing 
@@ -240,6 +258,15 @@ struct calc_vr_params {
   long index, k;
   double E, J;
 };
+
+/**
+* @brief ?
+*
+* @param r ?
+* @param p ?
+*
+* @return ?
+*/
 double calc_pot_within_interval(double r, void *p) {
   double pot;
   struct calc_vr_params *params= (struct calc_vr_params *) p;
@@ -292,6 +319,14 @@ double calc_pot_within_interval(double r, void *p) {
   return(pot);
 };
 
+/**
+* @brief ?
+*
+* @param r ?
+* @param k ?
+*
+* @return ?
+*/
 double calc_pot_in_interval(double r, long k) {
   double pot;
 #ifdef USE_MPI
@@ -338,6 +373,17 @@ double calc_pot_in_interval(double r, long k) {
 };
 
 
+/**
+* @brief ?
+*
+* @param j ?
+* @param kmin ?
+* @param kmax ?
+* @param E ?
+* @param J ?
+*
+* @return ?
+*/
 long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
   /* another binary search:
    * anologous to above, except FUNC(k) may be decreasing 
@@ -420,7 +466,14 @@ long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
   return (kmin);
 } 
 
-/* Calculate the square of vr ! */
+/**
+* @brief Calculate the square of vr !
+*
+* @param r ?
+* @param p ?
+*
+* @return ?
+*/
 double calc_vr_within_interval(double r, void *p) {
   struct calc_vr_params *params= (struct calc_vr_params *) p;
   long index, k;
@@ -433,7 +486,17 @@ double calc_vr_within_interval(double r, void *p) {
   return(vr);
 };
 
-/* Calculates the square of vr */
+/**
+* @brief Calculates the square of vr
+*
+* @param r ?
+* @param index ?
+* @param k ?
+* @param E energy
+* @param J angular momentum
+*
+* @return ?
+*/
 double calc_vr_in_interval(double r, long index, long k, double E, double J) {
   struct calc_vr_params params;
   double vr;
@@ -448,6 +511,14 @@ double calc_vr_in_interval(double r, long index, long k, double E, double J) {
   return(vr);
 };
 
+/**
+* @brief ?
+*
+* @param r ?
+* @param p ?
+*
+* @return ?
+*/
 double calc_Q_within_interval(double r, void *p) {
   struct calc_vr_params *params= (struct calc_vr_params *) p;
   double pot, E, J;
@@ -464,7 +535,16 @@ double calc_Q_within_interval(double r, void *p) {
 #endif
 };
 
-/* Calculates the square of vr! */
+/**
+* @brief Calculates the square of vr!
+*
+* @param r ?
+* @param index ?
+* @param E energy
+* @param J angular momentum
+*
+* @return ?
+*/
 double calc_vr(double r, long index, double E, double J) {
   long k;
   struct Interval inter;
@@ -491,10 +571,20 @@ double calc_vr(double r, long index, double E, double J) {
   return(vr);
 };
 
-/* Calculates the root of vr with the additional constraint that when 
- * substituting it back into calc_vr_within_interval leads to vr>= 0.0 .
- */
 //#define FUNC(j, k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J))
+/**
+* @brief
+* Calculates the root of vr with the additional constraint that when
+* substituting it back into calc_vr_within_interval leads to vr>= 0.0 .
+*
+*
+* @param index ?
+* @param k ?
+* @param E ?
+* @param J ?
+*
+* @return ?
+*/
 double find_root_vr(long index, long k, double E, double J) {
   struct calc_vr_params p;
   int status, not_converged;
