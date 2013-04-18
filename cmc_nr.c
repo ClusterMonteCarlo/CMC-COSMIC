@@ -278,11 +278,13 @@ double calc_pot_within_interval(double r, void *p) {
   
 #ifdef USE_MPI
   if (r< (star_r[k]-DBL_EPSILON) || r> star_r[k+1]+DBL_EPSILON) {
+    eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r,
+        star_r[k], star_r[k+1], r-star_r[k], r-star_r[k+1]);
 #else
   if (r< (star[k].r-DBL_EPSILON) || r> star[k+1].r+DBL_EPSILON) {
-#endif
     eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r, 
         star[k].r, star[k+1].r, r-star[k].r, r-star[k+1].r);
+#endif
     exit_cleanly(-1, __FUNCTION__);
   };
 
@@ -331,11 +333,13 @@ double calc_pot_in_interval(double r, long k) {
   double pot;
 #ifdef USE_MPI
   if (r< (star_r[k]-DBL_EPSILON) || r> star_r[k+1]+DBL_EPSILON) {
+    eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r,
+        star_r[k], star_r[k+1], r-star_r[k], r-star_r[k+1]);
 #else
   if (r< (star[k].r-DBL_EPSILON) || r> star[k+1].r+DBL_EPSILON) {
-#endif
     eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r, 
         star[k].r, star[k+1].r, r-star[k].r, r-star[k+1].r);
+#endif
     exit_cleanly(-1, __FUNCTION__);
   };
 

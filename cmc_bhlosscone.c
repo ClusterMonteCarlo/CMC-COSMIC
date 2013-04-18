@@ -638,8 +638,13 @@ double calc_p_orb_gc(double x, void *params) {
 		    kmax, kmin, index);
 		  dprintf("E= %g, J=%g, id=%li\n", E, J, star[index].id);
   	          dprintf("x=%g, ra= %g, rp= %g\n", x, ra, rp);
+#ifdef USE_MPI
+                  dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star_r[kmin+1]);
+                  dprintf("ra-r[kmax-1]= %g\n", ra-star_r[kmax-1]);
+#else
                   dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star[kmin+1].r);
                   dprintf("ra-r[kmax-1]= %g\n", ra-star[kmax-1].r);
+#endif
 		};
 		if (gsl_isnan(result)) {
 		  dprintf("result is NaN! Damn it!\n");
@@ -647,8 +652,13 @@ double calc_p_orb_gc(double x, void *params) {
 		    kmax, kmin, index);
 		  dprintf("E= %g, J=%g, id=%li\n", E, J, star[index].id);
   	          dprintf("x=%g, ra= %g, rp= %g, radicand= %g\n", x, ra, rp, radicand);
+#ifdef USE_MPI
+                  dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star_r[kmin+1]);
+                  dprintf("ra-r[kmax-1]= %g\n", ra-star_r[kmax-1]);
+#else
                   dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star[kmin+1].r);
                   dprintf("ra-r[kmax-1]= %g\n", ra-star[kmax-1].r);
+#endif
 		};
 		return(2.0 * sqrt((x-rp)*(ra-x)/radicand));
 	}

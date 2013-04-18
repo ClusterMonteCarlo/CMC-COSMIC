@@ -945,7 +945,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		if (rmax >= Rtidal) {
 			/* dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
 #ifdef USE_MPI
-			dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", g_j, star[j].id, star_m[j], star[j].E, star[j].binind);
+			dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", g_j, star[j].id, star_m[g_j], star[j].E, star[j].binind);
 #else
 			dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind);
 #endif

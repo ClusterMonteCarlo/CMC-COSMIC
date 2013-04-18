@@ -484,7 +484,11 @@ void do_stellar_evolution(gsl_rng *rng)
 
 		if (WRITE_BH_INFO) {
 			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
+#ifdef USE_MPI
+				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g\n", TotalTime, star_r[g_k], star[k].id,star[k].se_mass, star[k].se_mt, VKO);
+#else
 				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g\n", TotalTime, star[k].r, star[k].id,star[k].se_mass, star[k].se_mt, VKO); 
+#endif
 //m_init, m_bh, time, id, kick, r, vr_init, vt_init, vr_final, vt_final, binflag, m0_init, m1_init, m0_final, m1_final, 
 			}
 		}
@@ -498,7 +502,7 @@ void do_stellar_evolution(gsl_rng *rng)
 #ifdef USE_MPI
       if (star_m[g_k]<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
           dprintf ("zeroed out star: skipping SE:\n");  
-          dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[get_global_idx(k)], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star_r[get_global_idx(k)]);
+          dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star_m[g_k], binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star_r[g_k]);
 #else
       if (star[k].m<=DBL_MIN && binary[kb].a==0. && binary[kb].e==0. && binary[kb].m1==0. && binary[kb].m2==0.){ //ignoring zeroed out binaries
             dprintf ("zeroed out star: skipping SE:\n");  

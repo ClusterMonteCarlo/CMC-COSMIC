@@ -784,7 +784,11 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 
 		parafprintf(threebbdebugfile, "%ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g", k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, r1, r2, r3, m1, m2, m3, v1[0], v1[1], v1[2], v1[3], v2[0], v2[1], v2[2], v2[3], v3[0], v3[1], v3[2], v3[3], v1_cmf[0], v1_cmf[1], v1_cmf[2], v1_cmf[3], v2_cmf[0], v2_cmf[1], v2_cmf[2], v2_cmf[3], v3_cmf[0], v3_cmf[1], v3_cmf[2], v3_cmf[3]);
 
-		parafprintf(threebbdebugfile, "%ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", knew, star[knew].id, star[knew].r, star[knew].m, vs_cmf[0], vs_cmf[1], vs_cmf[2], vs_cmf[3], vb_cmf[0], vb_cmf[1], vb_cmf[2], vb_cmf[3], vs[0], vs[1], vs[2], vs[3], vb[0], vb[1], vb[2], vb[3], ave_local_mass, n_local,sigma_local, eta, Eb, ecc, r_p, semi_major, PE_i, PE_f, KE_cmf_i, KE_cmf_f, KE_i, KE_f, delta_PE, delta_KE, delta_E);
+#ifdef USE_MPI
+		parafprintf(threebbdebugfile, "%ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", knew, star[knew].id, star_r[get_global_idx(knew)], star_m[get_global_idx(knew)], vs_cmf[0], vs_cmf[1], vs_cmf[2], vs_cmf[3], vb_cmf[0], vb_cmf[1], vb_cmf[2], vb_cmf[3], vs[0], vs[1], vs[2], vs[3], vb[0], vb[1], vb[2], vb[3], ave_local_mass, n_local,sigma_local, eta, Eb, ecc, r_p, semi_major, PE_i, PE_f, KE_cmf_i, KE_cmf_f, KE_i, KE_f, delta_PE, delta_KE, delta_E);
+#else
+		fprintf(threebbdebugfile, "%ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", knew, star[knew].id, star[knew].r, star[knew].m, vs_cmf[0], vs_cmf[1], vs_cmf[2], vs_cmf[3], vb_cmf[0], vb_cmf[1], vb_cmf[2], vb_cmf[3], vs[0], vs[1], vs[2], vs[3], vb[0], vb[1], vb[2], vb[3], ave_local_mass, n_local,sigma_local, eta, Eb, ecc, r_p, semi_major, PE_i, PE_f, KE_cmf_i, KE_cmf_f, KE_i, KE_f, delta_PE, delta_KE, delta_E);
+#endif
 		//parafprintf(threebbdebugfile, "Internal Energies:  Eint1=%g  Eint2=%g  Eint_binary=%g\n", star[k1].Eint, star[k2].Eint, star[knew].Eint);
 
 		// running total for simulation - change in energy occuring during 3bb formation procedure
@@ -800,8 +804,11 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 
 		// destroy the two former single stars (which have now formed a binary)
 		// leave the remaining single star (properties have already been updated)
-		parafprintf(threebbfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %ld\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2*(units.m / clus.N_STAR / MSUN), m3*(units.m / clus.N_STAR / MSUN), ave_local_mass, n_local, sigma_local, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star[knew].r, r3, star[knew].vr, star[knew].vt, star[k3].vr, star[k3].vt, star[knew].phi, star[k3].phi, delta_PE, delta_KE, delta_E, delta_E_3bb, N3bbformed);
-
+#ifdef USE_MPI
+		parafprintf(threebbfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %ld\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2*(units.m / clus.N_STAR / MSUN), m3*(units.m / clus.N_STAR / MSUN), ave_local_mass, n_local, sigma_local, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star[get_global_idx(knew)], r3, star[knew].vr, star[knew].vt, star[k3].vr, star[k3].vt, star_phi[get_global_idx(knew)], star_phi[get_global_idx(k3)], delta_PE, delta_KE, delta_E, delta_E_3bb, N3bbformed);
+#else
+		fprintf(threebbfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %ld\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2*(units.m / clus.N_STAR / MSUN), m3*(units.m / clus.N_STAR / MSUN), ave_local_mass, n_local, sigma_local, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star[knew].r, r3, star[knew].vr, star[knew].vt, star[k3].vr, star[k3].vt, star[knew].phi, star[k3].phi, delta_PE, delta_KE, delta_E, delta_E_3bb, N3bbformed);
+#endif
 		destroy_obj(k1);
 		destroy_obj(k2);
 	//	parafprintf(threebbfile, "KE_cmf_i=%g  eta=%g  Eb=%g\n", KE_cmf_i, eta, Eb);

@@ -1230,14 +1230,19 @@ double fastpotential(double r, long kmin, long kmax) {
 	
 #ifdef USE_MPI
 	if(star_r[i] > r || star_r[i+1] < r){
+		eprintf("binary search (FindZero_r) failed!!\n");
+		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
+				i, star_r[i], star_r[i+1], star_r[i+2], star_r[i+3], r);
+		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
+			star_m[i], star_m[i+1], star_m[i+2], star_m[i+3]);
 #else
 	if(star[i].r > r || star[i+1].r < r){
-#endif
 		eprintf("binary search (FindZero_r) failed!!\n");
 		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
 				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
 		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
 			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
+#endif
 		exit_cleanly(-2, __FUNCTION__);
 	}
 
