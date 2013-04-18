@@ -1077,6 +1077,21 @@ void set_star_olds(long k)
 #endif
 }
 
+#ifdef USE_MPI
+/**
+* @brief copies the global/duplicated array values to the local star structure
+*
+* @param k index of star
+*/
+void copy_globals_to_locals(long k)
+{
+    int g_k = get_global_idx(k);
+    star[k].m = star_m[g_k];
+    star[k].r = star_r[g_k];
+    star[k].phi = star_phi[g_k];
+}
+#endif
+
 /**
 * @brief find masses of merging stars from binary interaction components
 *

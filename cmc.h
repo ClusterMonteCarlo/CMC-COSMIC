@@ -1444,6 +1444,7 @@ central_t central_hard_binary(double ktmin, central_t old_cent);
 void clusdyn_calculate(void);
 #ifdef USE_MPI
 void mpi_clusdyn_calculate(void);
+void copy_globals_to_locals(long k);
 #endif
 
 void print_interaction_status(char status_text[]);

@@ -367,7 +367,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		knew = create_star(k, 0);
 		
 		/* merge parent stars, setting mass, stellar radius, and SE params */
-		//MPI3: THere is a BUG here. Since we are passing the star itself, the global _ variables will not be used, and the star variables will be used instead!!
+        //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
+#ifdef USE_MPI
+        copy_globals_to_locals(k);
+        copy_globals_to_locals(kp);
+#endif
 		merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
 	
 
