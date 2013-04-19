@@ -185,7 +185,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 						P_ave += P_3bb;
 						rate_ave += rate_3bb;
 						}
-/* //MPI3: Commenting out since this will cause a deadlock, and is also this needs a reduction for each star.
+/* //MPI: Commenting out since this will cause a deadlock, and is also this needs a reduction for each star.
 						// For each timestep, output average rate and probability of 3bb formation, 
 						// for innermost triplets (actual number is num_triplets_averaged)
 						if (triplet_count == num_triplets_averaged) {

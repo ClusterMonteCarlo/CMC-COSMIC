@@ -1,3 +1,5 @@
+/* vi: set filetype=c.doxygen: */
+
 /* Contains all MPI related variables and functions */
 
 /*

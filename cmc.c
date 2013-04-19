@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 /* trivial */
 #include <stdio.h>
 #include <stddef.h>
@@ -22,7 +23,7 @@
 
 /**
 * @brief The main function.
-* @detailed
+* @details
 Monte Carlo (MC) methods calculate the dynamical evolution of a collisional system of N stars in the Fokker-Planck approximation, which applies when the evolution of the cluster is dominated by two-body relaxation, and the relaxation time is much larger than the dynamical time. In practice, further assumptions of spherical symmetry and dynamical equilibrium have to be made. The Henon MC technique (Henon 1971), which is based on orbit averaging, represents a balanced compromise between realism and speed. The MC method allows for a star-by-star realization of the cluster, with its N particles representing the N stars in the cluster. Integration is done on the relaxation timescale, and the total computational cost scales as O(NlogN) (Henon 1971).
 
 Our code here is based on the Henon-type MC cluster evolution code CMC (Cluster Monte Carlo), developed over many years by Joshi et al. (2000, 2001), Fregeau et al. (2003), Fregeau & Rasio (2007), Chatterjee et al. (2010), and Umbreit et al. (2012). CMC includes a detailed treatment of strong binary star interactions and physical stellar collisions (Fregeau & Rasio 2007), as well as an implementation of single and binary star evolution (Chatterjee et al. 2010) and the capability of handling the dynamics around a central massive black hole (Umbreit et al. 2012).
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
 	gsl_rng *rng;
 	const gsl_rng_type *rng_type=gsl_rng_mt19937;
 
-	//Variables used for measuring timing if the input parameter TIMER is set to 1. Caveat: There might be some small overhead if the parallel code is timed due to the barriers used.
+	//MPI: Variables used for measuring timing if the input parameter TIMER is set to 1. Caveat: There might be some small overhead if the parallel code is timed due to the barriers (synchronization points) used.
 	double tmpTimeStart, tmpTimeStart_init, tmpTimeStart_full;
 	double t_full=0.0, t_init=0.0, t_cen_calc=0.0, t_timestep=0.0, t_dyn=0.0, t_se=0.0, t_orb=0.0, t_tid_str=0.0, t_sort=0.0, t_postsort_comm=0.0, t_pot_cal=0.0, t_ener_con3=0.0, t_calc_io_vars1=0.0, t_calc_io_vars2=0.0, t_io=0.0, t_io_ignore=0.0, t_comp_ener=0.0, t_upd_vars=0.0, t_oth=0.0;
 	t_sort_only=0.0;

@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 
 #include <stdio.h>
 #include <zlib.h>
@@ -603,7 +604,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		tempbinary.rad2 = star2->rad;
 		//tempbinary.m1 = star1->m;
 		//tempbinary.m2 = star2->m;
-		//MPI3: This was missed before in previous version. I suppose this has to be done
+		//MPI: This was missed before in previous version. I suppose this has to be done
 		tempbinary.m1 = star1->m;
 		tempbinary.m2 = star2->m;
 

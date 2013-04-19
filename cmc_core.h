@@ -1,3 +1,4 @@
+/* vi: set filetype=c.doxygen: */
 
 /** 
  * @brief Struct holding the indices and estimates of the local density.

@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 #include <math.h>
 #include "cmc.h"
 #include "cmc_vars.h"
@@ -11,8 +12,7 @@
 *
 * @param M ?
 *
-* @return
-* radius in code (N-body) units
+* @return radius in code (N-body) units
 */
 double r_of_m(double M)
 {

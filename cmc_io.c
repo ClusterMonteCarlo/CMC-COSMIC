@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 
 #include <stdio.h>
 #include <stddef.h>
@@ -580,7 +581,7 @@ void print_bh_summary() {
     buf_comm[10] = bh26;
     buf_comm[11] = bh89;
 
-    //MPI3: bhstar, and bhwd might be calculated after the reduce instead of in bh_count to save 2 communication calls.
+    //MPI:OPT: bhstar, and bhwd might be calculated after the reduce instead of in bh_count to save 2 communication calls.
 	 double tmpTimeStart = timeStartSimple();
     MPI_Reduce(buf_comm, buf_comm_recv, 12, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
 	 timeEndSimple(tmpTimeStart, &t_comm);
@@ -979,7 +980,7 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BH_SNAPSHOTTING);
 				sscanf(values, "%d", &BH_SNAPSHOTTING);
 				parsed.BH_SNAPSHOTTING = 1;
-                        } else if (strcmp(parameter_name, "BH_SNAPSHOT_DELTACOUNT") == 0) {
+            } else if (strcmp(parameter_name, "BH_SNAPSHOT_DELTACOUNT") == 0) {
 				PRINT_PARSED(PARAMDOC_BH_SNAPSHOT_DELTACOUNT);
 				sscanf(values, "%ld", &BH_SNAPSHOT_DELTACOUNT);
 				parsed.BH_SNAPSHOT_DELTACOUNT = 1;
@@ -1003,14 +1004,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
 				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
 				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
-                        } else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
-                                PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
-                                if (strncmp(values, "NULL", 4) == 0) {
-                                  SNAPSHOT_WINDOWS=NULL;
-                                } else {
-                                  SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
-                                  strncpy(SNAPSHOT_WINDOWS, values, 300);
-                                }
+            } else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
+                PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
+                if (strncmp(values, "NULL", 4) == 0) {
+                    SNAPSHOT_WINDOWS=NULL;
+                } else {
+                    SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
+                    strncpy(SNAPSHOT_WINDOWS, values, 300);
+                }
 				parsed.SNAPSHOT_WINDOWS = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_WINDOW_UNITS") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOW_UNITS);
@@ -1164,11 +1165,11 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_FORCE_RLX_STEP);
 				sscanf(values, "%i", &FORCE_RLX_STEP);
 				parsed.FORCE_RLX_STEP = 1;
-        		} else if (strcmp(parameter_name, "DT_HARD_BINARIES")== 0) {
+            } else if (strcmp(parameter_name, "DT_HARD_BINARIES")== 0) {
 				PRINT_PARSED(PARAMDOC_DT_HARD_BINARIES);
 				sscanf(values, "%i", &DT_HARD_BINARIES);
 				parsed.DT_HARD_BINARIES = 1;
-        		} else if (strcmp(parameter_name, "HARD_BINARY_KT")== 0) {
+            } else if (strcmp(parameter_name, "HARD_BINARY_KT")== 0) {
 				PRINT_PARSED(PARAMDOC_HARD_BINARY_KT);
 				sscanf(values, "%lf", &HARD_BINARY_KT);
 				parsed.HARD_BINARY_KT = 1;
@@ -1206,11 +1207,11 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_WRITE_STELLAR_INFO);
 				sscanf(values, "%i", &WRITE_STELLAR_INFO);
 				parsed.WRITE_STELLAR_INFO = 1;
-                        } else if (strcmp(parameter_name, "WRITE_BH_INFO")== 0) {
+            } else if (strcmp(parameter_name, "WRITE_BH_INFO")== 0) {
 				PRINT_PARSED(PARAMDOC_WRITE_BH_INFO);
 				sscanf(values, "%i", &WRITE_BH_INFO);
 				parsed.WRITE_BH_INFO = 1;
-                        } else if (strcmp(parameter_name, "WRITE_RWALK_INFO")== 0) {
+            } else if (strcmp(parameter_name, "WRITE_RWALK_INFO")== 0) {
 				PRINT_PARSED(PARAMDOC_WRITE_RWALK_INFO);
 				sscanf(values, "%i", &WRITE_RWALK_INFO);
 				parsed.WRITE_RWALK_INFO = 1;
@@ -1360,10 +1361,10 @@ if(myid==0) {
 	CHECK_PARSED(RELAXATION, 1, PARAMDOC_RELAXATION);
 	CHECK_PARSED(THETASEMAX, 1.0, PARAMDOC_THETASEMAX);
 	CHECK_PARSED(STELLAR_EVOLUTION, 0, PARAMDOC_STELLAR_EVOLUTION);
-        CHECK_PARSED(WRITE_STELLAR_INFO, 0, PARAMDOC_WRITE_STELLAR_INFO);
-        CHECK_PARSED(WRITE_BH_INFO, 0, PARAMDOC_WRITE_BH_INFO);
-        CHECK_PARSED(WRITE_RWALK_INFO, 0, PARAMDOC_WRITE_RWALK_INFO);
-        CHECK_PARSED(WRITE_EXTRA_CORE_INFO, 0, PARAMDOC_WRITE_EXTRA_CORE_INFO);
+    CHECK_PARSED(WRITE_STELLAR_INFO, 0, PARAMDOC_WRITE_STELLAR_INFO);
+    CHECK_PARSED(WRITE_BH_INFO, 0, PARAMDOC_WRITE_BH_INFO);
+    CHECK_PARSED(WRITE_RWALK_INFO, 0, PARAMDOC_WRITE_RWALK_INFO);
+    CHECK_PARSED(WRITE_EXTRA_CORE_INFO, 0, PARAMDOC_WRITE_EXTRA_CORE_INFO);
 	CHECK_PARSED(CALCULATE10, 0, PARAMDOC_CALCULATE10);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
@@ -1414,8 +1415,8 @@ if(myid==0) {
 	CHECK_PARSED(SG_MATCH_AT_FRACTION, 0.5, PARAMDOC_SG_MATCH_AT_FRACTION);
 	CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95, PARAMDOC_SG_PARTICLE_FRACTION);
 	CHECK_PARSED(FORCE_RLX_STEP, 0, PARAMDOC_FORCE_RLX_STEP);
-        CHECK_PARSED(DT_HARD_BINARIES, 0, PARAMDOC_DT_HARD_BINARIES);
-        CHECK_PARSED(HARD_BINARY_KT, 1, PARAMDOC_HARD_BINARY_KT);
+    CHECK_PARSED(DT_HARD_BINARIES, 0, PARAMDOC_DT_HARD_BINARIES);
+    CHECK_PARSED(HARD_BINARY_KT, 1, PARAMDOC_HARD_BINARY_KT);
 #ifdef EXPERIMENTAL
 	CHECK_PARSED(BH_LC_FDT, 0.0, PARAMDOC_BH_LC_FDT);
 	CHECK_PARSED(AVEKERNEL, 20, PARAMDOC_AVEKERNEL);
@@ -1461,8 +1462,8 @@ if(myid==0)
 #endif
 	fclose(parsedfp);
 	
-        /* set-up snapshot window variables */
-        parse_snapshot_windows(SNAPSHOT_WINDOWS);
+    /* set-up snapshot window variables */
+    parse_snapshot_windows(SNAPSHOT_WINDOWS);
 
 	/* read the number of stars and possibly other parameters */
 	/* MPI: Currently, all processors read the entire data (entire list of stars and binaries) from the file. The data partitioning is done in load_fits_file_data(). This might limit scalability since each node requires enough memory to store the entire data set. */
@@ -2501,8 +2502,7 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 void mpiInitGlobArrays()
 {
 #ifdef USE_MPI
-	/*MPI2: Initializing and extracting global arrays that will be needed by all processors.*/
-	//MPI2: Tested
+	/*MPI: Allocating global/duplicated arrays that will be needed by all processors.*/
 	star_r = (double *) malloc(N_STAR_DIM * sizeof(double));
 	star_m = (double *) malloc(N_STAR_DIM * sizeof(double));
 	star_phi = (double *) malloc(N_STAR_DIM * sizeof(double));

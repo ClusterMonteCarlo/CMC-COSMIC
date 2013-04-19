@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 
 #include <stdio.h>
 #include <zlib.h>
@@ -27,12 +28,12 @@ void bb_calcunits(fb_obj_t *obj[2], fb_units_t *bb_units)
 * @brief the main attraction
 *
 * @param t ?
-* @param k ?
-* @param kp ?
+* @param k index of star 1
+* @param kp index of star 2
 * @param W ?
 * @param bmax ?
 * @param hier ?
-* @param rng ?
+* @param rng gsl rng
 *
 * @return ?
 */

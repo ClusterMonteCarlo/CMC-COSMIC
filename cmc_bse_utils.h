@@ -1,3 +1,5 @@
+/* vi: set filetype=c.doxygen: */
+
 /**
 * @brief sse structure?
 */

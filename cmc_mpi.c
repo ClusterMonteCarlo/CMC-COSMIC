@@ -1,3 +1,4 @@
+/* vi: set filetype=c.doxygen: */
 #include "cmc_mpi.h"
 #include "cmc.h"
 #include "cmc_vars.h"

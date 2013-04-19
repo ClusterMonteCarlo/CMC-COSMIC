@@ -16,19 +16,46 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+/* vi: set filetype=c.doxygen: */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "bse_wrap.h"
 
-/* calculate metallicity constants */
+/**
+* @brief calculate metallicity constants
+*
+* @param z ?
+* @param zpars ?
+*/
 void bse_zcnsts(double *z, double *zpars)
 {
   zcnsts_(z, zpars);
 }
 
-/* evolve a single star */
+/**
+* @brief evolve a single star
+*
+* @param kw ?
+* @param mass ?
+* @param mt ?
+* @param r ?
+* @param lum ?
+* @param mc ?
+* @param rc ?
+* @param menv ?
+* @param renv ?
+* @param ospin ?
+* @param epoch ?
+* @param tms ?
+* @param tphys ?
+* @param tphysf ?
+* @param dtp ?
+* @param z ?
+* @param zpars ?
+* @param vs ?
+*/
 void bse_evolv1(int *kw, double *mass, double *mt, double *r, double *lum,
 		double *mc, double *rc, double *menv, double *renv, double *ospin,
 		double *epoch, double *tms, double *tphys, double *tphysf, 
@@ -46,8 +73,28 @@ void bse_evolv1(int *kw, double *mass, double *mt, double *r, double *lum,
 	  epoch, tms, tphys, tphysf, dtp, z, zpars, vs);
 }
 
-/* evolve a single star safely: in some cases, a merger can have non self-consistent properties, */
-/* leading to crazy things like NaN radii---this is the easiest way to get around that problem */
+/**
+* @brief evolve a single star safely: in some cases, a merger can have non self-consistent properties, leading to crazy things like NaN radii---this is the easiest way to get around that problem
+*
+* @param kw ?
+* @param mass ?
+* @param mt ?
+* @param r ?
+* @param lum ?
+* @param mc ?
+* @param rc ?
+* @param menv ?
+* @param renv ?
+* @param ospin ?
+* @param epoch ?
+* @param tms ?
+* @param tphys ?
+* @param tphysf ?
+* @param dtp ?
+* @param z ?
+* @param zpars ?
+* @param vs ?
+*/
 void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum,
 		       double *mc, double *rc, double *menv, double *renv, double *ospin,
 		       double *epoch, double *tms, double *tphys, double *tphysf, 
@@ -115,7 +162,33 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
   }
 }
 
-/* evolve a binary */
+/**
+* @brief evolve a binary
+*
+* @param kstar ?
+* @param mass0 ?
+* @param mass ?
+* @param rad ?
+* @param lum ?
+* @param massc ?
+* @param radc ?
+* @param menv ?
+* @param renv ?
+* @param ospin ?
+* @param B_0 ?
+* @param bacc ?
+* @param tacc ?
+* @param epoch ?
+* @param tms ?
+* @param tphys ?
+* @param tphysf ?
+* @param dtp ?
+* @param z ?
+* @param zpars ?
+* @param tb ?
+* @param ecc ?
+* @param vs ?
+*/
 void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
                 double *B_0, double *bacc, double *tacc,
@@ -134,8 +207,33 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
 	  epoch, tms, tphys, tphysf, dtp, z, zpars, tb, ecc, vs);
 }
 
-/* evolve a binary star safely: in some cases, a merger can have non self-consistent properties, */
-/* leading to crazy things like NaN radii---this is the easiest way to get around that problem */
+/**
+* @brief evolve a binary star safely: in some cases, a merger can have non self-consistent properties, leading to crazy things like NaN radii---this is the easiest way to get around that problem
+*
+* @param kstar ?
+* @param mass0 ?
+* @param mass ?
+* @param rad ?
+* @param lum ?
+* @param massc ?
+* @param radc ?
+* @param menv ?
+* @param renv ?
+* @param ospin ?
+* @param B_0 ?
+* @param bacc ?
+* @param tacc ?
+* @param epoch ?
+* @param tms ?
+* @param tphys ?
+* @param tphysf ?
+* @param dtp ?
+* @param z ?
+* @param zpars ?
+* @param tb ?
+* @param ecc ?
+* @param vs ?
+*/
 void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		       double *massc, double *radc, double *menv, double *renv, double *ospin,
                        double *B_0, double *bacc, double *tacc,
@@ -257,6 +355,28 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
   }
 }
 
+/**
+* @brief ?
+*
+* @param kw ?
+* @param mass ?
+* @param mt ?
+* @param r ?
+* @param lum ?
+* @param mc ?
+* @param rc ?
+* @param menv ?
+* @param renv ?
+* @param ospin ?
+* @param epoch ?
+* @param tms ?
+* @param tphys ?
+* @param tphysf ?
+* @param dtp ?
+* @param z ?
+* @param zpars ?
+* @param vs ?
+*/
 void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum,
 		double *mc, double *rc, double *menv, double *renv, double *ospin,
 		double *epoch, double *tms, double *tphys, double *tphysf,
@@ -317,13 +437,27 @@ void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum
   *tms = tempbinary.bse_tms[0];
 }
 
-/* set collision matrix */
+/**
+* @brief set collision matrix
+*/
 void bse_instar(void)
 {
   instar_();
 }
 
-/* star routine; shouldn't need to be used often outside of BSE */
+/**
+* @brief star routine; shouldn't need to be used often outside of BSE
+*
+* @param kw stellar type
+* @param mass initial mass
+* @param mt current mass
+* @param tm main sequence timescale
+* @param tn nuclear timescale
+* @param tscls timescales array (20)
+* @param lums luminosities array (10)
+* @param GB giant branch parameters (10)
+* @param zpars evolution parameters based on metallicity (20)
+*/
 void bse_star(int *kw, double *mass, double *mt, double *tm, double *tn, double *tscls, 
 	      double *lums, double *GB, double *zpars)
 {
@@ -382,7 +516,24 @@ void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, do
   hrdiag_(mass, aj, mt, tm, tn, tscls, lums, GB, zpars, r, lum, kw, mc, rc, menv, renv, k2, ST_tide, ecsnp, ecsn_mlow);
 }
 
-/* kick routine; shouldn't need to be used often outside of BSE */
+/**
+* @brief kick routine; shouldn't need to be used often outside of BSE
+*
+* @param kw stellar type
+* @param m1 mass of star 1
+* @param m1n new mass of star 1
+* @param m2 mass of star 2
+* @param ecc orbit eccentrity
+* @param sep orbit semimajor axis
+* @param jorb orbital angular momentum
+* @param vk kick magnitude, can be used to help set initial pulsar properties if desired
+* @param snstar which star (primary 1 or secondary 2) that goes SN
+* @param r2 radius of companion, stars may collide if lucky kick
+* @param fallback fraction of pre-SN mass that may fall back onto remnant. Can be 0. Kick strength is limited by such fall back of material
+* @param vs
+     old -> vs = velocity (3) of center of mass if bound, relative velocity at infinity if unbound
+     new -> vs = three possible sets of velocities (3). Is an array of 12, correctly accounts for
+*/
 void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	      double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs)
 {
@@ -416,13 +567,32 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
   kick_(kw, m1, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, vs);
 }
 
-/* Mix routine, call from cmc_sscollision.c within the merge_two_stars routine. */
-/* Helps merge troublesome systems that also wont pass through a common envelope. */
+/**
+* @brief Mix routine, call from cmc_sscollision.c within the merge_two_stars routine. Helps merge troublesome systems that also wont pass through a common envelope.
+*
+* @param mass ?
+* @param mt ?
+* @param aj ?
+* @param kw ?
+* @param zpars ?
+* @param ecsnp ?
+*/
 void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp)
 {
   mix_(mass, mt, aj, kw, zpars, ecsnp);
 }
 
+/**
+* @brief ?
+*
+* @param tempbinary ?
+* @param zpars ?
+* @param vs ?
+* @param fb ?
+* @param ecsnp ?
+* @param ecsn_mlow ?
+* @param ST_tide ?
+*/
 void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide)
 		//double *M0, double *M, double *MC, double *AJ, double *OSPIN, int *KW, 
 		//                double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2,
@@ -599,6 +769,13 @@ void bse_set_id2_pass(long int id2_pass) { cmcpass_.id2_pass = id2_pass; }
  * when we don't use the Tausworthe generator for BSE kicks */
 static struct { long long int state[4]; int first;} taus113state_;
 #endif
+
+/**
+* @brief copies the C tausworthe rng state variables to the Fortran states
+*
+* @param state C rng state
+* @param first ?
+*/
 void bse_set_taus113state(struct rng_t113_state state, int first) {
 
   taus113state_.state[0]= state.z[0];
@@ -620,6 +797,12 @@ float bse_get_spp(int i, int j) { return(single_.spp[j-1][i-1]); }
 float bse_get_scm(int i, int j) { return(single_.scm[j-1][i-1]); }
 float bse_get_bpp(int i, int j) { return(binary_.bpp[j-1][i-1]); }
 float bse_get_bcm(int i, int j) { return(binary_.bcm[j-1][i-1]); }
+
+/**
+* @brief copies back the Fortran tausworthe rng state variables to the C state
+*
+* @return state with variables copied from the Fortran rng
+*/
 struct rng_t113_state bse_get_taus113state(void) {
   struct rng_t113_state state;
 
@@ -630,8 +813,24 @@ struct rng_t113_state bse_get_taus113state(void) {
 
   return (state);
 }
+
+/**
+* @brief ?
+*
+* @param i ?
+* @param j ?
+*
+* @return ?
+*/
 int icase_get(int i, int j) { return(types_.ktype[j][i]); }
 
+/**
+* @brief ?
+*
+* @param kw ?
+*
+* @return ?
+*/
 char *bse_get_sselabel(int kw)
 {
   if (kw == 0) {
@@ -671,6 +870,13 @@ char *bse_get_sselabel(int kw)
   }
 }
 
+/**
+* @brief ?
+*
+* @param kw ?
+*
+* @return ?
+*/
 char *bse_get_bselabel(int kw)
 {
   if (kw == 1) {
@@ -706,10 +912,14 @@ char *bse_get_bselabel(int kw)
   }
 }
 
-/* kick speed from distribution, taken directly from BSE code */
-/* bse_evolv1() and bse_evolv2() return the kick speed, but the kick function
-   is included here just in case you want to use it. */
-/* may change startype in certain cases */
+/**
+* @brief kick speed from distribution, taken directly from BSE code.
+* @details bse_evolv1() and bse_evolv2() return the kick speed, but the kick function is included here just in case you want to use it. may change startype in certain cases
+*
+* @param startype star type
+*
+* @return ?
+*/
 double bse_kick_speed(int *startype)
 {
   int k;
@@ -737,8 +947,13 @@ double bse_kick_speed(int *startype)
   return(vk);
 }
 
-/* Roche lobe formula, taken directly from BSE code. */
-/* Returns R_L1/a, where q=m_1/m_2. */
+/**
+* @brief Roche lobe formula, taken directly from BSE code.
+*
+* @param q ?
+*
+* @return Returns R_L1/a, where q=m_1/m_2.
+*/
 double bse_rl(double q)
 {
   double p;

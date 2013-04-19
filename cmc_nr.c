@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 
 #include <stdio.h>
 #include <stddef.h>
@@ -9,8 +10,7 @@
 #include "cmc_vars.h"
 
 /**
-* @brief 
-* binary search (pure serial version):
+* @brief binary search on r (pure serial version):
 * given the array star[].r and the two indices kmin and kmax,
 * with the conditions 
 * 1) array is monotonic in its indices,
@@ -46,8 +46,7 @@ long FindZero_r_serial(long kmin, long kmax, double r){
 }
 
 /**
-* @brief 
-* binary search:
+* @brief binary search on r:
 * given the array star[].r and the two indices kmin and kmax,
 * with the conditions 
 * 1) array is monotonic in its indices,
@@ -95,8 +94,7 @@ long FindZero_r(long kmin, long kmax, double r){
 }
 
 /**
-* @brief
-* binary search:
+* @brief binary search on sigma_array.r
 * given the array sigma_array.r[] and the two indices kmin and kmax,
 * with the conditions
 * 1) array is monotonic in its indices,
@@ -105,7 +103,7 @@ long FindZero_r(long kmin, long kmax, double r){
 *
 * @param r target value
 *
-* @return index k, such that sigma_array.r[k]<r<sigma_array.r[k+1]
+* @return sigma value at index k, such that sigma_array.r[k]<r<sigma_array.r[k+1]
 */
 double sigma_r(double r){
 	long ktry, kmin=1, kmax=sigma_array.n;
@@ -214,20 +212,17 @@ long FindZero_r(long x1, long x2, double r)
 #endif
 
 /**
-* @brief ?
+* @brief another binary search, except FUNC(k) may be decreasing rather than increasing
 *
-* @param j ?
-* @param kmin ?
-* @param kmax ?
-* @param E ?
-* @param J ?
+* @param j star index
+* @param kmin min index for bisection
+* @param kmax max index for bisection
+* @param E energy
+* @param J angular momentum
 *
-* @return ?
+* @return index k, such that sigma_array.r[k]<r<sigma_array.r[k+1]
 */
 long FindZero_Q(long j, long kmin, long kmax, double E, double J){
-	/* another binary search:
-	 * anologous to above, except FUNC(k) may be decreasing 
-	 * rather than increasing */
 	long ktry;
 
 	if(FUNC(j, kmin, E, J)<FUNC(j, kmax, E, J)){
@@ -378,15 +373,15 @@ double calc_pot_in_interval(double r, long k) {
 
 
 /**
-* @brief ?
+* @brief another binary search, except FUNC(k) may be decreasing rather than increasing
 *
-* @param j ?
-* @param kmin ?
-* @param kmax ?
-* @param E ?
-* @param J ?
+* @param j star index
+* @param kmin min index for bisection
+* @param kmax max index for bisection
+* @param E energy
+* @param J angular momentum
 *
-* @return ?
+* @return index k, such that sigma_array.r[k]<r<sigma_array.r[k+1]
 */
 long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
   /* another binary search:
@@ -542,12 +537,12 @@ double calc_Q_within_interval(double r, void *p) {
 /**
 * @brief Calculates the square of vr!
 *
-* @param r ?
-* @param index ?
+* @param r radial position
+* @param index star index
 * @param E energy
 * @param J angular momentum
 *
-* @return ?
+* @return square of vr
 */
 double calc_vr(double r, long index, double E, double J) {
   long k;
@@ -584,8 +579,8 @@ double calc_vr(double r, long index, double E, double J) {
 *
 * @param index ?
 * @param k ?
-* @param E ?
-* @param J ?
+* @param E energy
+* @param J angular momentum
 *
 * @return ?
 */

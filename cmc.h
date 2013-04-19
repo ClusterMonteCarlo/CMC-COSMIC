@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 
 #include <sys/times.h>
 #include <zlib.h>
@@ -1489,7 +1490,6 @@ void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r, double *sig_sigma, lo
 
 void break_wide_binaries(void);
 void calc_sigma_r(long p, long N_LIMIT, double *sig_r, double *sig_sigma, long* sig_n, int r_0_mave_1);
-void zero_out_array(double* ptr, int size);
 
 double sigma_r(double r);
 

@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 
 /* use commandline option -DUSE_THREADS to turn on threading */
 /*#define USE_THREADS*/
@@ -720,8 +721,8 @@ void tidally_strip_stars(void) {
 * @brief removes star
 *
 * @param j index of star
-* @param phi_rtidal ?
-* @param phi_zero ?
+* @param phi_rtidal potential at tidal radius
+* @param phi_zero potential at zero
 */
 void remove_star(long j, double phi_rtidal, double phi_zero) {
 	double E, J, m, r;
@@ -789,7 +790,11 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	destroy_obj(j);
 }
 
-// Meagan: output file for escaping BHs
+/**
+* @brief Meagan: output file for escaping BHs
+*
+* @param j star index
+*/
 void count_esc_bhs(long j) {
 	long k;
 	k = star[j].binind;

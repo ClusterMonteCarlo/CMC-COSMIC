@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 
 #include <stdio.h>
 #include <stddef.h>
@@ -805,7 +806,7 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 		// destroy the two former single stars (which have now formed a binary)
 		// leave the remaining single star (properties have already been updated)
 #ifdef USE_MPI
-		parafprintf(threebbfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %ld\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2*(units.m / clus.N_STAR / MSUN), m3*(units.m / clus.N_STAR / MSUN), ave_local_mass, n_local, sigma_local, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star[get_global_idx(knew)], r3, star[knew].vr, star[knew].vt, star[k3].vr, star[k3].vt, star_phi[get_global_idx(knew)], star_phi[get_global_idx(k3)], delta_PE, delta_KE, delta_E, delta_E_3bb, N3bbformed);
+		parafprintf(threebbfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %ld\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2*(units.m / clus.N_STAR / MSUN), m3*(units.m / clus.N_STAR / MSUN), ave_local_mass, n_local, sigma_local, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star_r[get_global_idx(knew)], r3, star[knew].vr, star[knew].vt, star[k3].vr, star[k3].vt, star_phi[get_global_idx(knew)], star_phi[get_global_idx(k3)], delta_PE, delta_KE, delta_E, delta_E_3bb, N3bbformed);
 #else
 		fprintf(threebbfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %ld\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2*(units.m / clus.N_STAR / MSUN), m3*(units.m / clus.N_STAR / MSUN), ave_local_mass, n_local, sigma_local, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star[knew].r, r3, star[knew].vr, star[knew].vt, star[k3].vr, star[k3].vt, star[knew].phi, star[k3].phi, delta_PE, delta_KE, delta_E, delta_E_3bb, N3bbformed);
 #endif
@@ -938,8 +939,8 @@ double calc_n_local(long k, long p, long N_LIMIT)
 /**
 * @brief ?
 *
-* @param k ?
-* @param kp ?
+* @param k index of star 1
+* @param kp index of star 2
 * @param p ?
 * @param W ?
 * @param N_LIMIT ?
@@ -971,8 +972,8 @@ double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT)
 /**
 * @brief ?
 *
-* @param k ?
-* @param kp ?
+* @param k index of star 1
+* @param kp index of star 2
 * @param v[4] ?
 * @param vp[4] ?
 * @param w[4] ?
@@ -1430,9 +1431,9 @@ void binint_log_status(fb_ret_t retval)
 * @param mass ?
 * @param r ?
 * @param obj ?
-* @param k ?
-* @param kp ?
-* @param startype ?
+* @param k index of star 1
+* @param kp index of star 2
+* @param startype star type
 */
 void binint_log_collision(const char interaction_type[], long id,
 			  double mass, double r, fb_obj_t obj, long k, long kp, long startype)
@@ -1801,7 +1802,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				
 				star[knew].rad = star[knew].se_radius * RSUN / units.l;
 
-//MPI3: Keeping the global m updated.
+                //MPI: Keeping the global m updated.
 #ifdef USE_MPI
 //				star_m[get_global_idx(knew)] = star[knew].m;
 #endif

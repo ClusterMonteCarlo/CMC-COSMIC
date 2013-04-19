@@ -1,3 +1,4 @@
+/* vi: set filetype=c.doxygen: */
 
 /* "extern" should be uncommented here when compiling with g++ */
 #ifndef _MAIN_

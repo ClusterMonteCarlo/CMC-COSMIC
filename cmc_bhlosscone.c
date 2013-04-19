@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 
 #include <stdio.h>
 #include <stddef.h>
@@ -13,7 +14,7 @@
 /**
 * @brief ?
 *
-* @param fname ?
+* @param fname file name
 */
 void create_rwalk_file(char *fname) {
 
@@ -45,7 +46,7 @@ void create_rwalk_file(char *fname) {
 * @brief ?
 *
 * @param fname ?
-* @param index ?
+* @param index star index
 * @param Trel ?
 * @param dt ?
 * @param l2_scale ?
@@ -89,7 +90,7 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
 /**
 * @brief This is the random walk procedure as outlined by Freitag & Benz (2002). Change of notation: beta here is theta in the paper.
 *
-* @param index ?
+* @param index star index
 * @param v[4] ?
 * @param vcm[4] ?
 * @param beta ?
@@ -227,7 +228,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 void get_3d_velocities(double *w, double vr, double vt) {
    double phi;
 
-	//MPI2: Dont know how what to do with this rng call, but this function itself is not used anywhere! So, we can safely ignore this as of now.
+	//MPI: Dont know how what to do with this rng call, but this function itself is not used anywhere! So, we can safely ignore this as of now.
    phi= rng_t113_dbl()*2.*FB_CONST_PI;
    w[0]= vt* cos(phi);
    w[1]= vt* sin(phi);
@@ -284,7 +285,7 @@ double check_angle_w_w_new(double *w, double *w_new, double delta) {
 *
 * @param index star index
 *
-* @return  star's radial orbital period
+* @return star's radial orbital period
 */
 double calc_P_orb(long index)
 {

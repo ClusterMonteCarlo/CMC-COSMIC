@@ -1,3 +1,4 @@
+/* vi: set filetype=c.doxygen: */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -6,13 +7,6 @@
 #include "cmc.h"
 #include "cmc_vars.h"
 #include "bse_wrap/bse_wrap.h"
-
-void zero_out_array(double* ptr, int size)
-{
-  int i;
-  for( i=0; i<size; i++)
-    ptr[i] = 0.0;
-}
 
 /**
 * @brief ?
@@ -162,9 +156,6 @@ void stellar_evolution_init(void){
           &(tempbinary.bse_tb), &(tempbinary.e), vs);
       *curr_st=bse_get_taus113state();
 
-      //MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
-      //zero_out_array(vs, 12);
-
       star[k].se_mass = tempbinary.bse_mass0[0];
       star[k].se_k = tempbinary.bse_kw[0];
       star[k].se_mt = tempbinary.bse_mass[0];
@@ -249,8 +240,6 @@ void stellar_evolution_init(void){
               &(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
               &(binary[kb].bse_tb), &(binary[kb].e), vs);
       *curr_st=bse_get_taus113state();
-      //MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
-      //zero_out_array(vs, 12);
 
       handle_bse_outcome(k, kb, vs, tphysf);
     } else {
@@ -373,9 +362,6 @@ void do_stellar_evolution(gsl_rng *rng)
             &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
             &(tempbinary.bse_tb), &(tempbinary.e), vs);
         *curr_st=bse_get_taus113state();
-
-        //MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
-        //zero_out_array(vs, 12);
 
         star[k].se_mass = tempbinary.bse_mass0[0];
         star[k].se_k = tempbinary.bse_kw[0];
@@ -531,9 +517,6 @@ void do_stellar_evolution(gsl_rng *rng)
             &(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
             &(binary[kb].bse_tb), &(binary[kb].e), vs);
         *curr_st=bse_get_taus113state();
-
-        //MPI2: Since the BSE rng is not yet parallelized, disabling kicks by setting vs[] to zero.
-        //zero_out_array(vs, 12);
 
         if(isnan(binary[kb].bse_radius[0])){
           fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");

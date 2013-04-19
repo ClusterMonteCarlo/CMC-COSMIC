@@ -1,3 +1,4 @@
+/* vi: set filetype=c.doxygen: */
 #include "cmc.h"
 #include "cmc_vars.h"
 #ifdef DEBUGGING
@@ -6,7 +7,7 @@
 * @brief ?
 *
 * @param ids ?
-* @param filename ?
+* @param filename file name
 */
 void load_id_table(GHashTable* ids, char *filename) {
   FILE * id_file;

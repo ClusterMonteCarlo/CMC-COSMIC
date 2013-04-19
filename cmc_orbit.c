@@ -1,4 +1,5 @@
 /* -*- linux-c -*- */
+/* vi: set filetype=c.doxygen: */
 /* vim: set shiftwidth=2 */
 
 /* use commandline option -DUSE_THREADS to turn on threading */
@@ -21,8 +22,8 @@
 * @brief ?
 *
 * @param index ?
-* @param E ?
-* @param J ?
+* @param E energy
+* @param J angular momentum
 *
 * @return ?
 */
@@ -442,13 +443,13 @@ void debug_msg_orbit_new_outside_interval(long si, double rmin, double rmin_new,
 }
 
 /**
-* @brief ?
+* @brief finds out new orbit of star, primarily peri and apo- center distances
 *
-* @param index ?
-* @param E ?
-* @param J ?
+* @param index star index
+* @param E energy
+* @param J angular momentum
 *
-* @return ?
+* @return orbit structure containing properties of new orbit
 */
 orbit_rs_t calc_orbit_new(long index, double E, double J) {
   orbit_rs_t orbit_rs;
