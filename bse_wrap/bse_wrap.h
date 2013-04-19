@@ -16,37 +16,109 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+/* vi: set filetype=c.doxygen: */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "../common/taus113-v2.h"
 
-/* A structure used to pass binary information along to bse_wrap.c . */
+/**
+* @brief A structure used to pass binary information along to bse_wrap.c
+*/
 typedef struct{
-	double a; /* semimajor axis */
-	double e; /* eccentricity */
-	int bse_kw[2]; /* star types */
-	double bse_mass0[2]; /* initial masses */
-	double bse_mass[2]; /* masses */
-	double bse_radius[2]; /* radii */
-	double bse_lum[2]; /* luminosity */
+/**
+* @brief semimajor axis
+*/
+	double a;
+/**
+* @brief eccentricity
+*/
+	double e;
+/**
+* @brief star types
+*/
+	int bse_kw[2];
+/**
+* @brief initial masses
+*/
+	double bse_mass0[2];
+/**
+* @brief masses
+*/
+	double bse_mass[2];
+/**
+* @brief radii
+*/
+	double bse_radius[2];
+/**
+* @brief luminosity
+*/
+	double bse_lum[2];
+/**
+* @brief ?
+*/
 	double bse_massc[2];
+/**
+* @brief ?
+*/
 	double bse_radc[2];
+/**
+* @brief ?
+*/
 	double bse_menv[2];
+/**
+* @brief ?
+*/
 	double bse_renv[2];
-	double bse_ospin[2]; /* original spin */
-        double bse_B_0[2]; /* Pulsar magnetic field */
-        double bse_bacc[2]; /* Amount of mass pulsar has accreted */
-        double bse_tacc[2]; /* Amount of time pulsar has spent accreting */
+/**
+* @brief original spin
+*/
+	double bse_ospin[2];
+/**
+* @brief Pulsar magnetic field
+*/
+    double bse_B_0[2];
+/**
+* @brief Amount of mass pulsar has accreted
+*/
+    double bse_bacc[2];
+/**
+* @brief Amount of time pulsar has spent accreting
+*/
+    double bse_tacc[2];
+/**
+* @brief ?
+*/
 	double bse_epoch[2];
+/**
+* @brief ?
+*/
 	double bse_tms[2];
-	double bse_tphys; /* physical time */
-	double bse_tb; /* binary orbital period */
-	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */
-	double bse_bcm_radrol[2]; /* radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)] */
-        double bse_bcm_B[2]; /* Pulsar magnetic field strength at surface */
-        int bse_bcm_formation[2]; /* provides formation pathway of NS */
+/**
+* @brief physical time
+*/
+	double bse_tphys;
+/**
+* @brief binary orbital period
+*/
+	double bse_tb;
+/**
+* @brief mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)]
+*/
+	double bse_bcm_dmdt[2];
+/**
+* @brief radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)]
+*/
+	double bse_bcm_radrol[2];
+/**
+* @brief Pulsar magnetic field strength at surface
+*/
+    double bse_bcm_B[2];
+/**
+* @brief provides formation pathway of NS
+*/
+    int bse_bcm_formation[2];
 } bse_binary;
 
 /* prototypes for fortran BSE functions */
