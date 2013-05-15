@@ -261,11 +261,9 @@ We use these two arrays to store the number of stars created by each node during
 	/* calculate central quantities */
 	central_calculate();
 
-	/* can skip for MPI
-		if (WRITE_EXTRA_CORE_INFO) {
+	if (WRITE_EXTRA_CORE_INFO) {
 		no_remnants= no_remnants_core(6);
-		}
-	 */
+	}
 
 	calc_clusdyn_new();
 

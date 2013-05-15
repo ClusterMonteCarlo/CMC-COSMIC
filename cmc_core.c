@@ -218,6 +218,10 @@ struct densities mpi_density_estimators(int n_points, int *startypes, int len) {
     rhoj.rho[i]= mrho/Vrj;
   }
 
+  free(rhoj_idx);
+  free(nave_all_long);
+  free(nave_all);
+  free(nave_disp);
   return(rhoj);
 }
 
