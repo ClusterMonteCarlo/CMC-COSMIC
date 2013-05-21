@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "../common/taus113-v2.h"
+#include "../config.h"
 
 /**
 * @brief A structure used to pass binary information along to bse_wrap.c
