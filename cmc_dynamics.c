@@ -140,11 +140,11 @@ void dynamics_apply(double dt, gsl_rng *rng)
 				form_binary = 0; // reset this to zero; later we decide whether to form a binary, and if so, set form_binary=1
 				// Sort stars by mass (k1 is most massive)
 #ifdef USE_MPI
-				n_local = calc_n_local(get_global_idx(k1), BH_AVEKERNEL, N_LIMIT);
 				mpi_sort_three_masses(sq, &k1, &k2, &k3);
+				n_local = calc_n_local(get_global_idx(k1), BH_AVEKERNEL, N_LIMIT);
 #else
-				n_local = calc_n_local(k1, BH_AVEKERNEL, N_LIMIT);
 				sort_three_masses(sq, &k1, &k2, &k3);
+				n_local = calc_n_local(k1, BH_AVEKERNEL, N_LIMIT);
 #endif
 				// If density above threshold, check for 3bb formation
 				if (n_local > n_threshold) {
