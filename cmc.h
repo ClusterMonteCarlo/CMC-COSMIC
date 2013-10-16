@@ -768,6 +768,8 @@ typedef struct{
 * @brief minimum size of chunks that get partitioned across processors in the parallel code
 */
         int MIN_CHUNK_SIZE;
+#define PARAMDOC_BH_AVEKERNEL "one half the number of stars over which to average 3bb related quantities"
+        int BH_AVEKERNEL;
 #define PARAMDOC_APSIDES_PRECISION "absolute precision of the roots of vr^2 for the numerical root finding algorithm."
 /**
 * @brief absolute precision of the roots of vr^2 for the numerical root finding algorithm.
