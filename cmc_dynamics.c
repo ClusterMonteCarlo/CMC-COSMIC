@@ -126,11 +126,11 @@ void dynamics_apply(double dt, gsl_rng *rng)
 #ifdef USE_MPI
 		  //MPI: This loop isn't identical to the actual serial loop (commented out below) which would ignore at most 2 stars (the last 2 which won't be able to undergo a 3bb interaction). However, parallelization would be more tricky, so here we fixed this the quick and dirty way - by skipping at most 2 stars in each processor.
 		  // Local density about star k1, nearest 20 stars (10 inside, 10 outside)
-        mpi_calc_sigma_r(10, clus.N_MAX_NEW, ave_local_mass_arr, sigma_local_arr, &temp, 1);
+        mpi_calc_sigma_r(BH_AVEKERNEL, clus.N_MAX_NEW, ave_local_mass_arr, sigma_local_arr, &temp, 1);
 		  for (sq=1; sq<=(mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%3-2; sq+=3) // loop through objects, 3 at a time
 #else
 		  // Local density about star k1, nearest 20 stars (10 inside, 10 outside)
-		  calc_sigma_r(10, N_LIMIT, ave_local_mass_arr, sigma_local_arr, &temp, 1);
+		  calc_sigma_r(BH_AVEKERNEL, N_LIMIT, ave_local_mass_arr, sigma_local_arr, &temp, 1);
 		  //for (sq=1; sq<=N_LIMIT-N_LIMIT%3-2; sq+=3) // loop through objects, 3 at a time
 		  for(i=0; i<procs; i++)
 			  for (sq=Start[i]; sq<=Start[i]+(End[i]-Start[i]+1)-(End[i]-Start[i]+1)%3-2; sq+=3) // loop through objects, 3 at a time
