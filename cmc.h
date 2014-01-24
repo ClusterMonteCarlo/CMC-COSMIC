@@ -520,6 +520,16 @@ typedef struct{
 * @brief minimum hardness for newly formed three-body binaries
 */
 	int MIN_BINARY_HARDNESS;
+#define PARAMDOC_BINARY_DISTANCE_BREAKING "What fraction of the local interparticle seperation do binaries have to be apart to be broken up (default is 0.1)"
+/**
+* @brief Fraction of the local interparticule seperation to disrupt binaries (default is 0.1)
+*/
+	int BINARY_DISTANCE_BREAKING;
+#define PARAMDOC_BINARY_BREAKING_MIN "Should I use the interparticle seperation or MIN_BINARY_HARDNESS to break soft binaries (0=interparticle, 1=MIN_BINARY_HARDNESS)"
+/**
+* @brief criterion to break soft binaries (0=interparticle, 1=MIN_BINARY_HARDNESS) 
+*/
+	int BINARY_BREAKING_MIN;
 #define PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES "allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)"
 /**
 * @brief allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)
@@ -1656,6 +1666,7 @@ double calc_vr_in_interval(double r, long index, long k, double E, double J);
 double calc_vr(double r, long index, double E, double J);
 double find_root_vr(long index, long k, double E, double J);
 double calc_pot_in_interval(double r, long k);
+double local_kT(long si, int p);
 void remove_star(long j, double phi_rtidal, double phi_zero);
 inline double function_q(long j, long double r, long double pot, long double E, long double J);
 void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_st);

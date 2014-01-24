@@ -2412,8 +2412,14 @@ double simul_relax(gsl_rng *rng)
 */
 void break_wide_binaries(void)
 {
-	long j, k, g_k, knew, knewp;
-	double W, vorb, Eexcess=0.0, exc_ratio, nlocal, llocal;
+	long i,g_i,j, k, g_k, knew, knewp;
+    int breakBinary = 0;
+	double W, vorb, m, v2, Eexcess=0.0, exc_ratio, nlocal, llocal;
+    double E_dump, E_dump_capacity, E_dump_factor=0.8;
+    double length_factor = BINARY_DISTANCE_BREAKING;
+    double Eexcess_prev, Eexcess_check;
+    double hardness, mAveLocal, sigma2;
+	MPI_Status stat;
 	
 	for (k=1; k<=clus.N_MAX_NEW; k++)
 	{
@@ -2424,26 +2430,21 @@ void break_wide_binaries(void)
 			/* binary index */
 			j = star[k].binind;
 			
-			/* get relative velocity from velocity dispersion at binary's radial position */
-			W = 4.0 * sigma_array.sigma[k] / sqrt(3.0 * PI);
-		
-			/* this is an order of magnitude estimate for the orbital speed */
-#ifdef USE_MPI
-			vorb = sqrt(star_m[g_k] * madhoc / binary[j].a);
-#else
-			vorb = sqrt(star[k].m * madhoc / binary[j].a);
-#endif
+			nlocal = calc_n_local(g_k, AVEKERNEL, clus.N_MAX);
+            mAveLocal = sqrt(calc_average_mass_sqr(k,clus.N_MAX));
+            sigma2 = sqr(sigma_array.sigma[k]);
+			llocal = length_factor * pow(nlocal, -1.0/3.0);
+            hardness = (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
+                         (binary[j].a * mAveLocal * sigma2);
 
-			nlocal = calc_n_local(k, AVEKERNEL, clus.N_MAX);
-			llocal = 0.1 * pow(nlocal, -1.0/3.0);
+            /*if Binary_breaking_min is set, then use the hardness and MIN_BINARY_HARDNESS as a breaking criterion
+            otherwise, use the length of the apoastron compared to the interparticule seperation as the criterion*/
+            if(BINARY_BREAKING_MIN)
+                breakBinary = (hardness <= MIN_BINARY_HARDNESS);
+            else
+                breakBinary = (binary[j].a*(1.0+binary[j].e) >= llocal);
 
-			/* Destroy binary if its orbital speed is less than some fraction of the 
-			   local relative velocity. */
-			/* if (vorb <= XHS*W) {*/
-			/* break if apocenter is larger than interparticle separation */
-			if (binary[j].a*(1.0+binary[j].e) >= llocal) {
-				dprintf("breaking wide binary: vorb=%g W=%g\n", vorb, W);
-				
+			if (breakBinary){
 				Eexcess += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 
 				/* create two stars for the binary components */
@@ -2451,32 +2452,66 @@ void break_wide_binaries(void)
 				knewp = create_star(k, 0);
 				cp_binmemb_to_star(k, 0, knew);
 				cp_binmemb_to_star(k, 1, knewp);
+				//printf("breaking wide binary: hardness = %lg  binid = %ld  id1 = %ld  id2 = %ld m1 = %lg m2 = %lg  a = %lg sigma2 = %lg, mave = %lg\n", hardness,g_k,get_global_idx(knew),get_global_idx(knewp),binary[j].m1,binary[j].m2,binary[j].a,sigma2,mAveLocal);
 				
 				/* destroy this binary */
 				destroy_obj(k);
-			} else {
-				/* take excess energy from nearby field star (single or binary) */
+                breakBinary = 0;
+            }
+        } else if(Eexcess > 0. && star[k].interacted == 0 ){
 #ifdef USE_MPI
-				if(Eexcess > 0 && star[k].interacted == 0 && Eexcess < 0.5*(sqr(star[k].vt)+sqr(star[k].vr))*star_m[g_k]*madhoc) {
-					exc_ratio = 
-						sqrt( (sqr(star[k].vt)+sqr(star[k].vr)-2.0*Eexcess/(star_m[g_k]*madhoc))/
-						      (sqr(star[k].vt)+sqr(star[k].vr)) );
+            m = star_m[g_k];
 #else
-				if(Eexcess > 0 && star[k].interacted == 0 && Eexcess < 0.5*(sqr(star[k].vt)+sqr(star[k].vr))*star[k].m*madhoc) {
-					exc_ratio = 
-						sqrt( (sqr(star[k].vt)+sqr(star[k].vr)-2.0*Eexcess/(star[k].m*madhoc))/
-						      (sqr(star[k].vt)+sqr(star[k].vr)) );
+            m = star[k].m;
 #endif
-					star[k].vr *= exc_ratio;
-					star[k].vt *= exc_ratio;
-					set_star_EJ(k);
-					Eexcess = 0.0;
-					star[k].interacted = 1;
-				}
-			}
-		}
+            /* take excess energy from nearby field star (single or binary) */
+            v2 = sqr(star[k].vt)+sqr(star[k].vr);
+            E_dump_capacity = E_dump_factor * 0.5 * m * madhoc * v2; 
+            E_dump = MIN(E_dump_capacity,Eexcess);
+            exc_ratio = sqrt( (v2-2.0*E_dump/(m*madhoc) ) / v2 );
+            star[k].vr *= exc_ratio;
+            star[k].vt *= exc_ratio;
+            set_star_EJ(k);
+			//printf("stealing binary energy = %lg from star id = %ld\n", E_dump,g_k);
+            Eexcess -= E_dump;
+            star[k].interacted = 1;
+		   }
 	}
-	
+	double tmpTimeStart;
+    MPI_Allreduce(&Eexcess, &Eexcess_check, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+    Eexcess_prev = 0.0;
+    while(Eexcess_check > 0.)
+    {
+        tmpTimeStart = timeStartSimple();
+        if(myid != procs-1)
+            MPI_Send(&Eexcess, 1, MPI_DOUBLE, ( myid + 1 ), 0, MPI_COMM_WORLD);
+        if(myid != 0)
+            MPI_Recv(&Eexcess_prev, 1, MPI_DOUBLE, ( myid - 1), 0, MPI_COMM_WORLD, &stat);
+        timeEndSimple(tmpTimeStart, &t_comm);
+
+        Eexcess = Eexcess_prev;
+        for (i = 1; i <= clus.N_MAX_NEW; i++) {
+            g_i = get_global_idx(i);
+            m = star_m[g_i];
+
+            v2 = sqr(star[i].vr)+sqr(star[i].vt);
+            if (star[i].interacted == 0) {
+                    E_dump_capacity = E_dump_factor * 0.5 * m * madhoc * v2;
+                    E_dump = MIN( E_dump_capacity, Eexcess );
+                    if(Eexcess > 0) {
+                        exc_ratio = sqrt( (v2 - 2 * E_dump / (m*madhoc)) / v2 );
+                        star[i].vr *= exc_ratio;
+                        star[i].vt *= exc_ratio;
+                        Eexcess -= E_dump;
+                        set_star_EJ(k);
+                        star[k].interacted = 1;
+                    }
+            }
+        }
+        tmpTimeStart = timeStartSimple();
+        MPI_Allreduce(&Eexcess, &Eexcess_check, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+        timeEndSimple(tmpTimeStart, &t_comm);
+	}
 	/* keep track of the energy that's vanishing due to our negligence */
 	Eoops += -Eexcess;
 }

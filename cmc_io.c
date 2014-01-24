@@ -1031,6 +1031,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_INPUT_FILE);
 				sscanf(values, "%s", INPUT_FILE);
 				parsed.INPUT_FILE = 1;
+			} else if (strcmp(parameter_name, "BINARY_DISTANCE_BREAKING") == 0) {
+				PRINT_PARSED(PARAMDOC_BINARY_DISTANCE_BREAKING);
+				sscanf(values, "%lf", &BINARY_DISTANCE_BREAKING);
+				parsed.BINARY_DISTANCE_BREAKING = 1;
+			} else if (strcmp(parameter_name, "BINARY_BREAKING_MIN") == 0) {
+				PRINT_PARSED(PARAMDOC_BINARY_BREAKING_MIN);
+				sscanf(values, "%d", &BINARY_BREAKING_MIN);
+				parsed.BINARY_BREAKING_MIN = 1;
 			} else if (strcmp(parameter_name, "MASS_PC_BH_INCLUDE") == 0) {
 				PRINT_PARSED(PARAMDOC_MASS_PC_BH_INCLUDE);
 				sscanf(values, "%d", &MASS_PC_BH_INCLUDE);
@@ -1390,6 +1398,8 @@ if(myid==0) {
 	CHECK_PARSED(MINIMUM_R, 0.0, PARAMDOC_MINIMUM_R);
 	CHECK_PARSED(BH_R_DISRUPT_NB, 0., PARAMDOC_BH_R_DISRUPT_NB);
 	CHECK_PARSED(CIRC_PERIOD_THRESHOLD, 1e-18, PARAMDOC_CIRC_PERIOD_THRESHOLD);
+	CHECK_PARSED(BINARY_DISTANCE_BREAKING,0.1, PARAMDOC_BINARY_DISTANCE_BREAKING);
+	CHECK_PARSED(BINARY_BREAKING_MIN,0.0, PARAMDOC_BINARY_BREAKING_MIN);
 
 	CHECK_PARSED(T_MAX, 20.0, PARAMDOC_T_MAX);
 	CHECK_PARSED(T_MAX_PHYS, 12.0, PARAMDOC_T_MAX_PHYS);
@@ -1950,7 +1960,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
     if (THREEBODYBINARIES)
     {
         // print header
-        pararootfprintf(threebbfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:ave_local_mass #12:sigma_local #13:eta #14:Eb #15:ecc #16:a[AU] #17:r_peri[AU] #18:r(bin) #19:r(single) #20:vr(bin) #21:vt(bin) #22:vr(single) #23:vt(single) #24:phi(bin) #25:phi(single) #26:delta_PE #27:delta_KE #28:delta_E(interaction) #29:delta_E(cumulative) #30:N_3bb\n");
+        pararootfprintf(threebbfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:ave_local_mass #12:n_local #13:sigma_local #14:eta #15:Eb #16:ecc #17:a[AU] #18:r_peri[AU] #19:r(bin) #20:r(single) #21:vr(bin) #22:vt(bin) #23:vr(single) #24:vt(single) #25:phi(bin) #26:phi(single) #27:delta_PE #28:delta_KE #29:delta_E(interaction) #30:delta_E(cumulative) #31:N_3bb\n");
         // print header
         pararootfprintf(threebbprobabilityfile, "#1:time #2:dt #3:dt*N/log(gamma*N) #3:Rate_3bb #4:P_3bb #5:r\n### average rate and probability of three-body binary formation in the timestep; calculated from the innermost 300 triplets of single stars considered for three-body binary formation\n");
         // print header
@@ -2359,7 +2369,7 @@ void write_snapshot(char *filename, int bh_only) {
 #endif
 				// print useful header
 				gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
-				gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.star.phi\n");
+				gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.bin.Eb 25.eta 26.star.phi\n");
 #ifdef USE_MPI
 			}
 #endif
@@ -2396,13 +2406,16 @@ void write_snapshot(char *filename, int bh_only) {
 					}
 
 					if (j == 0) {
-						gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 ",
+						gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 -100 -100 ",
 								star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
 					} else {
-						gzprintf(snapfile, "0 0 0 %d %d %.8g %.8g %.8g %.8g ",
+						gzprintf(snapfile, "0 0 0 %d %d %.8g %.8g %.8g %.8g %.8g %.8g ",
 								binary[j].bse_kw[0], binary[j].bse_kw[1],
 								binary[j].bse_lum[0], binary[j].bse_lum[1],
-								binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN);
+								binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN,
+								-(binary[j].m1/clus.N_STAR)*(binary[j].m2/clus.N_STAR)/(2*binary[j].a),
+                                 (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
+                                 (binary[j].a * sqrt(calc_average_mass_sqr(k,clus.N_MAX)) * sqr(sigma_array.sigma[k])));
 					}
 					gzprintf(snapfile, "%0.12g\n", phi);
 				}

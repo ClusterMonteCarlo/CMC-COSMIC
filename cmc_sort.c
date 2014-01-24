@@ -287,7 +287,7 @@ keyType* sample(type *buf, keyType *sample_array, int N, int n_samples)
 {
 	//srand ( time(NULL) );
 	if(n_samples > N)
-		eprintf("Oversampling occurred! id = %d num samples = %d local no. of stars = %d", myid, n_samples, N);
+		eprintf("Oversampling occurred! id = %d num samples = %d local no. of stars = %d\n", myid, n_samples, N);
 
 	//MPI: For now, we do regular sampling. In future we might want to explore random sampling.
 	int i;
