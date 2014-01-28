@@ -2415,7 +2415,7 @@ void write_snapshot(char *filename, int bh_only) {
 								binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN,
 								-(binary[j].m1/clus.N_STAR)*(binary[j].m2/clus.N_STAR)/(2*binary[j].a),
                                  (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
-                                 (binary[j].a * sqrt(calc_average_mass_sqr(k,clus.N_MAX)) * sqr(sigma_array.sigma[k])));
+                                 (binary[j].a * sqrt(calc_average_mass_sqr(i,clus.N_MAX)) * sqr(sigma_array.sigma[i])));
 					}
 					gzprintf(snapfile, "%0.12g\n", phi);
 				}
