@@ -2661,14 +2661,14 @@ void set_rng_states()
 
 	//Using jump polynomials to assign the intial state for the current processor.
 	for(i = 0; i < myid; i++)
-		*curr_st = rng_t113_jump( *curr_st , JPoly_2_20);
+		*curr_st = rng_t113_jump( *curr_st , JPoly_2_80);
 #else
 	st = (struct rng_t113_state*) malloc(procs * sizeof(struct rng_t113_state));
 	reset_rng_t113_new(IDUM, &st[0]);
 
 	//Using jump polynomials to assign the intial state for the all processors - to mimic the parallel rng.
 	for(i = 1; i < procs; i++)
-		st[i] = rng_t113_jump( st[i-1] , JPoly_2_20);
+		st[i] = rng_t113_jump( st[i-1] , JPoly_2_80);
 #endif
 }
 
