@@ -466,7 +466,10 @@ void do_stellar_evolution(gsl_rng *rng)
 		
 	/* PDK search for boom stuff and write pulsar data. */
 		//bcm_boom_search(k, vs, getCMCvalues);
-		pulsar_write(k, VKO);
+		if(WRITE_PULSAR_INFO)
+		{
+			pulsar_write(k, VKO);
+		}
 
 		if (WRITE_BH_INFO) {
 			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
@@ -1174,14 +1177,19 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
   } else {
     dprintf("unhandled binary outcome!\n");
   /* End by looking for boom stuff to log and log pulsar info */
-  if (knew) {
-    //bcm_boom_search(knew, vs, getCMCvalues);
-    pulsar_write(knew, VKO);
-  } else {
-    //bcm_boom_search(k, vs, getCMCvalues);
-    pulsar_write(k, VKO);
-  }
-    dprintf("bse_mass0=%g bse_mass1=%g tb=%g\n", 
+
+	 if(WRITE_PULSAR_INFO)
+	 {
+		 if (knew) {
+			 //bcm_boom_search(knew, vs, getCMCvalues);
+			 pulsar_write(knew, VKO);
+		 } else {
+			 //bcm_boom_search(k, vs, getCMCvalues);
+			 pulsar_write(k, VKO);
+		 }
+	 }
+
+	 dprintf("bse_mass0=%g bse_mass1=%g tb=%g\n",
       binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_tb);
     exit_cleanly(-1, __FUNCTION__);
   }

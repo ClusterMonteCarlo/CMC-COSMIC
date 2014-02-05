@@ -820,6 +820,11 @@ typedef struct{
 * @brief Write out information about cores that are defined differently from the standard (0=off, 1=on)
 */
         int WRITE_EXTRA_CORE_INFO;
+#define PARAMDOC_WRITE_PULSAR_INFO "Write out information about pulsars (0=off, 1=on)"
+/**
+* @brief Write out information about pulsars (0=off, 1=on)
+*/
+        int WRITE_PULSAR_INFO;
 #define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"
 /**
 * @brief Write out information about 10\% lagrange radius (0=off, 1=on)

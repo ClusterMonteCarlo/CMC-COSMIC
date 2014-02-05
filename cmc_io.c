@@ -763,11 +763,14 @@ void PrintParaFileOutput(void)
     mpi_para_file_write(mpi_semergedisruptfile_wrbuf, &mpi_semergedisruptfile_len, &mpi_semergedisruptfile_ofst_total, &mpi_semergedisruptfile);
     mpi_para_file_write(mpi_removestarfile_wrbuf, &mpi_removestarfile_len, &mpi_removestarfile_ofst_total, &mpi_removestarfile);
     mpi_para_file_write(mpi_relaxationfile_wrbuf, &mpi_relaxationfile_len, &mpi_relaxationfile_ofst_total, &mpi_relaxationfile);
-    mpi_para_file_write(mpi_pulsarfile_wrbuf, &mpi_pulsarfile_len, &mpi_pulsarfile_ofst_total, &mpi_pulsarfile);
+
+	 if(WRITE_PULSAR_INFO)
+		 mpi_para_file_write(mpi_pulsarfile_wrbuf, &mpi_pulsarfile_len, &mpi_pulsarfile_ofst_total, &mpi_pulsarfile);
 
     /* Meagan's 3bb files */
     if (WRITE_BH_INFO)
         mpi_para_file_write(mpi_newbhfile_wrbuf, &mpi_newbhfile_len, &mpi_newbhfile_ofst_total, &mpi_newbhfile);
+
     if (THREEBODYBINARIES)
     {
         mpi_para_file_write(mpi_threebbfile_wrbuf, &mpi_threebbfile_len, &mpi_threebbfile_ofst_total, &mpi_threebbfile);
@@ -1231,6 +1234,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_WRITE_EXTRA_CORE_INFO);
 				sscanf(values, "%i", &WRITE_EXTRA_CORE_INFO);
 				parsed.WRITE_EXTRA_CORE_INFO = 1;
+			} else if (strcmp(parameter_name, "WRITE_PULSAR_INFO")== 0) {
+				PRINT_PARSED(PARAMDOC_WRITE_PULSAR_INFO);
+				sscanf(values, "%i", &WRITE_PULSAR_INFO);
+				parsed.WRITE_PULSAR_INFO = 1;
 			} else if (strcmp(parameter_name, "CALCULATE10")== 0) {
 				PRINT_PARSED(PARAMDOC_CALCULATE10);
 				sscanf(values, "%i", &CALCULATE10);
@@ -1377,6 +1384,7 @@ if(myid==0) {
     CHECK_PARSED(WRITE_BH_INFO, 0, PARAMDOC_WRITE_BH_INFO);
     CHECK_PARSED(WRITE_RWALK_INFO, 0, PARAMDOC_WRITE_RWALK_INFO);
     CHECK_PARSED(WRITE_EXTRA_CORE_INFO, 0, PARAMDOC_WRITE_EXTRA_CORE_INFO);
+    CHECK_PARSED(WRITE_PULSAR_INFO, 0, PARAMDOC_WRITE_PULSAR_INFO);
 	CHECK_PARSED(CALCULATE10, 0, PARAMDOC_CALCULATE10);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
@@ -1810,10 +1818,6 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_relaxationfile);
     MPI_File_set_size(mpi_relaxationfile, 0);
 
-    sprintf(outfile, "%s.pulsars.dat", outprefix);
-    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_pulsarfile);
-    MPI_File_set_size(mpi_pulsarfile, 0);
-
     if (THREEBODYBINARIES)
     {
         sprintf(outfile, "%s.3bb.log", outprefix);
@@ -1839,6 +1843,14 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
         MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_newbhfile);
         MPI_File_set_size(mpi_newbhfile, 0);
     }
+
+	if(WRITE_PULSAR_INFO)
+	{
+		sprintf(outfile, "%s.pulsars.dat", outprefix);
+		MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_pulsarfile);
+		MPI_File_set_size(mpi_pulsarfile, 0);
+	}
+
 #else
 
 	/* output files for binaries */
@@ -1897,14 +1909,6 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 		exit(1);
 	}
 
-	/* Pulsar log file */
-	sprintf(outfile, "%s.pulsars.dat", outprefix);
-	//if ((pulsarfile = gzopen(outfile, outfilemode)) == NULL) {
-	if ((pulsarfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create pulsar file \"%s\".\n", outfile);
-		exit(1);
-	}
-
     if (THREEBODYBINARIES)
     {
         /* Meagan: output file for three-body binary formation */
@@ -1942,6 +1946,17 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			exit(1);
 		}
     }
+
+	/* Pulsar log file */
+	if(WRITE_PULSAR_INFO)
+	{
+		sprintf(outfile, "%s.pulsars.dat", outprefix);
+		//if ((pulsarfile = gzopen(outfile, outfilemode)) == NULL) {
+		if ((pulsarfile = fopen(outfile, outfilemode)) == NULL) {
+			eprintf("cannot create pulsar file \"%s\".\n", outfile);
+			exit(1);
+		}
+	}
 #endif
 
 	//MPI: Headers are written out only by the root node.
@@ -1977,7 +1992,8 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 //"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
 
 	/* print header */
-	pararootfprintf(pulsarfile, "tcount    TotalTime    Star_id      Rperi    Rapo    R     VR    VT    PHI    PHIr0    PHIrt    kick    Binary_id1    Binary_id2    kw2     P     B    formation     bacc    tacc    B0   TB     M2    M1     e     R2/RL2     dm1/dt   \n");
+	if(WRITE_PULSAR_INFO)
+		pararootfprintf(pulsarfile, "tcount    TotalTime    Star_id      Rperi    Rapo    R     VR    VT    PHI    PHIr0    PHIrt    kick    Binary_id1    Binary_id2    kw2     P     B    formation     bacc    tacc    B0   TB     M2    M1     e     R2/RL2     dm1/dt   \n");
 }
 
 
@@ -2042,7 +2058,6 @@ void close_node_buffers(void)
 	fclose(tidalcapturefile);
 	fclose(semergedisruptfile);
 	fclose(relaxationfile);
-	fclose(pulsarfile);
 	/*Sourav: closing the file I opened*/
 	fclose(removestarfile);
     /* Meagan: close 3bb log file */
@@ -2056,6 +2071,10 @@ void close_node_buffers(void)
     if (WRITE_BH_INFO) {
         fclose(newbhfile);
     }
+	 if(WRITE_PULSAR_INFO)
+	 {
+		 fclose(pulsarfile);
+	 }
 }
 
 #ifdef USE_MPI
@@ -2071,7 +2090,6 @@ void mpi_close_node_buffers(void)
 	MPI_File_close(&mpi_tidalcapturefile);
 	MPI_File_close(&mpi_semergedisruptfile);
 	MPI_File_close(&mpi_relaxationfile);
-	MPI_File_close(&mpi_pulsarfile);
 	/*Sourav: closing the file I opened*/
 	MPI_File_close(&mpi_removestarfile);
     /* Meagan: close 3bb log file */
@@ -2085,6 +2103,10 @@ void mpi_close_node_buffers(void)
     if (WRITE_BH_INFO) {
         MPI_File_close(&mpi_newbhfile);
     }
+	 if(WRITE_PULSAR_INFO)
+	 {
+		 MPI_File_close(&mpi_pulsarfile);
+	 }
 
 	//TEMPORARY
 /*
