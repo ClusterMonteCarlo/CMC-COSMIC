@@ -24,7 +24,7 @@ void print_initial_binaries(void)
 	 //MPI: Open corresponding MPI files, and declare buffers reqd for parallel write.
     MPI_File mpi_initbinfile;
     char mpi_initbinfile_buf[10000], mpi_initbinfile_wrbuf[10000000];
-    int mpi_initbinfile_len=0, mpi_initbinfile_ofst_total=0;
+    long long mpi_initbinfile_len=0, mpi_initbinfile_ofst_total=0;
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_initbinfile);
     MPI_File_set_size(mpi_initbinfile, 0);
 #else

@@ -56,7 +56,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 #ifdef USE_MPI
         MPI_File mpi_binfp;
         char mpi_binfp_buf[10000], mpi_binfp_wrbuf[10000000];
-        int mpi_binfp_len=0, mpi_binfp_ofst_total=0;
+        long long mpi_binfp_len=0, mpi_binfp_ofst_total=0;
         sprintf(filename, "a_e2.%04ld.dat", tcount);
         MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_binfp);
         MPI_File_set_size(mpi_binfp, 0);

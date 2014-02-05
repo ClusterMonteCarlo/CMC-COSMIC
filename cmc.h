@@ -1364,7 +1364,7 @@ void ComputeEnergy(void);
 
 #ifdef USE_MPI
 void mpi_ComputeEnergy(void);
-void mpi_para_file_write(char* wrbuf, int *len, int *prev_cum_offset, MPI_File* fh);
+void mpi_para_file_write(char* wrbuf, long long *len, long long *prev_cum_offset, MPI_File* fh);
 void PrintParaFileOutput(void);
 void mpi_close_node_buffers(void);
 #endif

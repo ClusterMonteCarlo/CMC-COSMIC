@@ -22,7 +22,7 @@ void create_rwalk_file(char *fname) {
     MPI_File mpi_rwalk_file;
     char mpi_rwalk_file_buf[10000];
     char mpi_rwalk_file_wrbuf[10000000];
-    int mpi_rwalk_file_len=0, mpi_rwalk_file_ofst_total=0;
+    long long mpi_rwalk_file_len=0, mpi_rwalk_file_ofst_total=0;
     MPI_File_open(MPI_COMM_WORLD, fname, MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &mpi_rwalk_file);
 	 if(tcount==1)
 		 MPI_File_set_size(mpi_rwalk_file, 0);
@@ -66,7 +66,7 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
     MPI_File mpi_rwalk_file;
     char mpi_rwalk_file_buf[10000];
     char mpi_rwalk_file_wrbuf[10000000];
-    int mpi_rwalk_file_len=0, mpi_rwalk_file_ofst_total=0;
+    long long mpi_rwalk_file_len=0, mpi_rwalk_file_ofst_total=0;
     MPI_File_open(MPI_COMM_WORLD, fname, MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &mpi_rwalk_file);
 	 if(tcount==1)
 		 MPI_File_set_size(mpi_rwalk_file, 0);

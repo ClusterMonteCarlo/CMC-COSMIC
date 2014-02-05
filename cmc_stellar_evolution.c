@@ -576,7 +576,7 @@ void write_stellar_data(void){
 #ifdef USE_MPI
   MPI_File mpi_stel_file;
   char mpi_stel_file_buf[10000], mpi_stel_file_wrbuf[10000000];
-  int mpi_stel_file_len=0, mpi_stel_file_ofst_total=0;
+  long long mpi_stel_file_len=0, mpi_stel_file_ofst_total=0;
   MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_stel_file);
   MPI_File_set_size(mpi_stel_file, 0);
 #else

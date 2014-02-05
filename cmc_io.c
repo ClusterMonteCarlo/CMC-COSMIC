@@ -788,19 +788,25 @@ void PrintParaFileOutput(void)
 * @param prev_cum_offset offset of the file where the data needs to be written
 * @param fh MPI-IO File handle
 */
-void mpi_para_file_write(char* wrbuf, int *len, int *prev_cum_offset, MPI_File* fh)
+void mpi_para_file_write(char* wrbuf, long long* len, long long* prev_cum_offset, MPI_File* fh)
 {
-    int offset=0, tot_offset=0;
+    MPI_Offset mpi_offset=0;
+	 long long offset=0;
+	 long long tot_offset=0;
     MPI_Status mpistat;
+
 	 //First find out the offset for this processor based on the buffer lengths of other procecessors
-    MPI_Exscan(len, &offset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Exscan(len, &offset, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
+
 	 //Add this offset to the previous cumulative file offset
     offset += *prev_cum_offset;
+	 mpi_offset = offset;
+
 	 //Write data to file in parallel
-    MPI_File_write_at_all(*fh, offset, wrbuf, *len, MPI_CHAR, &mpistat);
+    MPI_File_write_at_all(*fh, mpi_offset, wrbuf, *len, MPI_CHAR, &mpistat);
 
 	 //Update cumulative file offset for next flush
-    MPI_Allreduce (len, &tot_offset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce (len, &tot_offset, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
     *prev_cum_offset += tot_offset;
 
 	 //Reset buffer and length variables

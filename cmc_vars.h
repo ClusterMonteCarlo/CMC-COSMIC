@@ -115,12 +115,12 @@ _EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN]
 /**
 * @brief MPI: Variables to maintail the length of the buffers until the next flush
 */
-_EXTERN_ int mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_pulsarfile_len, mpi_tidalcapturefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
+_EXTERN_ long long mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_pulsarfile_len, mpi_tidalcapturefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
 
 /**
 * @brief MPI: Variables to maintain the total offset of the file
 */
-_EXTERN_ int mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_pulsarfile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
+_EXTERN_ long long mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_pulsarfile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
 
 /* Meagan's 3bb files */
 /**
@@ -141,12 +141,12 @@ _EXTERN_ char mpi_bhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_escbhsummaryfile_wrbuf
 /**
 * @brief MPI: Variables to maintail the length of the buffers until the next flush
 */
-_EXTERN_ int mpi_bhsummaryfile_len, mpi_escbhsummaryfile_len, mpi_newbhfile_len, mpi_threebbfile_len, mpi_threebbprobabilityfile_len, mpi_lightcollisionfile_len, mpi_threebbdebugfile_len;
+_EXTERN_ long long mpi_bhsummaryfile_len, mpi_escbhsummaryfile_len, mpi_newbhfile_len, mpi_threebbfile_len, mpi_threebbprobabilityfile_len, mpi_lightcollisionfile_len, mpi_threebbdebugfile_len;
 
 /**
 * @brief MPI: Variables to maintain the total offset of the file
 */
-_EXTERN_ int mpi_bhsummaryfile_ofst_total, mpi_escbhsummaryfile_ofst_total, mpi_newbhfile_ofst_total, mpi_threebbfile_ofst_total, mpi_threebbprobabilityfile_ofst_total, mpi_lightcollisionfile_ofst_total, mpi_threebbdebugfile_ofst_total;
+_EXTERN_ long long mpi_bhsummaryfile_ofst_total, mpi_escbhsummaryfile_ofst_total, mpi_newbhfile_ofst_total, mpi_threebbfile_ofst_total, mpi_threebbprobabilityfile_ofst_total, mpi_lightcollisionfile_ofst_total, mpi_threebbdebugfile_ofst_total;
 
 #endif
 
