@@ -62,7 +62,7 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
     double P_orb, double n_orb) {
 
 #ifdef USE_MPI
-	double r = star_r[get_global_idx(index)];
+	double r = star_r[index];
     MPI_File mpi_rwalk_file;
     char mpi_rwalk_file_buf[10000];
     char mpi_rwalk_file_wrbuf[10000000];
