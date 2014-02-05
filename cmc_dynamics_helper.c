@@ -2293,7 +2293,13 @@ double simul_relax_new(void)
 	p = AVEKERNEL; //For this value, the results are very close to the original simul_relax() function.
 
 	//Computing the timesteps only for every pth star.
-	for (si=p+1; si<N_LIMIT-p; si+=2*p) {
+//   for (si=p+1; si<N_LIMIT-p; si+=2*p) {
+
+  //MPI: Changing this to do exactly emulate the parallel version.
+	int i;
+	for(i=0; i<procs; i++)
+	{
+		for (si=Start[i]+p; si<End[i]-p; si+=2*p) {
 		simin = si - p;
 		simax = simin + (2 * p - 1);
 
@@ -2326,6 +2332,7 @@ double simul_relax_new(void)
 
 		dtmin = MIN(dtmin, dt);
 		//dtmin = dt;
+		}
 	}
 
 	return(dtmin);
