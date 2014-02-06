@@ -2419,6 +2419,74 @@ double simul_relax(gsl_rng *rng)
 */
 void break_wide_binaries(void)
 {
+	long i,j, k, knew, knewp;
+    int breakBinary = 0;
+	double W, vorb, m, v2, Eexcess=0.0, exc_ratio, nlocal, llocal;
+    double E_dump, E_dump_capacity, E_dump_factor=0.8;
+    double length_factor = BINARY_DISTANCE_BREAKING;
+    double hardness, mAveLocal, sigma2;
+	
+	for (k=1; k<=clus.N_MAX_NEW; k++)
+	{
+		if (star[k].binind) {
+
+			/* binary index */
+			j = star[k].binind;
+			
+			nlocal = calc_n_local(k, AVEKERNEL, clus.N_MAX);
+            mAveLocal = sqrt(calc_average_mass_sqr(k,clus.N_MAX));
+            sigma2 = sqr(sigma_array.sigma[k]);
+			llocal = length_factor * pow(nlocal, -1.0/3.0);
+            hardness = (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
+                         (binary[j].a * mAveLocal * sigma2);
+
+            /*if Binary_breaking_min is set, then use the hardness and MIN_BINARY_HARDNESS as a breaking criterion
+            otherwise, use the length of the apoastron compared to the interparticule seperation as the criterion*/
+            if(BINARY_BREAKING_MIN)
+                breakBinary = (hardness <= MIN_BINARY_HARDNESS);
+            else
+                breakBinary = (binary[j].a*(1.0+binary[j].e) >= llocal);
+
+			if (breakBinary){
+				Eexcess += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
+
+				/* create two stars for the binary components */
+				knew = create_star(k, 0);
+				knewp = create_star(k, 0);
+				cp_binmemb_to_star(k, 0, knew);
+				cp_binmemb_to_star(k, 1, knewp);
+				/* destroy this binary */
+				destroy_obj(k);
+                breakBinary = 0;
+            }
+        } else if(Eexcess > 0. && star[k].interacted == 0 ){
+            m = star[k].m;
+            /* take excess energy from nearby field star (single or binary) */
+            v2 = sqr(star[k].vt)+sqr(star[k].vr);
+            E_dump_capacity = E_dump_factor * 0.5 * m * madhoc * v2; 
+            E_dump = MIN(E_dump_capacity,Eexcess);
+            exc_ratio = sqrt( (v2-2.0*E_dump/(m*madhoc) ) / v2 );
+            star[k].vr *= exc_ratio;
+            star[k].vt *= exc_ratio;
+            set_star_EJ(k);
+			//printf("stealing binary energy = %lg from star id = %ld\n", E_dump,g_k);
+            Eexcess -= E_dump;
+            star[k].interacted = 1;
+		   }
+	}
+	/* keep track of the energy that's vanishing due to our negligence */
+	Eoops += -Eexcess;
+}
+
+#ifdef USE_MPI
+/**
+* @brief
+   Since the binary interactions are done in a vaccuum, it is possible for them
+   to produce pathologically wide binaries, which must be broken by hand, else 
+   they shorten the timestep to a crawl.
+*/
+void mpi_break_wide_binaries(void)
+{
 	long i,g_i,j, k, g_k, knew, knewp;
     int breakBinary = 0;
 	double W, vorb, m, v2, Eexcess=0.0, exc_ratio, nlocal, llocal;
@@ -2466,11 +2534,7 @@ void break_wide_binaries(void)
                 breakBinary = 0;
             }
         } else if(Eexcess > 0. && star[k].interacted == 0 ){
-#ifdef USE_MPI
             m = star_m[g_k];
-#else
-            m = star[k].m;
-#endif
             /* take excess energy from nearby field star (single or binary) */
             v2 = sqr(star[k].vt)+sqr(star[k].vr);
             E_dump_capacity = E_dump_factor * 0.5 * m * madhoc * v2; 
@@ -2522,6 +2586,7 @@ void break_wide_binaries(void)
 	/* keep track of the energy that's vanishing due to our negligence */
 	Eoops += -Eexcess;
 }
+#endif
 
 #ifdef USE_MPI
 /**

@@ -1357,10 +1357,10 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   /* and set the stars' dynamical properties */
   star[knew].r = star[k].r;
   if(kbi == 0){
-    star[g_knew].m = binary[kb].m1;//bse_mass[kbi] * MSUN / units.mstar;
+    star[knew].m = binary[kb].m1;//bse_mass[kbi] * MSUN / units.mstar;
   }
   else{
-    star[g_knew].m = binary[kb].m2;//bse_mass[kbi] * MSUN / units.mstar;
+    star[knew].m = binary[kb].m2;//bse_mass[kbi] * MSUN / units.mstar;
   }
   star[knew].phi = star[k].phi;
 #endif

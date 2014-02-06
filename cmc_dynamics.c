@@ -560,6 +560,9 @@ are skipped if they already interacted in 3bb loop!  */
 	pararootfprintf(logfile, "\n");
 
 	/* break pathologically wide binaries */
+#ifdef USE_MPI
+	mpi_break_wide_binaries();
+#else
 	break_wide_binaries();
-    
+#endif
 }

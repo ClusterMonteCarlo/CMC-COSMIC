@@ -1503,6 +1503,7 @@ double simul_relax_new(void);
 #ifdef USE_MPI
 double mpi_simul_relax_new(void);
 void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r, double *sig_sigma, long* sig_n, int r_0_mave_1);
+void mpi_break_wide_binaries(void);
 #endif
 
 void break_wide_binaries(void);

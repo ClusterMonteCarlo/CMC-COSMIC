@@ -1794,6 +1794,7 @@ double local_kT(long si, int p) {
   mave= 0.;
   for (j=simin; j< simax; j++) {
     //MPI: Here we are using global indices since this whole thing will be done only by the root node, so we dont need an index transformation.
+    //Carl: Modified this back to global indices since this function can be in future used in other functions where more than one node might participate. Introducing an index transformation wont change the behavior in anyway since for the root node the index transformation is an identity transformation.
 #ifdef USE_MPI
     mave+= star_m[get_global_idx(j)] *madhoc;
 #else
