@@ -15,6 +15,8 @@ void stellar_evolution_init(void){
   double tphysf, dtp, vs[12];
   int i;
   long k, kb;
+  int kprev0=-100;
+  int kprev1=-100;
   binary_t tempbinary;
 
   /* SSE */
@@ -241,7 +243,7 @@ void stellar_evolution_init(void){
               &(binary[kb].bse_tb), &(binary[kb].e), vs);
       *curr_st=bse_get_taus113state();
 
-      handle_bse_outcome(k, kb, vs, tphysf);
+      handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
     } else {
       eprintf("totally confused!\n");
       exit_cleanly(-1, __FUNCTION__);
@@ -271,6 +273,7 @@ void do_stellar_evolution(gsl_rng *rng)
 {
   long k, kb, j, jj;
   int kprev,i;
+  int kprev0, kprev1;
   double dtp, tphysf, vs[12], VKO;
   double M_beforeSE, M10_beforeSE, M100_beforeSE, M1000_beforeSE, Mcore_beforeSE;
   double M_afterSE, M10_afterSE, M100_afterSE, M1000_afterSE, Mcore_afterSE;
@@ -293,7 +296,8 @@ void do_stellar_evolution(gsl_rng *rng)
       dtp = tphysf;
       dtp = 0.0;
       kprev = star[k].se_k;   
-
+      kprev0 = -100; /* set the previous stellar type variable for binary, just so they are initialized) */
+      kprev1 = -100;
 #ifdef USE_MPI
       if (star_m[get_global_idx(k)]<=DBL_MIN && star[k].vr==0. && star[k].vt==0. && star[k].E==0. && star[k].J==0.){ //ignoring zeroed out stars
         dprintf ("zeroed out star: skipping SE:\n"); 
@@ -474,9 +478,9 @@ void do_stellar_evolution(gsl_rng *rng)
 		if (WRITE_BH_INFO) {
 			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
 #ifdef USE_MPI
-				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g\n", TotalTime, star_r[g_k], star[k].id,star[k].se_mass, star[k].se_mt, VKO);
+				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g\n", TotalTime, star_r[g_k], star[k].id,star[k].se_mass, star[k].se_mt);
 #else
-				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g\n", TotalTime, star[k].r, star[k].id,star[k].se_mass, star[k].se_mt, VKO); 
+				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g\n", TotalTime, star[k].r, star[k].id,star[k].se_mass, star[k].se_mt); 
 #endif
 //m_init, m_bh, time, id, kick, r, vr_init, vt_init, vr_final, vt_final, binflag, m0_init, m1_init, m0_final, m1_final, 
 			}
@@ -498,6 +502,9 @@ void do_stellar_evolution(gsl_rng *rng)
             dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star[k].m, binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
 #endif
       } else {
+	/* store previous star types for binary components, before evolving binary */
+	kprev0=binary[kb].bse_kw[0];
+	kprev1=binary[kb].bse_kw[1];
         /* set binary orbital period (in days) from a */
         binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
 #ifdef USE_MPI
@@ -533,7 +540,24 @@ void do_stellar_evolution(gsl_rng *rng)
           fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
           exit(1);
         }
-        handle_bse_outcome(k, kb, vs, tphysf);
+	if (WRITE_BH_INFO) {
+		if (kprev0!=14 && binary[kb].bse_kw[0]==14) { // newly formed BH
+#ifdef USE_MPI
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g\n", TotalTime, star_r[g_k], binary[kb].id1, binary[kb].bse_mass0[0], binary[kb].bse_mass[0]);
+#else
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g\n", TotalTime, star[k].r, binary[kb].id1, binary[kb].bse_mass0[0], binary[kb].bse_mass[0]); 
+#endif
+		}
+		if (kprev1!=14 && binary[kb].bse_kw[1]==14) { // newly formed BH
+#ifdef USE_MPI
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g\n", TotalTime, star_r[g_k], binary[kb].id2, binary[kb].bse_mass0[1], binary[kb].bse_mass[1]);
+#else
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g\n", TotalTime, star[k].r, binary[kb].id2, binary[kb].bse_mass0[1], binary[kb].bse_mass[1]); 
+#endif
+
+		}
+	}
+	handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
       }
     }
     bh_count(k);
@@ -687,7 +711,7 @@ void write_stellar_data(void){
 * @param vs ?
 * @param tphysf ?
 */
-void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
+void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, int kprev1)
 {
   int j, jj;
   long knew, knewp, convert;
@@ -847,17 +871,17 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
 #endif
 
 #ifdef USE_MPI
-    parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g)\n",
+    parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g) type1=%d type2=%d\n",
       TotalTime,
       star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
       star[knewp].id, star_m[get_global_idx(knewp)] * units.mstar / FB_CONST_MSUN,
-      star_r[get_global_idx(k)]);
+      star_r[get_global_idx(k)], kprev0, kprev1);
 #else
-    parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g)\n", 
+    parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g) type1=%d type2=%d\n", 
       TotalTime,
       star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
       star[knewp].id, star[knewp].m * units.mstar / FB_CONST_MSUN,
-      star[k].r);
+      star[k].r, kprev0, kprev1);
 #endif
 
     destroy_obj(k);
@@ -972,19 +996,19 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     cp_binmemb_to_star(k, 0, knew);
 
 #ifdef USE_MPI
-    parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n",
+    parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d\n",
       TotalTime,
       star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
-      star_r[get_global_idx(k)]);
+      star_r[get_global_idx(k)], star[knew].se_k, kprev0, kprev1);
 #else
-    parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
+    parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d\n", 
       TotalTime, 
       star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
-      star[k].r);
+      star[k].r, star[knew].se_k, kprev0, kprev1);
 #endif
     destroy_obj(k);
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
@@ -1074,19 +1098,19 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf)
     cp_binmemb_to_star(k, 1, knew);
 
 #ifdef USE_MPI
-    parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n",
+    parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d\n",
       TotalTime,
       star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
-      star_r[get_global_idx(k)]);
+      star_r[get_global_idx(k)], star[knew].se_k, kprev0, kprev1);
 #else
-    parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g)\n", 
+    parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d\n", 
       TotalTime, 
       star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
-      star[k].r);
+      star[k].r, star[knew].se_k, kprev0, kprev1);
 #endif
 
     destroy_obj(k);

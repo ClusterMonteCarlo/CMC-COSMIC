@@ -606,10 +606,9 @@ void print_bh_summary() {
 	} else {
 		fb_bh = 0.0;
 	}
-	rootfprintf(bhsummaryfile, "%ld %.8g %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %.6g\n",
-		tcount, TotalTime, (bhsingle + bhbinary + 2*bhbh), bhsingle, bhbinary, 
-		bhbh, bhnonbh, bh13, bhwd, (bh10+bh11+bh12), bhstar, bh01, bh26, 
-		bh7, bh89, fb_bh);
+	rootfprintf(bhsummaryfile, "%ld %.8g %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %.6g\n",
+		tcount, TotalTime, (bhsingle + bhnonbh + 2*bhbh), bhsingle, bhbinary, 
+		bhbh, bhnonbh, bh13, bhwd, (bhnonbh-bhwd-bh13), bh01, (bhnonbh-bhwd-bh13-bh01), fb_bh);
 
 	// reset all counts for next timestep
 	bhbinary=0;
@@ -675,7 +674,7 @@ void print_esc_bh_summary() {
     esc_bhnonbh_tot += esc_bhnonbh;
     esc_bh13_tot += esc_bh13;
     esc_bhwd_tot += esc_bhwd;
-    esc_bhstar_tot = esc_bhstar_tot + esc_bh01 + esc_bh26 + esc_bh7 +  esc_bh89;
+    esc_bhstar_tot = esc_bhnonbh_tot - esc_bhwd_tot - esc_bh13_tot;
     esc_bh10_tot += esc_bh10;
     esc_bh11_tot += esc_bh11;
     esc_bh12_tot += esc_bh12;
@@ -683,29 +682,27 @@ void print_esc_bh_summary() {
     esc_bh26_tot += esc_bh26;
     esc_bh7_tot += esc_bh7;
     esc_bh89_tot += esc_bh89;
-    if ((esc_bhbinary + esc_bhsingle)>0) {
+    /*if ((esc_bhbinary + esc_bhsingle)>0) {
         esc_fb_bh = ((double) (esc_bhbinary))/((double) (esc_bhbinary + esc_bhsingle));
     } else {
         esc_fb_bh = 0.0;
-    }
+    }*/
     if (esc_bhbinary_tot>0 || esc_bhsingle_tot>0) {
         esc_fb_bh_tot = ((double) (esc_bhbinary_tot))/((double) (esc_bhbinary_tot + esc_bhsingle_tot));
     } else {
         esc_fb_bh_tot = 0.0;
     }
-    rootfprintf(escbhsummaryfile, "%ld %.8g %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %.6g %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %.6g\n",
+    rootfprintf(escbhsummaryfile, "%ld %.8g %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld %.6g\n",
             tcount, TotalTime, 
             // counts for this timestep
-            (esc_bhsingle + esc_bhbinary + 2*esc_bhbh), esc_bhsingle, 
-            esc_bhbinary, esc_bhbh, esc_bhnonbh, esc_bh13, esc_bhwd, 
-            (esc_bh10+esc_bh11+esc_bh12), esc_bhstar, esc_bh01, esc_bh26, 
-            esc_bh7, esc_bh89, esc_fb_bh,
+            (esc_bhsingle_tot + esc_bhnonbh_tot + 2*esc_bhbh_tot), esc_bhsingle_tot, 
+            esc_bhbinary_tot, esc_bhbh_tot, esc_bhnonbh_tot, esc_bh13_tot, esc_bhwd_tot,
+	    esc_bhstar_tot, esc_bh01_tot, (esc_bhstar_tot-esc_bh01_tot),esc_fb_bh_tot);
             // cumulative counts for escaping bhs
-            (esc_bhsingle_tot + esc_bhbinary_tot + 2*esc_bhbh_tot), esc_bhsingle_tot, 
+            /*(esc_bhsingle_tot + esc_bhbinary_tot + 2*esc_bhbh_tot), esc_bhsingle_tot, 
             esc_bhbinary_tot, esc_bhbh_tot, esc_bhnonbh_tot, esc_bh13_tot, esc_bhwd_tot, 
             (esc_bh10_tot+esc_bh11_tot+esc_bh12_tot), esc_bhstar_tot, esc_bh01_tot, 
-            esc_bh26_tot, esc_bh7_tot, esc_bh89_tot, esc_fb_bh_tot);
-
+            esc_bh26_tot, esc_bh7_tot, esc_bh89_tot, esc_fb_bh_tot);*/
 
     // reset counts for next timestep
     esc_bhsingle = 0;
@@ -1778,8 +1775,10 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
         fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
 
 		// print header
-		fprintf(bhsummaryfile, "#1:tcount  #2:TotalTime  #3:N_bh  #4:N_bh_single  #5:N_bh_binary  #6:N_bh-bh  #7:N_bh-ns  #8:N_bh-wd  #9:N_bh-star  #10:N_bh-nonbh  #11:fb_bh\n");
-//#10:  #11:Binary_id1  #12:Binary_id2  #13:kw1  #14:kw2  #15:M1   #16:M2   #17:P  #18:a  #19:e  #20:R2/RL2  #21:dm1/dt\n");
+		fprintf(bhsummaryfile, "#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)\n");
+
+	    // print header
+		fprintf(escbhsummaryfile, "# Ejected BHs\n#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)]\n");
 
 		if(TIMER)
 			fprintf(timerfile, "#1:tcount\t#2:t_cen_calc\t#3:t_timestep\t#4:t_dyn\t#5:t_se\t#6:t_orb\t#7:t_tid_str\t#8:t_sort\t#9:t_postsort_comm\t#10:t_pot_cal\t#11:t_ener_con3\t#12:t_calc_io_vars1\t#13:t_calc_io_vars1\t#14:t_comp_ener\t#15:t_upd_vars\t#16:t_io\t#17:t_io_ignore\t#18:t_oth\t#19:t_sort_lsort1\t#20:t_sort_splitters\t#21:t_sort_a2a\t#22:t_sort_lsort2\t#23:t_sort_oth\t#24:t_sort_lb\t#25:t_sort_only\n");
@@ -1978,8 +1977,8 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 	pararootfprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 	pararootfprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 
-    if (THREEBODYBINARIES)
-    {
+	if (THREEBODYBINARIES)
+    	{
         // print header
         pararootfprintf(threebbfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:ave_local_mass #12:n_local #13:sigma_local #14:eta #15:Eb #16:ecc #17:a[AU] #18:r_peri[AU] #19:r(bin) #20:r(single) #21:vr(bin) #22:vt(bin) #23:vr(single) #24:vt(single) #25:phi(bin) #26:phi(single) #27:delta_PE #28:delta_KE #29:delta_E(interaction) #30:delta_E(cumulative) #31:N_3bb\n");
         // print header
@@ -1988,13 +1987,15 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
         pararootfprintf(lightcollisionfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:type1 #12:type2 #13:type3 #14:rad1 #15:rad2 #16:rad3 #17:Eb #18:ecc #19:a(au) #20:rp(au)\n");
         // print header
         pararootfprintf(threebbdebugfile, "#1:k1 #2:k2 #3:k3 #4:id1 #5:id2 #6:id3 #7:r1 #8:r2 #9:r3 #10:m1 #11:m2 #12:m3 #13:v1 #14:v1[1] #15:v1[2] #16:v1[2] #17:v2 #18:v2[1] #19:v2[2] #20:v2[3] #21:v3 #22:v3[1] #23:v3[2] #24:v3[3] #25:v1_cmf #26:v1_cmf[1] #27:v1_cmf[2] #28:v1_cmf[3] #29:v2_cmf #30:v2_cmf[1] #31:v2_cmf[2] #32:v2_cmf[3] #33:v3_cmf #34:v3_cmf[1] #35:v3_cmf[2] #36:v3_cmf[3] #37:knew #38:bin_id #39:bin_r #40:bin_m #41:vs_cmf #42:vs_cmf[1] #43:vs_cmf[2] #44:vs_cmf[3] #45:vb_cmf #46:vb_cmf[1] #47:vb_cmf[2] #48:vb_cmf[3] #49:vs #50:vs[1] #51:vs[2] #52:vs[3] #53:vb #55:vb[1] #56:vb[2] #57:vb[3] #58:ave_local_m #59:sigma #60:eta #61:Eb #62:ecc #63:rp #64:a #65:PE_i #66:PE_f #67:KE_cmf_i #68:KE_cmf_f #69:KE_i #70:KE_f #71:delta_PE #72:delta_KE #73:delta_E\n");
-    }
+	}
 
     // print header
-    pararootfprintf(escbhsummaryfile, "#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
+	/*pararootfprintf(escbhsummaryfile, "# Ejected BHs\n#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)]\n");
+	*/
+
     // print header
 	if (WRITE_BH_INFO)
-		pararootfprintf(newbhfile,"#:time #:r #:ID #:m_progenitor #:bh mass #:kick[km/s]\n");
+		pararootfprintf(newbhfile,"#:time #:r #:ID #:m_progenitor #:bh mass\n");
 //"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
 
 	/* print header */
