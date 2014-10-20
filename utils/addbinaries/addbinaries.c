@@ -254,9 +254,9 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 					   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
 					
 					/* setting star properties in FITS file, being careful with units */
-					cfd->bs_k1[j] = star.se_k;
-					cfd->bs_m1[j] = star.se_mass / cfd->Mclus;
-					cfd->bs_Reff1[j] = star.se_radius / (cfd->Rvir * PARSEC / RSUN);
+					cfd->bs_k2[j] = star.se_k;
+					cfd->bs_m2[j] = star.se_mass / cfd->Mclus;
+					cfd->bs_Reff2[j] = star.se_radius / (cfd->Rvir * PARSEC / RSUN);
 					
 					/*m2 stellar properties are set, now set m1 stellar properties*/
 					star.se_mass = cfd->bs_m1[j] * cfd->Mclus;

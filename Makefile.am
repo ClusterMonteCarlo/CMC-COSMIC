@@ -8,7 +8,7 @@ SUBDIRS = libs bse_wrap fewbody-0.24
 bin_PROGRAMS = cmc
 
 if BUILD_UTILS
-bin_PROGRAMS+= cmc_mkplummer cmc_mkking cmc_setimf cmc_setunits cmc_setstellar cmc_addbinaries
+bin_PROGRAMS+= cmc_mkplummer cmc_mkking cmc_setimf cmc_setunits cmc_setstellar cmc_addbinaries cmc_nbody2fits
 endif
 
 cmc_SOURCES= cmc.c
@@ -45,6 +45,10 @@ cmc_setstellar_LDFLAGS = $(LIBTOOL_LDFLAGS)
 cmc_addbinaries_SOURCES = utils/addbinaries/addbinaries.c
 cmc_addbinaries_LDADD = libs/libsupport.la bse_wrap/libbsewrap.la
 cmc_addbinaries_LDFLAGS = $(LIBTOOL_LDFLAGS)
+
+cmc_nbody2fits_SOURCES = utils/ascii2fits/nbody2fits.c
+cmc_nbody2fits_LDADD = libs/libsupport.la
+cmc_nbody2fits_LDFLAGS = $(LIBTOOL_LDFLAGS)
 
 noinst_LTLIBRARIES = libcmc.la
 # Since this is just a convenience library, we set the -static flag to avoid
