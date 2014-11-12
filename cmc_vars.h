@@ -70,8 +70,8 @@ _EXTERN_ long esc_bhstar_tot, esc_bh01_tot, esc_bh26_tot, esc_bh7_tot, esc_bh89_
 _EXTERN_ double fb_bh, esc_fb_bh, esc_fb_bh_tot;
 _EXTERN_ FILE *bhsummaryfile, *escbhsummaryfile, *newbhfile;
 /* BSE input file parameters */
-_EXTERN_ int BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_IDUM, BSE_WINDFLAG;
-_EXTERN_ double BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_MXNS, BSE_BCONST, BSE_CK, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA;
+_EXTERN_ int BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_IDUM, BSE_WINDFLAG,BSE_FBKICKSWITCH;
+_EXTERN_ double BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_ALPHA1, BSE_LAMBDA, BSE_MXNS, BSE_BCONST, BSE_CK, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA;
 /* binary stuff */
 _EXTERN_ long N_b, N_bb, N_bs, last_hole;
 //Probably not needed anymore

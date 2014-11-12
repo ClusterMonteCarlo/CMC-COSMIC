@@ -240,7 +240,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
 		       double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		       double *z, double *zpars, double *tb, double *ecc, double *vs)
 {
-  int mykstar[2], kattempt=-1, j, i;
+  int mykstar[2], mykstarprev[2], kattempt=-1, j, i;
   double mymass0[2], mymass[2], myrad[2], mylum[2], mymassc[2], myradc[2], mymenv[2], myrenv[2], myospin[2], myB_0[2], mybacc[2], mytacc[2], myepoch[2];
   double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[12];
 
@@ -248,6 +248,9 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
     kattempt++;
     for (j=0; j<2; j++) {
       mykstar[j] = kstar[j];
+      //Sourav: testing additional controlable kick routine for blackholes
+      //Save the initial startypes since formation kick must be added only when the SN happens
+      //mykstarprev[j] = kstar[j];
       mymass0[j] = mass0[j];
       mymass[j] = mass[j];
       myrad[j] = rad[j];
@@ -741,6 +744,8 @@ void bse_set_bwind(double bwind) { value1_.bwind = bwind; }
 void bse_set_hewind(double hewind) { value1_.hewind = hewind; }
 void bse_set_windflag(int windflag) { value1_.windflag = windflag; }
 void bse_set_sigma(double sigma) { value4_.sigma = sigma; }
+void bse_set_bhsigmafrac(double bhsigmafrac) {value4_.bhsigmafrac = bhsigmafrac; }
+void bse_set_fbkickswitch(int fbkickswitch) {value4_.fbkickswitch = fbkickswitch; }
 void bse_set_ifflag(int ifflag) { flags_.ifflag = ifflag; }
 void bse_set_wdflag(int wdflag) { flags_.wdflag = wdflag; }
 void bse_set_bhflag(int bhflag) { value4_.bhflag = bhflag; }

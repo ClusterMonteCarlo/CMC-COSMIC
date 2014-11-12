@@ -185,10 +185,11 @@
       INTEGER pulsar,bdecayfac,aic,htpmb,ST_cr,ST_tide,wdwdedd,eddlim
       INTEGER mergemsp,merge_mem,notamerger
       REAL*8 fallback,sigma,sigmahold,sigmadiv,ecsnp,ecsn_mlow
+      REAL*8 bhsigmafrac
       REAL*8 vk,u1,u2,s,Kconst,betahold,convradcomp(2),teff(2)
       REAL*8 B_0(2),bconst,CK,bacc(2),tacc(2),xip,xihold,diskxi,diskxip
       REAL*8 B(2),Bbot,omdot,b_mdot,b_mdot_lim
-      COMMON /VALUE4/ sigma,bconst,CK
+      COMMON /VALUE4/ sigma,bhsigmafrac,bconst,CK
       COMMON /VALUE3/ idum
       INTEGER idum2,iy,ir(32)
       COMMON /RAND3/ idum2,iy,ir
@@ -1200,7 +1201,9 @@
                elseif(merger.le.-20.d0)then
                   sigma = ABS(merger)
                   fallback = 0.d0
-                  if(merger.ge.200.d0)then!estimate CC SN
+*                  if(merger.ge.200.d0)then!estimate CC SN
+*Sourav:Possible bug in the line above. merger should really be sigms!!              
+                  if(sigma.ge.200.d0)then!estimate CC SN
                      formation(k) = 4
                   else
                      formation(k) = 7

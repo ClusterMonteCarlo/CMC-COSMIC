@@ -37,6 +37,8 @@ int main(void)
   bse_set_hewind(0.5);
   bse_set_windflag(0);
   bse_set_sigma(190.0);
+  bse_set_bhsigmafrac(1.);
+  bse_set_fbkickswitch(1); 
   bse_set_ifflag(0);
   bse_set_wdflag(1);
   bse_set_bhflag(0);

@@ -49,6 +49,8 @@ void stellar_evolution_init(void){
   bse_set_pts2(0.01);
   bse_set_pts3(0.02);
   bse_set_sigma(BSE_SIGMA);
+  bse_set_bhsigmafrac(BSE_BHSIGMAFRAC);
+  bse_set_fbkickswitch(BSE_FBKICKSWITCH);
   bse_set_beta(BSE_BETA); //set -0.125 if variable beta (following startrack), otherwise 0.125 for bse.
   bse_set_xi(1.0);
   bse_set_acc2(1.5);
@@ -63,7 +65,7 @@ void stellar_evolution_init(void){
 
   /* set collisions matrix */
   bse_instar();
-  dprintf("se_init: %g %g %g %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BETA, BSE_EDDFAC, BSE_GAMMA);
+  dprintf("se_init: %g %g %g %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %d\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_FBKICKSWITCH);
 
 #ifdef USE_MPI 
   for (k=1; k<=mpiEnd-mpiBegin+1; k++) {

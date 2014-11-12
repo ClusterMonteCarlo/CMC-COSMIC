@@ -35,8 +35,8 @@
       REAL*8 MENV,RENV,MENVD,RZAMS,vk
       REAL*8 bkick(12),fallback,ecsnp,ecsn_mlow,M1i,M2i
       INTEGER formation1,formation2
-      REAL*8 sigma,sigmahold,sigmadiv
-      COMMON /VALUE4/ sigma
+      REAL*8 sigma,bhsigmafrac,sigmahold,sigmadiv
+      COMMON /VALUE4/ sigma,bhsigmafrac
       REAL*8 AURSUN,K3,ALPHA1,LAMBDA
       PARAMETER (AURSUN = 214.95D0,K3 = 0.21D0) 
       COMMON /VALUE2/ ALPHA1,LAMBDA

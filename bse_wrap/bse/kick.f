@@ -34,7 +34,7 @@
       COMMON /VALUE3/ idum
       INTEGER idum2,iy,ir(32)
       COMMON /RAND3/ idum2,iy,ir
-      integer bhflag,wdaflag
+      integer bhflag,wdaflag,fbkickswitch
       real*8 tphys,m1,m2,m1n,mbi,mbf,mtilda,mdif
       real*8 ecc,sep,sepn,jorb,ecc2,bb,angle
       real*8 pi,twopi,gmrkm,yearsc,rsunkm
@@ -46,7 +46,7 @@
       real*8 vr,vr2,vk2,vn2,hn2
       real*8 mu,cmu,vs(3),v1,v2,v1a,v1b
       real*8 Ptt,Qtt,Rtt,Stt,mx1,mx2,r2,qdist
-      real*8 sigma,sigmah,RotInvX,RotInvZ
+      real*8 sigma,sigmah,bhsigmafrac,RotInvX,RotInvZ
       real*8 signs,sigc,psins,psic,cpsins,spsins,cpsic,spsic
       real*8 csigns,ssigns,csigc,ssigc
       real*8 semilatrec,cangleofdeath,angleofdeath,energy
@@ -56,7 +56,7 @@
       logical output
 *
       real*8 bconst,CK
-      COMMON /VALUE4/ sigma,bconst,CK,bhflag
+      COMMON /VALUE4/ sigma,bhsigmafrac,bconst,CK,bhflag,fbkickswitch 
       real*8 mxns,neta,bwind,hewind
       COMMON /VALUE1/ neta,bwind,hewind,mxns
       real*8 bkick(12)
@@ -82,6 +82,10 @@
          kickscale = 10.d0
       endif
       sigmah = sigma
+*Test: Checking if we can make customized sigma for blackholes only
+      if(kw.eq.14.or.(kw.eq.13.and.(m1n.ge.mxns)))then
+          sigma = sigmah*bhsigmafrac
+      endif
       if(output)then
          write(48,49)kw,m1,m1n,m2,ecc,sep,snstar,fallback,
      &               bhflag,sigma,mxns,id1_pass,id2_pass
@@ -167,9 +171,12 @@
       vk = SQRT(vk2)
 * Limit BH kick with fallback mass fraction.
 *      if(kw.eq.14)then
-      fallback = MIN(fallback,1.d0)
-      vk = MAX((1.d0-fallback)*vk,0.d0)
-      vk2 = vk*vk
+*Limit BH kick with fallback only if wanted
+      if (fbkickswitch.gt.0)then
+          fallback = MIN(fallback,1.d0)
+          vk = MAX((1.d0-fallback)*vk,0.d0)
+          vk2 = vk*vk
+      endif
       if(kickscale.gt.0.d0)then
          vk = vk/kickscale
          vk2 = vk2/kickscale

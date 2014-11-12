@@ -152,6 +152,14 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	if (binmf==99){
 		rfile = fopen("readbinary.dat", "r");
 	}
+	long nhighmass = 0;
+	if (binmf==98){
+		for (i=0; i<=cfd->NOBJ; i++){
+			if (cfd->obj_m[i]>15.*cfd->Mclus) {
+				nhighmass++;
+			}
+		}
+	}
 
 	
 	/* set parameters relating to metallicity */
@@ -165,7 +173,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	newstarid = cfd->NOBJ;
 
 	/* test for strange things */
-	if (Nbin+nplanets > cfd->NOBJ) {
+	if (Nbin+nplanets+nhighmass > cfd->NOBJ) {
 		fprintf(stderr, "Error: You've requested more binaries than there are objects in the input file!\n");
 		exit(1);
 	}
@@ -174,20 +182,20 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 		fprintf(stderr, "Warning: NBINARY!=0 in input FITS file.  Be sure you know what you're doing!\n");
 	}
 
-	cfd->NBINARY = Nbin+nplanets;
+	cfd->NBINARY = Nbin+nplanets+nhighmass;
 	
 	/* reallocate memory for binaries */
-	cfd->bs_index = (long *) realloc(cfd->bs_index, (nplanets+Nbin+1)*sizeof(long));
-	cfd->bs_id1 = (long *) realloc(cfd->bs_id1, (nplanets+Nbin+1)*sizeof(long));
-	cfd->bs_k1 = (int *) realloc(cfd->bs_k1, (nplanets+Nbin+1)*sizeof(int));
-	cfd->bs_m1 = (double *) realloc(cfd->bs_m1, (nplanets+Nbin+1)*sizeof(double));
-	cfd->bs_Reff1 = (double *) realloc(cfd->bs_Reff1, (nplanets+Nbin+1)*sizeof(double));
-	cfd->bs_id2 = (long *) realloc(cfd->bs_id2, (nplanets+Nbin+1)*sizeof(long));
-	cfd->bs_k2 = (int *) realloc(cfd->bs_k2, (nplanets+Nbin+1)*sizeof(int));
-	cfd->bs_m2 = (double *) realloc(cfd->bs_m2, (nplanets+Nbin+1)*sizeof(double));
-	cfd->bs_Reff2 = (double *) realloc(cfd->bs_Reff2, (nplanets+Nbin+1)*sizeof(double));
-	cfd->bs_a = (double *) realloc(cfd->bs_a, (nplanets+Nbin+1)*sizeof(double));
-	cfd->bs_e = (double *) realloc(cfd->bs_e, (nplanets+Nbin+1)*sizeof(double));
+	cfd->bs_index = (long *) realloc(cfd->bs_index, (nhighmass+nplanets+Nbin+1)*sizeof(long));
+	cfd->bs_id1 = (long *) realloc(cfd->bs_id1, (nhighmass+nplanets+Nbin+1)*sizeof(long));
+	cfd->bs_k1 = (int *) realloc(cfd->bs_k1, (nhighmass+nplanets+Nbin+1)*sizeof(int));
+	cfd->bs_m1 = (double *) realloc(cfd->bs_m1, (nhighmass+nplanets+Nbin+1)*sizeof(double));
+	cfd->bs_Reff1 = (double *) realloc(cfd->bs_Reff1, (nhighmass+nplanets+Nbin+1)*sizeof(double));
+	cfd->bs_id2 = (long *) realloc(cfd->bs_id2, (nhighmass+nplanets+Nbin+1)*sizeof(long));
+	cfd->bs_k2 = (int *) realloc(cfd->bs_k2, (nhighmass+nplanets+Nbin+1)*sizeof(int));
+	cfd->bs_m2 = (double *) realloc(cfd->bs_m2, (nhighmass+nplanets+Nbin+1)*sizeof(double));
+	cfd->bs_Reff2 = (double *) realloc(cfd->bs_Reff2, (nhighmass+nplanets+Nbin+1)*sizeof(double));
+	cfd->bs_a = (double *) realloc(cfd->bs_a, (nhighmass+nplanets+Nbin+1)*sizeof(double));
+	cfd->bs_e = (double *) realloc(cfd->bs_e, (nhighmass+nplanets+Nbin+1)*sizeof(double));
 
 	/* calculate minimum mass of mass function, plus other statistics */
 	Mmin = GSL_POSINF;
@@ -204,8 +212,120 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 
 	/* first assign all secondary masses, since this will change the units */
 	j = 0;
-	
-	while (j < Nbin) {
+	/*First assign all high mass stars as binaries even before going to the random assignment. */
+	if (binmf==98){
+		for (i=0; i<=cfd->NOBJ; i++){
+			if (cfd->obj_m[i]>15./cfd->Mclus){
+				j++;
+				cfd->obj_binind[i] = j;
+				cfd->bs_index[j] = j;	
+				
+				/* copy properties for star 1 */
+				cfd->bs_id1[j] = cfd->obj_id[i];
+				cfd->bs_k1[j] = cfd->obj_k[i];
+				cfd->bs_m1[j] = cfd->obj_m[i];
+				cfd->bs_Reff1[j] = cfd->obj_Reff[i];
+
+				/* assign properties for star 2;
+			   	this assumes all stars in input file are id'ed sequentially from 1 */
+				cfd->bs_id2[j] = star_get_id_new();
+				/* set secondary mass from dP/dq=1 distribution */
+				cfd->bs_m2[j] = Mmin + rng_t113_dbl() * (cfd->bs_m1[j] - Mmin);
+			
+				/* stellar evolution stuff */
+				star.se_mass = cfd->bs_m2[j] * cfd->Mclus;
+				if(star.se_mass <= 0.7){
+					star.se_k = 0;
+				} else {
+					star.se_k = 1;
+				}
+				/* setting the rest of the variables */
+				star.se_mt = star.se_mass;
+				star.se_ospin = 0.0;
+				star.se_epoch = 0.0;
+				star.se_tphys = 0.0;
+
+				/* evolving stars a little bit to set luminosity and radius */
+				tphysf = 1.0e-6;
+				dtp = tphysf;
+				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
+					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
+				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
+				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+
+				/* setting star properties in FITS file, being careful with units */
+				cfd->bs_k2[j] = star.se_k;
+				cfd->bs_m2[j] = star.se_mass / cfd->Mclus;
+				cfd->bs_Reff2[j] = star.se_radius / (cfd->Rvir * PARSEC / RSUN);
+
+				/* set/unset stellar properties for obj */
+				cfd->obj_id[i] = NOT_A_STAR;
+				cfd->obj_k[i] = NOT_A_STAR;
+				cfd->obj_m[i] = cfd->bs_m1[j] + cfd->bs_m2[j];
+				cfd->obj_Reff[i] = 0.0;
+			}
+		}
+	}
+	if (binmf==97){/*No BH progenotors are initially in a binary. */
+		while (j < Nbin+nhighmass){
+			i = (long) floor(rng_t113_dbl() * cfd->NOBJ + 1.0);
+			/* make it a binary if it's not already */
+			if (i <= cfd->NOBJ && cfd->obj_binind[i] == 0 && cfd->obj_m[i]<15./cfd->Mclus) {
+				j++;
+
+				/* make this object a binary */
+				cfd->obj_binind[i] = j;
+				cfd->bs_index[j] = j;
+				
+				/* copy properties for star 1 */
+				cfd->bs_id1[j] = cfd->obj_id[i];
+				cfd->bs_k1[j] = cfd->obj_k[i];
+				cfd->bs_m1[j] = cfd->obj_m[i];
+				cfd->bs_Reff1[j] = cfd->obj_Reff[i];
+
+				/* assign properties for star 2;
+			   	this assumes all stars in input file are id'ed sequentially from 1 */
+				cfd->bs_id2[j] = star_get_id_new();
+				/* set secondary mass from dP/dq=1 distribution */
+				cfd->bs_m2[j] = Mmin + rng_t113_dbl() * (cfd->bs_m1[j] - Mmin);
+			
+				/* stellar evolution stuff */
+				star.se_mass = cfd->bs_m2[j] * cfd->Mclus;
+				if(star.se_mass <= 0.7){
+					star.se_k = 0;
+				} else {
+					star.se_k = 1;
+				}
+				/* setting the rest of the variables */
+				star.se_mt = star.se_mass;
+				star.se_ospin = 0.0;
+				star.se_epoch = 0.0;
+				star.se_tphys = 0.0;
+
+				/* evolving stars a little bit to set luminosity and radius */
+				tphysf = 1.0e-6;
+				dtp = tphysf;
+				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
+					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
+				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
+				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+
+				/* setting star properties in FITS file, being careful with units */
+				cfd->bs_k2[j] = star.se_k;
+				cfd->bs_m2[j] = star.se_mass / cfd->Mclus;
+				cfd->bs_Reff2[j] = star.se_radius / (cfd->Rvir * PARSEC / RSUN);
+
+				/* set/unset stellar properties for obj */
+				cfd->obj_id[i] = NOT_A_STAR;
+				cfd->obj_k[i] = NOT_A_STAR;
+				cfd->obj_m[i] = cfd->bs_m1[j] + cfd->bs_m2[j];
+				cfd->obj_Reff[i] = 0.0;
+
+			}
+		}
+	}
+	if (binmf!=97){
+	while (j < Nbin+nhighmass) {
 		i = (long) floor(rng_t113_dbl() * cfd->NOBJ + 1.0);
 		
 		/* make it a binary if it's not already */
@@ -298,7 +418,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				}
 			}
 
-			else if (binmf==0){   /*All single masses are chosen from the same MF.  Binary companion masses are chosen later.*/
+			else if (binmf==0 || binmf==98){   /*All single masses are chosen from the same MF.  Binary companion masses are chosen later.*/
 				/* copy properties for star 1 */
 				cfd->bs_id1[j] = cfd->obj_id[i];
 				cfd->bs_k1[j] = cfd->obj_k[i];
@@ -441,6 +561,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				cfd->obj_Reff[i] = 0.0;
 			}
 		}
+	}
 	}
 
 	if (nplanets>0){

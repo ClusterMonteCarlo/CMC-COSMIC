@@ -932,6 +932,16 @@ typedef struct{
 * @brief sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).
 */
 	int BSE_SIGMA;
+#define PARAMDOC_BSE_BHSIGMAFRAC "bhsigmafrac is the factor to scale Maxwellian dispersion for BH SN kick speeds (1) compared to NS (265 km/s)."
+/**
+* @brief bhsigmafrac is the factor to scale Maxwellian dispersion for BH SN kick speeds (1) compared to NS (265 km/s).
+*/
+	int BSE_BHSIGMAFRAC;
+#define PARAMDOC_BSE_FBKICKSWITCH "fbkickswitch is the switch to decide whether SN kicks should be scaled by fallback. 0:No, >0:Yes (1)."
+/**
+* @brief fbkickswitch is the switch to decide whether SN kicks should be scaled by fallback. 0:No, >0:Yes (1)..
+*/
+	int BSE_FBKICKSWITCH;
 #define PARAMDOC_BSE_BETA "beta is the wind velocity factor: proprotinal to vwind^2 (1/8)."
 /**
 * @brief beta is the wind velocity factor: proprotinal to vwind^2 (1/8).
