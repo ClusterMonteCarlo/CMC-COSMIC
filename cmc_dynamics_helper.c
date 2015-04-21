@@ -1649,6 +1649,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					sid = 1;
 					bid = 0;
 				}
+				fprintf (stdout, "istriple: %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n");
 			} else {
 				eprintf("object with n=%d!\n", hier.obj[i]->n);
 				exit_cleanly(1, __FUNCTION__);

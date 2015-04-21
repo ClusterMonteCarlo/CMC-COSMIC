@@ -274,7 +274,7 @@ void stellar_evolution_init(void){
 void do_stellar_evolution(gsl_rng *rng)
 {
   long k, kb, j, jj;
-  int kprev,i;
+  int kprev,i, ii;
   int kprev0, kprev1;
   double dtp, tphysf, vs[12], VKO;
   double M_beforeSE, M10_beforeSE, M100_beforeSE, M1000_beforeSE, Mcore_beforeSE;
@@ -480,9 +480,18 @@ void do_stellar_evolution(gsl_rng *rng)
 		if (WRITE_BH_INFO) {
 			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
 #ifdef USE_MPI
-				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g\n", TotalTime, star_r[g_k], star[k].id,star[k].se_mass, star[k].se_mt);
+				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g ", TotalTime, star_r[g_k], star[k].id,star[k].se_mass, star[k].se_mt, VKO);
+				for (ii=0; ii<12; ii++){
+					parafprintf (newbhfile, "%g ", vs[ii]);
+				}
+				parafprintf (newbhfile, "\n");
 #else
-				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g\n", TotalTime, star[k].r, star[k].id,star[k].se_mass, star[k].se_mt); 
+				//parafprintf(newbhfile, "%.18g %g 0 %ld %g %g\n", TotalTime, star[k].r, star[k].id,star[k].se_mass, star[k].se_mt); 
+				fprintf(newbhfile, "%.18g %g 0 %ld %g %g %g ", TotalTime, star[k].r, star[k].id,star[k].se_mass, star[k].se_mt, VKO);
+				for (ii=0; ii<12; ii++){
+					fprintf (newbhfile, "%g ", vs[ii]);
+				}
+				fprintf (newbhfile, "\n");
 #endif
 //m_init, m_bh, time, id, kick, r, vr_init, vt_init, vr_final, vt_final, binflag, m0_init, m1_init, m0_final, m1_final, 
 			}
@@ -542,24 +551,41 @@ void do_stellar_evolution(gsl_rng *rng)
           fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
           exit(1);
         }
+	handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
 	if (WRITE_BH_INFO) {
 		if (kprev0!=14 && binary[kb].bse_kw[0]==14) { // newly formed BH
 #ifdef USE_MPI
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g\n", TotalTime, star_r[g_k], binary[kb].id1, binary[kb].bse_mass0[0], binary[kb].bse_mass[0]);
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g ", TotalTime, star_r[g_k], binary[kb].id1, binary[kb].bse_mass0[0], binary[kb].bse_mass[0], VKO);
+			for (ii=0; ii<12; ii++){
+				parafprintf (newbhfile, "%g ", vs[ii]);
+			}
+			parafprintf (newbhfile, "\n");
 #else
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g\n", TotalTime, star[k].r, binary[kb].id1, binary[kb].bse_mass0[0], binary[kb].bse_mass[0]); 
+			fprintf(newbhfile, "%.18g %g 1 %ld %g %g %g ", TotalTime, star[k].r, binary[kb].id1, binary[kb].bse_mass0[0], binary[kb].bse_mass[0], VKO); 
+			for (ii=0; ii<12; ii++){
+				fprintf (newbhfile, "%g ", vs[ii]);
+			}
+			fprintf (newbhfile, "\n");
 #endif
 		}
 		if (kprev1!=14 && binary[kb].bse_kw[1]==14) { // newly formed BH
 #ifdef USE_MPI
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g\n", TotalTime, star_r[g_k], binary[kb].id2, binary[kb].bse_mass0[1], binary[kb].bse_mass[1]);
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g ", TotalTime, star_r[g_k], binary[kb].id2, binary[kb].bse_mass0[1], binary[kb].bse_mass[1], VKO);
+			for (ii=0; ii<12; ii++){
+				parafprintf (newbhfile, "%g ", vs[ii]);
+			}
+			parafprintf (newbhfile, "\n");
 #else
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g\n", TotalTime, star[k].r, binary[kb].id2, binary[kb].bse_mass0[1], binary[kb].bse_mass[1]); 
+			fprintf(newbhfile, "%.18g %g 1 %ld %g %g %g ", TotalTime, star[k].r, binary[kb].id2, binary[kb].bse_mass0[1], binary[kb].bse_mass[1], VKO);
+			for (ii=0; ii<12; ii++){
+				fprintf (newbhfile, "%g ", vs[ii]);
+			} 
+			fprintf (newbhfile, "\n");
 #endif
 
 		}
 	}
-	handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
+	//handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
       }
     }
     bh_count(k);
