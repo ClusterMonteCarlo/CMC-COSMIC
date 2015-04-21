@@ -2005,7 +2005,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 
     // print header
 	if (WRITE_BH_INFO)
-		pararootfprintf(newbhfile,"#:time #:r #:ID #:m_progenitor #:bh mass\n");
+		pararootfprintf(newbhfile,"#1:time #2:r #3.binary? #4:ID #5:m_progenitor #6:bh mass #7.birth-kick(km/s) #8-19.vsarray\n");
 //"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
 
 	/* print header */
