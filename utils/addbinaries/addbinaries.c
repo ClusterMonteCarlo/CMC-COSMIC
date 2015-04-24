@@ -24,6 +24,8 @@
 #define MIN_A 0.01  //in AU
 #define MAX_A 100.0  //in AU
 #define NPLANETS 0
+#define HIGHMASSFB 0.
+#define HIGHMASSAINDEX -1.75  //default taken from Sana et al. 2012
 
 /* global variables needed by Star Track */
 double *zpars, METALLICITY, WIND_FACTOR=1.0;
@@ -59,7 +61,9 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  -M --Ebmax <E_b,max>           : maximum binding energy, in kT [%g]\n", EBMAX);
 	fprintf(stream, "  -I --ignoreradii               : ignore radii when setting binary properties\n");
 	fprintf(stream, "  -s --seed <seed>               : random seed [%ld]\n", SEED);
-	fprintf(stream, "  -b --binary_mf <choosing bin MF> : set a different MF (KTG91 for now) for binaries [%d]\n", BINMF);	
+	fprintf(stream, "  -b --binary_mf <choosing bin MF> : set a different MF (KTG91 for now) for binaries [%d]\n", BINMF);
+	fprintf(stream, "  -f --highmass_fb <choosing binary fraction for high-mass stars separately> : set a different binary fraction for M>15 Msun [%g]\nNeeds this for binmf=98\n", HIGHMASSFB);
+	fprintf(stream, "  -k --highmass_aind <choosing power-law a-dist for high-mass stars> : set a power-law a-dist. in dn/da [%g].\nMust have l=5\n", HIGHMASSAINDEX);	
 	fprintf(stream, "  -h --help                      : display this help text\n");
 }
 
@@ -106,13 +110,14 @@ void addbin_calc_sigma_r(cmc_fits_data_t *cfd, double *r, double *sigma, double 
 	}
 }
 
-void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a, double min_a, double max_a, double EbminkT, double EbmaxkT, int ignoreradii, int binmf, long nplanets)
+void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a, double min_a, double max_a, double EbminkT, double EbmaxkT, int ignoreradii, int binmf, long nplanets, double highmassfb, double highmass_aindex)
 {
 	int success, success_a;
 	long i, j, planetntry;
-	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew, aminroche, mlow, mhigh, norm;
+	double mass, Mmin, Mmax, amin, amax, W, vorb, emax, Mtotnew, aminroche, mlow, mhigh, norm, norm1;
 	double eta, temp, temp1, temp_a, temp_W, temp_k;
 	double tempm0, tempm1, tempa, tempe;
+	double dummy, dummy1;
 	double kTcore, vcore, Eb, Ebmin, Ebmax, timeunitcgs, mtotal, m1, m2, X, qbin;
 	double *r, *sigma, *mave, dtp, tphysf;
 	star_t star;
@@ -216,53 +221,56 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	if (binmf==98){
 		for (i=0; i<=cfd->NOBJ; i++){
 			if (cfd->obj_m[i]>15./cfd->Mclus){
-				j++;
-				cfd->obj_binind[i] = j;
-				cfd->bs_index[j] = j;	
+				dummy = rng_t113_dbl();
+				if (dummy<=highmassfb) {
+					j++;
+					cfd->obj_binind[i] = j;
+					cfd->bs_index[j] = j;	
 				
-				/* copy properties for star 1 */
-				cfd->bs_id1[j] = cfd->obj_id[i];
-				cfd->bs_k1[j] = cfd->obj_k[i];
-				cfd->bs_m1[j] = cfd->obj_m[i];
-				cfd->bs_Reff1[j] = cfd->obj_Reff[i];
+					/* copy properties for star 1 */
+					cfd->bs_id1[j] = cfd->obj_id[i];
+					cfd->bs_k1[j] = cfd->obj_k[i];
+					cfd->bs_m1[j] = cfd->obj_m[i];
+					cfd->bs_Reff1[j] = cfd->obj_Reff[i];
 
-				/* assign properties for star 2;
-			   	this assumes all stars in input file are id'ed sequentially from 1 */
-				cfd->bs_id2[j] = star_get_id_new();
-				/* set secondary mass from dP/dq=1 distribution */
-				cfd->bs_m2[j] = Mmin + rng_t113_dbl() * (cfd->bs_m1[j] - Mmin);
+					/* assign properties for star 2;
+			   		this assumes all stars in input file are id'ed sequentially from 1 */
+					cfd->bs_id2[j] = star_get_id_new();
+					/* set secondary mass from dP/dq=1 distribution */
+					cfd->bs_m2[j] = Mmin + rng_t113_dbl() * (cfd->bs_m1[j] - Mmin);
 			
-				/* stellar evolution stuff */
-				star.se_mass = cfd->bs_m2[j] * cfd->Mclus;
-				if(star.se_mass <= 0.7){
-					star.se_k = 0;
-				} else {
-					star.se_k = 1;
+					/* stellar evolution stuff */
+					star.se_mass = cfd->bs_m2[j] * cfd->Mclus;
+					if(star.se_mass <= 0.7){
+						star.se_k = 0;
+					} else {
+						star.se_k = 1;
+					}
+					/* setting the rest of the variables */
+					star.se_mt = star.se_mass;
+					star.se_ospin = 0.0;
+					star.se_epoch = 0.0;
+					star.se_tphys = 0.0;
+
+					/* evolving stars a little bit to set luminosity and radius */
+					tphysf = 1.0e-6;
+					dtp = tphysf;
+					bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
+						   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
+					   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
+					   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+
+					/* setting star properties in FITS file, being careful with units */
+					cfd->bs_k2[j] = star.se_k;
+					cfd->bs_m2[j] = star.se_mass / cfd->Mclus;
+					cfd->bs_Reff2[j] = star.se_radius / (cfd->Rvir * PARSEC / RSUN);
+
+					/* set/unset stellar properties for obj */
+					cfd->obj_id[i] = NOT_A_STAR;
+					cfd->obj_k[i] = NOT_A_STAR;
+					cfd->obj_m[i] = cfd->bs_m1[j] + cfd->bs_m2[j];
+					cfd->obj_Reff[i] = 0.0;
 				}
-				/* setting the rest of the variables */
-				star.se_mt = star.se_mass;
-				star.se_ospin = 0.0;
-				star.se_epoch = 0.0;
-				star.se_tphys = 0.0;
-
-				/* evolving stars a little bit to set luminosity and radius */
-				tphysf = 1.0e-6;
-				dtp = tphysf;
-				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
-					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
-				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
-
-				/* setting star properties in FITS file, being careful with units */
-				cfd->bs_k2[j] = star.se_k;
-				cfd->bs_m2[j] = star.se_mass / cfd->Mclus;
-				cfd->bs_Reff2[j] = star.se_radius / (cfd->Rvir * PARSEC / RSUN);
-
-				/* set/unset stellar properties for obj */
-				cfd->obj_id[i] = NOT_A_STAR;
-				cfd->obj_k[i] = NOT_A_STAR;
-				cfd->obj_m[i] = cfd->bs_m1[j] + cfd->bs_m2[j];
-				cfd->obj_Reff[i] = 0.0;
 			}
 		}
 	}
@@ -852,6 +860,65 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				cfd->bs_e[i] = emax * rng_t113_dbl();
 			}
 		}
+	} else if (limits==5 && binmf!=99) { //Assign binary semimajor axis as a power law based on Sana et al. 2012, Science, 337, 444
+		/* assign binaries physically */
+		for (i=1; i<=cfd->NBINARY; i++) {
+			if (cfd->bs_m2[i]*cfd->Mclus < 0.002){  //If planetary, then put them in circular orbits at 5 AU
+				cfd->bs_a[i] = 5. * AU / (cfd->Rvir * PARSEC);
+				cfd->bs_e[i] = 0.;
+			} else if (cfd->bs_m1[i]*cfd->Mclus >= 15.) {  //If high-mass primary, > 15 Msun, use a user-defined power-law a-dist
+				/* choose a from a powerlaw distribution from near contact to hard/soft boundary */
+				amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
+				W = 4.0 * vcore / sqrt(3.0 * PI);
+				vorb = XHS * W;
+				amax = cfd->obj_m[i] / (vorb * vorb);
+				if (amax <= amin && ignoreradii == 0) {
+				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
+				  fprintf(stderr, "WARNING: setting amax = amin\n");
+				  amax = amin;
+				}
+				dummy1 = rng_t113_dbl();
+				if (highmass_aindex==0) {
+					cfd->bs_a[i] = amin + (amax-amin)*dummy1;  //If uniform in a
+				} else if (highmass_aindex==-1) {
+					fprintf (stderr, "Change your generating file and use limits 0 instead of 5.[%g]\n", highmass_aindex); //If uniform in log a
+				} else {
+					norm1 = pow(highmass_aindex-1, amax/amin);
+					cfd->bs_a[i] = amin * pow(1./(highmass_aindex-1), (norm1 * dummy1 + 1.)); 
+				}
+				/* get eccentricity from thermal distribution, truncated near contact */
+				if (ignoreradii == 0) {
+				  emax = 1.0 - amin / cfd->bs_a[i];
+				} else {
+				  emax = 1.0;
+				}
+				cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
+			} else {  //If not high-mass star, use the regular uniform in log a distribution. 
+				/* choose a from a distribution uniform in 1/a from near contact to hard/soft boundary */
+				amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
+				W = 4.0 * vcore / sqrt(3.0 * PI);
+				vorb = XHS * W;
+				amax = cfd->obj_m[i] / (vorb * vorb);
+				if (amax <= amin && ignoreradii == 0) {
+				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
+				  fprintf(stderr, "WARNING: setting amax = amin\n");
+				  amax = amin;
+				}
+				cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
+	
+				/* get eccentricity from thermal distribution, truncated near contact */
+				if (ignoreradii == 0) {
+				  emax = 1.0 - amin / cfd->bs_a[i];
+				} else {
+				  emax = 1.0;
+				}
+				cfd->bs_e[i] = emax * sqrt(rng_t113_dbl());
+			}
+
+		
+		}
+		
+
 	} else if (binmf!=99) {
 		fprintf(stderr, "limits=%d unknown!\n", limits);
 		exit(1);
@@ -872,10 +939,10 @@ int main(int argc, char *argv[]){
         int i, limits, ignoreradii, binary_mf;
 	long Nbin, nplanets;
 	unsigned long seed;
-	double Ebmin, Ebmax, peak_a, min_a, max_a;
+	double Ebmin, Ebmax, peak_a, min_a, max_a, highmass_fb, highmass_aind;
 	cmc_fits_data_t cfd;
 	char infilename[1024], outfilename[1024];
-	const char *short_opts = "i:o:N:l:p:a:A:m:M:Is:b:n:h";
+	const char *short_opts = "i:o:N:l:p:a:A:m:M:Is:b:n:f:k:h";
 	const struct option long_opts[] = {
 		{"infile", required_argument, NULL, 'i'},
 		{"outfile", required_argument, NULL, 'o'},
@@ -890,6 +957,8 @@ int main(int argc, char *argv[]){
 		{"seed", required_argument, NULL, 's'},
 		{"binary_mf", required_argument, NULL, 'b'},
 		{"Nplanets", required_argument, NULL, 'n'},
+		{"highmass_fb", required_argument, NULL, 'f'},
+		{"highmass_aind", required_argument, NULL, 'k'},
 		{"help", no_argument, NULL, 'h'},
 		{NULL, 0, NULL, 0}
 	};
@@ -908,6 +977,9 @@ int main(int argc, char *argv[]){
 	seed = SEED;
 	nplanets = NPLANETS;
 	binary_mf = BINMF;
+	highmass_fb = HIGHMASSFB;
+	highmass_aind = HIGHMASSAINDEX;
+	
 
 	while ((i = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
 		switch (i) {
@@ -972,6 +1044,22 @@ int main(int argc, char *argv[]){
 				exit(1);
 			}
 			break;
+		case 'f':
+			highmass_fb = strtod(optarg, NULL);
+			if (highmass_fb<0 || highmass_fb>1){
+				fprintf (stderr, "highmass binary fraction must bee >=0 and <=1![%g]\n", highmass_fb);
+			} else if (binary_mf!=98) {
+				fprintf (stderr, "binary_mf is expected to be 98. Do you know what your are doing?\n");
+			}
+			break;
+		case 'k':
+			highmass_aind = strtod(optarg, NULL);
+			if (highmass_aind==-1){
+				fprintf (stderr, "should directly use l=0\n");
+			} else if (binary_mf!=98) {
+				fprintf (stderr, "looks like power-law dist. is desired. Make sure to choose b=98.\n");
+			}
+			break;
 		case 'h':
 			print_usage(stdout);
 			return(0);
@@ -992,7 +1080,8 @@ int main(int argc, char *argv[]){
 
 	METALLICITY = cfd.Z;
 	//fprintf(stderr, "l=%d, p=%g AU, a=%g AU, A=%g AU, m=%g M=%g b=%d\n", limits, peak_a, min_a, max_a, Ebmin, Ebmax, binary_mf);
-	assign_binaries(&cfd, Nbin, limits, peak_a, min_a, max_a, Ebmin, Ebmax, ignoreradii, binary_mf, nplanets);
+	fprintf (stderr, "Came Here.\n");
+	assign_binaries(&cfd, Nbin, limits, peak_a, min_a, max_a, Ebmin, Ebmax, ignoreradii, binary_mf, nplanets, highmass_fb, highmass_aind);
 
 	cmc_write_fits_file(&cfd, outfilename);
 
