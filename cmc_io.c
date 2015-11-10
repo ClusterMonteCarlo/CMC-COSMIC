@@ -1276,7 +1276,7 @@ if(myid==0) {
 				parsed.BSE_HEWIND = 1;
 			} else if (strcmp(parameter_name, "BSE_WINDFLAG")==0) {
 				PRINT_PARSED(PARAMDOC_BSE_WINDFLAG);
-				sscanf(values, "%lf", &BSE_WINDFLAG);
+				sscanf(values, "%d", &BSE_WINDFLAG);
 				parsed.BSE_WINDFLAG = 1;
 			} else if (strcmp(parameter_name, "BSE_ALPHA1")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_ALPHA1);
