@@ -267,6 +267,7 @@ We use these two arrays to store the number of stars created by each node during
 
 	calc_clusdyn_new();
 
+
 	/* print out binary properties to a file */
 	print_initial_binaries();
 

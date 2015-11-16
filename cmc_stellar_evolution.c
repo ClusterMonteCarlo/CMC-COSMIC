@@ -513,9 +513,9 @@ void do_stellar_evolution(gsl_rng *rng)
             dprintf ("k=%ld kb=%ld m=%g m1=%g m2=%g a=%g e=%g r=%g\n", k, kb, star[k].m, binary[kb].m1, binary[kb].m2, binary[kb].a, binary[kb].e, star[k].r);
 #endif
       } else {
-	/* store previous star types for binary components, before evolving binary */
-	kprev0=binary[kb].bse_kw[0];
-	kprev1=binary[kb].bse_kw[1];
+		/* store previous star types for binary components, before evolving binary */
+		kprev0=binary[kb].bse_kw[0];
+		kprev1=binary[kb].bse_kw[1];
         /* set binary orbital period (in days) from a */
         binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
 #ifdef USE_MPI

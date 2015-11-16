@@ -181,6 +181,7 @@
       REAL*8 jspin(2),ospin(2),jorb,oorb,jspbru,ospbru
       REAL*8 delet,delet1,dspint(2),djspint(2),djtx(2)
       REAL*8 dtj,djorb,djgr,djmb,djt,djtt,rmin,rdisk
+      COMMON /fall/fallback
 *
       INTEGER pulsar,bdecayfac,aic,htpmb,ST_cr,ST_tide,wdwdedd,eddlim
       INTEGER mergemsp,merge_mem,notamerger
@@ -1123,20 +1124,6 @@
          endif
 *
          CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
-* Use fall back of material during a SN to limit kick strength
-* according to Belczynski et al. (2008). Here we 'remember' the
-* core mass prior to the SN which sets fall back mass. Need to 
-* pass fallback through to kick.f.
-         fallback = 0.d0
-         if(fb.eq.1)then
-            if(mc.le.5.d0)then
-               fallback = 0.d0
-            elseif(mc.le.7.6)then
-               fallback = (mc-5.d0)/2.6d0
-            else
-               fallback = 1.d0
-            endif
-         endif
          CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
      &               rm,lum,kw,mc,rc,me,re,k2,ST_tide,
      &               ecsnp,ecsn_mlow)
@@ -1201,9 +1188,9 @@
                elseif(merger.le.-20.d0)then
                   sigma = ABS(merger)
                   fallback = 0.d0
-*                  if(merger.ge.200.d0)then!estimate CC SN
+                  if(merger.ge.200.d0)then!estimate CC SN
 *Sourav:Possible bug in the line above. merger should really be sigms!!              
-                  if(sigma.ge.200.d0)then!estimate CC SN
+*                  if(sigma.ge.200.d0)then!estimate CC SN
                      formation(k) = 4
                   else
                      formation(k) = 7
@@ -2808,16 +2795,6 @@
          endif
          kw = kstar(k)
          CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
-         fallback = 0.d0
-         if(fb.eq.1)then
-            if(mc.le.5.d0)then
-               fallback = 0.d0
-            elseif(mc.le.7.6)then
-               fallback = (mc-5.d0)/2.6d0
-            else
-               fallback = 1.d0
-            endif
-         endif
          CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
      &               rm,lum,kw,mc,rc,me,re,k2,ST_tide,ecsnp,ecsn_mlow)
 *

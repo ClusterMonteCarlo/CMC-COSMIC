@@ -87,7 +87,8 @@
           sigma = sigmah*bhsigmafrac
       endif
       if(output)then
-         write(48,49)kw,m1,m1n,m2,ecc,sep,snstar,fallback,
+
+        if(kw.eq.14) write(48,49)kw,m1,m1n,m2,ecc,sep,snstar,fallback,
      &               bhflag,sigma,mxns,id1_pass,id2_pass
       endif
 *      if(kw.lt.0)then
@@ -177,6 +178,7 @@
           vk = MAX((1.d0-fallback)*vk,0.d0)
           vk2 = vk*vk
       endif
+      if(kw.eq.14.and.vk.lt.10) write(20,*)'BH FORM', m1,vk,fallback
       if(kickscale.gt.0.d0)then
          vk = vk/kickscale
          vk2 = vk2/kickscale

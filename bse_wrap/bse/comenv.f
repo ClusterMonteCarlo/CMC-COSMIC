@@ -24,6 +24,7 @@
       COMMON /TYPES/ KTYPE
       INTEGER ceflag,tflag,ifflag,nsflag,wdflag,ST_tide
       COMMON /FLAGS/ ceflag,tflag,ifflag,nsflag,wdflag
+      common /fall/fallback
 *
       REAL*8 M01,M1,MC1,AJ1,JSPIN1,R1,L1,K21
       REAL*8 M02,M2,MC2,AJ2,JSPIN2,R2,L2,K22,MC22
@@ -144,18 +145,6 @@
             KW1i = KW1
             M1i = M1
             CALL star(KW1,M01,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS)
-* Fall back of material modifies resultant post SN velocity kick. Do prior
-* to mc modification. Is according to Belczynski et al. (2008).
-            fallback = 0.d0
-            if(fb.eq.1)then
-               if(MC1.le.5.d0)then
-                  fallback = 0.d0
-               elseif(MC1.le.7.6d0)then
-                  fallback = (MC1-5.d0)/2.6d0
-               else
-                  fallback = 1.d0
-               endif
-            endif
             CALL hrdiag(M01,AJ1,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS,
      &                  R1,L1,KW1,MC1,RC1,MENV,RENV,K21,ST_tide,
      &                  ecsnp,ecsn_mlow)
@@ -306,18 +295,6 @@
             KW1i = KW1
             M1i = M1
             CALL star(KW1,M01,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS)
-* Fall back of material modifies resultant post SN velocity kick. Do prior
-* to mc modification. Is according to Belczynski et al. (2008).
-            fallback = 0.d0
-            if(fb.eq.1)then
-               if(MC1.le.5.d0)then
-                  fallback = 0.d0
-               elseif(MC1.le.7.6d0)then
-                  fallback = (MC1-5.d0)/2.6d0
-               else
-                  fallback = 1.d0
-               endif
-            endif
             CALL hrdiag(M01,AJ1,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS,
      &                  R1,L1,KW1,MC1,RC1,MENV,RENV,K21,ST_tide,
      &                  ecsnp,ecsn_mlow)
@@ -385,18 +362,6 @@
             KW2i = KW2
             M2i = M2
             CALL star(KW2,M02,M2,TM2,TN,TSCLS2,LUMS,GB,ZPARS)
-* Fall back of material modifies resultant post SN velocity kick. Do prior
-* to mc modification. Is according to Belczynski et al. (2008).
-            fallback = 0.d0
-            if(fb.eq.1)then
-               if(MC2.le.5.d0)then
-                  fallback = 0.d0
-               elseif(MC2.le.7.6d0)then
-                  fallback = (MC2-5.d0)/2.6d0
-               else
-                  fallback = 1.d0
-               endif
-            endif
             CALL hrdiag(M02,AJ2,M2,TM2,TN,TSCLS2,LUMS,GB,ZPARS,
      &                  R2,L2,KW2,MC2,RC2,MENV,RENV,K22,ST_tide,
      &                  ecsnp,ecsn_mlow)
@@ -558,18 +523,6 @@
          KW1i = KW
          KW1i = KW
          M1i = M1
-* Fall back of material modifies resultant post SN velocity kick. Do prior
-* to mc modification. Is according to Belczynski et al. (2008).
-         fallback = 0.d0
-         if(fb.eq.1)then
-            if(MC1.le.5.d0)then
-               fallback = 0.d0
-            elseif(MC1.le.7.6d0)then
-               fallback = (MC1-5.d0)/2.6d0
-            else
-               fallback = 1.d0
-            endif
-         endif
          CALL hrdiag(M01,AJ1,M1,TM1,TN,TSCLS1,LUMS,GB,ZPARS,
      &               R1,L1,KW,MC1,RC1,MENV,RENV,K21,ST_tide,
      &               ecsnp,ecsn_mlow)

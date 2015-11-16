@@ -34,6 +34,8 @@
       real*8 mass0,mt0,mtc
       REAL*8 neta,bwind,hewind,mxns
       COMMON /VALUE1/ neta,bwind,hewind,mxns
+      common /fall/fallback
+      REAL*8 fallback
 * 
       real*8 mt_max,ecsnp,ecsn_mlow,mchold
 * 
@@ -515,9 +517,12 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      endif
                      if(mc.le.5.d0)then
                         mt = mcx
+                        fallback = 0.d0
                      elseif(mc.lt.7.6d0)then
                         mt = mcx + (mc - 5.d0)*(mt - mcx)/2.6d0
+                        fallback = (mc - 5.d0)/2.6d0
                      endif
+                     if(mc.gt.7.60) fallback = 1.d0
                   elseif(nsflag.ge.2)then
 *
 * Use NS/BH masses given by Belczynski+08. PK.
@@ -655,9 +660,12 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         endif
                         if(mc.le.5.d0)then
                            mt = mcx
+                           fallback = 0.d0
                         elseif(mc.lt.7.6d0)then
                            mt = mcx + (mc - 5.d0)*(mt - mcx)/2.6d0
+                           fallback = (mc - 5.d0)/2.6d0
                         endif
+                        if(mc.gt.7.60) fallback = 1.d0
                      elseif(nsflag.eq.2)then
 *
 * Use NS/BH masses given by Belczynski+08. PK.

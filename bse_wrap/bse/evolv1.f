@@ -55,6 +55,7 @@ c-------------------------------------------------------------c
       real*8 mlwind,vrotf
       external mlwind,vrotf
       logical iplot,isave
+      common /fall/fallback
 *
       REAL*8 fallback,vk !PDK
 *
@@ -170,18 +171,6 @@ c-------------------------------------------------------------c
 *
 * Find the current radius, luminosity, core mass and stellar type
 * given the initial mass, current mass, metallicity and age
-*
-* Also calculate possible fallback (only used if SN occurs). PDK.
-         fallback = 0.d0
-         if(fb.eq.1)then
-            if(mc.lt.5.d0)then
-               fallback = 0.d0
-            elseif(mc.le.7.6)then
-               fallback = (mc-5.d0)/2.6d0
-            else
-               fallback = 1.d0
-            endif
-         endif
          kwold = kw
          CALL hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
      &               r,lum,kw,mc,rc,menv,renv,k2)
