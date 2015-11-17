@@ -1,5 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4 
-AUTOMAKE_OPTIONS = foreign
+AUTOMAKE_OPTIONS = foreign subdir-objects
+##########AUTOMAKE_OPTIONS = subdir-objects
 SUBDIRS = libs bse_wrap fewbody-0.24 
 
 .cu.cpp:
