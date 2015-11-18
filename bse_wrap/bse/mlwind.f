@@ -166,10 +166,11 @@
          elseif(teff.gt.25000.and.teff.le.50000)then
             dms = -6.697d0 + 2.194d0*LOG10(lum/1.0d+05) - 
      &            1.313d0*LOG10(mt/30.d0) - 1.226d0*LOG10(2.6d0/2.d0) +
-     &            0.85d0*LOG10(z/0.02d0) + 0.933d0*LOG10(teff/2.0d+04) -
+     &            0.85d0*LOG10(z/0.02d0) + 0.933d0*LOG10(teff/4.0d+04) -
      &            10.92d0*(LOG10(teff/4.0d+04)**2)
             dms = 10.d0**dms
          endif
+
          if(kw.ge.2.and.kw.le.6)then
 * LBV-like mass loss beyond the Humphreys-Davidson limit.
             x = 1.0d-5*r*sqrt(lum)

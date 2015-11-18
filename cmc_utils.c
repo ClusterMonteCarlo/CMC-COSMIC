@@ -1973,7 +1973,7 @@ void clusdyn_calculate(void)
 *
 * @return vr^2 (aka Q)
 */
-inline double function_q(long j, long double r, long double pot, long double E, long double J) { 
+double function_q(long j, long double r, long double pot, long double E, long double J) { 
   double res; 
   long double Jr, phis;
 

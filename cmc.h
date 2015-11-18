@@ -76,6 +76,28 @@
 #define STR_BUF_LEN 10000
 #define STR_WRBUF_LEN 100000000
 
+/*-------------------------------------------------------------c
+*
+*     STELLAR TYPES - KW
+*
+*        0 - deeply or fully convective low mass MS star
+*        1 - Main Sequence star
+*        2 - Hertzsprung Gap
+*        3 - First Giant Branch
+*        4 - Core Helium Burning
+*        5 - First Asymptotic Giant Branch
+*        6 - Second Asymptotic Giant Branch
+*        7 - Main Sequence Naked Helium star
+*        8 - Hertzsprung Gap Naked Helium star
+*        9 - Giant Branch Naked Helium star
+*       10 - Helium White Dwarf
+*       11 - Carbon/Oxygen White Dwarf
+*       12 - Oxygen/Neon White Dwarf
+*       13 - Neutron Star
+*       14 - Black Hole
+*       15 - Massless Supernova
+*
+*-------------------------------------------------------------*/
 
 
 /**
@@ -132,7 +154,11 @@ typedef struct{
 */
 	int bse_kw[2];
 /**
-* @brief  initial masses
+* @brief original (t=0) ZAMS mass 
+*/
+	double bse_zams_mass[2];
+/**
+* @brief  initial masses before BSE is run
 */
 	double bse_mass0[2];
 /**
@@ -353,11 +379,15 @@ typedef struct{
 	double vtold, vrold;
 	/* TODO: stellar evolution variables */
 /**
-* @brief ?
+* @brief mass at beining of (BSE) integration 
 */
 	double se_mass;
 /**
-* @brief ?
+* @brief original ZAMS mass (at t=0) 
+*/
+	double zams_mass;
+/**
+* @brief stellar types (see bse_wrap/bse/bse.f for the list)
 */
 	int se_k;
 /**
@@ -902,9 +932,9 @@ typedef struct{
 * @brief bhflag > 0 allows velocity kick at BH formation (1).
 */
 	int BSE_BHFLAG;
-#define PARAMDOC_BSE_NSFLAG "nsflag > 0 takes NS/BH mass distribution of Belczynski et al. 2002, ApJ, 572, 407 (1)."
+#define PARAMDOC_BSE_NSFLAG "0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN"
 /**
-* @brief nsflag > 0 takes NS/BH mass distribution of Belczynski et al. 2002, ApJ, 572, 407 (1).
+* @brief nsflag = 0 gives the NS/BH mass distribution from default BSE; 1 uses the distribution of Belczynski et al. 2002, ApJ, 572, 407 (1), while 2, 3, and 4 give you the standard, 'rapid' and 'delayed' models of Fryer et al. 2012, ApJ, 749, 91
 */
 	int BSE_NSFLAG;
 #define PARAMDOC_BSE_MXNS "mxns is the maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1)."
@@ -1684,7 +1714,7 @@ double find_root_vr(long index, long k, double E, double J);
 double calc_pot_in_interval(double r, long k);
 double local_kT(long si, int p);
 void remove_star(long j, double phi_rtidal, double phi_zero);
-inline double function_q(long j, long double r, long double pot, long double E, long double J);
+double function_q(long j, long double r, long double pot, long double E, long double J);
 void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_st);
 
 void parse_snapshot_windows(char *option_string);
