@@ -45,7 +45,9 @@ void stellar_evolution_init(void){
   }
 #endif
   bse_set_idum(BSE_IDUM);
-  bse_set_pts1(0.05);
+//  bse_set_pts1(0.05); New version, designed to resolve the transition to LBV
+//  correctly
+  bse_set_pts1(0.01);
   bse_set_pts2(0.01);
   bse_set_pts3(0.02);
   bse_set_sigma(BSE_SIGMA);

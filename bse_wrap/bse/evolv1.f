@@ -106,7 +106,7 @@ c-------------------------------------------------------------c
 * Calculate mass loss from the previous timestep.
 *
             dt = 1.0d+06*dtm
-            dms = mlwind(kw,lum,r,mt,mc,rl,z)*dt
+            dms = mlwind(kw,lum,r,mt,mc,rl,z,tphys)*dt
             if(kw.lt.10)then
                dml = mt - mc
                if(dml.lt.dms)then

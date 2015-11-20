@@ -892,9 +892,9 @@ typedef struct{
 * @brief hewind is a helium star mass-loss factor (0.5 normally).
 */
 	int BSE_HEWIND;
-#define PARAMDOC_BSE_WINDFLAG "windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink)."
+#define PARAMDOC_BSE_WINDFLAG "windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars)."
 /**
-* @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink).
+* @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars).
 */
 	int BSE_WINDFLAG;
 #define PARAMDOC_BSE_ALPHA1 "alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)"

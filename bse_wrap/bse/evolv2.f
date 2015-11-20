@@ -461,7 +461,7 @@
                rlperi = rol(k)*(1.d0-ecc)
                if(ST_tide.gt.1) rlperi = rol(k)
                dmr(k) = mlwind(kstar(k),lumin(k),rad(k),mass(k),
-     &                         massc(k),rlperi,z)
+     &                         massc(k),rlperi,z,tphys)
 *
 * Calculate how much of wind mass loss from companion will be
 * accreted (Boffin & Jorissen, A&A 1988, 205, 155).
@@ -830,7 +830,7 @@
             if(neta.gt.tiny)then
                rlperi = 0.d0
                dmr(k) = mlwind(kstar(k),lumin(k),rad(k),mass(k),
-     &                         massc(k),rlperi,z)
+     &                         massc(k),rlperi,z,tphys)
             else
                dmr(k) = 0.d0
             endif
@@ -2113,7 +2113,7 @@
                endif
                rlperi = rol(k)*(1.d0-ecc)
                dmr(k) = mlwind(kstar(k),lumin(k),radx(k),
-     &                         mass(k),massc(k),rlperi,z)
+     &                         mass(k),massc(k),rlperi,z,tphys)
                vwind2 = 2.d0*beta*acc1*mass(k)/radx(k)
                omv2 = (1.d0 + vorb2/vwind2)**(3.d0/2.d0)
                dmt(3-k) = ivsqm*acc2*dmr(k)*((acc1*mass(3-k)/vwind2)**2)

@@ -269,7 +269,7 @@ We use these two arrays to store the number of stars created by each node during
 
 
 	/* print out binary properties to a file */
-	//print_initial_binaries();
+	print_initial_binaries();
 
 	/* Printing Results for initial model */
 	print_results();
