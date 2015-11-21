@@ -45,9 +45,7 @@ void stellar_evolution_init(void){
   }
 #endif
   bse_set_idum(BSE_IDUM);
-//  bse_set_pts1(0.05); New version, designed to resolve the transition to LBV
-//  correctly
-  bse_set_pts1(0.01);
+  bse_set_pts1(0.05);
   bse_set_pts2(0.01);
   bse_set_pts3(0.02);
   bse_set_sigma(BSE_SIGMA);
@@ -143,6 +141,7 @@ void stellar_evolution_init(void){
       tempbinary.bse_tms[1] = 0.0;
       tempbinary.bse_tb = 0.0;
       tempbinary.e = 0.0;
+
       /*
         bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
         &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
@@ -288,6 +287,7 @@ void do_stellar_evolution(gsl_rng *rng)
   double r10_beforeSE, r100_beforeSE, r1000_beforeSE, rcore_beforeSE;
   double dM_dt_SE10, dM_dt_SE100, dM_dt_SE1000, dM_dt_SEcore; 
   struct rng_t113_state temp_state;
+  int reduced_timestep=0;
   binary_t tempbinary;
   bse_set_merger(-1.0);
   /* double vk, theta; */
@@ -356,6 +356,14 @@ void do_stellar_evolution(gsl_rng *rng)
         tempbinary.bse_tms[1] = 0.0;
         tempbinary.bse_tb = 0.0;
         tempbinary.e = 0.0;
+
+		  /*If we've got a large MS star, we need to reduce the timestep, otherwise
+		   * we miss the transition from MS to HG to giant, and won't start applying
+		   * winds for massive stars at the right time*/
+		  if(star[k].se_mass > 50){
+			  bse_set_pts1(0.005);
+			  reduced_timestep = 1;
+		  }
         /*
           bse_evolv1(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &(star[k].se_radius), 
           &(star[k].se_lum), &(star[k].se_mc), &(star[k].se_rc), &(star[k].se_menv), 
@@ -390,6 +398,10 @@ void do_stellar_evolution(gsl_rng *rng)
         star[k].se_tacc = tempbinary.bse_tacc[0];
         star[k].se_epoch = tempbinary.bse_epoch[0];
         star[k].se_tms = tempbinary.bse_tms[0];
+
+		  /*Reset the MS timestep once we're done*/
+		  if(reduced_timestep == 1)
+			  bse_set_pts1(0.05);
 
         star[k].rad = star[k].se_radius * RSUN / units.l;
 #ifdef USE_MPI
@@ -522,6 +534,15 @@ void do_stellar_evolution(gsl_rng *rng)
 		/* store previous star types for binary components, before evolving binary */
 		kprev0=binary[kb].bse_kw[0];
 		kprev1=binary[kb].bse_kw[1];
+
+	  /*If we've got a large MS star, we need to reduce the timestep, otherwise
+	   * we miss the transition from MS to HG to giant, and won't start applying
+	   * winds for massive stars at the right time*/
+	  if(binary[kb].bse_mass0[0] > 50 || binary[kb].bse_mass0[1]){
+		  bse_set_pts1(0.005);
+ 		  reduced_timestep = 1;
+ 	  }
+
         /* set binary orbital period (in days) from a */
         binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
 #ifdef USE_MPI
@@ -544,6 +565,10 @@ void do_stellar_evolution(gsl_rng *rng)
             &(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
             &(binary[kb].bse_tb), &(binary[kb].e), vs);
         *curr_st=bse_get_taus113state();
+
+		  /*Reset the MS timestep once we're done*/
+		  if(reduced_timestep == 1)
+			  bse_set_pts1(0.05);
 
         if(isnan(binary[kb].bse_radius[0])){
           fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
