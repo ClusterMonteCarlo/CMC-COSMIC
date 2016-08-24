@@ -166,7 +166,7 @@
       REAL*8 mass0(2),mass(2),massc(2),menv(2),mass00(2),mcxx(2)
       REAL*8 rad(2),rol(2),rol0(2),rdot(2),radc(2),renv(2),radx(2)
       REAL*8 lumin(2),k2str(2),q(2),dms(2),dmr(2),dmt(2)
-      REAL*8 dml,vorb2,vwind2,omv2,ivsqm,lacc,bkick(12)
+      REAL*8 dml,vorb2,vwind2,omv2,ivsqm,lacc,bkick(16)
       REAL*8 sep,dr,tb,dme,tdyn,taum,dm1,dm2,dmchk,qc,dt,pd,rlperi
       REAL*8 m1ce,m2ce,mch,tmsnew,dm22,mew
       PARAMETER(mch=1.44d0)
@@ -220,6 +220,30 @@
       REAL*8 merger
       COMMON /cmcpass/ merger,id1_pass,id2_pass
       LOGICAL output
+
+*f2py intent(in,out,copy)  kstar
+*f2py intent(in,out,copy)  mass0
+*f2py intent(in,out,copy)  mass
+*f2py intent(in,out,copy)  rad
+*f2py intent(in,out,copy)  lumin
+*f2py intent(in,out,copy)  massc
+*f2py intent(in,out,copy)  radc
+*f2py intent(in,out,copy)  menv
+*f2py intent(in,out,copy)  renv
+*f2py intent(in,out,copy)  ospin
+*f2py intent(in,out,copy)  B_0
+*f2py intent(in,out,copy)  bacc
+*f2py intent(in,out,copy)  tacc
+*f2py intent(in,out,copy)  epoch
+*f2py intent(hide)  tms
+*f2py intent(in,out,copy)  tphys
+*f2py intent(in,out,copy)  tphysf
+*f2py intent(in)  dtp
+*f2py intent(in)  z
+*f2py intent(in)  zpars
+*f2py intent(in,out,copy)  tb
+*f2py intent(in,out,copy)  ecc
+*f2py intent(out)  bkick
 *
 * Save the initial state.
 *
@@ -232,13 +256,14 @@
       ngtv = -1.d0
       ngtv2 = -2.d0
       twopi = 2.d0*ACOS(-1.d0)
+      fallback = 0.d0
 * PDK
       pulsar = 1
       bdecayfac = 1 !determines which accretion induced field decay method to use: 0=exp, 1=inverse
       fb = 1
       wdwdedd = 0 !Have not introduced yet but will. if set to 1 forces WD dynamical MT to be limited by eddington rate.
       eddlim = 1 !Have not introduced yet but will.if = 0 then BSE version, only H limit, else StarTrack version.
-      ecsnp = 2.5d0 !>0 turns on ECSN and also sets maximum ECSN kick mass range (mass at SN, bse=st=2.25, pod=2.5)
+      ecsnp = 2.25d0 !>0 turns on ECSN and also sets maximum ECSN kick mass range (mass at SN, bse=st=2.25, pod=2.5)
       ecsn_mlow = 1.6d0 ! low end of ECSN mass range, BSE=1.6, Pod=1.4, StarTrack=1.85.
       sigmahold = sigma !Captures original sigma so after ECSN we can reset it.
       sigmadiv = -20.d0! negative sets ECSN sigma, positive devides into old sigma.
@@ -1117,7 +1142,7 @@
 * Masses over 100Msun should probably not be trusted in the
 * evolution formulae.
 *
-         if(mt.gt.100.d0)then
+         if(mt.gt.150.d0)then
             WRITE(99,*)' MASS EXCEEDED ',mass1i,mass2i,tbi,ecci,mt,
      & tphysf,id1_pass,id2_pass
 *            goto 140
@@ -2788,7 +2813,7 @@
 * Masses over 100Msun should probably not be trusted in the
 * evolution formulae.
 *
-         if(mt.gt.100.d0)then
+         if(mt.gt.150.d0)then
             WRITE(99,*)' MASS EXCEEDED ',mass1i,mass2i,tbi,ecci,mt,
      & tphysf,id1_pass,id2_pass
 *            goto 140
@@ -3365,18 +3390,25 @@
      & id1_pass,id2_pass,mass(1),mass(2)
 *         WRITE(*,*)' STOP: EVOLV2 ARRAY ERROR '
 *         CALL exit(0)
-         STOP
+           bpp(jp+1,1) = -100.
+           bcm(jp+1,1) = -100.
+*         STOP
       elseif(jp.ge.40)then
          WRITE(99,*)' EVOLV2 ARRAY WARNING ',mass1i,mass2i,tbi,ecci,jp
       endif
       if(iter.ge.loop)then
          WRITE(99,*)'ITER>=LOOP:',jp,tphys,tphysfhold,dtp,kstar,age,kst,
      & id1_pass,id2_pass,mass(1),mass(2),iter,loop
-         CALL exit(0)
-         STOP
+*         CALL exit(0)
+           bpp(jp+1,1) = -100.
+           bcm(jp+1,1) = -100.
+*         STOP
       endif
-      bcm(ip+1,1) = -1.0
-      bpp(jp+1,1) = -1.0
+* if ending with no issues, bookend the common arrays
+      if(bcm(jp+1,1).ne.-100.)then
+          bcm(ip+1,1) = -1.0
+          bpp(jp+1,1) = -1.0
+      endif
 *
       RETURN
       END

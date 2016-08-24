@@ -34,10 +34,11 @@
       COMMON /VALUE3/ idum
       INTEGER idum2,iy,ir(32)
       COMMON /RAND3/ idum2,iy,ir
-      integer bhflag,wdaflag,fbkickswitch
+      integer bhflag,wdaflag
       real*8 tphys,m1,m2,m1n,mbi,mbf,mtilda,mdif
       real*8 ecc,sep,sepn,jorb,ecc2,bb,angle
       real*8 pi,twopi,gmrkm,yearsc,rsunkm
+      real*8 omega,sino,coso,cosmu,sinmu,x_tilt,y_tilt,z_tilt
       parameter(yearsc=3.1557d+07,rsunkm=6.96d+05)
       real*8 mm,em,dif,der,del,r
       real*8 u1,u2,vk,v(4),s,theta,phi,alpha,beta,gamma
@@ -50,16 +51,16 @@
       real*8 signs,sigc,psins,psic,cpsins,spsins,cpsic,spsic
       real*8 csigns,ssigns,csigc,ssigc
       real*8 semilatrec,cangleofdeath,angleofdeath,energy
-      real*8 fallback,kickscale
+      real*8 fallback,kickscale,bound,phi_old
 * Output
       real*8 v1out,v2out,v3out,vkout
       logical output
 *
-      real*8 bconst,CK
-      COMMON /VALUE4/ sigma,bhsigmafrac,bconst,CK,bhflag,fbkickswitch 
+      real*8 bconst,CK,opening_angle
+      COMMON /VALUE4/ sigma,bhsigmafrac,bconst,CK,bhflag,opening_angle
       real*8 mxns,neta,bwind,hewind
       COMMON /VALUE1/ neta,bwind,hewind,mxns
-      real*8 bkick(12)
+      real*8 bkick(16)
 *      COMMON /VKICK/ bkick
       real ran3,xx
       external ran3
@@ -67,7 +68,9 @@
       real*8 merger
       COMMON /cmcpass/ merger,id1_pass,id2_pass
 *
-      output = .true. !useful for debugging...
+      output = .false. !useful for debugging...
+*       write(91,49)kw,m1,m1n,m2,ecc,sep,snstar,fallback,
+*    &               bhflag,sigma,mxns,id1_pass,id2_pass
       v1out = 0.d0
       v2out = 0.d0
       v3out = 0.d0
@@ -75,7 +78,6 @@
 * Scaling owing to ECSN.
       kickscale = 0.d0
 *
-*      write(*,*)sigma
 *
       if(sigma.lt.0.d0)then 
          sigma = -1.d0*sigma
@@ -173,37 +175,63 @@
 * Limit BH kick with fallback mass fraction.
 *      if(kw.eq.14)then
 *Limit BH kick with fallback only if wanted
-      if (fbkickswitch.gt.0)then
-          fallback = MIN(fallback,1.d0)
-          vk = MAX((1.d0-fallback)*vk,0.d0)
-          vk2 = vk*vk
-      endif
-      if(kw.eq.14.and.vk.lt.10) write(20,*)'BH FORM', m1,vk,fallback
+*      write(20,*)'BH FORM', m1,vk,fallback,kw
+*     write(91,*) 9
       if(kickscale.gt.0.d0)then
+*      write(91,*) 10
          vk = vk/kickscale
-         vk2 = vk2/kickscale
+*      write(91,*) 11
+         vk2 = vk2/kickscale/kickscale
+*      write(91,*) 12
       endif
-*      endif
 *      write(15,*)'kick 4:',vk,theta,s
       if(kw.eq.14.and.bhflag.eq.0)then
          vk2 = 0.d0
          vk = 0.d0
-c$$$********BELOW HAS BEEN ADDED********\/
-c$$$      elseif((kw.ge.10.and.kw.le.12).and.wdaflag.ne.1)then !is this OK????
-c$$$         vk2 = 0.d0
-c$$$         vk = 0.d0
-c$$$********ABOVE HAS BEEN ADDED********/\
-      endif ! It means we can scrap this within the search routine...
+      elseif(kw.eq.14.and.bhflag.eq.1)then
+*         write(91,*) 13, fallback
+          fallback = MIN(fallback,1.d0)
+*         write(91,*) 14, fallback, vk
+          vk = MAX((1.d0-fallback)*vk,0.d0)
+*         write(91,*) 15,fallback,vk
+          vk2 = vk*vk
+*         write(91,*) 16,vk,vk2
+      elseif(kw.eq.14.and.bhflag.eq.2)then
+         vk = vk * mxns / m1n
+         vk2 = vk*vk
+      endif 
+
+*     write(91,*) 17
       sigma = sigmah
-      sphi = -1.d0 + 2.d0*ran3(idum)
+* CLR - Allow for a restricted opening angle for SN kicks
+*       Only relevant for binaries, obviously
+      bound = SIN((90.d0 - opening_angle)*pi/180.d0)
+      sphi = (1.d0-bound)*ran3(idum) + bound
       phi = ASIN(sphi)
       cphi = COS(phi)
+* CLR - if the orbit has already been kicked, then any polar kick
+*       needs to be tilted as well (since L_hat and S_hat are no longer
+*       aligned).  Here we take the random kick from above and rotate it
+*       about the X axis by the angle mu from the last SN kick
+      if(bkick(1).gt.0.d0.and.bkick(5).le.0.d0)then
+        cosmu = bkick(13)
+        sinmu = sqrt(1 - bkick(13)*bkick(13))
+        z_tilt=cosmu*sphi + cphi*sinmu*stheta
+        phi = ASIN(z_tilt)
+        sphi = z_tilt
+        cphi = COS(phi)
+*       write(15,*) vk,theta,phi,bkick(13)
+      endif
+      theta = twopi*ran3(idum)
       stheta = SIN(theta)
       ctheta = COS(theta)
+
       if(sep.le.0.d0.or.ecc.lt.0.d0) goto 90
 *
 * Determine the magnitude of the new relative velocity.
-      vn2 = vk2+vr2-2.d0*vk*vr*(ctheta*cphi*salpha-stheta*cphi*calpha)
+* CLR - fixed a spurious minus sign in the parenthesis here; only
+*       relevant for eccentric orbits
+      vn2 = vk2+vr2-2.d0*vk*vr*(ctheta*cphi*salpha+stheta*cphi*calpha)
 * Calculate the new semi-major axis.
       sep = 2.d0/r - vn2/(gmrkm*(m1n+m2))
       sep = 1.d0/sep
@@ -222,6 +250,11 @@ c$$$********ABOVE HAS BEEN ADDED********/\
 * Determine the angle between the new and old orbital angular
 * momentum vectors.
       cmu = (vr*salpha-vk*ctheta*cphi)/SQRT(v1 + v2)
+      if(bkick(1).le.0.d0)then
+        bkick(13) = cmu
+      elseif(bkick(5).le.0.d0)then
+        bkick(14) = cmu
+      endif
       mu = ACOS(cmu)
 * Determine if orbit becomes hyperbolic.
  90   continue

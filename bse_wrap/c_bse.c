@@ -57,7 +57,7 @@ int main(void)
   bse_set_pts3(0.02);
   bse_set_sigma(190.0);
   bse_set_bhsigmafrac(1.);
-  bse_set_fbkickswitch(1); 
+  bse_set_opening_angle(180.); 
   bse_set_beta(0.125);
   bse_set_xi(1.0);
   bse_set_acc2(1.5);

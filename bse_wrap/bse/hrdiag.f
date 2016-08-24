@@ -569,8 +569,9 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         mcx = 1.38d0
                      endif
                      if(mc.le.2.5d0)then
+                        fallback = 0.2d0 / (mt - mcx) 
                         mt = mcx + 0.2d0
-                        fallback = 0.d0
+                        if(ecsnp.gt.0.d0.and.mcbagb.le.ecsnp)mt=mt-0.2d0
                      elseif(mc.le.6.d0)then
                         fallback = (0.286d0*mc - 0.514d0) / (mt - mcx)
                         mt = mcx + 0.286d0*mc - 0.514d0
@@ -588,7 +589,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                   elseif(nsflag.eq.4)then
 *
 * Use the "Delayed" SN Prescription (Fryer et al. 2012, APJ, 749,91)
-*
 *                    For this, we just set the proto-core mass to one
                      if(mc.le.3.5d0)then
                         mcx = 1.2d0
@@ -600,8 +600,8 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         mcx = 1.6d0
                      endif
                      if(mc.lt.2.5d0)then
+                        fallback = 0.2d0 / (mt - mcx) 
                         mt = mcx + 0.2
-                        fallback = 0.d0
                      elseif(mc.lt.3.5d0)then
                         fallback = (0.5d0 * mc - 1.05d0) / (mt - mcx)
                         mt = mcx + 0.5d0 * mc - 1.05d0
@@ -634,8 +634,18 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                   endif  
                endif
             endif
+         else
+* CLR - Begin new
+* Check for an electron-capture collapse of an ONe core.
+*            if(mcbagb.ge.1.6d0.and.mcbagb.le.2.25d0)then
+*               if(ecsnp.gt.0.d0.and.mcx.ge.1.372d0)then
+*                  mt = 1.26d0
+*                  mc = mt
+*                  kw = 13
+*               endif
+*            endif
+* CLR - End new
          endif
-*
       endif
 *
  90   continue
@@ -779,8 +789,9 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         mcx = 1.38d0
                      endif
                      if(mc.le.2.5d0)then
+                        fallback = 0.2d0 / (mt - mcx) 
                         mt = mcx + 0.2d0
-                        fallback = 0.d0
+                        if(ecsnp.gt.0.d0.and.mcbagb.le.ecsnp)mt=mt-0.2d0
                      elseif(mc.le.6.d0)then
                         fallback = (0.286d0*mc - 0.514d0) / (mt - mcx)
                         mt = mcx + 0.286d0*mc - 0.514d0
@@ -810,8 +821,8 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         mcx = 1.6d0
                      endif
                      if(mc.lt.2.5d0)then
+                        fallback = 0.2d0 / (mt - mcx)
                         mt = mcx + 0.2
-                        fallback = 0.d0
                      elseif(mc.lt.3.5d0)then
                         fallback = (0.5d0 * mc - 1.05d0) / (mt - mcx)
                         mt = mcx + 0.5d0 * mc - 1.05d0
@@ -910,6 +921,7 @@ C      if(mt0.gt.100.d0) mt = 100.d0
             if(mt.lt.0.000005d0) r = 0.009d0
 *
          endif
+* CLR - Commenting this out...
          mch = mchold !added for AIC ECSN stuff.
       endif
 *

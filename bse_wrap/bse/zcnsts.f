@@ -5,6 +5,9 @@
       integer kw
 *
       real*8 z,zpars(20)
+*f2py intent(in) z 
+*f2py intent(out) zpars 
+*f2py depend(z) zpars
       real*8 tm,tn,tscls(20),lums(10),GB(10)
       real*8 lzs,dlzs,lz,lzd,dum1,m1,m2,rr,rb,mhefl,lhefl,thefl,lx
       real*8 tbgbf,thef,lbagbf,lheif,lhef,lzahbf

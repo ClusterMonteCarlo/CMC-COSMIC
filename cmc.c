@@ -269,7 +269,7 @@ We use these two arrays to store the number of stars created by each node during
 
 
 	/* print out binary properties to a file */
-	print_initial_binaries();
+	//print_initial_binaries();
 
 	/* Printing Results for initial model */
 	print_results();
@@ -413,7 +413,8 @@ We use these two arrays to store the number of stars created by each node during
 		timeEndSimple(tmpTimeStart, &t_oth);
 
 		tmpTimeStart = timeStartSimple();
-		tidally_strip_stars();
+		if(TIDALLY_STRIP_STARS > 0)
+			tidally_strip_stars();
 		timeEndSimple(tmpTimeStart, &t_tid_str);
 
 		/* Compute Intermediate Energies of stars. 

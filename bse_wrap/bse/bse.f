@@ -37,7 +37,7 @@
 *
       integer i,kw,kw2,kstar(2),j,k,time
 *
-      real*8 mass0(2),mass(2),z,zpars(20),vs(3),bkick(12)
+      real*8 mass0(2),mass(2),z,zpars(20),vs(3),bkick(16)
       real*8 epoch(2),tms(2),tphys,tphysf,dtp,aj
       real*8 rad(2),lum(2),ospin(2)
       real*8 massc(2),radc(2),menv(2),renv(2)

@@ -169,6 +169,7 @@
             endif
             dms = MAX(dms,dml)
          endif
+
 * Apply Vink, de Koter & lamers (2001) OB star winds.
 * First check if hot massive H-rich O/B star in appropriate temperature ranges.
          if(teff.ge.12500.and.teff.le.25000)then
@@ -185,36 +186,36 @@
             dms = 10.d0**dms
             testflag = 2
          endif
+* Apply the reduced WR-like mass loss for small H-envelope mass 
+* as described in the Hurley, Pols & Tout (200) SSE paper. 
+         if(kw.le.6)then
+            mew = ((mt-mc)/mt)*MIN(5.d0,MAX(1.2d0,(lum/lum0)**kap))
+            if(mew.lt.1.d0)then
+*              dml = 1.0d-13*lum**(3.d0/2.d0)*(1.d0 - mew)
+               dml = 1.0d-13*(lum**1.5d0)*((z/0.02d0)**0.86d0)
+     &                 *(1.d0 - mew)
+               dms = MAX(dml,dms)
+            endif
+         endif
 
-         if((windflag.eq.3.or.kw.ge.2).and.kw.le.6)then
+         if(kw.ge.7.and.kw.le.9)then !WR (naked helium stars)
+* If naked helium use Hamann & Koesterke (1998) reduced WR winds with 
+* Vink & de Koter (2005) metallicity dependence.
+            dms = 1.0d-13*(lum**1.5d0)*((z/0.02d0)**0.86d0)
+*            dms = MAX(dml,dms)
+            testflag = 4
+         elseif((windflag.eq.3.or.kw.ge.2).and.kw.le.6)then
 * LBV-like mass loss beyond the Humphreys-Davidson limit.
 * Optional flag (windflag=3) to use for every non-degenerate star
 *past the limit, or just for giant, evolved stars
              x = 1.0d-5*r*sqrt(lum)
             if(lum.gt.6.0d+05.and.x.gt.1.d0)then
                dms = 1.5d0*1.0d-04
-               testflag = 3
             endif
-         elseif(kw.ge.7.and.kw.le.9)then !WR (naked helium stars)
-* If naked helium use Hamann & Koesterke (1998) reduced WR winds with 
-* Vink & de Koter (2005) metallicity dependence.
-            dms = 1.0d-13*(lum**1.5d0)*((z/0.02d0)**0.86d0)
-            testflag = 4
          endif
 *
          mlwind = dms
       endif
-*
-*         if(mt.gt.50.and.testflag.eq.1) then
-*         write(*,*) 'Nieuwenhuijzen Winds, ',
-*     &         tphys,label(kw),mt,mc,r,teff,dms
-*         elseif(mt.gt.50.and.testflag.eq.2) then
-*         write(*,*) 'Vink Winds, ', label(kw),tphys,mt,mc,r,teff,dms
-*         elseif(mt.gt.50.and.testflag.eq.3) then
-*         write(*,*) 'LBV Winds, ', label(kw),tphys,mt,mc,r,teff,dms
-*         elseif(mt.gt.50.and.testflag.eq.4) then
-*         write(*,*) 'WR Winds, ', label(kw),tphys,mt,mc,r,teff,dms
-*         endif 
 
       return
       end

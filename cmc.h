@@ -660,6 +660,11 @@ typedef struct{
 * @brief perform two-body relaxation (0=off, 1=on)
 */
 	int RELAXATION;
+#define PARAMDOC_TIDALLY_STRIP_STARS "remove stars that pass beyond the tidal boundary"
+/**
+* @brief strip stars pass the tidal boundary (0 = off, 1=on[default]) 
+*/
+	int TIDALLY_STRIP_STARS;
 #define PARAMDOC_THETASEMAX "maximum super-encounter scattering angle (radians)"
 /**
 * @brief maximum super-encounter scattering angle (radians)
@@ -967,11 +972,12 @@ typedef struct{
 * @brief bhsigmafrac is the factor to scale Maxwellian dispersion for BH SN kick speeds (1) compared to NS (265 km/s).
 */
 	int BSE_BHSIGMAFRAC;
-#define PARAMDOC_BSE_FBKICKSWITCH "fbkickswitch is the switch to decide whether SN kicks should be scaled by fallback. 0:No, >0:Yes (1)."
+#define PARAMDOC_BSE_OPENING_ANGLE "Opening angle (in degrees) for SN kicks around the north pole of the star.  Default (180) means isotropic kicks"
 /**
-* @brief fbkickswitch is the switch to decide whether SN kicks should be scaled by fallback. 0:No, >0:Yes (1)..
+* @brief Opening angle for SN kicks about the north pole of the star, in
+* radians.  Default (180) means isotropic over whole sphere 
 */
-	int BSE_FBKICKSWITCH;
+	int BSE_OPENING_ANGLE;
 #define PARAMDOC_BSE_BETA "beta is the wind velocity factor: proprotinal to vwind^2 (1/8)."
 /**
 * @brief beta is the wind velocity factor: proprotinal to vwind^2 (1/8).

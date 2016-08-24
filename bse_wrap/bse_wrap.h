@@ -193,7 +193,7 @@ extern struct { int ktype[15][15]; } types_;
 extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
 extern struct { double neta, bwind, hewind, mxns; int windflag; } value1_;
 extern struct { double alpha1, lambda; } value2_;
-extern struct { double sigma; double bhsigmafrac; double bconst; double CK; int bhflag; int fbkickswitch; } value4_;
+extern struct { double sigma; double bhsigmafrac; double bconst; double CK; int bhflag; int opening_angle; } value4_;
 extern struct { double beta, xi, acc2, epsnov, eddfac, gamma; } value5_;
 extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
@@ -209,7 +209,7 @@ void bse_set_hewind(double hewind); /* helium star mass loss factor (1.0 normall
 void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
 void bse_set_sigma(double sigma); /* dispersion in the Maxwellian for the SN kick speed (190 km/s) */
 void bse_set_bhsigmafrac(double bhsigmafrac); /* Ad hoc factor to change BH SN kick speed relative to NS SN kick sigma (1) */
-void bse_set_fbkickswitch(int fbkickswitch); /* Switch to decide whether SN kick should be scaled by fallback fraction. 0:No, >0:Yes. (1) */
+void bse_set_opening_angle(int opening_angle); /* Switch to set the allowed opening angle of SN kicks.  Defaults to 180 degrees*/
 void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0) */
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
