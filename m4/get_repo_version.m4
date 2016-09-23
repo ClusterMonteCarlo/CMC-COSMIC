@@ -6,10 +6,12 @@
 # "exported".
 
 AC_DEFUN([GET_REPO_VERSION], [
+         AC_CHECK_PROG([HAS_GIT], [git], [yes], [no])
          AC_CHECK_PROG([HAS_SVN], [svnversion], [yes], [no])
          AC_CHECK_PROG([HAS_HG], [hg], [yes], [no])
          VERSION="exported"
          AS_IF([test "x$HAS_SVN" == "xyes"], [VERSION=`svnversion`])
+         AS_IF([test "x$HAS_GIT" == "xyes"], [VERSION=`git show -s --pretty=format:%h`])
          AS_IF([test "x$VERSION" == "xexported"], [
                AS_IF([test "x$HAS_HG" == "xyes"], [VERSION=`hg id -n 2>/dev/null`])])
          AS_IF([test "x$VERSION" == "x"], [VERSION="exported"])
