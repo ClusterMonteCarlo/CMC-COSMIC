@@ -1981,7 +1981,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 
 	//MPI: Headers are written out only by the root node.
    // print header
-	pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1\n");
+	pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 \n");
    // print header
 	pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
    // print header
@@ -2413,7 +2413,7 @@ void write_snapshot(char *filename, int bh_only) {
 #endif
 				// print useful header
 				gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
-				gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.bin.Eb 25.eta 26.star.phi\n");
+				gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.bin.Eb 25.eta 26.star.phi#27:rad0 #28:rad1 #29:tb #30:lum0 #31:lum1 #32:massc0 #33:massc1 #34:radc0 #35:radc1 #36:menv0 #37:menv1 #38:renv0 #39:renv1 #40:tms0 #41:tms1 #42:dmdt0 #43:dmdt1 #44:radrol0 #45:radrol1 #46:ospin0 #47:ospin1 #48:B0 #49:B1 #50:formation0 #51:formation1 #52:bacc0 #53:bacc1 #54:tacc0 $55:tacc1 #56:mass0_0 #57:mass0_1 #58:epoch0 #59:epoch1 \n");
 #ifdef USE_MPI
 			}
 #endif
@@ -2461,7 +2461,13 @@ void write_snapshot(char *filename, int bh_only) {
                                  (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
                                  (binary[j].a * sqrt(calc_average_mass_sqr(i,clus.N_MAX)) * sqr(sigma_array.sigma[i])));
 					}
-					gzprintf(snapfile, "%0.12g\n", phi);
+					gzprintf(snapfile, "%0.12g ", phi);
+					if (j == 0) {
+						gzprintf(snapfile, "na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na \n");
+					} else {
+						gzprintf(snapfile, "%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g \n",
+								binary[j].bse_radius[0], binary[j].bse_radius[1], binary[j].bse_tb, binary[j].bse_lum[0], binary[j].bse_lum[1], binary[j].bse_massc[0], binary[j].bse_massc[1], binary[j].bse_radc[0], binary[j].bse_radc[1], binary[j].bse_menv[0], binary[j].bse_menv[1], binary[j].bse_renv[0], binary[j].bse_renv[1], binary[j].bse_tms[0], binary[j].bse_tms[1], binary[j].bse_bcm_dmdt[0], binary[j].bse_bcm_dmdt[1], binary[j].bse_bcm_radrol[0], binary[j].bse_bcm_radrol[1], binary[j].bse_ospin[0], binary[j].bse_ospin[1], binary[j].bse_bcm_B[0], binary[j].bse_bcm_B[1], binary[j].bse_bcm_formation[0], binary[j].bse_bcm_formation[1], binary[j].bse_bacc[0], binary[j].bse_bacc[1], binary[j].bse_tacc[0], binary[j].bse_tacc[1], binary[j].bse_mass0[0], binary[j].bse_mass0[1], binary[j].bse_epoch[0], binary[j].bse_epoch[1]);
+					}
 				}
 			}
 			gzclose(snapfile);
