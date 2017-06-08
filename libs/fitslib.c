@@ -198,7 +198,7 @@ void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 * @param cfd Struct of type cmc_fits_data_t where the data is stored after reading from the file
 * @param filename input fits file that needs to be read
 */
-void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd){
+void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUNT){
 	int status=0, hdunum, hdutype, anynull;
 	fitsfile *fptr;
 	long frow=1, felem=1, nelem;
@@ -219,6 +219,13 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd){
 	fits_read_key(fptr, TDOUBLE, "RTID", &(cfd->Rtid), NULL, &status);
 	fits_read_key(fptr, TDOUBLE, "Z", &(cfd->Z), NULL, &status);
 	cmc_fits_printerror(status);
+
+	/*if we're restarting from a checkpoint, we don't need to allocate or read
+	 * in the original star files from the fits file...just the header info*/
+	if(RESTART_TCOUNT > 0){
+		fits_close_file(fptr, &status);
+		return;
+	}
 
 	cmc_malloc_fits_data_t(cfd);
 

@@ -515,10 +515,11 @@ long CheckStop(struct tms tmsbufref) {
 	tspent += tmsbuf.tms_cutime-tmsbufref.tms_cutime;
 	tspent += tmsbuf.tms_cstime-tmsbufref.tms_cstime;
 	tspent /= sysconf(_SC_CLK_TCK);
-	tspent /= 60;
+	//tspent /= 60;
 
 	if (tspent >= MAX_WCLOCK_TIME) {
 		print_2Dsnapshot();
+		MPI_Barrier(MPI_COMM_WORLD);
 		diaprintf("MAX_WCLOCK_TIME exceeded ... Terminating.\n");
 		return (1);
 	}
@@ -653,6 +654,28 @@ long CheckStop(struct tms tmsbufref) {
 	}
 	return (0); /* NOT stopping time yet */
 }
+
+int CheckCheckpoint(struct tms tmsbufref) {
+	struct tms tmsbuf;
+	long tspent;
+
+	times(&tmsbuf);
+	tspent  = tmsbuf.tms_utime-tmsbufref.tms_utime;
+	tspent += tmsbuf.tms_stime-tmsbufref.tms_stime;
+	tspent += tmsbuf.tms_cutime-tmsbufref.tms_cutime;
+	tspent += tmsbuf.tms_cstime-tmsbufref.tms_cstime;
+	tspent /= sysconf(_SC_CLK_TCK);
+	//
+	//Basically save a checkpoint every CHECKPOINT_INTERVAL seconds, or if we're
+	// exceeding the wallclock time
+	if (tspent >= next_restart_t){
+		next_restart_t += CHECKPOINT_INTERVAL;
+		return 1;
+	}
+	else
+		return 0;
+}
+
 
 
 #ifdef USE_MPI
@@ -819,7 +842,7 @@ long mpi_potential_calculate(void) {
 		  eprintf("NaN in phi[%li] detected\n", k);
 		  eprintf("phi[k+1]=%g mprev=%g, r[k]=%g, r[k+1]=%g, m[k]=%g, clus.N_STAR=%li\n", 
 		  	star_phi[k + 1], mprev, star_r[k], star_r[k + 1], star_m[k], clus.N_STAR);
-		  //exit_cleanly(-1);
+		  exit_cleanly(-1,__FUNCTION__);
 		}
 	}
 
@@ -2140,6 +2163,10 @@ void set_global_vars1()
 	initial_total_mass = 1.0;
 	newstarid = 0;
 	cenma.E = 0.0;
+	
+	//this will be set later if -R flag is used
+	RESTART_TCOUNT = 0;
+	NEXT_RESTART = 1;
 
 #ifdef USE_MPI
 	Eescaped_old = 0.0;
@@ -2189,6 +2216,8 @@ void set_global_vars2()
 	StepCount = 0; 		
 	tcount = 1;
 	TotalTime = 0.0;
+
+	next_restart_t = CHECKPOINT_INTERVAL;
 }
 
 

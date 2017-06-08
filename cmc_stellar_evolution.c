@@ -9,7 +9,62 @@
 #include "bse_wrap/bse_wrap.h"
 
 /**
-* @brief ?
+* @brief This is the same as the stellar_evolution_init, except we're only
+* setting the global BSE properties (the individual star and binary properties
+* were set in the restart binary files)
+*/
+void restart_stellar_evolution(void){
+  bse_set_neta(BSE_NETA);
+  bse_set_bwind(BSE_BWIND);
+  bse_set_hewind(BSE_HEWIND);
+  bse_set_windflag(BSE_WINDFLAG);
+  bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
+  bse_set_lambda(BSE_LAMBDA);
+  bse_set_ceflag(BSE_CEFLAG);
+  bse_set_tflag(BSE_TFLAG);
+  bse_set_ifflag(BSE_IFFLAG);
+  bse_set_wdflag(BSE_WDFLAG);
+  bse_set_bhflag(BSE_BHFLAG);
+  bse_set_nsflag(BSE_NSFLAG);
+  bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
+  bse_set_bconst(BSE_BCONST);
+  bse_set_CK(BSE_CK);
+#ifdef USE_TAUS
+  /* need to suppress the self-initialization of the Fortran Tausworthe generator */
+  if (BSE_IDUM<0) {
+    BSE_IDUM= -BSE_IDUM;
+  }
+#endif
+  bse_set_idum(BSE_IDUM);
+  bse_set_pts1(0.05);
+  bse_set_pts2(0.01);
+  bse_set_pts3(0.02);
+  bse_set_sigma(BSE_SIGMA);
+  bse_set_bhsigmafrac(BSE_BHSIGMAFRAC);
+  bse_set_opening_angle(BSE_OPENING_ANGLE);
+  bse_set_beta(BSE_BETA); //set -0.125 if variable beta (following startrack), otherwise 0.125 for bse.
+  bse_set_xi(1.0);
+  bse_set_acc2(1.5);
+  bse_set_epsnov(0.001);
+  bse_set_eddfac(BSE_EDDFAC); /* (normally 1.0) */
+  bse_set_gamma(BSE_GAMMA);
+  bse_set_merger(-1.0);
+  
+  /* set parameters relating to metallicity */
+  zpars = (double *) malloc(20 * sizeof(double));
+  bse_zcnsts(&METALLICITY, zpars);
+
+  /* set collisions matrix */
+  bse_instar();
+
+  /*Set rng to saved rng seed*/
+  bse_set_taus113state(*curr_st, 0);
+}
+
+/**
+* @brief Initializes stellar evolution, both the global BSE properties and the
+* individual properties for each star.  Runs BSE for a dt->0 time to set a bunch
+* of the parameters for individual stars
 */
 void stellar_evolution_init(void){  
   double tphysf, dtp, vs[16];

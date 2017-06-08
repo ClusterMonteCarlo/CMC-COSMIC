@@ -1194,7 +1194,7 @@ int main(int argc, char *argv[]){
 
 	reset_rng_t113(seed);
 
-	cmc_read_fits_file(infilename, &cfd);
+	cmc_read_fits_file(infilename, &cfd, 0);
 
 	METALLICITY = cfd.Z;
 	//fprintf(stderr, "l=%d, p=%g AU, a=%g AU, A=%g AU, m=%g M=%g b=%d\n", limits, peak_a, min_a, max_a, Ebmin, Ebmax, binary_mf);

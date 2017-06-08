@@ -109,6 +109,7 @@ int main(int argc, char *argv[])
 	/* initialize GSL RNG */
 	gsl_rng_env_setup();
 	rng = gsl_rng_alloc(rng_type);
+	
 
 	/* parse input parameter file, and read input data */
 	parser(argc, argv, rng);
@@ -129,18 +130,30 @@ We use these two arrays to store the number of stars created by each node during
 	DMse_mimic = (double *) calloc(procs, sizeof(double));
 #endif
 
-	/* MPI: Populating Start and End arrays based on data partitioning scheme */
-	findLimits( cfd.NOBJ, MIN_CHUNK_SIZE );
+	if(RESTART_TCOUNT == 0){
+		/* MPI: Populating Start and End arrays based on data partitioning scheme */
+		findLimits( cfd.NOBJ, MIN_CHUNK_SIZE );
 
-	/* copy the input data which has been read from the input file into the cfd struct in parser() into the star and binary data structures */
-	get_star_data(argc, argv, rng);
+		/* copy the input data which has been read from the input file into the cfd struct in parser() into the star and binary data structures */
+		get_star_data(argc, argv, rng);
+
+		/* Initializes rng states for parallel version and serial mimic */
+		set_rng_states();
+	} else {
+		/*Load the restart file directly into star and binary array*/
+		load_restart_file();
+
+		/*Find the limits on each MPI process, but using the actual star numbers*/
+		findLimits( clus.N_MAX, MIN_CHUNK_SIZE );
+
+		/*Communicate that information to the global arrays*/
+		post_sort_comm();
+
+	}
 
 //Probably not needed anymore
 //	N_b_OLD = N_b;
 //	N_b_NEW = N_b;
-
-	/* Initializes rng states for parallel version and serial mimic */
-	set_rng_states();
 
 	orbit_r = R_MAX;
 
@@ -244,8 +257,12 @@ We use these two arrays to store the number of stars created by each node during
 #endif
 
 	if (STELLAR_EVOLUTION > 0) {
-		stellar_evolution_init();
+		if(RESTART_TCOUNT == 0 )
+			stellar_evolution_init();
+		else
+			restart_stellar_evolution();
 	}
+
 
 #ifndef USE_MPI
 	for(i=0; i<procs; i++)
@@ -267,40 +284,41 @@ We use these two arrays to store the number of stars created by each node during
 
 	calc_clusdyn_new();
 
-
+	if(RESTART_TCOUNT == 0){
 	/* print out binary properties to a file */
 	//print_initial_binaries();
+	
+		/* Printing Results for initial model */
+		print_results();
 
-	/* Printing Results for initial model */
-	print_results();
+		/* print handy script for converting output files to physical units */
+		print_conversion_script();
 
-	/* print handy script for converting output files to physical units */
-	print_conversion_script();
+	#ifdef USE_CUDA
+		cuInitialize();
+	#endif
 
-#ifdef USE_CUDA
-	cuInitialize();
-#endif
+	#ifdef USE_MPI
+		tmpTimeStart = timeStartSimple();
+		//MPI: Apparently there are changes to the masses of the stars in stellar_evolution_init, so here before we start the timestep loop, we synchronize the mass array across all processors.
+		if (STELLAR_EVOLUTION > 0) {
+			mpiFindDispAndLenCustom( clus.N_MAX, MIN_CHUNK_SIZE, mpiDisp, mpiLen );
 
-#ifdef USE_MPI
-	tmpTimeStart = timeStartSimple();
-	//MPI: Apparently there are changes to the masses of the stars in stellar_evolution_init, so here before we start the timestep loop, we synchronize the mass array across all processors.
-	if (STELLAR_EVOLUTION > 0) {
-		mpiFindDispAndLenCustom( clus.N_MAX, MIN_CHUNK_SIZE, mpiDisp, mpiLen );
+			for(i=0;i<procs;i++)
+				mpiLen[i] *= sizeof(double); 
 
-		for(i=0;i<procs;i++)
-			mpiLen[i] *= sizeof(double); 
-
-		//MPI: Can be replaced by AllGatherv similar to the way it's done after sorting in post_sort_comm.
-		MPI_Status stat;
-		if(myid!=0)
-			MPI_Send(&star_m[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-		else
-			for(i=1;i<procs;i++)
-				MPI_Recv(&star_m[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
-		MPI_Bcast(star_m, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			//MPI: Can be replaced by AllGatherv similar to the way it's done after sorting in post_sort_comm.
+			MPI_Status stat;
+			if(myid!=0)
+				MPI_Send(&star_m[mpiDisp[myid]], mpiLen[myid], MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+			else
+				for(i=1;i<procs;i++)
+					MPI_Recv(&star_m[mpiDisp[i]], mpiLen[i], MPI_BYTE, i, 0, MPI_COMM_WORLD, &stat);
+			MPI_Bcast(star_m, clus.N_MAX+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		}
+		timeEndSimple(tmpTimeStart, &t_comm);
 	}
-	timeEndSimple(tmpTimeStart, &t_comm);
-#endif
+	#endif
 
 #ifdef USE_MPI
 	t_init = MPI_Wtime() - tmpTimeStart_init;
@@ -514,12 +532,13 @@ We use these two arrays to store the number of stars created by each node during
 
 		tcount++;
 
+
 		/* take a snapshot, we need more accurate 
 		 * and meaningful criterion 
 		 */
 		if(tcount%SNAPSHOT_DELTACOUNT==0) {
 			print_2Dsnapshot();
-			if (WRITE_STELLAR_INFO) {
+		if (WRITE_STELLAR_INFO) {
 				write_stellar_data();
 			}
 		}
@@ -537,7 +556,12 @@ We use these two arrays to store the number of stars created by each node during
 		}
 		timeEndSimple(tmpTimeStart, &t_io_ignore);
 
+		if(CheckCheckpoint(tmsbufref))
+			save_restart_file();
+
 	} /* End time step iteration loop */
+
+	save_restart_file();
 
 	times(&tmsbuf);
 #ifdef USE_MPI

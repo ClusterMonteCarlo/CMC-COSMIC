@@ -966,7 +966,7 @@ int main(int argc, char *argv[]){
         /* Allocate fits structure */
         cfd= (cmc_fits_data_t *) calloc(1, sizeof(cmc_fits_data_t));
 
-	cmc_read_fits_file(param.infile, cfd);
+	cmc_read_fits_file(param.infile, cfd, 0);
 	
 	/* add central BH, hidden in 0th star */
         if (param.bhmass > 0.0) {

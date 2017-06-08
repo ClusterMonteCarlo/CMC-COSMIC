@@ -10,6 +10,7 @@
 _EXTERN_ clus_struct_t clus;
 _EXTERN_ Etotal_struct_t Etotal;
 _EXTERN_ clusdyn_struct_t clusdyn;
+_EXTERN_ long RESTART_TCOUNT;
 
 /* tidal truncation stuff */
 _EXTERN_ double max_r, Rtidal, TidalMassLoss, orbit_r;
@@ -25,7 +26,7 @@ _EXTERN_ double initial_total_mass, Mtotal;
 _EXTERN_ double DMse, DMrejuv;
 /******************* Input file parameters *************************/
 _EXTERN_ long N_STAR_DIM, N_STAR_DIM_OPT, N_BIN_DIM, N_BIN_DIM_OPT, T_MAX_COUNT, MASS_PC_COUNT, STELLAR_EVOLUTION, TIDAL_TREATMENT, SS_COLLISION, TIDAL_CAPTURE, STAR_AGING_SCHEME, PREAGING, NO_MASS_BINS;
-_EXTERN_ long SNAPSHOT_DELTACOUNT, BH_SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME;
+_EXTERN_ long SNAPSHOT_DELTACOUNT, BH_SNAPSHOT_DELTACOUNT, MAX_WCLOCK_TIME, CHECKPOINT_INTERVAL, CHECKPOINTS_TO_KEEP;
 _EXTERN_ int SNAPSHOTTING, BH_SNAPSHOTTING, SNAPSHOT_CORE_COLLAPSE, SNAPSHOT_CORE_BOUNCE;
 _EXTERN_ long IDUM, PERTURB, RELAXATION, TIDALLY_STRIP_STARS;
 _EXTERN_ long NUM_CENTRAL_STARS;
@@ -156,6 +157,8 @@ _EXTERN_ char outprefix[100];
 _EXTERN_ char dummystring[MAX_STRING_LENGTH], dummystring2[MAX_STRING_LENGTH], dummystring3[MAX_STRING_LENGTH], dummystring4[MAX_STRING_LENGTH];
 _EXTERN_ int se_file_counter;
 _EXTERN_ long tcount;
+_EXTERN_ long NEXT_RESTART;
+_EXTERN_ long next_restart_t;
 _EXTERN_ long Echeck;
 _EXTERN_ long snap_num, StepCount, bh_snap_num;
 _EXTERN_ long newstarid;

@@ -87,7 +87,7 @@ int main(int argc, char *argv[]){
 		return(1);
 	}
 
-	cmc_read_fits_file(infilename, &cfd);
+	cmc_read_fits_file(infilename, &cfd, 0);
 
 	if (setMclus) cfd.Mclus = Mclus;
 	if (setRvir) cfd.Rvir = Rvir;

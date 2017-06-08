@@ -144,7 +144,7 @@ int main(int argc, char *argv[]){
 		return(1);
 	}
 
-	cmc_read_fits_file(infilename, &cfd);
+	cmc_read_fits_file(infilename, &cfd, 0);
 
 	METALLICITY = cfd.Z;
 

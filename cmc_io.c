@@ -830,12 +830,13 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	int allparsed=1;
 	/* int *ip; */
 	FILE *in, *parsedfp;
-	const char *short_opts = "qdVhs:";
+	const char *short_opts = "qdVhs:R:";
 	const struct option long_opts[] = {
 		{"quiet", no_argument, NULL, 'q'},
 		{"debug", no_argument, NULL, 'd'},
 		{"version", no_argument, NULL, 'V'},
 		{"help", no_argument, NULL, 'h'},
+		{"restart", required_argument, NULL, 'R'},
 		{"streams", required_argument, NULL, 's'}, //Run with multiple random streams. To mimic the parallel version with the given number of processors
 		{NULL, 0, NULL, 0}
 	};
@@ -860,6 +861,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			exit(0);
 		case 's':
 			procs = atoi(optarg);
+			break;
+		case 'R':
+			RESTART_TCOUNT = atol(optarg);
 			break;
 		case 'h':
 			print_version(stdout);
@@ -1135,6 +1139,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_MAX_WCLOCK_TIME);
 				sscanf(values, "%ld", &MAX_WCLOCK_TIME);
 				parsed.MAX_WCLOCK_TIME = 1;
+			} else if (strcmp(parameter_name, "CHECKPOINT_INTERVAL") == 0) {
+				PRINT_PARSED(PARAMDOC_CHECKPOINT_INTERVAL);
+				sscanf(values, "%ld", &CHECKPOINT_INTERVAL);
+				parsed.CHECKPOINT_INTERVAL = 1;
+			} else if (strcmp(parameter_name, "CHECKPOINTS_TO_KEEP") == 0) {
+				PRINT_PARSED(PARAMDOC_CHECKPOINTS_TO_KEEP);
+				sscanf(values, "%ld", &CHECKPOINTS_TO_KEEP);
+				parsed.CHECKPOINTS_TO_KEEP = 1;
 			} else if (strcmp(parameter_name, "WIND_FACTOR") == 0) {
 				PRINT_PARSED(PARAMDOC_WIND_FACTOR);
 				sscanf(values, "%lf", &WIND_FACTOR);
@@ -1429,6 +1441,8 @@ if(myid==0) {
 	CHECK_PARSED(T_MAX_PHYS, 12.0, PARAMDOC_T_MAX_PHYS);
 	CHECK_PARSED(T_MAX_COUNT, 1000000, PARAMDOC_T_MAX_COUNT);
 	CHECK_PARSED(MAX_WCLOCK_TIME, 2592000, PARAMDOC_MAX_WCLOCK_TIME);
+	CHECK_PARSED(CHECKPOINT_INTERVAL, 43200, PARAMDOC_CHECKPOINT_INTERVAL);
+	CHECK_PARSED(CHECKPOINTS_TO_KEEP, 1, PARAMDOC_CHECKPOINTS_TO_KEEP);
 	CHECK_PARSED(STOPATCORECOLLAPSE, 1, PARAMDOC_STOPATCORECOLLAPSE);
 	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT, 0.5, PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT);
 
@@ -1485,7 +1499,7 @@ if(myid==0) {
 	CHECK_PARSED(BSE_CK, -1000.00, PARAMDOC_BSE_CK);
 	CHECK_PARSED(BSE_IDUM, -999, PARAMDOC_BSE_IDUM);
 	CHECK_PARSED(BSE_SIGMA, 265.00, PARAMDOC_BSE_SIGMA);
-        CHECK_PARSED(BSE_BHSIGMAFRAC, 1.00, PARAMDOC_BSE_BHSIGMAFRAC);
+	CHECK_PARSED(BSE_BHSIGMAFRAC, 1.00, PARAMDOC_BSE_BHSIGMAFRAC);
 	CHECK_PARSED(BSE_OPENING_ANGLE, 180., PARAMDOC_BSE_OPENING_ANGLE);
 	CHECK_PARSED(BSE_BETA, 0.12500, PARAMDOC_BSE_BETA);
 	CHECK_PARSED(BSE_EDDFAC, 1.00, PARAMDOC_BSE_EDDFAC);
@@ -1508,7 +1522,7 @@ if(myid==0)
 
 	/* read the number of stars and possibly other parameters */
 	/* MPI: Currently, all processors read the entire data (entire list of stars and binaries) from the file. The data partitioning is done in load_fits_file_data(). This might limit scalability since each node requires enough memory to store the entire data set. */
-	cmc_read_fits_file(INPUT_FILE, &cfd);
+	cmc_read_fits_file(INPUT_FILE, &cfd, RESTART_TCOUNT);
 	clus.N_STAR = cfd.NOBJ;
 	clus.N_BINARY = cfd.NBINARY;
 	if (OVERWRITE_RVIR>0.) {
@@ -1551,11 +1565,12 @@ if(myid==0)
 	//MPI: Giving a larger safety factor for the parallel version.
 	N_STAR_DIM_OPT = (long) floor(1.5 * ((double) N_STAR_DIM_OPT));
 	N_BIN_DIM_OPT = (long) floor(1.5 * ((double) N_BIN_DIM_OPT));
-
-	/* the main star array containing all star parameters */
-	star = (star_t *) calloc(N_STAR_DIM_OPT, sizeof(star_t));
-	/* the binary array containing all binary parameters */
-	binary = (binary_t *) calloc(N_BIN_DIM_OPT, sizeof(binary_t));
+	if(RESTART_TCOUNT == 0){
+		/* the main star array containing all star parameters */
+		star = (star_t *) calloc(N_STAR_DIM_OPT, sizeof(star_t));
+		/* the binary array containing all binary parameters */
+		binary = (binary_t *) calloc(N_BIN_DIM_OPT, sizeof(binary_t));
+	}
 	sigma_array.r = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
 	sigma_array.sigma = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
 #else
@@ -1601,7 +1616,10 @@ if(myid==0)
 	}
 
 	/*======= Opening of output files =======*/
-	sscanf("w", "%s", outfilemode);
+	if(RESTART_TCOUNT > 0)
+		sscanf("a", "%s", outfilemode);
+	else 
+		sscanf("w", "%s", outfilemode);
 	
 /*
 MPI: In the parallel version, IO is done in the following way. Some files require data only from the root node, and others need data from all nodes. The former are opened and written to only by the root node using C IO APIs. However, for the latter, the files are opened by all processors using MPI-IO. At places when the files are suposed to be written to in the serial version, in the parallel version, each processor writes the data into a string/char buffer. At the end of the timestep, all processors flush the data from the buffers into the corresponding files in parallel using MPI-IO. The code uses 5 variables for this process - the MPI-IO file pointer, which follows the format mpi_<serial fptr name>, 2 char buffers, which hav the format mpi_<serial fptr name>_buf and mpi_<ser fptr name>_wrbuf, and an int/longlong variables to maintain the length of the buffer (format mpi_<ser fptr name>_len) and the offset in the file (format mpi_<ser fptr name>_ofst_total) where data has to be written.
@@ -1725,78 +1743,80 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			}
 		}
 
-        /* Printing our headers */
-        fprintf(lagradfile, "# Lagrange radii [code units]\n");
-        fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
-        fprintf(no_star_file, "# Number of stars within Lagrange radii [dimensionless]\n");
-        fprintf(densities_file, "# Density within Lagrange radii [code units]\n");
-        fprintf(ke_rad_file, "# Total radial kinetic energy within Lagrange radii [code units]\n");
-        fprintf(ke_tan_file, "# Total tangential kinetic energy within Lagrange radii [code units]\n");
-        fprintf(v2_rad_file, "# Sum of v_r within Lagrange radii [code units]\n");
-        fprintf(v2_tan_file, "# Sum of v_t within Lagrange radii [code units]\n");
-        for(i=0; i<NO_MASS_BINS-1; i++){
-            fprintf(mlagradfile[i], "# Lagrange radii for %g < m < %g range [code units]\n", mass_bins[i], mass_bins[i+1]);
-        }
+		if(RESTART_TCOUNT == 0){
+			/* Printing our headers */
+			fprintf(lagradfile, "# Lagrange radii [code units]\n");
+			fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
+			fprintf(no_star_file, "# Number of stars within Lagrange radii [dimensionless]\n");
+			fprintf(densities_file, "# Density within Lagrange radii [code units]\n");
+			fprintf(ke_rad_file, "# Total radial kinetic energy within Lagrange radii [code units]\n");
+			fprintf(ke_tan_file, "# Total tangential kinetic energy within Lagrange radii [code units]\n");
+			fprintf(v2_rad_file, "# Sum of v_r within Lagrange radii [code units]\n");
+			fprintf(v2_tan_file, "# Sum of v_t within Lagrange radii [code units]\n");
+			for(i=0; i<NO_MASS_BINS-1; i++){
+				fprintf(mlagradfile[i], "# Lagrange radii for %g < m < %g range [code units]\n", mass_bins[i], mass_bins[i+1]);
+			}
 
-        fprintf(lagradfile, "# 1:t");
-        fprintf(ave_mass_file, "# 1:t");
-        fprintf(no_star_file, "# 1:t");
-        fprintf(densities_file, "# 1:t");
-        fprintf(ke_rad_file, "# 1:t");
-        fprintf(ke_tan_file, "# 1:t");
-        fprintf(v2_rad_file, "# 1:t");
-        fprintf(v2_tan_file, "# 1:t");
-        for(i=0; i<NO_MASS_BINS-1; i++){
-            fprintf(mlagradfile[i], "# 1:t");
-        }
+			fprintf(lagradfile, "# 1:t");
+			fprintf(ave_mass_file, "# 1:t");
+			fprintf(no_star_file, "# 1:t");
+			fprintf(densities_file, "# 1:t");
+			fprintf(ke_rad_file, "# 1:t");
+			fprintf(ke_tan_file, "# 1:t");
+			fprintf(v2_rad_file, "# 1:t");
+			fprintf(v2_tan_file, "# 1:t");
+			for(i=0; i<NO_MASS_BINS-1; i++){
+				fprintf(mlagradfile[i], "# 1:t");
+			}
 
-        for (i=0; i<MASS_PC_COUNT; i++) {
-            fprintf(lagradfile, " %ld:r(%g)", i+2, mass_pc[i]);
-            fprintf(ave_mass_file, " %ld:<m>(%g)", i+2, mass_pc[i]);
-            fprintf(no_star_file, " %ld:N(%g)", i+2, mass_pc[i]);
-            fprintf(densities_file, " %ld:rho(%g)", i+2, mass_pc[i]);
-            fprintf(ke_rad_file, " %ld:T_r(%g)", i+2, mass_pc[i]);
-            fprintf(ke_tan_file, " %ld:T_t(%g)", i+2, mass_pc[i]);
-            fprintf(v2_rad_file, " %ld:V2_r(%g)", i+2, mass_pc[i]);
-            fprintf(v2_tan_file, " %ld:V2_t(%g)", i+2, mass_pc[i]);
-            for(j=0; j<NO_MASS_BINS-1; j++){
-                fprintf(mlagradfile[j], " %ld:r(%g)", i+2, mass_pc[i]);
-            }
-        }
+			for (i=0; i<MASS_PC_COUNT; i++) {
+				fprintf(lagradfile, " %ld:r(%g)", i+2, mass_pc[i]);
+				fprintf(ave_mass_file, " %ld:<m>(%g)", i+2, mass_pc[i]);
+				fprintf(no_star_file, " %ld:N(%g)", i+2, mass_pc[i]);
+				fprintf(densities_file, " %ld:rho(%g)", i+2, mass_pc[i]);
+				fprintf(ke_rad_file, " %ld:T_r(%g)", i+2, mass_pc[i]);
+				fprintf(ke_tan_file, " %ld:T_t(%g)", i+2, mass_pc[i]);
+				fprintf(v2_rad_file, " %ld:V2_r(%g)", i+2, mass_pc[i]);
+				fprintf(v2_tan_file, " %ld:V2_t(%g)", i+2, mass_pc[i]);
+				for(j=0; j<NO_MASS_BINS-1; j++){
+					fprintf(mlagradfile[j], " %ld:r(%g)", i+2, mass_pc[i]);
+				}
+			}
 
-        fprintf(lagradfile, "\n");
-        fprintf(ave_mass_file, "\n");
-        fprintf(no_star_file, "\n");
-        fprintf(densities_file, "\n");
-        fprintf(ke_rad_file, "\n");
-        fprintf(ke_tan_file, "\n");
-        fprintf(v2_rad_file, "\n");
-        fprintf(v2_tan_file, "\n");
-        for(i=0; i<NO_MASS_BINS-1; i++){
-            fprintf(mlagradfile[i], "\n");
-        }
+			fprintf(lagradfile, "\n");
+			fprintf(ave_mass_file, "\n");
+			fprintf(no_star_file, "\n");
+			fprintf(densities_file, "\n");
+			fprintf(ke_rad_file, "\n");
+			fprintf(ke_tan_file, "\n");
+			fprintf(v2_rad_file, "\n");
+			fprintf(v2_tan_file, "\n");
+			for(i=0; i<NO_MASS_BINS-1; i++){
+				fprintf(mlagradfile[i], "\n");
+			}
 
-        fprintf(centmass_file, "# Information on central black hole [code units unless otherwise noted]\n");
-        fprintf(centmass_file, "#1:t #2:cenma.m #3:Dt #4:rho_core #5:Etotal.tot #6:Etotal.K #7:Etotal.P\n");
-        fprintf(dynfile, "# Dynamical information [code units]\n");
-        fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN) #28.N_c_nb\n");
-        //Sourav:printing properties at 10 lagrange radii
-        if (CALCULATE10){
-            fprintf(lagrad10file, "#Dynamical information at 0.1 lagrange radius\n");
-            fprintf(lagrad10file, "#1.t #2.Dt #3.tcount #4.N_10 #5.M_10 #6.N_s,10 #7.M_s,10 #8.N_b,10 #9.M_b_10 #10.r_10 #11.rho_10\n");
-        }
+			fprintf(centmass_file, "# Information on central black hole [code units unless otherwise noted]\n");
+			fprintf(centmass_file, "#1:t #2:cenma.m #3:Dt #4:rho_core #5:Etotal.tot #6:Etotal.K #7:Etotal.P\n");
+			fprintf(dynfile, "# Dynamical information [code units]\n");
+			fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN) #28.N_c_nb\n");
+			//Sourav:printing properties at 10 lagrange radii
+			if (CALCULATE10){
+				fprintf(lagrad10file, "#Dynamical information at 0.1 lagrange radius\n");
+				fprintf(lagrad10file, "#1.t #2.Dt #3.tcount #4.N_10 #5.M_10 #6.N_s,10 #7.M_s,10 #8.N_b,10 #9.M_b_10 #10.r_10 #11.rho_10\n");
+			}
 
-        fprintf(binaryfile, "# Binary information [code units]\n");
-        fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
+			fprintf(binaryfile, "# Binary information [code units]\n");
+			fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
 
-		// print header
-		fprintf(bhsummaryfile, "#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)\n");
+			// print header
+			fprintf(bhsummaryfile, "#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)\n");
 
-	    // print header
-		fprintf(escbhsummaryfile, "# Ejected BHs\n#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)]\n");
+			// print header
+			fprintf(escbhsummaryfile, "# Ejected BHs\n#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)]\n");
 
-		if(TIMER)
-			fprintf(timerfile, "#1:tcount\t#2:t_cen_calc\t#3:t_timestep\t#4:t_dyn\t#5:t_se\t#6:t_orb\t#7:t_tid_str\t#8:t_sort\t#9:t_postsort_comm\t#10:t_pot_cal\t#11:t_ener_con3\t#12:t_calc_io_vars1\t#13:t_calc_io_vars1\t#14:t_comp_ener\t#15:t_upd_vars\t#16:t_io\t#17:t_io_ignore\t#18:t_oth\t#19:t_sort_lsort1\t#20:t_sort_splitters\t#21:t_sort_a2a\t#22:t_sort_lsort2\t#23:t_sort_oth\t#24:t_sort_lb\t#25:t_sort_only\n");
+			if(TIMER)
+				fprintf(timerfile, "#1:tcount\t#2:t_cen_calc\t#3:t_timestep\t#4:t_dyn\t#5:t_se\t#6:t_orb\t#7:t_tid_str\t#8:t_sort\t#9:t_postsort_comm\t#10:t_pot_cal\t#11:t_ener_con3\t#12:t_calc_io_vars1\t#13:t_calc_io_vars1\t#14:t_comp_ener\t#15:t_upd_vars\t#16:t_io\t#17:t_io_ignore\t#18:t_oth\t#19:t_sort_lsort1\t#20:t_sort_splitters\t#21:t_sort_a2a\t#22:t_sort_lsort2\t#23:t_sort_oth\t#24:t_sort_lb\t#25:t_sort_only\n");
+		}/*if (RESTARTING_TCOUNT == 0)*/
 
 #ifdef USE_MPI
     }
@@ -1805,70 +1825,91 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 
 #ifdef USE_MPI
     //MPI3-IO: Files that might require data from all nodes, and are opened by all procs using MPI-IO. In the serial version, these are just opened as normal (see under #else below).
+	
+	int MPI_MODE_RESTART;
+	if(RESTART_TCOUNT > 0)
+		MPI_MODE_RESTART = (MPI_MODE_APPEND | MPI_MODE_WRONLY);
+	else
+		MPI_MODE_RESTART = (MPI_MODE_CREATE | MPI_MODE_WRONLY);
+
     sprintf(outfile, "%s.log", outprefix);
-    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_logfile);
-    MPI_File_set_size(mpi_logfile, 0);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_logfile);
+	if(RESTART_TCOUNT == 0)
+		MPI_File_set_size(mpi_logfile, 0);
 
     // output files for binaries 
     sprintf(outfile, "%s.binint.log", outprefix);
-    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_binintfile);
-    MPI_File_set_size(mpi_binintfile, 0);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_binintfile);
+	if(RESTART_TCOUNT == 0)
+		MPI_File_set_size(mpi_binintfile, 0);
 
     sprintf(outfile, "%s.esc.dat", outprefix);
-    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_escfile);
-    MPI_File_set_size(mpi_escfile, 0);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_escfile);
+	if(RESTART_TCOUNT == 0)
+		MPI_File_set_size(mpi_escfile, 0);
 
     sprintf(outfile, "%s.collision.log", outprefix);
-    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_collisionfile);
-    MPI_File_set_size(mpi_collisionfile, 0);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_collisionfile);
+	if(RESTART_TCOUNT == 0)
+		MPI_File_set_size(mpi_collisionfile, 0);
 
     sprintf(outfile, "%s.tidalcapture.log", outprefix);
-    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_tidalcapturefile);
-    MPI_File_set_size(mpi_tidalcapturefile, 0);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_tidalcapturefile);
+	if(RESTART_TCOUNT == 0)
+		MPI_File_set_size(mpi_tidalcapturefile, 0);
 
     sprintf(outfile, "%s.semergedisrupt.log", outprefix);
-    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_semergedisruptfile);
-    MPI_File_set_size(mpi_semergedisruptfile, 0);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_semergedisruptfile);
+	if(RESTART_TCOUNT == 0)
+		MPI_File_set_size(mpi_semergedisruptfile, 0);
 
     sprintf(outfile, "%s.removestar.log", outprefix);
-    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_removestarfile);
-    MPI_File_set_size(mpi_removestarfile, 0);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_removestarfile);
+	if(RESTART_TCOUNT == 0)
+		MPI_File_set_size(mpi_removestarfile, 0);
 
     sprintf(outfile, "%s.relaxation.dat", outprefix);
-    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_relaxationfile);
-    MPI_File_set_size(mpi_relaxationfile, 0);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_relaxationfile);
+	if(RESTART_TCOUNT == 0)
+		MPI_File_set_size(mpi_relaxationfile, 0);
 
     if (THREEBODYBINARIES)
     {
         sprintf(outfile, "%s.3bb.log", outprefix);
-        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_threebbfile);
-        MPI_File_set_size(mpi_threebbfile, 0);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_threebbfile);
+		if(RESTART_TCOUNT == 0)
+			MPI_File_set_size(mpi_threebbfile, 0);
 
         sprintf(outfile, "%s.3bbprobability.log", outprefix);
-        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_threebbprobabilityfile);
-        MPI_File_set_size(mpi_threebbprobabilityfile, 0);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_threebbprobabilityfile);
+		if(RESTART_TCOUNT == 0)
+			MPI_File_set_size(mpi_threebbprobabilityfile, 0);
 
         sprintf(outfile, "%s.lightcollision.log", outprefix);
-        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_lightcollisionfile);
-        MPI_File_set_size(mpi_lightcollisionfile, 0);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_lightcollisionfile);
+		if(RESTART_TCOUNT == 0)
+			MPI_File_set_size(mpi_lightcollisionfile, 0);
 
         sprintf(outfile, "%s.3bbdebug.log", outprefix);
-        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_threebbdebugfile);
-        MPI_File_set_size(mpi_threebbdebugfile, 0);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_threebbdebugfile);
+		if(RESTART_TCOUNT == 0)
+			MPI_File_set_size(mpi_threebbdebugfile, 0);
     }
 
     // Meagan: extra output for black holes
     if (WRITE_BH_INFO) {
         sprintf(outfile, "%s.bhformation.dat", outprefix);
-        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_newbhfile);
-        MPI_File_set_size(mpi_newbhfile, 0);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_newbhfile);
+		if(RESTART_TCOUNT == 0)
+			MPI_File_set_size(mpi_newbhfile, 0);
     }
 
 	if(WRITE_PULSAR_INFO)
 	{
 		sprintf(outfile, "%s.pulsars.dat", outprefix);
-		MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_pulsarfile);
-		MPI_File_set_size(mpi_pulsarfile, 0);
+		MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_pulsarfile);
+		if(RESTART_TCOUNT == 0)
+			MPI_File_set_size(mpi_pulsarfile, 0);
 	}
 
 #else
@@ -1981,41 +2022,43 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 
 	//MPI: Headers are written out only by the root node.
    // print header
-	pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 \n");
-   // print header
-	pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
-   // print header
-	pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]\n");
-   // print header
-	pararootfprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
-   //Sourav:  print header
-	pararootfprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
-	pararootfprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
+    if(RESTART_TCOUNT == 0){
+		pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 \n");
+	   // print header
+		pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
+	   // print header
+		pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]\n");
+	   // print header
+		pararootfprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
+	   //Sourav:  print header
+		pararootfprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
+		pararootfprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 
-	if (THREEBODYBINARIES)
-    	{
-        // print header
-        pararootfprintf(threebbfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:ave_local_mass #12:n_local #13:sigma_local #14:eta #15:Eb #16:ecc #17:a[AU] #18:r_peri[AU] #19:r(bin) #20:r(single) #21:vr(bin) #22:vt(bin) #23:vr(single) #24:vt(single) #25:phi(bin) #26:phi(single) #27:delta_PE #28:delta_KE #29:delta_E(interaction) #30:delta_E(cumulative) #31:N_3bb\n");
-        // print header
-        pararootfprintf(threebbprobabilityfile, "#1:time #2:dt #3:dt*N/log(gamma*N) #3:Rate_3bb #4:P_3bb #5:r\n### average rate and probability of three-body binary formation in the timestep; calculated from the innermost 300 triplets of single stars considered for three-body binary formation\n");
-        // print header
-        pararootfprintf(lightcollisionfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:type1 #12:type2 #13:type3 #14:rad1 #15:rad2 #16:rad3 #17:Eb #18:ecc #19:a(au) #20:rp(au)\n");
-        // print header
-        pararootfprintf(threebbdebugfile, "#1:k1 #2:k2 #3:k3 #4:id1 #5:id2 #6:id3 #7:r1 #8:r2 #9:r3 #10:m1 #11:m2 #12:m3 #13:v1 #14:v1[1] #15:v1[2] #16:v1[2] #17:v2 #18:v2[1] #19:v2[2] #20:v2[3] #21:v3 #22:v3[1] #23:v3[2] #24:v3[3] #25:v1_cmf #26:v1_cmf[1] #27:v1_cmf[2] #28:v1_cmf[3] #29:v2_cmf #30:v2_cmf[1] #31:v2_cmf[2] #32:v2_cmf[3] #33:v3_cmf #34:v3_cmf[1] #35:v3_cmf[2] #36:v3_cmf[3] #37:knew #38:bin_id #39:bin_r #40:bin_m #41:vs_cmf #42:vs_cmf[1] #43:vs_cmf[2] #44:vs_cmf[3] #45:vb_cmf #46:vb_cmf[1] #47:vb_cmf[2] #48:vb_cmf[3] #49:vs #50:vs[1] #51:vs[2] #52:vs[3] #53:vb #55:vb[1] #56:vb[2] #57:vb[3] #58:ave_local_m #59:sigma #60:eta #61:Eb #62:ecc #63:rp #64:a #65:PE_i #66:PE_f #67:KE_cmf_i #68:KE_cmf_f #69:KE_i #70:KE_f #71:delta_PE #72:delta_KE #73:delta_E\n");
-	}
+		if (THREEBODYBINARIES)
+			{
+			// print header
+			pararootfprintf(threebbfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:ave_local_mass #12:n_local #13:sigma_local #14:eta #15:Eb #16:ecc #17:a[AU] #18:r_peri[AU] #19:r(bin) #20:r(single) #21:vr(bin) #22:vt(bin) #23:vr(single) #24:vt(single) #25:phi(bin) #26:phi(single) #27:delta_PE #28:delta_KE #29:delta_E(interaction) #30:delta_E(cumulative) #31:N_3bb\n");
+			// print header
+			pararootfprintf(threebbprobabilityfile, "#1:time #2:dt #3:dt*N/log(gamma*N) #3:Rate_3bb #4:P_3bb #5:r\n### average rate and probability of three-body binary formation in the timestep; calculated from the innermost 300 triplets of single stars considered for three-body binary formation\n");
+			// print header
+			pararootfprintf(lightcollisionfile, "#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:type1 #12:type2 #13:type3 #14:rad1 #15:rad2 #16:rad3 #17:Eb #18:ecc #19:a(au) #20:rp(au)\n");
+			// print header
+			pararootfprintf(threebbdebugfile, "#1:k1 #2:k2 #3:k3 #4:id1 #5:id2 #6:id3 #7:r1 #8:r2 #9:r3 #10:m1 #11:m2 #12:m3 #13:v1 #14:v1[1] #15:v1[2] #16:v1[2] #17:v2 #18:v2[1] #19:v2[2] #20:v2[3] #21:v3 #22:v3[1] #23:v3[2] #24:v3[3] #25:v1_cmf #26:v1_cmf[1] #27:v1_cmf[2] #28:v1_cmf[3] #29:v2_cmf #30:v2_cmf[1] #31:v2_cmf[2] #32:v2_cmf[3] #33:v3_cmf #34:v3_cmf[1] #35:v3_cmf[2] #36:v3_cmf[3] #37:knew #38:bin_id #39:bin_r #40:bin_m #41:vs_cmf #42:vs_cmf[1] #43:vs_cmf[2] #44:vs_cmf[3] #45:vb_cmf #46:vb_cmf[1] #47:vb_cmf[2] #48:vb_cmf[3] #49:vs #50:vs[1] #51:vs[2] #52:vs[3] #53:vb #55:vb[1] #56:vb[2] #57:vb[3] #58:ave_local_m #59:sigma #60:eta #61:Eb #62:ecc #63:rp #64:a #65:PE_i #66:PE_f #67:KE_cmf_i #68:KE_cmf_f #69:KE_i #70:KE_f #71:delta_PE #72:delta_KE #73:delta_E\n");
+		}
 
-    // print header
-	/*pararootfprintf(escbhsummaryfile, "# Ejected BHs\n#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)]\n");
-	*/
+		// print header
+		/*pararootfprintf(escbhsummaryfile, "# Ejected BHs\n#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)]\n");
+		*/
 
-    // print header
-	if (WRITE_BH_INFO)
-		pararootfprintf(newbhfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:bh mass #8.birth-kick(km/s) #9-20.vsarray\n");
-//"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
+		// print header
+		if (WRITE_BH_INFO)
+			pararootfprintf(newbhfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:bh mass #8.birth-kick(km/s) #9-20.vsarray\n");
+	//"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
 
-	/* print header */
-	if(WRITE_PULSAR_INFO)
-		pararootfprintf(pulsarfile, "tcount    TotalTime    Star_id      Rperi    Rapo    R     VR    VT    PHI    PHIr0    PHIrt    kick    Binary_id1    Binary_id2    kw2     P     B    formation     bacc    tacc    B0   TB     M2    M1     e     R2/RL2     dm1/dt   \n");
+		/* print header */
+		if(WRITE_PULSAR_INFO)
+			pararootfprintf(pulsarfile, "tcount    TotalTime    Star_id      Rperi    Rapo    R     VR    VT    PHI    PHIr0    PHIrt    kick    Binary_id1    Binary_id2    kw2     P     B    formation     bacc    tacc    B0   TB     M2    M1     e     R2/RL2     dm1/dt   \n");
+	} /*if(RESTART_TCOUNT == 0)*/
 }
 
 
@@ -2577,6 +2620,283 @@ void mpiInitGlobArrays()
 #endif
 }
 
+typedef struct{
+	double s_Eescaped_old;
+	double s_Jescaped_old;
+	double s_Eintescaped_old;
+	double s_Ebescaped_old;
+	double s_TidalMassLoss_old;
+	double s_Etidal_old;
+
+    long long s_mpi_logfile_len;
+    long long s_mpi_escfile_len;
+    long long s_mpi_binintfile_len;
+    long long s_mpi_collisionfile_len;
+    long long s_mpi_tidalcapturefile_len;
+    long long s_mpi_semergedisruptfile_len;
+    long long s_mpi_removestarfile_len;
+    long long s_mpi_relaxationfile_len;
+    long long s_mpi_pulsarfile_len;
+
+    long long s_mpi_logfile_ofst_total;
+    long long s_mpi_escfile_ofst_total;
+    long long s_mpi_binaryfile_ofst_total;
+    long long s_mpi_binintfile_ofst_total;
+    long long s_mpi_collisionfile_ofst_total;
+    long long s_mpi_tidalcapturefile_ofst_total;
+    long long s_mpi_semergedisruptfile_ofst_total;
+    long long s_mpi_removestarfile_ofst_total;
+    long long s_mpi_relaxationfile_ofst_total;
+    long long s_mpi_pulsarfile_ofst_total;
+
+	double s_TidalMassLoss;
+	double s_Etidal;
+	long   s_N_bb;		
+	long   s_N_bs;
+	double s_E_bb;
+	double s_E_bs;
+	long   s_Echeck; 		
+	int    s_se_file_counter; 	
+	long   s_snap_num; 		
+	long   s_bh_snap_num;
+	long   s_StepCount; 		
+	long   s_tcount;
+	double s_TotalTime;                           
+	long   s_newstarid;
+} restart_struct_t;
+
+void save_global_vars(restart_struct_t *rest){
+	rest->s_Eescaped_old                       =Eescaped_old;
+	rest->s_Jescaped_old                       =Jescaped_old;
+	rest->s_Eintescaped_old                    =Eintescaped_old;
+	rest->s_Ebescaped_old                      =Ebescaped_old;
+	rest->s_TidalMassLoss_old                  =TidalMassLoss_old;
+	rest->s_Etidal_old                         =Etidal_old;
+	rest->s_mpi_logfile_len                    =mpi_logfile_len;
+	rest->s_mpi_escfile_len                    =mpi_escfile_len;
+	rest->s_mpi_binintfile_len                 =mpi_binintfile_len;
+	rest->s_mpi_collisionfile_len              =mpi_collisionfile_len;
+	rest->s_mpi_tidalcapturefile_len           =mpi_tidalcapturefile_len;
+	rest->s_mpi_semergedisruptfile_len         =mpi_semergedisruptfile_len;
+	rest->s_mpi_removestarfile_len             =mpi_removestarfile_len;
+	rest->s_mpi_relaxationfile_len             =mpi_relaxationfile_len;
+	rest->s_mpi_pulsarfile_len                 =mpi_pulsarfile_len;
+	rest->s_mpi_logfile_ofst_total             =mpi_logfile_ofst_total;
+	rest->s_mpi_escfile_ofst_total             =mpi_escfile_ofst_total;
+	rest->s_mpi_binaryfile_ofst_total          =mpi_binaryfile_ofst_total;
+	rest->s_mpi_binintfile_ofst_total          =mpi_binintfile_ofst_total;
+	rest->s_mpi_collisionfile_ofst_total       =mpi_collisionfile_ofst_total;
+	rest->s_mpi_tidalcapturefile_ofst_total    =mpi_tidalcapturefile_ofst_total;
+	rest->s_mpi_semergedisruptfile_ofst_total  =mpi_semergedisruptfile_ofst_total;
+	rest->s_mpi_removestarfile_ofst_total      =mpi_removestarfile_ofst_total;
+	rest->s_mpi_relaxationfile_ofst_total      =mpi_relaxationfile_ofst_total;
+	rest->s_mpi_pulsarfile_ofst_total          =mpi_pulsarfile_ofst_total;
+	rest->s_TidalMassLoss                      =TidalMassLoss;
+	rest->s_Etidal                             =Etidal;
+	rest->s_N_bb		                       =N_bb;		
+	rest->s_N_bs                               =N_bs;
+	rest->s_E_bb                               =E_bb;
+	rest->s_E_bs                               =E_bs;
+	rest->s_Echeck 		                       =Echeck; 		
+	rest->s_se_file_counter 	               =se_file_counter; 	
+	rest->s_snap_num 		                   =snap_num; 		
+	rest->s_bh_snap_num                        =bh_snap_num;
+	rest->s_StepCount 		                   =StepCount; 		
+	rest->s_tcount                             =tcount;
+	rest->s_TotalTime                          =TotalTime;
+	rest->s_newstarid                          =newstarid;
+}
+
+void load_global_vars(restart_struct_t *rest){
+	Eescaped_old                       =rest->s_Eescaped_old;
+	Jescaped_old                       =rest->s_Jescaped_old;
+	Eintescaped_old                    =rest->s_Eintescaped_old;
+	Ebescaped_old                      =rest->s_Ebescaped_old;
+	TidalMassLoss_old                  =rest->s_TidalMassLoss_old;
+	Etidal_old                         =rest->s_Etidal_old;
+	mpi_logfile_len                    =rest->s_mpi_logfile_len;
+	mpi_escfile_len                    =rest->s_mpi_escfile_len;
+	mpi_binintfile_len                 =rest->s_mpi_binintfile_len;
+	mpi_collisionfile_len              =rest->s_mpi_collisionfile_len;
+	mpi_tidalcapturefile_len           =rest->s_mpi_tidalcapturefile_len;
+	mpi_semergedisruptfile_len         =rest->s_mpi_semergedisruptfile_len;
+	mpi_removestarfile_len             =rest->s_mpi_removestarfile_len;
+	mpi_relaxationfile_len             =rest->s_mpi_relaxationfile_len;
+	mpi_pulsarfile_len                 =rest->s_mpi_pulsarfile_len;
+	mpi_logfile_ofst_total             =rest->s_mpi_logfile_ofst_total;
+	mpi_escfile_ofst_total             =rest->s_mpi_escfile_ofst_total;
+	mpi_binaryfile_ofst_total          =rest->s_mpi_binaryfile_ofst_total;
+	mpi_binintfile_ofst_total          =rest->s_mpi_binintfile_ofst_total;
+	mpi_collisionfile_ofst_total       =rest->s_mpi_collisionfile_ofst_total;
+	mpi_tidalcapturefile_ofst_total    =rest->s_mpi_tidalcapturefile_ofst_total;
+	mpi_semergedisruptfile_ofst_total  =rest->s_mpi_semergedisruptfile_ofst_total;
+	mpi_removestarfile_ofst_total      =rest->s_mpi_removestarfile_ofst_total;
+	mpi_relaxationfile_ofst_total      =rest->s_mpi_relaxationfile_ofst_total;
+	mpi_pulsarfile_ofst_total          =rest->s_mpi_pulsarfile_ofst_total;
+	TidalMassLoss                      =rest->s_TidalMassLoss;
+	Etidal                             =rest->s_Etidal;
+	N_bb		                       =rest->s_N_bb;		
+	N_bs                               =rest->s_N_bs;
+	E_bb                               =rest->s_E_bb;
+	E_bs                               =rest->s_E_bs;
+	Echeck 		                       =rest->s_Echeck; 		
+	se_file_counter 	               =rest->s_se_file_counter; 	
+	snap_num 		                   =rest->s_snap_num; 		
+	bh_snap_num                        =rest->s_bh_snap_num;
+	StepCount 		                   =rest->s_StepCount; 		
+	tcount                             =rest->s_tcount;
+	TotalTime                          =rest->s_TotalTime;
+	newstarid                          =rest->s_newstarid;
+}
+
+void save_restart_file(){
+	FILE *my_restart_file;
+	char restart_file[200];
+	char delete_file[200];
+	char restart_folder[200];
+	int i,j;
+	int num_bin=0;
+	restart_struct_t restart_struct;
+	
+	sprintf(restart_folder, "./%s-RESTART", outprefix);
+	sprintf(restart_file, "%s/%s.restart.%ld-%d.bin",restart_folder,outprefix,NEXT_RESTART,myid);
+
+	/*If it's our first restart, we need to create the folder; if not, we can
+	 * just save it in the existing folder*/
+	struct stat st = {0};
+	if (stat(restart_folder,&st) == -1) {
+		mkdir(restart_folder, 0700);
+	}
+
+	my_restart_file = fopen(restart_file,"wb");
+	if (!my_restart_file){
+		eprintf("can't open restart file %s for writing!\n",restart_file);
+		exit_cleanly(-1, __FUNCTION__);
+	}
+
+	
+	/*Save the entire star and binary arrays, including the many empty stars at
+	 * the end; easier this way, and it ensures a bit-by-bit restart (also, the
+	 * N_*_DIM_OPT are never updated, and should be the same as when the
+	 * original star and binary structures were allocated)*/
+	clus.N_BINARY = N_b;
+	save_global_vars(&restart_struct);
+
+	fwrite(curr_st, sizeof(struct rng_t113_state), 1, my_restart_file);
+	fwrite(&restart_struct, sizeof(restart_struct_t), 1, my_restart_file);
+	fwrite(&clus, sizeof(clus_struct_t), 1, my_restart_file);
+	fwrite(star, sizeof(star_t), N_STAR_DIM_OPT, my_restart_file);
+	fwrite(binary, sizeof(binary_t), N_BIN_DIM_OPT, my_restart_file);
+
+	fclose(my_restart_file);
+
+	/*Delete the last restart (or the last after however many we want to keep)*/
+	long restart_to_delete = NEXT_RESTART - CHECKPOINTS_TO_KEEP;
+	if ((restart_to_delete > 0) && (CHECKPOINTS_TO_KEEP != 0)){
+		sprintf(delete_file, "%s/%s.restart.%ld-%d.bin",restart_folder,outprefix,restart_to_delete,myid);
+		remove(delete_file);
+	}
+
+	rootprintf("******************************************************************************\n");
+	rootprintf("Saving checkpoint %d at time %g in folder %s\n",NEXT_RESTART,TotalTime,restart_folder);
+	rootprintf("******************************************************************************\n");
+		
+	NEXT_RESTART += 1;
+
+}
+
+void load_restart_file(){
+	FILE *my_restart_file;
+	char restart_file[200];
+	char restart_folder[200];
+	int i,j;
+	int num_bin=0;
+	restart_struct_t restart_struct;
+
+	sprintf(restart_folder, "./%s-RESTART", outprefix);
+	sprintf(restart_file, "%s/%s.restart.%ld-%d.bin",restart_folder,outprefix,RESTART_TCOUNT,myid);
+
+
+	if (stat(restart_folder,&st) == -1) {
+		eprintf("can't find the restart folder %s\n",restart_folder);
+		exit_cleanly(-1, __FUNCTION__);
+	}
+
+	my_restart_file = fopen(restart_file,"rb");
+	if (!my_restart_file){
+		eprintf("can't open restart file %s for writing!\n",restart_file);
+		exit_cleanly(-1, __FUNCTION__);
+	}
+
+	/*These must be allocated here for the binary files to load correctly*/
+	star = (star_t *) malloc(N_STAR_DIM_OPT*sizeof(star_t));
+	binary = (binary_t *) malloc(N_BIN_DIM_OPT*sizeof(binary_t));
+	curr_st = (struct rng_t113_state*) malloc(sizeof(struct rng_t113_state));
+
+	/*Set the units using the original data from the fits file*/
+	units_set();
+	
+	/*Load the entire star and binaries arrays at once.  Because this is done in
+	 * a single chunk of memory and with the same size of arrays as was
+	 * generated from the FITS file, this should load the exact local state into
+	 * each file*/
+	fread(curr_st, sizeof(struct rng_t113_state), 1, my_restart_file);
+	fread(&restart_struct, sizeof(restart_struct_t), 1, my_restart_file);
+	fread(&clus, sizeof(clus_struct_t), 1, my_restart_file);
+	fread(star, sizeof(star_t), N_STAR_DIM_OPT, my_restart_file);
+	fread(binary, sizeof(binary_t), N_BIN_DIM_OPT, my_restart_file);
+
+	fclose(my_restart_file);
+
+	/*Set the random number generator back where it was*/
+	set_rng_t113(*curr_st);
+
+	/*Load the global variables from the structure (replaces set_global_vars 1
+	 * and 2 in the code)*/
+	load_global_vars(&restart_struct);
+
+	/*Set this and allocate the global arrays*/
+	N_b = clus.N_BINARY;
+    q_root = gsl_root_fsolver_alloc(gsl_root_fsolver_brent);
+	mpiInitGlobArrays();
+
+	/*Set the MPI files back to exactly where they were, using the saved offsets*/
+	MPI_File_seek(mpi_logfile,mpi_logfile_ofst_total,MPI_SEEK_SET);
+	MPI_File_seek(mpi_binintfile,mpi_binintfile_ofst_total,MPI_SEEK_SET);
+	MPI_File_seek(mpi_escfile,mpi_escfile_ofst_total,MPI_SEEK_SET);
+	MPI_File_seek(mpi_collisionfile,mpi_collisionfile_ofst_total,MPI_SEEK_SET);
+	MPI_File_seek(mpi_tidalcapturefile,mpi_tidalcapturefile_ofst_total,MPI_SEEK_SET);
+	MPI_File_seek(mpi_semergedisruptfile,mpi_semergedisruptfile_ofst_total,MPI_SEEK_SET);
+	MPI_File_seek(mpi_relaxationfile,mpi_relaxationfile_ofst_total,MPI_SEEK_SET);
+	MPI_File_seek(mpi_removestarfile,mpi_removestarfile_ofst_total,MPI_SEEK_SET);
+    if (THREEBODYBINARIES){
+        MPI_File_seek(mpi_threebbfile,mpi_threebbfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_threebbprobabilityfile,mpi_threebbprobabilityfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_lightcollisionfile,mpi_lightcollisionfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_threebbdebugfile,mpi_threebbdebugfile_ofst_total,MPI_SEEK_SET);
+    }
+    if (WRITE_BH_INFO) {
+        MPI_File_seek(mpi_newbhfile,mpi_newbhfile_ofst_total,MPI_SEEK_SET);
+    }
+	if(WRITE_PULSAR_INFO){
+		 MPI_File_seek(mpi_pulsarfile,mpi_pulsarfile_ofst_total,MPI_SEEK_SET);
+	}
+
+	next_restart_t = CHECKPOINT_INTERVAL;
+	NEXT_RESTART = RESTART_TCOUNT + 1;
+
+	/*Bit of arrray-based housekeeping*/
+	star_r[0] = ZERO; 
+	star_r[clus.N_STAR + 1] = SF_INFINITY;
+	cenma.m = star_m[0];
+	cenma.m_new= star_m[0];
+	star_m[0] = 0.0;
+
+	rootprintf("******************************************************************************\n");
+	rootprintf("Loading checkpoint %d at time %g in folder %s\n",RESTART_TCOUNT,TotalTime,restart_folder);
+	rootprintf("******************************************************************************\n");
+
+}
 /*
 void alloc_bin_buf()
 {
@@ -2726,8 +3046,7 @@ void save_root_files()
 		save_root_files_helper("binint.log");
 		save_root_files_helper("esc.dat");
 		save_root_files_helper("collision.log");
-		save_root_files_helper("tidalcapture.log");
-		save_root_files_helper("semergedisrupt.log");
+		save_root_files_helper("tidalcapture.log		save_root_files_helper("semergedisrupt.log");
 		save_root_files_helper("removestar.log");
 		save_root_files_helper("relaxation.dat");
 		for(i=0; i<NO_MASS_BINS-1; i++){

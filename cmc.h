@@ -2,6 +2,9 @@
 /* vi: set filetype=c.doxygen: */
 
 #include <sys/times.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <zlib.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_errno.h>
@@ -726,6 +729,16 @@ typedef struct{
 * @brief maximum wall clock time (seconds)
 */
 	int MAX_WCLOCK_TIME;
+#define PARAMDOC_CHECKPOINT_INTERVAL "how often to save checkpoint (seconds)"
+/**
+* @brief how often to save checkpoint files (seconds)
+*/
+	int CHECKPOINT_INTERVAL;
+#define PARAMDOC_CHECKPOINTS_TO_KEEP "how many checkpoints to keep" 
+/**
+* @brief how many checkpoints to keep
+*/
+	int CHECKPOINTS_TO_KEEP;
 #define PARAMDOC_WIND_FACTOR "stellar evolution wind mass loss factor (0.5-2)"
 /**
 * @brief stellar evolution wind mass loss factor (0.5-2)
@@ -1418,6 +1431,7 @@ void mpi_close_node_buffers(void);
 void PrintLogOutput(void);
 double GetTimeStep(gsl_rng *rng);
 long CheckStop(struct tms tmsbuf);
+int CheckCheckpoint(struct tms tmsbufref);
 void ComputeIntermediateEnergy(void);
 void energy_conservation3(void);
 void set_velocities3(void);
@@ -1432,6 +1446,7 @@ void print_2Dsnapshot(void);
 void print_bh_snapshot(void);
 void get_physical_units(void);
 void update_vars(void);
+void save_restart_file(void);
 
 void print_version(FILE *stream);
 void cmc_print_usage(FILE *stream, char *argv[]);
@@ -1453,6 +1468,7 @@ void load_fits_file_data(void);
 
 /* stellar evolution stuff */
 void stellar_evolution_init(void);
+void restart_stellar_evolution(void);
 void do_stellar_evolution(gsl_rng *rng);
 void write_stellar_data(void);
 void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, int kprev1);

@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
 
 	cmc_free_fits_data_t(&cfd);
 
-	cmc_read_fits_file("test.fits", &cfd2);
+	cmc_read_fits_file("test.fits", &cfd2, 0);
 
 	cmc_write_fits_file(&cfd2, "test2.fits");
 
