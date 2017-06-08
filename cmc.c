@@ -231,9 +231,9 @@ We use these two arrays to store the number of stars created by each node during
 	/* compute energy initially */
 	star[0].E = star[0].J = 0.0;
 
-	compute_energy_new();
+    set_energy_vars();
 
-	set_energy_vars();
+	compute_energy_new();
 
 	/* If we don't set it here, new stars created by breaking binaries (BSE) will
 	 * end up in the wrong place */
