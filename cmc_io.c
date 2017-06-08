@@ -42,6 +42,7 @@ void cmc_print_usage(FILE *stream, char *argv[])
 	fprintf(stream, "  -q --quiet   : do not print diagnostic info to stdout\n");
 	fprintf(stream, "  -d --debug   : turn on debugging\n");
 	fprintf(stream, "  -V --version : print version info\n");
+	fprintf(stream, "  -R --restart : start from a saved checkpoint (specify number)\n");
 	fprintf(stream, "  -h --help    : display this help text\n");
 }
 
