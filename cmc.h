@@ -1430,8 +1430,9 @@ void mpi_close_node_buffers(void);
 
 void PrintLogOutput(void);
 double GetTimeStep(gsl_rng *rng);
-long CheckStop(struct tms tmsbuf);
-int CheckCheckpoint(struct tms tmsbufref);
+void update_tspent(struct tms tmsbufref);
+long CheckStop();
+int CheckCheckpoint();
 void ComputeIntermediateEnergy(void);
 void energy_conservation3(void);
 void set_velocities3(void);

@@ -498,14 +498,7 @@ void ComputeIntermediateEnergy(void)
 	}
 }
 
-/**
-* @brief makes a few checks at the beginning of each timestep to make sure the simulation is proceeding normally, and expected on some abnormal activity, or if simulation reaches some of the user-specified termination conditions.
-*
-* @param tmsbufref
-*
-* @return 0 if error and simulation needs to be terminated, 1 otherwise
-*/
-long CheckStop(struct tms tmsbufref) {
+void update_tspent(struct tms tmsbufref) {
 	struct tms tmsbuf;
 	long tspent;
 
@@ -515,11 +508,22 @@ long CheckStop(struct tms tmsbufref) {
 	tspent += tmsbuf.tms_cutime-tmsbufref.tms_cutime;
 	tspent += tmsbuf.tms_cstime-tmsbufref.tms_cstime;
 	tspent /= sysconf(_SC_CLK_TCK);
-	//tspent /= 60;
 
-	if (tspent >= MAX_WCLOCK_TIME) {
+    headnode_time = tspent;
+
+    MPI_Bcast(&headnode_time, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+}
+
+/**
+* @brief makes a few checks at the beginning of each timestep to make sure the simulation is proceeding normally, and expected on some abnormal activity, or if simulation reaches some of the user-specified termination conditions.
+*
+* @param tmsbufref
+*
+* @return 0 if error and simulation needs to be terminated, 1 otherwise
+*/
+long CheckStop() {
+	if (headnode_time >= MAX_WCLOCK_TIME) {
 		print_2Dsnapshot();
-		MPI_Barrier(MPI_COMM_WORLD);
 		diaprintf("MAX_WCLOCK_TIME exceeded ... Terminating.\n");
 		return (1);
 	}
@@ -655,20 +659,10 @@ long CheckStop(struct tms tmsbufref) {
 	return (0); /* NOT stopping time yet */
 }
 
-int CheckCheckpoint(struct tms tmsbufref) {
-	struct tms tmsbuf;
-	long tspent;
-
-	times(&tmsbuf);
-	tspent  = tmsbuf.tms_utime-tmsbufref.tms_utime;
-	tspent += tmsbuf.tms_stime-tmsbufref.tms_stime;
-	tspent += tmsbuf.tms_cutime-tmsbufref.tms_cutime;
-	tspent += tmsbuf.tms_cstime-tmsbufref.tms_cstime;
-	tspent /= sysconf(_SC_CLK_TCK);
-	//
+int CheckCheckpoint() {
 	//Basically save a checkpoint every CHECKPOINT_INTERVAL seconds, or if we're
 	// exceeding the wallclock time
-	if (tspent >= next_restart_t){
+	if (headnode_time >= next_restart_t){
 		next_restart_t += CHECKPOINT_INTERVAL;
 		return 1;
 	}
