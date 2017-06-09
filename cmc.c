@@ -146,6 +146,9 @@ We use these two arrays to store the number of stars created by each node during
 		/*Find the limits on each MPI process, but using the actual star numbers*/
 		findLimits( clus.N_MAX, MIN_CHUNK_SIZE );
 
+        /*If we crashed, then these need to be sorted*/
+        qsorts_new();
+
 		/*Communicate that information to the global arrays*/
 		post_sort_comm();
 
