@@ -1749,6 +1749,7 @@ double local_kT(long si, int p);
 void remove_star(long j, double phi_rtidal, double phi_zero);
 double function_q(long j, long double r, long double pot, long double E, long double J);
 void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_st);
+void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct rng_t113_state* rng_st);
 
 void parse_snapshot_windows(char *option_string);
 void print_snapshot_windows(void);

@@ -2665,6 +2665,7 @@ typedef struct{
 	long   s_N_bb;		
 	long   s_N_bs;
 	double s_E_bb;
+    double s_OldTidalMassLoss;
 	double s_E_bs;
 	long   s_Echeck; 		
 	int    s_se_file_counter; 	
@@ -2706,6 +2707,7 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_mpi_relaxationfile_ofst_total      =mpi_relaxationfile_ofst_total;
 	rest->s_mpi_pulsarfile_ofst_total          =mpi_pulsarfile_ofst_total;
 	rest->s_TidalMassLoss                      =TidalMassLoss;
+    rest->s_OldTidalMassLoss                   =OldTidalMassLoss;
 	rest->s_Etidal                             =Etidal;
 	rest->s_N_bb		                       =N_bb;		
 	rest->s_N_bs                               =N_bs;
@@ -2751,6 +2753,7 @@ void load_global_vars(restart_struct_t *rest){
 	mpi_relaxationfile_ofst_total      =rest->s_mpi_relaxationfile_ofst_total;
 	mpi_pulsarfile_ofst_total          =rest->s_mpi_pulsarfile_ofst_total;
 	TidalMassLoss                      =rest->s_TidalMassLoss;
+    OldTidalMassLoss                   =rest->s_OldTidalMassLoss;
 	Etidal                             =rest->s_Etidal;
 	N_bb		                       =rest->s_N_bb;		
 	N_bs                               =rest->s_N_bs;
