@@ -3066,3 +3066,85 @@ void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_
 }
 
 
+/**
+* @brief add GW recoil kicks and mass loss for mergers of BBHs
+*
+* These are all based on fits to NR simulations, though the functional forms
+* I've taken from Section V of Gerosa and Kesden, PRD, 93, 12, 124066 (2016)
+*
+* Disabled for now...
+*/
+void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct rng_t113_state* rng_st){
+	return;
+	double theta1, theta2, Theta, X;
+	double delta_par, delta_perp, chi_par, chi_perp;
+	double z1,z2,rISCO,eISCO;
+	double chi1 = BH_KERR_SPIN, chi2 = BH_KERR_SPIN;
+	/*Keeping this seperate in case we want to implement non-uniform spins
+	 * at some point*/
+	double mass_frac;
+	double mprev0 = binary[kb].m1*madhoc; // The BSE variables have been updated, but not the dynamical ones...
+	double mprev1 = binary[kb].m2*madhoc; 
+	double q_ratio = mprev0 / mprev1, eta = mprev0*mprev1 / pow(mprev0+mprev1,2);
+	double vm, vs_perp, vs_par, vk;
+
+	/*First draw random variables for the misalignment between S1, S2, and L,
+	 * and the in-plane angle between (delta x L) and the anomoly of the plunge */
+	X = rng_t113_dbl_new(rng_st);
+	theta1 = acos(2*X - 1.);
+	X = rng_t113_dbl_new(rng_st);
+	theta2 = acos(2*X - 1.);
+	X = rng_t113_dbl_new(rng_st);
+	Theta = X * PI; 
+
+    /*Compute the approprite mass-weighted spin combinations and their
+	 * projections parallel and perpendicular to L*/
+	q_ratio = mprev0 / mprev1;
+	delta_par = (cos(theta2)*q_ratio*chi2 - cos(theta1)*chi1) / (1+q_ratio);
+	chi_par = (cos(theta2)*q_ratio*q_ratio*chi2 + cos(theta1)*chi1) / pow(1+q_ratio,2.);
+	delta_perp = abs((sin(theta2)*q_ratio*chi2 - sin(theta1)*chi1) / (1+q_ratio));
+	chi_perp = abs((sin(theta2)*q_ratio*q_ratio*chi2 + sin(theta1)*chi1) / pow(1+q_ratio,2.));
+
+    /*The compute the energy-per-mass at the Kerr ISCO of an effective particle
+	 * with that spin*/
+	z1 = 1 + pow(1-chi_par*chi_par,0.3333333333)*(pow(1+chi_par,0.3333333333)+pow(1-chi_par,0.3333333333));
+	z2 = sqrt(3*chi_par*chi_par + z1*z1);
+	rISCO = 3 + z2 - copysignf(sqrt((3-z1)*(3+z1+2*z2)),chi_par);
+	eISCO = sqrt(1 - 2. / 3. / rISCO);
+
+	/*The final remnant mass is, based on the extrapolation between equal-mass
+	 * and test mass limits (Barausse et al, Apj, 758, 63 (2012))*/
+	mass_frac = 1 - eta*(1+4*eta)*(1-eISCO) - 16*eta*eta*(0.04827 + 4*0.01707*chi_par*(chi_par + 1));
+
+	/*Then compute velocity of the recoil kick, both from the assymetric mass
+	 * ratio and the misalignment of the spins.  These fits to NR simulations
+	 * are taken from:
+	 *
+	 *	Campanelli et al, APJ 659, L5 (2007)
+	 *	Gonzalez et al, PRL, 98, 091101 (2007)
+	 *	Lousto et al, PRD, 77, 044028 (2008)
+	 *	Lousto et al, PRD, 85, 084015 (2012)
+	 *	Lousto and Zlochower, PRD, 87, 084027 (2013)
+	 *
+	 *	Though I just copied them all from the Gerosa paper...
+	 * */
+	vm = 1.2e4 * eta*eta * ((1-q_ratio) / (1+q_ratio)) * (1 - 0.93*eta);
+	vs_perp = 6.9e3 * eta*eta * delta_par;
+	vs_par = 16 * eta*eta *(delta_perp *(3677.76 + 2*2481.21*chi_par + 4*1792.45*chi_par*chi_par + 8*1506.52*pow(chi_par,3))
+							+ 2*chi_perp*delta_par*(1140 + 2*2481*chi_par))*cos(Theta);
+	vk = sqrt(vm*vm - 2*vm*vs_perp*0.8192 /*cos(145d)*/ + vs_perp*vs_perp + vs_par*vs_par);
+
+	/*Finally, apply these to the newly formed (single!) BH*/
+	vt_add_kick(&(star[knew].vt),vk,0.,rng_st);
+	star[knew].m *= mass_frac;
+
+	/*Record this in the collision file*/
+	parafprintf(collisionfile, "t=%g BBH-merger idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d\n",
+		TotalTime,
+		star[knew].id, star[knew].m*madhoc,
+		binary[kb].id1, mprev0,
+		binary[kb].id2, mprev1,
+		star_r[get_global_idx(knew)], 14, 14, 14);
+
+}
+

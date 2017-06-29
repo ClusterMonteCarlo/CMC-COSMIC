@@ -743,6 +743,7 @@ void bse_set_neta(double neta) { value1_.neta = neta; }
 void bse_set_bwind(double bwind) { value1_.bwind = bwind; }
 void bse_set_hewind(double hewind) { value1_.hewind = hewind; }
 void bse_set_windflag(int windflag) { value1_.windflag = windflag; }
+void bse_set_ppsn(int ppsn) { value1_.ppsn = ppsn; }
 void bse_set_sigma(double sigma) { value4_.sigma = sigma; }
 void bse_set_bhsigmafrac(double bhsigmafrac) {value4_.bhsigmafrac = bhsigmafrac; }
 void bse_set_opening_angle(int opening_angle) {value4_.opening_angle = opening_angle; }

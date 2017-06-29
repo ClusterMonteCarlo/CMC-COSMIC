@@ -198,7 +198,8 @@
       EXTERNAL ran3
 *
       REAL*8 neta,bwind,hewind,mxns
-      COMMON /VALUE1/ neta,bwind,hewind,mxns
+      integer windflag,ppsn
+      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,ppsn
       REAL*8 beta,xi,acc2,epsnov,eddfac,gamma
       COMMON /VALUE5/ beta,xi,acc2,epsnov,eddfac,gamma
 *
@@ -568,17 +569,16 @@
 *
 * For very close systems include angular momentum loss owing to 
 * gravitational radiation. 
+* CLR - changed so this is applied for ALL systems
 *
-         if(sep.le.10.d0)then
-            djgr = 8.315d-10*mass(1)*mass(2)*(mass(1)+mass(2))/
+        djgr = 8.315d-10*mass(1)*mass(2)*(mass(1)+mass(2))/
      &             (sep*sep*sep*sep)
-            f1 = (19.d0/6.d0) + (121.d0/96.d0)*ecc2
-            sqome5 = sqome2**5
-            delet1 = djgr*ecc*f1/sqome5
-            djgr = djgr*jorb*(1.d0+0.875d0*ecc2)/sqome5
-            djorb = djorb + djgr
-            delet = delet + delet1
-         endif
+        f1 = (19.d0/6.d0) + (121.d0/96.d0)*ecc2
+        sqome5 = sqome2**5
+        delet1 = djgr*ecc*f1/sqome5
+        djgr = djgr*jorb*(1.d0+0.875d0*ecc2)/sqome5
+        djorb = djorb + djgr
+        delet = delet + delet1
 *
          do 502 , k = 1,2
 

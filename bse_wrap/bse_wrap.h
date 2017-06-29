@@ -191,7 +191,7 @@ extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
 extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
-extern struct { double neta, bwind, hewind, mxns; int windflag; } value1_;
+extern struct { double neta, bwind, hewind, mxns; int windflag; int ppsn; } value1_;
 extern struct { double alpha1, lambda; } value2_;
 extern struct { double sigma; double bhsigmafrac; double bconst; double CK; int bhflag; int opening_angle; } value4_;
 extern struct { double beta, xi, acc2, epsnov, eddfac, gamma; } value5_;
@@ -207,6 +207,7 @@ void bse_set_neta(double neta); /* Reimers mass-loss coefficent (neta*4x10^-13; 
 void bse_set_bwind(double bwind); /* binary enhanced mass loss parameter (inactive for single) */
 void bse_set_hewind(double hewind); /* helium star mass loss factor (1.0 normally) */
 void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
+void bse_set_ppsn(int ppsn); /* Sets Pair-instability pulsations and supernoa */ 
 void bse_set_sigma(double sigma); /* dispersion in the Maxwellian for the SN kick speed (190 km/s) */
 void bse_set_bhsigmafrac(double bhsigmafrac); /* Ad hoc factor to change BH SN kick speed relative to NS SN kick sigma (1) */
 void bse_set_opening_angle(int opening_angle); /* Switch to set the allowed opening angle of SN kicks.  Defaults to 180 degrees*/

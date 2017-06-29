@@ -18,6 +18,7 @@ void restart_stellar_evolution(void){
   bse_set_bwind(BSE_BWIND);
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
+  bse_set_ppsn(BSE_PPSN);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambda(BSE_LAMBDA);
   bse_set_ceflag(BSE_CEFLAG);
@@ -82,6 +83,7 @@ void stellar_evolution_init(void){
   bse_set_bwind(BSE_BWIND);
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
+  bse_set_ppsn(BSE_PPSN);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambda(BSE_LAMBDA);
   bse_set_ceflag(BSE_CEFLAG);
@@ -120,7 +122,7 @@ void stellar_evolution_init(void){
 
   /* set collisions matrix */
   bse_instar();
-  dprintf("se_init: %g %g %g %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %d\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_OPENING_ANGLE);
+  dprintf("se_init: %g %g %g %d %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %d\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PPSN, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_OPENING_ANGLE);
 
 #ifdef USE_MPI 
   for (k=1; k<=mpiEnd-mpiBegin+1; k++) {
@@ -638,6 +640,7 @@ void do_stellar_evolution(gsl_rng *rng)
           exit(1);
         }
 	handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
+
 	if (WRITE_BH_INFO) {
 		if (kprev0!=14 && binary[kb].bse_kw[0]==14) { // newly formed BH
 #ifdef USE_MPI
@@ -1109,6 +1112,10 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
     knew = create_star(k, 1);
     cp_binmemb_to_star(k, 0, knew);
 
+	/*If this was a BBH merger, special things must be done*/
+	if(kprev0 == 14 && kprev1 == 14)
+		binary_bh_merger(k, kb, knew, kprev0, kprev1, curr_st);
+
 #ifdef USE_MPI
     parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d\n",
       TotalTime,
@@ -1210,6 +1217,10 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
     //dprintf("binary disrupted via BSE with second star intact\n");
     knew = create_star(k, 1);
     cp_binmemb_to_star(k, 1, knew);
+
+	/*If this was a BBH merger, special things must be done*/
+	if(kprev0 == 14 && kprev1 == 14)
+		binary_bh_merger(k, kb, knew, kprev0, kprev1, curr_st);
 
 #ifdef USE_MPI
     parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d\n",

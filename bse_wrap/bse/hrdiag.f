@@ -33,7 +33,8 @@
       parameter(mlp=12.d0,tiny=1.0d-14)
       real*8 mass0,mt0,mtc
       REAL*8 neta,bwind,hewind,mxns
-      COMMON /VALUE1/ neta,bwind,hewind,mxns
+      integer windflag,ppsn
+      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,ppsn
       common /fall/fallback
       REAL*8 fallback
 * 
@@ -45,6 +46,7 @@
       real*8 rx,ry,delr,rzams,rtms,gamma,rmin,taumin,rg
       parameter(taumin=5.0d-08)
       real*8 mcmax,mcx,mcy,mcbagb,lambda
+      real*8 frac,kappa,sappa,alphap
       real*8 am,xx,fac,rdgen,mew,lum0,kap,zeta,ahe,aco
       parameter(lum0=7.0d+04,kap=-0.5d0,ahe=4.d0,aco=16.d0)
 *
@@ -631,6 +633,42 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      kw = 14
 * Convert baryonic mass to gravitational mass (approx for BHs) 
                      if(nsflag.ge.2) mt = 0.9d0*mt 
+
+* CLR - PPSN and PSN goes here
+                     if(ppsn.gt.0)then
+                     mcy = mcheif(mass,zpars(2),zpars(10))
+                     frac = mcy/mt
+                     kappa = 0.67d0*frac + 0.1d0
+                     sappa = 0.5228d0*frac - 0.52974
+                     if(mcy.le.32.d0)then
+                        alphap = 1.0d0
+                     elseif(frac.lt.0.9d0.and.mcy.le.37.d0)then
+                        alphap = 0.2d0*(kappa-1.d0)*mcy +           
+     &                          0.2d0*(37.d0 - 32.d0*kappa)
+                     elseif(mcy.le.60d0.and.frac.lt.0.9d0)then
+                        alphap = kappa
+                     elseif(frac.ge.0.9.and.mcy.le.37d0)then
+                        alphap = sappa*(mcy - 32.d0) + 1.d0
+                     elseif(frac.ge.0.9.and.mcy.le.56.and.         
+     &                         sappa.lt.0.82916)then
+                        alphap = 5.d0*sappa + 1.d0
+                     elseif(frac.ge.0.9.and.mcy.le.56.and.         
+     &                         sappa.ge.0.82916)then
+                        alphap = (-0.1381*frac + 0.1309)*          
+     &                            (mcy - 56.d0) + 0.82916
+                     elseif(frac.ge.0.9.and.mcy.gt.56.and.         
+     &                        mcy.lt.64)then                     
+                        alphap = -0.103645*mcy + 6.63328
+                     elseif(mcy.ge.64.and.mcy.lt.135)then
+                        alphap = 0.d0
+                        kw = 15
+                        write(*,*) "PAIR-INSTABILITY SN!"
+                     elseif(mcy.ge.135)then
+                        alphap = 1.0d0
+                     endif
+                        
+                     mt = alphap*mt
+                     endif
                   endif  
                endif
             endif

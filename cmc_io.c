@@ -1294,6 +1294,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_WINDFLAG);
 				sscanf(values, "%d", &BSE_WINDFLAG);
 				parsed.BSE_WINDFLAG = 1;
+			} else if (strcmp(parameter_name, "BSE_PPSN")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_PPSN);
+				sscanf(values, "%d", &BSE_PPSN);
+				parsed.BSE_PPSN = 1;
 			} else if (strcmp(parameter_name, "BSE_ALPHA1")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_ALPHA1);
 				sscanf(values, "%lf", &BSE_ALPHA1);
@@ -1366,6 +1370,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_GAMMA);
 				sscanf(values, "%lf", &BSE_GAMMA);
 				parsed.BSE_GAMMA = 1;
+			} else if (strcmp(parameter_name, "BH_KERR_SPIN")== 0) {
+				PRINT_PARSED(PARAMDOC_BH_KERR_SPIN);
+				sscanf(values, "%lf", &BH_KERR_SPIN);
+				parsed.BH_KERR_SPIN = 1;
 			} else if (strcmp(parameter_name, "TIMER")== 0) {
 				PRINT_PARSED(PARAMDOC_TIMER);
 				sscanf(values, "%d", &TIMER);
@@ -1486,6 +1494,7 @@ if(myid==0) {
 	CHECK_PARSED(BSE_BWIND, 0.00, PARAMDOC_BSE_BWIND);
 	CHECK_PARSED(BSE_HEWIND, 0.50, PARAMDOC_BSE_HEWIND);
 	CHECK_PARSED(BSE_WINDFLAG, 1, PARAMDOC_BSE_WINDFLAG);
+	CHECK_PARSED(BSE_PPSN, 0, PARAMDOC_BSE_PPSN);
 	CHECK_PARSED(BSE_ALPHA1, 3.00, PARAMDOC_BSE_ALPHA1);
 	CHECK_PARSED(BSE_LAMBDA, 0.50, PARAMDOC_BSE_LAMBDA);
 	CHECK_PARSED(BSE_CEFLAG, 0, PARAMDOC_BSE_CEFLAG);
@@ -1504,6 +1513,7 @@ if(myid==0) {
 	CHECK_PARSED(BSE_BETA, 0.12500, PARAMDOC_BSE_BETA);
 	CHECK_PARSED(BSE_EDDFAC, 1.00, PARAMDOC_BSE_EDDFAC);
 	CHECK_PARSED(BSE_GAMMA, -1.00, PARAMDOC_BSE_GAMMA);
+	CHECK_PARSED(BH_KERR_SPIN, 0.99, PARAMDOC_BH_KERR_SPIN);
 	CHECK_PARSED(TIMER, 0, PARAMDOC_TIMER);
 #undef CHECK_PARSED
 

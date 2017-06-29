@@ -915,6 +915,11 @@ typedef struct{
 * @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars).
 */
 	int BSE_WINDFLAG;
+#define PARAMDOC_BSE_PPSN "PPSN turns on pair-instability SN and pulsations ala Spera and Mapelli 2017 (0=off, 1=on)"
+/**
+* @brief PPSN flag turns ou pair-instability SN and pulsations for massive stars.
+*/
+	int BSE_PPSN;
 #define PARAMDOC_BSE_ALPHA1 "alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)"
 /**
 * @brief alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)
@@ -1006,6 +1011,11 @@ typedef struct{
 * @brief gamma is the angular momentum factor for mass lost during Roche (-1.0, see evolv2.f for more details).
 */
 	int BSE_GAMMA;
+#define PARAMDOC_BH_KERR_SPIN "The dimmensionless Kerr spin to assign to every BH.  Determines kicks for BBH mergers"
+/**
+* @brief Kerr spin magnitude for all BHs (default is 0.99) 
+*/
+	int BH_KERR_SPIN;
 #define PARAMDOC_TIMER "enable or disable timers. This would return a detailed profiling of the code, but uses barriers, so might slow down the code a bit."
 /**
 * @brief enable or disable timers. This would return a detailed profiling of the code, but uses barriers, so might slow down the code a bit.
