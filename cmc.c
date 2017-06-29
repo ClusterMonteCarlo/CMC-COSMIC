@@ -146,6 +146,9 @@ We use these two arrays to store the number of stars created by each node during
 		/*Find the limits on each MPI process, but using the actual star numbers*/
 		findLimits( clus.N_MAX, MIN_CHUNK_SIZE );
 
+        /*Should already be sorted, but new stars need to be accounted for*/
+        qsorts_new();
+
 		/*Communicate that information to the global arrays*/
 		post_sort_comm();
 
@@ -231,9 +234,9 @@ We use these two arrays to store the number of stars created by each node during
 	/* compute energy initially */
 	star[0].E = star[0].J = 0.0;
 
-	compute_energy_new();
+    set_energy_vars();
 
-	set_energy_vars();
+	compute_energy_new();
 
 	/* If we don't set it here, new stars created by breaking binaries (BSE) will
 	 * end up in the wrong place */
@@ -331,7 +334,7 @@ We use these two arrays to store the number of stars created by each node during
 
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
-	while (CheckStop(tmsbufref) == 0) 
+	while (CheckStop() == 0) 
 	{
 
 		tmpTimeStart = timeStartSimple();
@@ -556,7 +559,9 @@ We use these two arrays to store the number of stars created by each node during
 		}
 		timeEndSimple(tmpTimeStart, &t_io_ignore);
 
-		if(CheckCheckpoint(tmsbufref))
+	    update_tspent(tmsbufref);
+
+		if(CheckCheckpoint())
 			save_restart_file();
 
 	} /* End time step iteration loop */

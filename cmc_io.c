@@ -42,6 +42,7 @@ void cmc_print_usage(FILE *stream, char *argv[])
 	fprintf(stream, "  -q --quiet   : do not print diagnostic info to stdout\n");
 	fprintf(stream, "  -d --debug   : turn on debugging\n");
 	fprintf(stream, "  -V --version : print version info\n");
+	fprintf(stream, "  -R --restart : start from a saved checkpoint (specify number)\n");
 	fprintf(stream, "  -h --help    : display this help text\n");
 }
 
@@ -1626,10 +1627,10 @@ if(myid==0)
 	}
 
 	/*======= Opening of output files =======*/
-	if(RESTART_TCOUNT > 0)
-		sscanf("a", "%s", outfilemode);
-	else 
+	if(RESTART_TCOUNT == 0)
 		sscanf("w", "%s", outfilemode);
+	else 
+		sscanf("a", "%s", outfilemode);
 	
 /*
 MPI: In the parallel version, IO is done in the following way. Some files require data only from the root node, and others need data from all nodes. The former are opened and written to only by the root node using C IO APIs. However, for the latter, the files are opened by all processors using MPI-IO. At places when the files are suposed to be written to in the serial version, in the parallel version, each processor writes the data into a string/char buffer. At the end of the timestep, all processors flush the data from the buffers into the corresponding files in parallel using MPI-IO. The code uses 5 variables for this process - the MPI-IO file pointer, which follows the format mpi_<serial fptr name>, 2 char buffers, which hav the format mpi_<serial fptr name>_buf and mpi_<ser fptr name>_wrbuf, and an int/longlong variables to maintain the length of the buffer (format mpi_<ser fptr name>_len) and the offset in the file (format mpi_<ser fptr name>_ofst_total) where data has to be written.
@@ -2673,6 +2674,9 @@ typedef struct{
 	long   s_tcount;
 	double s_TotalTime;                           
 	long   s_newstarid;
+    double s_cenma_m;
+    double s_cenma_m_new;
+    double s_cenma_e;
 } restart_struct_t;
 
 void save_global_vars(restart_struct_t *rest){
@@ -2715,6 +2719,9 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_tcount                             =tcount;
 	rest->s_TotalTime                          =TotalTime;
 	rest->s_newstarid                          =newstarid;
+	rest->s_cenma_m                            =cenma.m;                 
+	rest->s_cenma_m_new                        =cenma.m_new;                
+	rest->s_cenma_e                            =cenma.E;                       
 }
 
 void load_global_vars(restart_struct_t *rest){
@@ -2757,6 +2764,9 @@ void load_global_vars(restart_struct_t *rest){
 	tcount                             =rest->s_tcount;
 	TotalTime                          =rest->s_TotalTime;
 	newstarid                          =rest->s_newstarid;
+	cenma.m                            =rest->s_cenma_m;
+	cenma.m_new                        =rest->s_cenma_m_new;
+	cenma.E                            =rest->s_cenma_e;
 }
 
 void save_restart_file(){
@@ -2766,6 +2776,7 @@ void save_restart_file(){
 	char restart_folder[200];
 	int i,j;
 	int num_bin=0;
+	struct stat folder_thing = {0};
 	restart_struct_t restart_struct;
 	
 	sprintf(restart_folder, "./%s-RESTART", outprefix);
@@ -2773,8 +2784,7 @@ void save_restart_file(){
 
 	/*If it's our first restart, we need to create the folder; if not, we can
 	 * just save it in the existing folder*/
-	struct stat st = {0};
-	if (stat(restart_folder,&st) == -1) {
+	if (stat(restart_folder,&folder_thing) == -1) {
 		mkdir(restart_folder, 0700);
 	}
 
@@ -2821,13 +2831,13 @@ void load_restart_file(){
 	char restart_folder[200];
 	int i,j;
 	int num_bin=0;
+	struct stat folder_thing = {0};
 	restart_struct_t restart_struct;
 
 	sprintf(restart_folder, "./%s-RESTART", outprefix);
 	sprintf(restart_file, "%s/%s.restart.%ld-%d.bin",restart_folder,outprefix,RESTART_TCOUNT,myid);
 
-
-	if (stat(restart_folder,&st) == -1) {
+	if (stat(restart_folder,&folder_thing) == -1) {
 		eprintf("can't find the restart folder %s\n",restart_folder);
 		exit_cleanly(-1, __FUNCTION__);
 	}
@@ -2898,7 +2908,6 @@ void load_restart_file(){
 	/*Bit of arrray-based housekeeping*/
 	star_r[0] = ZERO; 
 	star_r[clus.N_STAR + 1] = SF_INFINITY;
-	cenma.m = star_m[0];
 	cenma.m_new= star_m[0];
 	star_m[0] = 0.0;
 

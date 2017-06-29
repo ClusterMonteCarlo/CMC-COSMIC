@@ -38,6 +38,8 @@ AC_DEFUN([_NU_MPI_EXTRACT_FLAGS], [
                     _mpiwrap_link='-showme:link'],
         [MPICH2],  [_mpiwrap_compile="-compile-info| _NU_DROP_FIRST_ARG";
                     _mpiwrap_link="-link-info | _NU_DROP_FIRST_ARG"],
+        [IMPI],  [_mpiwrap_compile="-compile-info| _NU_DROP_FIRST_ARG";
+                    _mpiwrap_link="-link-info | _NU_DROP_FIRST_ARG"],
         [_mpiwrap_unknown=yes 
          AC_MSG_WARN([Unknown MPI implementation.])
     ])
@@ -62,6 +64,8 @@ AC_DEFUN([_NU_MPI_EXTRACT_IMPL], [
        #define RESULT "OpenMPI"
        #elif defined MPICH2
        #define RESULT "MPICH2"
+       #elif defined I_MPI_VERSION
+       #define RESULT "IMPI"
        #elif defined LAM_MPI
        #define RESULT "Lam-MPI"
        #else
