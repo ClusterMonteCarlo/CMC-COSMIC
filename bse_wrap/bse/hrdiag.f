@@ -662,7 +662,7 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mcy.ge.64.and.mcy.lt.135)then
                         alphap = 0.d0
                         kw = 15
-                        write(*,*) "PAIR-INSTABILITY SN!"
+                        write(*,*) "PAIR INSTABILITY SN ", mt, mcy
                      elseif(mcy.ge.135)then
                         alphap = 1.0d0
                      endif

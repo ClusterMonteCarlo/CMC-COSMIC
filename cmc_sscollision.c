@@ -379,6 +379,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 #ifdef USE_MPI
 		g_knew = get_global_idx(knew);
 		star_r[g_knew] = rcm;
+        star_m[g_knew] = star[knew].m;
 #else
 		star[knew].r = rcm;
 #endif

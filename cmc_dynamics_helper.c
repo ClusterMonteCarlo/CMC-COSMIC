@@ -3075,7 +3075,6 @@ void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_
 * Disabled for now...
 */
 void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct rng_t113_state* rng_st){
-	return;
 	double theta1, theta2, Theta, X;
 	double delta_par, delta_perp, chi_par, chi_perp;
 	double z1,z2,rISCO,eISCO;
@@ -3083,10 +3082,12 @@ void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct
 	/*Keeping this seperate in case we want to implement non-uniform spins
 	 * at some point*/
 	double mass_frac;
-	double mprev0 = binary[kb].m1*madhoc; // The BSE variables have been updated, but not the dynamical ones...
-	double mprev1 = binary[kb].m2*madhoc; 
-	double q_ratio = mprev0 / mprev1, eta = mprev0*mprev1 / pow(mprev0+mprev1,2);
+	double mprev0 = binary[kb].m1*units.mstar / FB_CONST_MSUN; // The BSE variables have been updated, but not the dynamical ones...
+	double mprev1 = binary[kb].m2*units.mstar / FB_CONST_MSUN; 
+	double eta = mprev0*mprev1 / pow(mprev0+mprev1,2);
 	double vm, vs_perp, vs_par, vk;
+    double q_ratio = mprev0/mprev1;
+    if (q_ratio > 1.) q_ratio = 1./q_ratio;
 
 	/*First draw random variables for the misalignment between S1, S2, and L,
 	 * and the in-plane angle between (delta x L) and the anomoly of the plunge */
@@ -3102,8 +3103,8 @@ void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct
 	q_ratio = mprev0 / mprev1;
 	delta_par = (cos(theta2)*q_ratio*chi2 - cos(theta1)*chi1) / (1+q_ratio);
 	chi_par = (cos(theta2)*q_ratio*q_ratio*chi2 + cos(theta1)*chi1) / pow(1+q_ratio,2.);
-	delta_perp = abs((sin(theta2)*q_ratio*chi2 - sin(theta1)*chi1) / (1+q_ratio));
-	chi_perp = abs((sin(theta2)*q_ratio*q_ratio*chi2 + sin(theta1)*chi1) / pow(1+q_ratio,2.));
+	delta_perp = fabs((sin(theta2)*q_ratio*chi2 - sin(theta1)*chi1) / (1+q_ratio));
+	chi_perp = fabs((sin(theta2)*q_ratio*q_ratio*chi2 + sin(theta1)*chi1) / pow(1+q_ratio,2.));
 
     /*The compute the energy-per-mass at the Kerr ISCO of an effective particle
 	 * with that spin*/
@@ -3130,21 +3131,27 @@ void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct
 	 * */
 	vm = 1.2e4 * eta*eta * ((1-q_ratio) / (1+q_ratio)) * (1 - 0.93*eta);
 	vs_perp = 6.9e3 * eta*eta * delta_par;
-	vs_par = 16 * eta*eta *(delta_perp *(3677.76 + 2*2481.21*chi_par + 4*1792.45*chi_par*chi_par + 8*1506.52*pow(chi_par,3))
-							+ 2*chi_perp*delta_par*(1140 + 2*2481*chi_par))*cos(Theta);
-	vk = sqrt(vm*vm - 2*vm*vs_perp*0.8192 /*cos(145d)*/ + vs_perp*vs_perp + vs_par*vs_par);
+	vs_par = 16.*eta*eta *(delta_perp *(3677.76 + 2*2481.21*chi_par + 4*1792.45*chi_par*chi_par + 8*1506.52*pow(chi_par,3.))
+                             + 2.*chi_perp*delta_par*(1140. + 2*2481.*chi_par))*cos(Theta);
+	vk = sqrt(vm*vm - 2*vm*vs_perp*0.8192 + vs_perp*vs_perp + vs_par*vs_par);
+
+    //printf("MERGER HERE\n");
+
+    //printf("%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",mprev0,mprev1,vm,vk,vs_perp,vs_par,theta1,theta2,Theta,eISCO,mass_frac,delta_par,chi_par,delta_perp,chi_perp,chi1,chi2);
 
 	/*Finally, apply these to the newly formed (single!) BH*/
+    printf("before add kick vt=%g\n",star[knew].vt);
 	vt_add_kick(&(star[knew].vt),vk,0.,rng_st);
+    printf("after add kick vt=%g\n",star[knew].vt);
 	star[knew].m *= mass_frac;
+    star[knew].se_mt *= mass_frac;
 
-	/*Record this in the collision file*/
-	parafprintf(collisionfile, "t=%g BBH-merger idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d\n",
-		TotalTime,
-		star[knew].id, star[knew].m*madhoc,
-		binary[kb].id1, mprev0,
-		binary[kb].id2, mprev1,
-		star_r[get_global_idx(knew)], 14, 14, 14);
 
+    int ii;
+    if (WRITE_BH_INFO) {
+        parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g %g ", TotalTime, star_r[get_global_idx(knew)], star[k].id,mprev0,mprev1, star[k].se_mt, vk);
+        for (ii=0; ii<16; ii++) parafprintf(newbhfile, "-100 ");
+        parafprintf (newbhfile, "\n");
+    }
 }
 

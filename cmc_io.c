@@ -2632,12 +2632,13 @@ void mpiInitGlobArrays()
 }
 
 typedef struct{
-	double s_Eescaped_old;
-	double s_Jescaped_old;
-	double s_Eintescaped_old;
-	double s_Ebescaped_old;
-	double s_TidalMassLoss_old;
-	double s_Etidal_old;
+	double s_Eescaped;
+	double s_Jescaped;
+	double s_Eintescaped;
+	double s_Ebescaped;
+	double s_TidalMassLoss;
+	double s_Etidal;
+    double s_Prev_Dt;
 
     long long s_mpi_logfile_len;
     long long s_mpi_escfile_len;
@@ -2648,7 +2649,6 @@ typedef struct{
     long long s_mpi_removestarfile_len;
     long long s_mpi_relaxationfile_len;
     long long s_mpi_pulsarfile_len;
-
     long long s_mpi_logfile_ofst_total;
     long long s_mpi_escfile_ofst_total;
     long long s_mpi_binaryfile_ofst_total;
@@ -2660,12 +2660,11 @@ typedef struct{
     long long s_mpi_relaxationfile_ofst_total;
     long long s_mpi_pulsarfile_ofst_total;
 
-	double s_TidalMassLoss;
-	double s_Etidal;
+	double s_OldTidalMassLoss;
+    double s_TidalMassLoss_old;
 	long   s_N_bb;		
 	long   s_N_bs;
 	double s_E_bb;
-    double s_OldTidalMassLoss;
 	double s_E_bs;
 	long   s_Echeck; 		
 	int    s_se_file_counter; 	
@@ -2681,12 +2680,14 @@ typedef struct{
 } restart_struct_t;
 
 void save_global_vars(restart_struct_t *rest){
-	rest->s_Eescaped_old                       =Eescaped_old;
-	rest->s_Jescaped_old                       =Jescaped_old;
-	rest->s_Eintescaped_old                    =Eintescaped_old;
-	rest->s_Ebescaped_old                      =Ebescaped_old;
-	rest->s_TidalMassLoss_old                  =TidalMassLoss_old;
-	rest->s_Etidal_old                         =Etidal_old;
+	rest->s_Eescaped                           =Eescaped;
+	rest->s_Jescaped                           =Jescaped;
+	rest->s_Eintescaped                        =Eintescaped;
+	rest->s_Ebescaped                          =Ebescaped;
+	rest->s_TidalMassLoss                      =TidalMassLoss;
+	rest->s_Etidal                             =Etidal;
+    rest->s_Prev_Dt                            =Prev_Dt;
+
 	rest->s_mpi_logfile_len                    =mpi_logfile_len;
 	rest->s_mpi_escfile_len                    =mpi_escfile_len;
 	rest->s_mpi_binintfile_len                 =mpi_binintfile_len;
@@ -2706,9 +2707,9 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_mpi_removestarfile_ofst_total      =mpi_removestarfile_ofst_total;
 	rest->s_mpi_relaxationfile_ofst_total      =mpi_relaxationfile_ofst_total;
 	rest->s_mpi_pulsarfile_ofst_total          =mpi_pulsarfile_ofst_total;
-	rest->s_TidalMassLoss                      =TidalMassLoss;
+
     rest->s_OldTidalMassLoss                   =OldTidalMassLoss;
-	rest->s_Etidal                             =Etidal;
+    rest->s_TidalMassLoss_old                  =TidalMassLoss_old;
 	rest->s_N_bb		                       =N_bb;		
 	rest->s_N_bs                               =N_bs;
 	rest->s_E_bb                               =E_bb;
@@ -2727,12 +2728,14 @@ void save_global_vars(restart_struct_t *rest){
 }
 
 void load_global_vars(restart_struct_t *rest){
-	Eescaped_old                       =rest->s_Eescaped_old;
-	Jescaped_old                       =rest->s_Jescaped_old;
-	Eintescaped_old                    =rest->s_Eintescaped_old;
-	Ebescaped_old                      =rest->s_Ebescaped_old;
-	TidalMassLoss_old                  =rest->s_TidalMassLoss_old;
-	Etidal_old                         =rest->s_Etidal_old;
+	Eescaped                           =rest->s_Eescaped;
+	Jescaped                           =rest->s_Jescaped;
+	Eintescaped                        =rest->s_Eintescaped;
+	Ebescaped                          =rest->s_Ebescaped;
+	TidalMassLoss                      =rest->s_TidalMassLoss;
+	Etidal                             =rest->s_Etidal;
+    Prev_Dt                            =rest->s_Prev_Dt;
+
 	mpi_logfile_len                    =rest->s_mpi_logfile_len;
 	mpi_escfile_len                    =rest->s_mpi_escfile_len;
 	mpi_binintfile_len                 =rest->s_mpi_binintfile_len;
@@ -2752,9 +2755,9 @@ void load_global_vars(restart_struct_t *rest){
 	mpi_removestarfile_ofst_total      =rest->s_mpi_removestarfile_ofst_total;
 	mpi_relaxationfile_ofst_total      =rest->s_mpi_relaxationfile_ofst_total;
 	mpi_pulsarfile_ofst_total          =rest->s_mpi_pulsarfile_ofst_total;
-	TidalMassLoss                      =rest->s_TidalMassLoss;
+
     OldTidalMassLoss                   =rest->s_OldTidalMassLoss;
-	Etidal                             =rest->s_Etidal;
+    TidalMassLoss_old                  =rest->s_TidalMassLoss_old;
 	N_bb		                       =rest->s_N_bb;		
 	N_bs                               =rest->s_N_bs;
 	E_bb                               =rest->s_E_bb;
