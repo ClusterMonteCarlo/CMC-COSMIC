@@ -112,7 +112,9 @@ C      ENDIF
             M03 = M1
             M3 = M1
          ENDIF
-         IF(ICASE.EQ.13.AND.M3.GT.MXNS) KW = 14
+         IF(ICASE.EQ.13.AND.M3.GT.MXNS)then
+          KW = 14
+            endif
       ELSEIF(ICASE.EQ.15)THEN
          M3 = 0.D0
       ELSEIF(ICASE.GT.100)THEN

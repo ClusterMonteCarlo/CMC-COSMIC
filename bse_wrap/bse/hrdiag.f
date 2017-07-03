@@ -631,44 +631,65 @@ C      if(mt0.gt.100.d0) mt = 100.d0
 * Zero-age Black hole
 *
                      kw = 14
-* Convert baryonic mass to gravitational mass (approx for BHs) 
-                     if(nsflag.ge.2) mt = 0.9d0*mt 
 
-* CLR - PPSN and PSN goes here
-                     if(ppsn.gt.0)then
-                     mcy = mcheif(mass,zpars(2),zpars(10))
-                     frac = mcy/mt
+* CLR - (Pulsational) Pair-Instability Supernova
+
+* Belczynski+2016 prescription: just shrink any BH with a He core mass
+* between 45 and 65 solar masses, and blow up anything between 65 and
+* 135 solar masses.  Cheap, but effective
+                     if(ppsn.eq.1)then   
+                     if(mcbagb.ge.45.d0.and.mcbagb.lt.65.d0)then
+                        mt = 45.d0
+                        mc = 45.d0
+                     elseif(mcbagb.ge.65.d0.and.mcbagb.lt.135.d0)then
+                        mt = 0.d0
+                        mc = 0.d0
+                        kw = 15
+                        write(*,*) "PAIR-INSTABILITY SN!"
+                     endif
+* The Spera+Mapelli2017 prescription is a tad more sophisticated:
+* complex fitting formula to Stan Woosley's PSN models.  HOWEVER, these
+* were done using the ZAMS mass/core mass/remnant mass relationships for
+* SEVN, not BSE.  In other words, I woud be careful using this (and in
+* practice, it doesn't vary that much from Belczynski's prescription,
+* since the He core masses are the same in both)
+                     elseif(ppsn.eq.2)then
+                     frac = mcbagb/mt
                      kappa = 0.67d0*frac + 0.1d0
                      sappa = 0.5228d0*frac - 0.52974
-                     if(mcy.le.32.d0)then
+                     if(mcbagb.le.32.d0)then
                         alphap = 1.0d0
-                     elseif(frac.lt.0.9d0.and.mcy.le.37.d0)then
-                        alphap = 0.2d0*(kappa-1.d0)*mcy +           
+                     elseif(frac.lt.0.9d0.and.mcbagb.le.37.d0)then
+                        alphap = 0.2d0*(kappa-1.d0)*mcbagb +           
      &                          0.2d0*(37.d0 - 32.d0*kappa)
-                     elseif(mcy.le.60d0.and.frac.lt.0.9d0)then
+                     elseif(mcbagb.le.60d0.and.frac.lt.0.9d0)then
                         alphap = kappa
-                     elseif(frac.ge.0.9.and.mcy.le.37d0)then
-                        alphap = sappa*(mcy - 32.d0) + 1.d0
-                     elseif(frac.ge.0.9.and.mcy.le.56.and.         
+                     elseif(frac.ge.0.9.and.mcbagb.le.37d0)then
+                        alphap = sappa*(mcbagb - 32.d0) + 1.d0
+                     elseif(frac.ge.0.9.and.mcbagb.le.56.and.         
      &                         sappa.lt.0.82916)then
                         alphap = 5.d0*sappa + 1.d0
-                     elseif(frac.ge.0.9.and.mcy.le.56.and.         
+                     elseif(frac.ge.0.9.and.mcbagb.le.56.and.         
      &                         sappa.ge.0.82916)then
                         alphap = (-0.1381*frac + 0.1309)*          
-     &                            (mcy - 56.d0) + 0.82916
-                     elseif(frac.ge.0.9.and.mcy.gt.56.and.         
-     &                        mcy.lt.64)then                     
-                        alphap = -0.103645*mcy + 6.63328
-                     elseif(mcy.ge.64.and.mcy.lt.135)then
+     &                            (mcbagb - 56.d0) + 0.82916
+                     elseif(frac.ge.0.9.and.mcbagb.gt.56.and.         
+     &                        mcbagb.lt.64)then                     
+                        alphap = -0.103645*mcbagb + 6.63328
+                     elseif(mcbagb.ge.64.and.mcbagb.lt.135)then
                         alphap = 0.d0
                         kw = 15
-                        write(*,*) "PAIR INSTABILITY SN ", mt, mcy
-                     elseif(mcy.ge.135)then
+                        write(*,*) "PAIR-INSTABILITY SN!"
+                     elseif(mcbagb.ge.135)then
                         alphap = 1.0d0
                      endif
                         
                      mt = alphap*mt
                      endif
+
+* Convert baryonic mass to gravitational mass (approx for BHs) 
+                     if(nsflag.ge.2) mt = 0.9d0*mt 
+
                   endif  
                endif
             endif
@@ -888,6 +909,63 @@ C      if(mt0.gt.100.d0) mt = 100.d0
 * Zero-age Black hole
 *
                      kw = 14
+
+* CLR - PPSN and PSN goes here
+
+* Belczynski+2016 prescription: just shrink any BH with a He core mass
+* between 45 and 65 solar masses, and blow up anything between 65 and
+* 135 solar masses.  Cheap, but effective
+                     if(ppsn.eq.1)then   
+                     if(mcbagb.ge.45.d0.and.mcbagb.lt.65.d0)then
+                        mt = 45.d0
+                        mc = 45.d0
+                     elseif(mcbagb.ge.65.d0.and.mcbagb.lt.135.d0)then
+                        mt = 0.d0
+                        mc = 0.d0
+                        kw = 15
+                        write(*,*) "PAIR-INSTABILITY SN!"
+                     endif
+* The Spera+Mapelli2017 prescription is a tad more sophisticated:
+* complex fitting formula to Stan Woosley's PSN models.  HOWEVER, these
+* were done using the ZAMS mass/core mass/remnant mass relationships for
+* SEVN, not BSE.  In other words, I woud be careful using this (and in
+* practice, it doesn't vary that much from Belczynski's prescription,
+* since the He core masses are from the same BSE fitting formulae)
+                     elseif(ppsn.eq.2)then
+                     frac = mcbagb/mt
+                     kappa = 0.67d0*frac + 0.1d0
+                     sappa = 0.5228d0*frac - 0.52974
+                     if(mcbagb.le.32.d0)then
+                        alphap = 1.0d0
+                     elseif(frac.lt.0.9d0.and.mcbagb.le.37.d0)then
+                        alphap = 0.2d0*(kappa-1.d0)*mcbagb +           
+     &                          0.2d0*(37.d0 - 32.d0*kappa)
+                     elseif(mcbagb.le.60d0.and.frac.lt.0.9d0)then
+                        alphap = kappa
+                     elseif(frac.ge.0.9.and.mcbagb.le.37d0)then
+                        alphap = sappa*(mcbagb - 32.d0) + 1.d0
+                     elseif(frac.ge.0.9.and.mcbagb.le.56.and.         
+     &                         sappa.lt.0.82916)then
+                        alphap = 5.d0*sappa + 1.d0
+                     elseif(frac.ge.0.9.and.mcbagb.le.56.and.         
+     &                         sappa.ge.0.82916)then
+                        alphap = (-0.1381*frac + 0.1309)*          
+     &                            (mcbagb - 56.d0) + 0.82916
+                     elseif(frac.ge.0.9.and.mcbagb.gt.56.and.         
+     &                        mcbagb.lt.64)then                     
+                        alphap = -0.103645*mcbagb + 6.63328
+                     elseif(mcbagb.ge.64.and.mcbagb.lt.135)then
+                        alphap = 0.d0
+                        kw = 15
+                        write(*,*) "PAIR-INSTABILITY SN!"
+                     elseif(mcbagb.ge.135)then
+                        alphap = 1.0d0
+                     endif
+                        
+                     mt = alphap*mt
+                     endif
+
+
 * Convert baryonic mass to gravitational mass (approx for BHs) 
                      if(nsflag.ge.2) mt = 0.9d0*mt 
                      endif

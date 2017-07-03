@@ -915,7 +915,7 @@ typedef struct{
 * @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars).
 */
 	int BSE_WINDFLAG;
-#define PARAMDOC_BSE_PPSN "PPSN turns on pair-instability SN and pulsations ala Spera and Mapelli 2017 (0=off, 1=on)"
+#define PARAMDOC_BSE_PPSN "PPSN turns on pair-instability SN and pulsations ala Belczynski+2016 or Spera+Mapelli 2017 (0=off, 1=Belczynski, 2=SM)"
 /**
 * @brief PPSN flag turns ou pair-instability SN and pulsations for massive stars.
 */

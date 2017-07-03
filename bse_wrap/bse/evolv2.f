@@ -1260,7 +1260,9 @@
                sigma = sigmahold !reset sigma after possible ECSN kick dist. Remove this if u want some kick link to the intial pulsar values...
                if(mass(3-k).lt.0.d0)then
                   if(kstar(3-k).lt.0.d0) mt = mt-mass(3-k) !ignore TZ object
-                  if(kw.eq.13.and.mt.gt.mxns) kw = 14
+                  if(kw.eq.13.and.mt.gt.mxns) then
+                      kw = 14
+                  endif
                   kstar(k) = kw
                   mass(k) = mt
                   epoch(k) = tphys - age
@@ -2876,6 +2878,9 @@
             if(mass(3-k).lt.0.d0)then
                if(kstar(3-k).lt.0.d0) mt = mt-mass(3-k)
                if(kw.eq.13.and.mt.gt.mxns) kw = 14
+              if(kw.eq.13.and.mt.gt.mxns) then
+                   kw = 14
+              endif
                kstar(k) = kw
                mass(k) = mt
                epoch(k) = tphys - age
