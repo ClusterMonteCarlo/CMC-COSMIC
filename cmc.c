@@ -238,6 +238,7 @@ We use these two arrays to store the number of stars created by each node during
 
 	compute_energy_new();
 
+
 	/* If we don't set it here, new stars created by breaking binaries (BSE) will
 	 * end up in the wrong place */
 #ifdef USE_MPI

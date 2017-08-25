@@ -22,6 +22,7 @@ typedef struct{
         double bse_tacc[2]; /* Amount of time pulsar has spent accreting */
 	double bse_epoch[2];
 	double bse_tms[2];
+	double bse_bhspin[2];
 	double bse_tphys; /* physical time */
 	double bse_tb; /* binary orbital period */
 	double bse_bcm_dmdt[2]; /* mass transfer rate for each star [bse_get_bcm(i,14), bse_get_bcm(i,28)] */

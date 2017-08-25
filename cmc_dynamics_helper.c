@@ -71,6 +71,7 @@ void zero_star(long j)
 	star[j].se_menv = 0.0;
 	star[j].se_renv = 0.0;
 	star[j].se_tms = 0.0;
+	star[j].se_bhspin = 0.0;
 }
 
 /**
@@ -1152,6 +1153,49 @@ double binint_get_mass(long k, long kp, long id)
 }
 
 /**
+* @brief find spins of merging black holes from binary interaction components
+*
+* @param k index of first star
+* @param kp index of second star
+* @param id id of star
+*
+* @return spin of merging black holes
+*/
+double binint_get_spins(long k, long kp, long id)
+{
+	/* first look at k */
+	if (star[k].binind == 0) {
+		if (star[k].id == id) {
+			return(star[k].se_bhspin);
+		}
+	} else {
+		if (binary[star[k].binind].id1 == id) {
+			return(binary[star[k].binind].bse_bhspin[0]);
+		} else if (binary[star[k].binind].id2 == id) {
+			return(binary[star[k].binind].bse_bhspin[1]);
+		}
+	}
+	
+	/* then at kp */
+	if (star[kp].binind == 0) {
+		if (star[kp].id == id) {
+			return(star[kp].se_bhspin);
+		}
+	} else {
+		if (binary[star[kp].binind].id1 == id) {
+			return(binary[star[kp].binind].bse_bhspin[0]);
+		} else if (binary[star[kp].binind].id2 == id) {
+			return(binary[star[kp].binind].bse_bhspin[1]);
+		}
+	}
+
+	eprintf("cannot find matching id %ld!\n", id);
+	exit_cleanly(1, __FUNCTION__);
+	/* this is just for the compiler */
+	exit(1);
+}
+
+/**
 * @brief Sourav: find stellar types of merging stars from binary interaction components
 *
 * @param k index of star 1
@@ -1351,7 +1395,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring1, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=single m=%g R=%g Eint=%g id=%s\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, obj->Eint*units.E, idstring1);
+		parafprintf(binintfile, "type=single m=%g R=%g Eint=%g id=%s ktype=%d\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, obj->Eint*units.E, idstring1, obj->k_type);
 	} else if (fb_n_hier(obj) == 2) {
 		/* first write id strings */
 		snprintf(idstring1, FB_MAX_STRING_LENGTH, "%ld", obj->obj[0]->id[0]);
@@ -1365,12 +1409,13 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring2, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=binary m0=%g m1=%g R0=%g R1=%g Eint1=%g Eint2=%g id0=%s id1=%s a=%g e=%g\n", 
+		parafprintf(binintfile, "type=binary m0=%g m1=%g R0=%g R1=%g Eint1=%g Eint2=%g id0=%s id1=%s a=%g e=%g ktype1=%d ktype2=%d\n", 
 			obj->obj[0]->m*units.m/MSUN, obj->obj[1]->m*units.m/MSUN, 
 			obj->obj[0]->R*units.l/RSUN, obj->obj[1]->R*units.l/RSUN, 
 			obj->obj[0]->Eint*units.E, obj->obj[1]->Eint*units.E, 
 			idstring1, idstring2, 
-			obj->a*units.l/AU, obj->e);
+			obj->a*units.l/AU, obj->e,
+			obj->obj[0]->k_type, obj->obj[1]->k_type);
 	} else if (fb_n_hier(obj) == 3) {
 		/* identify inner binary */
 		if (obj->obj[0]->n==2) {
@@ -1397,13 +1442,14 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring3, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=triple min0=%g min1=%g mout=%g Rin0=%g Rin1=%g Rout=%g Eintin0=%g Eintin1=%g Eintout=%g idin1=%s idin2=%s idout=%s ain=%g aout=%g ein=%g eout=%g\n",
+		parafprintf(binintfile, "type=triple min0=%g min1=%g mout=%g Rin0=%g Rin1=%g Rout=%g Eintin0=%g Eintin1=%g Eintout=%g idin1=%s idin2=%s idout=%s ain=%g aout=%g ein=%g eout=%g ktypein1=%d ktypein1=%d ktypeout=%d\n",
 			obj->obj[bid]->obj[0]->m*units.m/MSUN, obj->obj[bid]->obj[1]->m*units.m/MSUN, obj->obj[sid]->m*units.m/MSUN,
 			obj->obj[bid]->obj[0]->R*units.l/RSUN, obj->obj[bid]->obj[1]->R*units.l/RSUN, obj->obj[sid]->R*units.l/RSUN,
 			obj->obj[bid]->obj[0]->Eint*units.E, obj->obj[bid]->obj[1]->Eint*units.E, obj->obj[sid]->Eint*units.E,
 			idstring1, idstring2, idstring3, 
 			obj->obj[bid]->a*units.l/AU, obj->a*units.l/AU,
-			obj->obj[bid]->e, obj->e);
+			obj->obj[bid]->e, obj->e,
+			obj->obj[bid]->obj[0]->k_type, obj->obj[bid]->obj[1]->k_type, obj->obj[sid]->k_type);
 	} else {
 		/* thankfully won't need to print out quads */
 		eprintf("Don't know how to print out object with >3 stars!\n");
@@ -1456,10 +1502,12 @@ void binint_log_collision(const char interaction_type[], long id,
 	parafprintf(collisionfile, "typem=%ld ", startype);
 	for (j=0; j<obj.ncoll; j++) {
 		parafprintf(collisionfile, "type%d=%ld ", j+1, 
-				binint_get_startype(k, kp, obj.id[j]));
+				binint_get_startype(k, kp, obj.id[j]));// Use this, not the Fewbody type, since this is changed by BSE after mergers
 	}
 	parafprintf(collisionfile, "\n");
 }
+
+
 
 /**
 * @brief do binary interaction (bin-bin or bin-single)
@@ -1609,10 +1657,16 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	printing_units.E = cmc_units.E * units.E;
 
 	/* now do something with the Fewbody result */
-	if ( !( (fabs(retval.DeltaEfrac) < 1.0e-3 || fabs(retval.DeltaE) < 1.0e-3) && 
-		 (fabs(retval.DeltaLfrac) < 1.0e-3 || fabs(retval.DeltaL) < 1.0e-3) ) ) {
+	if ( (!( (fabs(retval.DeltaEfrac) < 1.0e-3 || fabs(retval.DeltaE) < 1.0e-3) && 
+		 (fabs(retval.DeltaLfrac) < 1.0e-3 || fabs(retval.DeltaL) < 1.0e-3) ) 
+         && retval.PN_ON == 0 )) {
 		/* energy error; ignore for now */
+        /* TODO: we don't have a good way to check for energy/angular momentum conservation
+         * if the integration was done with PN terms*/
 		parafprintf(binintfile, "outcome: energy and/or angular momentum error\n");
+		print_interaction_error();
+	} else if ( isnan(retval.DeltaE) || isnan(retval.DeltaL) ) {
+		parafprintf(binintfile, "outcome: NaN returned by fewbody\n");
 		print_interaction_error();
 	} else if (retval.retval == 0) {
 		/* bad outcome; ignore for now */
@@ -1678,7 +1732,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				vnew[j] = vcm[j] + cmc_units.v * alpha * 
 					(hier.obj[i]->v[0] * wx[j] + hier.obj[i]->v[1] * wy[j]+ hier.obj[i]->v[2] * wz[j]);
 			}
-			
+
 			/* set new velocities */
 			star[knew].vr = vnew[3];
 			star[knew].vt = sqrt(sqr(vnew[1]) + sqr(vnew[2]));
@@ -1767,15 +1821,35 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					while (nmerged < hier.obj[i]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->id[nmerged], &bi);
 						star[knew].id = star_get_merger_id_new(star[knew].id, hier.obj[i]->id[nmerged]);
-						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
-						merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs, curr_st);
-                                                /* Owing to merger only useful vs's are v[1-3] */
-						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
+                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                         * BSE results with the fewbody dynamical results */
+                        if(tempstar.se_k == 14 && star[knew].se_k == 14 ){
+                            star[knew].se_k = 14;
+                            star[knew].m = hier.obj[i]->m * cmc_units.m / madhoc;
+                            star[knew].se_mass = star[knew].m * units.mstar / MSUN;
+                            star[knew].se_mt  = star[knew].m * units.mstar / MSUN;
+                            star[knew].se_mc = star[knew].m * units.mstar / MSUN;
+                            star[knew].se_bhspin = hier.obj[i]->chi;
+                            star[knew].Eint = 0;
+                            if(WRITE_BH_INFO)
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
+                                                          TotalTime, (isbinbin?"binary-binary":"binary-single"),
+                                                          star_r[get_global_idx(knew)], hier.obj[i]->id[0],hier.obj[i]->id[nmerged], 
+                                                          binint_get_mass(k, kp, hier.obj[i]->id[0]) * units.mstar / FB_CONST_MSUN, 
+                                                          binint_get_mass(k, kp, hier.obj[i]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
+                                                          binint_get_spins(k, kp, hier.obj[i]->id[0]), binint_get_spins(k, kp, hier.obj[i]->id[nmerged]), 
+                                                          star[knew].m*units.mstar/MSUN,hier.obj[i]->chi,hier.obj[i]->vkick[nmerged]);
+                        } else{
+                            merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs, curr_st);
+                                                    /* Owing to merger only useful vs's are v[1-3] */
+                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
 
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                            //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        }
+						nmerged++;
 					}
 					set_star_EJ(knew);
 					
@@ -1788,6 +1862,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					
 					/* log collision */
 #ifdef USE_MPI
+                    star_m[get_global_idx(knew)] = star[knew].m;
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
 						star[knew].id, star_m[get_global_idx(knew)],
 						star_r[get_global_idx(knew)],
@@ -1802,10 +1877,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				
 				star[knew].rad = star[knew].se_radius * RSUN / units.l;
 
-                //MPI: Keeping the global m updated.
-#ifdef USE_MPI
-//				star_m[get_global_idx(knew)] = star[knew].m;
-#endif
 
 				/* track binding energy */
 				BEf += -star[knew].Eint;
@@ -1839,21 +1910,40 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					while (nmerged < hier.obj[i]->obj[0]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[0]->id[nmerged], &bi);
 						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[0]->id[nmerged]);
-						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
-						/* FIXME: really we're supposed to add the kick to each binary
-						   member separately, then calculate the systemic kick to the binary,
-						   but hopefully this doesn't happen too much. */
-                                                /* The kick routine within /bse_wrap/bse/ correctly updates COM velocity... */
-						if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
-							wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
-								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
-						}
-						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                         * BSE results with the fewbody dynamical results */
+                        if(tempstar2.se_k == 14 && tempstar.se_k == 14){
+                            tempstar.se_k = 14;
+                            tempstar.m = hier.obj[i]->obj[0]->m * cmc_units.m / madhoc;
+                            tempstar.se_mass = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_mc = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_bhspin = hier.obj[i]->obj[0]->chi;
+                            tempstar.Eint = 0;
+                            if(WRITE_BH_INFO)
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
+                                                          TotalTime, (isbinbin?"binary-binary":"binary-single"),
+                                                          star_r[get_global_idx(knew)], hier.obj[i]->obj[0]->id[0],hier.obj[i]->obj[0]->id[nmerged], 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[0]->id[0]) * units.mstar / FB_CONST_MSUN, 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[0]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
+                                                          binint_get_spins(k, kp, hier.obj[i]->obj[0]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[0]->id[nmerged]), 
+                                                          tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[0]->chi,hier.obj[i]->obj[0]->vkick[nmerged]);
+                        } else{
+                            merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+                            /* FIXME: really we're supposed to add the kick to each binary
+                               member separately, then calculate the systemic kick to the binary,
+                               but hopefully this doesn't happen too much. */
+                                                    /* The kick routine within /bse_wrap/bse/ correctly updates COM velocity... */
+                            if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+                                wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
+                                    sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
+                            }
+                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
+                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                        }
+						nmerged++;
 					}
 					set_star_EJ(knew);
 
@@ -1904,20 +1994,39 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					while (nmerged < hier.obj[i]->obj[1]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[1]->id[nmerged], &bi);
 						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[1]->id[nmerged]);
-						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
-						/* FIXME: really we're supposed to add the kick to each binary
-						   member separately, then calculate the systemic kick to the binary,
-						   but hopefully this doesn't happen too much. */
-						if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
-							wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
-								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
-						}
-						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                         * BSE results with the fewbody dynamical results */
+                        if(tempstar2.se_k == 14 && tempstar.se_k == 14){
+                            tempstar.se_k = 14;
+                            tempstar.m = hier.obj[i]->obj[1]->m * cmc_units.m / madhoc;
+                            tempstar.se_mass = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_mc = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_bhspin = hier.obj[i]->obj[1]->chi;
+                            tempstar.Eint = 0;
+                            if(WRITE_BH_INFO)
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
+                                                          TotalTime, (isbinbin?"binary-binary":"binary-single"),
+                                                          star_r[get_global_idx(knew)], hier.obj[i]->obj[1]->id[0],hier.obj[i]->obj[1]->id[nmerged], 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[1]->id[0]) * units.mstar / FB_CONST_MSUN, 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[1]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
+                                                          binint_get_spins(k, kp, hier.obj[i]->obj[1]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[1]->id[nmerged]), 
+                                                          tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[1]->chi,hier.obj[i]->obj[1]->vkick[nmerged]);
+                        } else{
+                            merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+                            /* FIXME: really we're supposed to add the kick to each binary
+                               member separately, then calculate the systemic kick to the binary,
+                               but hopefully this doesn't happen too much. */
+                            if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+                                wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
+                                    sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
+                            }
+                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
+                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                        }
+						nmerged++;
 					}
 					set_star_EJ(knew);
 					
@@ -2019,15 +2128,34 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					while (nmerged < hier.obj[i]->obj[sid]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[sid]->id[nmerged], &bi);
 						star[knew].id = star_get_merger_id_new(star[knew].id, hier.obj[i]->obj[sid]->id[nmerged]);
-						nmerged++;
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
-						merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs, curr_st);
-						star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
+                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                         * BSE results with the fewbody dynamical results */
+                        if(star[knewp].se_k == 14 && tempstar.se_k == 14){
+                            star[knewp].se_k = 14;
+                            star[knewp].m = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
+                            star[knewp].se_mass = star[knewp].m * units.mstar / MSUN;
+                            star[knewp].se_mt  = star[knewp].m * units.mstar / MSUN;
+                            star[knewp].se_mc = star[knewp].m * units.mstar / MSUN;
+                            star[knewp].se_bhspin = hier.obj[i]->obj[sid]->chi;
+                            star[knewp].Eint = 0;
+                            if(WRITE_BH_INFO)
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
+                                                          TotalTime, (isbinbin?"binary-binary":"binary-single"),
+                                                          star_r[get_global_idx(knew)], hier.obj[i]->obj[sid]->id[0],hier.obj[i]->obj[sid]->id[nmerged], 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[sid]->id[0]) * units.mstar / FB_CONST_MSUN, 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[sid]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
+                                                          binint_get_spins(k, kp, hier.obj[i]->obj[sid]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[sid]->id[nmerged]), 
+                                                          star[knewp].m*units.mstar/MSUN,hier.obj[i]->obj[sid]->chi,hier.obj[i]->obj[sid]->vkick[nmerged]);
+                        } else{
+                            merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs, curr_st);
+                            star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
 
-						//MPI2: parallel rng mimicking removed due to parent function which takes k as parameter?
-						vt_add_kick(&(star[knewp].vt),vs[1],vs[2], curr_st);
-						//star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                            //MPI2: parallel rng mimicking removed due to parent function which takes k as parameter?
+                            vt_add_kick(&(star[knewp].vt),vs[1],vs[2], curr_st);
+                        }
+						nmerged++;
 					}
 					set_star_EJ(knewp);
 
@@ -2038,6 +2166,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					}
 					/* log collision */
 #ifdef USE_MPI
+                    star_m[get_global_idx(knewp)] = star[knewp].m;
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
 						star[knewp].id, star_m[get_global_idx(knewp)],
 						star_r[get_global_idx(knewp)],
@@ -2083,21 +2212,40 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[bid]->obj[0]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged], &bi);
-						nmerged++;
+                        tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]);
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
-						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]);
-						/* FIXME: really we're supposed to add the kick to each binary
-						   member separately, then calculate the systemic kick to the binary,
-						   but hopefully this doesn't happen too much. */
-						if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
-							wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
-								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
-						}
-						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                         * BSE results with the fewbody dynamical results */
+                        if(tempstar2.se_k == 14 && tempstar.se_k == 14){
+                            tempstar.se_k = 14;
+                            tempstar.m = hier.obj[i]->obj[bid]->obj[0]->m * cmc_units.m / madhoc;
+                            tempstar.se_mass = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_mc = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_bhspin = hier.obj[i]->obj[bid]->obj[0]->chi;
+                            tempstar.Eint = 0;
+                            if(WRITE_BH_INFO)
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
+                                                          TotalTime, (isbinbin?"binary-binary":"binary-single"),
+                                                          star_r[get_global_idx(knew)], hier.obj[i]->obj[bid]->obj[0]->id[0],hier.obj[i]->obj[bid]->obj[0]->id[nmerged], 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[0]) * units.mstar / FB_CONST_MSUN, 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
+                                                          binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]), 
+                                                          tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[bid]->obj[0]->chi,hier.obj[i]->obj[bid]->obj[0]->vkick[nmerged]);
+                        } else{
+                            merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+                            /* FIXME: really we're supposed to add the kick to each binary
+                               member separately, then calculate the systemic kick to the binary,
+                               but hopefully this doesn't happen too much. */
+                            if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+                                wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
+                                    sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
+                            }
+                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
+                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                        }
+						nmerged++;
 					}
 					set_star_EJ(knew);
 					
@@ -2139,21 +2287,40 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[bid]->obj[1]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged], &bi);
-						nmerged++;
+                        tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]);
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-						merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
-						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]);
-						/* FIXME: really we're supposed to add the kick to each binary
-						   member separately, then calculate the systemic kick to the binary,
-						   but hopefully this doesn't happen too much. */
-						if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
-							wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
-								sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
-						}
-						star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-						vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-						//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                         * BSE results with the fewbody dynamical results */
+                        if(tempstar2.se_k == 14 && tempstar.se_k == 14){
+                            tempstar.se_k = 14;
+                            tempstar.m = hier.obj[i]->obj[bid]->obj[1]->m * cmc_units.m / madhoc;
+                            tempstar.se_mass = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_mc = tempstar.m * units.mstar / MSUN;
+                            tempstar.se_bhspin = hier.obj[i]->obj[bid]->obj[1]->chi;
+                            tempstar.Eint = 0;
+                            if(WRITE_BH_INFO)
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
+                                                          TotalTime, (isbinbin?"binary-binary":"binary-single"),
+                                                          star_r[get_global_idx(knew)], hier.obj[i]->obj[bid]->obj[1]->id[0],hier.obj[i]->obj[bid]->obj[1]->id[nmerged], 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[0]) * units.mstar / FB_CONST_MSUN, 
+                                                          binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
+                                                          binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]), 
+                                                          tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[bid]->obj[1]->chi,hier.obj[i]->obj[bid]->obj[1]->vkick[nmerged]);
+                        } else{
+                            merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+                            /* FIXME: really we're supposed to add the kick to each binary
+                               member separately, then calculate the systemic kick to the binary,
+                               but hopefully this doesn't happen too much. */
+                            if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+                                wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
+                                    sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
+                            }
+                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
+                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                        }
+						nmerged++;
 					}
 					set_star_EJ(knew);
 					
@@ -3071,87 +3238,40 @@ void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_
 *
 * These are all based on fits to NR simulations, though the functional forms
 * I've taken from Section V of Gerosa and Kesden, PRD, 93, 12, 124066 (2016)
-*
-* Disabled for now...
 */
 void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct rng_t113_state* rng_st){
-	double theta1, theta2, Theta, X;
-	double delta_par, delta_perp, chi_par, chi_perp;
-	double z1,z2,rISCO,eISCO;
-	double chi1 = BH_KERR_SPIN, chi2 = BH_KERR_SPIN;
-	/*Keeping this seperate in case we want to implement non-uniform spins
-	 * at some point*/
-	double mass_frac;
-	double mprev0 = binary[kb].m1*units.mstar / FB_CONST_MSUN; // The BSE variables have been updated, but not the dynamical ones...
-	double mprev1 = binary[kb].m2*units.mstar / FB_CONST_MSUN; 
-	double eta = mprev0*mprev1 / pow(mprev0+mprev1,2);
-	double vm, vs_perp, vs_par, vk;
-    double q_ratio = mprev0/mprev1;
-    if (q_ratio > 1.) q_ratio = 1./q_ratio;
+	double m1 = binary[kb].m1*units.mstar / FB_CONST_MSUN;//Only need the mass ratio anyway
+	double m2 = binary[kb].m2*units.mstar / FB_CONST_MSUN;
+	double chi1 = binary[kb].bse_bhspin[0];
+	double chi2 = binary[kb].bse_bhspin[1];
+	double afinal, mass_frac, v_para, v_perp;
+    double X, theta, phi, vk, vx, vy, vz;
 
-	/*First draw random variables for the misalignment between S1, S2, and L,
-	 * and the in-plane angle between (delta x L) and the anomoly of the plunge */
-	X = rng_t113_dbl_new(rng_st);
-	theta1 = acos(2*X - 1.);
-	X = rng_t113_dbl_new(rng_st);
-	theta2 = acos(2*X - 1.);
-	X = rng_t113_dbl_new(rng_st);
-	Theta = X * PI; 
-
-    /*Compute the approprite mass-weighted spin combinations and their
-	 * projections parallel and perpendicular to L*/
-	q_ratio = mprev0 / mprev1;
-	delta_par = (cos(theta2)*q_ratio*chi2 - cos(theta1)*chi1) / (1+q_ratio);
-	chi_par = (cos(theta2)*q_ratio*q_ratio*chi2 + cos(theta1)*chi1) / pow(1+q_ratio,2.);
-	delta_perp = fabs((sin(theta2)*q_ratio*chi2 - sin(theta1)*chi1) / (1+q_ratio));
-	chi_perp = fabs((sin(theta2)*q_ratio*q_ratio*chi2 + sin(theta1)*chi1) / pow(1+q_ratio,2.));
-
-    /*The compute the energy-per-mass at the Kerr ISCO of an effective particle
-	 * with that spin*/
-	z1 = 1 + pow(1-chi_par*chi_par,0.3333333333)*(pow(1+chi_par,0.3333333333)+pow(1-chi_par,0.3333333333));
-	z2 = sqrt(3*chi_par*chi_par + z1*z1);
-	rISCO = 3 + z2 - copysignf(sqrt((3-z1)*(3+z1+2*z2)),chi_par);
-	eISCO = sqrt(1 - 2. / 3. / rISCO);
-
-	/*The final remnant mass is, based on the extrapolation between equal-mass
-	 * and test mass limits (Barausse et al, Apj, 758, 63 (2012))*/
-	mass_frac = 1 - eta*(1+4*eta)*(1-eISCO) - 16*eta*eta*(0.04827 + 4*0.01707*chi_par*(chi_par + 1));
-
-	/*Then compute velocity of the recoil kick, both from the assymetric mass
-	 * ratio and the misalignment of the spins.  These fits to NR simulations
-	 * are taken from:
-	 *
-	 *	Campanelli et al, APJ 659, L5 (2007)
-	 *	Gonzalez et al, PRL, 98, 091101 (2007)
-	 *	Lousto et al, PRD, 77, 044028 (2008)
-	 *	Lousto et al, PRD, 85, 084015 (2012)
-	 *	Lousto and Zlochower, PRD, 87, 084027 (2013)
-	 *
-	 *	Though I just copied them all from the Gerosa paper...
-	 * */
-	vm = 1.2e4 * eta*eta * ((1-q_ratio) / (1+q_ratio)) * (1 - 0.93*eta);
-	vs_perp = 6.9e3 * eta*eta * delta_par;
-	vs_par = 16.*eta*eta *(delta_perp *(3677.76 + 2*2481.21*chi_par + 4*1792.45*chi_par*chi_par + 8*1506.52*pow(chi_par,3.))
-                             + 2.*chi_perp*delta_par*(1140. + 2*2481.*chi_par))*cos(Theta);
-	vk = sqrt(vm*vm - 2*vm*vs_perp*0.8192 + vs_perp*vs_perp + vs_par*vs_par);
-
-    //printf("MERGER HERE\n");
-
-    //printf("%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",mprev0,mprev1,vm,vk,vs_perp,vs_par,theta1,theta2,Theta,eISCO,mass_frac,delta_par,chi_par,delta_perp,chi_perp,chi1,chi2);
+	/* The actual kick routine is in fewbody_coll.c */
+	fb_bh_merger(m1,m2,chi1,chi2,&mass_frac,&afinal,&v_para,&v_perp,rng_st);
 
 	/*Finally, apply these to the newly formed (single!) BH*/
-    printf("before add kick vt=%g\n",star[knew].vt);
-	vt_add_kick(&(star[knew].vt),vk,0.,rng_st);
-    printf("after add kick vt=%g\n",star[knew].vt);
+    /* Pick a random 3D vector for the kick (probably overkill...)*/
+	X = rng_t113_dbl_new(rng_st);
+	phi = 2.0 * PI * X;
+	X = rng_t113_dbl_new(rng_st);
+    theta = acos(2*X - 1.);
+    vk = sqrt(v_para*v_para + v_perp*v_perp);
+    vx = vk*sin(theta)*sin(phi);
+	vy = vk*sin(theta)*cos(phi);
+    vz = vk*cos(theta);
+
+    /* Then add the 3D vector to the stars velocity
+     * Note that the kick is in km/s; convert to CGS then code units*/
+    star[knew].vr += vx * 1.0e5 / (units.l/units.t);					       
+	vt_add_kick(&(star[knew].vt),vy,vz,rng_st);
+
 	star[knew].m *= mass_frac;
     star[knew].se_mt *= mass_frac;
+	star[knew].se_bhspin = afinal;
 
-
-    int ii;
-    if (WRITE_BH_INFO) {
-        parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g %g ", TotalTime, star_r[get_global_idx(knew)], star[k].id,mprev0,mprev1, star[k].se_mt, vk);
-        for (ii=0; ii<16; ii++) parafprintf(newbhfile, "-100 ");
-        parafprintf (newbhfile, "\n");
-    }
+    if(WRITE_BH_INFO)
+        parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n", TotalTime, "isolat-binary", star_r[get_global_idx(knew)],
+                                     binary[kb].id1,binary[kb].id2, m1,m2,chi1,chi2, (m1+m2)*mass_frac, afinal,vk);
 }
 

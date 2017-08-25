@@ -69,6 +69,10 @@ typedef struct {
 */
 	double se_tms;
 /**
+* @brief Black Hole spin magnitude 
+*/
+	double se_bhspin;
+/**
 * @brief Pulsar surface magnetic field
 */
     double se_scm_B;
@@ -136,6 +140,10 @@ typedef struct {
 * @brief Amount of time pulsar has spent accreting
 */
     double bse_tacc[2];
+/**
+* @brief Spin magnitudes for black holes 
+*/
+    double bse_bhspin[2];
 /**
 * @brief ?
 */

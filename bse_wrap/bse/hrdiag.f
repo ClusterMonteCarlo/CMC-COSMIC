@@ -1,7 +1,7 @@
 ***
       SUBROUTINE hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
      &                  r,lum,kw,mc,rc,menv,renv,k2,ST_tide,
-     &                  ecsnp,ecsn_mlow)
+     &                  ecsnp,ecsn_mlow,bhspin)
 *
 *
 *       H-R diagram for population I stars.
@@ -33,10 +33,15 @@
       parameter(mlp=12.d0,tiny=1.0d-14)
       real*8 mass0,mt0,mtc
       REAL*8 neta,bwind,hewind,mxns
-      integer windflag,ppsn
-      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,ppsn
+      integer windflag,bhspinflag,ppsn
+      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,bhspinflag,ppsn
+      integer idum
+      COMMON /VALUE3/ idum
       common /fall/fallback
       REAL*8 fallback
+      REAL ran3
+      EXTERNAL ran3
+      real*8 bhspin
 * 
       real*8 mt_max,ecsnp,ecsn_mlow,mchold
 * 
@@ -45,7 +50,7 @@
       real*8 lx,ly,dell,alpha,beta,eta
       real*8 rx,ry,delr,rzams,rtms,gamma,rmin,taumin,rg
       parameter(taumin=5.0d-08)
-      real*8 mcmax,mcx,mcy,mcbagb,lambda
+      real*8 mcmax,mcx,mcy,mcbagb,lambda,mcppsn
       real*8 frac,kappa,sappa,alphap
       real*8 am,xx,fac,rdgen,mew,lum0,kap,zeta,ahe,aco
       parameter(lum0=7.0d+04,kap=-0.5d0,ahe=4.d0,aco=16.d0)
@@ -558,6 +563,23 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mc.gt.7.60)then
                         fallback = 1.d0
                      endif
+                        if(bhspinflag.eq.0)then
+                            bhspin = 0.d0
+                        elseif(bhspinflag.eq.1)then
+                            bhspin = ran3(idum)
+                        elseif(bhspinflag.eq.2)then
+                            bhspin = ran3(idum) / 4.d0
+                        elseif(bhspinflag.eq.3)then
+                            if(mc.le.13.d0)then
+                                bhspin = 0.9d0
+                            elseif(mc.lt.27.d0)then
+                                bhspin = -0.064d0*mc + 1.736d0
+                            else
+                                bhspin = 0.0d0
+                            endif
+                        elseif(bhspinflag.eq.4)then
+                            bhspin = 1.d0
+                        endif
                       mc = mt
                   elseif(nsflag.eq.3)then
 *
@@ -587,6 +609,23 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mc.gt.11.d0)then
                         fallback = 1.d0
                      endif
+                        if(bhspinflag.eq.0)then
+                            bhspin = 0.d0
+                        elseif(bhspinflag.eq.1)then
+                            bhspin = ran3(idum)
+                        elseif(bhspinflag.eq.2)then
+                            bhspin = ran3(idum) / 4.d0
+                        elseif(bhspinflag.eq.3)then
+                            if(mc.le.13.d0)then
+                                bhspin = 0.9d0
+                            elseif(mc.lt.27.d0)then
+                                bhspin = -0.064d0*mc + 1.736d0
+                            else
+                                bhspin = 0.0d0
+                            endif
+                        elseif(bhspinflag.eq.4)then
+                            bhspin = 1.d0
+                        endif
                      mc = mt
                   elseif(nsflag.eq.4)then
 *
@@ -615,6 +654,23 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mc.ge.11.d0)then
                         fallback = 1.d0
                      endif 
+                        if(bhspinflag.eq.0)then
+                            bhspin = 0.d0
+                        elseif(bhspinflag.eq.1)then
+                            bhspin = ran3(idum)
+                        elseif(bhspinflag.eq.2)then
+                            bhspin = ran3(idum) / 4.d0
+                        elseif(bhspinflag.eq.3)then
+                            if(mc.le.13.d0)then
+                                bhspin = 0.9d0
+                            elseif(mc.lt.27.d0)then
+                                bhspin = -0.064d0*mc + 1.736d0
+                            else
+                                bhspin = 0.0d0
+                            endif
+                        elseif(bhspinflag.eq.4)then
+                            bhspin = 1.d0
+                        endif
                      mc = mt
                   endif
                   
@@ -645,7 +701,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         mt = 0.d0
                         mc = 0.d0
                         kw = 15
-                        write(*,*) "PAIR-INSTABILITY SN!"
                      endif
 * The Spera+Mapelli2017 prescription is a tad more sophisticated:
 * complex fitting formula to Stan Woosley's PSN models.  HOWEVER, these
@@ -679,7 +734,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mcbagb.ge.64.and.mcbagb.lt.135)then
                         alphap = 0.d0
                         kw = 15
-                        write(*,*) "PAIR-INSTABILITY SN!"
                      elseif(mcbagb.ge.135)then
                         alphap = 1.0d0
                      endif
@@ -835,6 +889,23 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mc.gt.7.60)then
                         fallback = 1.d0
                      endif
+                        if(bhspinflag.eq.0)then
+                            bhspin = 0.d0
+                        elseif(bhspinflag.eq.1)then
+                            bhspin = ran3(idum)
+                        elseif(bhspinflag.eq.2)then
+                            bhspin = ran3(idum) / 4.d0
+                        elseif(bhspinflag.eq.3)then
+                            if(mc.le.13.d0)then
+                                bhspin = 0.9d0
+                            elseif(mc.lt.27.d0)then
+                                bhspin = -0.064d0*mc + 1.736d0
+                            else
+                                bhspin = 0.0d0
+                            endif
+                        elseif(bhspinflag.eq.4)then
+                            bhspin = 1.d0
+                        endif
                       mc = mt
                   elseif(nsflag.eq.3)then
 *
@@ -864,6 +935,23 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mc.gt.11.d0)then
                         fallback = 1.d0
                      endif
+                        if(bhspinflag.eq.0)then
+                            bhspin = 0.d0
+                        elseif(bhspinflag.eq.1)then
+                            bhspin = ran3(idum)
+                        elseif(bhspinflag.eq.2)then
+                            bhspin = ran3(idum) / 4.d0
+                        elseif(bhspinflag.eq.3)then
+                            if(mc.le.13.d0)then
+                                bhspin = 0.9d0
+                            elseif(mc.lt.27.d0)then
+                                bhspin = -0.064d0*mc + 1.736d0
+                            else
+                                bhspin = 0.0d0
+                            endif
+                        elseif(bhspinflag.eq.4)then
+                            bhspin = 1.d0
+                        endif
                      mc = mt
                   elseif(nsflag.eq.4)then
 *
@@ -893,6 +981,23 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mc.ge.11.d0)then
                         fallback = 1.d0
                      endif 
+                        if(bhspinflag.eq.0)then
+                            bhspin = 0.d0
+                        elseif(bhspinflag.eq.1)then
+                            bhspin = ran3(idum)
+                        elseif(bhspinflag.eq.2)then
+                            bhspin = ran3(idum) / 4.d0
+                        elseif(bhspinflag.eq.3)then
+                            if(mc.le.13.d0)then
+                                bhspin = 0.9d0
+                            elseif(mc.lt.27.d0)then
+                                bhspin = -0.064d0*mc + 1.736d0
+                            else
+                                bhspin = 0.0d0
+                            endif
+                        elseif(bhspinflag.eq.4)then
+                            bhspin = 1.d0
+                        endif
                      mc = mt
                   endif
                   
@@ -923,7 +1028,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         mt = 0.d0
                         mc = 0.d0
                         kw = 15
-                        write(*,*) "PAIR-INSTABILITY SN!"
                      endif
 * The Spera+Mapelli2017 prescription is a tad more sophisticated:
 * complex fitting formula to Stan Woosley's PSN models.  HOWEVER, these
@@ -957,7 +1061,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                      elseif(mcbagb.ge.64.and.mcbagb.lt.135)then
                         alphap = 0.d0
                         kw = 15
-                        write(*,*) "PAIR-INSTABILITY SN!"
                      elseif(mcbagb.ge.135)then
                         alphap = 1.0d0
                      endif

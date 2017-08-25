@@ -1,7 +1,7 @@
 ***
       SUBROUTINE evolv2(kstar,mass0,mass,rad,lumin,massc,radc,
      &                  menv,renv,ospin,B_0,bacc,tacc,epoch,tms,
-     &                  tphys,tphysf,dtp,z,zpars,tb,ecc,bkick)
+     &                  tphys,tphysf,dtp,z,zpars,tb,ecc,bkick,bhspin)
       implicit none
 ***
 *
@@ -196,10 +196,11 @@
       COMMON /RAND3/ idum2,iy,ir
       REAL ran3
       EXTERNAL ran3
+      REAL*8 bhspin(2)
 *
       REAL*8 neta,bwind,hewind,mxns
-      integer windflag,ppsn
-      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,ppsn
+      INTEGER windflag,bhspinflag,ppsn
+      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,bhspinflag,ppsn
       REAL*8 beta,xi,acc2,epsnov,eddfac,gamma
       COMMON /VALUE5/ beta,xi,acc2,epsnov,eddfac,gamma
 *
@@ -232,6 +233,7 @@
 *f2py intent(in,out,copy)  menv
 *f2py intent(in,out,copy)  renv
 *f2py intent(in,out,copy)  ospin
+*f2py intent(in,out,copy)  bhspin
 *f2py intent(in,out,copy)  B_0
 *f2py intent(in,out,copy)  bacc
 *f2py intent(in,out,copy)  tacc
@@ -349,6 +351,8 @@
          sep = 1.0d+10
          oorb = 0.d0
          jorb = 0.d0
+*         bhspin(1) = 0.d0 NOPE!  This will reset it every time; don't
+*         bhspin(2) = 0.d0
          if(ospin(1).lt.0.0) ospin(1) = 1.0d-10
          if(ospin(2).lt.0.0) ospin(2) = 1.0d-10
          q(1) = 1.0d+10
@@ -372,7 +376,7 @@
          CALL star(kstar(k),mass0(k),mass(k),tm,tn,tscls,lums,GB,zpars)
          CALL hrdiag(mass0(k),age,mass(k),tm,tn,tscls,lums,GB,zpars,
      &               rm,lum,kstar(k),mc,rc,me,re,k2,ST_tide,
-     &               ecsnp,ecsn_mlow)
+     &               ecsnp,ecsn_mlow,bhspin(k))
          aj(k) = age
          epoch(k) = tphys - age
          rad(k) = rm
@@ -1151,7 +1155,7 @@
          CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
          CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
      &               rm,lum,kw,mc,rc,me,re,k2,ST_tide,
-     &               ecsnp,ecsn_mlow)
+     &               ecsnp,ecsn_mlow,bhspin(k))
 *
          if(kw.ne.15)then
             ospin(k) = jspin(k)/(k2*(mt-mc)*rm*rm+k3*mc*rc*rc)
@@ -1908,7 +1912,7 @@
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
      &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick,ecsnp,ecsn_mlow,
-     &               formation(j1),formation(j2),ST_tide)
+     &               formation(j1),formation(j2),ST_tide,bhspin)
          if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
      &      kstar(j1).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
@@ -2042,6 +2046,7 @@
       elseif(kstar(j1).eq.14)then
 *
 * Both stars are black holes.  Let them merge quietly.
+* CLR - Note, this is overwritten by CMC now and handled correctly
 *
          dm1 = mass(j1)
          mass(j1) = 0.d0
@@ -2393,7 +2398,6 @@
 *
 * For very close systems include angular momentum loss mechanisms.
 *
-         if(sep.le.10.d0)then
             djgr = 8.315d-10*mass(1)*mass(2)*(mass(1)+mass(2))/
      &             (sep*sep*sep*sep)
             f1 = (19.d0/6.d0) + (121.d0/96.d0)*ecc2
@@ -2402,7 +2406,6 @@
             djgr = djgr*jorb*(1.d0+0.875d0*ecc2)/sqome5
             djorb = djorb + djgr*dt
             delet = delet + delet1*dt
-         endif
 *
          do 602 , k = 1,2
 *
@@ -2822,8 +2825,8 @@
          endif
          kw = kstar(k)
          CALL star(kw,m0,mt,tm,tn,tscls,lums,GB,zpars)
-         CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,
-     &               rm,lum,kw,mc,rc,me,re,k2,ST_tide,ecsnp,ecsn_mlow)
+         CALL hrdiag(m0,age,mt,tm,tn,tscls,lums,GB,zpars,rm,lum,kw,mc,
+     &                rc,me,re,k2,ST_tide,ecsnp,ecsn_mlow,bhspin(k))
 *
 * Check for a supernova and correct the semi-major axis if so.
 *
@@ -3114,7 +3117,7 @@
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
      &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick,ecsnp,ecsn_mlow,
-     &               formation(j1),formation(j2),ST_tide)
+     &               formation(j1),formation(j2),ST_tide,bhspin)
          if(output) write(*,*)'coal1:',tphys,kstar(j1),kstar(j2),coel,
      & mass(j1),mass(j2)
          if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
@@ -3135,7 +3138,7 @@
      &               kstar(j2),mass0(j1),mass(j1),massc(j1),aj(j1),
      &               jspin(j1),kstar(j1),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick,ecsnp,ecsn_mlow,
-     &               formation(j1),formation(j2),ST_tide)
+     &               formation(j1),formation(j2),ST_tide,bhspin)
          if(output) write(*,*)'coal2:',tphys,kstar(j1),kstar(j2),coel,
      & mass(j1),mass(j2)
          if(j2.eq.2.and.kcomp1.eq.13.and.kstar(j1).eq.15.and.

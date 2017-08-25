@@ -27,6 +27,7 @@ void restart_stellar_evolution(void){
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_bhflag(BSE_BHFLAG);
   bse_set_nsflag(BSE_NSFLAG);
+  bse_set_bhspinflag(BSE_BHSPINFLAG);
   bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
   bse_set_bconst(BSE_BCONST);
   bse_set_CK(BSE_CK);
@@ -92,6 +93,7 @@ void stellar_evolution_init(void){
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_bhflag(BSE_BHFLAG);
   bse_set_nsflag(BSE_NSFLAG);
+  bse_set_bhspinflag(BSE_BHSPINFLAG);
   bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
   bse_set_bconst(BSE_BCONST);
   bse_set_CK(BSE_CK);
@@ -196,6 +198,8 @@ void stellar_evolution_init(void){
       tempbinary.bse_epoch[1] = 0.0;
       tempbinary.bse_tms[0] = star[k].se_tms;
       tempbinary.bse_tms[1] = 0.0;
+      tempbinary.bse_bhspin[0] = star[k].se_bhspin;
+      tempbinary.bse_bhspin[1] = 0.0;
       tempbinary.bse_tb = 0.0;
       tempbinary.e = 0.0;
 
@@ -217,7 +221,7 @@ void stellar_evolution_init(void){
           &(tempbinary.bse_ospin[0]), &(tempbinary.bse_B_0[0]), &(tempbinary.bse_bacc[0]), &(tempbinary.bse_tacc[0]),
           &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
           &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-          &(tempbinary.bse_tb), &(tempbinary.e), vs);
+          &(tempbinary.bse_tb), &(tempbinary.e), vs,&(tempbinary.bse_bhspin[0]));
       *curr_st=bse_get_taus113state();
 
       star[k].se_mass = tempbinary.bse_mass0[0];
@@ -235,6 +239,7 @@ void stellar_evolution_init(void){
       star[k].se_tacc = tempbinary.bse_tacc[0];
       star[k].se_epoch = tempbinary.bse_epoch[0];
       star[k].se_tms = tempbinary.bse_tms[0];
+	  star[k].se_bhspin = tempbinary.bse_bhspin[0];
 
       star[k].rad = star[k].se_radius * RSUN / units.l;
 #ifdef USE_MPI
@@ -276,6 +281,7 @@ void stellar_evolution_init(void){
         binary[kb].bse_bacc[i] = 0.0;
         binary[kb].bse_tacc[i] = 0.0;
         binary[kb].bse_epoch[i] = 0.0;
+        binary[kb].bse_bhspin[i] = 0.0;
       }
       binary[kb].bse_tphys = 0.0;
 
@@ -304,7 +310,7 @@ void stellar_evolution_init(void){
               &(binary[kb].bse_B_0[0]), &(binary[kb].bse_bacc[0]), &(binary[kb].bse_tacc[0]),
               &(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
               &(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-              &(binary[kb].bse_tb), &(binary[kb].e), vs);
+              &(binary[kb].bse_tb), &(binary[kb].e), vs,&(binary[kb].bse_bhspin[0]));
       *curr_st=bse_get_taus113state();
 
       handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
@@ -411,6 +417,8 @@ void do_stellar_evolution(gsl_rng *rng)
         tempbinary.bse_epoch[1] = 0.0;
         tempbinary.bse_tms[0] = star[k].se_tms;
         tempbinary.bse_tms[1] = 0.0;
+        tempbinary.bse_bhspin[0] = star[k].se_bhspin;
+        tempbinary.bse_bhspin[1] = 0.0;
         tempbinary.bse_tb = 0.0;
         tempbinary.e = 0.0;
 
@@ -437,7 +445,7 @@ void do_stellar_evolution(gsl_rng *rng)
             &(tempbinary.bse_ospin[0]), &(tempbinary.bse_B_0[0]), &(tempbinary.bse_bacc[0]), &(tempbinary.bse_tacc[0]), 
             &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
             &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-            &(tempbinary.bse_tb), &(tempbinary.e), vs);
+            &(tempbinary.bse_tb), &(tempbinary.e), vs, &(tempbinary.bse_bhspin[0]));
         *curr_st=bse_get_taus113state();
 
         star[k].se_mass = tempbinary.bse_mass0[0];
@@ -455,6 +463,7 @@ void do_stellar_evolution(gsl_rng *rng)
         star[k].se_tacc = tempbinary.bse_tacc[0];
         star[k].se_epoch = tempbinary.bse_epoch[0];
         star[k].se_tms = tempbinary.bse_tms[0];
+	    star[k].se_bhspin = tempbinary.bse_bhspin[0];
 
 		  /*Reset the MS timestep once we're done*/
 		  if(reduced_timestep == 1)
@@ -555,14 +564,14 @@ void do_stellar_evolution(gsl_rng *rng)
 		if (WRITE_BH_INFO) {
 			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
 #ifdef USE_MPI
-				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g %g ", TotalTime, star_r[g_k], star[k].id,star[k].zams_mass,star[k].se_mass, star[k].se_mt, VKO);
+				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g %g %g", TotalTime, star_r[g_k], star[k].id,star[k].zams_mass,star[k].se_mass, star[k].se_mt, star[k].se_bhspin, VKO);
 				for (ii=0; ii<16; ii++){
 					parafprintf (newbhfile, "%g ", vs[ii]);
 				}
 				parafprintf (newbhfile, "\n");
 #else
 				//parafprintf(newbhfile, "%.18g %g 0 %ld %g %g\n", TotalTime, star[k].r, star[k].id,star[k].se_mass, star[k].se_mt); 
-				fprintf(newbhfile, "%.18g %g 0 %ld %g %g %g %g ", TotalTime, star[k].r, star[k].id,star[k].zams_mass;star[k].se_mass, star[k].se_mt, VKO);
+				fprintf(newbhfile, "%.18g %g 0 %ld %g %g %g %g %g", TotalTime, star[k].r, star[k].id,star[k].zams_mass;star[k].se_mass, star[k].se_mt, star[k].se_bhspin, VKO);
 				for (ii=0; ii<16; ii++){
 					fprintf (newbhfile, "%g ", vs[ii]);
 				}
@@ -620,7 +629,7 @@ void do_stellar_evolution(gsl_rng *rng)
                    	&(binary[kb].bse_B_0[0]), &(binary[kb].bse_bacc[0]), &(binary[kb].bse_tacc[0]),
 			&(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
             &(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-            &(binary[kb].bse_tb), &(binary[kb].e), vs);
+            &(binary[kb].bse_tb), &(binary[kb].e), vs, &(binary[kb].bse_bhspin[0]));
         *curr_st=bse_get_taus113state();
 
 		  /*Reset the MS timestep once we're done*/
@@ -644,13 +653,13 @@ void do_stellar_evolution(gsl_rng *rng)
 	if (WRITE_BH_INFO) {
 		if (kprev0!=14 && binary[kb].bse_kw[0]==14) { // newly formed BH
 #ifdef USE_MPI
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g ", TotalTime, star_r[g_k], binary[kb].id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], VKO);
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g ", TotalTime, star_r[g_k], binary[kb].id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bhspin[0], VKO);
 			for (ii=0; ii<16; ii++){
 				parafprintf (newbhfile, "%g ", vs[ii]);
 			}
 			parafprintf (newbhfile, "\n");
 #else
-			fprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g ", TotalTime, star[k].r, binary[kb].id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], VKO); 
+			fprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star[k].r, binary[kb].id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bhspin[0], VKO); 
 			for (ii=0; ii<16; ii++){
 				fprintf (newbhfile, "%g ", vs[ii]);
 			}
@@ -659,13 +668,13 @@ void do_stellar_evolution(gsl_rng *rng)
 		}
 		if (kprev1!=14 && binary[kb].bse_kw[1]==14) { // newly formed BH
 #ifdef USE_MPI
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g ", TotalTime, star_r[g_k], binary[kb].id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], VKO);
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g ", TotalTime, star_r[g_k], binary[kb].id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bhspin[1],VKO);
 			for (ii=0; ii<16; ii++){
 				parafprintf (newbhfile, "%g ", vs[ii]);
 			}
 			parafprintf (newbhfile, "\n");
 #else
-			fprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g ", TotalTime, star[k].r, binary[kb].id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], VKO);
+			fprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star[k].r, binary[kb].id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bhspin[1] VKO);
 			for (ii=0; ii<16; ii++){
 				fprintf (newbhfile, "%g ", vs[ii]);
 			} 
@@ -803,6 +812,7 @@ void write_stellar_data(void){
         binary[kb].bse_menv[0], binary[kb].bse_menv[1],
         binary[kb].bse_renv[0], binary[kb].bse_renv[1],
         binary[kb].bse_tms[0], binary[kb].bse_tms[1],
+        binary[kb].bse_bhspin[0], binary[kb].bse_bhspin[1],
         binary[kb].bse_bcm_dmdt[0], binary[kb].bse_bcm_dmdt[1],
         binary[kb].bse_bcm_radrol[0], binary[kb].bse_bcm_radrol[1],
         binary[kb].bse_ospin[0], binary[kb].bse_ospin[1],
@@ -1545,6 +1555,7 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   star[knew].se_menv = binary[kb].bse_menv[kbi];
   star[knew].se_renv = binary[kb].bse_renv[kbi];
   star[knew].se_tms = binary[kb].bse_tms[kbi];
+  star[knew].se_bhspin = binary[kb].bse_bhspin[kbi];
   //Sourav: toy rejuvenation- variables updating
   if (kbi==0){
     star[knew].createtime = binary[kb].createtime_m1;
@@ -1587,6 +1598,7 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
     star[knew].se_menv = star[oldk].se_menv;
     star[knew].se_renv = star[oldk].se_renv;
     star[knew].se_tms = star[oldk].se_tms;
+	star[knew].se_bhspin = star[oldk].se_bhspin;
     //Sourav: toy rejuvenation- updating the createtime and lifetime
     star[knew].createtime = star[oldk].createtime;
     star[knew].lifetime = star[oldk].lifetime;
@@ -1610,6 +1622,7 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
     star[knew].se_menv = binary[kb].bse_menv[kbi];
     star[knew].se_renv = binary[kb].bse_renv[kbi];
     star[knew].se_tms = binary[kb].bse_tms[kbi];
+	star[knew].se_bhspin = binary[kb].bse_bhspin[kbi];
     //Sourav: toy rejuvenation- updating the rejuv variables for two cases- mass1 and mass2 
     if (kbi==0){
       star[knew].createtime = binary[kb].createtime_m1;
@@ -1690,6 +1703,7 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
     target_star->se_menv = star[oldk].se_menv;
     target_star->se_renv = star[oldk].se_renv;
     target_star->se_tms = star[oldk].se_tms;
+	target_star->se_bhspin = star[oldk].se_bhspin;
     //Sourav: toy rejuvenation- updating rejuv variables
     target_star->createtime = star[oldk].createtime;
     target_star->lifetime = star[oldk].lifetime;
@@ -1712,6 +1726,7 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
     target_star->se_menv = binary[kb].bse_menv[kbi];
     target_star->se_renv = binary[kb].bse_renv[kbi];
     target_star->se_tms = binary[kb].bse_tms[kbi];
+	target_star->se_bhspin = binary[kb].bse_bhspin[kbi];
     //Sourav: toy rejuvenation- updating rejuv variables for two cases mass1 and mass2
     if (kbi==1){
     target_star->createtime = binary[kb].createtime_m1;
@@ -1789,6 +1804,7 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
     binary[kbnew].bse_menv[kbinew] = star[oldk].se_menv;
     binary[kbnew].bse_renv[kbinew] = star[oldk].se_renv;
     binary[kbnew].bse_tms[kbinew] = star[oldk].se_tms;
+	binary[kbnew].bse_bhspin[kbinew] = star[oldk].se_bhspin;
     //Sourav: toy rejuv- updating rejuv variables to the binary member from the single star
     if (kbinew==0){
       binary[kbnew].createtime_m1 = star[oldk].createtime;
@@ -1818,6 +1834,7 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
     binary[kbnew].bse_menv[kbinew] = binary[kbold].bse_menv[oldkbi];
     binary[kbnew].bse_renv[kbinew] = binary[kbold].bse_renv[oldkbi];
     binary[kbnew].bse_tms[kbinew] = binary[kbold].bse_tms[oldkbi];
+    binary[kbnew].bse_bhspin[kbinew] = binary[kbold].bse_bhspin[oldkbi];
     //Sourav: toy rejuv- updating rejuv variables to binary members from binary members
     //There can be four cases. m1,2(old)->m1,2(new) 
     if(kbinew==0){
@@ -1874,15 +1891,18 @@ void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid)
   binary[binindex].bse_menv[bid] = instar.se_menv;
   binary[binindex].bse_renv[bid] = instar.se_renv;
   binary[binindex].bse_tms[bid] = instar.se_tms;
+  binary[binindex].bse_bhspin[bid] = instar.se_bhspin;
   //Sourav: toy rejuv- updating rejuv variables from a single to a binary member
   if (bid==0){
     binary[binindex].createtime_m1 = instar.createtime;
     binary[binindex].lifetime_m1 = instar.lifetime;
     binary[binindex].rad1 = instar.rad; // PDK addition
+    binary[binindex].Eint1 = instar.Eint;
   } else {
     binary[binindex].createtime_m2 = instar.createtime;
     binary[binindex].lifetime_m2 = instar.lifetime;
-    binary[binindex].rad1 = instar.rad; // PDK addition
+    binary[binindex].rad2 = instar.rad; // PDK addition
+    binary[binindex].Eint2 = instar.Eint;
   }
 }
 

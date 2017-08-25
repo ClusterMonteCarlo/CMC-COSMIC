@@ -110,6 +110,8 @@ int main(int argc, char *argv[]) {
       binarray[i].bse_ospin[1] = 0.0;
       binarray[i].bse_epoch[0] = 0.0;
       binarray[i].bse_epoch[1] = 0.0;
+      binarray[i].bse_bhspin[0] = 0.0;
+      binarray[i].bse_bhspin[1] = 0.0;
       binarray[i].bse_tphys = 0.0;
       
       /* set primary mass from power law */
@@ -238,7 +240,7 @@ int main(int argc, char *argv[]) {
 		       &(lilbinarray[i].bse_tms[0]), 
 		       &lilbinarray[i].bse_tphys, &tphysfbse, &dtp, 
 		       &z, zpars, 
-		       &lilbinarray[i].bse_tb, &lilbinarray[i].e, vs);
+		       &lilbinarray[i].bse_tb, &lilbinarray[i].e, vs,&lilbinarray[i].bse_bhspin[0]);
 	    
 	    /* extract some binary info from BSE's bcm array */
 	    j = 1;

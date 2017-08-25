@@ -25,7 +25,8 @@
 #include "fewbody.h"
 
 /* classify the stars into hierarchies; i.e., build the binary tree */
-int fb_classify(fb_hier_t *hier, double t, double tidaltol)
+// PAU int fb_classify(fb_hier_t *hier, double t, double tidaltol)
+int fb_classify(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units)
 {
 	int i, j, k, n, isave[2], cont=1;
 	double a, amin, E, xrel[3], v0[3], v1[3], vcm[3], vrel[3], ftid;
@@ -136,7 +137,8 @@ int fb_classify(fb_hier_t *hier, double t, double tidaltol)
 	/* check stability of bound hierarchies */
 	for (i=2; i<=hier->nstar; i++) {
 		for (j=0; j<hier->narr[i]; j++) {
-			if (!fb_is_stable(&(hier->hier[hier->hi[i]+j]))) {
+			// if (!fb_is_stable(&(hier->hier[hier->hi[i]+j]))) {
+			if (!fb_is_stable(&(hier->hier[hier->hi[i]+j]), speedtol, units)) {
 				fb_dprintf("fewbody: classify(): unstable hierarchy: i=%d hier->narr[i]=%d j=%d\n", 
 					   i, hier->narr[i], j);
 				return(0);
@@ -157,10 +159,12 @@ int fb_classify(fb_hier_t *hier, double t, double tidaltol)
 }
 
 /* check the stability of an arbitrary hierarchical object */
-int fb_is_stable(fb_obj_t *obj)
+// PAU int fb_is_stable(fb_obj_t *obj)
+int fb_is_stable(fb_obj_t *obj, double speedtol, fb_units_t units)
 {
 	if (fb_n_hier(obj) == 2) {
-		return(fb_is_stable_binary(obj));
+		// PAU return(fb_is_stable_binary(obj));
+		return(fb_is_stable_binary(obj, speedtol, units));
 	} else if (fb_n_hier(obj) == 3) {
 		return(fb_is_stable_triple(obj));
 	} else if (fb_n_hier(obj) == 4) {
@@ -170,10 +174,20 @@ int fb_is_stable(fb_obj_t *obj)
 	}
 }
 
-int fb_is_stable_binary(fb_obj_t *obj)
+// PAU int fb_is_stable_binary(fb_obj_t *obj)
+//{
+int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units)
 {
+	double vrelperi;
+	double clight;
+
+	clight = FB_CONST_C / units.v;
+	vrelperi = sqrt(2.0 * obj->m / (obj->a * (1.0 - obj->e)) - obj->m / obj->a);
+
 	/* test for collision at pericenter */
-	if (fb_is_collision(obj->a * (1.0 - obj->e), obj->obj[0]->R, obj->obj[1]->R)) {
+	// PAU if (fb_is_collision(obj->a * (1.0 - obj->e), obj->obj[0]->R, obj->obj[1]->R)) {
+	if (fb_is_collision(obj->a * (1.0 - obj->e), obj->obj[0]->R, obj->obj[1]->R) || 
+		vrelperi / clight >= speedtol) {
 		return(0);
 	} else {
 		return(1);

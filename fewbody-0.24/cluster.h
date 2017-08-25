@@ -19,6 +19,13 @@
 */
 
 #define FB_TIDALTOL 1.0e-3
+#define FB_SPEEDTOL 5.0e-2
+
+#define FB_PN1 1
+#define FB_PN2 1
+#define FB_PN25 1
+#define FB_PN3 0
+#define FB_PN35 0
 
 /* number of stars in cluster */
 #define FB_N 20

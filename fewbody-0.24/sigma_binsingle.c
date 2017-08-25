@@ -142,7 +142,13 @@ int main(int argc, char *argv[])
 	input.relacc = FB_RELACC;
 	input.ncount = FB_NCOUNT;
 	input.tidaltol = FB_TIDALTOL;
+	input.speedtol = FB_SPEEDTOL;
 	input.fexp = FB_FEXP;
+	input.PN1 = FB_PN1;
+	input.PN2 = FB_PN2;
+	input.PN25 = FB_PN25;
+	input.PN3 = FB_PN3;
+	input.PN35 = FB_PN35;
 	seed = FB_SEED;
 	fb_debug = FB_DEBUG;
 	
@@ -347,7 +353,8 @@ int main(int argc, char *argv[])
 			/* fb_upsync(&(hier.hier[hier.hi[2]+0]), t); */
 			
 			/* call fewbody! */
-			retval = fewbody(input, &hier, &t);
+			// PAU retval = fewbody(input, &hier, &t);
+			retval = fewbody(input, units, &hier, &t, rng);
 
 			k = -1;
 			res = 0;

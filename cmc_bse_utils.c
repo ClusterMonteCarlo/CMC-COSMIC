@@ -15,6 +15,7 @@ void update_bse_from_sse(bse_t *bvars, sse_t *svars, int bmember) {
   bvars->bse_mass0[bmember] = svars->se_mass;
   bvars->bse_kw[bmember] = svars->se_k;
   bvars->bse_mass[bmember] = svars->se_mt;
+  bvars->bse_bhspin[bmember] = svars->se_bhspin;
   bvars->bse_ospin[bmember] = svars->se_ospin;
   bvars->bse_B_0[bmember] = svars->se_B_0;
   bvars->bse_bacc[bmember] = svars->se_bacc;
@@ -43,6 +44,7 @@ void update_sse_from_bse(bse_t *bvars, sse_t *svars, int bmember) {
   svars->se_mass = bvars->bse_mass0[bmember];
   svars->se_k = bvars->bse_kw[bmember];
   svars->se_mt =  bvars->bse_mass[bmember];
+  svars->se_bhspin =  bvars->bse_bhspin[bmember];
   svars->se_ospin = bvars->bse_ospin[bmember];
   svars->se_B_0 = bvars->bse_B_0[bmember];
   svars->se_bacc = bvars->bse_bacc[bmember];
@@ -70,6 +72,7 @@ void get_sse_from_star(sse_t *svars, star_t *star) {
   svars-> se_mass   = star->se_mass;
   svars-> se_k      = star->se_k;
   svars-> se_mt     = star->se_mt;
+  svars-> se_bhspin = star->se_bhspin;
   svars-> se_ospin  = star->se_ospin;
   svars-> se_B_0  = star->se_B_0;
   svars-> se_bacc  = star->se_bacc;
@@ -97,6 +100,7 @@ void update_star_from_sse(star_t *star, sse_t svars) {
   star-> se_mass   = svars.se_mass;
   star-> se_k      = svars.se_k;
   star-> se_mt     = svars.se_mt;
+  star-> se_bhspin = svars.se_bhspin;
   star-> se_ospin  = svars.se_ospin;
   star-> se_B_0  = svars.se_B_0;
   star-> se_bacc = svars.se_bacc;
@@ -139,6 +143,7 @@ void get_bse_from_binary(bse_t *bvars, binary_t *star) {
     bvars->bse_tacc[i]     = star->bse_tacc[i];
     bvars->bse_epoch[i]     = star->bse_epoch[i];
     bvars->bse_tms[i]       = star->bse_tms[i];
+    bvars->bse_bhspin[i]       = star->bse_bhspin[i];
     bvars->bse_bcm_dmdt[i]  = star->bse_bcm_dmdt[i];
     bvars->bse_bcm_radrol[i]= star->bse_bcm_radrol[i];
     bvars->bse_bcm_B[i]     = star->bse_bcm_B[i];
@@ -173,6 +178,7 @@ void update_binary_from_bse(binary_t *star, bse_t *bvars) {
     star->bse_tacc[i]     =bvars->bse_tacc[i];
     star->bse_epoch[i]     =bvars->bse_epoch[i];
     star->bse_tms[i]       =bvars->bse_tms[i];
+    star->bse_bhspin[i]       =bvars->bse_bhspin[i];
     star->bse_bcm_dmdt[i]  =bvars->bse_bcm_dmdt[i];
     star->bse_bcm_radrol[i]=bvars->bse_bcm_radrol[i];
     star->bse_bcm_B[i]     =bvars->bse_bcm_B[i];
@@ -286,6 +292,7 @@ void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, 
       tempbinary->bse_menv[ii] = temphold.bse_menv[jj];
       tempbinary->bse_renv[ii] = temphold.bse_renv[jj];
       tempbinary->bse_tms[ii] = temphold.bse_tms[jj];
+      tempbinary->bse_bhspin[ii] = temphold.bse_bhspin[jj];
       tempbinary->bse_bcm_radrol[ii] = temphold.bse_bcm_radrol[jj];
       tempbinary->bse_bcm_dmdt[ii] = temphold.bse_bcm_dmdt[jj];
     }
@@ -311,6 +318,7 @@ void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, 
       tempbinary->bse_menv[ii] = temphold.bse_menv[jj];
       tempbinary->bse_renv[ii] = temphold.bse_renv[jj];
       tempbinary->bse_tms[ii] = temphold.bse_tms[jj];
+      tempbinary->bse_bhspin[ii] = temphold.bse_bhspin[jj];
       tempbinary->bse_bcm_radrol[ii] = temphold.bse_bcm_radrol[jj];
       tempbinary->bse_bcm_dmdt[ii] = temphold.bse_bcm_dmdt[jj];
     }
@@ -328,6 +336,8 @@ void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, 
   binary.bse_mass0[1] = tempbinary->bse_mass0[1];
   binary.bse_kw[0] = tempbinary->bse_kw[0];
   binary.bse_kw[1] = tempbinary->bse_kw[1];
+  binary.bse_bhspin[0] = tempbinary->bse_bhspin[0];
+  binary.bse_bhspin[1] = tempbinary->bse_bhspin[1];
   binary.bse_radius[0] = tempbinary->bse_radius[0];
   binary.bse_radius[1] = tempbinary->bse_radius[1];
   binary.bse_lum[0] = tempbinary->bse_lum[0];
@@ -367,6 +377,8 @@ void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, 
   tempbinary->bse_mass0[1] = binary.bse_mass0[1];
   tempbinary->bse_kw[0] = binary.bse_kw[0];
   tempbinary->bse_kw[1] = binary.bse_kw[1];
+  tempbinary->bse_bhspin[0] = binary.bse_bhspin[0];
+  tempbinary->bse_bhspin[1] = binary.bse_bhspin[1];
   tempbinary->bse_radius[0] = binary.bse_radius[0];
   tempbinary->bse_radius[1] = binary.bse_radius[1];
   tempbinary->bse_lum[0] = binary.bse_lum[0];

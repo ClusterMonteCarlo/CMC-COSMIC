@@ -994,7 +994,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 			} else {
 				dprintf("circular orbit: vr^2<0: setting vr=0: si=%ld r=%g rmin=%g rmax=%g vr^2=%g X=%g E=%g J=%g\n", si, r, rmin, rmax, Q, X, E, J);
 				if (isnan(Q)) {
-					eprintf("si = %ld \tfatal error: Q=vr^2==nan!\n",si);
+					eprintf("si = %ld fatal error: Q=vr^2==nan!\nj=%ld id=%ld E=%g pot=%g J=%g r=%g rmin=%g rmax=%g clus.nmax_new=%ld\n",si,j,star[j].id,E,pot,J,r,rmin,rmax,clus.N_MAX_NEW);
 					exit_cleanly(-1, __FUNCTION__);
 				}
 				vr = 0;

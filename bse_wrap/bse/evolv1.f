@@ -60,8 +60,8 @@ c-------------------------------------------------------------c
       REAL*8 fallback,vk !PDK
 *
       REAL*8 neta,bwind,hewind,mxns
-      integer windflag,ppsn
-      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,ppsn
+      INTEGER windflag,bhspinflag,ppsn
+      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,bhspinflag,ppsn
       REAL*8 pts1,pts2,pts3
       COMMON /POINTS/ pts1,pts2,pts3
       REAL scm(50000,14),spp(20,3)

@@ -25,7 +25,8 @@
 #include "fewbody.h"
 
 /* build the binary tree, subject to tidal criterion */
-int fb_collapse(fb_hier_t *hier, double t, double tidaltol)
+// PAU int fb_collapse(fb_hier_t *hier, double t, double tidaltol)
+int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units)
 {
 	int i, j, k, n, isave[2], cont=1, retval=0;
 	double a, amin, E, xrel[3], v0[3], v1[3], vcm[3], ftid;
@@ -92,7 +93,8 @@ int fb_collapse(fb_hier_t *hier, double t, double tidaltol)
 			}
 				
 			/* can't collapse if the object is not stable */
-			if (!fb_is_stable(&(hier->hier[hier->hi[n]+hier->narr[n]]))) {
+			// PAU if (!fb_is_stable(&(hier->hier[hier->hi[n]+hier->narr[n]]))) {
+			if (!fb_is_stable(&(hier->hier[hier->hi[n]+hier->narr[n]]), speedtol, units)) {
 				cont = 0;
 			}
 

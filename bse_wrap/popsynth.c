@@ -18,6 +18,7 @@ int main(void) {
   gsl_rng *rng;
   const gsl_rng_type *rng_type=gsl_rng_mt19937;
   double z=0.03, *zpars, vs[12];
+  double bhspin[2];
   double amin, amax, targettphysf, tphysf, dtp, rlprimovera;
   
   /* initialize GSL rng */
@@ -83,6 +84,8 @@ int main(void) {
     binarray[i].bse_bcm_formation[1] = 0.0;
     binarray[i].bse_bcm_B[0] = 0.0;
     binarray[i].bse_bcm_B[1] = 0.0;
+	binarray[i].bse_bhspin[0] = 0.0;
+	binarray[i].bse_bhspin[1] = 0.0;
 
     /* set primary mass from power law */
     X = gsl_rng_uniform(rng);
@@ -151,7 +154,7 @@ int main(void) {
 		 &(binarray[i].bse_tms[0]), 
 		 &binarray[i].bse_tphys, &tphysf, &dtp, 
 		 &z, zpars, 
-		 &binarray[i].bse_tb, &binarray[i].e, vs);
+		 &binarray[i].bse_tb, &binarray[i].e, vs,&(binarray[i].bse_bhspin[0]));
       
       /* extract some binary info from BSE's bcm array */
       j = 1;

@@ -193,7 +193,7 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
                 double *B_0, double *bacc, double *tacc,
 		double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
-		double *z, double *zpars, double *tb, double *ecc, double *vs)
+		double *z, double *zpars, double *tb, double *ecc, double *vs, double *bhspin)
 {
  int i;
   /* must null out vs, since SSE/BSE is not designed to return it and hence doesn't null it out */
@@ -204,7 +204,7 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
       vs[i] = 0.0;
   }
   evolv2_(kstar, mass0, mass, rad, lum, massc, radc, menv, renv, ospin, B_0, bacc, tacc,
-	  epoch, tms, tphys, tphysf, dtp, z, zpars, tb, ecc, vs);
+	  epoch, tms, tphys, tphysf, dtp, z, zpars, tb, ecc, vs, bhspin);
 }
 
 /**
@@ -238,11 +238,11 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
 		       double *massc, double *radc, double *menv, double *renv, double *ospin,
                        double *B_0, double *bacc, double *tacc,
 		       double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
-		       double *z, double *zpars, double *tb, double *ecc, double *vs)
+		       double *z, double *zpars, double *tb, double *ecc, double *vs, double *bhspin)
 {
   int mykstar[2], mykstarprev[2], kattempt=-1, j, i;
   double mymass0[2], mymass[2], myrad[2], mylum[2], mymassc[2], myradc[2], mymenv[2], myrenv[2], myospin[2], myB_0[2], mybacc[2], mytacc[2], myepoch[2];
-  double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[12];
+  double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[12], mybhspin[2];
 
   //  do {
     kattempt++;
@@ -265,6 +265,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
       mytacc[j] = tacc[j];
       myepoch[j] = epoch[j];
       mytms[j] = tms[j];
+      mybhspin[j] = bhspin[j];
     }
     mytphys = BSE_WRAP_MAX(*tphys - ((float) kattempt) * pow(1.2, kattempt), 0.0);
     tphystried = mytphys;
@@ -278,7 +279,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
     mytb = *tb;
     myecc = *ecc;
     bse_evolv2(mykstar, mymass0, mymass, myrad, mylum, mymassc, myradc, mymenv, myrenv, myospin, myB_0, mybacc, mytacc,
-	       myepoch, mytms, &mytphys, &mytphysf, &mydtp, z, zpars, &mytb, &myecc, myvs);
+	       myepoch, mytms, &mytphys, &mytphysf, &mydtp, z, zpars, &mytb, &myecc, myvs, mybhspin);
     /*
   } while ((isnan(myrad[0]) || mymassc[0] < 0.0 || mymass[0] < 0.0 || mymass0[0] < 0.0 || mylum[0] < 0.0 || 
 	    isnan(myrad[1]) || mymassc[1] < 0.0 || mymass[1] < 0.0 || mymass0[1] < 0.0 || mylum[1] < 0.0) && tphystried > 0.0);
@@ -344,6 +345,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
       tacc[j] = mytacc[j];
       epoch[j] = myepoch[j];
       tms[j] = mytms[j];
+	  bhspin[j] = mybhspin[j];
     }
   *tphys = mytphys;
   *tphysf = mytphysf;
@@ -383,7 +385,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
 void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum,
 		double *mc, double *rc, double *menv, double *renv, double *ospin,
 		double *epoch, double *tms, double *tphys, double *tphysf,
-		double *dtp, double *z, double *zpars, double *vs) {
+		double *dtp, double *z, double *zpars, double *vs, double *bhspin) {
   bse_binary tempbinary;
 
   tempbinary.bse_mass0[0] = *mass;
@@ -406,6 +408,8 @@ void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum
   tempbinary.bse_renv[1] = 0.0;
   tempbinary.bse_ospin[0] = *ospin;
   tempbinary.bse_ospin[1] = 0.0;
+  tempbinary.bse_bhspin[0] = *bhspin;
+  tempbinary.bse_bhspin[1] = 0.0; 
   tempbinary.bse_B_0[0] = 0.0;
   tempbinary.bse_B_0[1] = 0.0;
   tempbinary.bse_bacc[0] = 0.0;
@@ -424,7 +428,7 @@ void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum
       &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]),
       &(tempbinary.bse_ospin[0]), &(tempbinary.bse_B_0[0]), &(tempbinary.bse_bacc[0]), &(tempbinary.bse_tacc[0]),
       &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]),
-      tphys, tphysf, dtp, z, zpars, &(tempbinary.bse_tb), &(tempbinary.e), vs);
+      tphys, tphysf, dtp, z, zpars, &(tempbinary.bse_tb), &(tempbinary.e), vs, &(tempbinary.bse_bhspin[0]));
 
   *mass = tempbinary.bse_mass0[0];
   *kw = tempbinary.bse_kw[0];
@@ -438,6 +442,7 @@ void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum
   *ospin = tempbinary.bse_ospin[0];
   *epoch = tempbinary.bse_epoch[0];
   *tms = tempbinary.bse_tms[0];
+  *bhspin = tempbinary.bse_bhspin[0];
 }
 
 /**
@@ -486,7 +491,7 @@ void bse_star(int *kw, double *mass, double *mt, double *tm, double *tn, double 
 /* hrdiag routine; shouldn't need to be used often outside of BSE */
 void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
 		double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
-		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow)
+		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow, double *bhspin)
 {
   /* INPUTS
      
@@ -516,7 +521,7 @@ void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, do
      k2 = radius of gyration of envelope
    */
 
-  hrdiag_(mass, aj, mt, tm, tn, tscls, lums, GB, zpars, r, lum, kw, mc, rc, menv, renv, k2, ST_tide, ecsnp, ecsn_mlow);
+  hrdiag_(mass, aj, mt, tm, tn, tscls, lums, GB, zpars, r, lum, kw, mc, rc, menv, renv, k2, ST_tide, ecsnp, ecsn_mlow, bhspin);
 }
 
 /**
@@ -604,6 +609,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
   int i, kcomp1,kcomp2, star1, star2, COEL;
   double vk,OORB,JORB,mce[2],AJ[2], M0ce[2], PI, JSPIN1, JSPIN2;
   double tm, tn, tscls[20], lums[10], GB[10], k2, k3;
+  double bhspin[2];
   k3 = 0.21;
   PI = acos(-1.0);
   //
@@ -642,7 +648,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
   //
   bse_hrdiag(&((*tempbinary).bse_mass0[0]), &(AJ[0]), &((*tempbinary).bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[0]), &((*tempbinary).bse_lum[0]), &((*tempbinary).bse_kw[0]), &((*tempbinary).bse_massc[0]), &((*tempbinary).bse_radc[0]), 
-	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide, ecsnp, ecsn_mlow);
+	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[0]));
   ////
   JSPIN1 = (*tempbinary).bse_ospin[0]*(k2*(*tempbinary).bse_radius[0]*(*tempbinary).bse_radius[0]*(*tempbinary).bse_menv[0] + 
 				       k3*(*tempbinary).bse_radc[0]*(*tempbinary).bse_radc[0]*(*tempbinary).bse_massc[0]);
@@ -652,7 +658,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
   //
   bse_hrdiag(&((*tempbinary).bse_mass0[1]), &(AJ[1]), &((*tempbinary).bse_mass[1]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[1]), &((*tempbinary).bse_lum[1]), &((*tempbinary).bse_kw[1]), &((*tempbinary).bse_massc[1]), &((*tempbinary).bse_radc[1]), 
-	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide, ecsnp, ecsn_mlow);
+	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[1]));
   ////
   JSPIN2 = (*tempbinary).bse_ospin[1]*(k2*(*tempbinary).bse_radius[1]*(*tempbinary).bse_radius[1]*(*tempbinary).bse_menv[1] + 
 				       k3*(*tempbinary).bse_radc[1]*(*tempbinary).bse_radc[1]*(*tempbinary).bse_massc[1]);
@@ -696,12 +702,12 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
     //
     bse_hrdiag(&((*tempbinary).bse_mass0[0]), &(AJ[0]), &((*tempbinary).bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[0]), &((*tempbinary).bse_lum[0]), &((*tempbinary).bse_kw[0]), &((*tempbinary).bse_massc[0]), &((*tempbinary).bse_radc[0]), 
-	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide, ecsnp, ecsn_mlow);
+	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[0]));
     bse_star(&((*tempbinary).bse_kw[1]), &((*tempbinary).bse_mass0[1]), &((*tempbinary).bse_mass[1]), &tm, &tn, tscls, lums, GB, zpars);
     //
     bse_hrdiag(&((*tempbinary).bse_mass0[1]), &(AJ[1]), &((*tempbinary).bse_mass[1]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[1]), &((*tempbinary).bse_lum[1]), &((*tempbinary).bse_kw[1]), &((*tempbinary).bse_massc[1]), &((*tempbinary).bse_radc[1]), 
-	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide, ecsnp, ecsn_mlow);
+	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[1]));
     (*tempbinary).bse_epoch[0] = (*tempbinary).bse_tphys - AJ[0];
     (*tempbinary).bse_epoch[1] = (*tempbinary).bse_tphys - AJ[1];
     OORB = JORB/(((*tempbinary).bse_mass[0]*(*tempbinary).bse_mass[1])/((*tempbinary).bse_mass[0]+(*tempbinary).bse_mass[1])*sqrt(1.0-((*tempbinary).e*(*tempbinary).e))*(*tempbinary).a*(*tempbinary).a);///214.9/214.9); //turn sep in Rsun into sep in AU by dividing by ~215 to find orb velocity freq in 1/years
@@ -718,7 +724,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
       //
       bse_hrdiag(&((*tempbinary).bse_mass0[1]), &(AJ[1]), &((*tempbinary).bse_mass[1]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[1]), &((*tempbinary).bse_lum[1]), &((*tempbinary).bse_kw[1]), &((*tempbinary).bse_massc[1]), &((*tempbinary).bse_radc[1]), 
-	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide, ecsnp, ecsn_mlow);
+	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[1]));
       (*tempbinary).bse_epoch[1] = (*tempbinary).bse_tphys - AJ[1];
       printf("after hrdiag: kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g epoch1=%g epoch2=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
       printf("\n");
@@ -727,7 +733,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
       //
       bse_hrdiag(&((*tempbinary).bse_mass0[0]), &(AJ[0]), &((*tempbinary).bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[0]), &((*tempbinary).bse_lum[0]), &((*tempbinary).bse_kw[0]), &((*tempbinary).bse_massc[0]), &((*tempbinary).bse_radc[0]), 
-	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide, ecsnp, ecsn_mlow);
+	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[0]));
       (*tempbinary).bse_epoch[0] = (*tempbinary).bse_tphys - AJ[0];
       printf("after hrdiag: kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g epoch1=%g epoch2=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
       printf("\n");
@@ -750,6 +756,7 @@ void bse_set_opening_angle(int opening_angle) {value4_.opening_angle = opening_a
 void bse_set_ifflag(int ifflag) { flags_.ifflag = ifflag; }
 void bse_set_wdflag(int wdflag) { flags_.wdflag = wdflag; }
 void bse_set_bhflag(int bhflag) { value4_.bhflag = bhflag; }
+void bse_set_bhspinflag(int bhspinflag) { value1_.bhspinflag = bhspinflag; }
 void bse_set_nsflag(int nsflag) { flags_.nsflag = nsflag; }
 void bse_set_mxns(double mxns) { value1_.mxns = mxns;} 
 void bse_set_bconst(double bconst) { value4_.bconst = bconst; }

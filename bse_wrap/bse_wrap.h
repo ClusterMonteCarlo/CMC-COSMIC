@@ -109,6 +109,10 @@ typedef struct{
 */
 	double bse_bcm_dmdt[2];
 /**
+* @brief the black hole spins, taken from the CO core mass 
+*/
+	double bse_bhspin[2];
+/**
 * @brief radius/roche_lobe_radius for each star [bse_get_bcm(i,15), bse_get_bcm(i,29)]
 */
 	double bse_bcm_radrol[2];
@@ -132,14 +136,14 @@ void evolv2_(int *kstar, double *mass0, double *mass, double *rad, double *lum,
 	     double *massc, double *radc, double *menv, double *renv, double *ospin,
              double *B_0, double *bacc, double *tacc,
 	     double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
-	     double *z, double *zpars, double *tb, double *ecc, double *vs);
+	     double *z, double *zpars, double *tb, double *ecc, double *vs, double* bhspin);
 void instar_(void);
 float ran3_(int *idum);
 void star_(int *kw, double *mass, double *mt, double *tm, double *tn, double *tscls, 
 	   double *lums, double *GB, double *zpars);
 void hrdiag_(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
 	     double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
-	     double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow);
+	     double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow, double *bhspin);
 void kick_(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	   double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
 void mix_(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp);
@@ -159,23 +163,23 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
 void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum,
 		double *mc, double *rc, double *menv, double *renv, double *ospin,
 		double *epoch, double *tms, double *tphys, double *tphysf,
-		double *dtp, double *z, double *zpars, double *vs);
+		double *dtp, double *z, double *zpars, double *vs, double *bhspin);
 void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
                 double *B_0, double *bacc, double *tacc,
 		double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
-		double *z, double *zpars, double *tb, double *ecc, double *vs);
+		double *z, double *zpars, double *tb, double *ecc, double *vs, double *bhspin);
 void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		       double *massc, double *radc, double *menv, double *renv, double *ospin,
                        double *B_0, double *bacc, double *tacc,
 		       double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
-		       double *z, double *zpars, double *tb, double *ecc, double *vs);
+		       double *z, double *zpars, double *tb, double *ecc, double *vs, double *bhspin);
 void bse_instar(void);
 void bse_star(int *kw, double *mass, double *mt, double *tm, double *tn, double *tscls, 
 	      double *lums, double *GB, double *zpars);
 void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
 		double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
-		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow);
+		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow, double *bhspin);
 void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	      double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
 void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp);
@@ -191,7 +195,7 @@ extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
 extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
-extern struct { double neta, bwind, hewind, mxns; int windflag; int ppsn; } value1_;
+extern struct { double neta, bwind, hewind, mxns; int windflag; int bhspinflag; int ppsn; } value1_;
 extern struct { double alpha1, lambda; } value2_;
 extern struct { double sigma; double bhsigmafrac; double bconst; double CK; int bhflag; int opening_angle; } value4_;
 extern struct { double beta, xi, acc2, epsnov, eddfac, gamma; } value5_;
@@ -215,6 +219,7 @@ void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS,
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
 void bse_set_nsflag(int nsflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=no spins, 1=Uniform(0-1), 2=Uniform(0-0.25),3=Belczynski2017,4=1)*/
 void bse_set_mxns(double mxns); /* maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1) */
 void bse_set_bconst(double bconst); /* isolated pulsar field decay timescale */
 void bse_set_CK(double CK); /* Pulsar mass accretion field decay factor */

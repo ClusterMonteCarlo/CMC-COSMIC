@@ -32,7 +32,8 @@
 
 int fb_debug = 0;
 
-fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
+// PAU fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
+fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t, gsl_rng *rng, struct rng_t113_state *curr_st)
 {
 	int i, j, k, status, done=0, forceclassify=0, restart, restep;
 	long clk_tck;
@@ -99,7 +100,14 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 		nonks_params.nstar = hier->nstar;
 		fb_malloc_nonks_params(&nonks_params);
 		fb_init_nonks_params(&nonks_params, *hier);
+		nonks_params.PN1 = input.PN1;
+		nonks_params.PN2 = input.PN2;
+		nonks_params.PN25 = input.PN25;
+		nonks_params.PN3 = input.PN3;
+		nonks_params.PN35 = input.PN35;
+		nonks_params.units = units;
 	}
+
 	
 	/* set the initial conditions in y_i */
 	if (input.ks) {
@@ -169,7 +177,8 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 				}
 			}
 			fb_elkcirt(&phier, *t);
-		} else if (tnew >= texpand && fb_collapse(&phier, tnew, input.tidaltol)) {
+		// PAU } else if (tnew >= texpand && fb_collapse(&phier, tnew, input.tidaltol)) {
+		} else if (tnew >= texpand && fb_collapse(&phier, tnew, input.tidaltol, input.speedtol, units)) {
 			*t = tnew;
 			/* if there is only one object, then it's stable---force classify() */
 			if (phier.nobj == 1) {
@@ -207,7 +216,8 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 			}
 			
 			/* do physical collisions */
-			if (fb_collide(hier, input.fexp)) {
+			// PAU if (fb_collide(hier, input.fexp)) {
+			if (fb_collide(hier, input.fexp, units, rng, curr_st)) {
 				/* initialize phier to a flat tree */
 				phier.nstar = hier->nstar;
 				fb_init_hier(&phier);
@@ -260,7 +270,8 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 			
 			/* see if we're done */
 			if (retval.count % input.ncount == 0 || forceclassify) {
-				status = fb_classify(hier, *t, input.tidaltol);
+				// PAU status = fb_classify(hier, *t, input.tidaltol);
+				status = fb_classify(hier, *t, input.tidaltol, input.speedtol, units);
 				retval.iclassify++;
 				fb_dprintf("fewbody: current status:  t=%.6g  %s  (%s)\n",
 					   *t, fb_sprint_hier(*hier, string1),
@@ -299,6 +310,12 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 				nonks_params.nstar = phier.nobj;
 				fb_malloc_nonks_params(&nonks_params);
 				fb_init_nonks_params(&nonks_params, phier);
+				nonks_params.PN1 = input.PN1;
+				nonks_params.PN2 = input.PN2;
+				nonks_params.PN25 = input.PN25;
+				nonks_params.PN3 = input.PN3;
+				nonks_params.PN35 = input.PN35;
+				nonks_params.units = units;
 				
 				y = fb_malloc_vector(6*nonks_params.nstar);
 				fb_euclidean_to_nonks(phier.obj, y, nonks_params.nstar);
@@ -330,7 +347,8 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 	}
 	
 	/* do final classification */
-	retval.retval = fb_classify(hier, *t, input.tidaltol);
+	// PAU retval.retval = fb_classify(hier, *t, input.tidaltol);
+	retval.retval = fb_classify(hier, *t, input.tidaltol, input.speedtol, units);
 	retval.iclassify++;
 	fb_dprintf("fewbody: current status:  t=%.6g  %s  (%s)\n",
 		   *t, fb_sprint_hier(*hier, string1),
@@ -375,5 +393,9 @@ fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 	retval.DeltaEfrac = E/Ei-1.0;
 	retval.DeltaL = fb_mod(DeltaL);
 	retval.DeltaLfrac = fb_mod(DeltaL)/fb_mod(Li);
+    if (input.PN1 == 1 || input.PN2 == 1 || input.PN25 == 1 || input.PN3 == 1 || input.PN35 == 1)
+        retval.PN_ON = 1;
+    else
+        retval.PN_ON = 0;
 	return(retval);
 }

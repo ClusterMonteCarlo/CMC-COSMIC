@@ -19,6 +19,13 @@
 */
 
 #define FB_TIDALTOL 1.0e-5
+#define FB_SPEEDTOL 5.0e-2
+
+#define FB_PN1 1
+#define FB_PN2 1
+#define FB_PN25 1
+#define FB_PN3 0
+#define FB_PN35 0
 
 #define FB_M00 (10.0 * FB_CONST_MSUN)
 #define FB_M01 (1.0 * FB_CONST_MSUN)

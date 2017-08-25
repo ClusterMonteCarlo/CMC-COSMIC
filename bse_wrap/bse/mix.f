@@ -18,8 +18,8 @@
       REAL*8 ecsnp
       PARAMETER(MCH=1.44D0)
       REAL*8 NETA,BWIND,HEWIND,MXNS
-      integer windflag,ppsn
-      COMMON /VALUE1/ NETA,BWIND,HEWIND,MXNS,windflag,ppsn
+      INTEGER windflag,bhspinflag,ppsn
+      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,bhspinflag,ppsn
 *
 *
 *       Define global indices with body #I1 being most evolved.

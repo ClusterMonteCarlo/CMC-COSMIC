@@ -82,6 +82,9 @@ typedef struct fb_obj{
 	double Ahat[3]; /* Runge-Lenz vector */
 	double t; /* time at which node was upsynced */
 	double mean_anom; /* mean anomaly when node was upsynced */
+	int k_type; /* Star Type; needed to identify black holes in mergers */
+    double *vkick; /* Array for recording the kicks from BBH mergers */
+	double chi; /*Dimensionless Kerr parameter (negative for non-BH/NSs)*/
 } fb_obj_t;
 
 /* parameters for the K-S integrator */
@@ -99,6 +102,12 @@ typedef struct{
 typedef struct{
 	int nstar; /* number of actual stars */
 	double *m; /* m[nstar] */
+	int PN1;
+	int PN2;
+	int PN25;
+	int PN3;
+	int PN35;
+	fb_units_t units;
 } fb_nonks_params_t;
 
 /* the hierarchy data structure */
@@ -123,8 +132,14 @@ typedef struct{
 	double relacc; /* relative accuracy of the integrator */
 	int ncount; /* number of integration steps between each call to fb_classify() */
 	double tidaltol; /* tidal tolerance */
+	double speedtol; /* v/c tolerance */
 	char firstlogentry[FB_MAX_LOGENTRY_LENGTH]; /* first entry to put in printout log */
 	double fexp; /* expansion factor for a merger product: R = f_exp (R_1+R_2) */
+	int PN1;
+	int PN2;
+	int PN25;
+	int PN3;
+	int PN35;
 } fb_input_t;
 
 /* return parameters */
@@ -138,26 +153,34 @@ typedef struct{
 	double DeltaL; /* change in ang. mom. */
 	double DeltaLfrac; /* change in ang. mom., as a fraction of initial ang. mom. */
 	double Rmin; /* minimum distance of close approach during interaction */
+    int PN_ON; /* Were the pN terms on */
 	int Rmin_i; /* index of star i participating in minimum close approach */
 	int Rmin_j; /* index of star j participating in minimum close approach */
 	int Nosc; /* number of oscillations of the quantity s^2 (McMillan & Hut 1996) (Nosc=Nmin-1, so resonance if Nosc>=1) */
 } fb_ret_t;
 
 /* fewbody.c */
-fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t);
+//fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t);
+fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t, gsl_rng *rng, struct rng_t113_state *curr_st);
 
 /* fewbody_classify.c */
-int fb_classify(fb_hier_t *hier, double t, double tidaltol);
-int fb_is_stable(fb_obj_t *obj);
-int fb_is_stable_binary(fb_obj_t *obj);
+//int fb_classify(fb_hier_t *hier, double t, double tidaltol);
+//int fb_is_stable(fb_obj_t *obj);
+//int fb_is_stable_binary(fb_obj_t *obj);
+int fb_classify(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units);
+int fb_is_stable(fb_obj_t *obj, double speedtol, fb_units_t units);
+int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units);
 int fb_is_stable_triple(fb_obj_t *obj);
 int fb_is_stable_quad(fb_obj_t *obj);
 int fb_mardling(fb_obj_t *obj, int ib, int is);
 
 /* fewbody_coll.c */
 int fb_is_collision(double r, double R1, double R2);
-int fb_collide(fb_hier_t *hier, double f_exp);
-void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp);
+//int fb_collide(fb_hier_t *hier, double f_exp);
+//void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp);
+int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st);
+void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st);
+void fb_bh_merger(double m1, double m2, double a1, double a2, double *mass_frac, double *afinal, double *v_para, double *v_perp, struct rng_t113_state *curr_st);
 
 /* fewbody_hier.c */
 void fb_malloc_hier(fb_hier_t *hier);
@@ -171,6 +194,7 @@ char *fb_sprint_hier(fb_hier_t hier, char string[FB_MAX_STRING_LENGTH]);
 char *fb_sprint_hier_hr(fb_hier_t hier, char string[FB_MAX_STRING_LENGTH]);
 void fb_upsync(fb_obj_t *obj, double t);
 void fb_randorient(fb_obj_t *obj, gsl_rng *rng, struct rng_t113_state *curr_st);
+//void fb_randorient(fb_obj_t *obj, gsl_rng *rng);
 void fb_downsync(fb_obj_t *obj, double t);
 void fb_objcpy(fb_obj_t *obj1, fb_obj_t *obj2);
 
@@ -187,7 +211,8 @@ void fb_print_version(FILE *stream);
 void fb_print_story(fb_obj_t *star, int nstar, double t, char *logentry);
 
 /* fewbody_isolate.c */
-int fb_collapse(fb_hier_t *hier, double t, double tidaltol);
+//int fb_collapse(fb_hier_t *hier, double t, double tidaltol);
+int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units);
 int fb_expand(fb_hier_t *hier, double t, double tidaltol);
 
 /* fewbody_ks.c */
@@ -247,5 +272,12 @@ double fb_reltide(fb_obj_t *bin, fb_obj_t *single, double r);
 
 /* there is just one global variable */
 extern int fb_debug;
+
+/* radiation rocket canonical kick speed */
+#define FB_VKICK 120.0e5
+
+/* effective BH radius (in units of M); this has to be >~6.5, since otherwise 
+   we can get v/c>~0.4 and the higher order PN terms will fail */
+#define FB_REFF_BH 6.5
 
 #endif /* fewbody.h */

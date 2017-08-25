@@ -217,6 +217,10 @@ typedef struct{
 */
 	double bse_tms[2];
 /**
+* @brief BSE bh spin array 
+*/
+	double bse_bhspin[2];
+/**
 * @brief  physical time
 */
 	double bse_tphys;
@@ -397,6 +401,10 @@ typedef struct{
 * @brief ?
 */
 	double se_mt;
+/**
+* @brief single star black hole spin 
+*/
+	double se_bhspin;
 /**
 * @brief ?
 */
@@ -955,6 +963,16 @@ typedef struct{
 * @brief bhflag > 0 allows velocity kick at BH formation (1).
 */
 	int BSE_BHFLAG;
+#define PARAMDOC_BSE_BHSPINFLAG "bhflag > 0 allows velocity kick at BH formation (1)."
+/**
+* @brief bhspinflag sets the spin magnitude for BH merger kicks(0=no spins, 1=Uniform(0-1), 2=Uniform(0-0.25),3=Belczynski2017,4=1) 
+*/
+	int BSE_BHSPINFLAG;
+#define PARAMDOC_BH_RADIUS_MULTIPLYER "Factor to multiply the radii of BHs by for collisions (default is 3, i.e. Schwarzschild ISCO)"
+/**
+* @brief Factor to multiply the rdii of BHs by when they're being integrated by fewbody (saves times for BH collisions).  The default is the Schwarzschild ISCO 
+*/
+	int BH_RADIUS_MULTIPLYER;
 #define PARAMDOC_BSE_NSFLAG "0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN"
 /**
 * @brief nsflag = 0 gives the NS/BH mass distribution from default BSE; 1 uses the distribution of Belczynski et al. 2002, ApJ, 572, 407 (1), while 2, 3, and 4 give you the standard, 'rapid' and 'delayed' models of Fryer et al. 2012, ApJ, 749, 91
@@ -1011,11 +1029,6 @@ typedef struct{
 * @brief gamma is the angular momentum factor for mass lost during Roche (-1.0, see evolv2.f for more details).
 */
 	int BSE_GAMMA;
-#define PARAMDOC_BH_KERR_SPIN "The dimmensionless Kerr spin to assign to every BH.  Determines kicks for BBH mergers"
-/**
-* @brief Kerr spin magnitude for all BHs (default is 0.99) 
-*/
-	int BH_KERR_SPIN;
 #define PARAMDOC_TIMER "enable or disable timers. This would return a detailed profiling of the code, but uses barriers, so might slow down the code a bit."
 /**
 * @brief enable or disable timers. This would return a detailed profiling of the code, but uses barriers, so might slow down the code a bit.

@@ -766,8 +766,10 @@ void PrintParaFileOutput(void)
 		 mpi_para_file_write(mpi_pulsarfile_wrbuf, &mpi_pulsarfile_len, &mpi_pulsarfile_ofst_total, &mpi_pulsarfile);
 
     /* Meagan's 3bb files */
-    if (WRITE_BH_INFO)
+    if (WRITE_BH_INFO){
         mpi_para_file_write(mpi_newbhfile_wrbuf, &mpi_newbhfile_len, &mpi_newbhfile_ofst_total, &mpi_newbhfile);
+        mpi_para_file_write(mpi_bhmergerfile_wrbuf, &mpi_bhmergerfile_len, &mpi_bhmergerfile_ofst_total, &mpi_bhmergerfile);
+    }
 
     if (THREEBODYBINARIES)
     {
@@ -1327,6 +1329,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_BHFLAG);
 				sscanf(values, "%i", &BSE_BHFLAG);
 				parsed.BSE_BHFLAG = 1;
+			} else if (strcmp(parameter_name, "BSE_BHSPINFLAG")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_BHSPINFLAG);
+				sscanf(values, "%i", &BSE_BHSPINFLAG);
+				parsed.BSE_BHSPINFLAG = 1;
+			} else if (strcmp(parameter_name, "BH_RADIUS_MULTIPLYER")== 0) {
+				PRINT_PARSED(PARAMDOC_BH_RADIUS_MULTIPLYER);
+				sscanf(values, "%i", &BH_RADIUS_MULTIPLYER);
+				parsed.BH_RADIUS_MULTIPLYER = 1;
 			} else if (strcmp(parameter_name, "BSE_NSFLAG")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_NSFLAG);
 				sscanf(values, "%i", &BSE_NSFLAG);
@@ -1371,10 +1381,6 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_GAMMA);
 				sscanf(values, "%lf", &BSE_GAMMA);
 				parsed.BSE_GAMMA = 1;
-			} else if (strcmp(parameter_name, "BH_KERR_SPIN")== 0) {
-				PRINT_PARSED(PARAMDOC_BH_KERR_SPIN);
-				sscanf(values, "%lf", &BH_KERR_SPIN);
-				parsed.BH_KERR_SPIN = 1;
 			} else if (strcmp(parameter_name, "TIMER")== 0) {
 				PRINT_PARSED(PARAMDOC_TIMER);
 				sscanf(values, "%d", &TIMER);
@@ -1503,6 +1509,8 @@ if(myid==0) {
 	CHECK_PARSED(BSE_IFFLAG, 0, PARAMDOC_BSE_IFFLAG);
 	CHECK_PARSED(BSE_WDFLAG, 1, PARAMDOC_BSE_WDFLAG);
 	CHECK_PARSED(BSE_BHFLAG, 1, PARAMDOC_BSE_BHFLAG);
+	CHECK_PARSED(BSE_BHSPINFLAG, 4, PARAMDOC_BSE_BHSPINFLAG);
+	CHECK_PARSED(BH_RADIUS_MULTIPLYER, 3, PARAMDOC_BH_RADIUS_MULTIPLYER);
 	CHECK_PARSED(BSE_NSFLAG, 1, PARAMDOC_BSE_NSFLAG);
 	CHECK_PARSED(BSE_MXNS, 3.00, PARAMDOC_BSE_MXNS);
 	CHECK_PARSED(BSE_BCONST, -3000.00, PARAMDOC_BSE_BCONST);
@@ -1514,7 +1522,6 @@ if(myid==0) {
 	CHECK_PARSED(BSE_BETA, 0.12500, PARAMDOC_BSE_BETA);
 	CHECK_PARSED(BSE_EDDFAC, 1.00, PARAMDOC_BSE_EDDFAC);
 	CHECK_PARSED(BSE_GAMMA, -1.00, PARAMDOC_BSE_GAMMA);
-	CHECK_PARSED(BH_KERR_SPIN, 0.99, PARAMDOC_BH_KERR_SPIN);
 	CHECK_PARSED(TIMER, 0, PARAMDOC_TIMER);
 #undef CHECK_PARSED
 
@@ -1913,6 +1920,12 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
         MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_newbhfile);
 		if(RESTART_TCOUNT == 0)
 			MPI_File_set_size(mpi_newbhfile, 0);
+
+        sprintf(outfile, "%s.bhmerger.dat", outprefix);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_bhmergerfile);
+		if(RESTART_TCOUNT == 0)
+			MPI_File_set_size(mpi_bhmergerfile, 0);
+        
     }
 
 	if(WRITE_PULSAR_INFO)
@@ -2017,6 +2030,11 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			eprintf("cannot create bhformation.dat file %s\n", outfile);
 			exit(1);
 		}
+		sprintf(outfile, "%s.bhmerger.dat", outprefix);
+		if ((bhmergerfile = fopen(outfile, outfilemode)) == NULL) {
+			eprintf("cannot create bhmerger.dat file %s\n", outfile);
+			exit(1);
+		}
     }
 
 	/* Pulsar log file */
@@ -2063,7 +2081,9 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 
 		// print header
 		if (WRITE_BH_INFO)
-			pararootfprintf(newbhfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:bh mass #8.birth-kick(km/s) #9-20.vsarray\n");
+			pararootfprintf(newbhfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:bh mass #8:bh_spin #9:birth-kick(km/s) #10-25:vsarray\n");
+			pararootfprintf(bhmergerfile,"#1:time #2:r #3.type #4:id1 #5:id2 #6:m1[MSUN] #7:m2[MSUN] #8:a1 #9:a2 #10:m_final[MSUN] 11:a_final 12:vkick[km/s]\n");
+			pararootfprintf(bhmergerfile,"#NOTE: if repeated mergers occur in fewbody (binary-single or binary-binary), the initial masses will be wrong; check collision.log\n");
 	//"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
 
 		/* print header */
@@ -2146,6 +2166,7 @@ void close_node_buffers(void)
     }
     if (WRITE_BH_INFO) {
         fclose(newbhfile);
+        fclose(bhmergerfile);
     }
 	 if(WRITE_PULSAR_INFO)
 	 {
@@ -2178,6 +2199,7 @@ void mpi_close_node_buffers(void)
     }
     if (WRITE_BH_INFO) {
         MPI_File_close(&mpi_newbhfile);
+        MPI_File_close(&mpi_bhmergerfile);
     }
 	 if(WRITE_PULSAR_INFO)
 	 {
@@ -2903,6 +2925,7 @@ void load_restart_file(){
     }
     if (WRITE_BH_INFO) {
         MPI_File_seek(mpi_newbhfile,mpi_newbhfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_bhmergerfile,mpi_bhmergerfile_ofst_total,MPI_SEEK_SET);
     }
 	if(WRITE_PULSAR_INFO){
 		 MPI_File_seek(mpi_pulsarfile,mpi_pulsarfile_ofst_total,MPI_SEEK_SET);

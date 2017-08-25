@@ -278,7 +278,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs, &(star.se_bhspin));
 
 				/* setting star properties in FITS file, being careful with units */
 				cfd->bs_k2[j] = star.se_k;
@@ -335,7 +335,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs, &(star.se_bhspin));
 
 				/* setting star properties in FITS file, being careful with units */
 				cfd->bs_k2[j] = star.se_k;
@@ -392,7 +392,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs, &(star.se_bhspin));
 
 				/* setting star properties in FITS file, being careful with units */
 				cfd->bs_k2[j] = star.se_k;
@@ -455,7 +455,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 					bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 						   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 					   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-					   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+					   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs, &(star.se_bhspin));
 					
 					/* setting star properties in FITS file, being careful with units */
 					cfd->bs_k2[j] = star.se_k;
@@ -482,7 +482,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 					bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 						   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 					   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-					   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+					   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs, &(star.se_bhspin));
 					
 					/* setting star properties in FITS file, being careful with units */
 					cfd->bs_k1[j] = star.se_k;
@@ -534,7 +534,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs, &(star.se_bhspin));
 
 				/* setting star properties in FITS file, being careful with units */
 				cfd->bs_k2[j] = star.se_k;
@@ -605,7 +605,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs, &(star.se_bhspin));
 
 				/* setting star properties in FITS file, being careful with units */
 				cfd->bs_k2[j] = star.se_k;
@@ -631,7 +631,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs, &(star.se_bhspin));
 
 				/* setting star properties in FITS file, being careful with units */
 				cfd->bs_k1[j] = star.se_k;
@@ -695,7 +695,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				bse_evolve_single(&(star.se_k), &(star.se_mass), &(star.se_mt), &(star.se_radius),
 					   &(star.se_lum), &(star.se_mc), &(star.se_rc), &(star.se_menv), 
 				   	&(star.se_renv), &(star.se_ospin), &(star.se_epoch), &(star.se_tms), 
-				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs);
+				   	&(star.se_tphys), &tphysf, &dtp, &METALLICITY, zpars, vs, &(star.se_bhspin));
 				/* setting star properties in FITS file, being careful with units */
 				cfd->bs_k2[j] = star.se_k;
 				cfd->bs_m2[j] = star.se_mass / cfd->Mclus;

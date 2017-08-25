@@ -40,6 +40,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 {
 	int j;
 	long jbin;
+    int num_bh=0;
 	double vc, b, rtid, m0, m1, a1, e1, m10, m11;
 	fb_units_t fb_units;
 	fb_input_t input;
@@ -47,6 +48,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	
 	/* a useful definition */
 	jbin = star[kbin].binind;
+
 
 	/* v_inf should be in units of v_crit */
 #ifdef USE_MPI
@@ -74,9 +76,29 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	input.relacc = 1.0e-9;
 	input.ncount = 500;
 	input.tidaltol = 1.0e-5;
+	input.speedtol = 5.0e-2;
+	input.PN1 = 0;
+	input.PN2 = 0;
+	input.PN25 = 0;
+	input.PN3 = 0;
+	input.PN35 = 0;
 	input.firstlogentry[0] = '\0';
 	input.fexp = 1.0;
 	fb_debug = 0;
+
+
+    /* If we have more than one black hole, adjust the integrator,
+     * adding post-Newtonian terms and allowing longer integrations */
+	if(star[ksin].se_k == 14) num_bh++; 
+	if(binary[jbin].bse_kw[0] == 14)  num_bh++; 
+	if(binary[jbin].bse_kw[1] == 14)  num_bh++;
+
+    if(num_bh > 1){
+        input.tcpustop *= 10.;
+        input.PN1 = 1;
+        input.PN2 = 1;
+        input.PN25 = 1;
+    }
 	
 	/* initialize a few things for integrator */
 	*t = 0.0;
@@ -108,6 +130,9 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 		hier->hier[hier->hi[1]+0].R = star[ksin].rad * units.l;
 		hier->hier[hier->hi[1]+1].R = binary[jbin].rad1 * units.l;
 		hier->hier[hier->hi[1]+2].R = binary[jbin].rad2 * units.l;
+        if(star[ksin].se_k == 14)  hier->hier[hier->hi[1]+0].R *= BH_RADIUS_MULTIPLYER; 
+        if(binary[jbin].bse_kw[0] == 14) hier->hier[hier->hi[1]+1].R *= BH_RADIUS_MULTIPLYER; 
+        if(binary[jbin].bse_kw[1] == 14) hier->hier[hier->hi[1]+2].R *= BH_RADIUS_MULTIPLYER; 
 	} else {
 		hier->hier[hier->hi[1]+0].R = 0.0;
 		hier->hier[hier->hi[1]+1].R = 0.0;
@@ -121,6 +146,14 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 #endif
 	hier->hier[hier->hi[1]+1].m = binary[jbin].m1 * units.mstar;
 	hier->hier[hier->hi[1]+2].m = binary[jbin].m2 * units.mstar;
+
+	hier->hier[hier->hi[1]+0].k_type = star[ksin].se_k;
+	hier->hier[hier->hi[1]+1].k_type = binary[jbin].bse_kw[0];
+	hier->hier[hier->hi[1]+2].k_type = binary[jbin].bse_kw[1];
+
+	hier->hier[hier->hi[1]+0].chi = star[ksin].se_bhspin;
+	hier->hier[hier->hi[1]+1].chi = binary[jbin].bse_bhspin[0];
+	hier->hier[hier->hi[1]+2].chi = binary[jbin].bse_bhspin[1];
 
 	hier->hier[hier->hi[2]+0].m = hier->hier[hier->hi[1]+1].m + hier->hier[hier->hi[1]+2].m;
 
@@ -172,7 +205,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	fb_upsync(&(hier->hier[hier->hi[2]+0]), *t);
 	
 	/* call fewbody! */
-	retval = fewbody(input, hier, t);
+	retval = fewbody(input, fb_units, hier, t, rng, curr_st);
 
 	/* and return */
 	return(retval);

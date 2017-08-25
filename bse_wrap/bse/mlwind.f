@@ -6,8 +6,8 @@
       real*8 dml,dms,dmt,p0,x,mew,lum0,kap
       real*8 neta,bwind,hewind,mxns
       parameter(lum0=7.0d+04,kap=-0.5d0)
-      integer ppsn
-      common /value1/ neta,bwind,hewind,mxns,windflag,ppsn
+      integer ppsn,bhspinflag
+      common /value1/ neta,bwind,hewind,mxns,windflag,bhspinflag,ppsn
 
       character*30 label(16)
       data label /' Low Mass MS Star ',' Main sequence Star ',

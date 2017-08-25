@@ -397,7 +397,8 @@ int main(int argc, char *argv[])
 	fb_dprintf("calling fewbody()...\n");
 	
 	/* call fewbody! */
-	retval = fewbody(input, &hier, &t);
+	// PAU retval = fewbody(input, &hier, &t);
+	retval = fewbody(input, units, &hier, &t, rng);
 
 	/* print information to screen */
 	fprintf(stderr, "OUTCOME:\n");

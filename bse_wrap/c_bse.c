@@ -27,7 +27,7 @@ int main(void)
   int i, j, kw[2];
   double mass0[2], mass[2], tb, ecc;
   double menv[2], renv[2], ospin[2], B_0[2], bacc[2], tacc[2], epoch[2], tms[2], tphys;
-  double rad[2], lum[2], massc[2], radc[2];
+  double rad[2], lum[2], massc[2], radc[2], bhspin[2];
   double tphysf, dtp, z=0.02, *zpars;
   double vs[12];
   double aj, tm, tn, tscls[20], lums[10], GB[10], k2;
@@ -92,7 +92,7 @@ int main(void)
   while (kw[0]<=1) {
     bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	       &(menv[0]), &(renv[0]), &(ospin[0]), &(B_0[0]), &(bacc[0]), &(tacc[0]), &(epoch[0]), &(tms[0]), 
-	       &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
+	       &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs, &(bhspin[0]));
     
     j = 1;
     while (bse_get_bpp(j, 1) >= 0.0) {
@@ -137,7 +137,7 @@ int main(void)
 
   bse_evolv2(&(kw[0]), &(mass0[0]), &(mass[0]), &(rad[0]), &(lum[0]), &(massc[0]), &(radc[0]), 
 	     &(menv[0]), &(renv[0]), &(ospin[0]), &(B_0[0]), &(bacc[0]), &(tacc[0]), &(epoch[0]), &(tms[0]), 
-	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs);
+	     &tphys, &tphysf, &dtp, &z, zpars, &tb, &ecc, vs, &(bhspin[0]));
 
   j = 1;
   while (bse_get_bpp(j, 1) >= 0.0) {
