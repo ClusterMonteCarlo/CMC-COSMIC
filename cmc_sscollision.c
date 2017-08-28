@@ -1067,6 +1067,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		  merged_star->se_renv = tempbinary.bse_renv[tbi];
 		  merged_star->se_tms = tempbinary.bse_tms[tbi];
 		  merged_star->se_bhspin = tempbinary.bse_bhspin[tbi];
+          merged_star->Eint = tempbinary.Eint1 + tempbinary.Eint2;
 		  
 		  merged_star->rad = merged_star->se_radius * RSUN / units.l;
 		  merged_star->m = merged_star->se_mt * MSUN / units.mstar;

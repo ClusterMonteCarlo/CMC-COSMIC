@@ -1704,6 +1704,7 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
     target_star->se_renv = star[oldk].se_renv;
     target_star->se_tms = star[oldk].se_tms;
 	target_star->se_bhspin = star[oldk].se_bhspin;
+    target_star->Eint = star[oldk].Eint;
     //Sourav: toy rejuvenation- updating rejuv variables
     target_star->createtime = star[oldk].createtime;
     target_star->lifetime = star[oldk].lifetime;
@@ -1729,14 +1730,15 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
 	target_star->se_bhspin = binary[kb].bse_bhspin[kbi];
     //Sourav: toy rejuvenation- updating rejuv variables for two cases mass1 and mass2
     if (kbi==1){
-    target_star->createtime = binary[kb].createtime_m1;
-  target_star->lifetime = binary[kb].lifetime_m1;
+        target_star->createtime = binary[kb].createtime_m1;
+        target_star->lifetime = binary[kb].lifetime_m1;
         target_star->rad = binary[kb].rad1; // PDK addition
-    } 
-    else {
-  target_star->createtime = binary[kb].createtime_m2;
-  target_star->lifetime = binary[kb].lifetime_m2;
+        target_star->Eint = binary[kb].Eint1;
+    } else {
+        target_star->createtime = binary[kb].createtime_m2;
+        target_star->lifetime = binary[kb].lifetime_m2;
         target_star->rad = binary[kb].rad2; // PDK addition
+        target_star->Eint = binary[kb].Eint2;
     }
   }
 }
