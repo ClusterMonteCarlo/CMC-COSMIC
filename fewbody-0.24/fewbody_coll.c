@@ -190,9 +190,12 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 		tmpobj.chi = afinal;
         tmpobj.k_type = 14;
 		tmpobj.m *= mass_frac;
-        fprintf(stdout,"here1 \n");
         tmpobj.vkick[tmpobj.ncoll-1] = sqrt(v_perp*v_perp + v_para*v_para);
-        fprintf(stdout,"here2 \n");
+
+        /* Also update the radius with the new ISCO radius */ 
+        /* We could use the Kerr ISCO here instead of the Schwarzschild,
+         * but any case where that's relavant will almost always merge...*/
+        tmpobj.R = 6*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
 
     /* Note: BSE will be called for collision, but only AFTER the fewbody integration is complete
      * On the off chance we have a repeated merger, we need to know what to do now.  For now,
@@ -204,9 +207,11 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 	} else if (obj1->k_type == 14){
         tmpobj.chi = obj1->chi;
         tmpobj.k_type = 14;
+        tmpobj.R = 6*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
     } else if (obj2->k_type == 14){
         tmpobj.chi = obj2->chi;
         tmpobj.k_type = 14;
+        tmpobj.R = 6*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
     }
 
 	/* and better set these, too... */
