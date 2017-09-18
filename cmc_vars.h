@@ -155,6 +155,7 @@ _EXTERN_ long long mpi_bhsummaryfile_ofst_total, mpi_escbhsummaryfile_ofst_total
 
 /* everything else except arrays */
 _EXTERN_ char outprefix[100];
+_EXTERN_ char oldoutprefix[100];
 _EXTERN_ char dummystring[MAX_STRING_LENGTH], dummystring2[MAX_STRING_LENGTH], dummystring3[MAX_STRING_LENGTH], dummystring4[MAX_STRING_LENGTH];
 _EXTERN_ int se_file_counter;
 _EXTERN_ long tcount;

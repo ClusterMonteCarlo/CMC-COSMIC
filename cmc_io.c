@@ -36,13 +36,14 @@ void print_version(FILE *stream)
 void cmc_print_usage(FILE *stream, char *argv[])
 {
 	fprintf(stream, "USAGE:\n");
-	fprintf(stream, "  %s [options...] <input_file> <output_file_prefix>\n", argv[0]);
+	fprintf(stream, "  %s [options...] <input_file> <output_file_prefix> <old_output_file_prefix[if -R specified]>\n", argv[0]);
 	fprintf(stream, "\n");
 	fprintf(stream, "OPTIONS:\n");
 	fprintf(stream, "  -q --quiet   : do not print diagnostic info to stdout\n");
 	fprintf(stream, "  -d --debug   : turn on debugging\n");
 	fprintf(stream, "  -V --version : print version info\n");
-	fprintf(stream, "  -R --restart : start from a saved checkpoint (specify number)\n");
+	fprintf(stream, "  -R --hard-restart : start from a saved checkpoint (specify number) with prefix <old...prefix> and write to new file prefix\n");
+	fprintf(stream, "  -r --soft-restart : start from a saved checkpoint (specify number) and write to the same files in the same place\n");
 	fprintf(stream, "  -h --help    : display this help text\n");
 }
 
@@ -831,9 +832,10 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	parsed_t *spp;
 	long i, j;
 	int allparsed=1;
+	int hard_restart=0;
 	/* int *ip; */
 	FILE *in, *parsedfp;
-	const char *short_opts = "qdVhs:R:";
+	const char *short_opts = "qdVhs:R:r:";
 	const struct option long_opts[] = {
 		{"quiet", no_argument, NULL, 'q'},
 		{"debug", no_argument, NULL, 'd'},
@@ -867,6 +869,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			break;
 		case 'R':
 			RESTART_TCOUNT = atol(optarg);
+			hard_restart = 1;
+			break;
+		case 'r':
+			RESTART_TCOUNT = atol(optarg);
+			hard_restart = 0;
 			break;
 		case 'h':
 			print_version(stdout);
@@ -879,7 +886,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	}
 
 	/* check to make sure there was nothing crazy on the command line */
-	if (argc - optind != 2) {
+	if (argc - optind != 2 + hard_restart) {
 		cmc_print_usage(stdout, argv);
 		exit(0);
 	}
@@ -887,6 +894,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	/* set inputfile and outprefix now that the options have been parsed */
 	sprintf(inputfile, "%s", argv[optind]);
 	sprintf(outprefix, "%s", argv[optind+1]);
+	if(hard_restart)
+		sprintf(oldoutprefix, "%s", argv[optind+2]);
+	else
+		sprintf(oldoutprefix, "%s", argv[optind+1]);
+		
 /*
 #ifdef USE_MPI
 	strcpy(outprefix_bak, outprefix);
@@ -2671,6 +2683,7 @@ typedef struct{
     long long s_mpi_removestarfile_len;
     long long s_mpi_relaxationfile_len;
     long long s_mpi_pulsarfile_len;
+    long long s_mpi_bhmergerfile_len;
     long long s_mpi_logfile_ofst_total;
     long long s_mpi_escfile_ofst_total;
     long long s_mpi_binaryfile_ofst_total;
@@ -2681,6 +2694,7 @@ typedef struct{
     long long s_mpi_removestarfile_ofst_total;
     long long s_mpi_relaxationfile_ofst_total;
     long long s_mpi_pulsarfile_ofst_total;
+    long long s_mpi_bhmergerfile_ofst_total;
 
 	double s_OldTidalMassLoss;
     double s_TidalMassLoss_old;
@@ -2719,6 +2733,7 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_mpi_removestarfile_len             =mpi_removestarfile_len;
 	rest->s_mpi_relaxationfile_len             =mpi_relaxationfile_len;
 	rest->s_mpi_pulsarfile_len                 =mpi_pulsarfile_len;
+	rest->s_mpi_bhmergerfile_len               =mpi_bhmergerfile_len;
 	rest->s_mpi_logfile_ofst_total             =mpi_logfile_ofst_total;
 	rest->s_mpi_escfile_ofst_total             =mpi_escfile_ofst_total;
 	rest->s_mpi_binaryfile_ofst_total          =mpi_binaryfile_ofst_total;
@@ -2729,6 +2744,7 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_mpi_removestarfile_ofst_total      =mpi_removestarfile_ofst_total;
 	rest->s_mpi_relaxationfile_ofst_total      =mpi_relaxationfile_ofst_total;
 	rest->s_mpi_pulsarfile_ofst_total          =mpi_pulsarfile_ofst_total;
+	rest->s_mpi_bhmergerfile_ofst_total        =mpi_bhmergerfile_ofst_total;
 
     rest->s_OldTidalMassLoss                   =OldTidalMassLoss;
     rest->s_TidalMassLoss_old                  =TidalMassLoss_old;
@@ -2767,6 +2783,7 @@ void load_global_vars(restart_struct_t *rest){
 	mpi_removestarfile_len             =rest->s_mpi_removestarfile_len;
 	mpi_relaxationfile_len             =rest->s_mpi_relaxationfile_len;
 	mpi_pulsarfile_len                 =rest->s_mpi_pulsarfile_len;
+	mpi_bhmergerfile_len               =rest->s_mpi_bhmergerfile_len;
 	mpi_logfile_ofst_total             =rest->s_mpi_logfile_ofst_total;
 	mpi_escfile_ofst_total             =rest->s_mpi_escfile_ofst_total;
 	mpi_binaryfile_ofst_total          =rest->s_mpi_binaryfile_ofst_total;
@@ -2777,6 +2794,7 @@ void load_global_vars(restart_struct_t *rest){
 	mpi_removestarfile_ofst_total      =rest->s_mpi_removestarfile_ofst_total;
 	mpi_relaxationfile_ofst_total      =rest->s_mpi_relaxationfile_ofst_total;
 	mpi_pulsarfile_ofst_total          =rest->s_mpi_pulsarfile_ofst_total;
+	mpi_bhmergerfile_ofst_total        =rest->s_mpi_bhmergerfile_ofst_total;
 
     OldTidalMassLoss                   =rest->s_OldTidalMassLoss;
     TidalMassLoss_old                  =rest->s_TidalMassLoss_old;
@@ -2862,8 +2880,8 @@ void load_restart_file(){
 	struct stat folder_thing = {0};
 	restart_struct_t restart_struct;
 
-	sprintf(restart_folder, "./%s-RESTART", outprefix);
-	sprintf(restart_file, "%s/%s.restart.%ld-%d.bin",restart_folder,outprefix,RESTART_TCOUNT,myid);
+	sprintf(restart_folder, "./%s-RESTART", oldoutprefix);
+	sprintf(restart_file, "%s/%s.restart.%ld-%d.bin",restart_folder,oldoutprefix,RESTART_TCOUNT,myid);
 
 	if (stat(restart_folder,&folder_thing) == -1) {
 		eprintf("can't find the restart folder %s\n",restart_folder);

@@ -1823,9 +1823,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						star[knew].id = star_get_merger_id_new(star[knew].id, hier.obj[i]->id[nmerged]);
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
-                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                        /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
-                        if(tempstar.se_k == 14 && star[knew].se_k == 14 ){
+                        if(tempstar.se_k == 14 || star[knew].se_k == 14 ){
                             star[knew].se_k = 14;
                             star[knew].m = hier.obj[i]->m * cmc_units.m / madhoc;
                             star[knew].se_mass = star[knew].m * units.mstar / MSUN;
@@ -1834,7 +1834,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             star[knew].se_bhspin = hier.obj[i]->chi;
                             star[knew].se_radius = hier.obj[i]->R * cmc_units.l;
                             star[knew].Eint = 0;
-                            if(WRITE_BH_INFO)
+                            if(WRITE_BH_INFO && tempstar.se_k == 14 && star[knew].se_k == 14)
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->id[0],hier.obj[i]->id[nmerged], 
@@ -1913,9 +1913,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[0]->id[nmerged]);
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                        /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
-                        if(tempstar2.se_k == 14 && tempstar.se_k == 14){
+                        if(tempstar2.se_k == 14 || tempstar.se_k == 14){
                             tempstar.se_k = 14;
                             tempstar.m = hier.obj[i]->obj[0]->m * cmc_units.m / madhoc;
                             tempstar.se_mass = tempstar.m * units.mstar / MSUN;
@@ -1924,7 +1924,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_bhspin = hier.obj[i]->obj[0]->chi;
                             tempstar.se_radius = hier.obj[i]->obj[0]->R * cmc_units.l;
                             tempstar.Eint = 0;
-                            if(WRITE_BH_INFO)
+                            if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[0]->id[0],hier.obj[i]->obj[0]->id[nmerged], 
@@ -1998,9 +1998,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[1]->id[nmerged]);
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                        /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
-                        if(tempstar2.se_k == 14 && tempstar.se_k == 14){
+                        if(tempstar2.se_k == 14 || tempstar.se_k == 14){
                             tempstar.se_k = 14;
                             tempstar.m = hier.obj[i]->obj[1]->m * cmc_units.m / madhoc;
                             tempstar.se_mass = tempstar.m * units.mstar / MSUN;
@@ -2009,7 +2009,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_bhspin = hier.obj[i]->obj[1]->chi;
                             tempstar.se_radius = hier.obj[i]->obj[1]->R * cmc_units.l;
                             tempstar.Eint = 0;
-                            if(WRITE_BH_INFO)
+                            if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[1]->id[0],hier.obj[i]->obj[1]->id[nmerged], 
@@ -2133,9 +2133,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						star[knew].id = star_get_merger_id_new(star[knew].id, hier.obj[i]->obj[sid]->id[nmerged]);
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
-                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                        /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
-                        if(star[knewp].se_k == 14 && tempstar.se_k == 14){
+                        if(star[knewp].se_k == 14 || tempstar.se_k == 14){
                             star[knewp].se_k = 14;
                             star[knewp].m = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
                             star[knewp].se_mass = star[knewp].m * units.mstar / MSUN;
@@ -2144,7 +2144,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             star[knewp].se_bhspin = hier.obj[i]->obj[sid]->chi;
                             star[knewp].se_radius = hier.obj[i]->obj[sid]->R * cmc_units.l;
                             star[knewp].Eint = 0;
-                            if(WRITE_BH_INFO)
+                            if(WRITE_BH_INFO && star[knewp].se_k == 14 && tempstar.se_k == 14 )
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[sid]->id[0],hier.obj[i]->obj[sid]->id[nmerged], 
@@ -2219,9 +2219,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                         tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]);
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                        /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
-                        if(tempstar2.se_k == 14 && tempstar.se_k == 14){
+                        if(tempstar2.se_k == 14 || tempstar.se_k == 14){
                             tempstar.se_k = 14;
                             tempstar.m = hier.obj[i]->obj[bid]->obj[0]->m * cmc_units.m / madhoc;
                             tempstar.se_mass = tempstar.m * units.mstar / MSUN;
@@ -2230,7 +2230,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_bhspin = hier.obj[i]->obj[bid]->obj[0]->chi;
                             tempstar.se_radius = hier.obj[i]->obj[bid]->obj[0]->R * cmc_units.l;
                             tempstar.Eint = 0;
-                            if(WRITE_BH_INFO)
+                            if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[bid]->obj[0]->id[0],hier.obj[i]->obj[bid]->obj[0]->id[nmerged], 
@@ -2295,9 +2295,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                         tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]);
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
-                        /* NOTE: if I have a BH/star merger then a BH merger, this will overwrite the 
+                        /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
-                        if(tempstar2.se_k == 14 && tempstar.se_k == 14){
+                        if(tempstar2.se_k == 14 || tempstar.se_k == 14){
                             tempstar.se_k = 14;
                             tempstar.m = hier.obj[i]->obj[bid]->obj[1]->m * cmc_units.m / madhoc;
                             tempstar.se_mass = tempstar.m * units.mstar / MSUN;
@@ -2306,7 +2306,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_bhspin = hier.obj[i]->obj[bid]->obj[1]->chi;
                             tempstar.se_radius = hier.obj[i]->obj[bid]->obj[1]->R * cmc_units.l;
                             tempstar.Eint = 0;
-                            if(WRITE_BH_INFO)
+                            if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14 )
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[bid]->obj[1]->id[0],hier.obj[i]->obj[bid]->obj[1]->id[nmerged], 
