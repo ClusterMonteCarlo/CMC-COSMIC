@@ -1826,7 +1826,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
                         if(tempstar.se_k == 14 || star[knew].se_k == 14 ){
-                            star[knew].se_k = 14;
                             star[knew].m = hier.obj[i]->m * cmc_units.m / madhoc;
                             star[knew].se_mass = star[knew].m * units.mstar / MSUN;
                             star[knew].se_mt  = star[knew].m * units.mstar / MSUN;
@@ -1842,6 +1841,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                                                           binint_get_mass(k, kp, hier.obj[i]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->id[0]), binint_get_spins(k, kp, hier.obj[i]->id[nmerged]), 
                                                           star[knew].m*units.mstar/MSUN,hier.obj[i]->chi,hier.obj[i]->vkick[nmerged]);
+                            star[knew].se_k = 14;
                         } else{
                             merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs, curr_st);
                                                     /* Owing to merger only useful vs's are v[1-3] */
@@ -1916,7 +1916,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
                         if(tempstar2.se_k == 14 || tempstar.se_k == 14){
-                            tempstar.se_k = 14;
                             tempstar.m = hier.obj[i]->obj[0]->m * cmc_units.m / madhoc;
                             tempstar.se_mass = tempstar.m * units.mstar / MSUN;
                             tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
@@ -1932,6 +1931,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[0]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[0]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[0]->id[nmerged]), 
                                                           tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[0]->chi,hier.obj[i]->obj[0]->vkick[nmerged]);
+                            tempstar.se_k = 14;
                         } else{
                             merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
                             /* FIXME: really we're supposed to add the kick to each binary
@@ -2001,7 +2001,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
                         if(tempstar2.se_k == 14 || tempstar.se_k == 14){
-                            tempstar.se_k = 14;
                             tempstar.m = hier.obj[i]->obj[1]->m * cmc_units.m / madhoc;
                             tempstar.se_mass = tempstar.m * units.mstar / MSUN;
                             tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
@@ -2017,6 +2016,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[1]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[1]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[1]->id[nmerged]), 
                                                           tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[1]->chi,hier.obj[i]->obj[1]->vkick[nmerged]);
+                            tempstar.se_k = 14;
                         } else{
                             merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
                             /* FIXME: really we're supposed to add the kick to each binary
@@ -2136,7 +2136,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
                         if(star[knewp].se_k == 14 || tempstar.se_k == 14){
-                            star[knewp].se_k = 14;
                             star[knewp].m = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
                             star[knewp].se_mass = star[knewp].m * units.mstar / MSUN;
                             star[knewp].se_mt  = star[knewp].m * units.mstar / MSUN;
@@ -2152,6 +2151,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[sid]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[sid]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[sid]->id[nmerged]), 
                                                           star[knewp].m*units.mstar/MSUN,hier.obj[i]->obj[sid]->chi,hier.obj[i]->obj[sid]->vkick[nmerged]);
+                            star[knewp].se_k = 14;
                         } else{
                             merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs, curr_st);
                             star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
@@ -2222,7 +2222,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
                         if(tempstar2.se_k == 14 || tempstar.se_k == 14){
-                            tempstar.se_k = 14;
                             tempstar.m = hier.obj[i]->obj[bid]->obj[0]->m * cmc_units.m / madhoc;
                             tempstar.se_mass = tempstar.m * units.mstar / MSUN;
                             tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
@@ -2238,6 +2237,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]), 
                                                           tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[bid]->obj[0]->chi,hier.obj[i]->obj[bid]->obj[0]->vkick[nmerged]);
+                            tempstar.se_k = 14;
                         } else{
                             merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
                             /* FIXME: really we're supposed to add the kick to each binary
@@ -2298,7 +2298,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
                          * BSE results with the fewbody dynamical results */
                         if(tempstar2.se_k == 14 || tempstar.se_k == 14){
-                            tempstar.se_k = 14;
                             tempstar.m = hier.obj[i]->obj[bid]->obj[1]->m * cmc_units.m / madhoc;
                             tempstar.se_mass = tempstar.m * units.mstar / MSUN;
                             tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
@@ -2314,6 +2313,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]), 
                                                           tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[bid]->obj[1]->chi,hier.obj[i]->obj[bid]->obj[1]->vkick[nmerged]);
+                            tempstar.se_k = 14;
                         } else{
                             merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
                             /* FIXME: really we're supposed to add the kick to each binary

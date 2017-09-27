@@ -176,32 +176,22 @@
 *      if(kw.eq.14)then
 *Limit BH kick with fallback only if wanted
 *      write(20,*)'BH FORM', m1,vk,fallback,kw
-*     write(91,*) 9
       if(kickscale.gt.0.d0)then
-*      write(91,*) 10
          vk = vk/kickscale
-*      write(91,*) 11
          vk2 = vk2/kickscale/kickscale
-*      write(91,*) 12
       endif
-*      write(15,*)'kick 4:',vk,theta,s
       if(kw.eq.14.and.bhflag.eq.0)then
          vk2 = 0.d0
          vk = 0.d0
       elseif(kw.eq.14.and.bhflag.eq.1)then
-*         write(91,*) 13, fallback
           fallback = MIN(fallback,1.d0)
-*         write(91,*) 14, fallback, vk
           vk = MAX((1.d0-fallback)*vk,0.d0)
-*         write(91,*) 15,fallback,vk
           vk2 = vk*vk
-*         write(91,*) 16,vk,vk2
       elseif(kw.eq.14.and.bhflag.eq.2)then
          vk = vk * mxns / m1n
          vk2 = vk*vk
       endif 
 
-*     write(91,*) 17
       sigma = sigmah
 * CLR - Allow for a restricted opening angle for SN kicks
 *       Only relevant for binaries, obviously
