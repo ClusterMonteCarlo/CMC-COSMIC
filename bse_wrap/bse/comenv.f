@@ -192,6 +192,14 @@
                      formation1 = 6
                   endif
                endif
+
+* SC: By hand circularize the binary before calling kick
+               IF(EORBF.LT.ECIRC)THEN
+                  ECC = SQRT(1.D0 - EORBF/ECIRC)
+               ELSE
+                  ECC = 0.D0
+               ENDIF
+
                CALL kick(KW1,MF,M1,M2,ECC,SEPF,JORB,vk,star1,
      &                   R2,fallback,bkick)
                snp = 1
@@ -345,6 +353,13 @@
                      formation1 = 6
                   endif
                endif
+* SC: By hand circularize the binary before calling kick
+               IF(EORBF.LT.ECIRC)THEN
+                  ECC = SQRT(1.D0 - EORBF/ECIRC)
+               ELSE
+                  ECC = 0.D0
+               ENDIF
+*
                CALL kick(KW1,MF,M1,M2,ECC,SEPF,JORB,vk,star1,
      &                   R2,fallback,bkick)
                snp = 1
@@ -412,6 +427,13 @@
                      formation2 = 6
                   endif
                endif
+* SC: By hand circularize the binary before calling kick
+               IF(EORBF.LT.ECIRC)THEN
+                  ECC = SQRT(1.D0 - EORBF/ECIRC)
+               ELSE
+                  ECC = 0.D0
+               ENDIF
+*
                CALL kick(KW2,MF,M2,M1,ECC,SEPF,JORB,vk,star2,
      &                   R1,fallback,bkick)
                snp = 1
@@ -574,6 +596,13 @@
                   formation1 = 6
                endif
             endif
+* SC: By hand circularize the binary before calling kick
+               IF(EORBF.LT.ECIRC)THEN
+                  ECC = SQRT(1.D0 - EORBF/ECIRC)
+               ELSE
+                  ECC = 0.D0
+               ENDIF
+*
             CALL kick(KW,MF,M1,0.d0,0.d0,-1.d0,0.d0,vk,star1,
      &                0.d0,fallback,bkick)
             if(output) write(*,*)'coel 2 6:',KW,M1,M01,R1,MENV,RENV
