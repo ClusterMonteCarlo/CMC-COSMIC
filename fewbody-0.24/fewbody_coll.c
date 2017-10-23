@@ -299,7 +299,7 @@ void fb_bh_merger(double m1, double m2, double a1, double a2,
 
 	/*The final remnant mass is, based on the extrapolation between equal-mass
 	 * and test mass limits (Barausse et al, Apj, 758, 63 (2012))*/
-	*mass_frac = 1 - eta*(1+4*eta)*(1-eISCO) - 16*eta*eta*(0.04827 + 4*0.01707*chi_par*(chi_par + 1));
+	*mass_frac = 1 - eta*(1-4*eta)*(1-eISCO) - 16*eta*eta*(0.04827 + 4*0.01707*chi_par*(chi_par + 1));
 	/*The final spin is taken from Barausse et al. Apj, 704, L40 (2009)
 	 * Note that I've assumed L-hat lies along the Z-axis*/
 	lil_L = 3.464102 - 3.51712*eta + 2.5763*eta*eta - 0.1229*pow(1+q,4.)*(chi_par*chi_par + chi_perp*chi_perp)

@@ -222,7 +222,7 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
 
 	/*if we're restarting from a checkpoint, we don't need to allocate or read
 	 * in the original star files from the fits file...just the header info*/
-	if(RESTART_TCOUNT > 0){
+	if(RESTART_TCOUNT != 0){
 		fits_close_file(fptr, &status);
 		return;
 	}

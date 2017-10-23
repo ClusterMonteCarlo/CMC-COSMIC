@@ -868,7 +868,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			procs = atoi(optarg);
 			break;
 		case 'R':
-			RESTART_TCOUNT = atol(optarg);
+			RESTART_TCOUNT = -atol(optarg);
 			hard_restart = 1;
 			break;
 		case 'r':
@@ -1646,7 +1646,7 @@ if(myid==0)
 	}
 
 	/*======= Opening of output files =======*/
-	if(RESTART_TCOUNT == 0)
+	if(RESTART_TCOUNT <= 0)
 		sscanf("w", "%s", outfilemode);
 	else 
 		sscanf("a", "%s", outfilemode);
@@ -1773,7 +1773,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			}
 		}
 
-		if(RESTART_TCOUNT == 0){
+		if(RESTART_TCOUNT <= 0){
 			/* Printing our headers */
 			fprintf(lagradfile, "# Lagrange radii [code units]\n");
 			fprintf(ave_mass_file, "# Average mass within Lagrange radii [M_sun]\n");
@@ -1864,65 +1864,65 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 
     sprintf(outfile, "%s.log", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_logfile);
-	if(RESTART_TCOUNT == 0)
+	if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_logfile, 0);
 
     // output files for binaries 
     sprintf(outfile, "%s.binint.log", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_binintfile);
-	if(RESTART_TCOUNT == 0)
+	if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_binintfile, 0);
 
     sprintf(outfile, "%s.esc.dat", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_escfile);
-	if(RESTART_TCOUNT == 0)
+	if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_escfile, 0);
 
     sprintf(outfile, "%s.collision.log", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_collisionfile);
-	if(RESTART_TCOUNT == 0)
+	if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_collisionfile, 0);
 
     sprintf(outfile, "%s.tidalcapture.log", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_tidalcapturefile);
-	if(RESTART_TCOUNT == 0)
+	if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_tidalcapturefile, 0);
 
     sprintf(outfile, "%s.semergedisrupt.log", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_semergedisruptfile);
-	if(RESTART_TCOUNT == 0)
+	if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_semergedisruptfile, 0);
 
     sprintf(outfile, "%s.removestar.log", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_removestarfile);
-	if(RESTART_TCOUNT == 0)
+	if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_removestarfile, 0);
 
     sprintf(outfile, "%s.relaxation.dat", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_relaxationfile);
-	if(RESTART_TCOUNT == 0)
+	if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_relaxationfile, 0);
 
     if (THREEBODYBINARIES)
     {
         sprintf(outfile, "%s.3bb.log", outprefix);
         MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_threebbfile);
-		if(RESTART_TCOUNT == 0)
+		if(RESTART_TCOUNT <= 0)
 			MPI_File_set_size(mpi_threebbfile, 0);
 
         sprintf(outfile, "%s.3bbprobability.log", outprefix);
         MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_threebbprobabilityfile);
-		if(RESTART_TCOUNT == 0)
+		if(RESTART_TCOUNT <= 0)
 			MPI_File_set_size(mpi_threebbprobabilityfile, 0);
 
         sprintf(outfile, "%s.lightcollision.log", outprefix);
         MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_lightcollisionfile);
-		if(RESTART_TCOUNT == 0)
+		if(RESTART_TCOUNT <= 0)
 			MPI_File_set_size(mpi_lightcollisionfile, 0);
 
         sprintf(outfile, "%s.3bbdebug.log", outprefix);
         MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_threebbdebugfile);
-		if(RESTART_TCOUNT == 0)
+		if(RESTART_TCOUNT <= 0)
 			MPI_File_set_size(mpi_threebbdebugfile, 0);
     }
 
@@ -1930,12 +1930,12 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
     if (WRITE_BH_INFO) {
         sprintf(outfile, "%s.bhformation.dat", outprefix);
         MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_newbhfile);
-		if(RESTART_TCOUNT == 0)
+		if(RESTART_TCOUNT <= 0)
 			MPI_File_set_size(mpi_newbhfile, 0);
 
         sprintf(outfile, "%s.bhmerger.dat", outprefix);
         MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_bhmergerfile);
-		if(RESTART_TCOUNT == 0)
+		if(RESTART_TCOUNT <= 0)
 			MPI_File_set_size(mpi_bhmergerfile, 0);
         
     }
@@ -1944,7 +1944,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 	{
 		sprintf(outfile, "%s.pulsars.dat", outprefix);
 		MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_pulsarfile);
-		if(RESTART_TCOUNT == 0)
+		if(RESTART_TCOUNT <= 0)
 			MPI_File_set_size(mpi_pulsarfile, 0);
 	}
 
@@ -2063,7 +2063,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 
 	//MPI: Headers are written out only by the root node.
    // print header
-    if(RESTART_TCOUNT == 0){
+    if(RESTART_TCOUNT <= 0){
 		pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 \n");
 	   // print header
 		pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
@@ -2879,9 +2879,10 @@ void load_restart_file(){
 	int num_bin=0;
 	struct stat folder_thing = {0};
 	restart_struct_t restart_struct;
+    long local_restart = RESTART_TCOUNT > 0 ? RESTART_TCOUNT : -RESTART_TCOUNT;
 
 	sprintf(restart_folder, "./%s-RESTART", oldoutprefix);
-	sprintf(restart_file, "%s/%s.restart.%ld-%d.bin",restart_folder,oldoutprefix,RESTART_TCOUNT,myid);
+	sprintf(restart_file, "%s/%s.restart.%ld-%d.bin",restart_folder,oldoutprefix,local_restart,myid);
 
 	if (stat(restart_folder,&folder_thing) == -1) {
 		eprintf("can't find the restart folder %s\n",restart_folder);
@@ -2927,30 +2928,54 @@ void load_restart_file(){
 	mpiInitGlobArrays();
 
 	/*Set the MPI files back to exactly where they were, using the saved offsets*/
-	MPI_File_seek(mpi_logfile,mpi_logfile_ofst_total,MPI_SEEK_SET);
-	MPI_File_seek(mpi_binintfile,mpi_binintfile_ofst_total,MPI_SEEK_SET);
-	MPI_File_seek(mpi_escfile,mpi_escfile_ofst_total,MPI_SEEK_SET);
-	MPI_File_seek(mpi_collisionfile,mpi_collisionfile_ofst_total,MPI_SEEK_SET);
-	MPI_File_seek(mpi_tidalcapturefile,mpi_tidalcapturefile_ofst_total,MPI_SEEK_SET);
-	MPI_File_seek(mpi_semergedisruptfile,mpi_semergedisruptfile_ofst_total,MPI_SEEK_SET);
-	MPI_File_seek(mpi_relaxationfile,mpi_relaxationfile_ofst_total,MPI_SEEK_SET);
-	MPI_File_seek(mpi_removestarfile,mpi_removestarfile_ofst_total,MPI_SEEK_SET);
-    if (THREEBODYBINARIES){
-        MPI_File_seek(mpi_threebbfile,mpi_threebbfile_ofst_total,MPI_SEEK_SET);
-        MPI_File_seek(mpi_threebbprobabilityfile,mpi_threebbprobabilityfile_ofst_total,MPI_SEEK_SET);
-        MPI_File_seek(mpi_lightcollisionfile,mpi_lightcollisionfile_ofst_total,MPI_SEEK_SET);
-        MPI_File_seek(mpi_threebbdebugfile,mpi_threebbdebugfile_ofst_total,MPI_SEEK_SET);
+    /*Only for a soft restart ('-r' on command line)*/
+    if(RESTART_TCOUNT > 0){
+        MPI_File_seek(mpi_logfile,mpi_logfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_binintfile,mpi_binintfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_escfile,mpi_escfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_collisionfile,mpi_collisionfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_tidalcapturefile,mpi_tidalcapturefile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_semergedisruptfile,mpi_semergedisruptfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_relaxationfile,mpi_relaxationfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_removestarfile,mpi_removestarfile_ofst_total,MPI_SEEK_SET);
+        if (THREEBODYBINARIES){
+            MPI_File_seek(mpi_threebbfile,mpi_threebbfile_ofst_total,MPI_SEEK_SET);
+            MPI_File_seek(mpi_threebbprobabilityfile,mpi_threebbprobabilityfile_ofst_total,MPI_SEEK_SET);
+            MPI_File_seek(mpi_lightcollisionfile,mpi_lightcollisionfile_ofst_total,MPI_SEEK_SET);
+            MPI_File_seek(mpi_threebbdebugfile,mpi_threebbdebugfile_ofst_total,MPI_SEEK_SET);
+        }
+        if (WRITE_BH_INFO) {
+            MPI_File_seek(mpi_newbhfile,mpi_newbhfile_ofst_total,MPI_SEEK_SET);
+            MPI_File_seek(mpi_bhmergerfile,mpi_bhmergerfile_ofst_total,MPI_SEEK_SET);
+        }
+        if(WRITE_PULSAR_INFO){
+             MPI_File_seek(mpi_pulsarfile,mpi_pulsarfile_ofst_total,MPI_SEEK_SET);
+        }
+    } else{
+        mpi_logfile_len=0;
+        mpi_escfile_len=0;
+        mpi_binintfile_len=0;
+        mpi_collisionfile_len=0;
+        mpi_tidalcapturefile_len=0;
+        mpi_semergedisruptfile_len=0;
+        mpi_removestarfile_len=0;
+        mpi_relaxationfile_len=0;
+        mpi_pulsarfile_len=0;
+
+        mpi_logfile_ofst_total=0;
+        mpi_escfile_ofst_total=0;
+        mpi_binaryfile_ofst_total=0;
+        mpi_binintfile_ofst_total=0;
+        mpi_collisionfile_ofst_total=0;
+        mpi_tidalcapturefile_ofst_total=0;
+        mpi_semergedisruptfile_ofst_total=0;
+        mpi_removestarfile_ofst_total=0;
+        mpi_relaxationfile_ofst_total=0;
+        mpi_pulsarfile_ofst_total=0;
     }
-    if (WRITE_BH_INFO) {
-        MPI_File_seek(mpi_newbhfile,mpi_newbhfile_ofst_total,MPI_SEEK_SET);
-        MPI_File_seek(mpi_bhmergerfile,mpi_bhmergerfile_ofst_total,MPI_SEEK_SET);
-    }
-	if(WRITE_PULSAR_INFO){
-		 MPI_File_seek(mpi_pulsarfile,mpi_pulsarfile_ofst_total,MPI_SEEK_SET);
-	}
 
 	next_restart_t = CHECKPOINT_INTERVAL;
-	NEXT_RESTART = RESTART_TCOUNT + 1;
+	NEXT_RESTART = local_restart + 1;
 
 	/*Bit of arrray-based housekeeping*/
 	star_r[0] = ZERO; 
@@ -2959,7 +2984,7 @@ void load_restart_file(){
 	star_m[0] = 0.0;
 
 	rootprintf("******************************************************************************\n");
-	rootprintf("Loading checkpoint %d at time %g in folder %s\n",RESTART_TCOUNT,TotalTime,restart_folder);
+	rootprintf("Loading checkpoint %d at time %g in folder %s\n",local_restart,TotalTime,restart_folder);
 	rootprintf("******************************************************************************\n");
 
 }
