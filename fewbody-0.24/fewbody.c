@@ -217,7 +217,7 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 			
 			/* do physical collisions */
 			// PAU if (fb_collide(hier, input.fexp)) {
-			if (fb_collide(hier, input.fexp, units, rng, curr_st)) {
+			if (fb_collide(hier, input.fexp, units, rng, curr_st, input.BH_REFF)) {
 				/* initialize phier to a flat tree */
 				phier.nstar = hier->nstar;
 				fb_init_hier(&phier);

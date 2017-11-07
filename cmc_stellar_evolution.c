@@ -601,13 +601,13 @@ void do_stellar_evolution(gsl_rng *rng)
 		kprev0=binary[kb].bse_kw[0];
 		kprev1=binary[kb].bse_kw[1];
 
-	  /*If we've got a large MS star, we need to reduce the timestep, otherwise
-	   * we miss the transition from MS to HG to giant, and won't start applying
-	   * winds for massive stars at the right time*/
-	  if(binary[kb].bse_mass0[0] > 50 || binary[kb].bse_mass0[1] > 50){
-		  bse_set_pts1(0.005);
- 		  reduced_timestep = 1;
- 	  }
+		/*If we've got a large MS star, we need to reduce the timestep, otherwise
+		 * we miss the transition from MS to HG to giant, and won't start applying
+		 * winds for massive stars at the right time*/
+		if(binary[kb].bse_mass0[0] > 50 || binary[kb].bse_mass0[1] > 50){
+		    bse_set_pts1(0.005);
+		    reduced_timestep = 1;
+		}
 
         /* set binary orbital period (in days) from a */
         binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
@@ -622,19 +622,26 @@ void do_stellar_evolution(gsl_rng *rng)
 #ifndef USE_MPI
         curr_st = &st[findProcForIndex(k)];
 #endif
-        bse_set_taus113state(*curr_st, 0);
-        bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
-            &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
-		     	&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]),
-                   	&(binary[kb].bse_B_0[0]), &(binary[kb].bse_bacc[0]), &(binary[kb].bse_tacc[0]),
-			&(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
-            &(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-            &(binary[kb].bse_tb), &(binary[kb].e), vs, &(binary[kb].bse_bhspin[0]));
-        *curr_st=bse_get_taus113state();
+		/* If this is a binary black hole, skip BSE and explicitly integrate the
+		 * Peters equations*/
+		if(binary[kb].bse_kw[0] == 14 && binary[kb].bse_kw[1] == 14){
+			integrate_a_e_peters_eqn(kb);
+			for (ii = 0 ; ii < 16 ; ii++) vs[ii] = 0.;
+		} else{
+			bse_set_taus113state(*curr_st, 0);
+			bse_evolv2_safely(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
+				&(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
+					&(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]),
+						&(binary[kb].bse_B_0[0]), &(binary[kb].bse_bacc[0]), &(binary[kb].bse_tacc[0]),
+				&(binary[kb].bse_epoch[0]), &(binary[kb].bse_tms[0]), 
+				&(binary[kb].bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
+				&(binary[kb].bse_tb), &(binary[kb].e), vs, &(binary[kb].bse_bhspin[0]));
+			*curr_st=bse_get_taus113state();
+		}
 
-		  /*Reset the MS timestep once we're done*/
-		  if(reduced_timestep == 1)
-			  bse_set_pts1(0.05);
+		/*Reset the MS timestep once we're done*/
+		if(reduced_timestep == 1)
+		    bse_set_pts1(0.05);
 
         if(isnan(binary[kb].bse_radius[0])){
           fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
@@ -648,6 +655,7 @@ void do_stellar_evolution(gsl_rng *rng)
           fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
           exit(1);
         }
+
 	handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
 
 	if (WRITE_BH_INFO) {
@@ -864,7 +872,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
      j = 0;
   }
   if (j >= 1) {
-   if (fabs((binary[kb].bse_tphys - bse_get_bcm(j,1))/binary[kb].bse_tphys) >= 1.0e-6) {
+   if ((fabs((binary[kb].bse_tphys - bse_get_bcm(j,1))/binary[kb].bse_tphys) >= 1.0e-6) && !(kprev0 == 14 && kprev1 == 14)) {
         wprintf("binary[kb].bse_tphys=%g bcmtime=%g\n", binary[kb].bse_tphys, bse_get_bcm(j,1));
         /* exit_cleanly(-1); */
     }
@@ -1921,5 +1929,93 @@ void cp_starmass_to_binmember(star_t instar, long binindex, int bid)
     binary[binindex].m1 = instar.m;
   } else {
     binary[binindex].m2 = instar.m;
-  }
+ }
 }
+
+int rhs_peters(double t, const double y[], double f[], void *params){
+	/* dadt and dedt from Peters 1964; note that this is entirely in code units! */
+	double *mG3c5 = (double *) params;
+	f[0] = -((12.8) * (*mG3c5) / (y[0]*y[0]*y[0]*pow(1-y[1]*y[1],3.5)))
+			*(1+3.041666666666667*y[1]*y[1] + 0.3854166666666667*y[1]*y[1]*y[1]*y[1]);
+	f[1] = -((20.2666666666667) * y[1] * (*mG3c5) / (y[0]*y[0]*y[0]*y[0]*pow(1-y[1]*y[1],2.5)))
+			*(1+0.3980263157894737*y[1]*y[1]);
+
+	return GSL_SUCCESS;
+}
+
+void integrate_a_e_peters_eqn(long kb){
+	double t = 0.;
+	double h = 1.e-9;
+	double eps_abs = 1.e-10;
+	double eps_rel = 1.e-10;
+	int collision = 0, status;
+
+	/* First, allocate the GSL integrator and all it's accoutrements*/
+	const gsl_odeiv2_step_type *type_ptr = gsl_odeiv2_step_rk8pd;
+	gsl_odeiv2_step *step_ptr = gsl_odeiv2_step_alloc(type_ptr, 2);
+	gsl_odeiv2_control *control_ptr = gsl_odeiv2_control_y_new(eps_abs, eps_rel);
+	gsl_odeiv2_evolve *evolve_ptr = gsl_odeiv2_evolve_alloc(2);
+	gsl_odeiv2_system my_system;
+
+	/* Then define the system; note that this is in code units*/
+	double m1 = binary[kb].m1;
+	double m2 = binary[kb].m2;
+	double clight = 2.9979e10 / (units.l/units.t); 
+	// main prefactor for Peters equations, in code units
+	double mG3c5 = m1*m2*(m1+m2)*madhoc*madhoc*madhoc / (clight*clight*clight*clight*clight);
+	double y[2] = {binary[kb].a, binary[kb].e};
+	
+	my_system.function = rhs_peters;
+	my_system.dimension = 2;
+	my_system.params = &mG3c5;
+
+	/* Finally, integrate for this timestep */
+	while (t < Dt){
+		//printf("t=%g dt=%g\n",t,Dt);
+		status = gsl_odeiv2_evolve_apply (evolve_ptr, control_ptr, step_ptr,
+								&my_system, &t, Dt, &h, y); 
+
+		//fprintf(stderr,"lol = %g %g %g %g %g \n",y[0]*units.l/AU,y[1],m1*units.mstar/MSUN,m2*units.mstar/MSUN,t);
+		/* Check for collisions at periapse */
+		if(y[0]*(1-y[1]) < BH_RADIUS_MULTIPLYER*(binary[kb].rad1 + binary[kb].rad2)){
+			collision = 1;
+			break;
+		}
+
+		/* Make sure the integrator does what it says it does...*/
+		if(status != GSL_SUCCESS){
+		    eprintf("GSL Integrator for the Peters equations failed; yell at Carl\n");
+		    exit_cleanly(-1, __FUNCTION__);
+			break;
+		}
+	}
+
+	/* If we have a collision, then set the BSE mass to zero, and
+	 * handle_bse_outcome will treat it correctly
+	 *
+	 * Otherwise, update eccentricity and semi-major axis accordingly */
+	if(collision){
+		binary[kb].bse_mass[1] = 0.;
+		binary[kb].bse_tb = 0.;
+		fprintf(stderr,"DADT DEDT COLLISON: %g %g %g %g %g %g %g %g\n",TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR,
+				Dt*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR,
+				m1*units.mstar/MSUN,m2*units.mstar/MSUN,y[0]*units.l/AU,y[1], binary[kb].rad1*units.l/AU, binary[kb].rad2*units.l/AU);
+	} else {
+		//fprintf(stderr,"DADT DEDT: %g %g %g %g %g %g %g %g\n",TotalTime,
+		//		Dt*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR,
+		//		m1*units.mstar/MSUN,m2*units.mstar/MSUN,(y[0])*units.l/AU,y[1],binary[kb].a*units.l/AU,binary[kb].e);
+		binary[kb].a = y[0];
+		binary[kb].e = y[1];
+		binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
+		/* This is used to set a again in handle_bse_outcome; easier to just set
+		 * it here as well*/
+	}
+
+	/* all done; free up the gsl_odeiv stuff */
+	gsl_odeiv2_evolve_free (evolve_ptr);
+	gsl_odeiv2_control_free (control_ptr);
+	gsl_odeiv2_step_free (step_ptr);
+
+	return;
+}
+

@@ -42,6 +42,8 @@ void fb_malloc_hier(fb_hier_t *hier)
 		hier->hier[i].ncoll = 0;
 		hier->hier[i].id = (long *) malloc(hier->nstarinit * sizeof(long));
 		hier->hier[i].vkick = (double *) malloc(hier->nstarinit * sizeof(double));
+		hier->hier[i].a_merger = (double *) malloc(hier->nstarinit * sizeof(double));
+		hier->hier[i].e_merger = (double *) malloc(hier->nstarinit * sizeof(double));
 	}
 	hier->obj = (fb_obj_t **) malloc(hier->nstarinit * sizeof(fb_obj_t *));
 }
@@ -70,6 +72,8 @@ void fb_free_hier(fb_hier_t hier)
 	for (i=0; i<hier.hi[hier.nstarinit]+1; i++) {
 		free(hier.hier[i].id);
 		free(hier.hier[i].vkick);
+		free(hier.hier[i].a_merger);
+		free(hier.hier[i].e_merger);
 	}
 	free(hier.hi+1);
 	free(hier.narr+2);
@@ -384,17 +388,23 @@ void fb_downsync(fb_obj_t *obj, double t)
 void fb_objcpy(fb_obj_t *obj1, fb_obj_t *obj2)
 {
 	int i;
-	long *longptr, *doubleptr;
+	long *longptr, *doubleptr, *doubleptr2, *doubleptr3;
 	
 	for (i=0; i<obj2->ncoll; i++) {
 		obj1->id[i] = obj2->id[i];
 		obj1->vkick[i] = obj2->vkick[i];
+		obj1->a_merger[i] = obj2->a_merger[i];
+		obj1->e_merger[i] = obj2->e_merger[i];
 	}
 
 	/* prevent any dangling pointers */
 	longptr = obj1->id;
 	doubleptr = obj1->vkick;
+	doubleptr2 = obj1->a_merger;
+	doubleptr3 = obj1->e_merger;
 	*obj1 = *obj2;
 	obj1->id = longptr;
 	obj1->vkick = doubleptr;
+	obj1->a_merger = doubleptr2;
+	obj1->e_merger = doubleptr3;
 }

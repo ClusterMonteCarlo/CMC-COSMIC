@@ -102,6 +102,7 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hi
         input.PN1 = 1;
         input.PN2 = 1;
         input.PN25 = 1;
+		input.BH_REFF = BH_RADIUS_MULTIPLYER;
     }
 	
 	/* initialize a few things for integrator */

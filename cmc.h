@@ -8,6 +8,7 @@
 #include <zlib.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_odeiv2.h>
 #include <gsl/gsl_roots.h>
 #include <fitsio.h>
 #include <string.h>
@@ -1504,6 +1505,7 @@ void cp_m_to_star(long oldk, int kbi, star_t *target_star);
 void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew);
 void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid);
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid);
+void integrate_a_e_peters_eqn(long binidx);
 double r_of_m(double M);
 void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide);
 

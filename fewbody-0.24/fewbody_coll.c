@@ -35,7 +35,7 @@ int fb_is_collision(double r, double R1, double R2)
 }
 
 // PAU int fb_collide(fb_hier_t *hier, double f_exp)
-int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st)
+int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff)
 {
 	int i, j=-1, k, retval=0, cont=1;
 	double R[3], peinit;
@@ -78,7 +78,7 @@ int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, st
 			/* do the actual merger */
 			fb_dprintf("fewbody: collide(): merging stars: i=%d j=%d\n", i, j);
 			// PAU fb_merge(&(hier->hier[hier->hi[1]+i]), &(hier->hier[hier->hi[1]+j]), hier->nstarinit, f_exp);
-			fb_merge(&(hier->hier[hier->hi[1]+i]), &(hier->hier[hier->hi[1]+j]), hier->nstarinit, f_exp, units, rng, curr_st);
+			fb_merge(&(hier->hier[hier->hi[1]+i]), &(hier->hier[hier->hi[1]+j]), hier->nstarinit, f_exp, units, rng, curr_st, bh_reff);
 			fb_objcpy(&(hier->hier[hier->hi[1]+j]), &(hier->hier[hier->hi[1]+hier->nstar-1]));
 			hier->nstar--;
 
@@ -92,7 +92,7 @@ int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, st
 }
 
 // PAU void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp)
-void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st)
+void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff)
 {
 	int i;
 	double x1[3], x2[3], v1[3], v2[3], l1[3], l2[3];
@@ -110,18 +110,26 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 	/* need some temporary storage here */
 	tmpobj.id = (long *) malloc(nstarinit * sizeof(long));
 	tmpobj.vkick = (double *) malloc(nstarinit * sizeof(double));
+	tmpobj.a_merger = (double *) malloc(nstarinit * sizeof(double));
+	tmpobj.e_merger = (double *) malloc(nstarinit * sizeof(double));
 
 	/* merge id's */
 	tmpobj.ncoll = obj1->ncoll + obj2->ncoll;
 	for (i=0; i<obj1->ncoll; i++) {
 		tmpobj.id[i] = obj1->id[i];
 		tmpobj.vkick[i] = obj1->vkick[i];
+		tmpobj.a_merger[i] = obj1->a_merger[i];
+		tmpobj.e_merger[i] = obj1->e_merger[i];
 	}
 	for (i=0; i<obj2->ncoll; i++) {
 		tmpobj.id[obj1->ncoll + i] = obj2->id[i];
 		tmpobj.vkick[obj1->ncoll + i] = obj2->vkick[i];
+		tmpobj.a_merger[obj1->ncoll + i] = obj2->a_merger[i];
+		tmpobj.e_merger[obj1->ncoll + i] = obj2->e_merger[i];
 	}
     tmpobj.vkick[tmpobj.ncoll-1] = 0; 
+    tmpobj.a_merger[tmpobj.ncoll-1] = 0; 
+    tmpobj.e_merger[tmpobj.ncoll-1] = 0; 
 
 	/* create idstring */
 	snprintf(tmpobj.idstring, FB_MAX_STRING_LENGTH, "%s:%s", obj1->idstring, obj2->idstring);
@@ -192,10 +200,38 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 		tmpobj.m *= mass_frac;
         tmpobj.vkick[tmpobj.ncoll-1] = sqrt(v_perp*v_perp + v_para*v_para);
 
+		/* Compute the final semi-major axis and eccentricity for the merging
+		 * components (to see where they are in the LIGO/LISA bands) */
+		double xrel[3], A[3], l[3], L[3], E;
+		for (i=0; i<3; i++) {
+			xrel[i] = obj1->x[i] - obj2->x[i];
+			vrel[i] = obj1->v[i] - obj2->v[i];
+		} 
+
+		E = 0.5*(obj1->m*fb_dot(obj1->v, obj1->v) + obj2->m*fb_dot(obj2->v, obj2->v)) - obj1->m*obj2->m/fb_mod(xrel);
+		tmpobj.a_merger[tmpobj.ncoll-1] = -obj1->m * obj2->m / (2.0 * E);
+
+		/* update angular momentum, Runge-Lenz vector, and eccentricity (using the Runge-Lenz vector) */
+		fb_cross(obj1->x, obj1->v, l1);
+		fb_cross(obj2->x, obj2->v, l2);
+		
+		for (i=0; i<3; i++) {
+			L[i] = obj1->m * l1[i] + obj2->m * l2[i];
+			l[i] = L[i] * (obj1->m+obj2->m)/(obj1->m*obj2->m);
+		}
+		
+		/* -A = l x v + G M \hat r */
+		fb_cross(vrel, l, A);
+		for (i=0; i<3; i++) {
+			A[i] -= (obj1->m+obj2->m) * xrel[i]/fb_mod(xrel);
+		}
+		
+		tmpobj.e_merger[tmpobj.ncoll-1] = fb_mod(A)/(obj1->m+obj2->m);
+
         /* Also update the radius with the new ISCO radius */ 
         /* We could use the Kerr ISCO here instead of the Schwarzschild,
          * but any case where that's relavant will almost always merge...*/
-        tmpobj.R = 6*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
+        tmpobj.R = bh_reff*2*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
 
     /* Note: BSE will be called for collision, but only AFTER the fewbody integration is complete
      * On the off chance we have a repeated merger, we need to know what to do now.  For now,
@@ -211,12 +247,12 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
         tmpobj.chi = obj1->chi;
 		tmpobj.m = obj1->m;
         tmpobj.k_type = 14;
-        tmpobj.R = 6*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
+        tmpobj.R = bh_reff*2*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
     } else if (obj2->k_type == 14){
         tmpobj.chi = obj2->chi;
 		tmpobj.m = obj2->m;
         tmpobj.k_type = 14;
-        tmpobj.R = 6*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
+        tmpobj.R = bh_reff*2*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
     }
 
 	/* and better set these, too... */
@@ -230,6 +266,8 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 
 	free(tmpobj.id);
 	free(tmpobj.vkick);
+	free(tmpobj.a_merger);
+	free(tmpobj.e_merger);
 }
 
 /* How to deal with a merger: takes as input m1,m2 (in any units), a1, a2

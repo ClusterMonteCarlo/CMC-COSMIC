@@ -84,6 +84,8 @@ typedef struct fb_obj{
 	double mean_anom; /* mean anomaly when node was upsynced */
 	int k_type; /* Star Type; needed to identify black holes in mergers */
     double *vkick; /* Array for recording the kicks from BBH mergers */
+    double *a_merger; /* Array for recording the final semi-major axes from BBH mergers*/
+    double *e_merger; /* Array for recording the final eccentricities for BBH mergers */
 	double chi; /*Dimensionless Kerr parameter (negative for non-BH/NSs)*/
 } fb_obj_t;
 
@@ -140,6 +142,7 @@ typedef struct{
 	int PN25;
 	int PN3;
 	int PN35;
+	double BH_REFF;
 } fb_input_t;
 
 /* return parameters */
@@ -178,8 +181,8 @@ int fb_mardling(fb_obj_t *obj, int ib, int is);
 int fb_is_collision(double r, double R1, double R2);
 //int fb_collide(fb_hier_t *hier, double f_exp);
 //void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp);
-int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st);
-void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st);
+int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff);
+void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff);
 void fb_bh_merger(double m1, double m2, double a1, double a2, double *mass_frac, double *afinal, double *v_para, double *v_perp, struct rng_t113_state *curr_st);
 
 /* fewbody_hier.c */
