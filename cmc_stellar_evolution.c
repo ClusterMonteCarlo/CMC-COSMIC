@@ -1969,11 +1969,13 @@ void integrate_a_e_peters_eqn(long kb){
 	my_system.dimension = 2;
 	my_system.params = &mG3c5;
 
-	/* Finally, integrate for this timestep */
-	while (t < Dt){
-		//printf("t=%g dt=%g\n",t,Dt);
+
+	/* Finally, integrate for this timestep; remember that Dt is in relaxation times,
+     * NOT N-body times */
+    double t_final = Dt * ((double) clus.N_STAR)/ log(GAMMA * ((double) clus.N_STAR));
+	while (t < t_final){
 		status = gsl_odeiv2_evolve_apply (evolve_ptr, control_ptr, step_ptr,
-								&my_system, &t, Dt, &h, y); 
+								&my_system, &t, t_final, &h, y); 
 
 		//fprintf(stderr,"lol = %g %g %g %g %g \n",y[0]*units.l/AU,y[1],m1*units.mstar/MSUN,m2*units.mstar/MSUN,t);
 		/* Check for collisions at periapse */
@@ -1995,15 +1997,10 @@ void integrate_a_e_peters_eqn(long kb){
 	 *
 	 * Otherwise, update eccentricity and semi-major axis accordingly */
 	if(collision){
+		binary[kb].bse_mass[0] += binary[kb].bse_mass[1];
 		binary[kb].bse_mass[1] = 0.;
 		binary[kb].bse_tb = 0.;
-		fprintf(stderr,"DADT DEDT COLLISON: %g %g %g %g %g %g %g %g\n",TotalTime*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR,
-				Dt*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR,
-				m1*units.mstar/MSUN,m2*units.mstar/MSUN,y[0]*units.l/AU,y[1], binary[kb].rad1*units.l/AU, binary[kb].rad2*units.l/AU);
 	} else {
-		//fprintf(stderr,"DADT DEDT: %g %g %g %g %g %g %g %g\n",TotalTime,
-		//		Dt*clus.N_STAR*units.t/log(GAMMA*clus.N_STAR)/YEAR,
-		//		m1*units.mstar/MSUN,m2*units.mstar/MSUN,(y[0])*units.l/AU,y[1],binary[kb].a*units.l/AU,binary[kb].e);
 		binary[kb].a = y[0];
 		binary[kb].e = y[1];
 		binary[kb].bse_tb = sqrt(cub(binary[kb].a * units.l / AU)/(binary[kb].bse_mass[0]+binary[kb].bse_mass[1]))*365.25;
