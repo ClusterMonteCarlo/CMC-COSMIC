@@ -882,6 +882,11 @@ typedef struct{
 * @brief Write out information about pulsars (0=off, 1=on)
 */
         int WRITE_PULSAR_INFO;
+#define PARAMDOC_WRITE_MOREPULSAR_INFO "Write out information about neutron stars (0=off, 1=on)"
+/**
+ * @brief Write out information about neutron stars (0=off, 1=on)
+ * */
+        int WRITE_MOREPULSAR_INFO;
 #define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"
 /**
 * @brief Write out information about 10\% lagrange radius (0=off, 1=on)
@@ -1410,6 +1415,7 @@ void pre_sort_comm();
 void post_sort_comm();
 void findIndices( long N, int blkSize, int i, int* begin, int* end );
 void pulsar_write(long k, double kick);
+void write_morepulsar(long i);
 void findLimits( long N, int blkSize );
 int findProcForIndex( int j );
 void set_rng_states();

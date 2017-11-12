@@ -561,6 +561,11 @@ void do_stellar_evolution(gsl_rng *rng)
 			pulsar_write(k, VKO);
 		}
 
+		//Shi
+		if (WRITE_MOREPULSAR_INFO){
+			write_morepulsar(k);
+		}
+
 		if (WRITE_BH_INFO) {
 			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
 #ifdef USE_MPI
@@ -1359,6 +1364,21 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
       binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_tb);
     exit_cleanly(-1, __FUNCTION__);
   }
+
+	/*Shi*/
+	if (WRITE_MOREPULSAR_INFO){
+        	if (knew){
+                	write_morepulsar(knew);
+
+                        if (knewp){
+                        	write_morepulsar(knewp);
+                        }
+
+                } else {
+                        write_morepulsar(k);
+
+                }
+        }
 }
 
 /**
@@ -1406,6 +1426,44 @@ void pulsar_write(long k, double kick)
 
 		}
 	}
+}
+
+/**
+ * @brief Output info of morepulsars
+ * 
+ * @param k star index
+ */
+void write_morepulsar(long i){      //Shi
+
+        long j;
+        double spin, spin0, spin1, twopi=6.283185307179586, yearsc=31557600;
+
+        j=star[i].binind;
+
+        if (j==0){ //Single
+                if (star[i].se_k==13){
+                        spin = (twopi*yearsc)/star[i].se_ospin;
+#ifdef USE_MPI
+                        parafprintf(morepulsarfile, "%ld %.8g %ld %.8g %.8g %g %.8g %d 0 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100\n", tcount, TotalTime, star[i].id, star[i].se_mt, star[i].se_radius, star[i].se_scm_B, spin, star[i].se_k);
+
+#else
+                        fprintf(morepulsarfile, "%ld %.8g %ld %.8g %.8g %g %.8g %d 0 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100 -100\n", tcount, TotalTime, star[i].id, star[i].se_mt, star[i].se_radius, star[i].se_scm_B, spin, star[i].se_k);
+
+#endif
+                }
+        } else { //Binary
+                if (binary[j].bse_kw[0]==13 || binary[j].bse_kw[1]==13){
+                        spin0 = (twopi*yearsc)/binary[j].bse_ospin[0];
+                        spin1 = (twopi*yearsc)/binary[j].bse_ospin[1];
+#ifdef USE_MPI
+                        parafprintf(morepulsarfile, "%ld %.8g -100 -100 -100 -100 -100 -100 1 %ld %ld %.8g %.8g %.8g %.8g %g %g %g %g %d %d %.8g %.8g\n", tcount, TotalTime, binary[j].id1, binary[j].id2, binary[j].bse_mass[0], binary[j].bse_mass[1], binary[j].bse_radius[0], binary[j].bse_radius[1], binary[j].bse_bcm_B[0], binary[j].bse_bcm_B[1], spin0, spin1, binary[j].bse_kw[0], binary[j].bse_kw[1], binary[j].a* units.l/AU, binary[j].e);
+
+#else
+                        fprintf(morepulsarfile, "%ld %.8g -100 -100 -100 -100 -100 -100 1 %ld %ld %.8g %.8g %.8g %.8g %g %g %g %g %d %d %.8g %.8g\n", tcount, TotalTime, binary[j].id1, binary[j].id2, binary[j].bse_mass[0], binary[j].bse_mass[1], binary[j].bse_radius[0], binary[j].bse_radius[1], binary[j].bse_bcm_B[0], binary[j].bse_bcm_B[1], spin0, spin1, binary[j].bse_kw[0], binary[j].bse_kw[1], binary[j].a* units.l/AU, binary[j].e);
+
+#endif
+                }
+        }
 }
 
 /* outputs boom information */
