@@ -2121,7 +2121,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 		// print header
 		if (WRITE_BH_INFO)
 			pararootfprintf(newbhfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:bh mass #8:bh_spin #9:birth-kick(km/s) #10-25:vsarray\n");
-			pararootfprintf(bhmergerfile,"#1:time #2:type #3.r #4:id1 #5:id2 #6:m1[MSUN] #7:m2[MSUN] #8:a1 #9:a2 #10:m_final[MSUN] 11:a_final 12:vkick[km/s] 13:a_final[AU] 14:e_final\n");
+			pararootfprintf(bhmergerfile,"#1:time #2:type #3.r #4:id1 #5:id2 #6:m1[MSUN] #7:m2[MSUN] #8:spin1 #9:spin2 #10:m_final[MSUN] #11:spin_final #12:vkick[km/s] #13:a_final[AU] #14:e_final #15:v_esc[km/s]\n");
 			pararootfprintf(bhmergerfile,"#NOTE: if repeated mergers occur in fewbody (binary-single or binary-binary), the initial masses will be wrong; check collision.log\n");
 	//"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
 

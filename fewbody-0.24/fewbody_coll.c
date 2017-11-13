@@ -95,8 +95,9 @@ int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, st
 void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff)
 {
 	int i;
-	double x1[3], x2[3], v1[3], v2[3], l1[3], l2[3];
-	double clight, vrel[3], x[3], y[3], z[3], theta;
+	double x1[3], x2[3], v1[3], v2[3], l1[3], l2[3], A[3], L[3], l[3];
+    double E;
+	double clight, xrel[3], vrel[3], x[3], y[3], z[3], theta;
 	double v_perp, v_para, afinal, mass_frac;
 	fb_obj_t tmpobj;
 	clight = FB_CONST_C / units.v;
@@ -128,8 +129,6 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 		tmpobj.e_merger[obj1->ncoll + i] = obj2->e_merger[i];
 	}
     tmpobj.vkick[tmpobj.ncoll-1] = 0; 
-    tmpobj.a_merger[tmpobj.ncoll-1] = 0; 
-    tmpobj.e_merger[tmpobj.ncoll-1] = 0; 
 
 	/* create idstring */
 	snprintf(tmpobj.idstring, FB_MAX_STRING_LENGTH, "%s:%s", obj1->idstring, obj2->idstring);
@@ -149,7 +148,14 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 		x2[i] = obj2->x[i] - tmpobj.x[i];
 		v1[i] = obj1->v[i] - tmpobj.v[i];
 		v2[i] = obj2->v[i] - tmpobj.v[i];
+        xrel[i] = obj1->x[i] - obj2->x[i];
+        vrel[i] = obj1->v[i] - obj2->v[i];
 	}
+
+    /* compute the orbital energy and semi-major axis at merger*/
+    E = 0.5 * (obj1->m * fb_dot(obj1->v, obj1->v) + obj2->m * fb_dot(obj2->v, obj2->v)) - 
+        obj1->m * obj2->m/fb_mod(xrel);
+	tmpobj.a_merger[tmpobj.ncoll-1] = -obj1->m * obj2->m / (2.0 * E);
 
 	/* set internal energy, using the difference in kinetic energy; the difference in potential energy
 	   depends on the positions of the other stars, and will be calculated later and added to Eint */
@@ -163,6 +169,21 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 	for (i=0; i<3; i++) {
 		tmpobj.Lint[i] = obj1->Lint[i] + obj2->Lint[i] + obj1->m * l1[i] + obj2->m * l2[i];
 	}
+
+    /* compute angular momenta for LRL vector*/
+	for (i=0; i<3; i++) {
+		L[i] = obj1->m * l1[i] + obj2->m * l2[i];
+		l[i] = L[i] * (obj1->m + obj2->m)/(obj1->m * obj2->m);
+	}
+	
+	/* -A = l x v + G M \hat r */
+	fb_cross(vrel, l, A);
+	for (i=0; i<3; i++) {
+		A[i] -= (obj1->m + obj2->m) * xrel[i]/fb_mod(xrel);
+	}
+	
+    /* magnitude of A gives the eccentricity at merger*/
+	tmpobj.e_merger[tmpobj.ncoll-1] = fb_mod(A)/(obj1->m + obj2->m);
 	
 
 	/* Apply a change in mass/spin/recoil speed for compact-object mergers */
@@ -199,34 +220,6 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
         tmpobj.k_type = 14;
 		tmpobj.m *= mass_frac;
         tmpobj.vkick[tmpobj.ncoll-1] = sqrt(v_perp*v_perp + v_para*v_para);
-
-		/* Compute the final semi-major axis and eccentricity for the merging
-		 * components (to see where they are in the LIGO/LISA bands) */
-		double xrel[3], A[3], l[3], L[3], E;
-		for (i=0; i<3; i++) {
-			xrel[i] = obj1->x[i] - obj2->x[i];
-			vrel[i] = obj1->v[i] - obj2->v[i];
-		} 
-
-		E = 0.5*(obj1->m*fb_dot(obj1->v, obj1->v) + obj2->m*fb_dot(obj2->v, obj2->v)) - obj1->m*obj2->m/fb_mod(xrel);
-		tmpobj.a_merger[tmpobj.ncoll-1] = -obj1->m * obj2->m / (2.0 * E);
-
-		/* update angular momentum, Runge-Lenz vector, and eccentricity (using the Runge-Lenz vector) */
-		fb_cross(obj1->x, obj1->v, l1);
-		fb_cross(obj2->x, obj2->v, l2);
-		
-		for (i=0; i<3; i++) {
-			L[i] = obj1->m * l1[i] + obj2->m * l2[i];
-			l[i] = L[i] * (obj1->m+obj2->m)/(obj1->m*obj2->m);
-		}
-		
-		/* -A = l x v + G M \hat r */
-		fb_cross(vrel, l, A);
-		for (i=0; i<3; i++) {
-			A[i] -= (obj1->m+obj2->m) * xrel[i]/fb_mod(xrel);
-		}
-		
-		tmpobj.e_merger[tmpobj.ncoll-1] = fb_mod(A)/(obj1->m+obj2->m);
 
         /* Also update the radius with the new ISCO radius */ 
         /* We could use the Kerr ISCO here instead of the Schwarzschild,

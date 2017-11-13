@@ -854,7 +854,7 @@ void write_stellar_data(void){
 void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, int kprev1)
 {
   int j, jj;
-  long knew, knewp, convert;
+  long knew=0, knewp=0, convert;
   double dtp, VKO;
   
 #ifndef USE_MPI

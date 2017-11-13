@@ -388,7 +388,10 @@ void fb_downsync(fb_obj_t *obj, double t)
 void fb_objcpy(fb_obj_t *obj1, fb_obj_t *obj2)
 {
 	int i;
-	long *longptr, *doubleptr, *doubleptr2, *doubleptr3;
+	long *longptr;
+    double *doubleptr, *doubleptr2, *doubleptr3;
+
+
 	
 	for (i=0; i<obj2->ncoll; i++) {
 		obj1->id[i] = obj2->id[i];
