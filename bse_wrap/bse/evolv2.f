@@ -2101,7 +2101,7 @@
                formation(1) = 11
                formation(2) = 11
             endif
-            CALL mix(mass0,mass,aj,kstar,zpars)
+            CALL mix(mass0,mass,aj,kstar,zpars,ecsnp)
             dm1 = m1ce - mass(j1)
             dm2 = mass(j2) - m2ce
 *
@@ -3155,7 +3155,7 @@
          endif
          com = .true.
       else
-         CALL mix(mass0,mass,aj,kstar,zpars)
+         CALL mix(mass0,mass,aj,kstar,zpars,ecsnp)
       endif
       if(com)then
          jp = MIN(80,jp + 1)

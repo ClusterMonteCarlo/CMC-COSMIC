@@ -481,7 +481,7 @@ void do_stellar_evolution(gsl_rng *rng)
         /* extract info from scm array */ /* PK looping over a large number anticipating further changes */
 	        i = 1;
 	        j = 1;
-        	while (bse_get_bcm(i,1)>=0.0 && i <= 5100000) {
+        	while (bse_get_bcm(i,1)>=0.0 && i < 50000) {
           		if(i > 1) {
             			if(bse_get_bcm(i,2) == 13 && bse_get_bcm(i-1,2) < 13){
               				if(bse_get_bcm(i+1,1) >= 0.0){
@@ -496,7 +496,7 @@ void do_stellar_evolution(gsl_rng *rng)
           		i++;
         	}
         	i--;
-        	if(i+1 >= 5100000){
+        	if(i+1 > 50000){
           		i = 0;
         	}
         	if(i>=1) {
@@ -869,11 +869,11 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
   /* 5100000 will eventually be a possible max array length... */
   j = 1;
   jj = 1;
-  while (bse_get_bcm(j, 1) >= 0.0 && j<=5100000) {
+  while (bse_get_bcm(j, 1) >= 0.0 && j<50000) {
     j++;
   }
   j--;
-  if(j+1 >= 5100000) {
+  if(j+1 > 50000) {
      j = 0;
   }
   if (j >= 1) {
