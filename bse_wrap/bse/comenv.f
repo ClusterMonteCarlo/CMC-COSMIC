@@ -1,4 +1,4 @@
-***
+**
       SUBROUTINE COMENV(M01,M1,MC1,AJ1,JSPIN1,KW1,
      &                  M02,M2,MC2,AJ2,JSPIN2,KW2,
      &                  ZPARS,ECC,SEP,JORB,COEL,star1,star2,vk,

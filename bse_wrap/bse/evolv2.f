@@ -351,8 +351,8 @@
          sep = 1.0d+10
          oorb = 0.d0
          jorb = 0.d0
-*         bhspin(1) = 0.d0 NOPE!  This will reset it every time; don't
-*         bhspin(2) = 0.d0
+         if(kstar(1).ne.14.d0) bhspin(1) = 0.d0 ! Be sure not to do this 
+         if(kstar(2).ne.14.d0) bhspin(2) = 0.d0 ! for black holes
          if(ospin(1).lt.0.0) ospin(1) = 1.0d-10
          if(ospin(2).lt.0.0) ospin(2) = 1.0d-10
          q(1) = 1.0d+10
