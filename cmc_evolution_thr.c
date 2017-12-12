@@ -598,7 +598,7 @@ void tidally_strip_stars(void) {
                         //Sourav: index mistake??
                         //parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na",
                         //        star[j].se_k, star[j].se_bhspin);
-                        /parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na",
+                        parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na",
                                 star[i].se_k, star[i].se_bhspin);
 					} else {
                         parafprintf(escfile, "na %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g na %g %g",
