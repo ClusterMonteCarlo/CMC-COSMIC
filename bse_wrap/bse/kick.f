@@ -180,16 +180,21 @@
          vk = vk/kickscale
          vk2 = vk2/kickscale/kickscale
       endif
-      if(kw.eq.14.and.bhflag.eq.0)then
+*
+*NO KICK TO BHs
+      if(bhflag.eq.0.and.kw.eq.14)then
          vk2 = 0.d0
          vk = 0.d0
-      elseif(kw.eq.14.and.bhflag.eq.1)then
+      elseif(bhflag.eq.1.and.kw.eq.14)then
           fallback = MIN(fallback,1.d0)
           vk = MAX((1.d0-fallback)*vk,0.d0)
           vk2 = vk*vk
-      elseif(kw.eq.14.and.bhflag.eq.2)then
+      elseif(bhflag.eq.2.and.kw.eq.14)then
          vk = vk * mxns / m1n
          vk2 = vk*vk
+      elseif(bhflag.eq.3.and.kw.eq.14.and.fallback.eq.1.d0)then
+         vk = 0.d0
+         vk2 = 0.d0
       endif 
 
       sigma = sigmah
