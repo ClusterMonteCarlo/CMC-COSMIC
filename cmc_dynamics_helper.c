@@ -1831,7 +1831,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             star[knew].se_mt  = star[knew].m * units.mstar / MSUN;
                             star[knew].se_mc = star[knew].m * units.mstar / MSUN;
                             star[knew].se_bhspin = hier.obj[i]->chi;
-                            star[knew].se_radius = hier.obj[i]->R * cmc_units.l / BH_RADIUS_MULTIPLYER;
+                            star[knew].se_radius = hier.obj[i]->R * cmc_units.l / BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             star[knew].Eint = 0;
                             if(WRITE_BH_INFO && tempstar.se_k == 14 && star[knew].se_k == 14)
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
@@ -1923,7 +1923,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
                             tempstar.se_mc = tempstar.m * units.mstar / MSUN;
                             tempstar.se_bhspin = hier.obj[i]->obj[0]->chi;
-                            tempstar.se_radius = hier.obj[i]->obj[0]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER;
+                            tempstar.se_radius = hier.obj[i]->obj[0]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
@@ -2010,7 +2010,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
                             tempstar.se_mc = tempstar.m * units.mstar / MSUN;
                             tempstar.se_bhspin = hier.obj[i]->obj[1]->chi;
-                            tempstar.se_radius = hier.obj[i]->obj[1]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER;
+                            tempstar.se_radius = hier.obj[i]->obj[1]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
@@ -2147,7 +2147,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             star[knewp].se_mt  = star[knewp].m * units.mstar / MSUN;
                             star[knewp].se_mc = star[knewp].m * units.mstar / MSUN;
                             star[knewp].se_bhspin = hier.obj[i]->obj[sid]->chi;
-                            star[knewp].se_radius = hier.obj[i]->obj[sid]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER;
+                            star[knewp].se_radius = hier.obj[i]->obj[sid]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             star[knewp].Eint = 0;
                             if(WRITE_BH_INFO && star[knewp].se_k == 14 && tempstar.se_k == 14 )
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
@@ -2235,7 +2235,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
                             tempstar.se_mc = tempstar.m * units.mstar / MSUN;
                             tempstar.se_bhspin = hier.obj[i]->obj[bid]->obj[0]->chi;
-                            tempstar.se_radius = hier.obj[i]->obj[bid]->obj[0]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER;
+                            tempstar.se_radius = hier.obj[i]->obj[bid]->obj[0]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
@@ -2313,7 +2313,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_mt  = tempstar.m * units.mstar / MSUN;
                             tempstar.se_mc = tempstar.m * units.mstar / MSUN;
                             tempstar.se_bhspin = hier.obj[i]->obj[bid]->obj[1]->chi;
-                            tempstar.se_radius = hier.obj[i]->obj[bid]->obj[1]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER;
+                            tempstar.se_radius = hier.obj[i]->obj[bid]->obj[1]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14 )
                                 parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",

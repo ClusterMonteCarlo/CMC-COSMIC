@@ -140,6 +140,9 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 	/* this is just a simple prescription */
 	tmpobj.R = f_exp * (obj1->R + obj2->R);
 
+    /* this will either get reset below or by CMC */
+    tmpobj.k_type = -1;
+
 	/* set new position and velocity, calculate relative positions and velocities */
 	for (i=0; i<3; i++) {
 		tmpobj.x[i] = (obj1->m * obj1->x[i] + obj2->m * obj2->x[i]) / tmpobj.m;
