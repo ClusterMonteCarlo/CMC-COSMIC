@@ -595,6 +595,12 @@ void tidally_strip_stars(void) {
 					}
 
 					if (star[i].binind == 0) {
+                        //parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g",
+                                //star[i].se_k, star[i].se_bhspin, star[i].se_ospin, star[i].se_scm_B);
+
+                        //Sourav: index mistake??
+                        //parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na",
+                        //        star[j].se_k, star[j].se_bhspin);
                         parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g",
                                 star[i].se_k, star[i].se_bhspin, star[i].se_ospin, star[i].se_scm_B);
 					} else {
@@ -604,7 +610,8 @@ void tidally_strip_stars(void) {
 					parafprintf (escfile, "\n");
 
 					// Meagan - check for, and count, escaping BHs
-					count_esc_bhs(j);
+					//Sourav: make sure this is correct
+					count_esc_bhs(i);
 
 					/* perhaps this will fix the problem wherein stars are ejected (and counted)
 					   multiple times */
@@ -661,7 +668,13 @@ void tidally_strip_stars(void) {
 					}
 
 					if (star[i].binind == 0) {
-                        parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g",
+                        //parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g",
+                               //star[i].se_k, star[i].se_bhspin, star[i].se_ospin, star[i].se_scm_B);
+
+                        //Sourav: index mistakes; make sure the fix is correct
+                        //parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na",
+                        //        star[j].se_k, star[j].se_bhspin);
+			parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g",
                                 star[i].se_k, star[i].se_bhspin, star[i].se_ospin, star[i].se_scm_B);
 					} else {
                         parafprintf(escfile, "na %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g na %g %g na na",

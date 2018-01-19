@@ -2576,14 +2576,14 @@ void write_snapshot(char *filename, int bh_only) {
 								binary[j].id1, binary[j].id2,
 								binary[j].a * units.l / AU, binary[j].e);
 					} else {
-						gzprintf(snapfile, "0 0 0 0 0 0 0 ");
+						gzprintf(snapfile, "-100 -100 -100 -100 -100 -100 -100 ");
 					}
 
 					if (j == 0) {
 						gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 -100 -100 ",
 								star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
 					} else {
-						gzprintf(snapfile, "0 0 0 %d %d %.8g %.8g %.8g %.8g %.8g %.8g ",
+						gzprintf(snapfile, "-100 -100 -100 %d %d %.8g %.8g %.8g %.8g %.8g %.8g ",
 								binary[j].bse_kw[0], binary[j].bse_kw[1],
 								binary[j].bse_lum[0], binary[j].bse_lum[1],
 								binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN,
