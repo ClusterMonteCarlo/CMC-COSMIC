@@ -757,6 +757,7 @@ void bse_set_ifflag(int ifflag) { flags_.ifflag = ifflag; }
 void bse_set_wdflag(int wdflag) { flags_.wdflag = wdflag; }
 void bse_set_bhflag(int bhflag) { value4_.bhflag = bhflag; }
 void bse_set_bhspinflag(int bhspinflag) { value1_.bhspinflag = bhspinflag; }
+void bse_set_bhspinmag(double bhspinmag) { value1_.bhspinmag = bhspinmag; }
 void bse_set_nsflag(int nsflag) { flags_.nsflag = nsflag; }
 void bse_set_mxns(double mxns) { value1_.mxns = mxns;} 
 void bse_set_bconst(double bconst) { value4_.bconst = bconst; }

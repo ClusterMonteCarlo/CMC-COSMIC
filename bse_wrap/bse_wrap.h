@@ -195,7 +195,7 @@ extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
 extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
-extern struct { double neta, bwind, hewind, mxns; int windflag; int bhspinflag; int ppsn; } value1_;
+extern struct { double neta, bwind, hewind, mxns; int windflag; int bhspinflag; double bhspinmag; int ppsn; } value1_;
 extern struct { double alpha1, lambda; } value2_;
 extern struct { double sigma; double bhsigmafrac; double bconst; double CK; int bhflag; int opening_angle; } value4_;
 extern struct { double beta, xi, acc2, epsnov, eddfac, gamma; } value5_;
@@ -219,7 +219,8 @@ void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS,
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
 void bse_set_nsflag(int nsflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=no spins, 1=Uniform(0-1), 2=Uniform(0-0.25),3=Belczynski2017,4=1)*/
+void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=[bhspinmag], 1=Uniform(0-1)*[bhspinmag], 2=Belczynski2017)*/
+void bse_set_bhspinmag(double bhspinmag);/* value of BH spins (default=0.0) */ 
 void bse_set_mxns(double mxns); /* maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1) */
 void bse_set_bconst(double bconst); /* isolated pulsar field decay timescale */
 void bse_set_CK(double CK); /* Pulsar mass accretion field decay factor */

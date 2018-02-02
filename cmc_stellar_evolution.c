@@ -28,6 +28,7 @@ void restart_stellar_evolution(void){
   bse_set_bhflag(BSE_BHFLAG);
   bse_set_nsflag(BSE_NSFLAG);
   bse_set_bhspinflag(BSE_BHSPINFLAG);
+  bse_set_bhspinmag(BSE_BHSPINMAG);
   bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
   bse_set_bconst(BSE_BCONST);
   bse_set_CK(BSE_CK);
@@ -94,6 +95,7 @@ void stellar_evolution_init(void){
   bse_set_bhflag(BSE_BHFLAG);
   bse_set_nsflag(BSE_NSFLAG);
   bse_set_bhspinflag(BSE_BHSPINFLAG);
+  bse_set_bhspinmag(BSE_BHSPINMAG);
   bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
   bse_set_bconst(BSE_BCONST);
   bse_set_CK(BSE_CK);

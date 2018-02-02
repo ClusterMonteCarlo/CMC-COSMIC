@@ -13,9 +13,9 @@
 *
       REAL*8 neta,bwind,hewind,mxns,alpha1,lambda
       REAL*8 sigma,bhsigmafrac,beta,xi,acc2,epsnov,eddfac,gamma
-      REAL*8 bconst,CK,opening_angle
+      REAL*8 bconst,CK,opening_angle,bhspinmag
       INTEGER windflag,bhspinflag,ppsn
-      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,bhspinflag,ppsn
+      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,bhspinflag,bhspinmag,ppsn
       COMMON /VALUE2/ alpha1,lambda
       COMMON /VALUE4/ sigma,bhsigmafrac,bconst,CK,bhflag,opening_angle
       COMMON /VALUE5/ beta,xi,acc2,epsnov,eddfac,gamma

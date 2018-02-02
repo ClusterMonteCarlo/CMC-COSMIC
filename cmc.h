@@ -969,12 +969,17 @@ typedef struct{
 * @brief bhflag > 0 allows velocity kick at BH formation (1).
 */
 	int BSE_BHFLAG;
-#define PARAMDOC_BSE_BHSPINFLAG "bhflag > 0 allows velocity kick at BH formation (1)."
+#define PARAMDOC_BSE_BHSPINMAG "spin magnitudes for BHs from BSE"
 /**
-* @brief bhspinflag sets the spin magnitude for BH merger kicks(0=no spins, 1=Uniform(0-1), 2=Uniform(0-0.25),3=Belczynski2017,4=1) 
+* @brief bhspinmag sets the magnitude of BH spins from BSE, either as a constant or as a distribution (see BSE_BHSPINFLAG)
+*/
+	int BSE_BHSPINMAG;
+#define PARAMDOC_BSE_BHSPINFLAG "different functions for setting the BH spin from single stars"
+/**
+* @brief bhspinflag sets the spin magnitude for BH merger kicks(0=[BHSPINMAG], 1=Uniform(0-1)*[BHSPINMAG], 2=Belczynski2017) 
 */
 	int BSE_BHSPINFLAG;
-#define PARAMDOC_BH_RADIUS_MULTIPLYER "Factor to multiply the radii of BHs by for collisions (default is 3, i.e. Schwarzschild ISCO)"
+#define PARAMDOC_BH_RADIUS_MULTIPLYER "Factor to multiply the radii of BHs by for collisions (default is 5, since PN breaks down at ~10M)"
 /**
 * @brief Factor to multiply the rdii of BHs by when they're being integrated by fewbody (saves times for BH collisions).  The default is the Schwarzschild ISCO 
 */
