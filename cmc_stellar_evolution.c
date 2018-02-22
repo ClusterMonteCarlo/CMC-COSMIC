@@ -681,7 +681,7 @@ void do_stellar_evolution(gsl_rng *rng)
 			fprintf (newbhfile, "\n");
 #endif
 		}
-		if (kprev1!=14 && binary[kb].bse_kw[1]==14) { // newly formed BH
+		if (kprev1!=14 && binary[kb].bse_kw[1]==14 && binary[kb].id2 != 0) { // newly formed BH
 #ifdef USE_MPI
 			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g ", TotalTime, star_r[g_k], binary[kb].id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bhspin[1],VKO);
 			for (ii=0; ii<16; ii++){

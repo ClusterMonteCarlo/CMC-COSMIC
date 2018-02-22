@@ -1891,9 +1891,11 @@
          coel = .true.
          if(mass(j2).gt.0.d0)then
             mass(j1) = 0.d0
+            bhspin(j2) = bhspin(j1)
             kstar(j1) = 15
          else
             kstar(j1) = kstar(j2)
+            bhspin(j1) = bhspin(j2)
             kstar(j2) = 15
          endif
          goto 135
@@ -1912,7 +1914,8 @@
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
      &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick,ecsnp,ecsn_mlow,
-     &               formation(j1),formation(j2),ST_tide,bhspin)
+     &               formation(j1),formation(j2),ST_tide,
+     &               bhspin(j1),bhspin(j2))
          if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
      &      kstar(j1).eq.13)then !PK. 
 * In CE the NS got switched around. Do same to formation.
@@ -2101,7 +2104,7 @@
                formation(1) = 11
                formation(2) = 11
             endif
-            CALL mix(mass0,mass,aj,kstar,zpars,ecsnp)
+            CALL mix(mass0,mass,aj,kstar,zpars,ecsnp,bhspin)
             dm1 = m1ce - mass(j1)
             dm2 = mass(j2) - m2ce
 *
@@ -3117,7 +3120,8 @@
      &               kstar(j1),mass0(j2),mass(j2),massc(j2),aj(j2),
      &               jspin(j2),kstar(j2),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick,ecsnp,ecsn_mlow,
-     &               formation(j1),formation(j2),ST_tide,bhspin)
+     &               formation(j1),formation(j2),ST_tide,
+     &               bhspin(j1),bhspin(j2))
          if(output) write(*,*)'coal1:',tphys,kstar(j1),kstar(j2),coel,
      & mass(j1),mass(j2)
          if(j1.eq.2.and.kcomp2.eq.13.and.kstar(j2).eq.15.and.
@@ -3138,7 +3142,8 @@
      &               kstar(j2),mass0(j1),mass(j1),massc(j1),aj(j1),
      &               jspin(j1),kstar(j1),zpars,ecc,sep,jorb,coel,j1,j2,
      &               vk,fb,bkick,ecsnp,ecsn_mlow,
-     &               formation(j1),formation(j2),ST_tide,bhspin)
+     &               formation(j1),formation(j2),ST_tide,
+     &               bhspin(j2),bhspin(j1))
          if(output) write(*,*)'coal2:',tphys,kstar(j1),kstar(j2),coel,
      & mass(j1),mass(j2)
          if(j2.eq.2.and.kcomp1.eq.13.and.kstar(j1).eq.15.and.
@@ -3155,7 +3160,7 @@
          endif
          com = .true.
       else
-         CALL mix(mass0,mass,aj,kstar,zpars,ecsnp)
+         CALL mix(mass0,mass,aj,kstar,zpars,ecsnp,bhspin)
       endif
       if(com)then
          jp = MIN(80,jp + 1)
