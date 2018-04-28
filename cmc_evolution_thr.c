@@ -601,10 +601,10 @@ void tidally_strip_stars(void) {
                         //Sourav: index mistake??
                         //parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na",
                         //        star[j].se_k, star[j].se_bhspin);
-                        parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g",
-                                star[i].se_k, star[i].se_bhspin, star[i].se_ospin, star[i].se_scm_B);
+                        parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g %g",
+                                star[i].se_k, star[i].se_bhspin, star[i].se_ospin, star[i].se_scm_B, star[i].se_scm_formation);
 					} else {
-                        parafprintf(escfile, "na %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g na %g %g na na",
+                        parafprintf(escfile, "na %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g na %g %g na na na",
                                 binary[k].bse_kw[0], binary[k].bse_kw[1], binary[k].bse_radius[0], binary[k].bse_radius[1], binary[k].bse_tb, binary[k].bse_lum[0], binary[k].bse_lum[1], binary[k].bse_massc[0], binary[k].bse_massc[1], binary[k].bse_radc[0], binary[k].bse_radc[1], binary[k].bse_menv[0], binary[k].bse_menv[1], binary[k].bse_renv[0], binary[k].bse_renv[1], binary[k].bse_tms[0], binary[k].bse_tms[1], binary[k].bse_bcm_dmdt[0], binary[k].bse_bcm_dmdt[1], binary[k].bse_bcm_radrol[0], binary[k].bse_bcm_radrol[1], binary[k].bse_ospin[0], binary[k].bse_ospin[1], binary[k].bse_bcm_B[0], binary[k].bse_bcm_B[1], binary[k].bse_bcm_formation[0], binary[k].bse_bcm_formation[1], binary[k].bse_bacc[0], binary[k].bse_bacc[1], binary[k].bse_tacc[0], binary[k].bse_tacc[1], binary[k].bse_mass0[0], binary[k].bse_mass0[1], binary[k].bse_epoch[0], binary[k].bse_epoch[1], binary[k].bse_bhspin[0], binary[k].bse_bhspin[1]);
 					}
 					parafprintf (escfile, "\n");
@@ -674,10 +674,10 @@ void tidally_strip_stars(void) {
                         //Sourav: index mistakes; make sure the fix is correct
                         //parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na",
                         //        star[j].se_k, star[j].se_bhspin);
-			parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g",
-                                star[i].se_k, star[i].se_bhspin, star[i].se_ospin, star[i].se_scm_B);
+			parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g %g",
+                                star[i].se_k, star[i].se_bhspin, star[i].se_ospin, star[i].se_scm_B, star[i].se_scm_formation);
 					} else {
-                        parafprintf(escfile, "na %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g na %g %g na na",
+                        parafprintf(escfile, "na %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g na %g %g na na na",
                                 binary[k].bse_kw[0], binary[k].bse_kw[1], binary[k].bse_radius[0], binary[k].bse_radius[1], binary[k].bse_tb, binary[k].bse_lum[0], binary[k].bse_lum[1], binary[k].bse_massc[0], binary[k].bse_massc[1], binary[k].bse_radc[0], binary[k].bse_radc[1], binary[k].bse_menv[0], binary[k].bse_menv[1], binary[k].bse_renv[0], binary[k].bse_renv[1], binary[k].bse_tms[0], binary[k].bse_tms[1], binary[k].bse_bcm_dmdt[0], binary[k].bse_bcm_dmdt[1], binary[k].bse_bcm_radrol[0], binary[k].bse_bcm_radrol[1], binary[k].bse_ospin[0], binary[k].bse_ospin[1], binary[k].bse_bcm_B[0], binary[k].bse_bcm_B[1], binary[k].bse_bcm_formation[0], binary[k].bse_bcm_formation[1], binary[k].bse_bacc[0], binary[k].bse_bacc[1], binary[k].bse_tacc[0], binary[k].bse_tacc[1], binary[k].bse_mass0[0], binary[k].bse_mass0[1], binary[k].bse_epoch[0], binary[k].bse_epoch[1], binary[k].bse_bhspin[0], binary[k].bse_bhspin[1]);
 					}
 					parafprintf (escfile, "\n");
@@ -790,10 +790,10 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	}
 
 	if (star[j].binind == 0) {
-		parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g",
-				star[j].se_k, star[j].se_bhspin, star[j].se_ospin, star[j].se_scm_B);
+		parafprintf(escfile, "%d na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g na na %g %g %g",
+				star[j].se_k, star[j].se_bhspin, star[j].se_ospin, star[j].se_scm_B, star[j].se_scm_formation);
 	} else {
-		parafprintf(escfile, "na %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g na %g %g na na",
+		parafprintf(escfile, "na %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g na %g %g na na na",
                                 binary[k].bse_kw[0], binary[k].bse_kw[1], binary[k].bse_radius[0], binary[k].bse_radius[1], binary[k].bse_tb, binary[k].bse_lum[0], binary[k].bse_lum[1], binary[k].bse_massc[0], binary[k].bse_massc[1], binary[k].bse_radc[0], binary[k].bse_radc[1], binary[k].bse_menv[0], binary[k].bse_menv[1], binary[k].bse_renv[0], binary[k].bse_renv[1], binary[k].bse_tms[0], binary[k].bse_tms[1], binary[k].bse_bcm_dmdt[0], binary[k].bse_bcm_dmdt[1], binary[k].bse_bcm_radrol[0], binary[k].bse_bcm_radrol[1], binary[k].bse_ospin[0], binary[k].bse_ospin[1], binary[k].bse_bcm_B[0], binary[k].bse_bcm_B[1], binary[k].bse_bcm_formation[0], binary[k].bse_bcm_formation[1], binary[k].bse_bacc[0], binary[k].bse_bacc[1], binary[k].bse_tacc[0], binary[k].bse_tacc[1], binary[k].bse_mass0[0], binary[k].bse_mass0[1], binary[k].bse_epoch[0], binary[k].bse_epoch[1], binary[k].bse_bhspin[0], binary[k].bse_bhspin[1]);
 	}
 	parafprintf (escfile, "\n");
