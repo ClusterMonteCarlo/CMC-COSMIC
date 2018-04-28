@@ -11,6 +11,7 @@ _EXTERN_ clus_struct_t clus;
 _EXTERN_ Etotal_struct_t Etotal;
 _EXTERN_ clusdyn_struct_t clusdyn;
 _EXTERN_ long RESTART_TCOUNT;
+_EXTERN_ long NEW_IDUM;
 
 /* tidal truncation stuff */
 _EXTERN_ double max_r, Rtidal, TidalMassLoss, orbit_r;

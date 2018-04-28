@@ -2160,6 +2160,7 @@ void set_global_vars1()
 	
 	//this will be set later if -R flag is used
 	RESTART_TCOUNT = 0;
+	NEW_IDUM = 0;
 	NEXT_RESTART = 1;
 
 #ifdef USE_MPI

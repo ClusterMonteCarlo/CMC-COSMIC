@@ -137,7 +137,7 @@ C      ENDIF
 * If you ever want to consider spin-up in combined stars, this is the
 * palce
       IF(KS(2).EQ.14)then
-          bhspin(2) = bhspin(1)
+          bhspin(1) = bhspin(2)
       ENDIF
       KS(1) = KW
       KS(2) = 15

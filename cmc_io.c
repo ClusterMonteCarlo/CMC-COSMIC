@@ -44,6 +44,7 @@ void cmc_print_usage(FILE *stream, char *argv[])
 	fprintf(stream, "  -V --version : print version info\n");
 	fprintf(stream, "  -R --hard-restart : start from a saved checkpoint (specify number) with prefix <old...prefix> and write to new file prefix\n");
 	fprintf(stream, "  -r --soft-restart : start from a saved checkpoint (specify number) and write to the same files in the same place\n");
+	fprintf(stream, "  -n --new-seed: reseed the parallel randonm number generator with a new value (given here); similar to specifying a new IDUM\n");-
 	fprintf(stream, "  -h --help    : display this help text\n");
 }
 
@@ -839,10 +840,11 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	int hard_restart=0;
 	/* int *ip; */
 	FILE *in, *parsedfp;
-	const char *short_opts = "qdVhs:R:r:";
+	const char *short_opts = "qdn:Vhs:R:r:";
 	const struct option long_opts[] = {
 		{"quiet", no_argument, NULL, 'q'},
 		{"debug", no_argument, NULL, 'd'},
+		{"new-seed", no_argument, NULL, 'n'},
 		{"version", no_argument, NULL, 'V'},
 		{"help", no_argument, NULL, 'h'},
 		{"restart", required_argument, NULL, 'R'},
@@ -878,6 +880,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		case 'r':
 			RESTART_TCOUNT = atol(optarg);
 			hard_restart = 0;
+			break;
+		case 'n':
+			NEW_IDUM = atol(optarg);
 			break;
 		case 'h':
 			print_version(stdout);
@@ -2971,6 +2976,9 @@ void load_restart_file(){
 	/*Set the random number generator back where it was*/
 	set_rng_t113(*curr_st);
 
+	if(NEW_IDUM)
+		reset_rng_t113_new(NEW_IDUM, curr_st);
+
 	/*Load the global variables from the structure (replaces set_global_vars 1
 	 * and 2 in the code)*/
 	load_global_vars(&restart_struct);
@@ -3018,6 +3026,8 @@ void load_restart_file(){
         mpi_relaxationfile_len=0;
         mpi_pulsarfile_len=0;
 	mpi_morepulsarfile_len=0;
+	mpi_newbhfile_len=0;
+	mpi_bhmergerfile_len=0;
 
         mpi_logfile_ofst_total=0;
         mpi_escfile_ofst_total=0;
@@ -3030,6 +3040,8 @@ void load_restart_file(){
         mpi_relaxationfile_ofst_total=0;
         mpi_pulsarfile_ofst_total=0;
 	mpi_morepulsarfile_ofst_total=0;
+	mpi_newbhfile_ofst_total=0;
+	mpi_bhmergerfile_ofst_total=0;
     }
 
 	next_restart_t = CHECKPOINT_INTERVAL;

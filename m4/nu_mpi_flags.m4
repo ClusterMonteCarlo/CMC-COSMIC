@@ -45,7 +45,7 @@ AC_DEFUN([_NU_MPI_EXTRACT_FLAGS], [
     ])
 
     _nu_mpi_flags_comp_flags=$($SHELL -c "[$]MPICOMP $_mpiwrap_compile")
-    _nu_mpi_flags_link_flags=$($SHELL -c "[$]MPICOMP $_mpiwrap_link")
+    #_nu_mpi_flags_link_flags=$($SHELL -c "[$]MPICOMP $_mpiwrap_link")
 
 ])
 
