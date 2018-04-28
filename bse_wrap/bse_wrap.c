@@ -585,9 +585,9 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
 * @param zpars ?
 * @param ecsnp ?
 */
-void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp)
+void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp, double *bhspin)
 {
-  mix_(mass, mt, aj, kw, zpars, ecsnp);
+  mix_(mass, mt, aj, kw, zpars, ecsnp, bhspin);
 }
 
 /**
@@ -683,7 +683,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
   printf(" kw1i=%d kw2i=%d m1i=%g m2i=%g r1i=%g r2i=%g epoch1=%g epoch2=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
   comenv_(&((*tempbinary).bse_mass0[0]), &((*tempbinary).bse_mass[0]), &((*tempbinary).bse_massc[0]), &(AJ[0]), &JSPIN1, &((*tempbinary).bse_kw[0]),
 	  &((*tempbinary).bse_mass0[1]), &((*tempbinary).bse_mass[1]), &((*tempbinary).bse_massc[1]), &(AJ[1]), &JSPIN2, &((*tempbinary).bse_kw[1]),
-	  zpars, &((*tempbinary).e), &((*tempbinary).a), &(JORB), &COEL, &star1, &star2, &vk, fb, vs, ecsnp, ecsn_mlow, &((*tempbinary).bse_bcm_formation[0]), &((*tempbinary).bse_bcm_formation[1]), ST_tide, &((*tempbinary).bse_bhspin[0]));
+	  zpars, &((*tempbinary).e), &((*tempbinary).a), &(JORB), &COEL, &star1, &star2, &vk, fb, vs, ecsnp, ecsn_mlow, &((*tempbinary).bse_bcm_formation[0]), &((*tempbinary).bse_bcm_formation[1]), ST_tide, &((*tempbinary).bse_bhspin[0]),&((*tempbinary).bse_bhspin[1]));
   printf("kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1]);
   printf("\n");
   ////
@@ -757,6 +757,7 @@ void bse_set_ifflag(int ifflag) { flags_.ifflag = ifflag; }
 void bse_set_wdflag(int wdflag) { flags_.wdflag = wdflag; }
 void bse_set_bhflag(int bhflag) { value4_.bhflag = bhflag; }
 void bse_set_bhspinflag(int bhspinflag) { value1_.bhspinflag = bhspinflag; }
+void bse_set_bhspinmag(double bhspinmag) { value1_.bhspinmag = bhspinmag; }
 void bse_set_nsflag(int nsflag) { flags_.nsflag = nsflag; }
 void bse_set_mxns(double mxns) { value1_.mxns = mxns;} 
 void bse_set_bconst(double bconst) { value4_.bconst = bconst; }

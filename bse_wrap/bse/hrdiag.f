@@ -32,9 +32,10 @@
 *      parameter(mch=1.44d0,mlp=12.d0,tiny=1.0d-14)
       parameter(mlp=12.d0,tiny=1.0d-14)
       real*8 mass0,mt0,mtc
-      REAL*8 neta,bwind,hewind,mxns
+      REAL*8 neta,bwind,hewind,mxns,bhspinmag
       integer windflag,bhspinflag,ppsn
-      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,bhspinflag,ppsn
+      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,
+     &        bhspinflag,bhspinmag,ppsn
       integer idum
       COMMON /VALUE3/ idum
       common /fall/fallback
@@ -564,12 +565,10 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         fallback = 1.d0
                      endif
                         if(bhspinflag.eq.0)then
-                            bhspin = 0.d0
+                            bhspin = bhspinmag
                         elseif(bhspinflag.eq.1)then
-                            bhspin = ran3(idum)
+                            bhspin = ran3(idum) * bhspinmag
                         elseif(bhspinflag.eq.2)then
-                            bhspin = ran3(idum) / 4.d0
-                        elseif(bhspinflag.eq.3)then
                             if(mc.le.13.d0)then
                                 bhspin = 0.9d0
                             elseif(mc.lt.27.d0)then
@@ -577,8 +576,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                             else
                                 bhspin = 0.0d0
                             endif
-                        elseif(bhspinflag.eq.4)then
-                            bhspin = 1.d0
                         endif
                       mc = mt
                   elseif(nsflag.eq.3)then
@@ -610,12 +607,10 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         fallback = 1.d0
                      endif
                         if(bhspinflag.eq.0)then
-                            bhspin = 0.d0
+                            bhspin = bhspinmag
                         elseif(bhspinflag.eq.1)then
-                            bhspin = ran3(idum)
+                            bhspin = ran3(idum) * bhspinmag
                         elseif(bhspinflag.eq.2)then
-                            bhspin = ran3(idum) / 4.d0
-                        elseif(bhspinflag.eq.3)then
                             if(mc.le.13.d0)then
                                 bhspin = 0.9d0
                             elseif(mc.lt.27.d0)then
@@ -623,8 +618,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                             else
                                 bhspin = 0.0d0
                             endif
-                        elseif(bhspinflag.eq.4)then
-                            bhspin = 1.d0
                         endif
                      mc = mt
                   elseif(nsflag.eq.4)then
@@ -655,12 +648,10 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         fallback = 1.d0
                      endif 
                         if(bhspinflag.eq.0)then
-                            bhspin = 0.d0
+                            bhspin = bhspinmag
                         elseif(bhspinflag.eq.1)then
-                            bhspin = ran3(idum)
+                            bhspin = ran3(idum) * bhspinmag
                         elseif(bhspinflag.eq.2)then
-                            bhspin = ran3(idum) / 4.d0
-                        elseif(bhspinflag.eq.3)then
                             if(mc.le.13.d0)then
                                 bhspin = 0.9d0
                             elseif(mc.lt.27.d0)then
@@ -668,8 +659,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                             else
                                 bhspin = 0.0d0
                             endif
-                        elseif(bhspinflag.eq.4)then
-                            bhspin = 1.d0
                         endif
                      mc = mt
                   endif
@@ -890,12 +879,10 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         fallback = 1.d0
                      endif
                         if(bhspinflag.eq.0)then
-                            bhspin = 0.d0
+                            bhspin = bhspinmag
                         elseif(bhspinflag.eq.1)then
-                            bhspin = ran3(idum)
+                            bhspin = ran3(idum) * bhspinmag
                         elseif(bhspinflag.eq.2)then
-                            bhspin = ran3(idum) / 4.d0
-                        elseif(bhspinflag.eq.3)then
                             if(mc.le.13.d0)then
                                 bhspin = 0.9d0
                             elseif(mc.lt.27.d0)then
@@ -903,8 +890,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                             else
                                 bhspin = 0.0d0
                             endif
-                        elseif(bhspinflag.eq.4)then
-                            bhspin = 1.d0
                         endif
                       mc = mt
                   elseif(nsflag.eq.3)then
@@ -936,12 +921,10 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         fallback = 1.d0
                      endif
                         if(bhspinflag.eq.0)then
-                            bhspin = 0.d0
+                            bhspin = bhspinmag
                         elseif(bhspinflag.eq.1)then
-                            bhspin = ran3(idum)
+                            bhspin = ran3(idum) * bhspinmag
                         elseif(bhspinflag.eq.2)then
-                            bhspin = ran3(idum) / 4.d0
-                        elseif(bhspinflag.eq.3)then
                             if(mc.le.13.d0)then
                                 bhspin = 0.9d0
                             elseif(mc.lt.27.d0)then
@@ -949,8 +932,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                             else
                                 bhspin = 0.0d0
                             endif
-                        elseif(bhspinflag.eq.4)then
-                            bhspin = 1.d0
                         endif
                      mc = mt
                   elseif(nsflag.eq.4)then
@@ -982,12 +963,10 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                         fallback = 1.d0
                      endif 
                         if(bhspinflag.eq.0)then
-                            bhspin = 0.d0
+                            bhspin = bhspinmag
                         elseif(bhspinflag.eq.1)then
-                            bhspin = ran3(idum)
+                            bhspin = ran3(idum) * bhspinmag
                         elseif(bhspinflag.eq.2)then
-                            bhspin = ran3(idum) / 4.d0
-                        elseif(bhspinflag.eq.3)then
                             if(mc.le.13.d0)then
                                 bhspin = 0.9d0
                             elseif(mc.lt.27.d0)then
@@ -995,8 +974,6 @@ C      if(mt0.gt.100.d0) mt = 100.d0
                             else
                                 bhspin = 0.0d0
                             endif
-                        elseif(bhspinflag.eq.4)then
-                            bhspin = 1.d0
                         endif
                      mc = mt
                   endif

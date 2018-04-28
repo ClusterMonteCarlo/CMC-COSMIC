@@ -679,7 +679,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    //aj = star[kp].se_tphys - star[kp].se_epoch;
 		    bseaj[0] = tempbinary.bse_tphys - tempbinary.bse_epoch[0];
 		    bseaj[1] = tempbinary.bse_tphys - tempbinary.bse_epoch[1];
-		    bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars, &ecsnp);
+		    bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars, &ecsnp,&(tempbinary.bse_bhspin[0]));
 		    
 		    bse_star(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars);
 		    
@@ -813,7 +813,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		      //aj = star[kp].se_tphys - star[kp].se_epoch;
 		      bseaj[0] = tempbinary.bse_tphys - tempbinary.bse_epoch[0];
 		      bseaj[1] = tempbinary.bse_tphys - tempbinary.bse_epoch[1];
-		      bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars, &ecsnp);
+		      bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars, &ecsnp,&(tempbinary.bse_bhspin[0]));
 		      
 		      bse_star(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars);
 		      

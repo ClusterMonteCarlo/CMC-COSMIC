@@ -273,7 +273,7 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
  * (dimmensionless), and the recoil kick (in km/s)*/ 
 void fb_bh_merger(double m1, double m2, double a1, double a2, 
 				  double *mass_frac, double *afinal, 
-				  double *v_perp, double *v_para, struct rng_t113_state *curr_st)
+				  double *v_para, double *v_perp, struct rng_t113_state *curr_st)
 {
 
 	double delta_par, delta_perp, chi_par, chi_perp;

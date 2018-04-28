@@ -146,9 +146,9 @@ void hrdiag_(double *mass, double *aj, double *mt, double *tm, double *tn, doubl
 	     double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow, double *bhspin);
 void kick_(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	   double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
-void mix_(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp);
+void mix_(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp, double *bhspin);
 // note: these function names only work if in lowercase here, even though FORTRAN versions in uppercase.
-void comenv_(double *M01, double *M1, double *MC1, double *AJ1, double *JSPIN1, int *KW1, double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2, double *ZPARS, double *ECC, double *SEP, double *JORB, int *COEL, int *star1, int *star2, double *vk, int *fb, double *bkick, double *ecsnp, double *ecsn_mlow, int *formation1, int *formation2, int *ST_tide, double *bhspin);
+void comenv_(double *M01, double *M1, double *MC1, double *AJ1, double *JSPIN1, int *KW1, double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2, double *ZPARS, double *ECC, double *SEP, double *JORB, int *COEL, int *star1, int *star2, double *vk, int *fb, double *bkick, double *ecsnp, double *ecsn_mlow, int *formation1, int *formation2, int *ST_tide, double *bhspin1, double *bhspin2);
 
 /* wrapped BSE functions */
 void bse_zcnsts(double *z, double *zpars);
@@ -182,7 +182,7 @@ void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, do
 		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow, double *bhspin);
 void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	      double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
-void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp);
+void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp, double *bhspin);
 void bse_comenv(bse_binary *binary, double *zpars,
                 double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide);
 
@@ -195,7 +195,7 @@ extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
 extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
-extern struct { double neta, bwind, hewind, mxns; int windflag; int bhspinflag; int ppsn; } value1_;
+extern struct { double neta, bwind, hewind, mxns; int windflag; int bhspinflag; double bhspinmag; int ppsn; } value1_;
 extern struct { double alpha1, lambda; } value2_;
 extern struct { double sigma; double bhsigmafrac; double bconst; double CK; int bhflag; int opening_angle; } value4_;
 extern struct { double beta, xi, acc2, epsnov, eddfac, gamma; } value5_;
@@ -219,7 +219,8 @@ void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS,
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
 void bse_set_nsflag(int nsflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=no spins, 1=Uniform(0-1), 2=Uniform(0-0.25),3=Belczynski2017,4=1)*/
+void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=[bhspinmag], 1=Uniform(0-1)*[bhspinmag], 2=Belczynski2017)*/
+void bse_set_bhspinmag(double bhspinmag);/* value of BH spins (default=0.0) */ 
 void bse_set_mxns(double mxns); /* maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1) */
 void bse_set_bconst(double bconst); /* isolated pulsar field decay timescale */
 void bse_set_CK(double CK); /* Pulsar mass accretion field decay factor */
