@@ -31,15 +31,18 @@
 #define FB_FM(i, j, k) fm[nstar*3*i + 3*j + k]
 #define FB_REL(i, j, k) fmr[nstar*3*i + 3*j + k]
 #define pi2 9.869604401089359
+
 int fb_nonks_func(double t, const double *y, double *f, void *params)
 {
-	//PAU int i, j, k, nstar;
-	//PAU double r[3], *m, *fm, val;
 	int i, j, k, nstar, PN1, PN2, PN25, PN3, PN35;
-	double n[3],r[3],v[3], *m, *fm, *fmr, val, rdot, SM, nu, A, B, A2, B2, A4, B4, A5, B5,  A6, B6, A7, B7;
+	double n[3],r[3],v[3], *m, *fm, *fmr, val, rdot, SM, nu;
+	double  A=0.,B=0.,A2=0.,B2=0.,A4=0.,B4=0.,A5=0.,B5=0.,A6=0.,B6=0.,A7=0.,B7=0.;
 	double clight, clight2, clight4, clight5, R, Mclus, aclus;
+	double SM2, SM3;
+	double rdot2,rdot3,rdot4,rdot6,v2,v4,v6;
+	double r_mod, r_mod2, r_mod3;
 	fb_units_t units;
-
+	
 	nstar = (*(fb_nonks_params_t *) params).nstar;
 	m = (*(fb_nonks_params_t *) params).m;
 	PN1 = (*(fb_nonks_params_t *) params).PN1;
@@ -65,117 +68,103 @@ int fb_nonks_func(double t, const double *y, double *f, void *params)
 				FB_REL(i, j, k) = -FB_REL(j, i, k);
 			}
 		}
-
 		for (j=i+1; j<nstar; j++) {
-
+			
+			/* First, precalculate a lot of quantities */
 			SM = m[i] + m[j];
-			nu = m[i]*m[j]/(SM*SM);
+			SM2 = SM*SM;
+			nu = m[i]*m[j]/(SM2);
+			SM3 = SM2*SM;
+	
+		
 			for (k=0; k<3; k++) {
 				r[k] = y[j*6+k] - y[i*6+k];	
 				v[k] = y[j*6+k+3] - y[i*6+k+3]; 
 			}
-			
-			/* this is not necessary, since collisions are handled properly elsewhere
-			   in the code */
-			/* if(fb_mod(r)<2*SM/clight2){ */
-/* 				collisions++; */
-/* 				if(collisions==1)printf("%dst collision at %6.16g\n",collisions,t); */
-/* 				if(collisions==2)printf("%dnd collision at %6.16g\n",collisions,t); */
-/* 				if(collisions==3)printf("%drd collision at %6.16g\n",collisions,t); */
-/* 				if(collisions>3)printf("%dth collision at %6.16g\n",collisions,t); */
-/* 			  if(nstar-collisions<=1) exit(-1);	 */
-/* 			} */
-			
-			for (k=0; k<3; k++) {
-				n[k] = r[k]/fb_mod(r); 
-			}
-			
+
 			rdot = 0;
+			r_mod = fb_mod(r);
+			r_mod2 = r_mod*r_mod;
+			r_mod3 = r_mod2*r_mod;
+
 			for (k=0; k<3; k++) {
+				n[k] = r[k]/r_mod; 
 				rdot += n[k]*v[k]; 
 			}
+
+			v2 = fb_mod(v)*fb_mod(v);
+			v4 = v2*v2;
+			v6 = v4*v2;
+			rdot2 = rdot*rdot;
+			rdot3 = rdot2*rdot;
+			rdot4 = rdot2*rdot2;
+			rdot6 = rdot4*rdot2;
 			
 			if (PN1) {
-				A2 = (-3*rdot*rdot*nu/2 + fb_sqr(fb_mod(v)) + 3*nu*fb_sqr(fb_mod(v)) - \
-				      SM*(4+2*nu)/fb_mod(r))/clight2;
+				A2 = (-3*rdot2*nu/2 + v2 + 3*nu*v2 - \
+				      SM*(4+2*nu)/r_mod)/clight2;
 				B2 = (-4 + 2*nu)*rdot/clight2;
-			} else {
-				A2 = 0.0;
-				B2 = 0.0;
-			}
+			} 
 
 			if (PN2) {
-				A4 = (15*rdot*rdot*rdot*rdot*nu/8-45*rdot*rdot*rdot*rdot*nu*nu/8-\
-				      9*rdot*rdot*nu*fb_sqr(fb_mod(v))/2+6*rdot*rdot*nu*nu*fb_sqr(fb_mod(v))+\
-				      3*nu*fb_sqr(fb_mod(v))*fb_sqr(fb_mod(v))-4*nu*nu*fb_sqr(fb_mod(v))*\
-				      fb_sqr(fb_mod(v))+SM*(-2*rdot*rdot-25*rdot*rdot*nu-2*rdot*rdot*nu*nu-\
-							    13*nu*fb_sqr(fb_mod(v))/2+2*nu*nu*fb_sqr(fb_mod(v)))\
-				      /fb_mod(r)+SM*SM*(9+87*nu/4)/fb_sqr(fb_mod(r)))/clight4;
-				B4 = (9*rdot*rdot*rdot*nu/2+3*rdot*rdot*rdot*nu*nu-15*rdot*nu*fb_sqr(fb_mod(v))/\
-				      2-2*rdot*nu*nu*fb_sqr(fb_mod(v))+SM*(2*rdot+41*rdot*nu/2+4*rdot*nu*nu)/\
-				      fb_mod(r))/clight4;
-			} else {
-				A4 = 0.0;
-				B4 = 0.0;
+				A4 = (15*rdot4*nu/8-45*rdot4*nu*nu/8-\
+				      9*rdot2*nu*v2/2+6*rdot2*nu*nu*v2+\
+				      3*nu*v4-4*nu*nu*v2*\
+				      v2+SM*(-2*rdot2-25*rdot2*nu-2*rdot2*nu*nu-\
+							    13*nu*v2/2+2*nu*nu*v2)\
+				      /r_mod+SM2*(9+87*nu/4)/r_mod2)/clight4;
+				B4 = (9*rdot3*nu/2+3*rdot3*nu*nu-15*rdot*nu*v2/\
+				      2-2*rdot*nu*nu*v2+SM*(2*rdot+41*rdot*nu/2+4*rdot*nu*nu)/\
+				      r_mod)/clight4;
 			}
 
 			if (PN25) {
-				A5 = (-24*rdot*nu*fb_sqr(fb_mod(v))*SM/(5*fb_mod(r))-\
-				      136*rdot*nu*SM*SM/(15*fb_sqr(fb_mod(r))))/clight5;
-				B5 = (8*nu*fb_sqr(fb_mod(v))*SM/(5*fb_mod(r)) + \
-				      24*nu*SM*SM/(5*fb_sqr(fb_mod(r))))/clight5;
-			} else {
-				A5 = 0.0;
-				B5 = 0.0;
+				A5 = (-24*rdot*nu*v2*SM/(5*r_mod)-\
+				      136*rdot*nu*SM2/(15*r_mod2))/clight5;
+				B5 = (8*nu*v2*SM/(5*r_mod) + \
+				      24*nu*SM2/(5*r_mod2))/clight5;
 			}
 			
+			
 			if (PN3) {
-				A6 = -((16+(1399/12-41*pi2/16)*nu+35.5*nu*nu)*SM*SM*SM/fb_mod(r)/fb_mod(r)/fb_mod(r)+\
-				       nu*fb_sqr(fb_mod(v))*SM*SM*(20827/840+123*pi2/64-nu*nu)/fb_sqr(fb_mod(r)) - \
-				       rdot*rdot*SM*SM*(1+(22717/168+615/64*pi2)*nu+11*nu*nu/8-7*nu*nu*nu)/fb_sqr(fb_mod(r)) - \
-				       0.25*nu*fb_sqr(fb_mod(v))*fb_sqr(fb_mod(v))*fb_sqr(fb_mod(v))*(11-49*nu+52*nu*nu) + \
-				       35*rdot*rdot*rdot*rdot*rdot*rdot*nu*(1-5*nu+5*nu*nu)/16 -\
-				       0.25*nu*SM*fb_sqr(fb_mod(v))*fb_sqr(fb_mod(v))*(75+32*nu-40*nu*nu)/fb_mod(r) - \
-				       0.5*nu*rdot*rdot*rdot*rdot*SM*(158-69*nu-60*nu*nu)/fb_mod(r) + \
-				       nu*SM*rdot*rdot*fb_sqr(fb_mod(v))*(121-16*nu-20*nu*nu)/fb_mod(r)  + \
-				       3*nu*fb_sqr(fb_mod(v))*fb_sqr(fb_mod(v))*rdot*rdot*(20-79*nu+60*nu*nu)/8 -\
-				       15*nu*rdot*rdot*rdot*rdot*fb_sqr(fb_mod(v))*(4-18*nu+17*nu*nu)/8 )/clight4/clight2;
-				B6 = -rdot*((4+((5849/840)+(123/32)*pi2)*nu-25*nu*nu-8*nu*nu*nu)*SM*SM/\
-					    fb_sqr(fb_mod(r))+nu*fb_sqr(fb_mod(v))*fb_sqr(fb_mod(v))*(65-152*nu-48*nu*nu)/8+\
-					    15*nu*rdot*rdot*rdot*rdot*(3-8*nu-2*nu*nu)/8+nu*(15+27*nu+10*nu*nu)*fb_sqr(fb_mod(v))*\
-					    SM/fb_mod(r)-nu*SM*rdot*rdot*(329+177*nu+108*nu*nu)/fb_mod(r)/6-\
-					    0.75*nu*rdot*rdot*fb_sqr(fb_mod(v))*(16-37*nu-16*nu*nu))/clight4/clight2;
-			} else {
-				A6 = 0.0;
-				B6 = 0.0;
+				A6 = -((16+(1399/12-41*pi2/16)*nu+35.5*nu*nu)*SM3/r_mod3 +\
+				       nu*v2*SM2*(20827/840+123*pi2/64-nu*nu)/r_mod2 - \
+				       rdot2*SM2*(1+(22717/168+615/64*pi2)*nu+11*nu*nu/8-7*nu*nu*nu)/r_mod2 - \
+				       0.25*nu*v6*(11-49*nu+52*nu*nu) + \
+				       35*rdot6*nu*(1-5*nu+5*nu*nu)/16 -\
+				       0.25*nu*SM*v4*(75+32*nu-40*nu*nu)/r_mod - \
+				       0.5*nu*rdot4*SM*(158-69*nu-60*nu*nu)/r_mod + \
+				       nu*SM*rdot2*v2*(121-16*nu-20*nu*nu)/r_mod  + \
+				       3*nu*v4*rdot2*(20-79*nu+60*nu*nu)/8 -\
+				       15*nu*rdot4*v2*(4-18*nu+17*nu*nu)/8 )/clight4/clight2;
+				B6 = -rdot*((4+((5849/840)+(123/32)*pi2)*nu-25*nu*nu-8*nu*nu*nu)*SM2/\
+					    r_mod2+nu*v4*(65-152*nu-48*nu*nu)/8+\
+					    15*nu*rdot4*(3-8*nu-2*nu*nu)/8+nu*(15+27*nu+10*nu*nu)*v2*\
+					    SM/r_mod-nu*SM*rdot2*(329+177*nu+108*nu*nu)/r_mod/6-\
+					    0.75*nu*rdot2*v2*(16-37*nu-16*nu*nu))/clight4/clight2;
 			}
 
 			if (PN35) {
-				A7 =  1.6*nu*SM*rdot*(23*SM*SM*(43+14*nu)/fb_sqr(fb_mod(r))/14+\
-						      3*fb_sqr(fb_mod(v))*fb_sqr(fb_mod(v))*(61+70*nu)/\
-						      28+70*rdot*rdot*rdot*rdot+SM*fb_sqr(fb_mod(v))*(519-1267*nu)/42/fb_mod(r) +\
-						      SM*rdot*rdot*(147+188*nu)/4/fb_mod(r)-\
-						      15*rdot*rdot*fb_sqr(fb_mod(v))*(19+2*nu)/4)/fb_mod(r)/clight5/clight2;
-				B7 = -1.6*nu*SM*(SM*SM*(1325+546*nu)/fb_sqr(fb_mod(r))/42+\
-						 fb_sqr(fb_mod(v))*fb_sqr(fb_mod(v))*(313+42*nu)/28+75*rdot*rdot*rdot*rdot-\
-						 SM*fb_sqr(fb_mod(v))*(205+777*nu)/fb_mod(r)/42   +\
-						 SM*rdot*rdot*(205+424*nu)/fb_mod(r)/12-\
-						 0.75*rdot*rdot*fb_sqr(fb_mod(v))*(113+2*nu))/fb_mod(r)/clight5/clight2;
-			} else {
-				A7 = 0.0;
-				B7 = 0.0;
+				A7 =  1.6*nu*SM*rdot*(23*SM2*(43+14*nu)/r_mod2/14+\
+						      3*v4*(61+70*nu)/\
+						      28+70*rdot4+SM*v2*(519-1267*nu)/42/r_mod +\
+						      SM*rdot2*(147+188*nu)/4/r_mod-\
+						      15*rdot2*v2*(19+2*nu)/4)/r_mod/clight5/clight2;
+				B7 = -1.6*nu*SM*(SM2*(1325+546*nu)/r_mod2/42+\
+						 v4*(313+42*nu)/28+75*rdot4-\
+						 SM*v2*(205+777*nu)/r_mod/42   +\
+						 SM*rdot2*(205+424*nu)/r_mod/12-\
+						 0.75*rdot2*v2*(113+2*nu))/r_mod/clight5/clight2;
 			}
 
 			A = A2 + A4 + A5 + A6 + A7;
 			B = B2 + B4 + B5 + B6 + B7;
 
-			/* fprintf(stdout, "%g\n", fb_mod(v)/clight); */
 
-			val = 1.0 / fb_cub(fb_mod(r));
-
+			val = 1.0 / r_mod3;
 			for (k=0; k<3; k++) {
 				FB_FM(i, j, k) = val * r[k];
-				FB_REL(i, j, k) = (A*n[k]+B*v[k]) / fb_sqr(fb_mod(r)) / SM;
+				FB_REL(i, j, k) = (A*n[k]+B*v[k]) / r_mod2;
 			}
 		}
 	}
@@ -189,19 +178,17 @@ int fb_nonks_func(double t, const double *y, double *f, void *params)
 		
 		for (j=0; j<i; j++) {
 			for (k=0; k<3; k++) {
-				// PAU f[i*6+k+3] += m[j] * FB_FM(i, j, k);
 				f[i*6+k+3] += m[j] * FB_FM(i, j, k) + m[j] * FB_REL(i,j,k);
 			}
 		}
 
 		for (j=i+1; j<nstar; j++) {
 			for (k=0; k<3; k++) {
-				// PAU f[i*6+k+3] += m[j] * FB_FM(i, j, k);
 				f[i*6+k+3] += m[j] * FB_FM(i, j, k) + m[j] * FB_REL(i,j,k);
 			}
 		}
 	}
-	
+
 	fb_free_vector(fm);
 	fb_free_vector(fmr);
 
@@ -227,7 +214,7 @@ int fb_nonks_jac(double t, const double *y, double *dfdy, double *dfdt, void *pa
 	matrix = &dfdy_mat.matrix;
 	
 	/* set dfdt to zero */
-	for (j=0; j< (unsigned int) nstar*6; j++) {
+	for (j=0; j<nstar*6; j++) {
 		dfdt[j] = 0.0;
 	}
 
@@ -235,14 +222,14 @@ int fb_nonks_jac(double t, const double *y, double *dfdy, double *dfdt, void *pa
 	gsl_matrix_set_zero(matrix);
 
 	/* then set the actual values */
-	for (i=0; i< (unsigned int) nstar; i++) {
+	for (i=0; i<nstar; i++) {
 		for (a=0; a<3; a++) {
 			gsl_matrix_set(matrix, i+a, i+a+3, 1.0);
 
-			for (k=0; k< (unsigned int) nstar; k++) {
+			for (k=0; k<nstar; k++) {
 				for (b=0; b<3; b++) {
 					val = 0.0;
-					for (j=0; j< (unsigned int) nstar; j++) {
+					for (j=0; j<nstar; j++) {
 						if (j != i) {
 							for (kk=0; kk<3; kk++) {
 								r[kk] = y[i*6+kk] - y[j*6+kk];

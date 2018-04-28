@@ -1533,6 +1533,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	char string1[1024], string2[1024];
 	star_t tempstar, tempstar2;
 	double vs[12], VK0;
+	double energy_from_outer=0.;
 
 	/* perform actions that are specific to the type of binary interaction */
 	if (star[k].binind != 0 && star[kp].binind != 0) {
@@ -2110,16 +2111,24 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				threeobjs[1] = *(hier.obj[i]->obj[bid]->obj[0]);
 				threeobjs[2] = *(hier.obj[i]->obj[bid]->obj[1]);
 				
-				/* bring outer member of triple to zero energy, decreasing inner binary's semimajor axis
-				   in the process, but preserving its eccentricity */
-				hier.obj[i]->obj[bid]->a = -(hier.obj[i]->obj[bid]->obj[0]->m)*(hier.obj[i]->obj[bid]->obj[1]->m)/
-					(2.0 * (fb_ketot(threeobjs, 3) + fb_petot(threeobjs, 3)));
+				/* determine the difference in energy between the inner binary and the 
+ 				   triple as a whole; this will be added to the cluster in break_wide_binaries */
+				energy_from_outer = (-(hier.obj[i]->obj[bid]->obj[0]->m)*(hier.obj[i]->obj[bid]->obj[1]->m)/
+							(2.0 * hier.obj[i]->obj[bid]->a)) - (fb_ketot(threeobjs, 3) + fb_petot(threeobjs, 3));
+
+				/* Unless fewbody has screwed up the classification, this can't happen, but better safe than sorry */
+				if (energy_from_outer < 0) {
+					eprintf("energy_from_outer is negative; fewbody classification has clearly screwed up\n");
+					energy_from_outer = 0.;
+				}
 				
 				/********************************/
 				/* set single star's properties */
 				/********************************/
 				/* internal energy */
 				star[knewp].Eint = hier.obj[i]->obj[sid]->Eint * cmc_units.E;
+				star[knewp].E_excess = energy_from_outer * cmc_units.E;
+				printf("Eexcess from triple=%g\n",star[knewp].E_excess);
 
 				/* id */
 				if (hier.obj[i]->obj[sid]->ncoll == 1) {
@@ -2685,6 +2694,10 @@ void mpi_break_wide_binaries(void)
 	{
 		g_k = get_global_idx(k);
 
+		/* Add in any excess energy from breaking triples in fewbody here  */
+		Eexcess += star[k].E_excess;
+		star[k].E_excess = 0.;
+
 		if (star[k].binind) {
 
 			/* binary index */
@@ -2707,12 +2720,14 @@ void mpi_break_wide_binaries(void)
 			if (breakBinary){
 				Eexcess += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 
+
+				printf("Eexcess from binary=%g\n",Eexcess);
+
 				/* create two stars for the binary components */
 				knew = create_star(k, 0);
 				knewp = create_star(k, 0);
 				cp_binmemb_to_star(k, 0, knew);
 				cp_binmemb_to_star(k, 1, knewp);
-				//printf("breaking wide binary: hardness = %lg  binid = %ld  id1 = %ld  id2 = %ld m1 = %lg m2 = %lg  a = %lg sigma2 = %lg, mave = %lg\n", hardness,g_k,get_global_idx(knew),get_global_idx(knewp),binary[j].m1,binary[j].m2,binary[j].a,sigma2,mAveLocal);
 				
 				/* destroy this binary */
 				destroy_obj(k);

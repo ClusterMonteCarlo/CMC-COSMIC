@@ -474,6 +474,10 @@ typedef struct{
 * @brief ?
 */
 	double lifetime, lifetimeold, lifetimenew;
+/**
+* @brief variable to keep track of excess energy (to be added back to cluster) 
+*/
+	double E_excess; 
 } star_t;
 
 /**
