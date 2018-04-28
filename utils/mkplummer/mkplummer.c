@@ -122,31 +122,18 @@ void create_random_array(double *X, long int N){
 	for(i=1; i<=N; i++){
 		X[i] = rng_t113_dbl();
 	}
-	sort_X(X+1, N);
 	/* removing the duplicates from the random number set 
 	 * since we use binary search this does NOT guarantee
 	 * unique positions 					*/
 	do{
+		sort_X(X+1, N);
 		duplicate = 0;
 		for(i=1; i<=N-1; i++){
-			if(X[i]==X[i+1]) {
-				duplicate = 1;
-				break;
+			if(X[i]==X[i+1]){
+				duplicate++;
+				X[i] = rng_t113_dbl();
 			}
 		}
-		if (duplicate){
-			for(j=i; j<=N-1; j++){
-				X[j] = X[j+1];
-			}
-			X[N] = rng_t113_dbl();
-			for(j=N; j>1; j--){
-				if (X[j]<X[j-1]){
-					tempX = X[j];
-					X[j] = X[j-1];
-					X[j-1] = tempX;
-				}
-			}
-		} 
 	} while (duplicate);
 }
 
