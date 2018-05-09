@@ -76,7 +76,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	input.relacc = 1.0e-9;
 	input.ncount = 500;
 	input.tidaltol = 1.0e-5;
-	input.speedtol = 5.0e-2;
+	input.speedtol = 1;
 	input.PN1 = 0;
 	input.PN2 = 0;
 	input.PN25 = 0;
@@ -96,9 +96,10 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 
     if(num_bh > 1){
         input.tcpustop *= 10.;
-        input.PN1 = 1;
-        input.PN2 = 1;
+        input.PN1 = 0;
+        input.PN2 = 0;
         input.PN25 = 1;
+        input.speedtol = 0.05;
     }
 	
 	/* initialize a few things for integrator */

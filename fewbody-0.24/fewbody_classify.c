@@ -174,8 +174,6 @@ int fb_is_stable(fb_obj_t *obj, double speedtol, fb_units_t units)
 	}
 }
 
-// PAU int fb_is_stable_binary(fb_obj_t *obj)
-//{
 int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units)
 {
 	double vrelperi;

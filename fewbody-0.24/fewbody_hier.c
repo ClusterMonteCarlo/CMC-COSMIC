@@ -44,6 +44,12 @@ void fb_malloc_hier(fb_hier_t *hier)
 		hier->hier[i].vkick = (double *) malloc(hier->nstarinit * sizeof(double));
 		hier->hier[i].a_merger = (double *) malloc(hier->nstarinit * sizeof(double));
 		hier->hier[i].e_merger = (double *) malloc(hier->nstarinit * sizeof(double));
+		hier->hier[i].a_50M = (double *) malloc(hier->nstarinit * sizeof(double));
+		hier->hier[i].e_50M = (double *) malloc(hier->nstarinit * sizeof(double));
+		hier->hier[i].a_100M = (double *) malloc(hier->nstarinit * sizeof(double));
+		hier->hier[i].e_100M = (double *) malloc(hier->nstarinit * sizeof(double));
+		hier->hier[i].a_500M = (double *) malloc(hier->nstarinit * sizeof(double));
+		hier->hier[i].e_500M = (double *) malloc(hier->nstarinit * sizeof(double));
 	}
 	hier->obj = (fb_obj_t **) malloc(hier->nstarinit * sizeof(fb_obj_t *));
 }
@@ -74,6 +80,12 @@ void fb_free_hier(fb_hier_t hier)
 		free(hier.hier[i].vkick);
 		free(hier.hier[i].a_merger);
 		free(hier.hier[i].e_merger);
+		free(hier.hier[i].a_50M);
+		free(hier.hier[i].e_50M);
+		free(hier.hier[i].a_100M);
+		free(hier.hier[i].e_100M);
+		free(hier.hier[i].a_500M);
+		free(hier.hier[i].e_500M);
 	}
 	free(hier.hi+1);
 	free(hier.narr+2);
@@ -389,7 +401,7 @@ void fb_objcpy(fb_obj_t *obj1, fb_obj_t *obj2)
 {
 	int i;
 	long *longptr;
-    double *doubleptr, *doubleptr2, *doubleptr3;
+    double *doubleptr, *doubleptr2, *doubleptr3, *doubleptr4, *doubleptr5, *doubleptr6, *doubleptr7, *doubleptr8, *doubleptr9;
 
 
 	
@@ -398,6 +410,12 @@ void fb_objcpy(fb_obj_t *obj1, fb_obj_t *obj2)
 		obj1->vkick[i] = obj2->vkick[i];
 		obj1->a_merger[i] = obj2->a_merger[i];
 		obj1->e_merger[i] = obj2->e_merger[i];
+		obj1->a_50M[i] = obj2->a_50M[i];
+		obj1->e_50M[i] = obj2->e_50M[i];
+		obj1->a_100M[i] = obj2->a_100M[i];
+		obj1->e_100M[i] = obj2->e_100M[i];
+		obj1->a_500M[i] = obj2->a_500M[i];
+		obj1->e_500M[i] = obj2->e_500M[i];
 	}
 
 	/* prevent any dangling pointers */
@@ -405,9 +423,21 @@ void fb_objcpy(fb_obj_t *obj1, fb_obj_t *obj2)
 	doubleptr = obj1->vkick;
 	doubleptr2 = obj1->a_merger;
 	doubleptr3 = obj1->e_merger;
+	doubleptr8 = obj1->a_50M;
+	doubleptr9 = obj1->e_50M;
+	doubleptr4 = obj1->a_100M;
+	doubleptr5 = obj1->e_100M;
+	doubleptr6 = obj1->a_500M;
+	doubleptr7 = obj1->e_500M;
 	*obj1 = *obj2;
 	obj1->id = longptr;
 	obj1->vkick = doubleptr;
 	obj1->a_merger = doubleptr2;
 	obj1->e_merger = doubleptr3;
+	obj1->a_100M = doubleptr4;
+	obj1->e_100M = doubleptr5;
+	obj1->a_500M = doubleptr6;
+	obj1->e_500M = doubleptr7;
+	obj1->a_50M = doubleptr8;
+	obj1->e_50M = doubleptr9;
 }

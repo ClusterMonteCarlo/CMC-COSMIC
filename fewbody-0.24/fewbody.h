@@ -71,6 +71,7 @@ typedef struct fb_obj{
 	double m; /* mass */
 	double R; /* radius */
 	double Eint; /* internal energy (used to check energy conservation) */
+	double Eint_rel; /* relativistic internal energy (used to check energy conservation) */
 	double Lint[3]; /* internal ang mom (used to check ang mom conservation) */
 	double x[3]; /* position */
 	double v[3]; /* velocity */
@@ -86,7 +87,17 @@ typedef struct fb_obj{
     double *vkick; /* Array for recording the kicks from BBH mergers */
     double *a_merger; /* Array for recording the final semi-major axes from BBH mergers*/
     double *e_merger; /* Array for recording the final eccentricities for BBH mergers */
+    double *a_50M; /* Array for recording the semi-major axes from BBH at 500M */
+    double *e_50M; /* Array for recording the eccentricities for BBH at 500M */
+    double *a_100M; /* Array for recording the semi-major axes from BBH at 100M */
+    double *e_100M; /* Array for recording the eccentricities for BBH at 100M */
+    double *a_500M; /* Array for recording the semi-major axes from BBH at 500M */
+    double *e_500M; /* Array for recording the eccentricities for BBH at 500M */
 	double chi; /*Dimensionless Kerr parameter (negative for non-BH/NSs)*/
+	double last_sepM;
+	double suppress;
+	double last_pn_E;
+	double last_pn_J;
 } fb_obj_t;
 
 /* parameters for the K-S integrator */
@@ -153,6 +164,8 @@ typedef struct{
 	double tcpu; /* cpu time taken */
 	double DeltaE; /* change in energy */
 	double DeltaEfrac; /* change in energy, as a fraction of initial energy */
+	double DeltaE_GW; /* change in energy from the 2.5 pN terms */
+	double DeltaE_GWfrac; /* change in energy, as a fraction of initial energy, from the 2.5 pN terms */
 	double DeltaL; /* change in ang. mom. */
 	double DeltaLfrac; /* change in ang. mom., as a fraction of initial ang. mom. */
 	double Rmin; /* minimum distance of close approach during interaction */
@@ -163,13 +176,9 @@ typedef struct{
 } fb_ret_t;
 
 /* fewbody.c */
-//fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t);
 fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t, gsl_rng *rng, struct rng_t113_state *curr_st);
 
 /* fewbody_classify.c */
-//int fb_classify(fb_hier_t *hier, double t, double tidaltol);
-//int fb_is_stable(fb_obj_t *obj);
-//int fb_is_stable_binary(fb_obj_t *obj);
 int fb_classify(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units);
 int fb_is_stable(fb_obj_t *obj, double speedtol, fb_units_t units);
 int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units);
@@ -179,8 +188,6 @@ int fb_mardling(fb_obj_t *obj, int ib, int is);
 
 /* fewbody_coll.c */
 int fb_is_collision(double r, double R1, double R2);
-//int fb_collide(fb_hier_t *hier, double f_exp);
-//void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp);
 int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff);
 void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff);
 void fb_bh_merger(double m1, double m2, double a1, double a2, double *mass_frac, double *afinal, double *v_para, double *v_perp, struct rng_t113_state *curr_st);
@@ -197,7 +204,6 @@ char *fb_sprint_hier(fb_hier_t hier, char string[FB_MAX_STRING_LENGTH]);
 char *fb_sprint_hier_hr(fb_hier_t hier, char string[FB_MAX_STRING_LENGTH]);
 void fb_upsync(fb_obj_t *obj, double t);
 void fb_randorient(fb_obj_t *obj, gsl_rng *rng, struct rng_t113_state *curr_st);
-//void fb_randorient(fb_obj_t *obj, gsl_rng *rng);
 void fb_downsync(fb_obj_t *obj, double t);
 void fb_objcpy(fb_obj_t *obj1, fb_obj_t *obj2);
 
@@ -214,8 +220,7 @@ void fb_print_version(FILE *stream);
 void fb_print_story(fb_obj_t *star, int nstar, double t, char *logentry);
 
 /* fewbody_isolate.c */
-//int fb_collapse(fb_hier_t *hier, double t, double tidaltol);
-int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units);
+int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units, fb_nonks_params_t nonks_params);
 int fb_expand(fb_hier_t *hier, double t, double tidaltol);
 
 /* fewbody_ks.c */
@@ -253,6 +258,16 @@ int fb_cross(double x[3], double y[3], double z[3]);
 int fb_angmom(fb_obj_t *star, int nstar, double L[3]);
 void fb_angmomint(fb_obj_t *star, int nstar, double L[3]);
 double fb_einttot(fb_obj_t *star, int nstar);
+double fb_einttot_rel(fb_obj_t *star, int nstar);
+double fb_Etot_rel(fb_obj_t *star, int nstar, fb_units_t units, fb_nonks_params_t nonks_params);
+double fb_E_rel(fb_obj_t *star1, fb_obj_t *star2, fb_units_t units, fb_nonks_params_t nonks_params);
+double E_rel(fb_obj_t *star1, fb_obj_t *star2, fb_units_t units, fb_nonks_params_t nonks_params);
+double J_rel(fb_obj_t *star1, fb_obj_t *star2, fb_units_t units, fb_nonks_params_t nonks_params);
+void fb_n_ecc(fb_obj_t *obj1, fb_obj_t *obj2, double *a, double *e, fb_units_t units);
+void fb_check_ecc_for_inspiral(fb_obj_t *obj1, fb_obj_t *obj2, double sep_M, fb_units_t units);
+double fb_pn_ecc_t(fb_obj_t *star1, fb_obj_t *star2, fb_units_t units, fb_nonks_params_t nonks_params);
+double fb_compute_distance_in_M(fb_obj_t *star1, fb_obj_t *star2, fb_units_t units);
+double fb_dedt_gw(fb_obj_t *star, int nstar, fb_units_t units, fb_nonks_params_t nonks_params);
 double fb_petot(fb_obj_t *star, int nstar);
 double fb_ketot(fb_obj_t *star, int nstar);
 double fb_outerpetot(fb_obj_t **obj, int nobj);

@@ -97,7 +97,7 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 	int i;
 	double x1[3], x2[3], v1[3], v2[3], l1[3], l2[3], A[3], L[3], l[3];
     double E;
-	double clight, xrel[3], vrel[3], x[3], y[3], z[3], theta;
+	double clight, vrel[3], x[3], y[3], z[3], theta;
 	double v_perp, v_para, afinal, mass_frac;
 	fb_obj_t tmpobj;
 	clight = FB_CONST_C / units.v;
@@ -113,6 +113,12 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 	tmpobj.vkick = (double *) malloc(nstarinit * sizeof(double));
 	tmpobj.a_merger = (double *) malloc(nstarinit * sizeof(double));
 	tmpobj.e_merger = (double *) malloc(nstarinit * sizeof(double));
+	tmpobj.a_500M = (double *) malloc(nstarinit * sizeof(double));
+	tmpobj.e_500M = (double *) malloc(nstarinit * sizeof(double));
+	tmpobj.a_100M = (double *) malloc(nstarinit * sizeof(double));
+	tmpobj.e_100M = (double *) malloc(nstarinit * sizeof(double));
+	tmpobj.a_50M = (double *) malloc(nstarinit * sizeof(double));
+	tmpobj.e_50M = (double *) malloc(nstarinit * sizeof(double));
 
 	/* merge id's */
 	tmpobj.ncoll = obj1->ncoll + obj2->ncoll;
@@ -121,12 +127,24 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 		tmpobj.vkick[i] = obj1->vkick[i];
 		tmpobj.a_merger[i] = obj1->a_merger[i];
 		tmpobj.e_merger[i] = obj1->e_merger[i];
+		tmpobj.a_50M[i] = obj1->a_50M[i];
+		tmpobj.e_50M[i] = obj1->e_50M[i];
+		tmpobj.a_500M[i] = obj1->a_500M[i];
+		tmpobj.e_500M[i] = obj1->e_500M[i];
+		tmpobj.a_100M[i] = obj1->a_100M[i];
+		tmpobj.e_100M[i] = obj1->e_100M[i];
 	}
 	for (i=0; i<obj2->ncoll; i++) {
 		tmpobj.id[obj1->ncoll + i] = obj2->id[i];
 		tmpobj.vkick[obj1->ncoll + i] = obj2->vkick[i];
 		tmpobj.a_merger[obj1->ncoll + i] = obj2->a_merger[i];
 		tmpobj.e_merger[obj1->ncoll + i] = obj2->e_merger[i];
+		tmpobj.a_500M[obj1->ncoll + i] = obj2->a_500M[i];
+		tmpobj.e_500M[obj1->ncoll + i] = obj2->e_500M[i];
+		tmpobj.a_100M[obj1->ncoll + i] = obj2->a_100M[i];
+		tmpobj.e_100M[obj1->ncoll + i] = obj2->e_100M[i];
+		tmpobj.a_50M[obj1->ncoll + i] = obj2->a_50M[i];
+		tmpobj.e_50M[obj1->ncoll + i] = obj2->e_50M[i];
 	}
     tmpobj.vkick[tmpobj.ncoll-1] = 0; 
 
@@ -151,14 +169,7 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 		x2[i] = obj2->x[i] - tmpobj.x[i];
 		v1[i] = obj1->v[i] - tmpobj.v[i];
 		v2[i] = obj2->v[i] - tmpobj.v[i];
-        xrel[i] = obj1->x[i] - obj2->x[i];
-        vrel[i] = obj1->v[i] - obj2->v[i];
 	}
-
-    /* compute the orbital energy and semi-major axis at merger*/
-    E = 0.5 * (obj1->m * fb_dot(obj1->v, obj1->v) + obj2->m * fb_dot(obj2->v, obj2->v)) - 
-        obj1->m * obj2->m/fb_mod(xrel);
-	tmpobj.a_merger[tmpobj.ncoll-1] = -obj1->m * obj2->m / (2.0 * E);
 
 	/* set internal energy, using the difference in kinetic energy; the difference in potential energy
 	   depends on the positions of the other stars, and will be calculated later and added to Eint */
@@ -171,24 +182,19 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 	fb_cross(x2, v2, l2);
 	for (i=0; i<3; i++) {
 		tmpobj.Lint[i] = obj1->Lint[i] + obj2->Lint[i] + obj1->m * l1[i] + obj2->m * l2[i];
-	}
-
-    /* compute angular momenta for LRL vector*/
-	for (i=0; i<3; i++) {
 		L[i] = obj1->m * l1[i] + obj2->m * l2[i];
-		l[i] = L[i] * (obj1->m + obj2->m)/(obj1->m * obj2->m);
 	}
-	
-	/* -A = l x v + G M \hat r */
-	fb_cross(vrel, l, A);
-	for (i=0; i<3; i++) {
-		A[i] -= (obj1->m + obj2->m) * xrel[i]/fb_mod(xrel);
-	}
-	
-    /* magnitude of A gives the eccentricity at merger*/
-	tmpobj.e_merger[tmpobj.ncoll-1] = fb_mod(A)/(obj1->m + obj2->m);
-	
 
+    /* magnitude of A gives the eccentricity at merger*/
+    fb_n_ecc(obj1,obj2,&tmpobj.a_merger[tmpobj.ncoll-1],&tmpobj.e_merger[tmpobj.ncoll-1],units);
+
+    tmpobj.e_50M[tmpobj.ncoll-1] = obj1->e_50M[obj1->ncoll-1];
+    tmpobj.a_50M[tmpobj.ncoll-1] = obj1->a_50M[obj1->ncoll-1];
+    tmpobj.e_100M[tmpobj.ncoll-1] = obj1->e_100M[obj1->ncoll-1];
+    tmpobj.a_100M[tmpobj.ncoll-1] = obj1->a_100M[obj1->ncoll-1];
+    tmpobj.e_500M[tmpobj.ncoll-1] = obj1->e_500M[obj1->ncoll-1];
+    tmpobj.a_500M[tmpobj.ncoll-1] = obj1->a_500M[obj1->ncoll-1];
+	
 	/* Apply a change in mass/spin/recoil speed for compact-object mergers */
 	if (obj1->k_type == 14 && obj2->k_type == 14){
 
@@ -235,17 +241,29 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
      * the progenitor BH  
 	 *
 	 * Note that it does NOT allow for any accretion; the star is simply
-	 * destroyed
+	 * destroyed; also note that the velocity of the star is still changed, thus energy/angmom are 
+     * NOT conserved (hence the bookkeeping in Eint/Lint).  This is fundamentally inconsistant, but 
+     * is far more conservative than a half-assed TDE/accretion assumption.
      *
-     * TODO: Josh, Kyle, or possibly Future Carl: if you ever want to consider BH spin-up during
-     * mergers, you'll have to change this as well as the BSE merger matrix*/
+     * TODO: Josh, Kyle, or possibly Future Carl: if you ever want to consider a full-assed 
+     * TDE/accretion assumption during BH-star mergers, change this as well as the BSE merger matrix*/
 	} else if (obj1->k_type == 14){
         tmpobj.chi = obj1->chi;
+        tmpobj.Eint += 0.5*fb_sqr(fb_mod(tmpobj.v)) * (tmpobj.m - obj1->m);
+        fb_cross(tmpobj.x,tmpobj.v,L);
+        for (i = 0; i < 3; i++){
+            tmpobj.Lint[i] += (tmpobj.m - obj1->m)* L[i];
+        }
 		tmpobj.m = obj1->m;
         tmpobj.k_type = 14;
         tmpobj.R = bh_reff*2*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
     } else if (obj2->k_type == 14){
         tmpobj.chi = obj2->chi;
+        tmpobj.Eint += 0.5*fb_sqr(fb_mod(tmpobj.v)) * (tmpobj.m - obj2->m);
+        fb_cross(tmpobj.x,tmpobj.v,L);
+        for (i = 0; i < 3; i++){
+            tmpobj.Lint[i] += (tmpobj.m - obj2->m)* L[i];
+        }
 		tmpobj.m = obj2->m;
         tmpobj.k_type = 14;
         tmpobj.R = bh_reff*2*(tmpobj.m * units.m)*FB_CONST_G / FB_CONST_C / FB_CONST_C / units.l;
@@ -264,6 +282,12 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 	free(tmpobj.vkick);
 	free(tmpobj.a_merger);
 	free(tmpobj.e_merger);
+	free(tmpobj.a_50M);
+	free(tmpobj.e_50M);
+	free(tmpobj.a_500M);
+	free(tmpobj.e_500M);
+	free(tmpobj.a_100M);
+	free(tmpobj.e_100M);
 }
 
 /* How to deal with a merger: takes as input m1,m2 (in any units), a1, a2

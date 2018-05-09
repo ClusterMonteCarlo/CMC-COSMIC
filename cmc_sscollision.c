@@ -425,19 +425,21 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 		/* log collision */
 #ifdef USE_MPI
-		parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d\n",
+		parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g\n",
 			TotalTime,
 			star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
 			star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
 			star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
-			star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k);
+			star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
+            b*units.l/RSUN,W*units.l/units.t/1.e5);
 #else
-		parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d\n", 
+		parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g\n",
 			TotalTime, 
 			star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN, 
 			star[k].id, mass_k * units.mstar / FB_CONST_MSUN, 
 			star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
-			star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k);
+			star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
+            b*units.l/RSUN,W*units.l/units.t/1.e5);
 #endif
 
 		/* destroy two progenitors */

@@ -1462,11 +1462,11 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 *
 * @param retval ?
 */
-void binint_log_status(fb_ret_t retval)
+void binint_log_status(fb_ret_t retval, double vesc)
 {
 	/* must print out Nosc when upgraded to latest Fewbody */
-	parafprintf(binintfile, "status: DE/E=%g DE=%g DL/L=%g DL=%g tcpu=%g\n", 
-		retval.DeltaEfrac, retval.DeltaE, retval.DeltaLfrac, retval.DeltaL, retval.tcpu);
+	parafprintf(binintfile, "status: DE/E=%g DE=%g DL/L=%g DL=%g DE_GW/E=%g DE_GW=%g v_esc_cluster[km/s]=%g tcpu=%g\n", 
+		retval.DeltaEfrac, retval.DeltaE, retval.DeltaLfrac, retval.DeltaL, retval.DeltaE_GWfrac, retval.DeltaE_GW, vesc, retval.tcpu);
 }
 
 /**
@@ -1649,8 +1649,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 		alpha = sqrt(1.0 + fb_outerpetot(hier.obj, hier.nobj)/fb_outerketot(hier.obj, hier.nobj));
 	}
 
+    /* record the escape speed of the cluser where the encounter occured*/
+    double vesc = sqrt(-2*star_phi[get_global_idx(k)]) * (units.l/units.t) / 1.0e5;
+
 	/* logging */
-	binint_log_status(retval);
+	binint_log_status(retval,vesc);
 	printing_units.v = cmc_units.v * units.l / units.t;
 	printing_units.l = cmc_units.l * units.l;
 	printing_units.t = cmc_units.t * units.t;
@@ -1658,12 +1661,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	printing_units.E = cmc_units.E * units.E;
 
 	/* now do something with the Fewbody result */
-	if ( (!( (fabs(retval.DeltaEfrac) < 1.0e-3 || fabs(retval.DeltaE) < 1.0e-3) && 
-		 (fabs(retval.DeltaLfrac) < 1.0e-3 || fabs(retval.DeltaL) < 1.0e-3) ) 
-         && retval.PN_ON == 0 )) {
-		/* energy error; ignore for now */
-        /* TODO: we don't have a good way to check for energy/angular momentum conservation
-         * if the integration was done with PN terms*/
+	if ( !( (fabs(retval.DeltaEfrac) < 1.0e-3 || fabs(retval.DeltaE) < 1.0e-3) && 
+		 (fabs(retval.DeltaLfrac) < 1.0e-3 || fabs(retval.DeltaL) < 1.0e-3) ) && 
+         (!((fabs(retval.DeltaE_GWfrac) > 1.0e-3 || fabs(retval.DeltaE_GW > 1.0e-3)
+            ) && retval.PN_ON == 1))) /* did we have a significant energy error that wasn't from gravitational waves? */
+    {
 		parafprintf(binintfile, "outcome: energy and/or angular momentum error\n");
 		print_interaction_error();
 	} else if ( isnan(retval.DeltaE) || isnan(retval.DeltaL) ) {
@@ -1835,15 +1837,18 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             star[knew].se_radius = hier.obj[i]->R * cmc_units.l / BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             star[knew].Eint = 0;
                             if(WRITE_BH_INFO && tempstar.se_k == 14 && star[knew].se_k == 14)
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->id[0],hier.obj[i]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->id[0]) * units.mstar / FB_CONST_MSUN, 
                                                           binint_get_mass(k, kp, hier.obj[i]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->id[0]), binint_get_spins(k, kp, hier.obj[i]->id[nmerged]), 
                                                           star[knew].m*units.mstar/MSUN,hier.obj[i]->chi,hier.obj[i]->vkick[nmerged],
+                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5,
 														  hier.obj[i]->a_merger[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->e_merger[nmerged],
-                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5);
+														  hier.obj[i]->a_50M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->e_50M[nmerged],
+														  hier.obj[i]->a_100M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->e_100M[nmerged],
+														  hier.obj[i]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->e_500M[nmerged]);
                             star[knew].se_k = 14;
                         } else{
                             merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs, curr_st);
@@ -1927,15 +1932,18 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_radius = hier.obj[i]->obj[0]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[0]->id[0],hier.obj[i]->obj[0]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[0]->id[0]) * units.mstar / FB_CONST_MSUN, 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[0]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[0]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[0]->id[nmerged]), 
                                                           tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[0]->chi,hier.obj[i]->obj[0]->vkick[nmerged],
+                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5,
 														  hier.obj[i]->obj[0]->a_merger[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[0]->e_merger[nmerged],
-                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5);
+														  hier.obj[i]->obj[0]->a_50M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[0]->e_50M[nmerged],
+														  hier.obj[i]->obj[0]->a_100M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[0]->e_100M[nmerged],
+														  hier.obj[i]->obj[0]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[0]->e_500M[nmerged]);
                             tempstar.se_k = 14;
                         } else{
                             merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
@@ -2014,15 +2022,18 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_radius = hier.obj[i]->obj[1]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[1]->id[0],hier.obj[i]->obj[1]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[1]->id[0]) * units.mstar / FB_CONST_MSUN, 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[1]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[1]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[1]->id[nmerged]), 
                                                           tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[1]->chi,hier.obj[i]->obj[1]->vkick[nmerged],
+                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5,
 														  hier.obj[i]->obj[1]->a_merger[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[1]->e_merger[nmerged],
-                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5);
+														  hier.obj[i]->obj[1]->a_50M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[1]->e_50M[nmerged],
+														  hier.obj[i]->obj[1]->a_100M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[1]->e_100M[nmerged],
+														  hier.obj[i]->obj[1]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[1]->e_500M[nmerged]);
                             tempstar.se_k = 14;
                         } else{
                             merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
@@ -2128,7 +2139,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				/* internal energy */
 				star[knewp].Eint = hier.obj[i]->obj[sid]->Eint * cmc_units.E;
 				star[knewp].E_excess = energy_from_outer * cmc_units.E;
-				printf("Eexcess from triple=%g\n",star[knewp].E_excess);
 
 				/* id */
 				if (hier.obj[i]->obj[sid]->ncoll == 1) {
@@ -2159,15 +2169,18 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             star[knewp].se_radius = hier.obj[i]->obj[sid]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             star[knewp].Eint = 0;
                             if(WRITE_BH_INFO && star[knewp].se_k == 14 && tempstar.se_k == 14 )
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[sid]->id[0],hier.obj[i]->obj[sid]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[sid]->id[0]) * units.mstar / FB_CONST_MSUN, 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[sid]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[sid]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[sid]->id[nmerged]), 
                                                           star[knewp].m*units.mstar/MSUN,hier.obj[i]->obj[sid]->chi,hier.obj[i]->obj[sid]->vkick[nmerged],
+                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5,
 														  hier.obj[i]->obj[sid]->a_merger[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[sid]->e_merger[nmerged],
-                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5);
+														  hier.obj[i]->obj[sid]->a_50M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[sid]->e_50M[nmerged],
+														  hier.obj[i]->obj[sid]->a_100M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[sid]->e_100M[nmerged],
+														  hier.obj[i]->obj[sid]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[sid]->e_500M[nmerged]);
                             star[knewp].se_k = 14;
                         } else{
                             merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs, curr_st);
@@ -2247,15 +2260,18 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_radius = hier.obj[i]->obj[bid]->obj[0]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[bid]->obj[0]->id[0],hier.obj[i]->obj[bid]->obj[0]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[0]) * units.mstar / FB_CONST_MSUN, 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]), 
                                                           tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[bid]->obj[0]->chi,hier.obj[i]->obj[bid]->obj[0]->vkick[nmerged],
+                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5,
 														  hier.obj[i]->obj[bid]->obj[0]->a_merger[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[0]->e_merger[nmerged],
-                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5);
+														  hier.obj[i]->obj[bid]->obj[0]->a_50M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[0]->e_50M[nmerged],
+														  hier.obj[i]->obj[bid]->obj[0]->a_100M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[0]->e_100M[nmerged],
+														  hier.obj[i]->obj[bid]->obj[0]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[0]->e_500M[nmerged]);
                             tempstar.se_k = 14;
                         } else{
                             merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
@@ -2324,16 +2340,19 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_bhspin = hier.obj[i]->obj[bid]->obj[1]->chi;
                             tempstar.se_radius = hier.obj[i]->obj[bid]->obj[1]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
-                            if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14 )
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n",
+                            if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[bid]->obj[1]->id[0],hier.obj[i]->obj[bid]->obj[1]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[0]) * units.mstar / FB_CONST_MSUN, 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]) * units.mstar / FB_CONST_MSUN,
                                                           binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[0]), binint_get_spins(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]), 
                                                           tempstar.m*units.mstar/MSUN,hier.obj[i]->obj[bid]->obj[1]->chi,hier.obj[i]->obj[bid]->obj[1]->vkick[nmerged],
-														  hier.obj[i]->obj[bid]->obj[1]->a_merger[nmerged]*cmc_units.l*units.l / FB_CONST_AU,hier.obj[i]->obj[bid]->obj[1]->e_merger[nmerged],
-                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5);
+                                                          sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5,
+														  hier.obj[i]->obj[bid]->obj[1]->a_merger[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[1]->e_merger[nmerged],
+														  hier.obj[i]->obj[bid]->obj[1]->a_50M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[1]->e_50M[nmerged],
+														  hier.obj[i]->obj[bid]->obj[1]->a_100M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[1]->e_100M[nmerged],
+														  hier.obj[i]->obj[bid]->obj[1]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[1]->e_500M[nmerged]);
                             tempstar.se_k = 14;
                         } else{
                             merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
@@ -2720,9 +2739,6 @@ void mpi_break_wide_binaries(void)
 			if (breakBinary){
 				Eexcess += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 
-
-				printf("Eexcess from binary=%g\n",Eexcess);
-
 				/* create two stars for the binary components */
 				knew = create_star(k, 0);
 				knewp = create_star(k, 0);
@@ -2743,7 +2759,6 @@ void mpi_break_wide_binaries(void)
             star[k].vr *= exc_ratio;
             star[k].vt *= exc_ratio;
             set_star_EJ(k);
-			//printf("stealing binary energy = %lg from star id = %ld\n", E_dump,g_k);
             Eexcess -= E_dump;
             star[k].interacted = 1;
 		   }
@@ -3305,9 +3320,10 @@ void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct
 	star[knew].se_bhspin = afinal;
 
     if(WRITE_BH_INFO)
-        parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g\n", TotalTime, "isolat-binary",
+        parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g -100 -100 -100 -100 -100 -100\n", TotalTime, "isolat-binary",
                                         star_r[get_global_idx(knew)], binary[kb].id1,binary[kb].id2, m1,m2,chi1,chi2,
-                                        (m1+m2)*mass_frac, afinal,vk,binary[kb].a*units.l/AU,binary[kb].e,
-                                        sqrt(-2*star_phi[get_global_idx(knew)]) * (units.l/units.t) / 1.0e5);
+                                        (m1+m2)*mass_frac, afinal,vk, 
+                                        sqrt(-2*star_phi[get_global_idx(knew)])*(units.l/units.t) / 1.0e5, 
+                                        binary[kb].a*units.l/AU,binary[kb].e);
 }
 

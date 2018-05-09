@@ -32,13 +32,15 @@
 
 int fb_debug = 0;
 
-// PAU fb_ret_t fewbody(fb_input_t input, fb_hier_t *hier, double *t)
 fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t, gsl_rng *rng, struct rng_t113_state *curr_st)
 {
 	int i, j, k, status, done=0, forceclassify=0, restart, restep;
 	long clk_tck;
 	double s, slast, sstop=FB_SSTOP, tout, h=FB_H, *y, texpand, tnew, R[3];
 	double Ei, E, Lint[3], Li[3], L[3], DeltaL[3];
+	double E_rel, E_rel_i;
+	double dedt_gw_old,dedt_gw_new;
+	double r_in_M;
 	double s2, s2prev=GSL_POSINF, s2prevprev=GSL_POSINF, s2minprev=GSL_POSINF, s2max=0.0, s2min;
 	struct tms firsttimebuf, currtimebuf;
 	clock_t firstclock, currclock;
@@ -60,6 +62,7 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 	retval.Rmin_i = -1;
 	retval.Rmin_j = -1;
 	retval.Nosc = 0;
+	retval.DeltaE_GW = 0.;
 	strncpy(logentry, input.firstlogentry, FB_MAX_LOGENTRY_LENGTH);
 
 	/* set up the perturbation tree, initially flat */
@@ -108,6 +111,10 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 		nonks_params.units = units;
 	}
 
+    if (input.PN1 == 1 || input.PN2 == 1 || input.PN25 == 1 || input.PN3 == 1 || input.PN35 == 1){
+        retval.PN_ON = 1;
+    }
+
 	
 	/* set the initial conditions in y_i */
 	if (input.ks) {
@@ -124,6 +131,8 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 	/* store the initial energy and angular momentum */
 	Ei = fb_petot(&(hier->hier[hier->hi[1]]), hier->nstar) + fb_ketot(&(hier->hier[hier->hi[1]]), hier->nstar) + 
 		fb_einttot(&(hier->hier[hier->hi[1]]), hier->nstar);
+	E_rel_i = fb_Etot_rel(&(hier->hier[hier->hi[1]]), hier->nstar, units, nonks_params);
+	dedt_gw_new = fb_dedt_gw(&(hier->hier[hier->hi[1]]), hier->nstar, units, nonks_params);
 	fb_angmom(&(hier->hier[hier->hi[1]]), hier->nstar, Li);
 	fb_angmomint(&(hier->hier[hier->hi[1]]), hier->nstar, Lint);
 	for (i=0; i<3; i++) {
@@ -177,8 +186,7 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 				}
 			}
 			fb_elkcirt(&phier, *t);
-		// PAU } else if (tnew >= texpand && fb_collapse(&phier, tnew, input.tidaltol)) {
-		} else if (tnew >= texpand && fb_collapse(&phier, tnew, input.tidaltol, input.speedtol, units)) {
+		} else if (tnew >= texpand && fb_collapse(&phier, tnew, input.tidaltol, input.speedtol, units, nonks_params)) {
 			*t = tnew;
 			/* if there is only one object, then it's stable---force classify() */
 			if (phier.nobj == 1) {
@@ -200,13 +208,30 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 					hier->hier[hier->hi[1]+i].v[k] = phier.hier[phier.hi[1]+i].v[k];
 				}
 			}
-			
+
+            /* integrate de/dt from the quadrupole formula and add it to the total energy lost */
+            if(retval.PN_ON){
+                dedt_gw_old = dedt_gw_new;
+                dedt_gw_new = fb_dedt_gw(&(hier->hier[hier->hi[1]]), hier->nstar, units, nonks_params);
+                retval.DeltaE_GW += (dedt_gw_old + dedt_gw_new) * (s - slast) / 2.;
+            }
+
 			/* update Rmin (closest approach) */
 			for (i=0; i<hier->nstar-1; i++) {
 				for (j=i+1; j<hier->nstar; j++) {
 					for (k=0; k<3; k++) {
 						R[k] = hier->hier[hier->hi[1]+i].x[k] - hier->hier[hier->hi[1]+j].x[k];
 					}
+	
+                    /* For PN terms, compute a,e for any possible pairs that may soon merge */
+                    if(retval.PN_ON){
+                        r_in_M = fb_compute_distance_in_M(&hier->hier[hier->hi[1]+i],&hier->hier[hier->hi[1]+j], units);
+        
+                        if(r_in_M < 510) {
+                            fb_check_ecc_for_inspiral(&hier->hier[hier->hi[1]+i],&hier->hier[hier->hi[1]+j], r_in_M, units);
+                        }
+                    }
+	
 					if (fb_mod(R) < retval.Rmin) {
 						retval.Rmin = fb_mod(R);
 						retval.Rmin_i = i;
@@ -216,7 +241,6 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 			}
 			
 			/* do physical collisions */
-			// PAU if (fb_collide(hier, input.fexp)) {
 			if (fb_collide(hier, input.fexp, units, rng, curr_st, input.BH_REFF)) {
 				/* initialize phier to a flat tree */
 				phier.nstar = hier->nstar;
@@ -366,6 +390,8 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 
 	E = fb_petot(&(hier->hier[hier->hi[1]]), hier->nstar) + fb_ketot(&(hier->hier[hier->hi[1]]), hier->nstar) + 
 		fb_einttot(&(hier->hier[hier->hi[1]]), hier->nstar);
+	E_rel = fb_Etot_rel(&(hier->hier[hier->hi[1]]), hier->nstar, units, nonks_params) + 
+		fb_einttot_rel(&(hier->hier[hier->hi[1]]), hier->nstar);
 	fb_angmom(&(hier->hier[hier->hi[1]]), hier->nstar, L);
 	fb_angmomint(&(hier->hier[hier->hi[1]]), hier->nstar, Lint);
 	for (i=0; i<3; i++) {
@@ -393,9 +419,7 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 	retval.DeltaEfrac = E/Ei-1.0;
 	retval.DeltaL = fb_mod(DeltaL);
 	retval.DeltaLfrac = fb_mod(DeltaL)/fb_mod(Li);
-    if (input.PN1 == 1 || input.PN2 == 1 || input.PN25 == 1 || input.PN3 == 1 || input.PN35 == 1)
-        retval.PN_ON = 1;
-    else
-        retval.PN_ON = 0;
+    if (retval.PN_ON)
+        retval.DeltaE_GWfrac = retval.DeltaE_GW/Ei; /* technically this should be the pN Ei, but any scattering should start off in the Newtonian regime anyway...*/
 	return(retval);
 }

@@ -25,11 +25,13 @@
 #include "fewbody.h"
 
 /* build the binary tree, subject to tidal criterion */
-// PAU int fb_collapse(fb_hier_t *hier, double t, double tidaltol)
-int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units)
+int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units, fb_nonks_params_t nonks_params)
 {
 	int i, j, k, n, isave[2], cont=1, retval=0;
-	double a, amin, E, xrel[3], v0[3], v1[3], vcm[3], ftid;
+	double a, amin, E, xrel[3], v0[3], v1[3], vcm[3], ftid, E_pN;
+
+	/* we only need the even terms here, since those are the conservative energy terms */
+	int PN_on = nonks_params.PN1 + nonks_params.PN2 + nonks_params.PN3;
 
 	/* first find the tightest binary and test to see whether it is unperturbed */
 	while (cont) {
@@ -48,8 +50,10 @@ int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_
 				
 				E = 0.5 * (hier->obj[j]->m * fb_dot(v0, v0) + hier->obj[k]->m * fb_dot(v1, v1)) - \
 					hier->obj[j]->m * hier->obj[k]->m / fb_mod(xrel);
-				
-				if (E < 0.0) {
+
+				E_pN = fb_E_rel(hier->obj[j], hier->obj[k], units, nonks_params);
+
+				if (E < 0.0 && (!PN_on || E_pN < 0.0)) {
 					a = -hier->obj[j]->m * hier->obj[k]->m / (2.0 * E);
 					if (a < amin) {
 						amin = a;
@@ -93,7 +97,6 @@ int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_
 			}
 				
 			/* can't collapse if the object is not stable */
-			// PAU if (!fb_is_stable(&(hier->hier[hier->hi[n]+hier->narr[n]]))) {
 			if (!fb_is_stable(&(hier->hier[hier->hi[n]+hier->narr[n]]), speedtol, units)) {
 				cont = 0;
 			}
