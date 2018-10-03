@@ -891,6 +891,11 @@ typedef struct{
  * @brief Write out information about neutron stars (0=off, 1=on)
  * */
         int WRITE_MOREPULSAR_INFO;
+#define PARAMDOC_PULSAR_DELTACOUNT "Pulsar output interval in time steps"
+/**
+ * * @brief Pulsar output interval in time steps
+ * */
+        int PULSAR_DELTACOUNT;
 #define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"
 /**
 * @brief Write out information about 10\% lagrange radius (0=off, 1=on)

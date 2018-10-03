@@ -1018,6 +1018,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BH_SNAPSHOT_DELTACOUNT);
 				sscanf(values, "%ld", &BH_SNAPSHOT_DELTACOUNT);
 				parsed.BH_SNAPSHOT_DELTACOUNT = 1;
+			} else if (strcmp(parameter_name, "PULSAR_DELTACOUNT") == 0) {
+                                PRINT_PARSED(PARAMDOC_PULSAR_DELTACOUNT);
+                                sscanf(values, "%ld", &PULSAR_DELTACOUNT);
+                                parsed.PULSAR_DELTACOUNT = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOTTING") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOTTING);
 				sscanf(values, "%d", &SNAPSHOTTING);
@@ -1493,6 +1497,7 @@ if(myid==0) {
 
 	CHECK_PARSED(BH_SNAPSHOTTING, 0, PARAMDOC_BH_SNAPSHOTTING);
 	CHECK_PARSED(BH_SNAPSHOT_DELTACOUNT, 50, PARAMDOC_BH_SNAPSHOT_DELTACOUNT);
+	CHECK_PARSED(PULSAR_DELTACOUNT, 50, PARAMDOC_PULSAR_DELTACOUNT);    //Shi: new parameter
 	CHECK_PARSED(SNAPSHOTTING, 0, PARAMDOC_SNAPSHOTTING);
 	CHECK_PARSED(SNAPSHOT_DELTACOUNT, 250, PARAMDOC_SNAPSHOT_DELTACOUNT);
 	CHECK_PARSED(SNAPSHOT_DELTAT, 0.25, PARAMDOC_SNAPSHOT_DELTAT);
@@ -2140,7 +2145,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			pararootfprintf(pulsarfile, "tcount    TotalTime    Star_id      Rperi    Rapo    R     VR    VT    PHI    PHIr0    PHIrt    kick    Binary_id1    Binary_id2    kw2     P     B    formation     bacc    tacc    B0   TB     M2    M1     e     R2/RL2     dm1/dt   \n");
                 /* print header */ //Shi
                 if (WRITE_MOREPULSAR_INFO)
-               		pararootfprintf(morepulsarfile,"#1:tcount 2:TotalTime #3:id #4:m[MSUN] #5:radius[RSUN] #6:B[G] #7:P[sec] #8:startype #9:binflag #10:id0 #11:id1 #12:m0[MSUN] #13:m1[MSUN] #14:radius0[RSUN] #15:radius1[RSUN] #16:B0[G] #17:B1[G] #18:P0[sec] #19:P1[sec] #20:startype0 #21:startype1 #22:a[AU] #23:ecc \n");
+               		pararootfprintf(morepulsarfile,"#1:tcount #2:TotalTime #3:binflag #4:id0 #5:id1 #6:m0[MSUN] #7:m1[MSUN] #8:B0[G] #9:B1[G] #10:P0[sec] #11:P1[sec] #12:startype0 #13:startype1 #14:a[AU] #15:ecc #16:radrol0 #17:radrol1 #18:dmdt0 #19:dmdt1\n");
 
 	} /*if(RESTART_TCOUNT == 0)*/
 
