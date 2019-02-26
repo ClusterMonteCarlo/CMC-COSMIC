@@ -706,6 +706,11 @@ typedef struct{
 * @brief allow for tidal capture in single-single interactions, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)
 */
 	int TIDAL_CAPTURE;
+#define PARAMDOC_BH_CAPTURE "Allow for the formation of binary black holes from gravitational-wave emission during single-single encounters; SS_COLLISION must be 1"
+/**
+* @brief Allow for the formation of binary black holes from gravitational-wave emission during single-single encounters; SS_COLLISION must be 1
+*/
+	int BH_CAPTURE;
 	//Sourav: toy rejuvenation flags
 #define PARAMDOC_STAR_AGING_SCHEME "the aging scheme of the stars (0=infinite age of all stars, 1=rejuvenation, 2=zero lifetime of collision stars, 3=arbitrary lifetime)"
 /**
@@ -891,6 +896,11 @@ typedef struct{
  * @brief Write out information about neutron stars (0=off, 1=on)
  * */
         int WRITE_MOREPULSAR_INFO;
+#define PARAMDOC_PULSAR_DELTACOUNT "Pulsar output interval in time steps"
+/**
+ * * @brief Pulsar output interval in time steps
+ * */
+        int PULSAR_DELTACOUNT;
 #define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"
 /**
 * @brief Write out information about 10\% lagrange radius (0=off, 1=on)
@@ -1603,10 +1613,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 double simul_relax(gsl_rng *rng);
 double simul_relax_new(void);
+int destroy_bbh(double m1, double m2,double a,double e,double nlocal,double sigma,struct rng_t113_state* rng_st);
 #ifdef USE_MPI
 double mpi_simul_relax_new(void);
 void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r, double *sig_sigma, long* sig_n, int r_0_mave_1);
-void mpi_break_wide_binaries(void);
+void mpi_break_wide_binaries(struct rng_t113_state* rng_st);
 #endif
 
 void break_wide_binaries(void);

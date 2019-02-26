@@ -17,7 +17,7 @@
 void dynamics_apply(double dt, gsl_rng *rng)
 {
 	long j, si, p=AVEKERNEL, N_LIMIT, k, kp, ksin, kbin;
-	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
+	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, S_brem, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
 	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi=0;
 //	double vel1[4], vel2[4], vel3[4], vel1a[4], vel2a[4], vel1b[4], vel3b[4];
 	double Trel12;
@@ -32,6 +32,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	double n_threshold, triplet_count, num_triplets_averaged=200;
 	double ave_local_mass, sigma_local, vrel_ave, v1[4], v2[4], v3[4], vrel12[4], vrel3[4]; 
 	double eta_min=MIN_BINARY_HARDNESS, Y1, rate_3bb, rate_ave=0.0, P_3bb, P_ave=0.0;
+	double clight10o7;
 
 #ifdef USE_MPI
     mpi_calc_sigma_r(AVEKERNEL, mpiEnd-mpiBegin+1, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
@@ -344,6 +345,9 @@ are skipped if they already interacted in 3bb loop!  */
 			}
 		} else {
 			if (SS_COLLISION) {
+
+				S_tmp = 0.0;
+
 				if (TIDAL_CAPTURE) {
 					/* single--single tidal capture cross section (Kim & Lee 1999);
 					   here we treat a compact object (k>=10) as a point mass, a massive MS star (k=1) as an 
@@ -389,11 +393,21 @@ are skipped if they already interacted in 3bb loop!  */
 					}
 
 					S_tmp = MAX(S_tc, S_lombardi);
-				} else {
-					S_tc = 0.0;
-					S_lombardi = 0.0;
-					S_tmp = 0.0;
+
+                }
+
+				if (BH_CAPTURE) {
+					/* cross section for single-single GW capture, from Quinlan and Shapiro 1987 */
+					if (star[k].se_k == 14 && star[kp].se_k == 14){
+						clight10o7 = pow(2.9979e10 / (units.l/units.t) ,1.428571);
+						rperi = 2.957852 * madhoc * (mass_k + mass_kp) / pow(W,0.57142857) / clight10o7;
+						S_brem = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
+
+						S_tmp = MAX(S_tmp, S_brem);
+					}
 				}
+
+
 				
 				/* standard sticky sphere collision cross section */
 				rperi = star[k].rad + star[kp].rad;
@@ -561,7 +575,7 @@ are skipped if they already interacted in 3bb loop!  */
 
 	/* break pathologically wide binaries */
 #ifdef USE_MPI
-	mpi_break_wide_binaries();
+	mpi_break_wide_binaries(curr_st);
 #else
 	break_wide_binaries();
 #endif
