@@ -102,7 +102,7 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
 {
   int mykw, kattempt=-1, i;
   double mymass, mymt, myr, mylum, mymc, myrc, mymenv, myrenv, myospin, myepoch;
-  double mytms, mytphys, mytphysf, mydtp, myvs[12], tphystried;
+  double mytms, mytphys, mytphysf, mydtp, myvs[16], tphystried;
 
   do {
     kattempt++;
@@ -242,7 +242,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
 {
   int mykstar[2], mykstarprev[2], kattempt=-1, j, i;
   double mymass0[2], mymass[2], myrad[2], mylum[2], mymassc[2], myradc[2], mymenv[2], myrenv[2], myospin[2], myB_0[2], mybacc[2], mytacc[2], myepoch[2];
-  double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[12], mybhspin[2];
+  double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[16], mybhspin[2];
 
   //  do {
     kattempt++;
