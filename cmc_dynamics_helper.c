@@ -2691,6 +2691,47 @@ void break_wide_binaries(void)
 	Eoops += -Eexcess;
 }
 
+/**
+* @brief
+   Here we need to compare the inspiral time for binary black holes to the typical
+   timescale for another encounter.  Note that I'm not being careful with units, since we
+   only need to compare timescales
+*/
+
+int destroy_bbh(double m1, double m2,double a,double e,double nlocal,double sigma,struct rng_t113_state* rng_st)
+{
+    /* if the binary isn't eccentric, don't bother*/
+    if(e < 0.9)
+        return 1;
+
+    double T_bs, lambda_bs, T_gw, X, beta;
+	double clight = 2.9979e10 / (units.l/units.t); 
+
+    /* first compute the typical rate between encounters 
+     * 4*sqrt(pi) = 7.089815
+     * Note that sigma is the 3D velocity dispersion; we want 1D */
+    lambda_bs = 7.089815 * nlocal * sqr(a) * (sigma/sqrt(3)) * (1 + madhoc*(m1+m2)/(2*a*sqr(sigma)/3));
+
+    /* then the gravitational-wave timescale to merger (in the high e limit)
+     * from Peters 1964 
+     * 64/5 = 12.8
+     * 768/425 = 1.807058 */
+    beta = 12.8 * m1*m2*(m1+m2)*madhoc*madhoc*madhoc / pow(clight,5);
+    T_gw = 1.807058 * (pow(a,4) / (4*beta)) * pow(1-sqr(e),3.5);
+
+    /* Then compute a random time for the next encounter, taken from the 
+     * exponential distribution */
+	X = rng_t113_dbl_new(rng_st);
+    T_bs = -log(1-X) / lambda_bs;
+
+    /* now just compare the two; if T_bs < T_gw, break the binary*/
+    if(T_bs < T_gw)
+        return 1;
+    else
+        return 0;
+    
+}
+
 #ifdef USE_MPI
 /**
 * @brief
@@ -2698,7 +2739,7 @@ void break_wide_binaries(void)
    to produce pathologically wide binaries, which must be broken by hand, else 
    they shorten the timestep to a crawl.
 */
-void mpi_break_wide_binaries(void)
+void mpi_break_wide_binaries(struct rng_t113_state* rng_st)
 {
 	long i,g_i,j, k, g_k, knew, knewp;
     int breakBinary = 0;
@@ -2735,6 +2776,12 @@ void mpi_break_wide_binaries(void)
                 breakBinary = (hardness <= MIN_BINARY_HARDNESS);
             else
                 breakBinary = (binary[j].a*(1.0+binary[j].e) >= llocal);
+
+            /* Special care must be taken for binary black holes, which can have very wide orbits
+             * but very small merger timescales if the eccentricity is high */
+            if(breakBinary && binary[j].bse_kw[0] == 14 && binary[j].bse_kw[1] == 14){
+                breakBinary = destroy_bbh(binary[j].m1, binary[j].m2, binary[j].a, binary[j].e,nlocal,sqrt(sigma2),rng_st);
+            }
 
 			if (breakBinary){
 				Eexcess += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);

@@ -1138,6 +1138,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_TIDAL_CAPTURE);
 				sscanf(values, "%ld", &TIDAL_CAPTURE);
 				parsed.TIDAL_CAPTURE = 1;
+			} else if (strcmp(parameter_name, "BH_CAPTURE") == 0) {
+				PRINT_PARSED(PARAMDOC_BH_CAPTURE);
+				sscanf(values, "%ld", &BH_CAPTURE);
+				parsed.BH_CAPTURE = 1;
 			} /*Sourav:new parameter*/
 			else if (strcmp(parameter_name, "STAR_AGING_SCHEME") == 0) {
 			 	PRINT_PARSED(PARAMDOC_STAR_AGING_SCHEME);
@@ -1467,6 +1471,7 @@ if(myid==0) {
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
 	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
+	CHECK_PARSED(BH_CAPTURE, 0, PARAMDOC_BH_CAPTURE);
 	/*Sourav: new parameter*/
 	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
 	CHECK_PARSED(SAMPLESIZE, 1024, PARAMDOC_SAMPLESIZE);
@@ -2412,7 +2417,7 @@ char *sprint_bin_dyn(long k, char string[MAX_STRING_LENGTH])
 {
 	long bi=star[k].binind;
 
-	snprintf(string, MAX_STRING_LENGTH, "[(%ld,%.3g,%d)-%.3g,%.3g-(%ld,%.3g,%d)]", 
+	snprintf(string, MAX_STRING_LENGTH, "[(%ld,%.3g,%d)-%.4g,%.10g-(%ld,%.3g,%d)]", 
 		 binary[bi].id1, binary[bi].m1*units.mstar/FB_CONST_MSUN, binary[bi].bse_kw[0],
 		 binary[bi].a*units.l/FB_CONST_AU, binary[bi].e,
 		 binary[bi].id2, binary[bi].m2*units.mstar/FB_CONST_MSUN, binary[bi].bse_kw[1]);
