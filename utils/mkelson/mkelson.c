@@ -43,20 +43,7 @@ double extended_hyperg_2F1(double a, double b, double c, double x){
 	s = 1. - x;	
 	t1 = fabs(b - a);
 
-	if ( 0 && x < -2.0 && fabs(t1 - round(t1)) > EPS) {
-		/* This transform has a pole for b-a integer, and
-	  	 * may produce large cancellation errors for |1/x| close 1
-  	 	 */
-		//fprintf(stderr,"t1=%g\n",t1);
-		p = extended_hyperg_2F1(a, 1 - c + a, 1 - b + a, 1.0 / x);
-		q = extended_hyperg_2F1(b, 1 - c + b, 1 - a + b, 1.0 / x);
-		p *= pow(-x, -a);
-		q *= pow(-x, -b);
-		t1 = gamma(c);
-		s = t1 * gamma(b - a) / (gamma(b) * gamma(c - a));
-		y = t1 * gamma(a - b) / (gamma(a) * gamma(c - b));
-		return s * p + y * q;
-	} else if (x < -1.0) {
+	if (x < -1.0) {
 		if (fabs(a) < fabs(b)) {
 			//fprintf(stderr,"%g %g\n",pow(s, -a), extended_hyperg_2F1(a, c - b, c, x / (x - 1)));
 			return pow(s, -a) * extended_hyperg_2F1(a, c - b, c, x / (x - 1));

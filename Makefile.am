@@ -9,7 +9,7 @@ SUBDIRS = libs bse_wrap fewbody-0.24
 bin_PROGRAMS = cmc
 
 if BUILD_UTILS
-bin_PROGRAMS+= cmc_mkplummer cmc_mkking cmc_setimf cmc_setunits cmc_setstellar cmc_addbinaries cmc_nbody2fits
+bin_PROGRAMS+= cmc_mkplummer cmc_mkelson cmc_mkking cmc_setimf cmc_setunits cmc_setstellar cmc_addbinaries cmc_nbody2fits
 endif
 
 cmc_SOURCES= cmc.c
@@ -26,6 +26,10 @@ endif
 cmc_mkplummer_SOURCES = utils/mkplummer/mkplummer.c
 cmc_mkplummer_LDADD = libs/libsupport.la
 cmc_mkplummer_LDFLAGS = $(LIBTOOL_LDFLAGS)
+
+cmc_mkelson_SOURCES = utils/mkelson/mkelson.c
+cmc_mkelson_LDADD = libs/libsupport.la
+cmc_mkelson_LDFLAGS = $(LIBTOOL_LDFLAGS)
 
 cmc_mkking_SOURCES = utils/mkking/mkking.c
 cmc_mkking_LDADD = libs/libsupport.la
