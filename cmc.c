@@ -118,6 +118,9 @@ int main(int argc, char *argv[])
 	Start = (int *) calloc(procs, sizeof(int));
 	End = (int *) calloc(procs, sizeof(int));
 
+	if(USE_TT_FILE)
+		load_tidal_tensor();
+
 #ifndef USE_MPI
 /*
 MPI: These are arrays used for mimicking the parallel version. In the parallel version new stars created are stored at the end of the local star array of each processor. In the serial version, the same is done i.e. they are placed at the end of the star array beyond the sentinel (which is a nullified star indicating the end of old stars and beginning of newly created ones). However, in order for the serial version to mimic the parallel, it is essential to know which node would have created these stars in a corresponding parallel run so as to draw a random number from the appropriate stream. Although this is trivial for the old stars since it is a just function of the index of the star, for newly created stars it is not, since they are stored at the end of the array and are mixed up.
@@ -146,8 +149,8 @@ We use these two arrays to store the number of stars created by each node during
 		/*Find the limits on each MPI process, but using the actual star numbers*/
 		findLimits( clus.N_MAX, MIN_CHUNK_SIZE );
 
-        /*Should already be sorted, but new stars need to be accounted for*/
-        qsorts_new();
+		/*Should already be sorted, but new stars need to be accounted for*/
+		qsorts_new();
 
 		/*Communicate that information to the global arrays*/
 		post_sort_comm();
@@ -158,7 +161,12 @@ We use these two arrays to store the number of stars created by each node during
 //	N_b_OLD = N_b;
 //	N_b_NEW = N_b;
 
-	orbit_r = R_MAX;
+	if(USE_TT_FILE){
+		load_tidal_tensor();
+		orbit_r = compute_tidal_boundary();
+	} else {
+		orbit_r = R_MAX;
+	}
 
 	/* compute the potential */
 	calc_potential_new();
@@ -374,6 +382,11 @@ We use these two arrays to store the number of stars created by each node during
 		tmpTimeStart = timeStartSimple();
 		calc_timestep(rng);
 		timeEndSimple(tmpTimeStart, &t_timestep);
+
+		/* If we're using a tidal tensor, advance to the new orbit of 
+		 * the cluster */
+		if(USE_TT_FILE)
+			orbit_r = compute_tidal_boundary();
 
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		tmpTimeStart = timeStartSimple();

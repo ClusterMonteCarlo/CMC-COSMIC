@@ -895,7 +895,6 @@ long potential_calculate(void) {
 	dprintf("Mtotal is %lf, cenma.m is %lf, madhoc is %lg, mprev is %lf\n", Mtotal, cenma.m, madhoc, mprev);
 
 	/* Compute new tidal radius using new Mtotal */
-
 	Rtidal = orbit_r * pow(Mtotal, 1.0 / 3.0);
 
 	/* zero boundary star first for safety */
@@ -1468,6 +1467,41 @@ void units_set(void)
 	diaprintf("units.l=%g PARSEC\n", units.l/PARSEC);
 	diaprintf("units.E=%g erg\n", units.E);
 	diaprintf("t_rel=%g YEAR\n", units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / YEAR);
+}
+
+/**
+* @brief compute the tidal boundary given the current time of the cluster and 
+* the dominant component of the tidal tensor 
+*/
+double compute_tidal_boundary(void){
+
+	double lambda_eff, slope;
+	double TimeNbody = TotalTime * clus.N_STAR / log(GAMMA*clus.N_STAR);
+
+	/* First find where we are in time; note we need the "-1" since we want 
+	 * to use N and N+1 to do the linear extrapolation */
+	while((TimeNbody > TT_times[TT_num]) && (TT_num < TT_num_max-1))
+		TT_num++;
+
+	/* If we've reached the end of the tidal tensor file, then just keep 
+	 * using the last value; this is wrong, but the best we can do. */
+	if(TT_num == TT_num_max-1){
+		eprintf("WARNING: have moved beyond the end of the tidal tensor file\n");
+		return orbit_r;
+	}
+
+	/* Linearly extrapolate to get the current lambda_effective */
+	slope = (TT_l1e[TT_num+1] - TT_l1e[TT_num]) / (TT_times[TT_num+1] - TT_times[TT_num]);
+	lambda_eff = TT_l1e[TT_num] + slope * (TimeNbody - TT_times[TT_num]);
+
+	if(lambda_eff < 0){
+		eprintf("WARNING: all eigenvalues of the tidal tensor are negative,\nmeaning cluster is in compressive mode; using previous tidal boundary...\n");
+		return orbit_r;
+	}
+
+	/* This should all already be in code units; once we multiply this by 
+	 * the updated cluster mass, it will give us the tidal radius*/
+	return pow(1 / lambda_eff, 0.333333333333);
 }
 
 /**

@@ -10,6 +10,8 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_odeiv2.h>
 #include <gsl/gsl_roots.h>
+#include <gsl/gsl_eigen.h>
+#include <gsl/gsl_sort_vector.h>
 #include <fitsio.h>
 #include <string.h>
 #include "common/fitslib.h"
@@ -636,6 +638,17 @@ typedef struct{
 * @brief input FITS file
 */
 	int INPUT_FILE;
+#define PARAMDOC_USE_TT_FILE "Whether to use a Tidal Tensor file"
+/**
+* @brief Whether to use a Tidal Tensor File (must specify the file name) 
+*/
+	int USE_TT_FILE;
+#define PARAMDOC_TT_FILE "Tidal Tensor file"
+/**
+* @brief The tidal tensor to compute the tidal stripping radius.  In physical 
+* units, it should be Time [Myr] T_xx T_yy T_zz T_xy T_xz T_yz [1/Myr^2] 
+*/
+	int TT_FILE;
 #define PARAMDOC_MASS_PC "mass fractions for Lagrange radii"
 /**
 * @brief mass fractions for Lagrange radii
@@ -1545,6 +1558,7 @@ void perturb_stars_fewbody(double dt, gsl_rng *rng);
 void qsorts_new(void);
 void qsorts(star_t *s, long n);
 void units_set(void);
+double compute_tidal_boundary(void);
 void central_calculate(void);
 
 #ifdef USE_MPI

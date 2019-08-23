@@ -41,6 +41,7 @@ _EXTERN_ double MINIMUM_R;
 _EXTERN_ double GAMMA, BININITEBMIN, BININITEBMAX;
 _EXTERN_ struct CenMa cenma;
 _EXTERN_ char MASS_PC[1000], MASS_BINS[1000], INPUT_FILE[1000];
+_EXTERN_ char *TT_FILE;
 _EXTERN_ char *SNAPSHOT_WINDOWS;
 _EXTERN_ char *SNAPSHOT_WINDOW_UNITS;
 _EXTERN_ int MASS_PC_BH_INCLUDE;
@@ -59,6 +60,7 @@ _EXTERN_ int THREEBODYBINARIES, ONLY_FORM_BH_THREEBODYBINARIES;;
 _EXTERN_ double MIN_BINARY_HARDNESS;
 _EXTERN_ double BINARY_DISTANCE_BREAKING;
 _EXTERN_ int BINARY_BREAKING_MIN; 
+_EXTERN_ int USE_TT_FILE; 
 _EXTERN_ long N3bbformed;
 _EXTERN_ double delta_E_3bb;
 // Meagan: extra bh output
@@ -177,6 +179,14 @@ _EXTERN_ double *mass_pc, *mass_r, *ave_mass_r, *densities_r, *no_star_r;
 _EXTERN_ double *ke_rad_r, *ke_tan_r, *v2_rad_r, *v2_tan_r;
 _EXTERN_ double *mass_bins, **multi_mass_r;
 _EXTERN_ int quiet;
+
+/**
+ * @brief the external arrays to save the diagionalized tidal tensor in.  Note 
+ * that this is saved AFTER the Eigenvalues have been computed and the variable 
+ * have been changed into code units.  
+*/
+_EXTERN_ double *TT_times, *TT_l1e;
+_EXTERN_ long TT_num, TT_num_max;
 
 /* mpi parallelization stuff */
 #ifdef USE_MPI

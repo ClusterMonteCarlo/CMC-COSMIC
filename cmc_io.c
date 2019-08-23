@@ -1042,15 +1042,15 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
 				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
 				parsed.SNAPSHOT_CORE_COLLAPSE = 1;
-            } else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
-                PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
-                if (strncmp(values, "NULL", 4) == 0) {
-                    SNAPSHOT_WINDOWS=NULL;
-                } else {
-                    SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
-                    strncpy(SNAPSHOT_WINDOWS, values, 300);
-                }
-				parsed.SNAPSHOT_WINDOWS = 1;
+			} else if (strcmp(parameter_name, "SNAPSHOT_WINDOWS") == 0) {
+				PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOWS);
+				if (strncmp(values, "NULL", 4) == 0) {
+				    SNAPSHOT_WINDOWS=NULL;
+				} else {
+				    SNAPSHOT_WINDOWS= (char *) malloc(sizeof(char)*300);
+				    strncpy(SNAPSHOT_WINDOWS, values, 300);
+				}
+					parsed.SNAPSHOT_WINDOWS = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_WINDOW_UNITS") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_WINDOW_UNITS);
 				SNAPSHOT_WINDOW_UNITS= (char *) malloc(sizeof(char)*10);
@@ -1065,6 +1065,19 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_IDUM);
 				sscanf(values, "%ld", &IDUM);
 				parsed.IDUM = 1;
+			} else if (strcmp(parameter_name, "USE_TT_FILE") == 0) {
+				PRINT_PARSED(PARAMDOC_USE_TT_FILE);
+				sscanf(values, "%d", &USE_TT_FILE);
+				parsed.USE_TT_FILE = 1;
+			} else if (strcmp(parameter_name, "TT_FILE") == 0) {
+				PRINT_PARSED(PARAMDOC_TT_FILE);
+				if (strncmp(values, "NULL", 4) == 0) {
+					TT_FILE = NULL;
+				} else{
+					TT_FILE = (char *) malloc(sizeof(char)*500);
+					strncpy(TT_FILE, values, 500);
+				}
+				parsed.TT_FILE= 1;
 			} else if (strcmp(parameter_name, "INPUT_FILE") == 0) {
 				PRINT_PARSED(PARAMDOC_INPUT_FILE);
 				sscanf(values, "%s", INPUT_FILE);
@@ -1456,6 +1469,7 @@ if(myid==0) {
 	
 	CHECK_PARSED(MASS_PC_BH_INCLUDE, 1, PARAMDOC_MASS_PC_BH_INCLUDE);
 	CHECK_PARSED(PERTURB, 1, PARAMDOC_PERTURB);
+	CHECK_PARSED(TT_FILE, NULL, PARAMDOC_TT_FILE);
 	CHECK_PARSED(RELAXATION, 1, PARAMDOC_RELAXATION);
 	CHECK_PARSED(TIDALLY_STRIP_STARS, 1, PARAMDOC_TIDALLY_STRIP_STARS);
 	CHECK_PARSED(THETASEMAX, 1.0, PARAMDOC_THETASEMAX);
@@ -1490,6 +1504,7 @@ if(myid==0) {
 	CHECK_PARSED(CIRC_PERIOD_THRESHOLD, 1e-18, PARAMDOC_CIRC_PERIOD_THRESHOLD);
 	CHECK_PARSED(BINARY_DISTANCE_BREAKING,0.1, PARAMDOC_BINARY_DISTANCE_BREAKING);
 	CHECK_PARSED(BINARY_BREAKING_MIN,0.0, PARAMDOC_BINARY_BREAKING_MIN);
+	CHECK_PARSED(USE_TT_FILE,0, PARAMDOC_USE_TT_FILE);
 
 	CHECK_PARSED(T_MAX, 20.0, PARAMDOC_T_MAX);
 	CHECK_PARSED(T_MAX_PHYS, 12.0, PARAMDOC_T_MAX_PHYS);
@@ -2724,6 +2739,115 @@ void mpiInitGlobArrays()
 	star_r = (double *) malloc(N_STAR_DIM * sizeof(double));
 	star_m = (double *) malloc(N_STAR_DIM * sizeof(double));
 	star_phi = (double *) malloc(N_STAR_DIM * sizeof(double));
+#endif
+}
+
+void load_tidal_tensor()
+{
+
+	if(TT_FILE == NULL && USE_TT_FILE == 1){
+		eprintf("ERROR: If you want to use the TT_FILE, you need to specifiy the filename\n");
+		exit_cleanly(-1,__FUNCTION__);
+	}
+
+	/* Only load and compute the tidal tensor on the root process */
+	if (myid == 0){
+		size_t bytes;
+		TT_num_max = 0;
+		double *TT_xx, *TT_yy, *TT_zz, *TT_xy, *TT_xz, *TT_yz;
+		double Myr_to_nbody_unit = (YEAR*1e6) / units.t; 
+		char buffer[1000], lastchar = '\n', *c;
+		FILE *fp;
+
+		
+		/* First load the tidal tensor file, and count the number of lines */
+		fp = fopen(TT_FILE,"r");
+
+		if(fp==NULL){
+			eprintf("ERROR: Can't find tidal tensor file\n");
+			exit_cleanly(-1, __FUNCTION__);
+		}
+
+		while ((bytes = fread(buffer, 1, sizeof(buffer) - 1, fp))) {
+			lastchar = buffer[bytes - 1];
+			for (c = buffer; (c = memchr(c, '\n', bytes - (c - buffer))); c++) {
+				TT_num_max++;
+			}
+		}
+
+		if (lastchar != '\n') {
+			TT_num_max++;  /* Count the last line even if it lacks a newline */
+		}
+
+		rewind(fp);
+
+		/* Then allocate the arrays to accomidate that number of lines*/
+		TT_times = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_l1e = (double *)malloc(sizeof(double)*TT_num_max);
+
+		TT_xx = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_yy = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_zz = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_xy = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_xz = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_yz = (double *)malloc(sizeof(double)*TT_num_max);
+
+		/* load the components of the tidal tensor*/
+		int i = 0;
+		while (i < TT_num_max && (fscanf(fp,"%lg %lg %lg %lg %lg %lg %lg ",&(TT_times)[i], &(TT_xx)[i], &(TT_yy)[i], &(TT_zz)[i], &(TT_xy)[i], &(TT_xz)[i], &(TT_yz)[i]) == 7)){
+			i++;
+		}
+
+		fclose(fp);
+
+		/* Now to compute the Eigenvalues of the tidal tensors;
+		 * first allocate all the GSL workspaces and vectors we need */
+		double tt_array[9];
+		double tt_lambda_1_effective;
+		gsl_eigen_symm_workspace * w = gsl_eigen_symm_alloc (3);
+		gsl_vector *eig_val = gsl_vector_alloc(3);
+		gsl_matrix_view tt;
+
+		for(i = 0 ; i < TT_num_max ; i++){
+			/* First unpack the tidal tensoryt into a single array */
+			tt_array[0] = -TT_xx[i]; tt_array[1] = -TT_xy[i]; tt_array[2] = -TT_xz[i];
+			tt_array[3] = -TT_xy[i]; tt_array[4] = -TT_yy[i]; tt_array[5] = -TT_yz[i];
+			tt_array[6] = -TT_xz[i]; tt_array[7] = -TT_yz[i]; tt_array[8] = -TT_zz[i];
+
+
+			/* Then convert into a GSL matrix */  
+			tt = gsl_matrix_view_array(tt_array,3,3);
+
+			/* Compute the Eigenvalues and sort them */
+			gsl_eigen_symm(&tt.matrix, eig_val, w);
+			gsl_sort_vector(eig_val);
+
+			/* Put into the arrays we want */
+			tt_lambda_1_effective = gsl_vector_get(eig_val,2) - 0.5*
+				(gsl_vector_get(eig_val,0) + gsl_vector_get(eig_val,1));
+			TT_times[i] *= Myr_to_nbody_unit;
+			TT_l1e[i] = tt_lambda_1_effective / Myr_to_nbody_unit / Myr_to_nbody_unit; 
+		}
+
+		gsl_eigen_symm_free(w);
+		gsl_vector_free(eig_val);
+		free(TT_xx);free(TT_yy),free(TT_zz);
+		free(TT_xy);free(TT_xz),free(TT_yz);
+	}
+	
+#ifdef USE_MPI
+        MPI_Bcast(&TT_num_max, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+#endif
+	TT_num = 0;
+
+	if(myid != 0){
+		TT_times = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_l1e = (double *)malloc(sizeof(double)*TT_num_max);
+	}
+
+#ifdef USE_MPI
+        MPI_Bcast(TT_times,TT_num_max, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(TT_l1e,TT_num_max, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 }
 
