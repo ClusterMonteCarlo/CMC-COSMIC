@@ -179,18 +179,18 @@ extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
 extern struct { int  tflag, ifflag, nsflag, wdflag, bhflag, windflag, qcflag, eddlimflag, bhspinflag, aic; } flags_;
-extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn } ceflags_;
+extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 
-extern struct { double neta, bwind, hewind, mxns, beta, xi, acc2, epsnov, eddfac, gamma } windvars_;
+extern struct { double neta, bwind, hewind, mxns, beta, xi, acc2, epsnov, eddfac, gamma; } windvars_;
 extern struct { double qcrit_array[16], alpha1, lambdaf; } cevars_;
-extern struct { double bconst, ck } magvars_;
-extern struct { double natal_kick_array, sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag } snvars_;
+extern struct { double bconst, ck; } magvars_;
+extern struct { double natal_kick_array, sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag; } snvars_;
 extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
 extern struct { double scm[14][50000], spp[3][20]; } single_;
 extern struct { double bcm[42][50000], bpp[23][1000]; } binary_;
-extern struct { double merger; long int id1_pass; long int id2_pass; long int using_cmc } cmcpass_;
+extern struct { double merger; long int id1_pass, id2_pass; long int using_cmc; } cmcpass_;
 
 /* setters */
 void bse_set_idum(int idum); /* RNG seed (for NS birth kicks) */
@@ -228,6 +228,9 @@ void bse_set_merger(double merger); /* pass through a value signifying a merger 
 void bse_set_id1_pass(long int id1_pass); /* pass through cmc star id into bse to help in debugging, this is used for iso star and star 1 in binary */
 void bse_set_id2_pass(long int id2_pass); /* pass through cmc star id into bse to help in debugging, this is used for star 2 in binary */
 void bse_set_taus113state(struct rng_t113_state state, int first);
+void bse_set_pisn(int pisn);
+void bse_set_ecsn(int ecsn);
+void bse_set_ecsn_mlow(int ecsn_mlow);
 
 /* getters */
 double bse_get_alpha1(void); /* get CE alpha */

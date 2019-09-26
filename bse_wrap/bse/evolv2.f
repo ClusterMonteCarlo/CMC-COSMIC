@@ -371,8 +371,8 @@ component.
          sep = 1.0d+10
          oorb = 0.d0
          jorb = 0.d0
-         bhspin(1) = 0.d0
-         bhspin(2) = 0.d0
+         if(kstar(1).ne.14.d0.or.using_cmc.eq.0) bhspin(1) = 0.d0
+         if(kstar(2).ne.14.d0.or.using_cmc.eq.0) bhspin(2) = 0.d0
          if(ospin(1).lt.0.0) ospin(1) = 1.0d-10
          if(ospin(2).lt.0.0) ospin(2) = 1.0d-10
          q(1) = 1.0d+10
@@ -2320,7 +2320,7 @@ component.
                formation(1) = 11
                formation(2) = 11
             endif
-            CALL mix(mass0,mass,aj,kstar,zpars)
+            CALL mix(mass0,mass,aj,kstar,zpars,bhspin)
             dm1 = m1ce - mass(j1)
             dm2 = mass(j2) - m2ce
 *
@@ -3425,7 +3425,7 @@ component.
              tb = -1.d0
          endif
       else
-         CALL mix(mass0,mass,aj,kstar,zpars)
+         CALL mix(mass0,mass,aj,kstar,zpars,bhspin)
       endif
 
 * set kick values for the bcm array
