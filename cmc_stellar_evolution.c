@@ -14,13 +14,14 @@
 * were set in the restart binary files)
 */
 void restart_stellar_evolution(void){
+  bse_set_using_cmc();
   bse_set_neta(BSE_NETA);
   bse_set_bwind(BSE_BWIND);
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
-  bse_set_ppsn(BSE_PPSN);
+  bse_set_pisn(BSE_PISN);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
-  bse_set_lambda(BSE_LAMBDA);
+  bse_set_lambda(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
   bse_set_tflag(BSE_TFLAG);
   bse_set_ifflag(BSE_IFFLAG);
@@ -44,7 +45,7 @@ void restart_stellar_evolution(void){
   bse_set_pts3(0.02);
   bse_set_sigma(BSE_SIGMA);
   bse_set_bhsigmafrac(BSE_BHSIGMAFRAC);
-  bse_set_opening_angle(BSE_OPENING_ANGLE);
+  bse_set_polar_kick_angle(BSE_POLAR_KICK_ANGLE);
   bse_set_beta(BSE_BETA); //set -0.125 if variable beta (following startrack), otherwise 0.125 for bse.
   bse_set_xi(1.0);
   bse_set_acc2(1.5);
@@ -81,13 +82,14 @@ void stellar_evolution_init(void){
   /* bse_set_hewind(0.5); */
 
   /* BSE */
+  bse_set_using_cmc();
   bse_set_neta(BSE_NETA);
   bse_set_bwind(BSE_BWIND);
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
-  bse_set_ppsn(BSE_PPSN);
+  bse_set_pisn(BSE_PISN);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
-  bse_set_lambda(BSE_LAMBDA);
+  bse_set_lambda(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
   bse_set_tflag(BSE_TFLAG);
   bse_set_ifflag(BSE_IFFLAG);
@@ -111,7 +113,7 @@ void stellar_evolution_init(void){
   bse_set_pts3(0.02);
   bse_set_sigma(BSE_SIGMA);
   bse_set_bhsigmafrac(BSE_BHSIGMAFRAC);
-  bse_set_opening_angle(BSE_OPENING_ANGLE);
+  bse_set_polar_kick_angle(BSE_POLAR_KICK_ANGLE);
   bse_set_beta(BSE_BETA); //set -0.125 if variable beta (following startrack), otherwise 0.125 for bse.
   bse_set_xi(1.0);
   bse_set_acc2(1.5);
@@ -126,7 +128,7 @@ void stellar_evolution_init(void){
 
   /* set collisions matrix */
   bse_instar();
-  dprintf("se_init: %g %g %g %d %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %d\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PPSN, BSE_ALPHA1, BSE_LAMBDA, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_OPENING_ANGLE);
+  dprintf("se_init: %g %g %g %d %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %d\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PISN, BSE_ALPHA1, BSE_LAMBDAF, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_POLAR_KICK_ANGLE);
 
 #ifdef USE_MPI 
   for (k=1; k<=mpiEnd-mpiBegin+1; k++) {
@@ -305,7 +307,7 @@ void stellar_evolution_init(void){
 #ifndef USE_MPI
       curr_st = &st[findProcForIndex(k)];
 #endif
-      bse_set_taus113state(*curr_st, 0);
+      bse_set_taus113state(*curr_st, 0);/*
       bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
               &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
               &(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), 
@@ -315,24 +317,29 @@ void stellar_evolution_init(void){
               &(binary[kb].bse_tb), &(binary[kb].e), vs,&(binary[kb].bse_bhspin[0]));
       *curr_st=bse_get_taus113state();
 
-      handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
+      handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);*/
     } else {
       eprintf("totally confused!\n");
       exit_cleanly(-1, __FUNCTION__);
     }
   }
+	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 
 #ifdef USE_MPI
 	double tmpTimeStart = timeStartSimple();
+	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
   //if(myid==0)
     MPI_Allreduce(MPI_IN_PLACE, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   //else
+	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
   //  MPI_Allreduce(&DMse, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	timeEndSimple(tmpTimeStart, &t_comm);
+	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 #else
   for(i=0; i<procs; i++)
     DMse += DMse_mimic[i];
 #endif
+	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 }
 
 /* note that this routine is called after perturb_stars() and get_positions() */
@@ -873,7 +880,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
   /* 5100000 will eventually be a possible max array length... */
   j = 1;
   jj = 1;
-  while (bse_get_bcm(j, 1) >= 0.0 && j<50000) {
+  while (bse_get_bcm(j, 1) >= 0 && j<50000) {
     j++;
   }
   j--;

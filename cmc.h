@@ -956,21 +956,21 @@ typedef struct{
 * @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars).
 */
 	int BSE_WINDFLAG;
-#define PARAMDOC_BSE_PPSN "PPSN turns on pair-instability SN and pulsations ala Belczynski+2016 or Spera+Mapelli 2017 (0=off, 1=Belczynski, 2=SM)"
+#define PARAMDOC_BSE_PISN "PISN turns on pair-instability SN and pulsations ala Belczynski+2016 or Spera+Mapelli 2017 (0=off, 1=Belczynski, 2=SM)"
 /**
-* @brief PPSN flag turns ou pair-instability SN and pulsations for massive stars.
+* @brief PISN flag turns ou pair-instability SN and pulsations for massive stars.
 */
-	int BSE_PPSN;
+	int BSE_PISN;
 #define PARAMDOC_BSE_ALPHA1 "alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)"
 /**
 * @brief alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)
 */
 	int BSE_ALPHA1;
-#define PARAMDOC_BSE_LAMBDA "labmda is the stellar binding energy factor for common-envelope evolution (0.5; +'ve allows it to vary, -'ve holds it constant at that value always)."
+#define PARAMDOC_BSE_LAMBDAF "labmda is the stellar binding energy factor for common-envelope evolution (0.5; +'ve allows it to vary, -'ve holds it constant at that value always)."
 /**
 * @brief labmda is the stellar binding energy factor for common-envelope evolution (0.5; +'ve allows it to vary, -'ve holds it constant at that value always).
 */
-	int BSE_LAMBDA;
+	int BSE_LAMBDAF;
 #define PARAMDOC_BSE_CEFLAG "ceflag sets CE prescription used. = 0 sets Tout et al. method, = 3 activates de Kool common-envelope models (normally 0)."
 /**
 * @brief ceflag sets CE prescription used. = 0 sets Tout et al. method, = 3 activates de Kool common-envelope models (normally 0).
@@ -1046,12 +1046,12 @@ typedef struct{
 * @brief bhsigmafrac is the factor to scale Maxwellian dispersion for BH SN kick speeds (1) compared to NS (265 km/s).
 */
 	int BSE_BHSIGMAFRAC;
-#define PARAMDOC_BSE_OPENING_ANGLE "Opening angle (in degrees) for SN kicks around the north pole of the star.  Default (180) means isotropic kicks"
+#define PARAMDOC_BSE_POLAR_KICK_ANGLE "Opening angle (in degrees) for SN kicks around the north pole of the star.  Default (180) means isotropic kicks"
 /**
 * @brief Opening angle for SN kicks about the north pole of the star, in
 * radians.  Default (180) means isotropic over whole sphere 
 */
-	int BSE_OPENING_ANGLE;
+	int BSE_POLAR_KICK_ANGLE;
 #define PARAMDOC_BSE_BETA "beta is the wind velocity factor: proprotinal to vwind^2 (1/8)."
 /**
 * @brief beta is the wind velocity factor: proprotinal to vwind^2 (1/8).

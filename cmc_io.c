@@ -1343,18 +1343,18 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_WINDFLAG);
 				sscanf(values, "%d", &BSE_WINDFLAG);
 				parsed.BSE_WINDFLAG = 1;
-			} else if (strcmp(parameter_name, "BSE_PPSN")==0) {
-				PRINT_PARSED(PARAMDOC_BSE_PPSN);
-				sscanf(values, "%d", &BSE_PPSN);
-				parsed.BSE_PPSN = 1;
+			} else if (strcmp(parameter_name, "BSE_PISN")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_PISN);
+				sscanf(values, "%d", &BSE_PISN);
+				parsed.BSE_PISN = 1;
 			} else if (strcmp(parameter_name, "BSE_ALPHA1")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_ALPHA1);
 				sscanf(values, "%lf", &BSE_ALPHA1);
 				parsed.BSE_ALPHA1 = 1;
-			} else if (strcmp(parameter_name, "BSE_LAMBDA")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_LAMBDA);
-				sscanf(values, "%lf", &BSE_LAMBDA);
-				parsed.BSE_LAMBDA = 1;
+			} else if (strcmp(parameter_name, "BSE_LAMBDAF")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_LAMBDAF);
+				sscanf(values, "%lf", &BSE_LAMBDAF);
+				parsed.BSE_LAMBDAF = 1;
 			} else if (strcmp(parameter_name, "BSE_CEFLAG")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_CEFLAG);
 				sscanf(values, "%i", &BSE_CEFLAG);
@@ -1419,10 +1419,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_BHSIGMAFRAC);
 				sscanf(values, "%lf", &BSE_BHSIGMAFRAC);
 				parsed.BSE_BHSIGMAFRAC = 1;
-			} else if (strcmp(parameter_name, "BSE_OPENING_ANGLE")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_OPENING_ANGLE);
-				sscanf(values, "%d", &BSE_OPENING_ANGLE);
-				parsed.BSE_OPENING_ANGLE = 1;
+			} else if (strcmp(parameter_name, "BSE_POLAR_KICK_ANGLE")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_POLAR_KICK_ANGLE);
+				sscanf(values, "%d", &BSE_POLAR_KICK_ANGLE);
+				parsed.BSE_POLAR_KICK_ANGLE = 1;
 			} else if (strcmp(parameter_name, "BSE_EDDFAC")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_EDDFAC);
 				sscanf(values, "%lf", &BSE_EDDFAC);
@@ -1556,9 +1556,9 @@ if(myid==0) {
 	CHECK_PARSED(BSE_BWIND, 0.00, PARAMDOC_BSE_BWIND);
 	CHECK_PARSED(BSE_HEWIND, 0.50, PARAMDOC_BSE_HEWIND);
 	CHECK_PARSED(BSE_WINDFLAG, 1, PARAMDOC_BSE_WINDFLAG);
-	CHECK_PARSED(BSE_PPSN, 0, PARAMDOC_BSE_PPSN);
+	CHECK_PARSED(BSE_PISN, 0, PARAMDOC_BSE_PISN);
 	CHECK_PARSED(BSE_ALPHA1, 3.00, PARAMDOC_BSE_ALPHA1);
-	CHECK_PARSED(BSE_LAMBDA, 0.50, PARAMDOC_BSE_LAMBDA);
+	CHECK_PARSED(BSE_LAMBDAF, 0.50, PARAMDOC_BSE_LAMBDAF);
 	CHECK_PARSED(BSE_CEFLAG, 0, PARAMDOC_BSE_CEFLAG);
 	CHECK_PARSED(BSE_TFLAG, 1, PARAMDOC_BSE_TFLAG);
 	CHECK_PARSED(BSE_IFFLAG, 0, PARAMDOC_BSE_IFFLAG);
@@ -1574,7 +1574,7 @@ if(myid==0) {
 	CHECK_PARSED(BSE_IDUM, -999, PARAMDOC_BSE_IDUM);
 	CHECK_PARSED(BSE_SIGMA, 265.00, PARAMDOC_BSE_SIGMA);
 	CHECK_PARSED(BSE_BHSIGMAFRAC, 1.00, PARAMDOC_BSE_BHSIGMAFRAC);
-	CHECK_PARSED(BSE_OPENING_ANGLE, 180., PARAMDOC_BSE_OPENING_ANGLE);
+	CHECK_PARSED(BSE_POLAR_KICK_ANGLE, 180., PARAMDOC_BSE_POLAR_KICK_ANGLE);
 	CHECK_PARSED(BSE_BETA, 0.12500, PARAMDOC_BSE_BETA);
 	CHECK_PARSED(BSE_EDDFAC, 1.00, PARAMDOC_BSE_EDDFAC);
 	CHECK_PARSED(BSE_GAMMA, -1.00, PARAMDOC_BSE_GAMMA);

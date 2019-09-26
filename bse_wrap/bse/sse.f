@@ -37,7 +37,7 @@ c-------------------------------------------------------------c
 *
       integer i,kw,j,k
 *
-      real*8 mass,mt,z,zpars(20),vs(3),bkick(16)
+      real*8 mass,mt,z,zpars(20),vs(3),bkick(12)
       real*8 epoch,tms,tphys,tphysf,dtp
       real*8 r,lum,ospin
       real*8 mc,rc,menv,renv

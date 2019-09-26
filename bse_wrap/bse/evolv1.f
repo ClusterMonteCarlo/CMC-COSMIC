@@ -43,7 +43,7 @@ c-------------------------------------------------------------c
       real*8 epoch,tphys,tphys2,tmold,tbgold
       real*8 mt,tm,tn,tphysf,dtp,tsave
       real*8 tscls(20),lums(10),GB(10),zpars(20)
-      real*8 r,lum,mc,teff,rc,menv,renv,bkick(16)
+      real*8 r,lum,mc,teff,rc,menv,renv,bkick(12)
       real*8 ospin,jspin,djt,djmb,k2,k3
       parameter(k3=0.21d0)
       real*8 m0,r1,lum1,mc1,rc1,menv1,renv1,k21
@@ -60,8 +60,7 @@ c-------------------------------------------------------------c
       REAL*8 fallback,vk !PDK
 *
       REAL*8 neta,bwind,hewind,mxns
-      INTEGER windflag,bhspinflag,ppsn
-      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,bhspinflag,ppsn
+      COMMON /VALUE1/ neta,bwind,hewind,mxns
       REAL*8 pts1,pts2,pts3
       COMMON /POINTS/ pts1,pts2,pts3
       REAL scm(50000,14),spp(20,3)
@@ -175,7 +174,7 @@ c-------------------------------------------------------------c
 * given the initial mass, current mass, metallicity and age
          kwold = kw
          CALL hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
-     &               r,lum,kw,mc,rc,menv,renv,k2)
+     &               r,lum,kw,mc,rc,menv,renv,k2,1)
 *
 * If mass loss has occurred and no type change then check that we
 * have indeed limited the radius change to 10%.
@@ -221,7 +220,7 @@ c-------------------------------------------------------------c
                mc = mc1
                CALL star(kw,mass,mt,tm,tn,tscls,lums,GB,zpars)
                CALL hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
-     &                     r,lum,kw,mc,rc,menv,renv,k2)
+     &                     r,lum,kw,mc,rc,menv,renv,k2,1)
                goto 20
             endif
  30         continue
@@ -317,7 +316,7 @@ c-------------------------------------------------------------c
             aj = MAX(aj,aj*(1.d0-eps)+dtr)
             mc1 = mc 
             CALL hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
-     &                  r1,lum1,kw,mc1,rc1,menv1,renv1,k21)
+     &                  r1,lum1,kw,mc1,rc1,menv1,renv1,k21,1)
             dr = r1 - rm0
             if(ABS(dr).gt.0.1d0*rm0)then
                dtm = dtr - ajhold*eps
@@ -337,7 +336,7 @@ c-------------------------------------------------------------c
  40      aj = ajhold + dtm
          mc1 = mc 
          CALL hrdiag(mass,aj,mt,tm,tn,tscls,lums,GB,zpars,
-     &               r1,lum1,kw,mc1,rc1,menv1,renv1,k21)
+     &               r1,lum1,kw,mc1,rc1,menv1,renv1,k21,1)
          dr = r1 - rm0
          it = it + 1
          if(it.eq.20.and.kw.eq.4) goto 50

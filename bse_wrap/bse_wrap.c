@@ -200,11 +200,15 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
 /*  vs[0] = 0.0;
   vs[1] = 0.0;
   vs[2] = 0.0; */
-  for(i=0;i<=11;i++) {
+  for(i=0;i<=20;i++) {
       vs[i] = 0.0;
   }
-  evolv2_(kstar, mass0, mass, rad, lum, massc, radc, menv, renv, ospin, B_0, bacc, tacc,
-	  epoch, tms, tphys, tphysf, dtp, z, zpars, tb, ecc, vs, bhspin);
+
+  /* used by COSMIC, but not needed here */
+   double *bppout, *bcmout;
+
+      evolv2_(kstar,mass,tb,ecc,z,tphysf,dtp,mass0,rad,lum,massc,radc, menv,renv,ospin,B_0,bacc,tacc,epoch,tms,bhspin,tphys,zpars,vs,bppout,bcmout);
+
 }
 
 /**
@@ -355,7 +359,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
 /*  vs[0] = myvs[0];
   vs[1] = myvs[1];
   vs[2] = myvs[2];*/
-  for(i=0;i<=11;i++) {
+  for(i=0;i<=20;i++) {
       vs[i] = myvs[i];
   }
 }
@@ -571,8 +575,9 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
      Another 3 values within the array show which star (1 or 2) went SN for that kick.
      This helps in differentiating which kick goes where.
    */
-
-  kick_(kw, m1, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, vs);
+  /* LOGICAL used by COSMIC, but not needed here */
+  int *temp=NULL;
+  kick_(kw, m1, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, vs, temp);
 }
 
 /**
@@ -744,37 +749,38 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
 
 /* setters */
 //OPT: Use inline before void -> makes it macro
-void bse_set_idum(int idum) { value3_.idum = idum; }
-void bse_set_neta(double neta) { value1_.neta = neta; }
-void bse_set_bwind(double bwind) { value1_.bwind = bwind; }
-void bse_set_hewind(double hewind) { value1_.hewind = hewind; }
-void bse_set_windflag(int windflag) { value1_.windflag = windflag; }
-void bse_set_ppsn(int ppsn) { value1_.ppsn = ppsn; }
-void bse_set_sigma(double sigma) { value4_.sigma = sigma; }
-void bse_set_bhsigmafrac(double bhsigmafrac) {value4_.bhsigmafrac = bhsigmafrac; }
-void bse_set_opening_angle(int opening_angle) {value4_.opening_angle = opening_angle; }
+void bse_set_using_cmc(void) {cmcpass_.using_cmc = 1; }
+void bse_set_idum(int idum) { rand1_.idum1 = idum; }
+void bse_set_neta(double neta) { windvars_.neta = neta; }
+void bse_set_bwind(double bwind) { windvars_.bwind = bwind; }
+void bse_set_hewind(double hewind) { windvars_.hewind = hewind; }
+void bse_set_windflag(int windflag) { flags_.windflag = windflag; }
+void bse_set_pisn(int pisn) { snvars_.pisn = pisn; }
+void bse_set_sigma(double sigma) { snvars_.sigma = sigma; }
+void bse_set_bhsigmafrac(double bhsigmafrac) {snvars_.bhsigmafrac = bhsigmafrac; }
+void bse_set_polar_kick_angle(int polar_kick_angle) {snvars_.polar_kick_angle = polar_kick_angle; }
 void bse_set_ifflag(int ifflag) { flags_.ifflag = ifflag; }
 void bse_set_wdflag(int wdflag) { flags_.wdflag = wdflag; }
-void bse_set_bhflag(int bhflag) { value4_.bhflag = bhflag; }
-void bse_set_bhspinflag(int bhspinflag) { value1_.bhspinflag = bhspinflag; }
-void bse_set_bhspinmag(double bhspinmag) { value1_.bhspinmag = bhspinmag; }
+void bse_set_bhflag(int bhflag) { flags_.bhflag = bhflag; }
+void bse_set_bhspinflag(int bhspinflag) { flags_.bhspinflag = bhspinflag; }
+void bse_set_bhspinmag(double bhspinmag) { snvars_.bhspinmag = bhspinmag; }
 void bse_set_nsflag(int nsflag) { flags_.nsflag = nsflag; }
-void bse_set_mxns(double mxns) { value1_.mxns = mxns;} 
-void bse_set_bconst(double bconst) { value4_.bconst = bconst; }
-void bse_set_CK(double CK) {value4_.CK = CK;}
+void bse_set_mxns(double mxns) { windvars_.mxns = mxns;} 
+void bse_set_bconst(double bconst) { magvars_.bconst = bconst; }
+void bse_set_CK(double CK) {magvars_.ck = CK;}
 void bse_set_pts1(double pts1) { points_.pts1 = pts1; }
 void bse_set_pts2(double pts2) { points_.pts2 = pts2; }
 void bse_set_pts3(double pts3) { points_.pts3 = pts3; }
-void bse_set_alpha1(double alpha1) { value2_.alpha1 = alpha1; }
-void bse_set_lambda(double lambda) { value2_.lambda = lambda; }
-void bse_set_ceflag(int ceflag) { flags_.ceflag = ceflag; }
+void bse_set_alpha1(double alpha1) { cevars_.alpha1 = alpha1; }
+void bse_set_lambda(double lambda) { cevars_.lambdaf = lambda; }
+void bse_set_ceflag(int ceflag) { ceflags_.ceflag = ceflag; }
 void bse_set_tflag(int tflag) { flags_.tflag = tflag; }
-void bse_set_beta(double beta) { value5_.beta = beta; }
-void bse_set_xi(double xi) { value5_.xi = xi; }
-void bse_set_acc2(double acc2) { value5_.acc2 = acc2; }
-void bse_set_epsnov(double epsnov) { value5_.epsnov = epsnov; }
-void bse_set_eddfac(double eddfac) { value5_.eddfac = eddfac; }
-void bse_set_gamma(double gamma) { value5_.gamma = gamma; }
+void bse_set_beta(double beta) { windvars_.beta = beta; }
+void bse_set_xi(double xi) { windvars_.xi = xi; }
+void bse_set_acc2(double acc2) { windvars_.acc2 = acc2; }
+void bse_set_epsnov(double epsnov) { windvars_.epsnov = epsnov; }
+void bse_set_eddfac(double eddfac) { windvars_.eddfac = eddfac; }
+void bse_set_gamma(double gamma) { windvars_.gamma = gamma; }
 void bse_set_merger(double merger) {cmcpass_.merger = merger; }
 void bse_set_id1_pass(long int id1_pass) { cmcpass_.id1_pass = id1_pass; }
 void bse_set_id2_pass(long int id2_pass) { cmcpass_.id2_pass = id2_pass; }
@@ -805,12 +811,12 @@ void bse_set_taus113state(struct rng_t113_state state, int first) {
 /* getters */
 /* note the index flip and decrement so the matrices are accessed
    as they would be in fortran */
-double bse_get_alpha1(void) { return(value2_.alpha1); }
-double bse_get_lambda(void) { return(value2_.lambda); }
-float bse_get_spp(int i, int j) { return(single_.spp[j-1][i-1]); }
-float bse_get_scm(int i, int j) { return(single_.scm[j-1][i-1]); }
-float bse_get_bpp(int i, int j) { return(binary_.bpp[j-1][i-1]); }
-float bse_get_bcm(int i, int j) { return(binary_.bcm[j-1][i-1]); }
+double bse_get_alpha1(void) { return(cevars_.alpha1); }
+double bse_get_lambda(void) { return(cevars_.lambdaf); }
+double bse_get_spp(int i, int j) { return(single_.spp[j-1][i-1]); }
+double bse_get_scm(int i, int j) { return(single_.scm[j-1][i-1]); }
+double bse_get_bpp(int i, int j) { return(binary_.bpp[j-1][i-1]); }
+double bse_get_bcm(int i, int j) { return(binary_.bcm[j-1][i-1]); }
 
 /**
 * @brief copies back the Fortran tausworthe rng state variables to the C state
@@ -940,9 +946,9 @@ double bse_kick_speed(int *startype)
   double u1, u2, s, theta, vk2, vk, v[4]; /* yes, v is supposed to be 4-D */
 
   for (k=1; k<=2; k++) {
-    u1 = ran3_(&(value3_.idum));
-    u2 = ran3_(&(value3_.idum));
-    s = value4_.sigma * sqrt(-2.0*log(1.0-u1));
+    u1 = ran3_(&(rand1_.idum1));
+    u2 = ran3_(&(rand1_.idum1));
+    s = snvars_.sigma * sqrt(-2.0*log(1.0-u1));
     theta = 2.0 * M_PI * u2;
     v[2*k-1-1] = s*cos(theta);
     v[2*k-1] = s*sin(theta);
@@ -950,7 +956,7 @@ double bse_kick_speed(int *startype)
   vk2 = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
   vk = sqrt(vk2);
 
-  if (((*startype) == 14 && value4_.bhflag == 0) || (*startype) < 0) {
+  if (((*startype) == 14 && flags_.bhflag == 0) || (*startype) < 0) {
     vk2 = 0.0;
     vk = 0.0;
     if ((*startype) < 0) {

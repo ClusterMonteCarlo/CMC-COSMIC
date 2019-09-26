@@ -1,17 +1,18 @@
 ***
       SUBROUTINE star(kw,mass,mt,tm,tn,tscls,lums,GB,zpars)
+      IMPLICIT NONE
+      INCLUDE 'const_bse.h'
 *
 *
-*       Stellar luminosity & evolution time. 
+*       Stellar luminosity & evolution time.
 *       ------------------------------------
 *
-      implicit none
 *
       integer kw
 *
       real*8 mass,mt,tm,tn,tscls(20),lums(10),GB(10),zpars(20)
       real*8 tgb,tbagb,mch,mcmax,mc1,mc2,mcbagb,dx,am
-      real*8 lambda,tau,mtc,mass0
+      real*8 lambdastar,tau,mtc,mass0
       parameter(mch=1.44d0)
 *
       real*8 lzamsf,lzahbf,lzhef
@@ -39,7 +40,7 @@
 *              4; Giant t(inf1)    5; Giant t(inf2) 6; Giant t(Mx)
 *              7; FAGB t(inf1)     8; FAGB t(inf2)  9; FAGB  t(Mx)
 *             10; SAGB t(inf1)    11; SAGB t(inf2) 12; SAGB  t(Mx)
-*             13; TP              14; t(Mcmax)     
+*             13; TP              14; t(Mcmax)
 *
 *       LUMS:  1; ZAMS             2; End MS        3; BGB
 *              4; He ignition      5; He burning    6; L(Mx)
@@ -97,20 +98,20 @@ C      if(mass0.gt.100.d0) mass = 100.d0
       lums(6) = GB(4)*GB(7)**GB(5)
 *
 * HeI ignition luminosity
-      lums(4) = lHeIf(mass,zpars(2)) 
+      lums(4) = lHeIf(mass,zpars(2))
       lums(7) = lbagbf(mass,zpars(2))
 *
       if(mass.lt.0.1d0.and.kw.le.1)then
          tscls(2) = 1.1d0*tscls(1)
          tscls(3) = 0.1d0*tscls(1)
-         lums(3) = lbgbf(mass) 
+         lums(3) = lbgbf(mass)
          goto 96
       endif
 *
       if(mass.le.zpars(3))then
 * Base of the giant branch luminosity
-         lums(3) = lbgbf(mass) 
-* Set GB timescales 
+         lums(3) = lbgbf(mass)
+* Set GB timescales
          tscls(4) = tscls(1) + (1.d0/((GB(5)-1.d0)*GB(1)*GB(4)))*
      &              ((GB(4)/lums(3))**((GB(5)-1.d0)/GB(5)))
          tscls(6) = tscls(4) - (tscls(4) - tscls(1))*((lums(3)/lums(6))
@@ -216,8 +217,8 @@ C      if(mass0.gt.100.d0) mass = 100.d0
       else
 * Star is on SAGB and we need to increase mcmax if any 3rd
 * dredge-up has occurred.
-         lambda = MIN(0.9d0,0.3d0+0.001d0*mass**5)
-         mcmax = (mcmax - lambda*mc1)/(1.d0 - lambda)
+         lambdastar = MIN(0.9d0,0.3d0+0.001d0*mass**5)
+         mcmax = (mcmax - lambdastar*mc1)/(1.d0 - lambdastar)
          if(mcmax.le.GB(7))then
             tscls(14) = tscls(10) - (1.d0/((GB(5)-1.d0)*GB(2)*GB(4)))*
      &                      (mcmax**(1.d0-GB(5)))
@@ -235,7 +236,7 @@ C      endif
 * Calculate the nuclear timescale - the time of exhausting
 * nuclear fuel without further mass loss.
 * This means we want to find when Mc = Mt which defines Tn and will
-* be used in determining the timestep required. Note that after some 
+* be used in determining the timestep required. Note that after some
 * stars reach Mc = Mt there will be a Naked Helium Star lifetime
 * which is also a nuclear burning period but is not included in Tn.
 *
@@ -247,8 +248,8 @@ C      endif
 * from CHeB or from the AGB we need to check the current stellar type.
          if(mt.gt.mcbagb.or.(mt.ge.mc1.and.kw.gt.4))then
             if(kw.eq.6)then
-               lambda = MIN(0.9d0,0.3d0+0.001d0*mass**5)
-               mc1 = (mt - lambda*mc1)/(1.d0 - lambda)
+               lambdastar = MIN(0.9d0,0.3d0+0.001d0*mass**5)
+               mc1 = (mt - lambdastar*mc1)/(1.d0 - lambdastar)
             else
                mc1 = mt
             endif
@@ -324,7 +325,7 @@ C      endif
 * Change in slope of giant L-Mc relation.
       lums(6) = GB(4)*GB(7)**GB(5)
 *
-*** Set Helium star GB timescales 
+*** Set Helium star GB timescales
 *
       mc1 = mcgbf(lums(2),GB,lums(6))
       tscls(4) = tm + (1.d0/((GB(5)-1.d0)*GB(8)*GB(4)))*

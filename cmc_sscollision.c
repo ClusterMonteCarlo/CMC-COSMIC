@@ -851,7 +851,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		      dprintf("after ce merge1: tb=%g a=%g m1=%g m2=%g e=%g kw1=%d kw2=%d r1=%g r2=%g\n",tempbinary.bse_tb,tempbinary.a,tempbinary.bse_mass[0],tempbinary.bse_mass[1],tempbinary.e,tempbinary.bse_kw[0],tempbinary.bse_kw[1],tempbinary.bse_radius[0],tempbinary.bse_radius[1]);
 		      ktry++;
 		    }
-		    bse_set_lambda(BSE_LAMBDA);
+		    bse_set_lambda(BSE_LAMBDAF);
 		    bse_set_merger(-1.0);
 		  }  //end of merger attempt, either from mix (non-CE) or evolv2 (for CE) with appropriate separation selection.
 

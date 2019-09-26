@@ -37,7 +37,7 @@
 *
       integer i,kw,kw2,kstar(2),j,k,time
 *
-      real*8 mass0(2),mass(2),z,zpars(20),vs(3),bkick(16)
+      real*8 mass0(2),mass(2),z,zpars(20),vs(3),bkick(12)
       real*8 epoch(2),tms(2),tphys,tphysf,dtp,aj
       real*8 rad(2),lum(2),ospin(2)
       real*8 massc(2),radc(2),menv(2),renv(2)
@@ -61,8 +61,8 @@
 * alpha1 is the common-envelope efficiency parameter (1.0).  
 * lambda is the binding energy factor for common envelope evolution (0.5).
 *
-* ceflag > 0 activates spin-energy correction in common-envelope (0). #defunct#
-* ceflag = 3 activates de Kool common-envelope model (0). 
+* ceflag = 0 activates spin-energy correction in common-envelope (0). 
+* ceflag = 1 activates de Kool common-envelope model (0). 
 * tflag > 0 activates tidal circularisation (1).
 * ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0). 
 * wdflag > 0 uses modified-Mestel cooling for WDs (0). 

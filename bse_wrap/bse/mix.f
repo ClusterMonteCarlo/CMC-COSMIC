@@ -1,5 +1,7 @@
 ***
-      SUBROUTINE MIX(M0,M,AJ,KS,ZPARS,ecsnp,bhspin)
+      SUBROUTINE MIX(M0,M,AJ,KS,ZPARS)
+      IMPLICIT NONE
+      INCLUDE 'const_bse.h'
 *
 *     Author : J. R. Hurley
 *     Date :   7th July 1998
@@ -7,19 +9,12 @@
 *       Evolution parameters for mixed star.
 *       ------------------------------------
 *
-      implicit none
 *
       INTEGER KS(2),I1,I2,K1,K2,KW,ICASE
-      INTEGER KTYPE(0:14,0:14)
-      COMMON /TYPES/ KTYPE
-      REAL*8 M0(2),M(2),AJ(2),ZPARS(20),bhspin(2)
+      REAL*8 M0(2),M(2),AJ(2),ZPARS(20)
       REAL*8 TSCLS(20),LUMS(10),GB(10),TMS1,TMS2,TMS3,TN
       REAL*8 M01,M02,M03,M1,M2,M3,AGE1,AGE2,AGE3,MC3,MCH
-      REAL*8 ecsnp
       PARAMETER(MCH=1.44D0)
-      REAL*8 NETA,BWIND,HEWIND,MXNS
-      INTEGER windflag,bhspinflag,ppsn
-      COMMON /VALUE1/ neta,bwind,hewind,mxns,windflag,bhspinflag,ppsn
 *
 *
 *       Define global indices with body #I1 being most evolved.
@@ -73,7 +68,7 @@
       KW = ICASE
       AGE3 = 0.d0
 *
-*       Restrict merged stars to masses less than 100 Msun. 
+*       Restrict merged stars to masses less than 100 Msun.
 C      IF(M3.GE.100.D0)THEN
 C         M3 = 99.D0
 C         M03 = MIN(M03,M3)
@@ -99,22 +94,20 @@ C      ENDIF
       ELSEIF(ICASE.LE.12)THEN
 *       Ensure that a new WD has the initial mass set correctly.
          M03 = M3
-         IF(ecsnp.gt.0.d0.and.ICASE.EQ.11.AND.M3.GE.1.38d0)then
+         IF(ecsn.gt.0.d0.and.ICASE.EQ.11.AND.M3.GE.1.38d0)then
             KW = 12 !will let hrdiag update accordingly...
          ELSEIF(ICASE.LT.12.AND.M3.GE.MCH)THEN
             M3 = 0.D0
             KW = 15
          ENDIF
       ELSEIF(ICASE.EQ.13.OR.ICASE.EQ.14)THEN
-*       Set unstable Thorne-Zytkow object with fast mass loss of envelope 
-*       unless the less evolved star is a WD, NS or BH. 
+*       Set unstable Thorne-Zytkow object with fast mass loss of envelope
+*       unless the less evolved star is a WD, NS or BH.
          IF(K2.LT.10)THEN
             M03 = M1
             M3 = M1
          ENDIF
-         IF(ICASE.EQ.13.AND.M3.GT.MXNS)then
-          KW = 14
-            endif
+         IF(ICASE.EQ.13.AND.M3.GT.MXNS) KW = 14
       ELSEIF(ICASE.EQ.15)THEN
          M3 = 0.D0
       ELSEIF(ICASE.GT.100)THEN
@@ -131,14 +124,6 @@ C      ENDIF
 *
 * Put the result in *1.
 *
-* CLR - If the secondary is a BH and the primary is not, then copy the
-* spin of the secondary into the primary
-
-* If you ever want to consider spin-up in combined stars, this is the
-* palce
-      IF(KS(2).EQ.14)then
-          bhspin(1) = bhspin(2)
-      ENDIF
       KS(1) = KW
       KS(2) = 15
       M(1) = M3

@@ -1,6 +1,8 @@
 ***
       REAL*8 FUNCTION CORERD(KW,MC,M0,MFLASH)
-*     
+      IMPLICIT NONE
+      INCLUDE 'const_bse.h'
+*
 * A function to determine the radius of the core of a giant-like star.
 * NOTE: this is out of date so rc should be obtained using HRDIAG!
 * It is still OK to use but bear in mind that the core radius calculated
@@ -10,7 +12,6 @@
 *     Date :   26th February 1997
 *     Updated 6/1/98 by J. Hurley
 *
-      IMPLICIT NONE
       INTEGER KW
       REAL*8 MC,MCH,M0,MFLASH
       PARAMETER (MCH = 1.44d0)
@@ -37,7 +38,7 @@
       ELSE
          CORERD = 0.0115d0*SQRT(MAX(1.48204d-06,(MCH/MC)**(2.d0/3.d0)
      &                                        - (MC/MCH)**(2.d0/3.d0)))
-* 
+*
 * Degenerate giants have hot subdwarf cores.
 *
          IF(KW.LE.9) CORERD = 5.d0*CORERD

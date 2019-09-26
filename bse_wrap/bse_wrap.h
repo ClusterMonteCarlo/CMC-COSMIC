@@ -132,11 +132,11 @@ void evolv1_(int *kw, double *mass, double *mt, double *r, double *lum,
 	     double *mc, double *rc, double *menv, double *renv, double *ospin,
 	     double *epoch, double *tms, double *tphys, double *tphysf, 
 	     double *dtp, double *z, double *zpars, double *vs);
-void evolv2_(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
-	     double *massc, double *radc, double *menv, double *renv, double *ospin,
-             double *B_0, double *bacc, double *tacc,
-	     double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
-	     double *z, double *zpars, double *tb, double *ecc, double *vs, double* bhspin);
+void evolv2_(int *kstar, double *mass, double *tb, double *ecc, double *z, 
+	     double *tphysf, double *dtp, double *mass0, double *rad, double *lum,
+             double *massc, double *radc, double *menv, double *renv,
+	     double *ospin, double *B_0, double *bacc, double *tacc, double *epoch,
+	     double *tms, double *bhspin, double *tphys, double *zpars, double *vs, double* bppout, double *bcmout);
 void instar_(void);
 float ran3_(int *idum);
 void star_(int *kw, double *mass, double *mt, double *tm, double *tn, double *tscls, 
@@ -145,7 +145,7 @@ void hrdiag_(double *mass, double *aj, double *mt, double *tm, double *tn, doubl
 	     double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
 	     double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow, double *bhspin);
 void kick_(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
-	   double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
+	   double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs, int *disrupt);
 void mix_(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp, double *bhspin);
 // note: these function names only work if in lowercase here, even though FORTRAN versions in uppercase.
 void comenv_(double *M01, double *M1, double *MC1, double *AJ1, double *JSPIN1, int *KW1, double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2, double *ZPARS, double *ECC, double *SEP, double *JORB, int *COEL, int *star1, int *star2, double *vk, int *fb, double *bkick, double *ecsnp, double *ecsn_mlow, int *formation1, int *formation2, int *ST_tide, double *bhspin1, double *bhspin2);
@@ -188,22 +188,25 @@ void bse_comenv(bse_binary *binary, double *zpars,
 
 /* structs to access BSE common blocks */
 /* note the index swap between fortran and C: i,j->j,i */
-extern struct { int idum; } value3_;
+extern struct { int idum1; } rand1_;
 extern struct { int idum2, iy, ir[32]; } rand3_;
 #ifdef USE_TAUS
 extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
-extern struct { int ceflag, tflag, ifflag, nsflag, wdflag; } flags_;
-extern struct { double neta, bwind, hewind, mxns; int windflag; int bhspinflag; double bhspinmag; int ppsn; } value1_;
-extern struct { double alpha1, lambda; } value2_;
-extern struct { double sigma; double bhsigmafrac; double bconst; double CK; int bhflag; int opening_angle; } value4_;
-extern struct { double beta, xi, acc2, epsnov, eddfac, gamma; } value5_;
+extern struct { int  tflag, ifflag, nsflag, wdflag, bhflag, windflag, qcflag, eddlimflag, bhspinflag, aic; } flags_;
+extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn } ceflags_;
+extern struct { int pisn_track[2]; } trackers_;
+
+extern struct { double neta, bwind, hewind, mxns, beta, xi, acc2, epsnov, eddfac, gamma } windvars_;
+extern struct { double qcrit_array[16], alpha1, lambdaf; } cevars_;
+extern struct { double bconst, ck } magvars_;
+extern struct { double natal_kick_array, sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag } snvars_;
 extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
-extern struct { float scm[14][50000], spp[3][20]; } single_;
-extern struct { float bcm[36][50000], bpp[10][80]; } binary_;
-extern struct { double merger; long int id1_pass; long int id2_pass; } cmcpass_;
+extern struct { double scm[14][50000], spp[3][20]; } single_;
+extern struct { double bcm[42][50000], bpp[23][1000]; } binary_;
+extern struct { double merger; long int id1_pass; long int id2_pass; long int using_cmc } cmcpass_;
 
 /* setters */
 void bse_set_idum(int idum); /* RNG seed (for NS birth kicks) */
@@ -214,7 +217,7 @@ void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTra
 void bse_set_ppsn(int ppsn); /* Sets Pair-instability pulsations and supernoa */ 
 void bse_set_sigma(double sigma); /* dispersion in the Maxwellian for the SN kick speed (190 km/s) */
 void bse_set_bhsigmafrac(double bhsigmafrac); /* Ad hoc factor to change BH SN kick speed relative to NS SN kick sigma (1) */
-void bse_set_opening_angle(int opening_angle); /* Switch to set the allowed opening angle of SN kicks.  Defaults to 180 degrees*/
+void bse_set_polar_kick_angle(int polar_kick_angle); /* Switch to set the allowed opening angle of SN kicks.  Defaults to 180 degrees*/
 void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0) */
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
@@ -245,10 +248,10 @@ void bse_set_taus113state(struct rng_t113_state state, int first);
 /* getters */
 double bse_get_alpha1(void); /* get CE alpha */
 double bse_get_lambda(void); /* get CE lambda */
-float bse_get_spp(int i, int j); /* stellar evolution log */
-float bse_get_scm(int i, int j); /* stored stellar parameters at interval dtp */
-float bse_get_bpp(int i, int j); /* binary evolution log */
-float bse_get_bcm(int i, int j); /* stored binary parameters at interval dtp */
+double bse_get_spp(int i, int j); /* stellar evolution log */
+double bse_get_scm(int i, int j); /* stored stellar parameters at interval dtp */
+double bse_get_bpp(int i, int j); /* binary evolution log */
+double bse_get_bcm(int i, int j); /* stored binary parameters at interval dtp */
 char *bse_get_sselabel(int kw); /* converts stellar type number to text label */
 char *bse_get_bselabel(int kw); /* converts binary type number to text label */
 struct rng_t113_state bse_get_taus113state(void);
