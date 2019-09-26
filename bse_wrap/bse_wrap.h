@@ -143,12 +143,12 @@ void star_(int *kw, double *mass, double *mt, double *tm, double *tn, double *ts
 	   double *lums, double *GB, double *zpars);
 void hrdiag_(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
 	     double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
-	     double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow, double *bhspin);
+	     double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *bhspin, int *kidx);
 void kick_(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	   double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs, int *disrupt);
-void mix_(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp, double *bhspin);
+void mix_(double *mass, double *mt, double *aj, int *kw, double *zpars, double *bhspin);
 // note: these function names only work if in lowercase here, even though FORTRAN versions in uppercase.
-void comenv_(double *M01, double *M1, double *MC1, double *AJ1, double *JSPIN1, int *KW1, double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2, double *ZPARS, double *ECC, double *SEP, double *JORB, int *COEL, int *star1, int *star2, double *vk, int *fb, double *bkick, double *ecsnp, double *ecsn_mlow, int *formation1, int *formation2, int *ST_tide, double *bhspin1, double *bhspin2);
+void comenv_(double *M01, double *M1, double *MC1, double *AJ1, double *JSPIN1, int *KW1, double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2, double *ZPARS, double *ECC, double *SEP, double *JORB, int *COEL, int *star1, int *star2, double *vk, int *fb, double *bkick, int *formation1, int *formation2, int *ST_tide, double *bhspin1, double *bhspin2, int *binstate, int *mergertype, int *jp, double *tphys,int *swtichedCE, double *rad, double *tms, double *evolve_type, int *disrupt);
 
 /* wrapped BSE functions */
 void bse_zcnsts(double *z, double *zpars);
@@ -179,12 +179,12 @@ void bse_star(int *kw, double *mass, double *mt, double *tm, double *tn, double 
 	      double *lums, double *GB, double *zpars);
 void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
 		double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
-		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow, double *bhspin);
+		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *bhspin);
 void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	      double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
-void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp, double *bhspin);
+void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *bhspin);
 void bse_comenv(bse_binary *binary, double *zpars,
-                double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide);
+                double *vs, int *fb, int *ST_tide);
 
 /* structs to access BSE common blocks */
 /* note the index swap between fortran and C: i,j->j,i */

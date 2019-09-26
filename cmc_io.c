@@ -1347,6 +1347,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_PISN);
 				sscanf(values, "%d", &BSE_PISN);
 				parsed.BSE_PISN = 1;
+			} else if (strcmp(parameter_name, "BSE_ECSN")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_ECSN);
+				sscanf(values, "%d", &BSE_ECSN);
+				parsed.BSE_ECSN = 1;
+			} else if (strcmp(parameter_name, "BSE_ECSNMLOW")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_ECSNMLOW);
+				sscanf(values, "%d", &BSE_ECSNMLOW);
+				parsed.BSE_ECSNMLOW = 1;
 			} else if (strcmp(parameter_name, "BSE_ALPHA1")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_ALPHA1);
 				sscanf(values, "%lf", &BSE_ALPHA1);
@@ -1557,6 +1565,8 @@ if(myid==0) {
 	CHECK_PARSED(BSE_HEWIND, 0.50, PARAMDOC_BSE_HEWIND);
 	CHECK_PARSED(BSE_WINDFLAG, 1, PARAMDOC_BSE_WINDFLAG);
 	CHECK_PARSED(BSE_PISN, 0, PARAMDOC_BSE_PISN);
+	CHECK_PARSED(BSE_ECSN, 1, PARAMDOC_BSE_ECSN);
+	CHECK_PARSED(BSE_ECSNMLOW, 1.6, PARAMDOC_BSE_ECSN);
 	CHECK_PARSED(BSE_ALPHA1, 3.00, PARAMDOC_BSE_ALPHA1);
 	CHECK_PARSED(BSE_LAMBDAF, 0.50, PARAMDOC_BSE_LAMBDAF);
 	CHECK_PARSED(BSE_CEFLAG, 0, PARAMDOC_BSE_CEFLAG);

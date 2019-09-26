@@ -961,6 +961,16 @@ typedef struct{
 * @brief PISN flag turns ou pair-instability SN and pulsations for massive stars.
 */
 	int BSE_PISN;
+#define PARAMDOC_BSE_ECSN "ECSN turns on electron capture supernova, 1 is on, 0 is off" 
+/**
+* @brief ECSN flag turns on electron capture supernova 
+*/
+	int BSE_ECSN;
+#define PARAMDOC_BSE_ECSNMLOW "ECSNMLOW is the minimum mass for electron-capture supernova (default is 1.6)" 
+/**
+* @brief ECSNMLOW is the minimum mass for electron-capture supernova (default is 1.6 solar masses) 
+*/
+	int BSE_ECSNMLOW;
 #define PARAMDOC_BSE_ALPHA1 "alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)"
 /**
 * @brief alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)
@@ -1545,7 +1555,7 @@ void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid);
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid);
 void integrate_a_e_peters_eqn(long binidx);
 double r_of_m(double M);
-void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide);
+void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, int *ST_tide);
 
 /* Fewbody stuff */
 void destroy_obj(long i);

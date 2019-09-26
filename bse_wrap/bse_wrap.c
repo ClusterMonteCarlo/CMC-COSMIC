@@ -102,7 +102,7 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
 {
   int mykw, kattempt=-1, i;
   double mymass, mymt, myr, mylum, mymc, myrc, mymenv, myrenv, myospin, myepoch;
-  double mytms, mytphys, mytphysf, mydtp, myvs[16], tphystried;
+  double mytms, mytphys, mytphysf, mydtp, myvs[20], tphystried;
 
   do {
     kattempt++;
@@ -157,7 +157,7 @@ void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum
 /*  vs[0] = myvs[0];
   vs[1] = myvs[1];
   vs[2] = myvs[2]; */
-  for(i=0;i<=11;i++) {
+  for(i=0;i<20;i++) {
       vs[i] = myvs[i];
   }
 }
@@ -200,14 +200,14 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
 /*  vs[0] = 0.0;
   vs[1] = 0.0;
   vs[2] = 0.0; */
-  for(i=0;i<=20;i++) {
+  for(i=0;i<20;i++) {
       vs[i] = 0.0;
   }
 
   /* used by COSMIC, but not needed here */
-   double *bppout, *bcmout;
+   double bppout[1000][23], bcmout[50000][42];
 
-      evolv2_(kstar,mass,tb,ecc,z,tphysf,dtp,mass0,rad,lum,massc,radc, menv,renv,ospin,B_0,bacc,tacc,epoch,tms,bhspin,tphys,zpars,vs,bppout,bcmout);
+      evolv2_(kstar,mass,tb,ecc,z,tphysf,dtp,mass0,rad,lum,massc,radc, menv,renv,ospin,B_0,bacc,tacc,epoch,tms,bhspin,tphys,zpars,vs,&(bppout[0]),&(bcmout[0]));
 
 }
 
@@ -246,7 +246,7 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
 {
   int mykstar[2], mykstarprev[2], kattempt=-1, j, i;
   double mymass0[2], mymass[2], myrad[2], mylum[2], mymassc[2], myradc[2], mymenv[2], myrenv[2], myospin[2], myB_0[2], mybacc[2], mytacc[2], myepoch[2];
-  double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[16], mybhspin[2];
+  double mytms[2], mytphys, mytphysf, mydtp, tphystried, mytb, myecc, myvs[20], mybhspin[2];
 
   //  do {
     kattempt++;
@@ -495,7 +495,7 @@ void bse_star(int *kw, double *mass, double *mt, double *tm, double *tn, double 
 /* hrdiag routine; shouldn't need to be used often outside of BSE */
 void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
 		double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
-		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *ecsnp, double *ecsn_mlow, double *bhspin)
+		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *bhspin)
 {
   /* INPUTS
      
@@ -524,8 +524,9 @@ void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, do
      renv = envelope radius
      k2 = radius of gyration of envelope
    */
+  int *kidx;
 
-  hrdiag_(mass, aj, mt, tm, tn, tscls, lums, GB, zpars, r, lum, kw, mc, rc, menv, renv, k2, ST_tide, ecsnp, ecsn_mlow, bhspin);
+  hrdiag_(mass, aj, mt, tm, tn, tscls, lums, GB, zpars, r, lum, kw, mc, rc, menv, renv, k2, ST_tide,  bhspin, kidx);
 }
 
 /**
@@ -576,8 +577,8 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
      This helps in differentiating which kick goes where.
    */
   /* LOGICAL used by COSMIC, but not needed here */
-  int *temp=NULL;
-  kick_(kw, m1, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, vs, temp);
+  int *disrupt;
+  kick_(kw, m1, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, vs, disrupt);
 }
 
 /**
@@ -590,9 +591,9 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
 * @param zpars ?
 * @param ecsnp ?
 */
-void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *ecsnp, double *bhspin)
+void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *bhspin)
 {
-  mix_(mass, mt, aj, kw, zpars, ecsnp, bhspin);
+  mix_(mass, mt, aj, kw, zpars, bhspin);
 }
 
 /**
@@ -606,7 +607,7 @@ void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, doubl
 * @param ecsn_mlow ?
 * @param ST_tide ?
 */
-void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, double *ecsnp, double *ecsn_mlow, int *ST_tide)
+void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, int *ST_tide)
 		//double *M0, double *M, double *MC, double *AJ, double *OSPIN, int *KW, 
 		//                double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2,
                 //double *ZPARS, double *ECC, double *SEP, double *PORB,  
@@ -615,6 +616,8 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
   double vk,OORB,JORB,mce[2],AJ[2], M0ce[2], PI, JSPIN1, JSPIN2;
   double tm, tn, tscls[20], lums[10], GB[10], k2, k3;
   double bhspin[2];
+  int *binstate, *mergertype, *jp, *switchedCE, *disrupt;
+  double rad[2], tms[2], *tphys, *evolve_type;
   k3 = 0.21;
   PI = acos(-1.0);
   //
@@ -653,7 +656,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
   //
   bse_hrdiag(&((*tempbinary).bse_mass0[0]), &(AJ[0]), &((*tempbinary).bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[0]), &((*tempbinary).bse_lum[0]), &((*tempbinary).bse_kw[0]), &((*tempbinary).bse_massc[0]), &((*tempbinary).bse_radc[0]), 
-	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[0]));
+	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide,&((*tempbinary).bse_bhspin[0]));
   ////
   JSPIN1 = (*tempbinary).bse_ospin[0]*(k2*(*tempbinary).bse_radius[0]*(*tempbinary).bse_radius[0]*(*tempbinary).bse_menv[0] + 
 				       k3*(*tempbinary).bse_radc[0]*(*tempbinary).bse_radc[0]*(*tempbinary).bse_massc[0]);
@@ -663,7 +666,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
   //
   bse_hrdiag(&((*tempbinary).bse_mass0[1]), &(AJ[1]), &((*tempbinary).bse_mass[1]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[1]), &((*tempbinary).bse_lum[1]), &((*tempbinary).bse_kw[1]), &((*tempbinary).bse_massc[1]), &((*tempbinary).bse_radc[1]), 
-	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[1]));
+	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide,&((*tempbinary).bse_bhspin[1]));
   ////
   JSPIN2 = (*tempbinary).bse_ospin[1]*(k2*(*tempbinary).bse_radius[1]*(*tempbinary).bse_radius[1]*(*tempbinary).bse_menv[1] + 
 				       k3*(*tempbinary).bse_radc[1]*(*tempbinary).bse_radc[1]*(*tempbinary).bse_massc[1]);
@@ -685,12 +688,12 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
   //for(iii=0;iii<20; iii++){
   //  printf("%g ", zpars[iii]);
   //}
-  printf(" kw1i=%d kw2i=%d m1i=%g m2i=%g r1i=%g r2i=%g epoch1=%g epoch2=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
+  //printf(" kw1i=%d kw2i=%d m1i=%g m2i=%g r1i=%g r2i=%g epoch1=%g epoch2=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
   comenv_(&((*tempbinary).bse_mass0[0]), &((*tempbinary).bse_mass[0]), &((*tempbinary).bse_massc[0]), &(AJ[0]), &JSPIN1, &((*tempbinary).bse_kw[0]),
 	  &((*tempbinary).bse_mass0[1]), &((*tempbinary).bse_mass[1]), &((*tempbinary).bse_massc[1]), &(AJ[1]), &JSPIN2, &((*tempbinary).bse_kw[1]),
-	  zpars, &((*tempbinary).e), &((*tempbinary).a), &(JORB), &COEL, &star1, &star2, &vk, fb, vs, ecsnp, ecsn_mlow, &((*tempbinary).bse_bcm_formation[0]), &((*tempbinary).bse_bcm_formation[1]), ST_tide, &((*tempbinary).bse_bhspin[0]),&((*tempbinary).bse_bhspin[1]));
-  printf("kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1]);
-  printf("\n");
+	  zpars, &((*tempbinary).e), &((*tempbinary).a), &(JORB), &COEL, &star1, &star2, &vk, fb, vs, &((*tempbinary).bse_bcm_formation[0]), &((*tempbinary).bse_bcm_formation[1]), ST_tide, &((*tempbinary).bse_bhspin[0]),&((*tempbinary).bse_bhspin[1]),binstate,mergertype,jp,tphys,switchedCE,rad,tms,evolve_type,disrupt);
+  //printf("kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1]);
+  //printf("\n");
   ////
   //// Update things to do with system components...
   ////
@@ -707,12 +710,12 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
     //
     bse_hrdiag(&((*tempbinary).bse_mass0[0]), &(AJ[0]), &((*tempbinary).bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[0]), &((*tempbinary).bse_lum[0]), &((*tempbinary).bse_kw[0]), &((*tempbinary).bse_massc[0]), &((*tempbinary).bse_radc[0]), 
-	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[0]));
+	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide,&((*tempbinary).bse_bhspin[0]));
     bse_star(&((*tempbinary).bse_kw[1]), &((*tempbinary).bse_mass0[1]), &((*tempbinary).bse_mass[1]), &tm, &tn, tscls, lums, GB, zpars);
     //
     bse_hrdiag(&((*tempbinary).bse_mass0[1]), &(AJ[1]), &((*tempbinary).bse_mass[1]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[1]), &((*tempbinary).bse_lum[1]), &((*tempbinary).bse_kw[1]), &((*tempbinary).bse_massc[1]), &((*tempbinary).bse_radc[1]), 
-	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[1]));
+	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide,&((*tempbinary).bse_bhspin[1]));
     (*tempbinary).bse_epoch[0] = (*tempbinary).bse_tphys - AJ[0];
     (*tempbinary).bse_epoch[1] = (*tempbinary).bse_tphys - AJ[1];
     OORB = JORB/(((*tempbinary).bse_mass[0]*(*tempbinary).bse_mass[1])/((*tempbinary).bse_mass[0]+(*tempbinary).bse_mass[1])*sqrt(1.0-((*tempbinary).e*(*tempbinary).e))*(*tempbinary).a*(*tempbinary).a);///214.9/214.9); //turn sep in Rsun into sep in AU by dividing by ~215 to find orb velocity freq in 1/years
@@ -729,7 +732,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
       //
       bse_hrdiag(&((*tempbinary).bse_mass0[1]), &(AJ[1]), &((*tempbinary).bse_mass[1]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[1]), &((*tempbinary).bse_lum[1]), &((*tempbinary).bse_kw[1]), &((*tempbinary).bse_massc[1]), &((*tempbinary).bse_radc[1]), 
-	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[1]));
+	     &((*tempbinary).bse_menv[1]), &((*tempbinary).bse_renv[1]), &k2, ST_tide,&((*tempbinary).bse_bhspin[1]));
       (*tempbinary).bse_epoch[1] = (*tempbinary).bse_tphys - AJ[1];
       printf("after hrdiag: kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g epoch1=%g epoch2=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
       printf("\n");
@@ -738,7 +741,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, doub
       //
       bse_hrdiag(&((*tempbinary).bse_mass0[0]), &(AJ[0]), &((*tempbinary).bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
 	     &((*tempbinary).bse_radius[0]), &((*tempbinary).bse_lum[0]), &((*tempbinary).bse_kw[0]), &((*tempbinary).bse_massc[0]), &((*tempbinary).bse_radc[0]), 
-	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide, ecsnp, ecsn_mlow,&((*tempbinary).bse_bhspin[0]));
+	     &((*tempbinary).bse_menv[0]), &((*tempbinary).bse_renv[0]), &k2, ST_tide,&((*tempbinary).bse_bhspin[0]));
       (*tempbinary).bse_epoch[0] = (*tempbinary).bse_tphys - AJ[0];
       printf("after hrdiag: kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g epoch1=%g epoch2=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
       printf("\n");
@@ -756,6 +759,8 @@ void bse_set_bwind(double bwind) { windvars_.bwind = bwind; }
 void bse_set_hewind(double hewind) { windvars_.hewind = hewind; }
 void bse_set_windflag(int windflag) { flags_.windflag = windflag; }
 void bse_set_pisn(int pisn) { snvars_.pisn = pisn; }
+void bse_set_ecsn(int ecsn) { snvars_.ecsn = ecsn; }
+void bse_set_ecsn_mlow(int ecsn_mlow) { snvars_.ecsn_mlow = ecsn_mlow; }
 void bse_set_sigma(double sigma) { snvars_.sigma = sigma; }
 void bse_set_bhsigmafrac(double bhsigmafrac) {snvars_.bhsigmafrac = bhsigmafrac; }
 void bse_set_polar_kick_angle(int polar_kick_angle) {snvars_.polar_kick_angle = polar_kick_angle; }

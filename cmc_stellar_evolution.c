@@ -20,6 +20,8 @@ void restart_stellar_evolution(void){
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
   bse_set_pisn(BSE_PISN);
+  bse_set_ecsn(BSE_ECSN);
+  bse_set_ecsn_mlow(BSE_ECSNMLOW);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambda(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
@@ -71,7 +73,7 @@ void restart_stellar_evolution(void){
 * of the parameters for individual stars
 */
 void stellar_evolution_init(void){  
-  double tphysf, dtp, vs[16];
+  double tphysf, dtp, vs[20];
   int i;
   long k, kb;
   int kprev0=-100;
@@ -88,6 +90,8 @@ void stellar_evolution_init(void){
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
   bse_set_pisn(BSE_PISN);
+  bse_set_ecsn(BSE_ECSN);
+  bse_set_ecsn_mlow(BSE_ECSNMLOW);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambda(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
@@ -307,7 +311,7 @@ void stellar_evolution_init(void){
 #ifndef USE_MPI
       curr_st = &st[findProcForIndex(k)];
 #endif
-      bse_set_taus113state(*curr_st, 0);/*
+      bse_set_taus113state(*curr_st, 0);
       bse_evolv2(&(binary[kb].bse_kw[0]), &(binary[kb].bse_mass0[0]), &(binary[kb].bse_mass[0]), &(binary[kb].bse_radius[0]), 
               &(binary[kb].bse_lum[0]), &(binary[kb].bse_massc[0]), &(binary[kb].bse_radc[0]), &(binary[kb].bse_menv[0]), 
               &(binary[kb].bse_renv[0]), &(binary[kb].bse_ospin[0]), 
@@ -317,7 +321,7 @@ void stellar_evolution_init(void){
               &(binary[kb].bse_tb), &(binary[kb].e), vs,&(binary[kb].bse_bhspin[0]));
       *curr_st=bse_get_taus113state();
 
-      handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);*/
+      handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
     } else {
       eprintf("totally confused!\n");
       exit_cleanly(-1, __FUNCTION__);
@@ -353,7 +357,7 @@ void do_stellar_evolution(gsl_rng *rng)
   long k, kb, j, jj;
   int kprev,i, ii;
   int kprev0, kprev1;
-  double dtp, tphysf, vs[16], VKO;
+  double dtp, tphysf, vs[20], VKO;
   double M_beforeSE, M10_beforeSE, M100_beforeSE, M1000_beforeSE, Mcore_beforeSE;
   double M_afterSE, M10_afterSE, M100_afterSE, M1000_afterSE, Mcore_afterSE;
   double r10_beforeSE, r100_beforeSE, r1000_beforeSE, rcore_beforeSE;
