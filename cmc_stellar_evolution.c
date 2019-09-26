@@ -476,7 +476,7 @@ void do_stellar_evolution(gsl_rng *rng)
         star[k].se_tacc = tempbinary.bse_tacc[0];
         star[k].se_epoch = tempbinary.bse_epoch[0];
         star[k].se_tms = tempbinary.bse_tms[0];
-	    star[k].se_bhspin = tempbinary.bse_bhspin[0];
+	star[k].se_bhspin = tempbinary.bse_bhspin[0];
 
 		  /*Reset the MS timestep once we're done*/
 		  if(reduced_timestep == 1)

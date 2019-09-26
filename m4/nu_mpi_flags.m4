@@ -38,6 +38,8 @@ AC_DEFUN([_NU_MPI_EXTRACT_FLAGS], [
                     _mpiwrap_link='-showme:link'],
         [MPICH2],  [_mpiwrap_compile="-compile-info| _NU_DROP_FIRST_ARG";
                     _mpiwrap_link="-link-info | _NU_DROP_FIRST_ARG"],
+        [MPICH],  [_mpiwrap_compile="-compile-info| _NU_DROP_FIRST_ARG";
+                    _mpiwrap_link="-link-info | _NU_DROP_FIRST_ARG"],
         [IMPI],  [_mpiwrap_compile="-compile-info| _NU_DROP_FIRST_ARG";
                     _mpiwrap_link="-link-info | _NU_DROP_FIRST_ARG"],
         [_mpiwrap_unknown=yes 
@@ -45,7 +47,7 @@ AC_DEFUN([_NU_MPI_EXTRACT_FLAGS], [
     ])
 
     _nu_mpi_flags_comp_flags=$($SHELL -c "[$]MPICOMP $_mpiwrap_compile")
-    _nu_mpi_flags_link_flags=$($SHELL -c "[$]MPICOMP $_mpiwrap_link")
+    #_nu_mpi_flags_link_flags=$($SHELL -c "[$]MPICOMP $_mpiwrap_link")
 
 ])
 
@@ -64,6 +66,8 @@ AC_DEFUN([_NU_MPI_EXTRACT_IMPL], [
        #define RESULT "OpenMPI"
        #elif defined MPICH2
        #define RESULT "MPICH2"
+       #elif defined MPICH
+       #define RESULT "MPICH"
        #elif defined I_MPI_VERSION
        #define RESULT "IMPI"
        #elif defined LAM_MPI

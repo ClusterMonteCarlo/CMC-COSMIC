@@ -128,10 +128,6 @@ typedef struct{
 
 /* prototypes for fortran BSE functions */
 void zcnsts_(double *z, double *zpars);
-void evolv1_(int *kw, double *mass, double *mt, double *r, double *lum,
-	     double *mc, double *rc, double *menv, double *renv, double *ospin,
-	     double *epoch, double *tms, double *tphys, double *tphysf, 
-	     double *dtp, double *z, double *zpars, double *vs);
 void evolv2_(int *kstar, double *mass, double *tb, double *ecc, double *z, 
 	     double *tphysf, double *dtp, double *mass0, double *rad, double *lum,
              double *massc, double *radc, double *menv, double *renv,
@@ -152,18 +148,6 @@ void comenv_(double *M01, double *M1, double *MC1, double *AJ1, double *JSPIN1, 
 
 /* wrapped BSE functions */
 void bse_zcnsts(double *z, double *zpars);
-void bse_evolv1(int *kw, double *mass, double *mt, double *r, double *lum,
-		double *mc, double *rc, double *menv, double *renv, double *ospin,
-		double *epoch, double *tms, double *tphys, double *tphysf, 
-		double *dtp, double *z, double *zpars, double *vs);
-void bse_evolv1_safely(int *kw, double *mass, double *mt, double *r, double *lum,
-		       double *mc, double *rc, double *menv, double *renv, double *ospin,
-		       double *epoch, double *tms, double *tphys, double *tphysf, 
-		       double *dtp, double *z, double *zpars, double *vs);
-void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum,
-		double *mc, double *rc, double *menv, double *renv, double *ospin,
-		double *epoch, double *tms, double *tphys, double *tphysf,
-		double *dtp, double *z, double *zpars, double *vs, double *bhspin);
 void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
                 double *B_0, double *bacc, double *tacc,
