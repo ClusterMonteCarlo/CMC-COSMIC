@@ -25,9 +25,9 @@ void restart_stellar_evolution(void){
   bse_set_ecsn_mlow(BSE_ECSN_MLOW);
   bse_set_aic(BSE_AIC);
   bse_set_ussn(BSE_USSN);
-  bse_set_qcrit_array(BSE_QCRIT_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-  bse_set_fprimc_array(BSE_FPRIMC_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-  bse_set_natal_kick_array(BSE_NATAL_KICK_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_qcrit_array(bse_qcrit_array, NO_BSE_QCRIT_ARRAY); 
+  bse_set_fprimc_array(bse_fprimc_array, NO_BSE_FPRIMC_ARRAY);
+  bse_set_natal_kick_array(bse_natal_kick_array, NO_BSE_NATAL_KICK_ARRAY); 
   bse_set_sigmadiv(BSE_SIGMADIV);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambdaf(BSE_LAMBDAF);
@@ -106,9 +106,9 @@ void stellar_evolution_init(void){
   bse_set_ecsn_mlow(BSE_ECSN_MLOW);
   bse_set_aic(BSE_AIC);
   bse_set_ussn(BSE_USSN);
-  bse_set_qcrit_array(BSE_QCRIT_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-  bse_set_fprimc_array(BSE_FPRIMC_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-  bse_set_natal_kick_array(BSE_NATAL_KICK_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_qcrit_array(bse_qcrit_array, NO_BSE_QCRIT_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_fprimc_array(bse_fprimc_array, NO_BSE_FPRIMC_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_natal_kick_array(bse_natal_kick_array, NO_BSE_NATAL_KICK_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
   bse_set_sigmadiv(BSE_SIGMADIV);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambdaf(BSE_LAMBDAF);
@@ -244,7 +244,7 @@ void stellar_evolution_init(void){
 #ifndef USE_MPI
       curr_st = &st[findProcForIndex(k)];
 #endif
-      bse_set_taus113state(*curr_st, 0);
+//      bse_set_taus113state(*curr_st, 0);
       bse_evolv2(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
           &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
           &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
