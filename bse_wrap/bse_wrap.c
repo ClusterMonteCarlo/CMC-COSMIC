@@ -130,7 +130,6 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
 		double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		double *z, double *zpars, double *tb, double *ecc, double *vs, double *bhspin)
 {
-      printf("lololol\n");
  int i;
   /* must null out vs, since SSE/BSE is not designed to return it and hence doesn't null it out */
 /*  vs[0] = 0.0;
@@ -139,15 +138,12 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
   for(i=0;i<20;i++) {
       vs[i] = 0.0;
   }
-	printf("line=%d\n",__LINE__);
 
   /* used by COSMIC, but not needed here */
    double bppout[23][1000], bcmout[42][50000];
 
-	printf("line=%d\n",__LINE__);
       evolv2_(kstar,mass,tb,ecc,z,tphysf,dtp,mass0,rad,lum,massc,radc, menv,renv,ospin,B_0,bacc,tacc,epoch,tms,bhspin,tphys,zpars,vs,bppout,bcmout);
 
-	printf("line=%d\n",__LINE__);
 }
 
 /**
@@ -221,7 +217,6 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
     }
     mytb = *tb;
     myecc = *ecc;
-    printf("LOLLL\n");
     bse_evolv2(mykstar, mymass0, mymass, myrad, mylum, mymassc, myradc, mymenv, myrenv, myospin, myB_0, mybacc, mytacc,
 	       myepoch, mytms, &mytphys, &mytphysf, &mydtp, z, zpars, &mytb, &myecc, myvs, mybhspin);
     /*

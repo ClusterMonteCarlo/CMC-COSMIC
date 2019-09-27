@@ -223,16 +223,6 @@ void stellar_evolution_init(void){
       curr_st = &st[findProcForIndex(k)];
 #endif
       bse_set_taus113state(*curr_st, 0);
-      printf("lololol\n");
-      printf("%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
-      (tempbinary.bse_kw[0]), (tempbinary.bse_mass0[0]), (tempbinary.bse_mass[0]), 
-          (tempbinary.bse_radius[0]), (tempbinary.bse_lum[0]), (tempbinary.bse_massc[0]), 
-          (tempbinary.bse_radc[0]), (tempbinary.bse_menv[0]), (tempbinary.bse_renv[0]), 
-          (tempbinary.bse_ospin[0]), (tempbinary.bse_B_0[0]), (tempbinary.bse_bacc[0]), (tempbinary.bse_tacc[0]),
-          (tempbinary.bse_epoch[0]), (tempbinary.bse_tms[0]), 
-          (star[k].se_tphys), tphysf, dtp, METALLICITY, zpars[0], 
-          (tempbinary.bse_tb), (tempbinary.e), vs[0],(tempbinary.bse_bhspin[0]));
-      printf("lololol\n");
       bse_evolv2(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
           &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
           &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -240,7 +230,6 @@ void stellar_evolution_init(void){
           &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
           &(star[k].se_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
           &(tempbinary.bse_tb), &(tempbinary.e), vs,&(tempbinary.bse_bhspin[0]));
-      printf("lololol\n");
       *curr_st=bse_get_taus113state();
 
       star[k].se_mass = tempbinary.bse_mass0[0];
