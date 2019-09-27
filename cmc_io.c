@@ -856,6 +856,9 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	quiet = 0;
 	debug = 0;
 	NO_MASS_BINS = 0;
+	NO_BSE_NATAL_KICK_ARRAY = 6;
+	NO_BSE_FPRIMC_ARRAY = 16;
+	NO_BSE_QCRIT_ARRAY = 16;
 	snapshot_window_count=0;
 	/* DEFAULT PARAMETER VALUES */
 	
@@ -1107,6 +1110,27 @@ if(myid==0) {
 				curr_mass = (char *) strtok(values, ",; ");
 				for (NO_MASS_BINS = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_MASS_BINS++);
 				parsed.MASS_BINS = 1;
+			} else if (strcmp(parameter_name, "BSE_NATAL_KICK_ARRAY") == 0) {
+				PRINT_PARSED(PARAMDOC_BSE_NATAL_KICK_ARRAY);
+				/* we recycle variable "curr_mass" for mass bins */
+				strcpy(BSE_NATAL_KICK_ARRAY, values);
+				curr_mass = (char *) strtok(values, ",; ");
+				for (NO_BSE_NATAL_KICK_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_BSE_NATAL_KICK_ARRAY++);
+				parsed.BSE_NATAL_KICK_ARRAY = 1;
+			} else if (strcmp(parameter_name, "BSE_QCRIT_ARRAY") == 0) {
+				PRINT_PARSED(PARAMDOC_BSE_QCRIT_ARRAY);
+				/* we recycle variable "curr_mass" for mass bins */
+				strcpy(BSE_QCRIT_ARRAY, values);
+				curr_mass = (char *) strtok(values, ",; ");
+				for (NO_BSE_QCRIT_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_BSE_QCRIT_ARRAY++);
+				parsed.BSE_QCRIT_ARRAY = 1;
+			} else if (strcmp(parameter_name, "BSE_FPRIMC_ARRAY") == 0) {
+				PRINT_PARSED(PARAMDOC_BSE_FPRIMC_ARRAY);
+				/* we recycle variable "curr_mass" for mass bins */
+				strcpy(BSE_FPRIMC_ARRAY, values);
+				curr_mass = (char *) strtok(values, ",; ");
+				for (NO_BSE_FPRIMC_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_BSE_FPRIMC_ARRAY++);
+				parsed.BSE_FPRIMC_ARRAY = 1;
 			} else if (strcmp(parameter_name, "MINIMUM_R") == 0) {
 				PRINT_PARSED(PARAMDOC_MINIMUM_R);
 				sscanf(values, "%lf", &MINIMUM_R);
@@ -1520,6 +1544,19 @@ if(myid==0) {
 	CHECK_PARSED(INPUT_FILE);
 	CHECK_PARSED(MASS_PC);
 	CHECK_PARSED(MASS_BINS);
+
+#undef CHECK_PARSED
+
+/* but only warn if some other parameters are unset and default values are used; special use case for arrays */
+#define CHECK_PARSED(A,DEFAULT) \
+	if (parsed.A == 0) { \
+		wprintf("parameters \"%s\" unset: using default values.\n", #A); \
+		strcpy(A,DEFAULT); \
+	}
+
+	CHECK_PARSED(BSE_FPRIMC_ARRAY,"0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095");
+	CHECK_PARSED(BSE_QCRIT_ARRAY,"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0");
+	CHECK_PARSED(BSE_NATAL_KICK_ARRAY,"-100,-100,-100,-100,-100,-100");
 	
 #undef CHECK_PARSED
 
@@ -1938,6 +1975,9 @@ if(myid==0)
 	v2_tan_r = (double *) malloc(MASS_PC_COUNT * sizeof(double));
 	mass_pc = (double *) calloc(MASS_PC_COUNT, sizeof(double));
 	mass_bins = (double *) calloc(NO_MASS_BINS, sizeof(double));
+	bse_natal_kick_array = (double *) calloc(NO_BSE_NATAL_KICK_ARRAY, sizeof(double));
+	bse_fprimc_array = (double *) calloc(NO_BSE_FPRIMC_ARRAY, sizeof(double));
+	bse_qcrit_array = (double *) calloc(NO_BSE_QCRIT_ARRAY, sizeof(double));
 	multi_mass_r = (double **) malloc(NO_MASS_BINS * sizeof(double *));
 	for(i=0; i<NO_MASS_BINS; i++){
 		multi_mass_r[i] = (double *) malloc(MASS_PC_COUNT * sizeof(double));
@@ -1957,6 +1997,30 @@ if(myid==0)
 
 	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
 		sscanf(curr_mass, "%lf", &mass_bins[i]);
+	}
+
+	/*======= Reading values for the BSE natal Kick array =======*/
+	curr_mass = (char *) strtok(BSE_NATAL_KICK_ARRAY, ",; ");
+	sscanf(curr_mass, "%lf", &bse_natal_kick_array[0]);
+
+	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
+		sscanf(curr_mass, "%lf", &bse_natal_kick_array[i]);
+	}
+
+	/*======= Reading values for the BSE fprinc Array =======*/
+	curr_mass = (char *) strtok(BSE_FPRIMC_ARRAY, ",; ");
+	sscanf(curr_mass, "%lf", &bse_fprimc_array[0]);
+
+	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
+		sscanf(curr_mass, "%lf", &bse_fprimc_array[i]);
+	}
+
+	/*======= Reading values for the BSE qcrit array =======*/
+	curr_mass = (char *) strtok(BSE_QCRIT_ARRAY, ",; ");
+	sscanf(curr_mass, "%lf", &bse_qcrit_array[0]);
+
+	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
+		sscanf(curr_mass, "%lf", &bse_qcrit_array[i]);
 	}
 
 	/*======= Opening of output files =======*/
