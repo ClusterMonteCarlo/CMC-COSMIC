@@ -173,7 +173,7 @@ void bse_comenv(bse_binary *binary, double *zpars,
 /* structs to access BSE common blocks */
 /* note the index swap between fortran and C: i,j->j,i */
 extern struct { int idum1; } rand1_;
-extern struct { int idum2, iy, ir[32]; } rand3_;
+extern struct { int idum2, iy, ir[32]; } rand2_;
 #ifdef USE_TAUS
 extern struct { long long int state[4]; int first;} taus113state_;
 #endif
@@ -185,7 +185,8 @@ extern struct { int pisn_track[2]; } trackers_;
 extern struct { double neta, bwind, hewind, mxns, beta, xi, acc2, epsnov, eddfac, gamma; } windvars_;
 extern struct { double qcrit_array[16], alpha1, lambdaf; } cevars_;
 extern struct { double bconst, ck; } magvars_;
-extern struct { double natal_kick_array, sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag; } snvars_;
+extern struct { double natal_kick_array[6], sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag; } snvars_;
+extern struct { double fprimc_array[16]; } _tidalvars;
 extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
 extern struct { double scm[14][50000], spp[3][20]; } single_;

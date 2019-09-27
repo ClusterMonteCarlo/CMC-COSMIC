@@ -1327,46 +1327,142 @@ if(myid==0) {
 				sscanf(values, "%lf", &OVERWRITE_MCLUS);
 				parsed.OVERWRITE_MCLUS = 1;
 				// Begin reading in stellar and binary evolution assumptions.
-			} else if (strcmp(parameter_name, "BSE_NETA")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_NETA);
-				sscanf(values, "%lf", &BSE_NETA);
-				parsed.BSE_NETA = 1;
-			} else if (strcmp(parameter_name, "BSE_BWIND")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_BWIND);
-				sscanf(values, "%lf", &BSE_BWIND);
-				parsed.BSE_BWIND = 1;
-			} else if (strcmp(parameter_name, "BSE_HEWIND")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_HEWIND);
-				sscanf(values, "%lf", &BSE_HEWIND);
-				parsed.BSE_HEWIND = 1;
+                        } else if (strcmp(parameter_name, "BSE_PTS1")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_PTS1);
+                                sscanf(values, "%lf", &BSE_PTS1);
+                                parsed.BSE_PTS1 = 1;
+                        } else if (strcmp(parameter_name, "BSE_PTS2")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_PTS2);
+                                sscanf(values, "%lf", &BSE_PTS2);
+                                parsed.BSE_PTS2 = 1;
+                        } else if (strcmp(parameter_name, "BSE_PTS3")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_PTS3);
+                                sscanf(values, "%lf", &BSE_PTS3);
+                                parsed.BSE_PTS3 = 1;
 			} else if (strcmp(parameter_name, "BSE_WINDFLAG")==0) {
 				PRINT_PARSED(PARAMDOC_BSE_WINDFLAG);
 				sscanf(values, "%d", &BSE_WINDFLAG);
 				parsed.BSE_WINDFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_EDDLIMFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_EDDLIMFLAG);
+                                sscanf(values, "%lf", &BSE_EDDLIMFLAG);
+                                parsed.BSE_EDDLIMFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_NETA")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_NETA);
+                                sscanf(values, "%lf", &BSE_NETA);
+                                parsed.BSE_NETA = 1;
+                        } else if (strcmp(parameter_name, "BSE_BWIND")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_BWIND);
+                                sscanf(values, "%lf", &BSE_BWIND);
+                                parsed.BSE_BWIND = 1;
+                        } else if (strcmp(parameter_name, "BSE_HEWIND")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_HEWIND);
+                                sscanf(values, "%lf", &BSE_HEWIND);
+                                parsed.BSE_HEWIND = 1;
+                        } else if (strcmp(parameter_name, "BSE_BETA")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_BETA);
+                                sscanf(values, "%lf", &BSE_BETA);
+                                parsed.BSE_BETA = 1;
+                        } else if (strcmp(parameter_name, "BSE_XI")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_XI);
+                                sscanf(values, "%lf", &BSE_XI);
+                                parsed.BSE_XI = 1;
+                        } else if (strcmp(parameter_name, "BSE_ACC2")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_ACC2);
+                                sscanf(values, "%lf", &BSE_ACC2);
+                                parsed.BSE_ACC2 = 1;
+                        } else if (strcmp(parameter_name, "BSE_ALPHA1")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_ALPHA1);
+                                sscanf(values, "%lf", &BSE_ALPHA1);
+                                parsed.BSE_ALPHA1 = 1;
+                        } else if (strcmp(parameter_name, "BSE_LAMBDAF")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_LAMBDAF);
+                                sscanf(values, "%lf", &BSE_LAMBDAF);
+                                parsed.BSE_LAMBDAF = 1;
+                        } else if (strcmp(parameter_name, "BSE_CEFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_CEFLAG);
+                                sscanf(values, "%i", &BSE_CEFLAG);
+                                parsed.BSE_CEFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_CEKICKFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_CEKICKFLAG);
+                                sscanf(values, "%i", &BSE_CEKICKFLAG);
+                                parsed.BSE_CEKICKFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_CEMERGEFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_CEMERGEFLAG);
+                                sscanf(values, "%i", &BSE_CEMERGEFLAG);
+                                parsed.BSE_CEMERGEFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_CEHESTARFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_CEHESTARFLAG);
+                                sscanf(values, "%i", &BSE_CEHESTARFLAG);
+                                parsed.BSE_CEHESTARFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_QCFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_QCFLAG);
+                                sscanf(values, "%i", &BSE_QCFLAG);
+                                parsed.BSE_QCFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_SIGMA")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_SIGMA);
+                                sscanf(values, "%lf", &BSE_SIGMA);
+                                parsed.BSE_SIGMA = 1;
+                        } else if (strcmp(parameter_name, "BSE_BHFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_BHFLAG);
+                                sscanf(values, "%i", &BSE_BHFLAG);
+                                parsed.BSE_BHFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_ECSN")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_ECSN);
+                                sscanf(values, "%d", &BSE_ECSN);
+                                parsed.BSE_ECSN = 1;
+                        } else if (strcmp(parameter_name, "BSE_ECSN_MLOW")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_ECSN_MLOW);
+                                sscanf(values, "%d", &BSE_ECSN_MLOW);
+                                parsed.BSE_ECSN_MLOW = 1;
+                        } else if (strcmp(parameter_name, "BSE_SIGMADIV")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_SIGMADIV);
+                                sscanf(values, "%d", &BSE_SIGMADIV);
+                                parsed.BSE_SIGMADIV = 1;
+                        } else if (strcmp(parameter_name, "BSE_AIC")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_AIC);
+                                sscanf(values, "%d", &BSE_AIC);
+                                parsed.BSE_AIC = 1;
+                        } else if (strcmp(parameter_name, "BSE_USSN")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_USSN);
+                                sscanf(values, "%d", &BSE_USSN);
+                                parsed.BSE_USSN = 1;
 			} else if (strcmp(parameter_name, "BSE_PISN")==0) {
 				PRINT_PARSED(PARAMDOC_BSE_PISN);
 				sscanf(values, "%d", &BSE_PISN);
 				parsed.BSE_PISN = 1;
-			} else if (strcmp(parameter_name, "BSE_ECSN")==0) {
-				PRINT_PARSED(PARAMDOC_BSE_ECSN);
-				sscanf(values, "%d", &BSE_ECSN);
-				parsed.BSE_ECSN = 1;
-			} else if (strcmp(parameter_name, "BSE_ECSNMLOW")==0) {
-				PRINT_PARSED(PARAMDOC_BSE_ECSNMLOW);
-				sscanf(values, "%d", &BSE_ECSNMLOW);
-				parsed.BSE_ECSNMLOW = 1;
-			} else if (strcmp(parameter_name, "BSE_ALPHA1")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_ALPHA1);
-				sscanf(values, "%lf", &BSE_ALPHA1);
-				parsed.BSE_ALPHA1 = 1;
-			} else if (strcmp(parameter_name, "BSE_LAMBDAF")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_LAMBDAF);
-				sscanf(values, "%lf", &BSE_LAMBDAF);
-				parsed.BSE_LAMBDAF = 1;
-			} else if (strcmp(parameter_name, "BSE_CEFLAG")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_CEFLAG);
-				sscanf(values, "%i", &BSE_CEFLAG);
-				parsed.BSE_CEFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_BHSIGMAFRAC")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_BHSIGMAFRAC);
+                                sscanf(values, "%lf", &BSE_BHSIGMAFRAC);
+                                parsed.BSE_BHSIGMAFRAC = 1;
+                        } else if (strcmp(parameter_name, "BSE_POLAR_KICK_ANGLE")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_POLAR_KICK_ANGLE);
+                                sscanf(values, "%d", &BSE_POLAR_KICK_ANGLE);
+                                parsed.BSE_POLAR_KICK_ANGLE = 1;
+                        } else if (strcmp(parameter_name, "BSE_NSFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_NSFLAG);
+                                sscanf(values, "%i", &BSE_NSFLAG);
+                                parsed.BSE_NSFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_MXNS")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_MXNS);
+                                sscanf(values, "%lf", &BSE_MXNS);
+                                parsed.BSE_MXNS = 1;
+                        } else if (strcmp(parameter_name, "BSE_BHSPINMAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_BHSPINMAG);
+                                sscanf(values, "%lf", &BSE_BHSPINMAG);
+                                parsed.BSE_BHSPINMAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_BHSPINFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_BHSPINFLAG);
+                                sscanf(values, "%i", &BSE_BHSPINFLAG);
+                                parsed.BSE_BHSPINFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_EDDFAC")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_EDDFAC);
+                                sscanf(values, "%lf", &BSE_EDDFAC);
+                                parsed.BSE_EDDFAC = 1;
+                        } else if (strcmp(parameter_name, "BSE_GAMMA")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_GAMMA);
+                                sscanf(values, "%lf", &BSE_GAMMA);
+                                parsed.BSE_GAMMA = 1;
 			} else if (strcmp(parameter_name, "BSE_TFLAG")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_TFLAG);
 				sscanf(values, "%i", &BSE_TFLAG);
@@ -1379,30 +1475,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_WDFLAG);
 				sscanf(values, "%i", &BSE_WDFLAG);
 				parsed.BSE_WDFLAG = 1;
-			} else if (strcmp(parameter_name, "BSE_BHFLAG")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_BHFLAG);
-				sscanf(values, "%i", &BSE_BHFLAG);
-				parsed.BSE_BHFLAG = 1;
-			} else if (strcmp(parameter_name, "BSE_BHSPINMAG")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_BHSPINMAG);
-				sscanf(values, "%lf", &BSE_BHSPINMAG);
-				parsed.BSE_BHSPINMAG = 1;
-			} else if (strcmp(parameter_name, "BSE_BHSPINFLAG")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_BHSPINFLAG);
-				sscanf(values, "%i", &BSE_BHSPINFLAG);
-				parsed.BSE_BHSPINFLAG = 1;
+                        } else if (strcmp(parameter_name, "BSE_EPSNOV")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_EPSNOV);
+                                sscanf(values, "%i", &BSE_EPSNOV);
+                                parsed.BSE_EPSNOV = 1;
 			} else if (strcmp(parameter_name, "BH_RADIUS_MULTIPLYER")== 0) {
 				PRINT_PARSED(PARAMDOC_BH_RADIUS_MULTIPLYER);
 				sscanf(values, "%i", &BH_RADIUS_MULTIPLYER);
 				parsed.BH_RADIUS_MULTIPLYER = 1;
-			} else if (strcmp(parameter_name, "BSE_NSFLAG")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_NSFLAG);
-				sscanf(values, "%i", &BSE_NSFLAG);
-				parsed.BSE_NSFLAG = 1;
-			} else if (strcmp(parameter_name, "BSE_MXNS")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_MXNS);
-				sscanf(values, "%lf", &BSE_MXNS);
-				parsed.BSE_MXNS = 1;
 			} else if (strcmp(parameter_name, "BSE_BCONST")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_BCONST);
 				sscanf(values, "%lf", &BSE_BCONST);
@@ -1415,30 +1495,6 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_IDUM);
 				sscanf(values, "%i", &BSE_IDUM);
 				parsed.BSE_IDUM = 1;
-			} else if (strcmp(parameter_name, "BSE_BETA")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_BETA);
-				sscanf(values, "%lf", &BSE_BETA);
-				parsed.BSE_BETA = 1;
-			} else if (strcmp(parameter_name, "BSE_SIGMA")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_SIGMA);
-				sscanf(values, "%lf", &BSE_SIGMA);
-				parsed.BSE_SIGMA = 1;
-			} else if (strcmp(parameter_name, "BSE_BHSIGMAFRAC")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_BHSIGMAFRAC);
-				sscanf(values, "%lf", &BSE_BHSIGMAFRAC);
-				parsed.BSE_BHSIGMAFRAC = 1;
-			} else if (strcmp(parameter_name, "BSE_POLAR_KICK_ANGLE")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_POLAR_KICK_ANGLE);
-				sscanf(values, "%d", &BSE_POLAR_KICK_ANGLE);
-				parsed.BSE_POLAR_KICK_ANGLE = 1;
-			} else if (strcmp(parameter_name, "BSE_EDDFAC")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_EDDFAC);
-				sscanf(values, "%lf", &BSE_EDDFAC);
-				parsed.BSE_EDDFAC = 1;
-			} else if (strcmp(parameter_name, "BSE_GAMMA")== 0) {
-				PRINT_PARSED(PARAMDOC_BSE_GAMMA);
-				sscanf(values, "%lf", &BSE_GAMMA);
-				parsed.BSE_GAMMA = 1;
 			} else if (strcmp(parameter_name, "TIMER")== 0) {
 				PRINT_PARSED(PARAMDOC_TIMER);
 				sscanf(values, "%d", &TIMER);
@@ -1560,34 +1616,238 @@ if(myid==0) {
 	CHECK_PARSED(OVERWRITE_Z, 0., PARAMDOC_OVERWRITE_Z);
 	CHECK_PARSED(OVERWRITE_RTID, 0., PARAMDOC_OVERWRITE_RTID);
 	CHECK_PARSED(OVERWRITE_MCLUS, 0., PARAMDOC_OVERWRITE_MCLUS);
-	CHECK_PARSED(BSE_NETA, 0.50, PARAMDOC_BSE_NETA);
-	CHECK_PARSED(BSE_BWIND, 0.00, PARAMDOC_BSE_BWIND);
-	CHECK_PARSED(BSE_HEWIND, 0.50, PARAMDOC_BSE_HEWIND);
-	CHECK_PARSED(BSE_WINDFLAG, 1, PARAMDOC_BSE_WINDFLAG);
-	CHECK_PARSED(BSE_PISN, 45, PARAMDOC_BSE_PISN);
-	CHECK_PARSED(BSE_ECSN, 2.25, PARAMDOC_BSE_ECSN);
-	CHECK_PARSED(BSE_ECSNMLOW, 1.6, PARAMDOC_BSE_ECSN);
-	CHECK_PARSED(BSE_ALPHA1, 3.00, PARAMDOC_BSE_ALPHA1);
-	CHECK_PARSED(BSE_LAMBDAF, 1.0, PARAMDOC_BSE_LAMBDAF);
-	CHECK_PARSED(BSE_CEFLAG, 0, PARAMDOC_BSE_CEFLAG);
-	CHECK_PARSED(BSE_TFLAG, 1, PARAMDOC_BSE_TFLAG);
-	CHECK_PARSED(BSE_IFFLAG, 0, PARAMDOC_BSE_IFFLAG);
-	CHECK_PARSED(BSE_WDFLAG, 1, PARAMDOC_BSE_WDFLAG);
-	CHECK_PARSED(BSE_BHFLAG, 1, PARAMDOC_BSE_BHFLAG);
-	CHECK_PARSED(BSE_BHSPINFLAG, 0, PARAMDOC_BSE_BHSPINFLAG);
-	CHECK_PARSED(BSE_BHSPINMAG, 0., PARAMDOC_BSE_BHSPINMAG);
+
+        // pts1,pts2,pts3 determine the timesteps chosen in each
+        // evolution phase as decimal fractions of the time taken in that phase:
+        //                 pts1 - MS                  (default=0.001, see Banerjee+ 2019)
+        CHECK_PARSED(BSE_PTS1, 0.001, PARAMDOC_BSE_PTS1);
+        //                 pts2 - GB, CHeB, AGB, HeGB (default=0.01)
+        CHECK_PARSED(BSE_PTS2, 0.01, PARAMDOC_BSE_PTS2);
+        //                 pts3 - HG, HeMS            (default=0.02)
+        CHECK_PARSED(BSE_PTS3, 0.02, PARAMDOC_BSE_PTS3);
+
+        // windflag sets the wind prescription
+        // windflag=0: stock BSE// windflag=1: StarTrack 2008
+        // windflag=2: Vink+2001// windflag=3: Vink+2005 (Vink plus LBV winds)
+        // default=3
+        CHECK_PARSED(BSE_WINDFLAG, 3, PARAMDOC_BSE_WINDFLAG);
+
+        // eddlimflag turns on metallicity dependence on winds, affecting the
+        // mass-loss rate of low-metallicity stars near the Eddington limit
+        // (see Grafener et al. 2011, Giacobbo et al. 2018)
+        // default=0
+        CHECK_PARSED(BSE_EDDLIMFLAG, 0, PARAMDOC_BSE_EDDLIMFLAG);
+
+        // neta is the Reimers mass-loss coefficent
+        // for more information, see Kudritzki & Reimers 1978, A&A 70, 227
+        // default=0.5
+        CHECK_PARSED(BSE_NETA, 0.5, PARAMDOC_BSE_NETA);
+
+        // bwind is the binary enhanced mass loss parameter
+        // bwind it is always inactive for single stars
+        // default=0.0
+        CHECK_PARSED(BSE_BWIND, 0.0, PARAMDOC_BSE_BWIND);
+
+        // hewind is a helium star mass loss factor, between 0 and 1
+        // only applies if windflag=0, otherwise it is overwritten
+        // default=1.0
+        CHECK_PARSED(BSE_HEWIND, 1.0, PARAMDOC_BSE_HEWIND);
+
+        // beta is wind velocity factor: proportional to vwind^2
+        // beta<0: follows StarTrack 2008// beta=0.125: stock BSE
+        // default=-1.0
+        CHECK_PARSED(BSE_BETA, -1.0, PARAMDOC_BSE_BETA);
+
+        // xi is the wind accretion efficiency factor, which gives the fraction of angular momentum lost via winds from the primary that transfers to the spin angular momentum of the companion
+        // default=0.5
+        CHECK_PARSED(BSE_XI, 0.5, PARAMDOC_BSE_XI);
+
+        // acc2 sets the Bondi-Hoyle wind accretion factor onto companion
+        // default=1.5
+        CHECK_PARSED(BSE_ACC2, 1.5, PARAMDOC_BSE_ACC2);
+
+        // alpha1 is the common-envelope efficiency parameter
+        // default=1.0
+        CHECK_PARSED(BSE_ALPHA1, 1.0, PARAMDOC_BSE_ALPHA1);
+
+        // lambdaf is the binding energy factor for common envelope evolution
+        // lambdaf=1.0 uses variable lambda prescription in appendix of Claeys+2014
+        // lambdaf<0 uses fixes lambda to a value of -1.0*lambdaf
+        // default=1.0
+        CHECK_PARSED(BSE_LAMBDAF, 1.0, PARAMDOC_BSE_LAMBDAF);
+
+        // ceflag=1 used the method from de Kool 1990 for setting the initial orbital energy
+        // ceflag=0 does not use this method (uses the core mass to calculate initial orbital energy)
+        // default=0
+        CHECK_PARSED(BSE_CEFLAG, 0, PARAMDOC_BSE_CEFLAG);
+
+        // cekickflag determined the prescription for calling kick.f in comenv.f
+        // 0: default BSE
+        // 1: uses pre-CE mass and sep values
+        // 2: uses post-CE mass and sep
+        // default=2
+        CHECK_PARSED(BSE_CEKICKFLAG, 2, PARAMDOC_BSE_CEKICKFLAG);
+
+        // cemergeflag determines whether stars without a core-envelope boundary automatically lead to merger in CE
+        // cemergeflag=1 turns this on (causes these systems to merge)
+        // default=0
+        CHECK_PARSED(BSE_CEMERGEFLAG, 0, PARAMDOC_BSE_CEMERGEFLAG);
+
+        // cehestarflag uses fitting formulae from TLP, 2015, MNRAS, 451 for evolving RLO systems with a helium star donor and compact object accretor
+        // this flag will override choice made by cekickflag if set
+        // 0: off
+        // 1: fits for final period only
+        // 2: fits for both final mass and final period
+        // default=0
+        CHECK_PARSED(BSE_CEHESTARFLAG, 0, PARAMDOC_BSE_CEHESTARFLAG);
+
+        // qcflag is an integer flag that sets the model to determine which critical mass ratios to use for the onset of unstable mass transfer and/or a common envelope. NOTE: this is overridden by qcrit_array if any of the values are non-zero.
+        // 0: standard BSE
+        // 1: BSE but with Hjellming & Webbink, 1987, ApJ, 318, 794 GB/AGB stars
+        // 2: following binary_c from Claeys+2014 Table 2
+        // 3: following binary_c from Claeys+2014 Table 2 but with Hjellming & Webbink, 1987, ApJ, 318, 794 GB/AGB stars
+        // default=2
+        CHECK_PARSED(BSE_QCFLAG, 2, PARAMDOC_BSE_QCFLAG);
+
+        // qcrit_array is a 16-length array for user-input values for the critical mass ratios that govern the onset of unstable mass transfer and a common envelope
+        // each item is set individually for its associated kstar, and a value of 0.0 will apply prescription of the qcflag for that kstar
+        // default: [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+        qcrit_array=[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+
+        // sigma sets is the dispersion in the Maxwellian for the SN kick velocity in km/s
+        // default=265.0
+        CHECK_PARSED(BSE_SIGMA, 265.0, PARAMDOC_BSE_SIGMA);
+
+        // bhflag != 0 allows velocity kick at BH formation
+        // bhflag=0: no BH kicks// bhflag=1: fallback-modulated kicks
+        // bhflag=2: mass-weighted (proportional) kicks// bhflag=3: full NS kicks
+        // default=1
+        CHECK_PARSED(BSE_BHFLAG, 1, PARAMDOC_BSE_BHFLAG);
+
+        // ecsn>0 turns on ECSN and also sets the maximum ECSN mass range (at the time of the SN)
+        // stock BSE and StarTrack: ecsn=2.25// Podsiadlowski+2004: ecsn=2.5)
+        // default=2.5
+        CHECK_PARSED(BSE_ECSN, 2.5, PARAMDOC_BSE_ECSN);
+
+        // ecsn_mlow sets the low end of the ECSN mass range
+        // stock BSE:1.6// StarTrack:1.85// Podsiadlowski+2004:1.4)
+        // default=1.4
+        CHECK_PARSED(BSE_ECSN_MLOW, 1.4, PARAMDOC_BSE_ECSN_MLOW);
+
+        // sigmadiv sets the modified ECSN kick
+        // negative values sets the ECSN sigma value, positive values divide sigma above by sigmadiv
+        // default=-20.0
+        CHECK_PARSED(BSE_SIGMADIV, -20.0, PARAMDOC_BSE_SIGMADIV);
+
+        // aic=1 turns on low kicks for accretion induced collapse
+        // works even if ecsn=0
+        // default=1
+        CHECK_PARSED(BSE_AIC, -1, PARAMDOC_BSE_AIC);
+
+        // ussn=1 uses reduced kicks (drawn from the sigmadiv distritbuion) for ultra-stripped supernovae
+        // these happen whenever a He-star undergoes a CE with a compact companion
+        // default=0
+        CHECK_PARSED(BSE_USSN, 0, PARAMDOC_BSE_USSN);
+
+        // pisn>0 allows for (pulsational) pair instability supernovae
+        // and sets the maximum mass of the remnant
+        // pisn=-1 uses the formulae from Spera+Mapelli 2017 for the mass
+        // pisn=-2 uses a polynomial fit to Table 1 Marchant 2018
+        // pisn=-3 uses a polynomial fit to Table 5 in Woosley 2019
+        // pisn=0 turns off (pulsational) pair instability supernovae
+        // default=45
+        CHECK_PARSED(BSE_PISN, 45.00, PARAMDOC_BSE_PISN);
+
+        // bhsigmafrac sets the fractional modification used for scaling down the sigma for BHs
+        // this works in addition to whatever is chosen for bhflag, and is applied to the sigma beforehand these prescriptions are implemented
+        // default=1.0
+        CHECK_PARSED(BSE_BHSIGMAFRAC, 1.00, PARAMDOC_BSE_BHSIGMAFRAC);
+
+        // polar_kick_angle sets the opening angle of the kick relative to the pole of the exploding star
+        // this can range from 0 (strictly polar kicks) to 90 (fully isotropic kicks)
+        // default=90.0
+        CHECK_PARSED(BSE_POLAR_KICK_ANGLE, 90.00, PARAMDOC_BSE_POLAR_KICK_ANGLE);
+
+        // natal_kick_array is a 6-length array for user-input values for the SN natal kick
+        // formatted as: (vk1, vk2, phi1, phi2, theta1, theta2)
+        // vk is valid on the range [0, inf], phi are the co-lateral polar angles valid from [-pi/2, pi/2], and theta are azimuthal angles [0, 2*pi]
+        // any number outside of these ranges will be sampled in the standard way in kick.f
+        // default=[-100.0,-100.0,-100.0,-100.0,-100.0,-100.0]
+        natal_kick_array=[-100.0,-100.0,-100.0,-100.0,-100.0,-100.0]
+
+        // nsflag determines the remnant mass prescription used
+        // nsflag=0: default BSE// nsflag=1: Belczynski et al. 2002, ApJ, 572, 407
+        // nsflag=2: Belczynski et al. 2008// nsflag=3: rapid prescription (Fryer+ 2012)
+        // nsflag=4: delayed prescription (Fryer+ 2012)
+        // default=4
+        CHECK_PARSED(BSE_NSFLAG, 4, PARAMDOC_BSE_NSFLAG);
+
+        // mxns sets the maximum NS mass
+        // default=3.0
+        CHECK_PARSED(BSE_MXNS, 3.00, PARAMDOC_BSE_MXNS);
+
+        // bhspinflag uses different prescriptions for BH spin after formation 
+        // bhspinflag=0// sets all BH spins to bhspinmag
+        // bhspinflag=1// draws a random BH spin between 0 and bhspinmag for every BH
+        // bhspinflag=2// core-mass dependent BH spin (based on Belczynski+2017// 1706.07053, v1)
+        // default=0 
+        CHECK_PARSED(BSE_BHSPINFLAG, 0, PARAMDOC_BSE_BHSPINFLAG);
+
+        // bhspinmag sets either the spin of all BHs or the upper limit of the uniform 
+        // distribution for BH spins 
+        // default=0.0
+        CHECK_PARSED(BSE_BHSPINMAG, 0.0, PARAMDOC_BSE_BHSPINMAG);
+
+        //////////////////////////////////////////////////////
+        ////// MASS TRANSFER FLAGS //////
+        //////////////////////////////////////////////////////
+
+        // eddfac is Eddington limit factor for mass transfer
+        // default=1.0
+        CHECK_PARSED(BSE_EDDFAC, 1.0, PARAMDOC_BSE_EDDFAC);
+
+        // gamma is the angular momentum factor for mass lost during RLO
+        // gamma=-2: assumes material is lost from the system as if it is a wind from the secondary (for super-Eddington mass transfer rates)
+        // gamma=-1: assumes the lost material carries with is the specific angular momentum of the primary
+        // gamma>0: assumes that the lost material take away a fraction (gamma) of the orbital angular momentum
+        // default=-2
+        CHECK_PARSED(BSE_GAMMA, -2.0, PARAMDOC_BSE_GAMMA);
+
+        // tflag=1 activates tidal circularisation
+        // default=1
+        CHECK_PARSED(BSE_TFLAG, 1, PARAMDOC_BSE_TFLAG);
+
+        // fprimc_array controls the scaling factor for convective tides
+        // each item is set individually for its associated kstar
+        // The releveant equation is Equation 21 from the BSE paper
+        // The default is to send the same coefficient (2/21) as is in the equation
+        // for every kstar
+        fprimc_array=[2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0]
+
+
+        // ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800
+        // default=0
+        CHECK_PARSED(BSE_IFFLAG, 0, PARAMDOC_BSE_IFFLAG);
+
+        // wdflag > 0 uses modified-Mestel cooling for WDs
+        // default=0
+        CHECK_PARSED(BSE_WDFLAG, 0, PARAMDOC_BSE_WDFLAG);
+
+        // epsnov is the fraction of accreted matter retained in nova eruptions
+        // default=0.001
+        CHECK_PARSED(BSE_EPSNOV, 0.001, PARAMDOC_BSE_EPSNOV);
+
+        // bconst is related to magnetic field evolution of pulsars, see Kiel+2008
+        // default=-3000
+        CHECK_PARSED(BSE_BCONST, -3000.00, PARAMDOC_BSE_BCONST);
+
+        // ck is related to magnetic field evolution of pulsars, see Kiel+2008
+        // default=-1000
+        CHECK_PARSED(BSE_CK, -1000.00, PARAMDOC_BSE_CK);
+
+
 	CHECK_PARSED(BH_RADIUS_MULTIPLYER, 5, PARAMDOC_BH_RADIUS_MULTIPLYER);
-	CHECK_PARSED(BSE_NSFLAG, 1, PARAMDOC_BSE_NSFLAG);
-	CHECK_PARSED(BSE_MXNS, 3.00, PARAMDOC_BSE_MXNS);
-	CHECK_PARSED(BSE_BCONST, -3000.00, PARAMDOC_BSE_BCONST);
-	CHECK_PARSED(BSE_CK, -1000.00, PARAMDOC_BSE_CK);
 	CHECK_PARSED(BSE_IDUM, -999, PARAMDOC_BSE_IDUM);
-	CHECK_PARSED(BSE_SIGMA, 265.00, PARAMDOC_BSE_SIGMA);
-	CHECK_PARSED(BSE_BHSIGMAFRAC, 1.00, PARAMDOC_BSE_BHSIGMAFRAC);
-	CHECK_PARSED(BSE_POLAR_KICK_ANGLE, 180., PARAMDOC_BSE_POLAR_KICK_ANGLE);
-	CHECK_PARSED(BSE_BETA, 0.12500, PARAMDOC_BSE_BETA);
-	CHECK_PARSED(BSE_EDDFAC, 1.00, PARAMDOC_BSE_EDDFAC);
-	CHECK_PARSED(BSE_GAMMA, -1.00, PARAMDOC_BSE_GAMMA);
 	CHECK_PARSED(TIMER, 0, PARAMDOC_TIMER);
 #undef CHECK_PARSED
 
