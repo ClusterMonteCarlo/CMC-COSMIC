@@ -7,8 +7,7 @@ AC_INIT([cmc],[[latest]],[[s-umbreit@northwestern.edu]])
 # We put all auxiliary scripts into common
 AC_CONFIG_AUX_DIR([common])
 AC_CONFIG_MACRO_DIR([m4])
-
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_CONFIG_SRCDIR([cmc_binbin.c])
 AC_CONFIG_HEADER([config.h])
@@ -251,7 +250,7 @@ AC_TYPE_SIZE_T
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([floor pow sqrt strchr strcspn strtol])
 
-AC_CONFIG_FILES([bse_wrap/bse/Makefile bse_wrap/bse/int64.h bse_wrap/Makefile
+AC_CONFIG_FILES([bse_wrap/bse/Makefile bse_wrap/bse/COSMIC/cosmic/src/int64.h bse_wrap/Makefile
                  fewbody-0.24/Makefile libs/Makefile Makefile])
 AC_OUTPUT
 
