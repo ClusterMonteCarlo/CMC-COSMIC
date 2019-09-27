@@ -244,7 +244,7 @@ void stellar_evolution_init(void){
 #ifndef USE_MPI
       curr_st = &st[findProcForIndex(k)];
 #endif
-//      bse_set_taus113state(*curr_st, 0);
+      bse_set_taus113state(*curr_st, 0);
       bse_evolv2(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
           &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
           &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
@@ -349,23 +349,18 @@ void stellar_evolution_init(void){
       exit_cleanly(-1, __FUNCTION__);
     }
   }
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 
 #ifdef USE_MPI
 	double tmpTimeStart = timeStartSimple();
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
   //if(myid==0)
     MPI_Allreduce(MPI_IN_PLACE, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   //else
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
   //  MPI_Allreduce(&DMse, &DMse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	timeEndSimple(tmpTimeStart, &t_comm);
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 #else
   for(i=0; i<procs; i++)
     DMse += DMse_mimic[i];
 #endif
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 }
 
 /* note that this routine is called after perturb_stars() and get_positions() */

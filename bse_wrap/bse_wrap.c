@@ -140,9 +140,9 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
   }
 
   /* used by COSMIC, but not needed here */
-   double bppout[23][1000], bcmout[42][50000];
+   //double bppout[23][1000], bcmout[42][50000];
 
-      evolv2_(kstar,mass,tb,ecc,z,tphysf,dtp,mass0,rad,lum,massc,radc, menv,renv,ospin,B_0,bacc,tacc,epoch,tms,bhspin,tphys,zpars,vs,bppout,bcmout);
+      evolv2_(kstar,mass,tb,ecc,z,tphysf,dtp,mass0,rad,lum,massc,radc, menv,renv,ospin,B_0,bacc,tacc,epoch,tms,bhspin,tphys,zpars,vs);
 
 }
 

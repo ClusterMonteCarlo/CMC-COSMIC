@@ -132,7 +132,7 @@ void evolv2_(int *kstar, double *mass, double *tb, double *ecc, double *z,
 	     double *tphysf, double *dtp, double *mass0, double *rad, double *lum,
              double *massc, double *radc, double *menv, double *renv,
 	     double *ospin, double *B_0, double *bacc, double *tacc, double *epoch,
-	     double *tms, double *bhspin, double *tphys, double *zpars, double *vs, double* bppout, double *bcmout);
+	     double *tms, double *bhspin, double *tphys, double *zpars, double *vs);
 void instar_(void);
 float ran3_(int *idum);
 void star_(int *kw, double *mass, double *mt, double *tm, double *tn, double *tscls, 

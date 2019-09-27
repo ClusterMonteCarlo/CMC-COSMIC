@@ -269,16 +269,12 @@ We use these two arrays to store the number of stars created by each node during
 #endif
 
 
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 	if (STELLAR_EVOLUTION > 0) {
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 		if(RESTART_TCOUNT == 0 )
 			stellar_evolution_init();
 		else
 			restart_stellar_evolution();
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 	}
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 
 
 #ifndef USE_MPI
@@ -411,11 +407,9 @@ We use these two arrays to store the number of stars created by each node during
 		timeEndSimple(tmpTimeStart, &t_dyn);
 
 		tmpTimeStart = timeStartSimple();
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 		if (STELLAR_EVOLUTION > 0)
 			do_stellar_evolution(rng);
 		timeEndSimple(tmpTimeStart, &t_se);
-	printf("GOT HERE=%d in %s on proc=%d\n",__LINE__,__FILE__,myid);
 
 		tmpTimeStart = timeStartSimple();
 		Prev_Dt = Dt;
