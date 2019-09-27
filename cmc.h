@@ -1011,11 +1011,11 @@ typedef struct{
 * @brief ECSN flag turns on electron capture supernova 
 */
 	int BSE_ECSN;
-#define PARAMDOC_BSE_ECSNMLOW "ECSNMLOW is the minimum mass for electron-capture supernova (default is 1.6)" 
+#define PARAMDOC_BSE_ECSN_MLOW "ECSNMLOW is the minimum mass for electron-capture supernova (default is 1.6)" 
 /**
 * @brief ECSNMLOW is the minimum mass for electron-capture supernova (default is 1.6 solar masses) 
 */
-	int BSE_ECSNMLOW;
+	int BSE_ECSN_MLOW;
 #define PARAMDOC_BSE_ALPHA1 "alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)"
 /**
 * @brief alpha1 is the common-envelope efficiency parameter (1.0 or 3.0 depending upon what you like and if lambda is variable)

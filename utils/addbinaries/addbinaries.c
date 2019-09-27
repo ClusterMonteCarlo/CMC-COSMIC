@@ -135,7 +135,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	bse_set_bwind(0.0);
 	bse_set_hewind(1.0);
 	bse_set_alpha1(3.0);
-	bse_set_lambda(0.5);
+	bse_set_lambdaf(1.0);
 	bse_set_ceflag(0);
 	bse_set_tflag(1);
 	bse_set_ifflag(0);

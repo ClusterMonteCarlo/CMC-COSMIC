@@ -607,13 +607,23 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb, int 
 //OPT: Use inline before void -> makes it macro
 void bse_set_using_cmc(void) {cmcpass_.using_cmc = 1; }
 void bse_set_idum(int idum) { rand1_.idum1 = idum; }
+void bse_set_eddlimflag(int eddlimflag) { flags_.eddlimflag = eddlimflag; } 
+void bse_set_sigmadiv(double sigmadiv) { snvars_.sigmadiv = sigmadiv; } 
+
+void bse_set_natal_kick_array(double natal_kick_array[6]) { snvars_.natal_kick_array = natal_kick_array; }
+void bse_set_fprimc_array(double fprimc_array[16]) { tidalvars_.fprimc_array = fprimc_array; }
+void bse_set_qcrit_array(double qcrit_array[16]) { cevars_.qcrit_array = qcrit_array; }
+
+void bse_set_aic(int aic) { flags_.aic = aic; }
+void bse_set_qcflag(int qcflag) { flags_.qcflag = qcflag; }
+void bse_set_ussn(int ussn) { ceflags_.ussn = ussn; }
 void bse_set_neta(double neta) { windvars_.neta = neta; }
 void bse_set_bwind(double bwind) { windvars_.bwind = bwind; }
 void bse_set_hewind(double hewind) { windvars_.hewind = hewind; }
 void bse_set_windflag(int windflag) { flags_.windflag = windflag; }
-void bse_set_pisn(int pisn) { snvars_.pisn = pisn; }
-void bse_set_ecsn(int ecsn) { snvars_.ecsn = ecsn; }
-void bse_set_ecsn_mlow(int ecsn_mlow) { snvars_.ecsn_mlow = ecsn_mlow; }
+void bse_set_pisn(double pisn) { snvars_.pisn = pisn; }
+void bse_set_ecsn(double ecsn) { snvars_.ecsn = ecsn; }
+void bse_set_ecsn_mlow(double ecsn_mlow) { snvars_.ecsn_mlow = ecsn_mlow; }
 void bse_set_sigma(double sigma) { snvars_.sigma = sigma; }
 void bse_set_bhsigmafrac(double bhsigmafrac) {snvars_.bhsigmafrac = bhsigmafrac; }
 void bse_set_polar_kick_angle(int polar_kick_angle) {snvars_.polar_kick_angle = polar_kick_angle; }
@@ -630,8 +640,11 @@ void bse_set_pts1(double pts1) { points_.pts1 = pts1; }
 void bse_set_pts2(double pts2) { points_.pts2 = pts2; }
 void bse_set_pts3(double pts3) { points_.pts3 = pts3; }
 void bse_set_alpha1(double alpha1) { cevars_.alpha1 = alpha1; }
-void bse_set_lambda(double lambda) { cevars_.lambdaf = lambda; }
+void bse_set_lambdaf(double lambdaf) { cevars_.lambdaf = lambdaf; }
 void bse_set_ceflag(int ceflag) { ceflags_.ceflag = ceflag; }
+void bse_set_cemergeflag(int cemergeflag) { ceflags_.cemergeflag = cemergeflag; }
+void bse_set_cekickflag(int cekickflag) { ceflags_.cekickflag = cekickflag; }
+void bse_set_cehestarflag(int cehestarflag) { ceflags_.cehestarflag = cehestarflag; }
 void bse_set_tflag(int tflag) { flags_.tflag = tflag; }
 void bse_set_beta(double beta) { windvars_.beta = beta; }
 void bse_set_xi(double xi) { windvars_.xi = xi; }
@@ -670,7 +683,7 @@ void bse_set_taus113state(struct rng_t113_state state, int first) {
 /* note the index flip and decrement so the matrices are accessed
    as they would be in fortran */
 double bse_get_alpha1(void) { return(cevars_.alpha1); }
-double bse_get_lambda(void) { return(cevars_.lambdaf); }
+double bse_get_lambdaf(void) { return(cevars_.lambdaf); }
 double bse_get_spp(int i, int j) { return(single_.spp[j-1][i-1]); }
 double bse_get_scm(int i, int j) { return(single_.scm[j-1][i-1]); }
 double bse_get_bpp(int i, int j) { return(binary_.bpp[j-1][i-1]); }

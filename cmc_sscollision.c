@@ -791,7 +791,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		      dprintf("Attempting to force merger in CE possibly by repeating evolution with a change of sep and lambda.\n");
 		      if(ktry>2){
 			lamb_val = -0.0001/((float)ktry);
-			bse_set_lambda(lamb_val); //perhaps should do this in the second attempt? 
+			bse_set_lambdaf(lamb_val); //perhaps should do this in the second attempt? 
 		      }
 		      tempbinary.a = tbcopy.a/ktry;
 		      tempbinary.bse_tb = sqrt(cub(tempbinary.a * units.l / AU)/(tempbinary.bse_mass[0]+tempbinary.bse_mass[1]))*365.25;
@@ -846,7 +846,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		      dprintf("after ce merge1: tb=%g a=%g m1=%g m2=%g e=%g kw1=%d kw2=%d r1=%g r2=%g\n",tempbinary.bse_tb,tempbinary.a,tempbinary.bse_mass[0],tempbinary.bse_mass[1],tempbinary.e,tempbinary.bse_kw[0],tempbinary.bse_kw[1],tempbinary.bse_radius[0],tempbinary.bse_radius[1]);
 		      ktry++;
 		    }
-		    bse_set_lambda(BSE_LAMBDAF);
+		    bse_set_lambdaf(BSE_LAMBDAF);
 		    bse_set_merger(-1.0);
 		  }  //end of merger attempt, either from mix (non-CE) or evolv2 (for CE) with appropriate separation selection.
 
@@ -1265,7 +1265,7 @@ double coll_CE(double Mrg, double Mint, double Mwd, double Rrg, double vinf)
 	double alpha, lambda;
 	
 	alpha = bse_get_alpha1();
-	lambda = bse_get_lambda();
+	lambda = bse_get_lambdaf();
 
 	return(1.0/(2.0*Mrg*(Mrg-Mwd)/(Mwd*Mint*alpha*lambda*Rrg)-(Mrg+Mint)/(Mwd*Mint)*vinf*vinf));
 

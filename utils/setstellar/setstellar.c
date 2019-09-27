@@ -46,7 +46,7 @@ void stellar_evolve(cmc_fits_data_t *cfd)
 	bse_set_bwind(0.0);
 	bse_set_hewind(1.0);
 	bse_set_alpha1(3.0);
-	bse_set_lambda(0.5);
+	bse_set_lambdaf(1.0);
 	bse_set_ceflag(0);
 	bse_set_tflag(1);
 	bse_set_ifflag(0);

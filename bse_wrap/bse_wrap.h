@@ -186,7 +186,7 @@ extern struct { double neta, bwind, hewind, mxns, beta, xi, acc2, epsnov, eddfac
 extern struct { double qcrit_array[16], alpha1, lambdaf; } cevars_;
 extern struct { double bconst, ck; } magvars_;
 extern struct { double natal_kick_array[6], sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag; } snvars_;
-extern struct { double fprimc_array[16]; } _tidalvars;
+extern struct { double fprimc_array[16]; } tidalvars_;
 extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
 extern struct { double scm[14][50000], spp[3][20]; } single_;
@@ -195,18 +195,30 @@ extern struct { double merger; long int id1_pass, id2_pass; long int using_cmc; 
 
 /* setters */
 void bse_set_idum(int idum); /* RNG seed (for NS birth kicks) */
+
 void bse_set_neta(double neta); /* Reimers mass-loss coefficent (neta*4x10^-13; 0.5 normally) */
 void bse_set_bwind(double bwind); /* binary enhanced mass loss parameter (inactive for single) */
 void bse_set_hewind(double hewind); /* helium star mass loss factor (1.0 normally) */
 void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
-void bse_set_ppsn(int ppsn); /* Sets Pair-instability pulsations and supernoa */ 
+void bse_set_eddlimflag(int eddlimflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
+void bse_set_pisn(double pisn); /* Sets Pair-instability pulsations and supernoa */ 
+void bse_set_aic(int aic); /* Sets Pair-instability pulsations and supernoa */
+void bse_set_ussn(int ussn); /* Sets Pair-instability pulsations and supernoa */
+
+void bse_set_ecsn(double ecsn);
+void bse_set_ecsn_mlow(double ecsn_mlow);
 void bse_set_sigma(double sigma); /* dispersion in the Maxwellian for the SN kick speed (190 km/s) */
+void bse_set_sigmadiv(double sigmadiv); /* dispersion in the Maxwellian for the SN kick speed (190 km/s) */
 void bse_set_bhsigmafrac(double bhsigmafrac); /* Ad hoc factor to change BH SN kick speed relative to NS SN kick sigma (1) */
 void bse_set_polar_kick_angle(int polar_kick_angle); /* Switch to set the allowed opening angle of SN kicks.  Defaults to 180 degrees*/
 void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0) */
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
 void bse_set_nsflag(int nsflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_qcflag(int qcflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_qcrit_array(double qcrit_array[16]); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_fprimc_array(double fprimc_array[16]); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_natal_kick_array(double natal_kick_array[6]); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=[bhspinmag], 1=Uniform(0-1)*[bhspinmag], 2=Belczynski2017)*/
 void bse_set_bhspinmag(double bhspinmag);/* value of BH spins (default=0.0) */ 
 void bse_set_mxns(double mxns); /* maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1) */
@@ -216,8 +228,11 @@ void bse_set_pts1(double pts1); /* timestep taken in MS phase (0.05) */
 void bse_set_pts2(double pts2); /* timestep taken in GB, CHeB, AGB, HeGB phases (0.01) */
 void bse_set_pts3(double pts3); /* timestep taken in HG, HeMS phases (0.02) */
 void bse_set_alpha1(double alpha1); /* common-envelope efficiency parameter (1.0) */
-void bse_set_lambda(double lambda); /* binding energy factor for common envelope evolution (0.5) */
+void bse_set_lambdaf(double lambdaf); /* binding energy factor for common envelope evolution (0.5) */
 void bse_set_ceflag(int ceflag); /* ceflag > 0 activates spin-energy correction in common-envelope (0); ceflag = 3 activates de Kool common-envelope model (0) */
+void bse_set_cehestarflag(int cehestarflag); /* cehestarflag > 0 activates spin-energy correction in common-envelope (0); cehestarflag = 3 activates de Kool common-envelope model (0) */
+void bse_set_cemergeflag(int cemergeflag); /* cemergeflag > 0 activates spin-energy correction in common-envelope (0); cemergeflag = 3 activates de Kool common-envelope model (0) */
+void bse_set_cekickflag(int cekickflag); /* cekickflag > 0 activates spin-energy correction in common-envelope (0); cekickflag = 3 activates de Kool common-envelope model (0) */
 void bse_set_tflag(int tflag); /* tflag > 0 activates tidal circularisation */
 void bse_set_beta(double beta); /* wind velocity factor: proportional to vwind**2 (1/8) */
 void bse_set_xi(double xi); /* wind accretion efficiency factor (1.0) */
@@ -225,17 +240,16 @@ void bse_set_acc2(double acc2); /* Bondi-Hoyle wind accretion factor (3/2) */
 void bse_set_epsnov(double epsnov); /* fraction of accreted matter retained in nova eruption (0.001) */
 void bse_set_eddfac(double eddfac); /* Eddington limit factor for mass transfer (1.0) */
 void bse_set_gamma(double gamma); /* angular momentum factor for mass lost during Roche (-1.0) */
+
+
 void bse_set_merger(double merger); /* pass through a value signifying a merger (>0.d0), evolv2.f will then do the appropriate kick and/or initial spin*/
 void bse_set_id1_pass(long int id1_pass); /* pass through cmc star id into bse to help in debugging, this is used for iso star and star 1 in binary */
 void bse_set_id2_pass(long int id2_pass); /* pass through cmc star id into bse to help in debugging, this is used for star 2 in binary */
 void bse_set_taus113state(struct rng_t113_state state, int first);
-void bse_set_pisn(int pisn);
-void bse_set_ecsn(int ecsn);
-void bse_set_ecsn_mlow(int ecsn_mlow);
 
 /* getters */
 double bse_get_alpha1(void); /* get CE alpha */
-double bse_get_lambda(void); /* get CE lambda */
+double bse_get_lambdaf(void); /* get CE lambda */
 double bse_get_spp(int i, int j); /* stellar evolution log */
 double bse_get_scm(int i, int j); /* stored stellar parameters at interval dtp */
 double bse_get_bpp(int i, int j); /* binary evolution log */

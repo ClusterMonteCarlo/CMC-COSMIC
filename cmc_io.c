@@ -1746,11 +1746,6 @@ if(myid==0) {
         // default=2
         CHECK_PARSED(BSE_QCFLAG, 2, PARAMDOC_BSE_QCFLAG);
 
-        // qcrit_array is a 16-length array for user-input values for the critical mass ratios that govern the onset of unstable mass transfer and a common envelope
-        // each item is set individually for its associated kstar, and a value of 0.0 will apply prescription of the qcflag for that kstar
-        // default: [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
-        qcrit_array=[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
-
         // sigma sets is the dispersion in the Maxwellian for the SN kick velocity in km/s
         // default=265.0
         CHECK_PARSED(BSE_SIGMA, 265.0, PARAMDOC_BSE_SIGMA);
@@ -1805,13 +1800,6 @@ if(myid==0) {
         // default=90.0
         CHECK_PARSED(BSE_POLAR_KICK_ANGLE, 90.00, PARAMDOC_BSE_POLAR_KICK_ANGLE);
 
-        // natal_kick_array is a 6-length array for user-input values for the SN natal kick
-        // formatted as: (vk1, vk2, phi1, phi2, theta1, theta2)
-        // vk is valid on the range [0, inf], phi are the co-lateral polar angles valid from [-pi/2, pi/2], and theta are azimuthal angles [0, 2*pi]
-        // any number outside of these ranges will be sampled in the standard way in kick.f
-        // default=[-100.0,-100.0,-100.0,-100.0,-100.0,-100.0]
-        natal_kick_array=[-100.0,-100.0,-100.0,-100.0,-100.0,-100.0]
-
         // nsflag determines the remnant mass prescription used
         // nsflag=0: default BSE// nsflag=1: Belczynski et al. 2002, ApJ, 572, 407
         // nsflag=2: Belczynski et al. 2008// nsflag=3: rapid prescription (Fryer+ 2012)
@@ -1853,14 +1841,6 @@ if(myid==0) {
         // tflag=1 activates tidal circularisation
         // default=1
         CHECK_PARSED(BSE_TFLAG, 1, PARAMDOC_BSE_TFLAG);
-
-        // fprimc_array controls the scaling factor for convective tides
-        // each item is set individually for its associated kstar
-        // The releveant equation is Equation 21 from the BSE paper
-        // The default is to send the same coefficient (2/21) as is in the equation
-        // for every kstar
-        fprimc_array=[2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0]
-
 
         // ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800
         // default=0

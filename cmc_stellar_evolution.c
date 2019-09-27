@@ -19,13 +19,24 @@ void restart_stellar_evolution(void){
   bse_set_bwind(BSE_BWIND);
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
+  bse_set_eddlimflag(BSE_EDDLIMFLAG);
   bse_set_pisn(BSE_PISN);
   bse_set_ecsn(BSE_ECSN);
-  bse_set_ecsn_mlow(BSE_ECSNMLOW);
+  bse_set_ecsn_mlow(BSE_ECSN_MLOW);
+  bse_set_aic(BSE_AIC);
+  bse_set_ussn(BSE_USSN);
+  bse_set_qcrit_array(BSE_QCRIT_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_fprimc_array(BSE_FPRIMC_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_natal_kick_array(BSE_NATAL_KICK_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_sigmadiv(BSE_SIGMADIV);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
-  bse_set_lambda(BSE_LAMBDAF);
+  bse_set_lambdaf(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
+  bse_set_cehestarflag(BSE_CEHESTARFLAG);
+  bse_set_cemergeflag(BSE_CEMERGEFLAG);
+  bse_set_cekickflag(BSE_CEKICKFLAG);
   bse_set_tflag(BSE_TFLAG);
+  bse_set_qcflag(BSE_QCFLAG);
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_bhflag(BSE_BHFLAG);
@@ -42,16 +53,16 @@ void restart_stellar_evolution(void){
   }
 #endif
   bse_set_idum(BSE_IDUM);
-  bse_set_pts1(0.05);
-  bse_set_pts2(0.01);
-  bse_set_pts3(0.02);
+  bse_set_pts1(BSE_PTS1);
+  bse_set_pts2(BSE_PTS2);
+  bse_set_pts3(BSE_PTS3);
   bse_set_sigma(BSE_SIGMA);
   bse_set_bhsigmafrac(BSE_BHSIGMAFRAC);
   bse_set_polar_kick_angle(BSE_POLAR_KICK_ANGLE);
   bse_set_beta(BSE_BETA); //set -0.125 if variable beta (following startrack), otherwise 0.125 for bse.
-  bse_set_xi(1.0);
-  bse_set_acc2(1.5);
-  bse_set_epsnov(0.001);
+  bse_set_xi(BSE_XI);
+  bse_set_acc2(BSE_ACC2);
+  bse_set_epsnov(BSE_EPSNOV);
   bse_set_eddfac(BSE_EDDFAC); /* (normally 1.0) */
   bse_set_gamma(BSE_GAMMA);
   bse_set_merger(-1.0);
@@ -89,13 +100,24 @@ void stellar_evolution_init(void){
   bse_set_bwind(BSE_BWIND);
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
+  bse_set_eddlimflag(BSE_EDDLIMFLAG);
   bse_set_pisn(BSE_PISN);
   bse_set_ecsn(BSE_ECSN);
-  bse_set_ecsn_mlow(BSE_ECSNMLOW);
+  bse_set_ecsn_mlow(BSE_ECSN_MLOW);
+  bse_set_aic(BSE_AIC);
+  bse_set_ussn(BSE_USSN);
+  bse_set_qcrit_array(BSE_QCRIT_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_fprimc_array(BSE_FPRIMC_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_natal_kick_array(BSE_NATAL_KICK_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_sigmadiv(BSE_SIGMADIV);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
-  bse_set_lambda(BSE_LAMBDAF);
+  bse_set_lambdaf(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
+  bse_set_cehestarflag(BSE_CEHESTARFLAG);
+  bse_set_cemergeflag(BSE_CEMERGEFLAG);
+  bse_set_cekickflag(BSE_CEKICKFLAG);
   bse_set_tflag(BSE_TFLAG);
+  bse_set_qcflag(BSE_QCFLAG);
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_bhflag(BSE_BHFLAG);
@@ -112,16 +134,16 @@ void stellar_evolution_init(void){
   }
 #endif
   bse_set_idum(BSE_IDUM);
-  bse_set_pts1(0.05);
-  bse_set_pts2(0.01);
-  bse_set_pts3(0.02);
+  bse_set_pts1(BSE_PTS1);
+  bse_set_pts2(BSE_PTS2);
+  bse_set_pts3(BSE_PTS3);
   bse_set_sigma(BSE_SIGMA);
   bse_set_bhsigmafrac(BSE_BHSIGMAFRAC);
   bse_set_polar_kick_angle(BSE_POLAR_KICK_ANGLE);
   bse_set_beta(BSE_BETA); //set -0.125 if variable beta (following startrack), otherwise 0.125 for bse.
-  bse_set_xi(1.0);
-  bse_set_acc2(1.5);
-  bse_set_epsnov(0.001);
+  bse_set_xi(BSE_XI);
+  bse_set_acc2(BSE_ACC2);
+  bse_set_epsnov(BSE_EPSNOV);
   bse_set_eddfac(BSE_EDDFAC); /* (normally 1.0) */
   bse_set_gamma(BSE_GAMMA);
   bse_set_merger(-1.0);
