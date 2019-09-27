@@ -1515,6 +1515,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_CK);
 				sscanf(values, "%lf", &BSE_CK);
 				parsed.BSE_CK = 1;
+			} else if (strcmp(parameter_name, "BSE_REJUV_FAC")== 0) {
+				PRINT_PARSED(PARAMDOC_BSE_REJUV_FAC);
+				sscanf(values, "%lf", &BSE_REJUV_FAC);
+				parsed.BSE_REJUV_FAC = 1;
 			} else if (strcmp(parameter_name, "BSE_IDUM")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_IDUM);
 				sscanf(values, "%i", &BSE_IDUM);
@@ -1861,6 +1865,7 @@ if(myid==0) {
         // ck is related to magnetic field evolution of pulsars, see Kiel+2008
         // default=-1000
         CHECK_PARSED(BSE_CK, -1000.00, PARAMDOC_BSE_CK);
+        CHECK_PARSED(BSE_REJUV_FAC, 1.00, PARAMDOC_BSE_REJUV_FAC);
 
 
 	CHECK_PARSED(BH_RADIUS_MULTIPLYER, 5, PARAMDOC_BH_RADIUS_MULTIPLYER);

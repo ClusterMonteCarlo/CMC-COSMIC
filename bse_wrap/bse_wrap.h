@@ -185,6 +185,7 @@ extern struct { int pisn_track[2]; } trackers_;
 extern struct { double neta, bwind, hewind, mxns, beta, xi, acc2, epsnov, eddfac, gamma; } windvars_;
 extern struct { double qcrit_array[16], alpha1, lambdaf; } cevars_;
 extern struct { double bconst, ck; } magvars_;
+extern struct { double rejuv_fac; } mixvars_;
 extern struct { double natal_kick_array[6], sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag; } snvars_;
 extern struct { double fprimc_array[16]; } tidalvars_;
 extern struct { double pts1, pts2, pts3; } points_;
@@ -224,6 +225,7 @@ void bse_set_bhspinmag(double bhspinmag);/* value of BH spins (default=0.0) */
 void bse_set_mxns(double mxns); /* maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1) */
 void bse_set_bconst(double bconst); /* isolated pulsar field decay timescale */
 void bse_set_CK(double CK); /* Pulsar mass accretion field decay factor */
+void bse_set_rejuv_fac(double rejuv_fac);
 void bse_set_pts1(double pts1); /* timestep taken in MS phase (0.05) */
 void bse_set_pts2(double pts2); /* timestep taken in GB, CHeB, AGB, HeGB phases (0.01) */
 void bse_set_pts3(double pts3); /* timestep taken in HG, HeMS phases (0.02) */

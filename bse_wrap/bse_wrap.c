@@ -636,6 +636,7 @@ void bse_set_nsflag(int nsflag) { flags_.nsflag = nsflag; }
 void bse_set_mxns(double mxns) { windvars_.mxns = mxns;} 
 void bse_set_bconst(double bconst) { magvars_.bconst = bconst; }
 void bse_set_CK(double CK) {magvars_.ck = CK;}
+void bse_set_rejuv_fac(double rejuv_fac) {mixvars_.rejuv_fac = rejuv_fac;}
 void bse_set_pts1(double pts1) { points_.pts1 = pts1; }
 void bse_set_pts2(double pts2) { points_.pts2 = pts2; }
 void bse_set_pts3(double pts3) { points_.pts3 = pts3; }

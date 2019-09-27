@@ -1137,6 +1137,11 @@ typedef struct{
 * @brief CK is an accretion induced field decay constant (-1000, although again this isn't well established...).
 */
 	int BSE_CK;
+#define PARAMDOC_BSE_REJUV_FAC "CK is an accretion induced field decay constant (-1000, although again this isn't well established...)."
+/**
+* @brief Factor to multiply main-sequence liftimes when combining stars 
+*/
+	int BSE_REJUV_FAC;
 #define PARAMDOC_BSE_IDUM "idum in the random number seed used by kick.f and setting initial pulsar spin period and magnetic field."
 /**
 * @brief idum in the random number seed used by kick.f and setting initial pulsar spin period and magnetic field.
