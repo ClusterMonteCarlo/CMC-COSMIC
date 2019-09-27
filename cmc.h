@@ -664,6 +664,21 @@ typedef struct{
 * @brief mass ranges for calculating derived quantities
 */
 	int MASS_BINS;
+#define PARAMDOC_BSE_FPRIMC_ARRAY "fprimc_array controls the scaling factor for convective tides each item is set individually for its associated kstar. The releveant equation is Equation 21 from the BSE paper. The default is to send the same coefficient (2/21) as is in the equation for every kstar"
+/**
+* @brief mass ranges for calculating derived quantities
+*/
+	int BSE_FPRIMC_ARRAY;
+#define PARAMDOC_BSE_NATAL_KICK_ARRAY "natal_kick_array is a 6-length array for user-input values for the SN natal kick formatted as: (vk1, vk2, phi1, phi2, theta1, theta2)"
+/**
+* @brief mass ranges for calculating derived quantities
+*/
+	int BSE_NATAL_KICK_ARRAY;
+#define PARAMDOC_BSE_QCRIT_ARRAY "qcrit_array is a 16-length array for user-input values for the critical mass ratios that govern the onset of unstable mass transfer and a common envelope"
+/**
+* @brief mass ranges for calculating derived quantities
+*/
+	int BSE_QCRIT_ARRAY;
 #define PARAMDOC_MINIMUM_R "radius of central mass"
 /**
 * @brief radius of central mass
