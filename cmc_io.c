@@ -1715,7 +1715,7 @@ if(myid==0) {
         // lambdaf=1.0 uses variable lambda prescription in appendix of Claeys+2014
         // lambdaf<0 uses fixes lambda to a value of -1.0*lambdaf
         // default=1.0
-        CHECK_PARSED(BSE_LAMBDAF, 1.0, PARAMDOC_BSE_LAMBDAF);
+        CHECK_PARSED(BSE_LAMBDAF, 0.5, PARAMDOC_BSE_LAMBDAF);
 
         // ceflag=1 used the method from de Kool 1990 for setting the initial orbital energy
         // ceflag=0 does not use this method (uses the core mass to calculate initial orbital energy)
