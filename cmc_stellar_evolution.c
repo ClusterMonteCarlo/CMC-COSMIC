@@ -24,6 +24,7 @@ void restart_stellar_evolution(void){
   bse_set_ecsn(BSE_ECSN);
   bse_set_ecsn_mlow(BSE_ECSN_MLOW);
   bse_set_aic(BSE_AIC);
+  bse_set_rejuvflag(BSE_REJUVFLAG);
   bse_set_ussn(BSE_USSN);
   bse_set_qcrit_array(bse_qcrit_array, NO_BSE_QCRIT_ARRAY); 
   bse_set_fprimc_array(bse_fprimc_array, NO_BSE_FPRIMC_ARRAY);
@@ -106,6 +107,7 @@ void stellar_evolution_init(void){
   bse_set_ecsn(BSE_ECSN);
   bse_set_ecsn_mlow(BSE_ECSN_MLOW);
   bse_set_aic(BSE_AIC);
+  bse_set_rejuvflag(BSE_REJUVFLAG);
   bse_set_ussn(BSE_USSN);
   bse_set_qcrit_array(bse_qcrit_array, NO_BSE_QCRIT_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
   bse_set_fprimc_array(bse_fprimc_array, NO_BSE_FPRIMC_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
@@ -683,6 +685,7 @@ void do_stellar_evolution(gsl_rng *rng)
 		    bse_set_pts1(0.05);
 
         if(isnan(binary[kb].bse_radius[0])){
+		printf("id1=%ld id2=%ld\n",binary[kb].id1,binary[kb].id2);
           fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
           fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1], binary[kb].bse_tb);
           fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);

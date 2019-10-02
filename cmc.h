@@ -1077,6 +1077,12 @@ typedef struct{
  *  * * @brief sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).
  *   * */
         int BSE_AIC;
+#define PARAMDOC_BSE_REJUVFLAG "whether to use the default BSE mixing prescription or not"
+/**
+ *  * * @brief whether to use the default BSE mixing presrirption (0) or the new 
+ *  COSMIC version (1) 
+ *   * */
+        int BSE_REJUVFLAG;
 #define PARAMDOC_BSE_USSN "sigma is the Maxwellian dispersion for SN kick speeds (265 km/s)."
 /**
  *  * * @brief sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).

@@ -178,7 +178,7 @@ extern struct { int idum2, iy, ir[32]; } rand2_;
 extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
-extern struct { int  tflag, ifflag, nsflag, wdflag, bhflag, windflag, qcflag, eddlimflag, bhspinflag, aic; } flags_;
+extern struct { int  tflag, ifflag, nsflag, wdflag, bhflag, windflag, qcflag, eddlimflag, bhspinflag, aic, rejuvflag; } flags_;
 extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 

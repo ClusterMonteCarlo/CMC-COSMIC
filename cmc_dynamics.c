@@ -428,6 +428,7 @@ are skipped if they already interacted in 3bb loop!  */
 		/* warn if something went wrong with the calculation of Dt */
 		if (P_enc >= 1.0) {
 			wprintf("P_enc = %g >= 1!\n", P_enc);
+			wprintf("n_local=%g W=%g dt=%g S=%g S_tc=%g S_coll=%g S_lombardi=%g S_tmp=%g S_brem=%g\n",n_local,W,dt,S,S_tc, S_coll, S_lombardi, S_tmp, S_brem);
 		}
 
 #ifndef USE_MPI

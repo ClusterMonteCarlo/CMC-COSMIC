@@ -1447,6 +1447,10 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_AIC);
                                 sscanf(values, "%d", &BSE_AIC);
                                 parsed.BSE_AIC = 1;
+                        } else if (strcmp(parameter_name, "BSE_REJUVFLAG")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_REJUVFLAG);
+                                sscanf(values, "%d", &BSE_REJUVFLAG);
+                                parsed.BSE_REJUVFLAG = 1;
                         } else if (strcmp(parameter_name, "BSE_USSN")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_USSN);
                                 sscanf(values, "%d", &BSE_USSN);
@@ -1661,7 +1665,7 @@ if(myid==0) {
         // pts1,pts2,pts3 determine the timesteps chosen in each
         // evolution phase as decimal fractions of the time taken in that phase:
         //                 pts1 - MS                  (default=0.001, see Banerjee+ 2019)
-        CHECK_PARSED(BSE_PTS1, 0.001, PARAMDOC_BSE_PTS1);
+        CHECK_PARSED(BSE_PTS1, 0.05, PARAMDOC_BSE_PTS1);
         //                 pts2 - GB, CHeB, AGB, HeGB (default=0.01)
         CHECK_PARSED(BSE_PTS2, 0.01, PARAMDOC_BSE_PTS2);
         //                 pts3 - HG, HeMS            (default=0.02)
@@ -1779,6 +1783,11 @@ if(myid==0) {
         // works even if ecsn=0
         // default=1
         CHECK_PARSED(BSE_AIC, -1, PARAMDOC_BSE_AIC);
+	//
+        // aic=1 turns on low kicks for accretion induced collapse
+        // works even if ecsn=0
+        // default=1
+        CHECK_PARSED(BSE_REJUVFLAG, -1, PARAMDOC_BSE_REJUVFLAG);
 
         // ussn=1 uses reduced kicks (drawn from the sigmadiv distritbuion) for ultra-stripped supernovae
         // these happen whenever a He-star undergoes a CE with a compact companion

@@ -615,6 +615,7 @@ void bse_set_fprimc_array(double *fprimc_array, long len_fprimc) {int i; for(i=0
 void bse_set_qcrit_array(double *qcrit_array, long len_qcrit) {int i; for(i=0;i<len_qcrit;i++) cevars_.qcrit_array[i] = qcrit_array[i]; }
 
 void bse_set_aic(int aic) { flags_.aic = aic; }
+void bse_set_rejuvflag(int rejuvflag) { flags_.rejuvflag = rejuvflag; }
 void bse_set_qcflag(int qcflag) { flags_.qcflag = qcflag; }
 void bse_set_ussn(int ussn) { ceflags_.ussn = ussn; }
 void bse_set_neta(double neta) { windvars_.neta = neta; }
