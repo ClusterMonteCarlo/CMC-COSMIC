@@ -1447,6 +1447,22 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_AIC);
                                 sscanf(values, "%d", &BSE_AIC);
                                 parsed.BSE_AIC = 1;
+                        } else if (strcmp(parameter_name, "BSE_BDECAYFAC")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_BDECAYFAC);
+                                sscanf(values, "%d", &BSE_BDECAYFAC);
+                                parsed.BSE_BDECAYFAC = 1;
+                        } else if (strcmp(parameter_name, "BSE_HTPMB")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_HTPMB);
+                                sscanf(values, "%d", &BSE_HTPMB);
+                                parsed.BSE_HTPMB = 1;
+                        } else if (strcmp(parameter_name, "BSE_ST_CR")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_ST_CR);
+                                sscanf(values, "%d", &BSE_ST_CR);
+                                parsed.BSE_ST_CR = 1;
+                        } else if (strcmp(parameter_name, "BSE_ST_TIDE")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_ST_TIDE);
+                                sscanf(values, "%d", &BSE_ST_TIDE);
+                                parsed.BSE_ST_TIDE = 1;
                         } else if (strcmp(parameter_name, "BSE_REJUVFLAG")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_REJUVFLAG);
                                 sscanf(values, "%d", &BSE_REJUVFLAG);
@@ -1782,12 +1798,18 @@ if(myid==0) {
         // aic=1 turns on low kicks for accretion induced collapse
         // works even if ecsn=0
         // default=1
-        CHECK_PARSED(BSE_AIC, -1, PARAMDOC_BSE_AIC);
+        CHECK_PARSED(BSE_AIC, 1, PARAMDOC_BSE_AIC);
+        CHECK_PARSED(BSE_BDECAYFAC, 1, PARAMDOC_BSE_BDECAYFAC);
+        CHECK_PARSED(BSE_HTPMB, 1, PARAMDOC_BSE_HTPMB);
+        CHECK_PARSED(BSE_ST_CR, 1, PARAMDOC_BSE_ST_CR);
+        CHECK_PARSED(BSE_ST_TIDE, 0, PARAMDOC_BSE_ST_TIDE);
+        
 	//
         // aic=1 turns on low kicks for accretion induced collapse
         // works even if ecsn=0
         // default=1
-        CHECK_PARSED(BSE_REJUVFLAG, -1, PARAMDOC_BSE_REJUVFLAG);
+        CHECK_PARSED(BSE_REJUVFLAG, 0, PARAMDOC_BSE_REJUVFLAG);
+
 
         // ussn=1 uses reduced kicks (drawn from the sigmadiv distritbuion) for ultra-stripped supernovae
         // these happen whenever a He-star undergoes a CE with a compact companion

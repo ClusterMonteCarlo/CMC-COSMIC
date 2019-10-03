@@ -1077,6 +1077,26 @@ typedef struct{
  *  * * @brief sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).
  *   * */
         int BSE_AIC;
+#define PARAMDOC_BSE_BDECAYFAC "sigma is the Maxwellian dispersion for SN kick speeds (265 km/s)."
+/**
+ *  * * @brief sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).
+ *   * */
+        int BSE_BDECAYFAC;
+#define PARAMDOC_BSE_ST_TIDE "ST_tide sets which tidal method to use. 0=Hurley+2002, 1=StarTrack: Belczynski+2008. Note, here startrack method does not use a better integration scheme (yet) but simply  follows similar set up to startrack (including initial vrot, using roche-lobe check at periastron, and circularisation and synchronisation at start of MT)."
+/**
+ *  * * @brief ST_tide sets which tidal method to use. 0=Hurley+2002, 1=StarTrack: Belczynski+2008. 
+ *   * */
+        int BSE_ST_TIDE;
+#define PARAMDOC_BSE_ST_CR "ST_cr sets which convective/radiative boundary to use.  0 is BSE paper, 1 is StarTrack"
+/**
+ *  * * @brief Which convective/radiative boundary to use (1 is default,  Belczynski+2008)
+ *   * */
+        int BSE_ST_CR;
+#define PARAMDOC_BSE_HTPMB "htpmb allows for different magnetic braking models.   0=follows BSE paper Section 2.4. 1=follows Ivanova & Taam 2003 method which kicks in later than the standard"
+/**
+ *  * * @brief which magnetic breaking model to use, 1 is Ivanova and Taam, 0 is BSE paper 
+ *   * */
+        int BSE_HTPMB;
 #define PARAMDOC_BSE_REJUVFLAG "whether to use the default BSE mixing prescription or not"
 /**
  *  * * @brief whether to use the default BSE mixing presrirption (0) or the new 

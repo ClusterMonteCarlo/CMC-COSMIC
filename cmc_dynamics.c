@@ -394,7 +394,9 @@ are skipped if they already interacted in 3bb loop!  */
 
 					S_tmp = MAX(S_tc, S_lombardi);
 
-                }
+				}
+
+				S_brem = 0.0;
 
 				if (BH_CAPTURE) {
 					/* cross section for single-single GW capture, from Quinlan and Shapiro 1987 */
@@ -402,7 +404,6 @@ are skipped if they already interacted in 3bb loop!  */
 						clight10o7 = pow(2.9979e10 / (units.l/units.t) ,1.428571);
 						rperi = 2.957852 * madhoc * (mass_k + mass_kp) / pow(W,0.57142857) / clight10o7;
 						S_brem = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
-
 						S_tmp = MAX(S_tmp, S_brem);
 					}
 				}
@@ -428,7 +429,6 @@ are skipped if they already interacted in 3bb loop!  */
 		/* warn if something went wrong with the calculation of Dt */
 		if (P_enc >= 1.0) {
 			wprintf("P_enc = %g >= 1!\n", P_enc);
-			wprintf("n_local=%g W=%g dt=%g S=%g S_tc=%g S_coll=%g S_lombardi=%g S_tmp=%g S_brem=%g\n",n_local,W,dt,S,S_tc, S_coll, S_lombardi, S_tmp, S_brem);
 		}
 
 #ifndef USE_MPI

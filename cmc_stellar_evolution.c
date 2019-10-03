@@ -24,6 +24,10 @@ void restart_stellar_evolution(void){
   bse_set_ecsn(BSE_ECSN);
   bse_set_ecsn_mlow(BSE_ECSN_MLOW);
   bse_set_aic(BSE_AIC);
+  bse_set_bdecayfac(BSE_BDECAYFAC);
+  bse_set_st_cr(BSE_ST_CR);
+  bse_set_st_tide(BSE_ST_TIDE);
+  bse_set_htpmb(BSE_HTPMB);
   bse_set_rejuvflag(BSE_REJUVFLAG);
   bse_set_ussn(BSE_USSN);
   bse_set_qcrit_array(bse_qcrit_array, NO_BSE_QCRIT_ARRAY); 
@@ -107,6 +111,10 @@ void stellar_evolution_init(void){
   bse_set_ecsn(BSE_ECSN);
   bse_set_ecsn_mlow(BSE_ECSN_MLOW);
   bse_set_aic(BSE_AIC);
+  bse_set_bdecayfac(BSE_BDECAYFAC);
+  bse_set_st_cr(BSE_ST_CR);
+  bse_set_st_tide(BSE_ST_TIDE);
+  bse_set_htpmb(BSE_HTPMB);
   bse_set_rejuvflag(BSE_REJUVFLAG);
   bse_set_ussn(BSE_USSN);
   bse_set_qcrit_array(bse_qcrit_array, NO_BSE_QCRIT_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */

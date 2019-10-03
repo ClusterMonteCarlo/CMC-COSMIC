@@ -178,7 +178,7 @@ extern struct { int idum2, iy, ir[32]; } rand2_;
 extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
-extern struct { int  tflag, ifflag, nsflag, wdflag, bhflag, windflag, qcflag, eddlimflag, bhspinflag, aic, rejuvflag; } flags_;
+extern struct { int  tflag, ifflag, nsflag, wdflag, bhflag, windflag, qcflag, eddlimflag, bhspinflag, aic, rejuvflag, htpmb, st_cr, st_tide, bdecayfac; } flags_;
 extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 
@@ -204,6 +204,10 @@ void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTra
 void bse_set_eddlimflag(int eddlimflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
 void bse_set_pisn(double pisn); /* Sets Pair-instability pulsations and supernoa */ 
 void bse_set_aic(int aic); /* Sets Pair-instability pulsations and supernoa */
+void bse_set_bdecayfac(int bdecayfac);
+void bse_set_htpmb(int htpmb); /* Sets Pair-instability pulsations and supernoa */
+void bse_set_st_tide(int st_tide); /* Sets Pair-instability pulsations and supernoa */
+void bse_set_st_cr(int st_cr); /* Sets Pair-instability pulsations and supernoa */
 void bse_set_ussn(int ussn); /* Sets Pair-instability pulsations and supernoa */
 
 void bse_set_ecsn(double ecsn);
