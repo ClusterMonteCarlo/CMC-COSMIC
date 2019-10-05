@@ -467,8 +467,8 @@ void do_stellar_evolution(gsl_rng *rng)
 		  /*If we've got a large MS star, we need to reduce the timestep, otherwise
 		   * we miss the transition from MS to HG to giant, and won't start applying
 		   * winds for massive stars at the right time*/
-		  if(star[k].se_mass > 50){
-			  bse_set_pts1(0.005);
+		  if(star[k].zams_mass > 18){
+			  bse_set_pts1(BSE_PTS1/10.);
 			  reduced_timestep = 1;
 		  }
         /*
@@ -509,7 +509,7 @@ void do_stellar_evolution(gsl_rng *rng)
 
 		  /*Reset the MS timestep once we're done*/
 		  if(reduced_timestep == 1)
-			  bse_set_pts1(0.05);
+			  bse_set_pts1(BSE_PTS1);
 
         star[k].rad = star[k].se_radius * RSUN / units.l;
 #ifdef USE_MPI
@@ -653,8 +653,8 @@ void do_stellar_evolution(gsl_rng *rng)
 		/*If we've got a large MS star, we need to reduce the timestep, otherwise
 		 * we miss the transition from MS to HG to giant, and won't start applying
 		 * winds for massive stars at the right time*/
-		if(binary[kb].bse_mass0[0] > 50 || binary[kb].bse_mass0[1] > 50){
-		    bse_set_pts1(0.005);
+		if(binary[kb].bse_zams_mass[0] > 18 || binary[kb].bse_zams_mass[1] > 18){
+		    bse_set_pts1(BSE_PTS1/10.);
 		    reduced_timestep = 1;
 		}
 
@@ -690,7 +690,7 @@ void do_stellar_evolution(gsl_rng *rng)
 
 		/*Reset the MS timestep once we're done*/
 		if(reduced_timestep == 1)
-		    bse_set_pts1(0.05);
+		    bse_set_pts1(BSE_PTS1);
 
         if(isnan(binary[kb].bse_radius[0])){
 		printf("id1=%ld id2=%ld\n",binary[kb].id1,binary[kb].id2);

@@ -1883,7 +1883,7 @@ if(myid==0) {
 
         // wdflag > 0 uses modified-Mestel cooling for WDs
         // default=0
-        CHECK_PARSED(BSE_WDFLAG, 0, PARAMDOC_BSE_WDFLAG);
+        CHECK_PARSED(BSE_WDFLAG, 1, PARAMDOC_BSE_WDFLAG);
 
         // epsnov is the fraction of accreted matter retained in nova eruptions
         // default=0.001
@@ -1896,7 +1896,7 @@ if(myid==0) {
         // ck is related to magnetic field evolution of pulsars, see Kiel+2008
         // default=-1000
         CHECK_PARSED(BSE_CK, -1000.00, PARAMDOC_BSE_CK);
-        CHECK_PARSED(BSE_REJUV_FAC, 1.00, PARAMDOC_BSE_REJUV_FAC);
+        CHECK_PARSED(BSE_REJUV_FAC, 0.1, PARAMDOC_BSE_REJUV_FAC);
 
 
 	CHECK_PARSED(BH_RADIUS_MULTIPLYER, 5, PARAMDOC_BH_RADIUS_MULTIPLYER);
