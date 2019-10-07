@@ -163,12 +163,12 @@ void bse_star(int *kw, double *mass, double *mt, double *tm, double *tn, double 
 	      double *lums, double *GB, double *zpars);
 void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, double *tscls, 
 		double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
-		double *mc, double *rc, double *menv, double *renv, double *k2, int *ST_tide, double *bhspin);
+		double *mc, double *rc, double *menv, double *renv, double *k2, double *bhspin);
 void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
 	      double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *vs);
 void bse_mix(double *mass, double *mt, double *aj, int *kw, double *zpars, double *bhspin);
 void bse_comenv(bse_binary *binary, double *zpars,
-                double *vs, int *fb, int *ST_tide);
+                double *vs, int *fb);
 
 /* structs to access BSE common blocks */
 /* note the index swap between fortran and C: i,j->j,i */

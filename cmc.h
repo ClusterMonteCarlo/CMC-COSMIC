@@ -1671,7 +1671,7 @@ void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid);
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid);
 void integrate_a_e_peters_eqn(long binidx);
 double r_of_m(double M);
-void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb, int *ST_tide);
+void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb);
 
 /* Fewbody stuff */
 void destroy_obj(long i);
