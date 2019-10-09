@@ -1,0 +1,4 @@
+// the configured options and settings for Tutorial
+#define CMC_VERSION_MAJOR @CMC_VERSION_MAJOR@
+#define CMC_VERSION_MINOR @CMC_VERSION_MINOR@
+#define CMCPRETTYNAME @CMCPRETTYNAME@
