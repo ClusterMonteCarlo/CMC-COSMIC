@@ -1433,15 +1433,15 @@ if(myid==0) {
                                 parsed.BSE_BHFLAG = 1;
                         } else if (strcmp(parameter_name, "BSE_ECSN")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ECSN);
-                                sscanf(values, "%d", &BSE_ECSN);
+                                sscanf(values, "%lf", &BSE_ECSN);
                                 parsed.BSE_ECSN = 1;
                         } else if (strcmp(parameter_name, "BSE_ECSN_MLOW")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ECSN_MLOW);
-                                sscanf(values, "%d", &BSE_ECSN_MLOW);
+                                sscanf(values, "%lf", &BSE_ECSN_MLOW);
                                 parsed.BSE_ECSN_MLOW = 1;
                         } else if (strcmp(parameter_name, "BSE_SIGMADIV")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_SIGMADIV);
-                                sscanf(values, "%d", &BSE_SIGMADIV);
+                                sscanf(values, "%lf", &BSE_SIGMADIV);
                                 parsed.BSE_SIGMADIV = 1;
                         } else if (strcmp(parameter_name, "BSE_AIC")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_AIC);
@@ -1473,7 +1473,7 @@ if(myid==0) {
                                 parsed.BSE_USSN = 1;
 			} else if (strcmp(parameter_name, "BSE_PISN")==0) {
 				PRINT_PARSED(PARAMDOC_BSE_PISN);
-				sscanf(values, "%d", &BSE_PISN);
+				sscanf(values, "%lf", &BSE_PISN);
 				parsed.BSE_PISN = 1;
                         } else if (strcmp(parameter_name, "BSE_BHSIGMAFRAC")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BHSIGMAFRAC);
