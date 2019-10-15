@@ -15,12 +15,16 @@ include_directories(SYSTEM ${MPI_INCLUDE_DIRS})
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 include_directories(SYSTEM ${CFITSIO_INCLUDE_DIRS})
 include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
+include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
 
 # MPI compile options
 target_compile_options(cmc PRIVATE ${MPI_COMPILE_FLAGS})
 
 # link library to executable
+
 target_link_libraries(cmc_library ${ZLIB_LIBRARIES})
+target_link_libraries(cmc_library ${HDF5_LIBRARIES})
+target_link_libraries(cmc_library ${HDF5_HL_LIBRARIES})
 target_link_libraries (cmc cmc_library)
 target_link_libraries (cmc fewbody)
 target_link_libraries (cmc bsewrap)
@@ -28,7 +32,8 @@ target_link_libraries (cmc support)
 target_link_libraries(cmc ${MPI_LIBRARIES} ${MPI_LINK_FLAGS})
 target_link_libraries(cmc ${GSL_LIBRARIES})
 target_link_libraries(cmc ${ZLIB_LIBRARIES})
-
+target_link_libraries(cmc ${HDF5_LIBRARIES})
+target_link_libraries(cmc ${HDF5_HL_LIBRARIES})
 
 install(TARGETS cmc DESTINATION bin)
 install(TARGETS cmc_library DESTINATION lib)

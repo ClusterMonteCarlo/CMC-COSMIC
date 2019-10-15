@@ -24,6 +24,15 @@
 #include "cmc_mpi.h"
 #endif
 
+/*-------------------------------------------------------------------------
+ * Table API example
+ *
+ * Save snapshots as HDF5 Tables
+ *
+ *-------------------------------------------------------------------------
+ */
+#define NFIELDS  (hsize_t)  62
+
 /*************************** Parameters ******************************/
 /* Large number, but still SF_INFINITY - 1 <> SF_INFINITY */
 #define SF_INFINITY 1.0e10
@@ -98,6 +107,81 @@
 *       15 - Massless Supernova
 *
 *-------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------------
+ * Table API example
+ *
+ * Save snapshots as HDF5 Tables
+ *
+ * #1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.bin.Eb 25.eta 26.star.phi#27:rad0 #28:rad1 #29:tb #30:lum0 #31:lum1 #32:massc0 #33:massc1 #34:radc0 #35:radc1 #36:menv0 #37:menv1 #38:renv0 #39:renv1 #40:tms0 #41:tms1 #42:dmdt0 #43:dmdt1 #44:radrol0 #45:radrol1 #46:ospin0 #47:ospin1 #48:B0 #49:B1 #50:formation0 #51:formation1 #52:bacc0 #53:bacc1 #54:tacc0 $55:tacc1 #56:mass0_0 #57:mass0_1 #58:epoch0 #59:epoch1 #60:ospin #61:B #62:formation
+ *-------------------------------------------------------------------------
+ */
+
+ typedef struct Snapshot
+ {
+  int id;
+  double m;
+  double r;
+  double vr;
+  double vt;
+  double E;
+  double J;
+  double binflag;
+  double m0;
+  double m1;
+  double id0;
+  double id1;
+  double a;
+  double e;
+  double startype;
+  double luminosity;
+  double radius;
+  double bin_startype0;
+  double bin_startype1;
+  double bin_star_lum0;
+  double bin_star_lum1;
+  double bin_star_radius0;
+  double bin_star_radius1;
+  double bin_Eb;
+  double eta;
+  double star_phi;
+  double rad0;
+  double rad1;
+  double tb;
+  double lum0;
+  double lum1;
+  double massc0;
+  double massc1;
+  double radc0;
+  double radc1;
+  double menv0;
+  double menv1;
+  double renv0;
+  double renv1;
+  double tms0;
+  double tms1;
+  double dmdt0;
+  double dmdt1;
+  double radrol0;
+  double radrol1;
+  double ospin0;
+  double ospin1;
+  double B0;
+  double B1;
+  double formation0;
+  double formation1;
+  double bacc0;
+  double bacc1;
+  double tacc0;
+  double tacc1;
+  double mass0_0;
+  double mass0_1;
+  double epoch0;
+  double epoch1;
+  double ospin;
+  double B;
+  double formation;
+ } Snapshot;
 
 
 /**

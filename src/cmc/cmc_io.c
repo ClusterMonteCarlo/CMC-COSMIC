@@ -16,6 +16,8 @@
 #include <sys/stat.h>
 #include "cmc.h"
 #include "cmc_vars.h"
+#include "hdf5.h"
+#include "hdf5_hl.h"
 
 /**
 * @brief print the version
@@ -1369,7 +1371,7 @@ if(myid==0) {
 				parsed.BSE_WINDFLAG = 1;
                         } else if (strcmp(parameter_name, "BSE_EDDLIMFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_EDDLIMFLAG);
-                                sscanf(values, "%lf", &BSE_EDDLIMFLAG);
+                                sscanf(values, "%d", &BSE_EDDLIMFLAG);
                                 parsed.BSE_EDDLIMFLAG = 1;
                         } else if (strcmp(parameter_name, "BSE_NETA")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_NETA);
@@ -1433,15 +1435,15 @@ if(myid==0) {
                                 parsed.BSE_BHFLAG = 1;
                         } else if (strcmp(parameter_name, "BSE_ECSN")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ECSN);
-                                sscanf(values, "%d", &BSE_ECSN);
+                                sscanf(values, "%lf", &BSE_ECSN);
                                 parsed.BSE_ECSN = 1;
                         } else if (strcmp(parameter_name, "BSE_ECSN_MLOW")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ECSN_MLOW);
-                                sscanf(values, "%d", &BSE_ECSN_MLOW);
+                                sscanf(values, "%lf", &BSE_ECSN_MLOW);
                                 parsed.BSE_ECSN_MLOW = 1;
                         } else if (strcmp(parameter_name, "BSE_SIGMADIV")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_SIGMADIV);
-                                sscanf(values, "%d", &BSE_SIGMADIV);
+                                sscanf(values, "%lf", &BSE_SIGMADIV);
                                 parsed.BSE_SIGMADIV = 1;
                         } else if (strcmp(parameter_name, "BSE_AIC")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_AIC);
@@ -1473,7 +1475,7 @@ if(myid==0) {
                                 parsed.BSE_USSN = 1;
 			} else if (strcmp(parameter_name, "BSE_PISN")==0) {
 				PRINT_PARSED(PARAMDOC_BSE_PISN);
-				sscanf(values, "%d", &BSE_PISN);
+				sscanf(values, "%lf", &BSE_PISN);
 				parsed.BSE_PISN = 1;
                         } else if (strcmp(parameter_name, "BSE_BHSIGMAFRAC")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BHSIGMAFRAC);
@@ -1481,7 +1483,7 @@ if(myid==0) {
                                 parsed.BSE_BHSIGMAFRAC = 1;
                         } else if (strcmp(parameter_name, "BSE_POLAR_KICK_ANGLE")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_POLAR_KICK_ANGLE);
-                                sscanf(values, "%d", &BSE_POLAR_KICK_ANGLE);
+                                sscanf(values, "%lf", &BSE_POLAR_KICK_ANGLE);
                                 parsed.BSE_POLAR_KICK_ANGLE = 1;
                         } else if (strcmp(parameter_name, "BSE_NSFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_NSFLAG);
@@ -1521,11 +1523,11 @@ if(myid==0) {
 				parsed.BSE_WDFLAG = 1;
                         } else if (strcmp(parameter_name, "BSE_EPSNOV")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_EPSNOV);
-                                sscanf(values, "%i", &BSE_EPSNOV);
+                                sscanf(values, "%lf", &BSE_EPSNOV);
                                 parsed.BSE_EPSNOV = 1;
 			} else if (strcmp(parameter_name, "BH_RADIUS_MULTIPLYER")== 0) {
 				PRINT_PARSED(PARAMDOC_BH_RADIUS_MULTIPLYER);
-				sscanf(values, "%i", &BH_RADIUS_MULTIPLYER);
+				sscanf(values, "%lf", &BH_RADIUS_MULTIPLYER);
 				parsed.BH_RADIUS_MULTIPLYER = 1;
 			} else if (strcmp(parameter_name, "BSE_BCONST")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_BCONST);
@@ -2900,13 +2902,195 @@ int valid_snapshot_window_units(void) {
 * @param bh_only if bh_only>0 this'll print only BHs.
 */
 void write_snapshot(char *filename, int bh_only) {
+        /* Define field information */
+        const char *field_names[NFIELDS]  =
+        { "id","m", "r", "vr", "vt", "E", "J", "binflag", "m0", "m1", "id0",
+        "id1", "a", "e", "startype", "luminosity", "radius", "bin_startype0", "bin_startype1",
+        "bin_star_lum0", "bin_star_lum1", "bin_star_radius0", "bin_star_radius1",
+        "bin_Eb", "eta", "star_phi", "rad0", "rad1", "tb", "lum0", "lum1", "massc0", "massc1", "radc0",
+        "radc1", "menv0", "menv1", "renv0", "renv1", "tms0", "tms1", "dmdt0", "dmdt1", "radrol0",
+        "radrol1", "ospin0", "ospin1", "B0", "B1", "formation0", "formation1", "bacc0", "bacc1",
+        "tacc0", "tacc1","mass0_0", "mass0_1", "epoch0","epoch1","ospin", "B","formation"};
+        hid_t      field_type[NFIELDS];
+        hid_t      snapfile_hdf5;
+        hsize_t    chunk_size = 10;
+        int        *fill_data = NULL;
+        int        compress  = 0;
+
+        for (int ii = 0; ii < NFIELDS; ++ii){
+          field_type[ii] = H5T_NATIVE_DOUBLE;
+        }
+        field_type[0] = H5T_NATIVE_INT;
+        Snapshot dst_buf[1];
+        /* Define an array of Particles */
+        Snapshot p_data[1] = {525,0.17924226,3.0778513,0.19755779,0.27799505,-0.15376079,0.85562742,-100,-100,-100,-100,-100,-100,-100,0,0.006673921,0.19985968,-100,-100,-100,-100,-100,-100,-100,-100,-0.211915956684,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,17.161,0,0};
+
+        /* Calculate the size and the offsets of our struct members in memory */
+        size_t dst_size =  sizeof( Snapshot );
+        size_t dst_offset[NFIELDS] = {
+                                        HOFFSET( Snapshot, id ),
+                                        HOFFSET( Snapshot, m ),
+                                        HOFFSET( Snapshot, r ),
+                                        HOFFSET( Snapshot, vr ),
+                                        HOFFSET( Snapshot, vt ),
+                                        HOFFSET( Snapshot, E ),
+                                        HOFFSET( Snapshot, J ),
+                                        HOFFSET( Snapshot, binflag ),
+                                        HOFFSET( Snapshot, m0 ),
+                                        HOFFSET( Snapshot, m1 ),
+                                        HOFFSET( Snapshot, id0 ),
+                                        HOFFSET( Snapshot, id1 ),
+                                        HOFFSET( Snapshot, a ),
+                                        HOFFSET( Snapshot, e ),
+                                        HOFFSET( Snapshot, startype ),
+                                        HOFFSET( Snapshot, luminosity ),
+                                        HOFFSET( Snapshot, radius ),
+                                        HOFFSET( Snapshot, bin_startype0 ),
+                                        HOFFSET( Snapshot, bin_startype1 ),
+                                        HOFFSET( Snapshot, bin_star_lum0 ),
+                                        HOFFSET( Snapshot, bin_star_lum1 ),
+                                        HOFFSET( Snapshot, bin_star_radius0 ),
+                                        HOFFSET( Snapshot, bin_star_radius1 ),
+                                        HOFFSET( Snapshot, bin_Eb ),
+                                        HOFFSET( Snapshot, eta ),
+                                        HOFFSET( Snapshot, star_phi ),
+                                        HOFFSET( Snapshot, rad0 ),
+                                        HOFFSET( Snapshot, rad1 ),
+                                        HOFFSET( Snapshot, tb ),
+                                        HOFFSET( Snapshot, lum0 ),
+                                        HOFFSET( Snapshot, lum1 ),
+                                        HOFFSET( Snapshot, massc0 ),
+                                        HOFFSET( Snapshot, massc1 ),
+                                        HOFFSET( Snapshot, radc0 ),
+                                        HOFFSET( Snapshot, radc1 ),
+                                        HOFFSET( Snapshot, menv0 ),
+                                        HOFFSET( Snapshot, menv1 ),
+                                        HOFFSET( Snapshot, renv0 ),
+                                        HOFFSET( Snapshot, renv1 ),
+                                        HOFFSET( Snapshot, tms0 ),
+                                        HOFFSET( Snapshot, tms1 ),
+                                        HOFFSET( Snapshot, dmdt0 ),
+                                        HOFFSET( Snapshot, dmdt1 ),
+                                        HOFFSET( Snapshot, radrol0 ),
+                                        HOFFSET( Snapshot, radrol1 ),
+                                        HOFFSET( Snapshot, ospin0 ),
+                                        HOFFSET( Snapshot, ospin1 ),
+                                        HOFFSET( Snapshot, B0 ),
+                                        HOFFSET( Snapshot, B1 ),
+                                        HOFFSET( Snapshot, formation0 ),
+                                        HOFFSET( Snapshot, formation1 ),
+                                        HOFFSET( Snapshot, bacc0 ),
+                                        HOFFSET( Snapshot, bacc1 ),
+                                        HOFFSET( Snapshot, tacc0 ),
+                                        HOFFSET( Snapshot, tacc1 ),
+                                        HOFFSET( Snapshot, mass0_0 ),
+                                        HOFFSET( Snapshot, mass0_1 ),
+                                        HOFFSET( Snapshot, epoch0 ),
+                                        HOFFSET( Snapshot, epoch1 ),
+                                        HOFFSET( Snapshot, ospin ),
+                                        HOFFSET( Snapshot, B ),
+                                        HOFFSET( Snapshot, formation ),
+                                    };
+
+        size_t dst_sizes[NFIELDS] = {
+                                        sizeof( p_data[0].id ),
+                                        sizeof( p_data[0].m ),
+                                        sizeof( p_data[0].r ),
+                                        sizeof( p_data[0].vr ),
+                                        sizeof( p_data[0].vt ),
+                                        sizeof( p_data[0].E ),
+                                        sizeof( p_data[0].J ),
+                                        sizeof( p_data[0].binflag ),
+                                        sizeof( p_data[0].m0 ),
+                                        sizeof( p_data[0].m1 ),
+                                        sizeof( p_data[0].id0 ),
+                                        sizeof( p_data[0].id1 ),
+                                        sizeof( p_data[0].a ),
+                                        sizeof( p_data[0].e ),
+                                        sizeof( p_data[0].startype ),
+                                        sizeof( p_data[0].luminosity ),
+                                        sizeof( p_data[0].radius ),
+                                        sizeof( p_data[0].bin_startype0 ),
+                                        sizeof( p_data[0].bin_startype1 ),
+                                        sizeof( p_data[0].bin_star_lum0 ),
+                                        sizeof( p_data[0].bin_star_lum1 ),
+                                        sizeof( p_data[0].bin_star_radius0 ),
+                                        sizeof( p_data[0].bin_star_radius1 ),
+                                        sizeof( p_data[0].bin_Eb ),
+                                        sizeof( p_data[0].eta ),
+                                        sizeof( p_data[0].star_phi ),
+                                        sizeof( p_data[0].rad0 ),
+                                        sizeof( p_data[0].rad1 ),
+                                        sizeof( p_data[0].tb ),
+                                        sizeof( p_data[0].lum0 ),
+                                        sizeof( p_data[0].lum1 ),
+                                        sizeof( p_data[0].massc0 ),
+                                        sizeof( p_data[0].massc1 ),
+                                        sizeof( p_data[0].radc0 ),
+                                        sizeof( p_data[0].radc1 ),
+                                        sizeof( p_data[0].menv0 ),
+                                        sizeof( p_data[0].menv1 ),
+                                        sizeof( p_data[0].renv0 ),
+                                        sizeof( p_data[0].renv1 ),
+                                        sizeof( p_data[0].tms0 ),
+                                        sizeof( p_data[0].tms1 ),
+                                        sizeof( p_data[0].dmdt0 ),
+                                        sizeof( p_data[0].dmdt1 ),
+                                        sizeof( p_data[0].radrol0 ),
+                                        sizeof( p_data[0].radrol1 ),
+                                        sizeof( p_data[0].ospin0 ),
+                                        sizeof( p_data[0].ospin1 ),
+                                        sizeof( p_data[0].B0 ),
+                                        sizeof( p_data[0].B1 ),
+                                        sizeof( p_data[0].formation0 ),
+                                        sizeof( p_data[0].formation1 ),
+                                        sizeof( p_data[0].bacc0 ),
+                                        sizeof( p_data[0].bacc1 ),
+                                        sizeof( p_data[0].tacc0 ),
+                                        sizeof( p_data[0].tacc1 ),
+                                        sizeof( p_data[0].mass0_0 ),
+                                        sizeof( p_data[0].mass0_1 ),
+                                        sizeof( p_data[0].epoch0 ),
+                                        sizeof( p_data[0].epoch1 ),
+                                        sizeof( p_data[0].ospin ),
+                                        sizeof( p_data[0].B ),
+                                        sizeof( p_data[0].formation ),
+                                    };
+
+#ifdef USE_MPI
+        //Serializing the snapshot printing.
+        int k;
+        for(k=0; k<procs; k++)
+        {
+                if(myid==k)
+                {
+                        //removing file if already exists.
+                        if(myid==0){
+                                snapfile_hdf5 = H5Fcreate("test.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+                                /* make a table */
+                                H5TBmake_table( "Table Title",snapfile_hdf5,"snapshot",NFIELDS,1,
+                                                    dst_size, field_names, dst_offset, field_type,
+                                                    chunk_size, fill_data, compress, p_data  );
+
+                                /* close the file */
+                                H5Fclose( snapfile_hdf5 );
+                        }
+#endif
+                        snapfile_hdf5 = H5Fopen("test.h5", H5F_ACC_RDWR, H5P_DEFAULT);
+                        /* append two records */
+                        H5TBappend_records(snapfile_hdf5, "snapshot", 1, dst_size, dst_offset, dst_sizes, &p_data);
+                        /* close the file */
+                        H5Fclose( snapfile_hdf5 );
+                }
+        }
+
 	long i, j;
 	j=0;
 	double m, r, phi;
 
 #ifdef USE_MPI
 	//Serializing the snapshot printing.
-	int k;
 	for(k=0; k<procs; k++)
 	{
 		if(myid==k)
