@@ -24,7 +24,7 @@
 */
 void print_version(FILE *stream)
 {
-	fprintf(stream, "** %s %s %s **\n", CMCPRETTYNAME, CMC_VERSION_MAJOR, CMC_VERSION_MINOR);
+	fprintf(stream, "** %s Version %d.%d **\n", CMCPRETTYNAME, CMC_VERSION_MAJOR, CMC_VERSION_MINOR);
 }
 
 /**
@@ -3036,7 +3036,7 @@ void print_denprof_snapshot(char* infile)
 void get_star_data(int argc, char *argv[], gsl_rng *rng)
 {
 	/* print version information to log file */
-	pararootfprintf(logfile, "** %s %s %s **\n", CMCPRETTYNAME, CMC_VERSION_MAJOR, CMC_VERSION_MINOR);
+	pararootfprintf(logfile, "** %s Version %d.%d **\n", CMCPRETTYNAME, CMC_VERSION_MAJOR, CMC_VERSION_MINOR);
 #ifdef USE_MPI
     mpi_para_file_write(mpi_logfile_wrbuf, &mpi_logfile_len, &mpi_logfile_ofst_total, &mpi_logfile);
 #endif

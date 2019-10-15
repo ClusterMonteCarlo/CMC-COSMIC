@@ -32,6 +32,11 @@ configure_file (
 install (FILES "${PROJECT_BINARY_DIR}/CMCConfig.h"        
          DESTINATION include)
 
+install(DIRECTORY include/bse_wrap DESTINATION include)
+install(DIRECTORY include/cmc DESTINATION include)
+install(DIRECTORY include/common DESTINATION include)
+install(DIRECTORY include/fewbody-0.24 DESTINATION include)
+
 # add the binary tree to the search path for include files
 # so that we will find CMCConfig.h
 include_directories("${PROJECT_BINARY_DIR}")

@@ -6,8 +6,8 @@
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
-#include "../../common/fitslib.h"
-#include "../../common/taus113-v2.h"
+#include "fitslib.h"
+#include "taus113-v2.h"
 
 #define INFILE "in.fits"
 #define OUTFILE "debug.fits"

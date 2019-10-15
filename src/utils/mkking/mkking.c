@@ -6,8 +6,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <gsl/gsl_sf_erf.h>
-#include "../../common/fitslib.h"
-#include "../../common/taus113-v2.h"
+#include "fitslib.h"
+#include "taus113-v2.h"
 
 #define LARGE_DISTANCE 1.0e40
 
@@ -182,7 +182,7 @@ void write_output_file(double *m, double *r, double *vr, double *vt, long int N,
 #define GENSORT_GETKEY(a)            a
 #define GENSORT_COMPAREKEYS(k1,k2)   k1 < k2
 
-#include "../../common/gensort.h"
+#include "gensort.h"
 
 void create_random_array(double *X, long int N){
 	long int i, j;

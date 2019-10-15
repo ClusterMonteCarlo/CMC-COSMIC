@@ -6,10 +6,10 @@
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
-#include "../../cmc.h"
-#include "../../common/fitslib.h"
-#include "../../common/taus113-v2.h"
-#include "../../bse_wrap/bse_wrap.h"
+#include "cmc.h"
+#include "fitslib.h"
+#include "taus113-v2.h"
+#include "bse_wrap.h"
 
 #define INFILE "in.fits"
 #define OUTFILE "debug.fits"
@@ -42,30 +42,67 @@ void stellar_evolve(cmc_fits_data_t *cfd)
 	/* bse_set_hewind(0.5); */
 	
 	/* BSE */
-	bse_set_neta(0.5);
-	bse_set_bwind(0.0);
-	bse_set_hewind(1.0);
-	bse_set_alpha1(3.0);
-	bse_set_lambdaf(1.0);
-	bse_set_ceflag(0);
-	bse_set_tflag(1);
-	bse_set_ifflag(0);
-	bse_set_wdflag(1);
-	bse_set_bhflag(0);
-	bse_set_nsflag(1);
-	bse_set_mxns(3.0);
-	bse_set_idum(29769);
-	bse_set_pts1(0.05);
-	bse_set_pts2(0.01);
-	bse_set_pts3(0.02);
-	bse_set_sigma(190.0);
-	bse_set_beta(0.125);
-	bse_set_xi(1.0);
-	bse_set_acc2(1.5);
-	bse_set_epsnov(0.001);
-	bse_set_eddfac(10.0);
-	bse_set_gamma(-1.0);
-	
+        bse_set_using_cmc();
+        bse_set_neta(0.5);
+        bse_set_bwind(0.0);
+        bse_set_hewind(1.0);
+        bse_set_windflag(3);
+        bse_set_eddlimflag(0);
+        bse_set_pisn(45.0);
+        bse_set_ecsn(2.5);
+        bse_set_ecsn_mlow(1.4);
+        bse_set_aic(1);
+        bse_set_bdecayfac(1);
+        bse_set_st_cr(0);
+        bse_set_st_tide(1);
+        bse_set_htpmb(1);
+        bse_set_rejuvflag(0);
+        bse_set_ussn(0);
+        double bse_qcrit_array[16];
+        double bse_fprimc_array[16];
+        double bse_natal_kick_array[6];
+        int i;
+        for(i=0;i<16;i++) bse_qcrit_array[i] = 0.0;
+        for(i=0;i<16;i++) bse_fprimc_array[i] = 2.0/21.0;
+        for(i=0;i<6;i++) bse_natal_kick_array[i] = -100.0;
+        bse_set_qcrit_array(bse_qcrit_array, 16);
+        bse_set_fprimc_array(bse_fprimc_array, 16);
+        bse_set_natal_kick_array(bse_natal_kick_array, 6);
+        bse_set_sigmadiv(-20.0);
+        bse_set_alpha1(1.0); /* FIXME: is 3 too high? (normally 1.0) */
+        bse_set_lambdaf(0.5);
+        bse_set_ceflag(0);
+        bse_set_cehestarflag(0);
+        bse_set_cemergeflag(0);
+        bse_set_cekickflag(2);
+        bse_set_tflag(1);
+        bse_set_qcflag(2);
+        bse_set_ifflag(0);
+        bse_set_wdflag(0);
+        bse_set_bhflag(1);
+        bse_set_nsflag(3);
+        bse_set_bhspinflag(0);
+        bse_set_bhspinmag(0.0);
+        bse_set_mxns(2.5); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
+        bse_set_bconst(-3000.0);
+        bse_set_CK(-1000.0);
+        bse_set_rejuv_fac(0.1);
+
+        bse_set_idum(22);
+        bse_set_pts1(0.001);
+        bse_set_pts2(0.01);
+        bse_set_pts3(0.02);
+        bse_set_sigma(265.0);
+        bse_set_bhsigmafrac(1.0);
+        bse_set_polar_kick_angle(90.0);
+        bse_set_beta(-0.125); //set -0.125 if variable beta (following startrack), otherwise 0.125 for bse.
+        bse_set_xi(0.5);
+        bse_set_acc2(1.5);
+        bse_set_epsnov(0.001);
+        bse_set_eddfac(1.0); /* (normally 1.0) */
+        bse_set_gamma(-1.0);
+        bse_set_merger(-1.0);
+
 	/* set parameters relating to metallicity */
 	zpars = (double *) malloc(20 * sizeof(double));
 	bse_zcnsts(&METALLICITY, zpars);

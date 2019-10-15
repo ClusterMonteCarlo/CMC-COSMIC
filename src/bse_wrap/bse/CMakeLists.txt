@@ -3,3 +3,5 @@ add_library(bse STATIC ./COSMIC/cosmic/src/comenv.f ./COSMIC/cosmic/src/corerd.f
 
 # Include paths to headers
 include_directories (./COSMIC/cosmic/src/)
+
+install(TARGETS bse DESTINATION lib)

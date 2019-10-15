@@ -6,10 +6,10 @@
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
-#include "../../cmc.h"
-#include "../../common/fitslib.h"
-#include "../../common/taus113-v2.h"
-#include "../../bse_wrap/bse_wrap.h"
+#include "cmc.h"
+#include "fitslib.h"
+#include "taus113-v2.h"
+#include "bse_wrap.h"
 
 #define INFILE "in.fits"
 #define OUTFILE "debug.fits"

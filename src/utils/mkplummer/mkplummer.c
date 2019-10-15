@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
-#include "../../common/fitslib.h"
-#include "../../common/taus113-v2.h"
+#include "fitslib.h"
+#include "taus113-v2.h"
 
 #define LARGE_DISTANCE 1.0e40
 #define PI 3.14159265358979323
@@ -111,7 +111,7 @@ double find_r(double X, double rcr, double cms, double r_abs_max, double tol){
 #define GENSORT_GETKEY(a)            a
 #define GENSORT_COMPAREKEYS(k1,k2)   k1 < k2
 
-#include "../../common/gensort.h"
+#include "gensort.h"
 
 void create_random_array(double *X, long int N){
 	long int i, j;

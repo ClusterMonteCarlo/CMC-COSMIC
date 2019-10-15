@@ -5,8 +5,8 @@
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
-#include "../../common/fitslib.h"
-#include "../../common/taus113-v2.h"
+#include "fitslib.h"
+#include "taus113-v2.h"
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_permute_double.h>
 #include "genimf.h"
@@ -820,7 +820,7 @@ double * calc_energy(cmc_fits_data_t *cfd) {
 #define GENSORT_GETKEY(a)            a
 #define GENSORT_COMPAREKEYS(k1,k2)   k1 > k2
 
-#include "../../common/gensort.h"
+#include "gensort.h"
 
 /* routine to sort an array E in increasing order indirectly*/
 #define GENSORT_NAME                 table_sort
@@ -831,7 +831,7 @@ double * calc_energy(cmc_fits_data_t *cfd) {
 #define GENSORT_GETKEY(a)            E[a]
 #define GENSORT_COMPAREKEYS(k1,k2)   k1<k2
 
-#include "../../common/gensort.h"
+#include "gensort.h"
 
 /** 
  * @brief Create a fully mass segregated cluster from the 'configuration' cluster s.

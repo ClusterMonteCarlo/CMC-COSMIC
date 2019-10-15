@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "../../common/taus113-v2.h"
+#include "taus113-v2.h"
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_permute_double.h>
 #include "genimf.h"

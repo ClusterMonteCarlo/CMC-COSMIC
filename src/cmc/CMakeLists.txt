@@ -31,3 +31,4 @@ target_link_libraries(cmc ${ZLIB_LIBRARIES})
 
 
 install(TARGETS cmc DESTINATION bin)
+install(TARGETS cmc_library DESTINATION lib)
