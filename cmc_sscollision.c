@@ -882,8 +882,8 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    while (bse_get_bpp(j, 1) >= 0.0) {
 		      fprintf(stderr, "time=%g m1=%g m2=%g k1=%d k2=%d sep=%g ecc=%g r1/rol1=%g r2/rol2=%g type=%s\n",
 			      bse_get_bpp(j, 1), bse_get_bpp(j, 2), bse_get_bpp(j, 3), (int) bse_get_bpp(j, 4), 
-			      (int) bse_get_bpp(j, 5), bse_get_bpp(j, 6), bse_get_bpp(j, 7), bse_get_bpp(j, 8), 
-			      bse_get_bpp(j, 9), bse_get_bselabel((int) bse_get_bpp(j, 10)));
+			      (int) bse_get_bpp(j, 5), bse_get_bpp(j, 6), bse_get_bpp(j, 8), bse_get_bpp(j, 9), 
+			      bse_get_bpp(j, 10), bse_get_bselabel((int) bse_get_bpp(j, 11)));
 		      fflush(NULL);
 		      j++;
 		    }

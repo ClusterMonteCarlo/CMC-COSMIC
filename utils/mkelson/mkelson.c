@@ -425,5 +425,7 @@ int main(int argc, char *argv[]){
 	scale_pos_and_vel(m, r, vr, vt, N);
 	write_output_file(m, r, vr, vt, N, filename);
 
+	fprintf(stdout, "Half-mass radius (after scaling) = %g\n",r[(int)round(N/2)]);
+
 	return 0;
 }
