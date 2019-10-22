@@ -2923,7 +2923,7 @@ void write_snapshot(char *filename, int bh_only) {
         field_type[0] = H5T_NATIVE_INT;
         Snapshot dst_buf[1];
         /* Define an array of Particles */
-        Snapshot p_data[1] = {525,0.17924226,3.0778513,0.19755779,0.27799505,-0.15376079,0.85562742,-100,-100,-100,-100,-100,-100,-100,0,0.006673921,0.19985968,-100,-100,-100,-100,-100,-100,-100,-100,-0.211915956684,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,17.161,0,0};
+        Snapshot p_data[1] = {525,0.17924226,3.0778513,0.19755779,0.27799505,-0.15376079,0.85562742,-100,-100,-100,-100,-100,-100,-100,0,0.006673921,0.19985968,-100,-100,-100,-100,-100,-100,-100,-100,-0.211915956684,0.00000,0.00000/0.0000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,17.161,0,0};
 
         /* Calculate the size and the offsets of our struct members in memory */
         size_t dst_size =  sizeof( Snapshot );
@@ -3064,7 +3064,7 @@ void write_snapshot(char *filename, int bh_only) {
         {
                 if(myid==k)
                 {
-                        //removing file if already exists.
+                        //Initial file created only by root node.
                         if(myid==0){
                                 snapfile_hdf5 = H5Fcreate("test.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
@@ -3082,8 +3082,11 @@ void write_snapshot(char *filename, int bh_only) {
                         H5TBappend_records(snapfile_hdf5, "snapshot", 1, dst_size, dst_offset, dst_sizes, &p_data);
                         /* close the file */
                         H5Fclose( snapfile_hdf5 );
+#ifdef USE_MPI
                 }
+                MPI_Barrier(MPI_COMM_WORLD);
         }
+#endif
 
 	long i, j;
 	j=0;
@@ -3119,6 +3122,12 @@ void write_snapshot(char *filename, int bh_only) {
 
 			// then print data
 #ifdef USE_MPI
+                        int NRECORDS = clus.N_MAX_NEW;
+#else
+                        int NRECORDS = clus.N_MAX;
+#endif
+                        Snapshot all_objects[2];
+#ifdef USE_MPI
 			for (i=1; i<=clus.N_MAX_NEW; i++) {
 				long g_i = get_global_idx(i);
 				m = star_m[g_i];
@@ -3134,24 +3143,68 @@ void write_snapshot(char *filename, int bh_only) {
 				//if bh_only>0, print only BHs
 				if( (bh_only==0) || ( (bh_only!=0) && (star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14) ) )
 				{
+                                        all_objects[0].id = star[i].id;
+                                        all_objects[0].m = m * (units.m / clus.N_STAR) / MSUN;
+                                        all_objects[0].r = r;
+                                        all_objects[0].vr = star[i].vr;
+                                        all_objects[0].vt = star[i].vt;
+                                        all_objects[0].E = star[i].E;
+                                        all_objects[0].J = star[i].J;
 					gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ",
 							star[i].id, m * (units.m / clus.N_STAR) / MSUN,
 							r, star[i].vr, star[i].vt,
 							star[i].E, star[i].J);
 					if (j) {
+                                                all_objects[0].binflag = 1;
+                                                all_objects[0].m0 = binary[j].m1 * (units.m / clus.N_STAR) / MSUN;
+                                                all_objects[0].m1 = binary[j].m2 * (units.m / clus.N_STAR) / MSUN;
+                                                all_objects[0].id0 = binary[j].id1;
+                                                all_objects[0].id1 = binary[j].id2;
+                                                all_objects[0].a = binary[j].a * units.l / AU;
+                                                all_objects[0].e = binary[j].e;
 						gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ",
 								binary[j].m1 * (units.m / clus.N_STAR) / MSUN,
 								binary[j].m2 * (units.m / clus.N_STAR) / MSUN,
 								binary[j].id1, binary[j].id2,
 								binary[j].a * units.l / AU, binary[j].e);
 					} else {
+                                                all_objects[0].binflag = -100;
+                                                all_objects[0].m0 = -100;
+                                                all_objects[0].m1 = -100;
+                                                all_objects[0].id0 = -100;
+                                                all_objects[0].id1 = -100;
+                                                all_objects[0].a = -100;
+                                                all_objects[0].e = -100;
 						gzprintf(snapfile, "-100 -100 -100 -100 -100 -100 -100 ");
 					}
 
 					if (j == 0) {
+                                                all_objects[0].startype = star[i].se_k;
+                                                all_objects[0].luminosity = star[i].se_lum;
+                                                all_objects[0].radius = star[i].rad * units.l / RSUN;
+                                                all_objects[0].bin_startype0 = -100;
+                                                all_objects[0].bin_startype1 = -100;
+                                                all_objects[0].bin_star_lum0 = -100;
+                                                all_objects[0].bin_star_lum1 = -100;
+                                                all_objects[0].bin_star_radius0 = -100;
+                                                all_objects[0].bin_star_radius1 = -100;
+                                                all_objects[0].bin_Eb = -100;
+                                                all_objects[0].eta = -100;
 						gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 -100 -100 ",
 								star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
 					} else {
+                                                all_objects[0].startype = -100;
+                                                all_objects[0].luminosity = -100;
+                                                all_objects[0].radius = -100;
+                                                all_objects[0].bin_startype0 = binary[j].bse_kw[0];
+                                                all_objects[0].bin_startype1 = binary[j].bse_kw[1];
+                                                all_objects[0].bin_star_lum0 = binary[j].bse_lum[0];
+                                                all_objects[0].bin_star_lum1 = binary[j].bse_lum[1];
+                                                all_objects[0].bin_star_radius0 = binary[j].rad1*units.l/RSUN;
+                                                all_objects[0].bin_star_radius1 =  binary[j].rad2*units.l/RSUN;
+                                                all_objects[0].bin_Eb = -(binary[j].m1/clus.N_STAR)*(binary[j].m2/clus.N_STAR)/(2*binary[j].a);
+                                                all_objects[0].eta = (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
+                                 (binary[j].a * sqrt(calc_average_mass_sqr(i,clus.N_MAX)) * sqr(sigma_array.sigma[i]));
 						gzprintf(snapfile, "-100 -100 -100 %d %d %.8g %.8g %.8g %.8g %.8g %.8g ",
 								binary[j].bse_kw[0], binary[j].bse_kw[1],
 								binary[j].bse_lum[0], binary[j].bse_lum[1],
@@ -3160,15 +3213,224 @@ void write_snapshot(char *filename, int bh_only) {
                                  (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
                                  (binary[j].a * sqrt(calc_average_mass_sqr(i,clus.N_MAX)) * sqr(sigma_array.sigma[i])));
 					}
+                                        all_objects[i].star_phi = phi;
 					gzprintf(snapfile, "%0.12g ", phi);
 					if (j == 0) {
+                                                all_objects[0].rad0 = 0.0 / 0.0;
+                                                all_objects[0].rad1 = 0.0 / 0.0;
+                                                all_objects[0].tb = 0.0 / 0.0;
+                                                all_objects[0].lum0 = 0.0 / 0.0;
+                                                all_objects[0].lum1 = 0.0 / 0.0;
+                                                all_objects[0].massc0 = 0.0 / 0.0;
+                                                all_objects[0].massc1 = 0.0 / 0.0;
+                                                all_objects[0].radc0 = 0.0 / 0.0;
+                                                all_objects[0].radc1 = 0.0 / 0.0;
+                                                all_objects[0].menv0 = 0.0 / 0.0;
+                                                all_objects[0].menv1 = 0.0 / 0.0;
+                                                all_objects[0].renv0 = 0.0 / 0.0;
+                                                all_objects[0].renv1 = 0.0 / 0.0;
+                                                all_objects[0].tms0 = 0.0 / 0.0;
+                                                all_objects[0].tms1 = 0.0 / 0.0;
+                                                all_objects[0].dmdt0 = 0.0 / 0.0;
+                                                all_objects[0].dmdt1 = 0.0 / 0.0;
+                                                all_objects[0].radrol0 = 0.0 / 0.0;
+                                                all_objects[0].radrol1 = 0.0 / 0.0;
+                                                all_objects[0].ospin0 = 0.0 / 0.0;
+                                                all_objects[0].ospin1 = 0.0 / 0.0;
+                                                all_objects[0].B0 = 0.0 / 0.0;
+                                                all_objects[0].B1 = 0.0 / 0.0;
+                                                all_objects[0].formation0 = 0.0 / 0.0;
+                                                all_objects[0].formation1 = 0.0 / 0.0;
+                                                all_objects[0].bacc0 = 0.0 / 0.0;
+                                                all_objects[0].bacc1 = 0.0 / 0.0;
+                                                all_objects[0].tacc0 = 0.0 / 0.0;
+                                                all_objects[0].tacc1 = 0.0 / 0.0;
+                                                all_objects[0].mass0_0 = 0.0 / 0.0;
+                                                all_objects[0].mass0_1 = 0.0 / 0.0;
+                                                all_objects[0].epoch0 = 0.0 / 0.0;
+                                                all_objects[0].epoch1 = 0.0 / 0.0;
+                                                all_objects[0].ospin = star[i].se_ospin;
+                                                all_objects[0].B = star[i].se_scm_B;
+                                                all_objects[0].formation = star[i].se_scm_formation;
 						gzprintf(snapfile, "na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g %g %g \n", star[i].se_ospin, star[i].se_scm_B, star[i].se_scm_formation);
 					} else {
+                                                all_objects[0].rad0 = 0.0 / 0.0;
+                                                all_objects[0].rad1 = 0.0 / 0.0;
+                                                all_objects[0].tb = 0.0 / 0.0;
+                                                all_objects[0].lum0 = 0.0 / 0.0;
+                                                all_objects[0].lum1 = 0.0 / 0.0;
+                                                all_objects[0].massc0 = 0.0 / 0.0;
+                                                all_objects[0].massc1 = 0.0 / 0.0;
+                                                all_objects[0].radc0 = 0.0 / 0.0;
+                                                all_objects[0].radc1 = 0.0 / 0.0;
+                                                all_objects[0].menv0 = 0.0 / 0.0;
+                                                all_objects[0].menv1 = 0.0 / 0.0;
+                                                all_objects[0].renv0 = 0.0 / 0.0;
+                                                all_objects[0].renv1 = 0.0 / 0.0;
+                                                all_objects[0].tms0 = 0.0 / 0.0;
+                                                all_objects[0].tms1 = 0.0 / 0.0;
+                                                all_objects[0].dmdt0 = 0.0 / 0.0;
+                                                all_objects[0].dmdt1 = 0.0 / 0.0;
+                                                all_objects[0].radrol0 = 0.0 / 0.0;
+                                                all_objects[0].radrol1 = 0.0 / 0.0;
+                                                all_objects[0].ospin0 = 0.0 / 0.0;
+                                                all_objects[0].ospin1 = 0.0 / 0.0;
+                                                all_objects[0].B0 = 0.0 / 0.0;
+                                                all_objects[0].B1 = 0.0 / 0.0;
+                                                all_objects[0].formation0 = 0.0 / 0.0;
+                                                all_objects[0].formation1 = 0.0 / 0.0;
+                                                all_objects[0].bacc0 = 0.0 / 0.0;
+                                                all_objects[0].bacc1 = 0.0 / 0.0;
+                                                all_objects[0].tacc0 = 0.0 / 0.0;
+                                                all_objects[0].tacc1 = 0.0 / 0.0;
+                                                all_objects[0].mass0_0 = 0.0 / 0.0;
+                                                all_objects[0].mass0_1 = 0.0 / 0.0;
+                                                all_objects[0].epoch0 = 0.0 / 0.0;
+                                                all_objects[0].epoch1 = 0.0 / 0.0;
+                                                all_objects[0].ospin = -100;
+                                                all_objects[0].B = -100;
+                                                all_objects[0].formation = -100;
 						gzprintf(snapfile, "%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g -100 -100 -100\n",
 								binary[j].bse_radius[0], binary[j].bse_radius[1], binary[j].bse_tb, binary[j].bse_lum[0], binary[j].bse_lum[1], binary[j].bse_massc[0], binary[j].bse_massc[1], binary[j].bse_radc[0], binary[j].bse_radc[1], binary[j].bse_menv[0], binary[j].bse_menv[1], binary[j].bse_renv[0], binary[j].bse_renv[1], binary[j].bse_tms[0], binary[j].bse_tms[1], binary[j].bse_bcm_dmdt[0], binary[j].bse_bcm_dmdt[1], binary[j].bse_bcm_radrol[0], binary[j].bse_bcm_radrol[1], binary[j].bse_ospin[0], binary[j].bse_ospin[1], binary[j].bse_bcm_B[0], binary[j].bse_bcm_B[1], binary[j].bse_bcm_formation[0], binary[j].bse_bcm_formation[1], binary[j].bse_bacc[0], binary[j].bse_bacc[1], binary[j].bse_tacc[0], binary[j].bse_tacc[1], binary[j].bse_mass0[0], binary[j].bse_mass0[1], binary[j].bse_epoch[0], binary[j].bse_epoch[1]);
 					}
 				}
 			}
+
+                        /* Calculate the size and the offsets of our struct members in memory */
+                        size_t dst_size_all =  sizeof( Snapshot );
+                        size_t dst_offset_all[NFIELDS] = {
+                                                        HOFFSET( Snapshot, id ),
+                                                        HOFFSET( Snapshot, m ),
+                                                        HOFFSET( Snapshot, r ),
+                                                        HOFFSET( Snapshot, vr ),
+                                                        HOFFSET( Snapshot, vt ),
+                                                        HOFFSET( Snapshot, E ),
+                                                        HOFFSET( Snapshot, J ),
+                                                        HOFFSET( Snapshot, binflag ),
+                                                        HOFFSET( Snapshot, m0 ),
+                                                        HOFFSET( Snapshot, m1 ),
+                                                        HOFFSET( Snapshot, id0 ),
+                                                        HOFFSET( Snapshot, id1 ),
+                                                        HOFFSET( Snapshot, a ),
+                                                        HOFFSET( Snapshot, e ),
+                                                        HOFFSET( Snapshot, startype ),
+                                                        HOFFSET( Snapshot, luminosity ),
+                                                        HOFFSET( Snapshot, radius ),
+                                                        HOFFSET( Snapshot, bin_startype0 ),
+                                                        HOFFSET( Snapshot, bin_startype1 ),
+                                                        HOFFSET( Snapshot, bin_star_lum0 ),
+                                                        HOFFSET( Snapshot, bin_star_lum1 ),
+                                                        HOFFSET( Snapshot, bin_star_radius0 ),
+                                                        HOFFSET( Snapshot, bin_star_radius1 ),
+                                                        HOFFSET( Snapshot, bin_Eb ),
+                                                        HOFFSET( Snapshot, eta ),
+                                                        HOFFSET( Snapshot, star_phi ),
+                                                        HOFFSET( Snapshot, rad0 ),
+                                                        HOFFSET( Snapshot, rad1 ),
+                                                        HOFFSET( Snapshot, tb ),
+                                                        HOFFSET( Snapshot, lum0 ),
+                                                        HOFFSET( Snapshot, lum1 ),
+                                                        HOFFSET( Snapshot, massc0 ),
+                                                        HOFFSET( Snapshot, massc1 ),
+                                                        HOFFSET( Snapshot, radc0 ),
+                                                        HOFFSET( Snapshot, radc1 ),
+                                                        HOFFSET( Snapshot, menv0 ),
+                                                        HOFFSET( Snapshot, menv1 ),
+                                                        HOFFSET( Snapshot, renv0 ),
+                                                        HOFFSET( Snapshot, renv1 ),
+                                                        HOFFSET( Snapshot, tms0 ),
+                                                        HOFFSET( Snapshot, tms1 ),
+                                                        HOFFSET( Snapshot, dmdt0 ),
+                                                        HOFFSET( Snapshot, dmdt1 ),
+                                                        HOFFSET( Snapshot, radrol0 ),
+                                                        HOFFSET( Snapshot, radrol1 ),
+                                                        HOFFSET( Snapshot, ospin0 ),
+                                                        HOFFSET( Snapshot, ospin1 ),
+                                                        HOFFSET( Snapshot, B0 ),
+                                                        HOFFSET( Snapshot, B1 ),
+                                                        HOFFSET( Snapshot, formation0 ),
+                                                        HOFFSET( Snapshot, formation1 ),
+                                                        HOFFSET( Snapshot, bacc0 ),
+                                                        HOFFSET( Snapshot, bacc1 ),
+                                                        HOFFSET( Snapshot, tacc0 ),
+                                                        HOFFSET( Snapshot, tacc1 ),
+                                                        HOFFSET( Snapshot, mass0_0 ),
+                                                        HOFFSET( Snapshot, mass0_1 ),
+                                                        HOFFSET( Snapshot, epoch0 ),
+                                                        HOFFSET( Snapshot, epoch1 ),
+                                                        HOFFSET( Snapshot, ospin ),
+                                                        HOFFSET( Snapshot, B ),
+                                                        HOFFSET( Snapshot, formation ),
+                                                    };
+
+                        size_t dst_sizes1[NFIELDS] = {
+                                                        sizeof( all_objects[0].id ),
+                                                        sizeof( all_objects[0].m ),
+                                                        sizeof( all_objects[0].r ),
+                                                        sizeof( all_objects[0].vr ),
+                                                        sizeof( all_objects[0].vt ),
+                                                        sizeof( all_objects[0].E ),
+                                                        sizeof( all_objects[0].J ),
+                                                        sizeof( all_objects[0].binflag ),
+                                                        sizeof( all_objects[0].m0 ),
+                                                        sizeof( all_objects[0].m1 ),
+                                                        sizeof( all_objects[0].id0 ),
+                                                        sizeof( all_objects[0].id1 ),
+                                                        sizeof( all_objects[0].a ),
+                                                        sizeof( all_objects[0].e ),
+                                                        sizeof( all_objects[0].startype ),
+                                                        sizeof( all_objects[0].luminosity ),
+                                                        sizeof( all_objects[0].radius ),
+                                                        sizeof( all_objects[0].bin_startype0 ),
+                                                        sizeof( all_objects[0].bin_startype1 ),
+                                                        sizeof( all_objects[0].bin_star_lum0 ),
+                                                        sizeof( all_objects[0].bin_star_lum1 ),
+                                                        sizeof( all_objects[0].bin_star_radius0 ),
+                                                        sizeof( all_objects[0].bin_star_radius1 ),
+                                                        sizeof( all_objects[0].bin_Eb ),
+                                                        sizeof( all_objects[0].eta ),
+                                                        sizeof( all_objects[0].star_phi ),
+                                                        sizeof( all_objects[0].rad0 ),
+                                                        sizeof( all_objects[0].rad1 ),
+                                                        sizeof( all_objects[0].tb ),
+                                                        sizeof( all_objects[0].lum0 ),
+                                                        sizeof( all_objects[0].lum1 ),
+                                                        sizeof( all_objects[0].massc0 ),
+                                                        sizeof( all_objects[0].massc1 ),
+                                                        sizeof( all_objects[0].radc0 ),
+                                                        sizeof( all_objects[0].radc1 ),
+                                                        sizeof( all_objects[0].menv0 ),
+                                                        sizeof( all_objects[0].menv1 ),
+                                                        sizeof( all_objects[0].renv0 ),
+                                                        sizeof( all_objects[0].renv1 ),
+                                                        sizeof( all_objects[0].tms0 ),
+                                                        sizeof( all_objects[0].tms1 ),
+                                                        sizeof( all_objects[0].dmdt0 ),
+                                                        sizeof( all_objects[0].dmdt1 ),
+                                                        sizeof( all_objects[0].radrol0 ),
+                                                        sizeof( all_objects[0].radrol1 ),
+                                                        sizeof( all_objects[0].ospin0 ),
+                                                        sizeof( all_objects[0].ospin1 ),
+                                                        sizeof( all_objects[0].B0 ),
+                                                        sizeof( all_objects[0].B1 ),
+                                                        sizeof( all_objects[0].formation0 ),
+                                                        sizeof( all_objects[0].formation1 ),
+                                                        sizeof( all_objects[0].bacc0 ),
+                                                        sizeof( all_objects[0].bacc1 ),
+                                                        sizeof( all_objects[0].tacc0 ),
+                                                        sizeof( all_objects[0].tacc1 ),
+                                                        sizeof( all_objects[0].mass0_0 ),
+                                                        sizeof( all_objects[0].mass0_1 ),
+                                                        sizeof( all_objects[0].epoch0 ),
+                                                        sizeof( all_objects[0].epoch1 ),
+                                                        sizeof( all_objects[0].ospin ),
+                                                        sizeof( all_objects[0].B ),
+                                                        sizeof( all_objects[0].formation ),
+                                                    };
+                        snapfile_hdf5 = H5Fopen("test.h5", H5F_ACC_RDWR, H5P_DEFAULT);
+//                        H5TBappend_records(snapfile_hdf5, "snapshot", NRECORDS, dst_size, dst_offset, dst_sizes, &p_data);
+                        H5TBappend_records(snapfile_hdf5, "snapshot", 2, dst_size_all, dst_offset_all, dst_sizes1, &all_objects);
+                        H5Fclose( snapfile_hdf5 );
 			gzclose(snapfile);
 
 #ifdef USE_MPI
@@ -3176,7 +3438,6 @@ void write_snapshot(char *filename, int bh_only) {
 		MPI_Barrier(MPI_COMM_WORLD);
 	}
 #endif
-
 }
 
 /**
