@@ -1179,6 +1179,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BH_CAPTURE);
 				sscanf(values, "%ld", &BH_CAPTURE);
 				parsed.BH_CAPTURE = 1;
+                        } else if (strcmp(parameter_name, "TC_FACTOR") == 0) {
+                                PRINT_PARSED(PARAMDOC_TC_FACTOR);
+                                sscanf(values, "%lf", &TC_FACTOR);
+                                parsed.TC_FACTOR = 1;
+                        } else if (strcmp(parameter_name, "COLL_FACTOR") == 0) {
+                                PRINT_PARSED(PARAMDOC_COLL_FACTOR);
+                                sscanf(values, "%lf", &COLL_FACTOR);
+                                parsed.COLL_FACTOR = 1;
 			} /*Sourav:new parameter*/
 			else if (strcmp(parameter_name, "STAR_AGING_SCHEME") == 0) {
 			 	PRINT_PARSED(PARAMDOC_STAR_AGING_SCHEME);
@@ -1611,6 +1619,8 @@ if(myid==0) {
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
 	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
 	CHECK_PARSED(BH_CAPTURE, 0, PARAMDOC_BH_CAPTURE);
+        CHECK_PARSED(TC_FACTOR, 1.0, PARAMDOC_TC_FACTOR);
+        CHECK_PARSED(COLL_FACTOR, 1.0, PARAMDOC_COLL_FACTOR);
 	/*Sourav: new parameter*/
 	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
 	CHECK_PARSED(SAMPLESIZE, 1024, PARAMDOC_SAMPLESIZE);

@@ -739,6 +739,18 @@ typedef struct{
 * @brief Allow for the formation of binary black holes from gravitational-wave emission during single-single encounters; SS_COLLISION must be 1
 */
 	int BH_CAPTURE;
+//Shi: simple tidal capture prescription for all stars with a radius.
+#define PARAMDOC_TC_FACTOR "allow for tidal capture (a multiple of the set factor of the pericenter) during single-single collision (1=off, greater than 1 sets different multiplyers)"
+/**
+* @brief allow for tidal capture (a multiple of the set factor of the pericenter) during single-single collision (1=off, greater than 1 sets different multiplyers)
+*/
+        int TC_FACTOR;
+//Shi: change the maximum pericenter distance for sticky-sphere collision by a factor. 
+#define PARAMDOC_COLL_FACTOR "allow for different factors for the sticky-sphere pericenter distance (1=off, greater than 1 sets different multiplyers)"
+/**
+* @brief allow for different factors for the sticky-sphere pericenter distance (1=off, greater than 1 sets different multiplyers)
+*/
+        int COLL_FACTOR;
 	//Sourav: toy rejuvenation flags
 #define PARAMDOC_STAR_AGING_SCHEME "the aging scheme of the stars (0=infinite age of all stars, 1=rejuvenation, 2=zero lifetime of collision stars, 3=arbitrary lifetime)"
 /**

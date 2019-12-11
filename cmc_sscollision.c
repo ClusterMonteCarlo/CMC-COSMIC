@@ -444,7 +444,83 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		destroy_obj(k);
 		destroy_obj(kp);
 
-	} else if (rperi <= star[k].rad + star[kp].rad) {
+        } else if (TC_FACTOR > 1 && (star[k].se_k != 14 || star[kp].se_k != 14) && rperi > COLL_FACTOR * (star[k].rad + star[kp].rad) && rperi <= TC_FACTOR * (star[k].rad + star[kp].rad)){
+                /* Shi: single-single tidal capture for all stars with a radius*/
+                /* put new binary together and destroy original stars*/
+                /* log stuff */
+                parafprintf(tidalcapturefile, "%.6g SS_COLL_TC %s+%s->", TotalTime,
+                                sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
+                
+                /* form a binary with zero eccentricity and semi-major axis = 2*rperi */
+                afinal = 2 * rperi;
+                efinal = 0.0;
+               
+                knew = create_binary(k, 0);
+
+#ifdef USE_MPI
+                g_knew = get_global_idx(knew);
+                star_m[g_knew] = mass_k + mass_kp;
+                star_r[g_knew] = rcm;
+                star_phi[g_knew] = potential(star_r[g_knew]);
+#else
+
+                star[knew].m = mass_k + mass_kp;
+                star[knew].r = rcm;
+                star[knew].phi = potential(star[knew].r);
+#endif
+                star[knew].vr = vcm[3];
+                star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+                set_star_EJ(knew);
+                set_star_news(knew);
+                set_star_olds(knew);
+
+                star[knew].interacted = 1;
+
+                binary[star[knew].binind].a = afinal;
+                binary[star[knew].binind].e = efinal;
+                binary[star[knew].binind].m1 = mass_k;
+                binary[star[knew].binind].m2 = mass_kp;
+                binary[star[knew].binind].rad1 = star[k].rad;
+                binary[star[knew].binind].rad2 = star[kp].rad;
+                binary[star[knew].binind].Eint1 = star[k].Eint;
+                binary[star[knew].binind].Eint2 = star[kp].Eint;
+                
+                /* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
+#ifdef USE_MPI
+                binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+                         - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                         - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
+                         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+                binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+                         - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                         - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
+                         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+#else
+
+                binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+                         - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                         - 0.5 * star[knew].m * madhoc * star[knew].phi
+                         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+                binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+                         - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                         - 0.5 * star[knew].m * madhoc * star[knew].phi
+                         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+#endif
+
+                binary[star[knew].binind].id1 = star[k].id;
+                binary[star[knew].binind].id2 = star[kp].id;
+                cp_SEvars_to_newbinary(k, -1, knew, 0);
+                cp_SEvars_to_newbinary(kp, -1, knew, 1);
+                binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
+                compress_binary(&star[knew], &binary[star[knew].binind]);
+
+                /* log stuff */
+                parafprintf(tidalcapturefile, "%s\n", sprint_bin_dyn(knew, dummystring));
+
+                destroy_obj(k);
+                destroy_obj(kp); 
+
+	} else if (rperi <= COLL_FACTOR * (star[k].rad + star[kp].rad)) {
 		/* perform standard sticky-sphere merger */
 		/* If tidal capture is turned off, the cross section is just large enough to enter this clause, 
 		   so the next clause should never be entered. */

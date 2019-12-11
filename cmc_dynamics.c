@@ -408,10 +408,14 @@ are skipped if they already interacted in 3bb loop!  */
 					}
 				}
 
-
 				
 				/* standard sticky sphere collision cross section */
-				rperi = star[k].rad + star[kp].rad;
+				/*Shi: If one of the star in sscollision is not a black hole, do tidal capture */
+                                if (star[k].se_k != 14 || star[kp].se_k != 14){
+                                	rperi = TC_FACTOR * (star[k].rad + star[kp].rad);
+                                }else{
+                                	rperi = COLL_FACTOR * (star[k].rad+star[kp].rad);
+                                }
 				S_coll = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 				
 				/* take the max of all cross sections; the event type will be chosen by sampling the impact parameter */
