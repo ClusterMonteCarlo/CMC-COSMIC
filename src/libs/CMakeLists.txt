@@ -2,7 +2,7 @@ add_library(support STATIC fitslib.c taus113-v2.c)
 
 # Include paths to headers
 include_directories ("${PROJECT_SOURCE_DIR}/include/common")
-include_directories(SYSTEM ${CFITSIO_INCLUDE_DIRS})
+include_directories(SYSTEM ${CFITSIO_INCLUDE_DIR})
 
 
 # link library to executable

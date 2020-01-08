@@ -4,6 +4,7 @@ add_executable(cmc_mkplummer mkplummer/mkplummer.c)
 include_directories ("${PROJECT_SOURCE_DIR}/include/common")
 # link library to executable
 target_link_libraries(cmc_mkplummer support)
+target_link_libraries(cmc_mkplummer m)
 
 # add the executable
 add_executable(cmc_mkelson mkelson/mkelson.c)
@@ -12,6 +13,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/include/common")
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 # link library to executable
 target_link_libraries(cmc_mkelson support)
+target_link_libraries(cmc_mkelson m)
 target_link_libraries(cmc_mkelson ${GSL_LIBRARIES})
 
 # add the executable
@@ -20,6 +22,7 @@ add_executable(cmc_mkking mkking/mkking.c)
 include_directories ("${PROJECT_SOURCE_DIR}/include/common")
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 # link library to executable
+target_link_libraries(cmc_mkking m)
 target_link_libraries(cmc_mkking support)
 target_link_libraries(cmc_mkking ${GSL_LIBRARIES})
 
@@ -30,6 +33,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/include/common")
 include_directories ("${PROJECT_SOURCE_DIR}/include/utils")
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 # link library to executable
+target_link_libraries(cmc_setimf m)
 target_link_libraries(cmc_setimf support)
 target_link_libraries(cmc_setimf ${GSL_LIBRARIES})
 
@@ -48,6 +52,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/include/cmc")
 include_directories ("${PROJECT_SOURCE_DIR}/include/bse_wrap")
 # link library to executable
 target_link_libraries(cmc_setstellar support)
+target_link_libraries(cmc_setstellar m)
 target_link_libraries(cmc_setstellar bsewrap)
 
 # add the executable
@@ -57,6 +62,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/include/common")
 include_directories ("${PROJECT_SOURCE_DIR}/include/cmc")
 # link library to executable
 target_link_libraries(cmc_addbinaries support)
+target_link_libraries(cmc_addbinaries m)
 target_link_libraries(cmc_addbinaries bsewrap)
 
 # add the executable
@@ -66,6 +72,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/include/common")
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 # link library to executable
 target_link_libraries(cmc_ascii2fits support)
+target_link_libraries(cmc_ascii2fits m)
 target_link_libraries(cmc_ascii2fits ${GSL_LIBRARIES})
 
 install(TARGETS cmc_mkplummer DESTINATION bin)

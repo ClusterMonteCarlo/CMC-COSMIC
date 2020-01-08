@@ -65,7 +65,7 @@ find_package(CFITSIO REQUIRED)
 
 find_package(ZLIB REQUIRED)
 
-find_package(HDF5 COMPONENTS C HL REQUIRED)
+#find_package(HDF5 COMPONENTS C HL REQUIRED)
 
 # enable USE_MPI
 option(WITH_MPI "Option description" ON)
