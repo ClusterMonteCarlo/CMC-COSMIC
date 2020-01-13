@@ -570,7 +570,7 @@ We use these two arrays to store the number of stars created by each node during
 		//Print out timer file
 		if(TIMER)
 		{
-			rootfprintf(timerfile, "%d\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\n", tcount, t_cen_calc, t_timestep, t_dyn, t_se, t_orb, t_tid_str, t_sort, t_postsort_comm, t_pot_cal, t_ener_con3, t_calc_io_vars1, t_calc_io_vars2, t_comp_ener, t_upd_vars, t_io, t_io_ignore, t_oth, t_sort_lsort1, t_sort_splitters, t_sort_a2a, t_sort_lsort2, t_sort_oth, t_sort_lb, t_sort_only);
+			rootfprintf(timerfile, "%ld\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\n", tcount, t_cen_calc, t_timestep, t_dyn, t_se, t_orb, t_tid_str, t_sort, t_postsort_comm, t_pot_cal, t_ener_con3, t_calc_io_vars1, t_calc_io_vars2, t_comp_ener, t_upd_vars, t_io, t_io_ignore, t_oth, t_sort_lsort1, t_sort_splitters, t_sort_a2a, t_sort_lsort2, t_sort_oth, t_sort_lb, t_sort_only);
 		}
 		timeEndSimple(tmpTimeStart, &t_io_ignore);
 

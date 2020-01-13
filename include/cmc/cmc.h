@@ -1733,6 +1733,12 @@ void free_ivector(int *v, long nl, long nh);
 /* fits stuff */
 void load_fits_file_data(void);
 
+/* restart file */
+void load_restart_file(void);
+
+/* misc */
+void load_tidal_tensor(void);
+
 /* stellar evolution stuff */
 void stellar_evolution_init(void);
 void restart_stellar_evolution(void);
