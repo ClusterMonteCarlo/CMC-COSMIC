@@ -166,7 +166,7 @@ void stellar_evolution_init(void){
 
   /* set collisions matrix */
   bse_instar();
-  dprintf("se_init: %g %g %g %d %d %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %d\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PISN, BSE_ALPHA1, BSE_LAMBDAF, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_POLAR_KICK_ANGLE);
+  dprintf("se_init: %g %g %g %d %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PISN, BSE_ALPHA1, BSE_LAMBDAF, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_POLAR_KICK_ANGLE);
 
 #ifdef USE_MPI 
   for (k=1; k<=mpiEnd-mpiBegin+1; k++) {
@@ -821,7 +821,7 @@ void write_stellar_data(void){
     parafprintf(stel_file, "%g ", star[k].se_bacc);
     parafprintf(stel_file, "%g ", star[k].se_tacc);
     parafprintf(stel_file, "\n");
-    parafprintf(stel_file, "%08ld ", get_global_idx(k));
+    parafprintf(stel_file, "%08d ", get_global_idx(k));
   }
 
 #ifdef USE_MPI
@@ -849,7 +849,7 @@ void write_stellar_data(void){
   pararootfprintf(stel_file, "# time (Myr): %e\n",
     TotalTime/MEGA_YEAR);
   pararootfprintf(stel_file, "# time (FP):  %e\n", TotalTime);
-  pararootfprintf(stel_file, "#1:id1 #2:id2 #3:M1[MSUN] #4:M2 #5:R1[RSUN] #6:R2 #7:k1 #8:k2 #9:Porb[day] #10:e #11:L1[LSUN] #12:L2 #13:Mcore1[MSUN] #14:Mcore2 #15:Rcore1[RSUN] #16:Rcore2 #17:Menv1[MSUN] #18:Menv2 #19:Renv1[RSUN] #20:Renv2 #21:Tms1[MYR] #22:Tms2 #23:Mdot1[MSUN/YR] #24:Mdot2 #25:R1/ROL1 #26:R2/ROL2 #27:ospin1 #28:ospin2 #29:B1 #30:B2 #31:formation1 #32:formation2 #33:bacc1 #34:bacc2 #35:tacc1 #36:tacc2\n");
+  pararootfprintf(stel_file, "#1:id1 #2:id2 #3:M1[MSUN] #4:M2 #5:R1[RSUN] #6:R2 #7:k1 #8:k2 #9:Porb[day] #10:e #11:L1[LSUN] #12:L2 #13:Mcore1[MSUN] #14:Mcore2 #15:Rcore1[RSUN] #16:Rcore2 #17:Menv1[MSUN] #18:Menv2 #19:Renv1[RSUN] #20:Renv2 #21:Tms1[MYR] #22:Tms2 #23:bhspin1 #24:bhspin2 #25:Mdot1[MSUN/YR] #26:Mdot2 #27:R1/ROL1 #28:R2/ROL2 #29:ospin1 #30:ospin2 #31:B1 #32:B2 #33:formation1 #34:formation2 #35:bacc1 #36:bacc2 #37:tacc1 #38:tacc2\n");
 
 #ifdef USE_MPI
   for(k=1; k<=clus.N_MAX_NEW; k++){
@@ -858,7 +858,7 @@ void write_stellar_data(void){
 #endif
     if (star[k].binind) {
       kb = star[k].binind;
-      parafprintf(stel_file, "%08ld %08ld %g %g %g %g %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
+      parafprintf(stel_file, "%08ld %08ld %g %g %g %g %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
         binary[kb].id1, binary[kb].id2,
         binary[kb].bse_mass[0], binary[kb].bse_mass[1],
         binary[kb].bse_radius[0], binary[kb].bse_radius[1],

@@ -205,9 +205,9 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	bse_set_rejuvflag(BSE_REJUVFLAG);
 	bse_set_ussn(BSE_USSN);
 
-	bse_set_qcrit_array(&BSE_QCRIT_ARRAY, NO_BSE_QCRIT_ARRAY); 
-	bse_set_fprimc_array(&BSE_FPRIMC_ARRAY, NO_BSE_FPRIMC_ARRAY);
-	bse_set_natal_kick_array(&BSE_NATAL_KICK_ARRAY, NO_BSE_NATAL_KICK_ARRAY); 
+	bse_set_qcrit_array(BSE_QCRIT_ARRAY, NO_BSE_QCRIT_ARRAY); 
+	bse_set_fprimc_array(BSE_FPRIMC_ARRAY, NO_BSE_FPRIMC_ARRAY);
+	bse_set_natal_kick_array(BSE_NATAL_KICK_ARRAY, NO_BSE_NATAL_KICK_ARRAY); 
 	bse_set_sigmadiv(BSE_SIGMADIV);
 	bse_set_alpha1(BSE_ALPHA1);
 	bse_set_lambdaf(BSE_LAMBDAF);

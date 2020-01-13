@@ -46,7 +46,7 @@ void cmc_print_usage(FILE *stream, char *argv[])
 	fprintf(stream, "  -V --version : print version info\n");
 	fprintf(stream, "  -R --hard-restart : start from a saved checkpoint (specify number) with prefix <old...prefix> and write to new file prefix\n");
 	fprintf(stream, "  -r --soft-restart : start from a saved checkpoint (specify number) and write to the same files in the same place\n");
-	fprintf(stream, "  -n --new-seed: reseed the parallel randonm number generator with a new value (given here); similar to specifying a new IDUM\n");-
+	fprintf(stream, "  -n --new-seed: reseed the parallel randonm number generator with a new value (given here); similar to specifying a new IDUM\n");
 	fprintf(stream, "  -h --help    : display this help text\n");
 }
 
@@ -3740,7 +3740,7 @@ void save_restart_file(){
 	}
 
 	rootprintf("******************************************************************************\n");
-	rootprintf("Saving checkpoint %d at time %g in folder %s\n",NEXT_RESTART,TotalTime,restart_folder);
+	rootprintf("Saving checkpoint %ld at time %g in folder %s\n",NEXT_RESTART,TotalTime,restart_folder);
 	rootprintf("******************************************************************************\n");
 		
 	NEXT_RESTART += 1;
@@ -3872,7 +3872,7 @@ void load_restart_file(){
 	star_m[0] = 0.0;
 
 	rootprintf("******************************************************************************\n");
-	rootprintf("Loading checkpoint %d at time %g in folder %s\n",local_restart,TotalTime,restart_folder);
+	rootprintf("Loading checkpoint %ld at time %g in folder %s\n",local_restart,TotalTime,restart_folder);
 	rootprintf("******************************************************************************\n");
 
 }

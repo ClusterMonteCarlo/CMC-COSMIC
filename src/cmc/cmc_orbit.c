@@ -469,8 +469,8 @@ orbit_rs_t calc_orbit_new(long index, double E, double J) {
   ktemp= get_positive_Q_index(index, E, J);
   if (ktemp<=-1) {
 #ifdef USE_MPI
-    dprintf("Did not find a single positive Q value! index= %li\n", g_si);
-    dprintf("circular orbit found: index=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
+    dprintf("Did not find a single positive Q value! index= %d\n", g_si);
+    dprintf("circular orbit found: index=%d sr=%g svr=%g svt=%g J=%g E=%g\n",
         g_si, star_r[g_si], star[index].vr, star[index].vt, star[index].J, star[index].E);
 #else
     dprintf("Did not find a single positive Q value! index= %li\n", index);

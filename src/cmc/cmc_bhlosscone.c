@@ -179,7 +179,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	while (L2 > 0.0) { 
 		L2 -= fb_sqr(delta); 
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
-			dprintf("index=%ld, id=%ld: star eaten by BH\n", g_index, star[index].id);
+			dprintf("index=%d, id=%ld: star eaten by BH\n", g_index, star[index].id);
 #ifdef USE_MPI
 			cenma.m_new += star_m[g_index]; 
 #else

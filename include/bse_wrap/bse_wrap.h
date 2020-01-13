@@ -152,6 +152,10 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
                 double *B_0, double *bacc, double *tacc,
 		double *epoch, double *tms, double *tphys, double *tphysf, double *dtp,
 		double *z, double *zpars, double *tb, double *ecc, double *vs, double *bhspin);
+void bse_evolve_single(int *kw, double *mass, double *mt, double *r, double *lum,
+                double *mc, double *rc, double *menv, double *renv, double *ospin,
+                double *epoch, double *tms, double *tphys, double *tphysf,
+                double *dtp, double *z, double *zpars, double *vs, double *bhspin);
 void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, double *lum, 
 		       double *massc, double *radc, double *menv, double *renv, double *ospin,
                        double *B_0, double *bacc, double *tacc,
@@ -201,6 +205,13 @@ void bse_set_bwind(double bwind); /* binary enhanced mass loss parameter (inacti
 void bse_set_hewind(double hewind); /* helium star mass loss factor (1.0 normally) */
 void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
 void bse_set_eddlimflag(int eddlimflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
+// rejuvflag toggles between the original BSE prescription for MS mixing and 
+// lifetimes of stars based on the mass of the MS stars (equation 80) or a
+// prescription that uses the ratio of helium core mass of the pre-merger stars
+// at the base of the first ascent of the giant branch to determine relative to the
+// helium core mass of the merger product at the base of the giant branch
+void bse_set_rejuvflag(int rejuvflag);
+void bse_set_using_cmc(void);
 void bse_set_pisn(double pisn); /* Sets Pair-instability pulsations and supernoa */ 
 void bse_set_aic(int aic); /* Sets Pair-instability pulsations and supernoa */
 void bse_set_bdecayfac(int bdecayfac);
@@ -220,9 +231,9 @@ void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for 
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
 void bse_set_nsflag(int nsflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_qcflag(int qcflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_qcrit_array(double *qcrit_array, long len); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_fprimc_array(double *fprimc_array, long len); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_natal_kick_array(double *natal_kick_array, long len); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_qcrit_array(double qcrit_array[16], long len); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_fprimc_array(double fprimc_array[16], long len); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_natal_kick_array(double natal_kick_array[6], long len); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=[bhspinmag], 1=Uniform(0-1)*[bhspinmag], 2=Belczynski2017)*/
 void bse_set_bhspinmag(double bhspinmag);/* value of BH spins (default=0.0) */ 
 void bse_set_mxns(double mxns); /* maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1) */

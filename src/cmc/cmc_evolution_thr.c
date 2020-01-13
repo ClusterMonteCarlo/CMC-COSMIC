@@ -92,7 +92,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		/* check to see if star is on almost circular orbit */
 		if (function_Q(g_si, ktemp, E, J) < 0) {
 #ifdef USE_MPI
-			dprintf("circular orbit found: si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
+			dprintf("circular orbit found: si=%d sr=%g svr=%g svt=%g J=%g E=%g\n",
 				g_si, star_r[g_si], star[si].vr, star[si].vt, star[si].J, star[si].E);
 #else
 			dprintf("circular orbit found: si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
@@ -251,7 +251,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		if ((rmin > rmax)||(dQdr_min<=0.)||(dQdr_max>=0.)) {
 		        eprintf("circular orbit found!\n");
 #ifdef USE_MPI
-		 	eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
+		 	eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%d r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
 				rmin, rmax, kmin, kmax, g_si, star_r[g_si], star[si].vr, star[si].vt, star[si].J, star[si].E,
 				function_Q(g_si, kmin, star[si].E, star[si].J), function_Q(g_si, kmax, star[si].E, star[si].J),
 				dQdr_min,dQdr_max,dQdr_min_num,dQdr_max_num);

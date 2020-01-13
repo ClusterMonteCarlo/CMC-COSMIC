@@ -609,9 +609,9 @@ void bse_set_idum(int idum) { rand1_.idum1 = idum; }
 void bse_set_eddlimflag(int eddlimflag) { flags_.eddlimflag = eddlimflag; } 
 void bse_set_sigmadiv(double sigmadiv) { snvars_.sigmadiv = sigmadiv; } 
 
-void bse_set_natal_kick_array(double *natal_kick_array, long len_kick) {int i; for(i=0; i<len_kick; i++) snvars_.natal_kick_array[i] = natal_kick_array[i]; }
-void bse_set_fprimc_array(double *fprimc_array, long len_fprimc) {int i; for(i=0;i<len_fprimc;i++) tidalvars_.fprimc_array[i] = fprimc_array[i]; }
-void bse_set_qcrit_array(double *qcrit_array, long len_qcrit) {int i; for(i=0;i<len_qcrit;i++) cevars_.qcrit_array[i] = qcrit_array[i]; }
+void bse_set_natal_kick_array(double natal_kick_array[6], long len_kick) {int i; for(i=0; i<len_kick; i++) snvars_.natal_kick_array[i] = natal_kick_array[i]; }
+void bse_set_fprimc_array(double fprimc_array[16], long len_fprimc) {int i; for(i=0;i<len_fprimc;i++) tidalvars_.fprimc_array[i] = fprimc_array[i]; }
+void bse_set_qcrit_array(double qcrit_array[16], long len_qcrit) {int i; for(i=0;i<len_qcrit;i++) cevars_.qcrit_array[i] = qcrit_array[i]; }
 
 void bse_set_aic(int aic) { flags_.aic = aic; }
 void bse_set_bdecayfac(int bdecayfac) { flags_.bdecayfac = bdecayfac; }
