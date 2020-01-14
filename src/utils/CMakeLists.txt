@@ -50,6 +50,7 @@ add_executable(cmc_setstellar setstellar/setstellar.c)
 include_directories ("${PROJECT_SOURCE_DIR}/include/common")
 include_directories ("${PROJECT_SOURCE_DIR}/include/cmc")
 include_directories ("${PROJECT_SOURCE_DIR}/include/bse_wrap")
+include_directories(SYSTEM ${CFITSIO_INCLUDE_DIR})
 # link library to executable
 target_link_libraries(cmc_setstellar support)
 target_link_libraries(cmc_setstellar m)
