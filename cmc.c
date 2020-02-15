@@ -157,6 +157,7 @@ We use these two arrays to store the number of stars created by each node during
 
 	}
 
+
 //Probably not needed anymore
 //	N_b_OLD = N_b;
 //	N_b_NEW = N_b;

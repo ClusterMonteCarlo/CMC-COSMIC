@@ -24,7 +24,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 {
 	//int ST_tide; //PDK addition for hrdiag, will eventually make it an input from cmc_stelar_evolution.c
 	long knew;
-	double vs[12], bmax, b, rperi, Eorbnew, acoll, ecoll, ace, ece, anew, enew, efinal, afinal;
+	double vs[20], bmax, b, rperi, Eorbnew, acoll, ecoll, ace, ece, anew, enew, efinal, afinal;
 	double clight5;
 	double aj, tm, tn, tscls[20], lums[10], GB[10], k2;
 	double Einit;

@@ -490,7 +490,6 @@ int main(int argc, char *argv[]){
 	check_for_file(filename);
 	create_random_array(X, N);
 	find_positions(X, r, N, gamma, rmax, 1e-10);
-	fprintf(stdout, "Half-mass radius (before scaling) = %g\n",r[(int)round(N/2)]);
 	find_velocities(r, vr, vt, N, gamma, rmax);
 	set_masses(m, r, N);
 	scale_pos_and_vel(m, r, vr, vt, N);

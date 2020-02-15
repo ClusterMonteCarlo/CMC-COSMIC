@@ -554,6 +554,15 @@ long CheckStop() {
 		return (1);
 	}
 
+	/* If we have less stars than sample_sort sample keys, stop.
+         * if needs be, the user can decrease SAMPLESIZE and restart
+         * fom the last checkpoint */
+	if (clus.N_MAX < SAMPLESIZE*procs && 0) {
+		print_2Dsnapshot();
+		diaprintf("N_MAX < SAMPLESIZE*procs .. Terminating.\n");
+		return (1);
+	}
+
 	/* Stop if Etotal > 0 */
 	if (Etotal.K + Etotal.P > 0.0) {
 		print_2Dsnapshot();
@@ -1478,15 +1487,17 @@ double compute_tidal_boundary(void){
 	double lambda_eff, slope;
 	double TimeNbody = TotalTime * clus.N_STAR / log(GAMMA*clus.N_STAR);
 
+
 	/* First find where we are in time; note we need the "-1" since we want 
 	 * to use N and N+1 to do the linear extrapolation */
-	while((TimeNbody > TT_times[TT_num]) && (TT_num < TT_num_max-1))
+	while((TimeNbody > TT_times[TT_num+1]) && (TT_num < TT_num_max))
 		TT_num++;
 
 	/* If we've reached the end of the tidal tensor file, then just keep 
 	 * using the last value; this is wrong, but the best we can do. */
-	if(TT_num == TT_num_max-1){
-		eprintf("WARNING: have moved beyond the end of the tidal tensor file\n");
+	if(TT_num >= TT_num_max-1){
+		if(myid == 0)
+			eprintf("WARNING: have moved beyond the end of the tidal tensor file\n");
 		return orbit_r;
 	}
 
@@ -1495,7 +1506,8 @@ double compute_tidal_boundary(void){
 	lambda_eff = TT_l1e[TT_num] + slope * (TimeNbody - TT_times[TT_num]);
 
 	if(lambda_eff < 0){
-		eprintf("WARNING: all eigenvalues of the tidal tensor are negative,\nmeaning cluster is in compressive mode; using previous tidal boundary...\n");
+		if(myid == 0)
+			eprintf("WARNING: all eigenvalues of the tidal tensor are negative, meaning cluster is in compressive mode; using previous tidal boundary...\n");
 		return orbit_r;
 	}
 
@@ -1526,10 +1538,6 @@ void central_calculate(void)
 	}
 	
 	/* DEBUG */
-	/* fprintf(stderr, "nave=%ld\n", nave); */
-	/* DEBUG */
-
-	/* exit if not enough stars */
 	if (clus.N_STAR <= 2*J || nave >= clus.N_STAR-6) {
 		eprintf("clus.N_STAR <= 2*J || nave >= clus.N_STAR-6\n");
 		exit_cleanly(-1, __FUNCTION__);

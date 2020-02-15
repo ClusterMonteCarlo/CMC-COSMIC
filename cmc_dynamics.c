@@ -525,6 +525,8 @@ are skipped if they already interacted in 3bb loop!  */
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
 			set_star_EJ(kp);
+
+
 		}
 	}
 #ifndef USE_MPI

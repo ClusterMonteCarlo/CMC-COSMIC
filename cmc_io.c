@@ -3132,8 +3132,8 @@ void load_tidal_tensor()
 		rewind(fp);
 
 		/* Then allocate the arrays to accomidate that number of lines*/
-		TT_times = (double *)malloc(sizeof(double)*TT_num_max);
-		TT_l1e = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_times = (double *)malloc(sizeof(double)*(TT_num_max+1));
+		TT_l1e = (double *)malloc(sizeof(double)*(TT_num_max+1));
 
 		TT_xx = (double *)malloc(sizeof(double)*TT_num_max);
 		TT_yy = (double *)malloc(sizeof(double)*TT_num_max);
@@ -3184,6 +3184,7 @@ void load_tidal_tensor()
 		free(TT_xx);free(TT_yy),free(TT_zz);
 		free(TT_xy);free(TT_xz),free(TT_yz);
 	}
+
 	
 #ifdef USE_MPI
         MPI_Bcast(&TT_num_max, 1, MPI_LONG, 0, MPI_COMM_WORLD);
@@ -3191,14 +3192,17 @@ void load_tidal_tensor()
 	TT_num = 0;
 
 	if(myid != 0){
-		TT_times = (double *)malloc(sizeof(double)*TT_num_max);
-		TT_l1e = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_times = (double *)malloc(sizeof(double)*(TT_num_max+1));
+		TT_l1e = (double *)malloc(sizeof(double)*(TT_num_max+1));
 	}
 
 #ifdef USE_MPI
-        MPI_Bcast(TT_times,TT_num_max, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Bcast(TT_l1e,TT_num_max, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(TT_times,(TT_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(TT_l1e,(TT_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
+
+	TT_times[TT_num_max] = 1e10;
+	TT_l1e[TT_num_max] = 0;
 }
 
 typedef struct{
