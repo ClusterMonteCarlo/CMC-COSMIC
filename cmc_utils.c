@@ -541,11 +541,14 @@ long DynamicalFrictionTimescale(){
 	}
 	
 	/* Same linear interpolation that we do for the tidal tensor file */
-	t_df_p1 = DF_prefactor[DF_num+1] / DF_Menc[DF_num+1] / log(1 + DF_Menc[DF_num+1]/Mtotal);
-	t_df_1 = DF_prefactor[DF_num] / DF_Menc[DF_num] / log(1 + DF_Menc[DF_num]/Mtotal);
+	t_df_p1 = DF_prefactor[DF_num+1] / Mtotal / log(1 + DF_Menc[DF_num+1]/Mtotal);
+	t_df_1 = DF_prefactor[DF_num] / Mtotal / log(1 + DF_Menc[DF_num]/Mtotal);
 
 	slope = (t_df_p1 - t_df_1) / (DF_times[DF_num+1] - DF_times[DF_num]);
 	t_df = t_df_1 + slope * (TimeNbody - DF_times[DF_num]);
+
+	if(myid == 0)
+		printf("tdfp1=%g tdf1=%g slope=%g t_df=%g timeNbody=%g\n",t_df_p1,t_df_1,slope,t_df,TimeNbody);
 
 	if(tcount <= 1){
 		t_df_prev = t_df;
@@ -555,15 +558,17 @@ long DynamicalFrictionTimescale(){
 
 	/* if DF_INTEGRATED_CRITERION = 1, then we stop when the running integral of Dt/t_df > 1, 
 	 * otherwise we stop when t_df > TotalTime */
-	if(DF_INTEGRATED_CRITERION)
+	if(DF_INTEGRATED_CRITERION){
 		t_df_cum += Dt*clus.N_STAR/log(GAMMA*clus.N_STAR)/(t_df_prev - t_df);
 		t_df_prev = t_df;
 		if(t_df_cum > 1)
 			return(1);
-	else if(t_df > TimeNbody)
+	} else if(t_df < TimeNbody){
+		printf("killing it t_df=%g TimeNbody=%g\n",t_df,TimeNbody);
 		return (1);
-	else
+	} else {
 		return(0);
+	}
 
 }
 
