@@ -182,11 +182,11 @@ extern struct { int  tflag, ifflag, nsflag, wdflag, bhflag, windflag, qcflag, ed
 extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 
-extern struct { double neta, bwind, hewind, mxns, beta, xi, acc2, epsnov, eddfac, gamma; } windvars_;
+extern struct { double neta, bwind, hewind, beta, xi, acc2, epsnov, eddfac, gamma; } windvars_;
 extern struct { double qcrit_array[16], alpha1, lambdaf; } cevars_;
 extern struct { double bconst, ck; } magvars_;
 extern struct { double rejuv_fac; } mixvars_;
-extern struct { double natal_kick_array[6], sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag; } snvars_;
+extern struct { double natal_kick_array[6], sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag, mxns; } snvars_;
 extern struct { double fprimc_array[16]; } tidalvars_;
 extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
