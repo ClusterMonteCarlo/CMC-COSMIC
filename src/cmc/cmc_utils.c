@@ -515,6 +515,64 @@ void update_tspent(struct tms tmsbufref) {
 }
 
 /**
+ * @brief compute the dynamical friciton timescale
+ *
+ * @param 
+ *
+ * @return 0 if done, 1 otherwise
+*/
+
+long DynamicalFrictionTimescale(){
+	double slope, t_df, t_df_p1, t_df_1;
+	double TimeNbody = TotalTime * clus.N_STAR / log(GAMMA*clus.N_STAR);
+
+
+	/* First find where we are in time; note we need the "-1" since we want 
+	 * to use N and N+1 to do the linear extrapolation */
+	while((TimeNbody > DF_times[DF_num+1]) && (DF_num < DF_num_max))
+		DF_num++;
+
+	/* If we've reached the end of the dynamical friction file, then it
+	 * doesnt really matter... */ 
+	if(DF_num >= DF_num_max-1){
+		if(myid == 0)
+			eprintf("WARNING: have moved beyond the end of the tidal tensor file\n");
+		return (1);
+	}
+	
+	/* Same linear interpolation that we do for the tidal tensor file */
+	t_df_p1 = DF_prefactor[DF_num+1] / Mtotal / log(1 + DF_Menc[DF_num+1]/Mtotal);
+	t_df_1 = DF_prefactor[DF_num] / Mtotal / log(1 + DF_Menc[DF_num]/Mtotal);
+
+	slope = (t_df_p1 - t_df_1) / (DF_times[DF_num+1] - DF_times[DF_num]);
+	t_df = t_df_1 + slope * (TimeNbody - DF_times[DF_num]);
+
+	if(myid == 0)
+		printf("tdfp1=%g tdf1=%g slope=%g t_df=%g timeNbody=%g\n",t_df_p1,t_df_1,slope,t_df,TimeNbody);
+
+	if(tcount <= 1){
+		t_df_prev = t_df;
+		t_df_cum = INITIAL_VALUE_DF_INTEGRAND;
+		return(0);
+	}
+
+	/* if DF_INTEGRATED_CRITERION = 1, then we stop when the running integral of Dt/t_df > 1, 
+	 * otherwise we stop when t_df > TotalTime */
+	if(DF_INTEGRATED_CRITERION){
+		t_df_cum += Dt*clus.N_STAR/log(GAMMA*clus.N_STAR)/(t_df_prev - t_df);
+		t_df_prev = t_df;
+		if(t_df_cum > 1)
+			return(1);
+	} else if(t_df < TimeNbody){
+		printf("killing it t_df=%g TimeNbody=%g\n",t_df,TimeNbody);
+		return (1);
+	} else {
+		return(0);
+	}
+
+}
+
+/**
 * @brief makes a few checks at the beginning of each timestep to make sure the simulation is proceeding normally, and expected on some abnormal activity, or if simulation reaches some of the user-specified termination conditions.
 *
 * @param tmsbufref
@@ -551,6 +609,15 @@ long CheckStop() {
 	if (clus.N_MAX < (0.005 * clus.N_STAR)) {
 		print_2Dsnapshot();
 		diaprintf("N_MAX < 0.005 * N_STAR ... Terminating.\n");
+		return (1);
+	}
+
+	/* If we have less stars than sample_sort sample keys, stop.
+         * if needs be, the user can decrease SAMPLESIZE and restart
+         * fom the last checkpoint */
+	if (clus.N_MAX < SAMPLESIZE*procs && 0) {
+		print_2Dsnapshot();
+		diaprintf("N_MAX < SAMPLESIZE*procs .. Terminating.\n");
 		return (1);
 	}
 
@@ -656,6 +723,13 @@ long CheckStop() {
 		diaprintf("Terminal Energy reached... Terminating.\n");
 		return (1);
 	}
+
+	if(DynamicalFrictionTimescale()){
+		print_2Dsnapshot();
+		diaprintf("Galactic Dynamical Friction Timescale reached... Terminating.\n");
+		return (1);
+	}
+
 	return (0); /* NOT stopping time yet */
 }
 
@@ -1478,15 +1552,17 @@ double compute_tidal_boundary(void){
 	double lambda_eff, slope;
 	double TimeNbody = TotalTime * clus.N_STAR / log(GAMMA*clus.N_STAR);
 
+
 	/* First find where we are in time; note we need the "-1" since we want 
 	 * to use N and N+1 to do the linear extrapolation */
-	while((TimeNbody > TT_times[TT_num]) && (TT_num < TT_num_max-1))
+	while((TimeNbody > TT_times[TT_num+1]) && (TT_num < TT_num_max))
 		TT_num++;
 
 	/* If we've reached the end of the tidal tensor file, then just keep 
 	 * using the last value; this is wrong, but the best we can do. */
-	if(TT_num == TT_num_max-1){
-		eprintf("WARNING: have moved beyond the end of the tidal tensor file\n");
+	if(TT_num >= TT_num_max-1){
+		if(myid == 0)
+			eprintf("WARNING: have moved beyond the end of the tidal tensor file\n");
 		return orbit_r;
 	}
 
@@ -1495,7 +1571,8 @@ double compute_tidal_boundary(void){
 	lambda_eff = TT_l1e[TT_num] + slope * (TimeNbody - TT_times[TT_num]);
 
 	if(lambda_eff < 0){
-		eprintf("WARNING: all eigenvalues of the tidal tensor are negative,\nmeaning cluster is in compressive mode; using previous tidal boundary...\n");
+		if(myid == 0)
+			eprintf("WARNING: all eigenvalues of the tidal tensor are negative, meaning cluster is in compressive mode; using previous tidal boundary...\n");
 		return orbit_r;
 	}
 
@@ -1526,10 +1603,6 @@ void central_calculate(void)
 	}
 	
 	/* DEBUG */
-	/* fprintf(stderr, "nave=%ld\n", nave); */
-	/* DEBUG */
-
-	/* exit if not enough stars */
 	if (clus.N_STAR <= 2*J || nave >= clus.N_STAR-6) {
 		eprintf("clus.N_STAR <= 2*J || nave >= clus.N_STAR-6\n");
 		exit_cleanly(-1, __FUNCTION__);

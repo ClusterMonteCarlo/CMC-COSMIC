@@ -1070,6 +1070,27 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_IDUM);
 				sscanf(values, "%ld", &IDUM);
 				parsed.IDUM = 1;
+			} else if (strcmp(parameter_name, "USE_DF_CUTOFF") == 0) {
+				PRINT_PARSED(PARAMDOC_USE_DF_CUTOFF);
+				sscanf(values, "%d", &USE_DF_CUTOFF);
+				parsed.USE_DF_CUTOFF = 1;
+			} else if (strcmp(parameter_name, "DF_FILE") == 0) {
+				PRINT_PARSED(PARAMDOC_DF_FILE);
+				if (strncmp(values, "NULL", 4) == 0) {
+					DF_FILE = NULL;
+				} else{
+					DF_FILE = (char *) malloc(sizeof(char)*500);
+					strncpy(DF_FILE, values, 500);
+				}
+				parsed.DF_FILE= 1;
+			} else if (strcmp(parameter_name, "DF_INTEGRATED_CRITERION") == 0) {
+				PRINT_PARSED(PARAMDOC_DF_INTEGRATED_CRITERION);
+				sscanf(values, "%d", &DF_INTEGRATED_CRITERION);
+				parsed.DF_INTEGRATED_CRITERION = 1;
+			} else if (strcmp(parameter_name, "INITIAL_VALUE_DF_INTEGRAND") == 0) {
+				PRINT_PARSED(PARAMDOC_INITIAL_VALUE_DF_INTEGRAND);
+				sscanf(values, "%d", &INITIAL_VALUE_DF_INTEGRAND);
+				parsed.INITIAL_VALUE_DF_INTEGRAND = 1;
 			} else if (strcmp(parameter_name, "USE_TT_FILE") == 0) {
 				PRINT_PARSED(PARAMDOC_USE_TT_FILE);
 				sscanf(values, "%d", &USE_TT_FILE);
@@ -1632,6 +1653,9 @@ if(myid==0) {
 	CHECK_PARSED(BINARY_DISTANCE_BREAKING,0.1, PARAMDOC_BINARY_DISTANCE_BREAKING);
 	CHECK_PARSED(BINARY_BREAKING_MIN,0.0, PARAMDOC_BINARY_BREAKING_MIN);
 	CHECK_PARSED(USE_TT_FILE,0, PARAMDOC_USE_TT_FILE);
+	CHECK_PARSED(USE_DF_CUTOFF,0, PARAMDOC_USE_DF_CUTOFF);
+	CHECK_PARSED(DF_INTEGRATED_CRITERION,0, PARAMDOC_DF_INTEGRATED_CRITERION);
+	CHECK_PARSED(INITIAL_VALUE_DF_INTEGRAND,0., PARAMDOC_INITIAL_VALUE_DF_INTEGRAND);
 
 	CHECK_PARSED(T_MAX, 20.0, PARAMDOC_T_MAX);
 	CHECK_PARSED(T_MAX_PHYS, 12.0, PARAMDOC_T_MAX_PHYS);
@@ -3426,6 +3450,113 @@ void mpiInitGlobArrays()
 #endif
 }
 
+void load_dynamical_friction_data()
+{
+
+	if(DF_FILE == NULL && USE_DF_CUTOFF == 1){
+		eprintf("ERROR: If you want to use the DYN_FRIC_FILE, you need to specifiy the filename\n");
+		exit_cleanly(-1,__FUNCTION__);
+	}
+
+	/* Only load and compute the dynamical friction on the root process */
+	if (myid == 0){
+		size_t bytes;
+		DF_num_max = 0;
+		double Myr_to_nbody_unit = (YEAR*1e6) / units.t; 
+		double Msun_to_nbody_units = MSUN / units.m;
+		double Kpc_to_nbody_units = (PARSEC*1e3) / units.l;
+		double kms_to_nbody_units = 1.0e5 / (units.l/units.t);
+		char buffer[1000], lastchar = '\n', *c;
+		FILE *fp;
+
+		
+		/* First load the dynamical friction file, and count the number of lines */
+		fp = fopen(DF_FILE,"r");
+
+		if(fp==NULL){
+			eprintf("ERROR: Can't find dynamical friction file\n");
+			exit_cleanly(-1, __FUNCTION__);
+		}
+
+		while ((bytes = fread(buffer, 1, sizeof(buffer) - 1, fp))) {
+			lastchar = buffer[bytes - 1];
+			for (c = buffer; (c = memchr(c, '\n', bytes - (c - buffer))); c++) {
+				DF_num_max++;
+			}
+		}
+
+		if (lastchar != '\n') {
+			DF_num_max++;  /* Count the last line even if it lacks a newline */
+		}
+
+		rewind(fp);
+		double *DF_r_c, *DF_v_c, *DF_sigma, *DF_J;
+		double sigma,R_c,ecc,X_df,B_df;
+
+		/* Then allocate the arrays to accomidate that number of lines*/
+		DF_times = (double *)malloc(sizeof(double)*(DF_num_max+1));
+		DF_r_c = (double *)malloc(sizeof(double)*(DF_num_max+1));
+		DF_v_c = (double *)malloc(sizeof(double)*(DF_num_max+1));
+		DF_Menc = (double *)malloc(sizeof(double)*(DF_num_max+1));
+		DF_sigma = (double *)malloc(sizeof(double)*(DF_num_max+1));
+		DF_J = (double *)malloc(sizeof(double)*(DF_num_max+1));
+		DF_prefactor = (double *)malloc(sizeof(double)*(DF_num_max+1));
+
+		/* load the quantities of the host galaxy for the dynamcial friction computation */
+		int i = 0;
+		// t r_c v_c M_c sigma 
+		while (i < DF_num_max && (fscanf(fp,"%lg %lg %lg %lg %lg %lg ",&(DF_times)[i], &(DF_r_c)[i], &(DF_v_c)[i], &(DF_Menc)[i], &(DF_sigma)[i], &(DF_J)[i]) == 6)){
+			i++;
+		}
+
+		fclose(fp);
+
+		/* Now implement equation 17 from Pfeffer et al., 2018 (taken 
+		 * from Lacey & Cole 1993).  If we do this right, converting the 
+		 * quantities to code units, we can just use the quantity itself 
+		 * (same as the tidal tensor computation)*/
+		for(i = 0 ; i < DF_num_max ; i++){
+			DF_times[i] *= Myr_to_nbody_unit;
+			DF_Menc[i] *= Msun_to_nbody_units;
+			R_c = DF_r_c[i] * Kpc_to_nbody_units;
+			sigma = DF_sigma[i] * kms_to_nbody_units;
+
+			/* the eccentricity and velocity distrubtion parts are 
+			 * dimmensionless anyway so doesn't matter */
+			ecc = DF_J[i] / (DF_r_c[i]*DF_v_c[i]);
+			X_df = DF_v_c[i] / DF_sigma[i] / 1.41421356;
+			B_df = erf(X_df) - 2*X_df*exp(-X_df*X_df) / 1.77245385;
+
+			DF_prefactor[i] = 1.41421356 * pow(ecc,0.78) * sigma * pow(R_c,2) / 2. / B_df;
+		}
+
+	free(DF_r_c);free(DF_sigma);free(DF_J);free(DF_v_c);
+
+	}
+
+	
+#ifdef USE_MPI
+        MPI_Bcast(&DF_num_max, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+#endif
+	DF_num = 0;
+
+	if(myid != 0){
+		DF_times = (double *)malloc(sizeof(double)*(DF_num_max+1));
+		DF_Menc = (double *)malloc(sizeof(double)*(DF_num_max+1));
+		DF_prefactor = (double *)malloc(sizeof(double)*(DF_num_max+1));
+	}
+
+#ifdef USE_MPI
+        MPI_Bcast(DF_times,(DF_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(DF_Menc,(DF_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(DF_prefactor,(DF_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+	DF_times[DF_num_max] = 1e10;
+	DF_Menc[DF_num_max] = 0;
+	DF_prefactor[DF_num_max] = 0;
+}
+
 void load_tidal_tensor()
 {
 
@@ -3466,8 +3597,8 @@ void load_tidal_tensor()
 		rewind(fp);
 
 		/* Then allocate the arrays to accomidate that number of lines*/
-		TT_times = (double *)malloc(sizeof(double)*TT_num_max);
-		TT_l1e = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_times = (double *)malloc(sizeof(double)*(TT_num_max+1));
+		TT_l1e = (double *)malloc(sizeof(double)*(TT_num_max+1));
 
 		TT_xx = (double *)malloc(sizeof(double)*TT_num_max);
 		TT_yy = (double *)malloc(sizeof(double)*TT_num_max);
@@ -3518,6 +3649,7 @@ void load_tidal_tensor()
 		free(TT_xx);free(TT_yy),free(TT_zz);
 		free(TT_xy);free(TT_xz),free(TT_yz);
 	}
+
 	
 #ifdef USE_MPI
         MPI_Bcast(&TT_num_max, 1, MPI_LONG, 0, MPI_COMM_WORLD);
@@ -3525,15 +3657,19 @@ void load_tidal_tensor()
 	TT_num = 0;
 
 	if(myid != 0){
-		TT_times = (double *)malloc(sizeof(double)*TT_num_max);
-		TT_l1e = (double *)malloc(sizeof(double)*TT_num_max);
+		TT_times = (double *)malloc(sizeof(double)*(TT_num_max+1));
+		TT_l1e = (double *)malloc(sizeof(double)*(TT_num_max+1));
 	}
 
 #ifdef USE_MPI
-        MPI_Bcast(TT_times,TT_num_max, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Bcast(TT_l1e,TT_num_max, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(TT_times,(TT_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(TT_l1e,(TT_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
+
+	TT_times[TT_num_max] = 1e10;
+	TT_l1e[TT_num_max] = 0;
 }
+
 
 typedef struct{
 	double s_Eescaped;

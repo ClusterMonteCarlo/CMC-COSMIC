@@ -118,8 +118,6 @@ int main(int argc, char *argv[])
 	Start = (int *) calloc(procs, sizeof(int));
 	End = (int *) calloc(procs, sizeof(int));
 
-	if(USE_TT_FILE)
-		load_tidal_tensor();
 
 #ifndef USE_MPI
 /*
@@ -157,6 +155,7 @@ We use these two arrays to store the number of stars created by each node during
 
 	}
 
+
 //Probably not needed anymore
 //	N_b_OLD = N_b;
 //	N_b_NEW = N_b;
@@ -167,6 +166,9 @@ We use these two arrays to store the number of stars created by each node during
 	} else {
 		orbit_r = R_MAX;
 	}
+
+	if(USE_DF_CUTOFF)
+		load_dynamical_friction_data();
 
 	/* compute the potential */
 	calc_potential_new();

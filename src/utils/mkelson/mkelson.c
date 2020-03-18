@@ -37,8 +37,7 @@ double extended_hyperg_2F1(double a, double b, double c, double x){
 
 	//fprintf(stderr,"a=%g b=%g c=%g x=%g\n",a,b,c,x);
 
-	double p,q,t1,s,y;
-	double EPS=1.0e-13;
+	double t1,s;
 
 	s = 1. - x;	
 	t1 = fabs(b - a);
@@ -68,7 +67,7 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  mkelson [options...]\n");
 	fprintf(stream, "\n");
 	fprintf(stream, "OPTIONS:\n");
-	fprintf(stream, "  -r --rmax <r_max>      : set maximum radius [%.6g]\n", RMAX);
+	fprintf(stream, "  -r --rmax <r_max>      : set maximum virial radius [%.6g]\n",RMAX);
 	fprintf(stream, "  -N --N <N>             : set number of stars [%ld]\n", NSTAR);
 	fprintf(stream, "  -g --gamma <g>         : set gamma for Elson profile [%.6g]\n", GAMMA);
 	fprintf(stream, "  -o --outfile <outfile> : set name of outfile [elson_n<N>.fits]\n");
@@ -77,6 +76,8 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  -d --debug             : turn on debugging\n");
 	fprintf(stream, "  -V --version           : print version info\n");
 	fprintf(stream, "  -h --help              : display this help text\n");
+	fprintf(stream, "\n  N.B. gamma ~ 2.01 tends to break the integrators, especially when rmax >= 300 \n");
+	fprintf(stream, "       if you really need a profile that compact, consider using a smaller rmax \n");
 }
 
 /* print the version */
@@ -126,7 +127,7 @@ double find_sigma2(double r, double r_max_cluster, double gamma){
 	double integral, error;
 	double rho_0;
 
-	gsl_integration_workspace * w = gsl_integration_workspace_alloc (1000);
+	gsl_integration_workspace * w = gsl_integration_workspace_alloc (10000);
 	gsl_function F;
 
 	rho_0 = 1. / M_enclosed(r_max_cluster,gamma,1);
@@ -135,7 +136,7 @@ double find_sigma2(double r, double r_max_cluster, double gamma){
 	F.function = &jeans_equation;
 	F.params = &parameters;
 
-	gsl_integration_qags(&F,r,r_max_cluster,1e-7,1e-8,1000, w,&integral, &error);
+	gsl_integration_qags(&F,r,r_max_cluster,1e-10,1e-12,10000, w,&integral, &error);
 
 	gsl_integration_workspace_free(w);
 
@@ -318,6 +319,7 @@ void scale_pos_and_vel(double *m, double *r, double *vr,
 			PEtot, KEtot, KEtot/PEtot);
 	/* scaling position and velocity */
 	rfac = -PEtot*2.0;
+	fprintf(stdout,"resclaling factor: %g\n", rfac);
 	vfac = 1.0/sqrt(4.0*KEtot);
 	for(i=1; i<=N; i++){
 		r[i] *= rfac;
@@ -337,6 +339,72 @@ void scale_pos_and_vel(double *m, double *r, double *vr,
 	}
 	fprintf(stdout,"After scaling:  PEtot = %f, KEtot = %f, vir rat = %f\n", 
 			PEtot, KEtot, KEtot/PEtot);
+}
+
+double work_integrand(double r, void *params){
+	struct jeans_params *p = (struct jeans_params *)params;
+	double gamma = p->gamma;
+	double rho_0 = p->rho_0;
+
+	return rho_r(r,gamma,rho_0) * r * 4 * 3.14159265 * M_enclosed(r,gamma,rho_0);
+}
+
+/* Virial radius is best calculated directly, since rmax may be pretty far from 
+ * infinity.  Directly integrate 4*pi*r*rho*m_enclosed from 0 to rMax to get the 
+ * binding energy, then just divide 0.5 by that. */
+double virial_radius_analytic(double gamma, double rmax){
+	double integral, error;
+	double rho_0;
+	gsl_integration_workspace * w = gsl_integration_workspace_alloc (1000);
+	gsl_function F;
+
+	rho_0 = 1. / M_enclosed(rmax,gamma,1);
+
+	struct jeans_params parameters = {gamma,rho_0};
+
+	F.function = &work_integrand;
+	F.params = &parameters;
+
+	gsl_integration_qags(&F,0.0,rmax,1e-7,1e-8,1000, w,&integral, &error);
+	gsl_integration_workspace_free(w);
+
+	return 1 / 2. / integral;
+}
+
+
+
+/*This is a little tricky: because the virial radius of the Elson profile 
+ * depends on the maximum radius, if the profile is very flat (e.g. gamma~2) 
+ * then you need a large maximum radius to get a large number of virial radius 
+ * in there.  This basically finds r such that  r / rVir(r) = rmax.  In other 
+ * word, how far out do we need to go to have rmax number of virial radii in the 
+ * sample.*/
+double find_rmax_vir(double rmax, double gamma){
+	double rTry;
+	double rOrvirMin = 1., rOrvirMax = 20000.;
+	
+	/* rvir ~ 1 for gamma > 4, and the M_enclosed integral doesn't converge.  
+	 * Here's a cheap fix for that... */
+	if(gamma > 4) rOrvirMax /= 10.;
+
+	double yMax = rOrvirMax / virial_radius_analytic(gamma,rOrvirMax) - rmax;
+	double yMin = rOrvirMin / virial_radius_analytic(gamma,rOrvirMin) - rmax;
+	double yTry;
+
+	/* Little bisection does the trick */
+	do {
+		rTry = (rOrvirMax+rOrvirMin)/2.;
+		yTry = rTry / virial_radius_analytic(gamma,rTry) - rmax;
+		if(yTry*yMax <= 0) {
+			yMin = yTry;
+			rOrvirMin = rTry;
+		} else {
+			yMax = yTry;
+			rOrvirMax = rTry;
+		}
+	} while (fabs(rOrvirMin-rOrvirMax) > 1e-3);
+
+	return rOrvirMin;
 }
 	
 int main(int argc, char *argv[]){
@@ -417,9 +485,11 @@ int main(int argc, char *argv[]){
 	m = (double *) malloc((N+2)*sizeof(double));
 	reset_rng_t113(seed);
 
+	rmax = find_rmax_vir(rmax,gamma);
+
 	check_for_file(filename);
 	create_random_array(X, N);
-	find_positions(X, r, N, gamma, rmax, 1e-12);
+	find_positions(X, r, N, gamma, rmax, 1e-10);
 	find_velocities(r, vr, vt, N, gamma, rmax);
 	set_masses(m, r, N);
 	scale_pos_and_vel(m, r, vr, vt, N);

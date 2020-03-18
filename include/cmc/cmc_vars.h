@@ -42,6 +42,7 @@ _EXTERN_ double GAMMA, BININITEBMIN, BININITEBMAX;
 _EXTERN_ struct CenMa cenma;
 _EXTERN_ char MASS_PC[1000], MASS_BINS[1000], INPUT_FILE[1000], BSE_QCRIT_ARRAY[1000], BSE_NATAL_KICK_ARRAY[1000], BSE_FPRIMC_ARRAY[1000];
 _EXTERN_ char *TT_FILE;
+_EXTERN_ char *DF_FILE;
 _EXTERN_ char *SNAPSHOT_WINDOWS;
 _EXTERN_ char *SNAPSHOT_WINDOW_UNITS;
 _EXTERN_ int MASS_PC_BH_INCLUDE;
@@ -61,6 +62,8 @@ _EXTERN_ double MIN_BINARY_HARDNESS;
 _EXTERN_ double BINARY_DISTANCE_BREAKING;
 _EXTERN_ int BINARY_BREAKING_MIN; 
 _EXTERN_ int USE_TT_FILE; 
+_EXTERN_ int USE_DF_CUTOFF, DF_INTEGRATED_CRITERION; 
+_EXTERN_ double INITIAL_VALUE_DF_INTEGRAND;
 _EXTERN_ long N3bbformed;
 _EXTERN_ double delta_E_3bb;
 // Meagan: extra bh output
@@ -187,6 +190,12 @@ _EXTERN_ int quiet;
 */
 _EXTERN_ double *TT_times, *TT_l1e;
 _EXTERN_ long TT_num, TT_num_max;
+/**
+ * @brief the needed quantities for computing the dymical friction timescale
+*/
+_EXTERN_ double *DF_times, *DF_Menc, *DF_prefactor;
+_EXTERN_ long DF_num, DF_num_max;
+_EXTERN_ double t_df_cum, t_df_prev;
 
 /* mpi parallelization stuff */
 #ifdef USE_MPI
