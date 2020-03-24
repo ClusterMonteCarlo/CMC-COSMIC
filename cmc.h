@@ -658,7 +658,7 @@ typedef struct{
 #define PARAMDOC_DF_FILE "Dynamical Friction file"
 /**
 * @brief The dynamical friciton timescale to abort the computation 
-* Needs: Time[Myr] Radius[Kpc] V_circ[km/s] M_enc[solMass] sigma[km/s] J[km^2/s]  
+* Needs: Time[Myr] Radius[Kpc] V_circ[km/s] M_enc[solMass] sigma[km/s] J[Kpc*km/s]  
 */
 	int DF_FILE;
 #define PARAMDOC_DF_INTEGRATED_CRITERION "Dynamical Friction termination criterion"
