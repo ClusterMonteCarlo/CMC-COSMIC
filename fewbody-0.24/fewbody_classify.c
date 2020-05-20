@@ -26,7 +26,7 @@
 
 /* classify the stars into hierarchies; i.e., build the binary tree */
 // PAU int fb_classify(fb_hier_t *hier, double t, double tidaltol)
-int fb_classify(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units)
+int fb_classify(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units, fb_input_t input)
 {
 	int i, j, k, n, isave[2], cont=1;
 	double a, amin, E, xrel[3], v0[3], v1[3], vcm[3], vrel[3], ftid;
@@ -138,7 +138,7 @@ int fb_classify(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_
 	for (i=2; i<=hier->nstar; i++) {
 		for (j=0; j<hier->narr[i]; j++) {
 			// if (!fb_is_stable(&(hier->hier[hier->hi[i]+j]))) {
-			if (!fb_is_stable(&(hier->hier[hier->hi[i]+j]), speedtol, units)) {
+			if (!fb_is_stable(&(hier->hier[hier->hi[i]+j]), speedtol, units, input)) {
 				fb_dprintf("fewbody: classify(): unstable hierarchy: i=%d hier->narr[i]=%d j=%d\n", 
 					   i, hier->narr[i], j);
 				return(0);
@@ -160,11 +160,11 @@ int fb_classify(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_
 
 /* check the stability of an arbitrary hierarchical object */
 // PAU int fb_is_stable(fb_obj_t *obj)
-int fb_is_stable(fb_obj_t *obj, double speedtol, fb_units_t units)
+int fb_is_stable(fb_obj_t *obj, double speedtol, fb_units_t units, fb_input_t input)
 {
 	if (fb_n_hier(obj) == 2) {
 		// PAU return(fb_is_stable_binary(obj));
-		return(fb_is_stable_binary(obj, speedtol, units));
+		return(fb_is_stable_binary(obj, speedtol, units, input));
 	} else if (fb_n_hier(obj) == 3) {
 		return(fb_is_stable_triple(obj));
 	} else if (fb_n_hier(obj) == 4) {
@@ -174,7 +174,7 @@ int fb_is_stable(fb_obj_t *obj, double speedtol, fb_units_t units)
 	}
 }
 
-int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units)
+int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units, fb_input_t input)
 {
 	double vrelperi;
 	double clight;
@@ -184,7 +184,7 @@ int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units)
 
 	/* test for collision at pericenter */
 	// PAU if (fb_is_collision(obj->a * (1.0 - obj->e), obj->obj[0]->R, obj->obj[1]->R)) {
-	if (fb_is_collision(obj->a * (1.0 - obj->e), obj->obj[0]->R, obj->obj[1]->R) || 
+	if (fb_is_collision(obj->a * (1.0 - obj->e), obj->obj[0]->R, obj->obj[1]->R, obj->obj[0]->m, obj->obj[1]->m, obj->obj[0]->k_type, obj->obj[1]->k_type, units.m, units.l, input.BHNS_TDE_FLAG) || 
 		vrelperi / clight >= speedtol) {
 		return(0);
 	} else {

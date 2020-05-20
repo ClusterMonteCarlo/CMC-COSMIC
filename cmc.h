@@ -948,9 +948,14 @@ typedef struct{
  * @brief Write out information about neutron stars (0=off, 1=on)
  * */
         int WRITE_MOREPULSAR_INFO;
+#define PARAMDOC_BHNS_TDE "Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)"
+/**
+ * @brief Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)
+ * */
+        int BHNS_TDE;
 #define PARAMDOC_PULSAR_DELTACOUNT "Pulsar output interval in time steps"
 /**
- * * @brief Pulsar output interval in time steps
+ * @brief Pulsar output interval in time steps
  * */
         int PULSAR_DELTACOUNT;
 #define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"

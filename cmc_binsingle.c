@@ -83,6 +83,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	input.PN3 = 0;
 	input.PN35 = 0;
     input.BH_REFF = BH_RADIUS_MULTIPLYER;
+    input.BHNS_TDE_FLAG = BHNS_TDE;
 	input.firstlogentry[0] = '\0';
 	input.fexp = 1.0;
 	fb_debug = 0;
