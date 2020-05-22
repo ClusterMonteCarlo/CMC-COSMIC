@@ -33,6 +33,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	double ave_local_mass, sigma_local, vrel_ave, v1[4], v2[4], v3[4], vrel12[4], vrel3[4]; 
 	double eta_min=MIN_BINARY_HARDNESS, Y1, rate_3bb, rate_ave=0.0, P_3bb, P_ave=0.0;
 	double clight10o7;
+	double collisions_multiple;
 
 #ifdef USE_MPI
     mpi_calc_sigma_r(AVEKERNEL, mpiEnd-mpiBegin+1, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
@@ -345,6 +346,25 @@ are skipped if they already interacted in 3bb loop!  */
 			}
 		} else {
 			if (SS_COLLISION) {
+				if (BHNS_TDE) {
+					if (star[kp].se_k >= 13 && star[k].se_k <= 1 && mass_kp >= mass_k) {
+						if (mass_k * units.mstar / FB_CONST_MSUN < 0.001) {
+							collisions_multiple = pow(mass_kp/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
+						} else {
+							collisions_multiple = pow(mass_kp/mass_k,1./3.);
+						}
+					} else if (star[k].se_k >= 13 && star[kp].se_k <= 1 && mass_k >= mass_kp) {
+						if (mass_kp * units.mstar / FB_CONST_MSUN < 0.001) {
+							collisions_multiple = pow(mass_k/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
+						} else {
+							collisions_multiple = pow(mass_k/mass_kp, 1./3.);
+						}
+					} else {
+						collisions_multiple = 1.0;
+					}
+				} else {
+					collisions_multiple = 1.0;
+				}
 
 				S_tmp = 0.0;
 
@@ -411,7 +431,7 @@ are skipped if they already interacted in 3bb loop!  */
 
 				
 				/* standard sticky sphere collision cross section */
-				rperi = star[k].rad + star[kp].rad;
+				rperi = collisions_multiple * (star[k].rad + star[kp].rad);
 				S_coll = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 				
 				/* take the max of all cross sections; the event type will be chosen by sampling the impact parameter */
