@@ -2048,7 +2048,7 @@ void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct
 void parse_snapshot_windows(char *option_string);
 void print_snapshot_windows(void);
 int valid_snapshot_window_units(void);
-void write_snapshot(char *filename, int bh_only);
+void write_snapshot(char *filename, int bh_only, char *tablename);
 
 #include "cmc_bse_utils.h"
 

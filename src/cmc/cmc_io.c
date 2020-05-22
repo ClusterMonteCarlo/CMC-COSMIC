@@ -73,11 +73,12 @@ void print_2Dsnapshot(void)
 	long i, j;
 	j=0;
 	char outfile[100];
-
+        char tablename[20];
 	if (SNAPSHOTTING) {
 		// open file for 2D snapshot 
 		sprintf(outfile, "%s.snap%04ld.dat.gz", outprefix, snap_num);
-		write_snapshot(outfile, 0);
+                sprintf(tablename, "snapshot%04ld/", snap_num);
+		write_snapshot(outfile, 0, tablename);
 		// global counter for snapshot output file 
 		snap_num++;
 	}
@@ -90,12 +91,14 @@ void print_2Dsnapshot(void)
 void print_bh_snapshot(void) {
 	long i, j;
 	char outfile[100];
+        char tablename[20];
 	
 	if (BH_SNAPSHOTTING) {
 		/* open file for BH snapshot */
 	
 		sprintf(outfile, "%s.bhinfo%04ld.dat.gz", outprefix, bh_snap_num);
-		write_snapshot(outfile, 1);
+                sprintf(tablename, "bhinfo%04ld", bh_snap_num);
+		write_snapshot(outfile, 1, tablename);
 
 		/* global counter for snapshot output file */
 		bh_snap_num++;
@@ -2894,8 +2897,10 @@ void print_snapshot_windows(void) {
     stop=  snapshot_windows[i*3+2];
     if (total_time>= start+step_counter*step && total_time<=stop) {
       char outfile[100];
+      char tablename[20];
       sprintf(outfile, "%s.w%02i_snap%04d.dat.gz", outprefix, i+1, step_counter+1);
-      write_snapshot(outfile, 0);
+      sprintf(tablename, "w%02i_snap%04d", i+1, step_counter+1);
+      write_snapshot(outfile, 0, tablename);
 //		print_denprof_snapshot(outfile);
 
       snapshot_window_counters[i]++;
@@ -2931,7 +2936,7 @@ int valid_snapshot_window_units(void) {
 * @param filename name of the file
 * @param bh_only if bh_only>0 this'll print only BHs.
 */
-void write_snapshot(char *filename, int bh_only) {
+void write_snapshot(char *filename, int bh_only, char *tablename) {
         /* Define field information */
         const char *field_names[NFIELDS]  =
         { "id","m", "r", "vr", "vt", "E", "J", "binflag", "m0", "m1", "id0",
@@ -3097,9 +3102,10 @@ void write_snapshot(char *filename, int bh_only) {
                 {       
                         //Initial file created only by root node.
                         if(myid==0){
-                                snapfile_hdf5 = H5Fcreate("test.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-                                
-                                H5Fclose( snapfile_hdf5 );
+                                H5E_BEGIN_TRY {
+                                    snapfile_hdf5 = H5Fcreate("test.h5", H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+                                    H5Fclose( snapfile_hdf5 );
+                                } H5E_END_TRY
                         }
                 }
                 MPI_Barrier(MPI_COMM_WORLD);
@@ -3110,25 +3116,6 @@ void write_snapshot(char *filename, int bh_only) {
 	{
 		if(myid==k)
 		{
-			//removing file if already exists.
-			if(myid==0)
-				remove(filename);
-
-                        gzFile snapfile;
-                        snapfile = gzopen (filename, "ab");
-			if (snapfile == NULL) {
-				eprintf("cannot create 2D snapshot file %s\n", filename);
-				exit_cleanly(1, __FUNCTION__);
-			}
-
-			//Header printed only by root node.
-			if(myid==0)
-			{
-				// print useful header
-				gzprintf(snapfile, "# t=%.8g [code units]; All quantities below are in code units unless otherwise specified.\n", TotalTime);
-				gzprintf(snapfile, "#1:id #2:m[MSUN] #3:r #4:vr #5:vt #6:E #7:J #8:binflag #9:m0[MSUN] #10:m1[MSUN] #11:id0 #12:id1 #13:a[AU] #14:e #15:startype #16:luminosity[LSUN] #17:radius[RSUN]  #18:bin_startype0 #19:bin_startype1 #20:bin_star_lum0[LSUN] #21:bin_star_lum1[LSUN] #22:bin_star_radius0[RSUN] #23:bin_star_radius1[RSUN] 24.bin.Eb 25.eta 26.star.phi#27:rad0 #28:rad1 #29:tb #30:lum0 #31:lum1 #32:massc0 #33:massc1 #34:radc0 #35:radc1 #36:menv0 #37:menv1 #38:renv0 #39:renv1 #40:tms0 #41:tms1 #42:dmdt0 #43:dmdt1 #44:radrol0 #45:radrol1 #46:ospin0 #47:ospin1 #48:B0 #49:B1 #50:formation0 #51:formation1 #52:bacc0 #53:bacc1 #54:tacc0 $55:tacc1 #56:mass0_0 #57:mass0_1 #58:epoch0 #59:epoch1 #60:ospin #61:B #62:formation\n");
-			}
-
 			// then print data
                         int NRECORDS = clus.N_MAX_NEW;
                         Snapshot all_objects[NRECORDS];
@@ -3148,10 +3135,6 @@ void write_snapshot(char *filename, int bh_only) {
                                         all_objects[i-1].vt = star[i].vt;
                                         all_objects[i-1].E = star[i].E;
                                         all_objects[i-1].J = star[i].J;
-					gzprintf(snapfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g ",
-							star[i].id, m * (units.m / clus.N_STAR) / MSUN,
-							r, star[i].vr, star[i].vt,
-							star[i].E, star[i].J);
 					if (j) {
                                                 all_objects[i-1].binflag = 1;
                                                 all_objects[i-1].m0 = binary[j].m1 * (units.m / clus.N_STAR) / MSUN;
@@ -3160,11 +3143,6 @@ void write_snapshot(char *filename, int bh_only) {
                                                 all_objects[i-1].id1 = binary[j].id2;
                                                 all_objects[i-1].a = binary[j].a * units.l / AU;
                                                 all_objects[i-1].e = binary[j].e;
-						gzprintf(snapfile, "1 %.8g %.8g %ld %ld %.8g %.8g ",
-								binary[j].m1 * (units.m / clus.N_STAR) / MSUN,
-								binary[j].m2 * (units.m / clus.N_STAR) / MSUN,
-								binary[j].id1, binary[j].id2,
-								binary[j].a * units.l / AU, binary[j].e);
 					} else {
                                                 all_objects[i-1].binflag = -100;
                                                 all_objects[i-1].m0 = -100;
@@ -3173,7 +3151,6 @@ void write_snapshot(char *filename, int bh_only) {
                                                 all_objects[i-1].id1 = -100;
                                                 all_objects[i-1].a = -100;
                                                 all_objects[i-1].e = -100;
-						gzprintf(snapfile, "-100 -100 -100 -100 -100 -100 -100 ");
 					}
 
 					if (j == 0) {
@@ -3188,8 +3165,6 @@ void write_snapshot(char *filename, int bh_only) {
                                                 all_objects[i-1].bin_star_radius1 = -100;
                                                 all_objects[i-1].bin_Eb = -100;
                                                 all_objects[i-1].eta = -100;
-						gzprintf(snapfile, "%d %.8g %.8g -100 -100 -100 -100 -100 -100 -100 -100 ",
-								star[i].se_k, star[i].se_lum, star[i].rad * units.l / RSUN);
 					} else {
                                                 all_objects[i-1].startype = -100;
                                                 all_objects[i-1].luminosity = -100;
@@ -3203,16 +3178,8 @@ void write_snapshot(char *filename, int bh_only) {
                                                 all_objects[i-1].bin_Eb = -(binary[j].m1/clus.N_STAR)*(binary[j].m2/clus.N_STAR)/(2*binary[j].a);
                                                 all_objects[i-1].eta = (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
                                  (binary[j].a * sqrt(calc_average_mass_sqr(i,clus.N_MAX)) * sqr(sigma_array.sigma[i]));
-						gzprintf(snapfile, "-100 -100 -100 %d %d %.8g %.8g %.8g %.8g %.8g %.8g ",
-								binary[j].bse_kw[0], binary[j].bse_kw[1],
-								binary[j].bse_lum[0], binary[j].bse_lum[1],
-								binary[j].rad1*units.l/RSUN, binary[j].rad2*units.l/RSUN,
-								-(binary[j].m1/clus.N_STAR)*(binary[j].m2/clus.N_STAR)/(2*binary[j].a),
-                                 (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
-                                 (binary[j].a * sqrt(calc_average_mass_sqr(i,clus.N_MAX)) * sqr(sigma_array.sigma[i])));
 					}
                                         all_objects[i-1].star_phi = phi;
-					gzprintf(snapfile, "%0.12g ", phi);
 					if (j == 0) {
                                                 all_objects[i-1].rad0 = 0.0 / 0.0;
                                                 all_objects[i-1].rad1 = 0.0 / 0.0;
@@ -3250,7 +3217,6 @@ void write_snapshot(char *filename, int bh_only) {
                                                 all_objects[i-1].ospin = star[i].se_ospin;
                                                 all_objects[i-1].B = star[i].se_scm_B;
                                                 all_objects[i-1].formation = star[i].se_scm_formation;
-						gzprintf(snapfile, "na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na %g %g %g \n", star[i].se_ospin, star[i].se_scm_B, star[i].se_scm_formation);
 					} else {
                                                 all_objects[i-1].rad0 = binary[j].bse_radius[0];
                                                 all_objects[i-1].rad1 = binary[j].bse_radius[1];
@@ -3288,24 +3254,21 @@ void write_snapshot(char *filename, int bh_only) {
                                                 all_objects[i-1].ospin = -100;
                                                 all_objects[i-1].B = -100;
                                                 all_objects[i-1].formation = -100;
-						gzprintf(snapfile, "%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g -100 -100 -100\n",
-								binary[j].bse_radius[0], binary[j].bse_radius[1], binary[j].bse_tb, binary[j].bse_lum[0], binary[j].bse_lum[1], binary[j].bse_massc[0], binary[j].bse_massc[1], binary[j].bse_radc[0], binary[j].bse_radc[1], binary[j].bse_menv[0], binary[j].bse_menv[1], binary[j].bse_renv[0], binary[j].bse_renv[1], binary[j].bse_tms[0], binary[j].bse_tms[1], binary[j].bse_bcm_dmdt[0], binary[j].bse_bcm_dmdt[1], binary[j].bse_bcm_radrol[0], binary[j].bse_bcm_radrol[1], binary[j].bse_ospin[0], binary[j].bse_ospin[1], binary[j].bse_bcm_B[0], binary[j].bse_bcm_B[1], binary[j].bse_bcm_formation[0], binary[j].bse_bcm_formation[1], binary[j].bse_bacc[0], binary[j].bse_bacc[1], binary[j].bse_tacc[0], binary[j].bse_tacc[1], binary[j].bse_mass0[0], binary[j].bse_mass0[1], binary[j].bse_epoch[0], binary[j].bse_epoch[1]);
 					}
 				}
 			}
                         if(myid==0){
                             snapfile_hdf5 = H5Fopen("test.h5", H5F_ACC_RDWR, H5P_DEFAULT);
-                            H5TBmake_table( "Table Title",snapfile_hdf5,"snapshot",NFIELDS,NRECORDS,
+                            H5TBmake_table( "Table Title",snapfile_hdf5, tablename, NFIELDS,NRECORDS,
                                                 dst_size, field_names, dst_offset, field_type,
                                                 chunk_size, fill_data, compress, all_objects);
                             H5Fclose( snapfile_hdf5 );
                         }
                         else{
                             snapfile_hdf5 = H5Fopen("test.h5", H5F_ACC_RDWR, H5P_DEFAULT);
-                            H5TBappend_records(snapfile_hdf5, "snapshot", NRECORDS, dst_size, dst_offset, dst_sizes, &all_objects);
+                            H5TBappend_records(snapfile_hdf5, tablename, NRECORDS, dst_size, dst_offset, dst_sizes, &all_objects);
                             H5Fclose( snapfile_hdf5 );
                         }
-                        gzclose(snapfile);
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
 	}
