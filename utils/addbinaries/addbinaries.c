@@ -341,15 +341,15 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				/* set secondary mass from dP/dq=1 distribution */
 				if (highmass_mratio_low<=0){
 					cfd->bs_m2[j] = Mmin + rng_t113_dbl() * (cfd->bs_m1[j] - Mmin);
-					fprintf (stderr, "highmass comp masses: %g %g\n", cfd->bs_m2[j], cfd->bs_m1[j]);
+					//fprintf (stderr, "highmass comp masses: %g %g %g\n", cfd->bs_m2[j]*cfd->Mclus, cfd->bs_m1[j]*cfd->Mclus, masscrit);
 				} else if (highmass_mratio_low>1){
 					dummy = masscrit;
 					cfd->bs_m2[j] = dummy + rng_t113_dbl() * (cfd->bs_m1[j] - dummy);
-					fprintf (stderr, "highmass comp masses: %g %g\n", cfd->bs_m2[j], cfd->bs_m1[j]);
+					//fprintf (stderr, "highmass comp masses: %g %g %g\n", cfd->bs_m2[j]*cfd->Mclus, cfd->bs_m1[j]*cfd->Mclus, masscrit);
 				} else {
 					dummy = cfd->bs_m1[j]*highmass_mratio_low;
 					cfd->bs_m2[j] = dummy + rng_t113_dbl() * (cfd->bs_m1[j] - dummy);
-					fprintf (stderr, "highmass comp masses: %g %g\n", cfd->bs_m2[j], cfd->bs_m1[j]);
+					//fprintf (stderr, "highmass comp masses: %g %g %g\n", cfd->bs_m2[j]*cfd->Mclus, cfd->bs_m1[j]*cfd->Mclus, masscrit);
 				}
 		
 				/* stellar evolution stuff */
@@ -407,7 +407,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				cfd->bs_id2[j] = star_get_id_new();
 				/* set secondary mass from dP/dq=1 distribution */
 				cfd->bs_m2[j] = Mmin + rng_t113_dbl() * (cfd->bs_m1[j] - Mmin);
-				fprintf (stderr, "comp masses: %g %g\n", cfd->bs_m2[j], cfd->bs_m1[j]);	
+				//fprintf (stderr, "comp masses: %g %g %g\n", cfd->bs_m2[j]*cfd->Mclus, cfd->bs_m1[j]*cfd->Mclus,masscrit);	
 					
 				/* stellar evolution stuff */
 				star.se_mass = cfd->bs_m2[j] * cfd->Mclus;
@@ -1140,7 +1140,7 @@ int main(int argc, char *argv[]){
 	double Ebmin, Ebmax, peak_a, min_a, max_a, highmass_fb, mcrit, highmass_aind, highmass_mratio_low;
 	cmc_fits_data_t cfd;
 	char infilename[1024], outfilename[1024];
-	const char *short_opts = "i:o:N:l:p:a:A:m:M:I:s:b:n:f:k:q:h";
+	const char *short_opts = "i:o:N:l:p:a:A:m:M:I:s:b:n:f:G:k:q:h";
 	const struct option long_opts[] = {
 		{"infile", required_argument, NULL, 'i'},
 		{"outfile", required_argument, NULL, 'o'},
