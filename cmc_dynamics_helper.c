@@ -1015,6 +1015,8 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	*W = sqrt(sqr(w[1]) + sqr(w[2]) + sqr(w[3]));
 
 	if (*W == 0.0) {
+		// If you're seeing this and it's during the first timestep, most likely the initial conditions are wrong 
+		// (e.g. if you've created a binary that is destroyed during stellar evolution initialization)
 		eprintf("W = 0! for star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
 		exit_cleanly(1, __FUNCTION__);
 	}
@@ -1532,7 +1534,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	fb_obj_t threeobjs[3];
 	char string1[1024], string2[1024];
 	star_t tempstar, tempstar2;
-	double vs[12], VK0;
+	double vs[20], VK0;
 	double energy_from_outer=0.;
 
 	/* perform actions that are specific to the type of binary interaction */

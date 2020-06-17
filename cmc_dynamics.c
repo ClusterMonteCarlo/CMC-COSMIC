@@ -17,7 +17,7 @@
 void dynamics_apply(double dt, gsl_rng *rng)
 {
 	long j, si, p=AVEKERNEL, N_LIMIT, k, kp, ksin, kbin;
-	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, S_brem, S_tc_simple, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
+	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, S_brem, S_tc_simple, S_tde, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
 	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi=0;
 //	double vel1[4], vel2[4], vel3[4], vel1a[4], vel2a[4], vel1b[4], vel3b[4];
 	double Trel12;
@@ -33,6 +33,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	double ave_local_mass, sigma_local, vrel_ave, v1[4], v2[4], v3[4], vrel12[4], vrel3[4]; 
 	double eta_min=MIN_BINARY_HARDNESS, Y1, rate_3bb, rate_ave=0.0, P_3bb, P_ave=0.0;
 	double clight10o7;
+	double collisions_multiple;
 
 #ifdef USE_MPI
     mpi_calc_sigma_r(AVEKERNEL, mpiEnd-mpiBegin+1, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
@@ -345,8 +346,31 @@ are skipped if they already interacted in 3bb loop!  */
 			}
 		} else {
 			if (SS_COLLISION) {
+                                S_tmp = 0.0;
 
-				S_tmp = 0.0;
+                                S_tde = 0.0;
+				if (BHNS_TDE) {
+					if (star[kp].se_k >= 13 && star[k].se_k <= 1 && mass_kp >= mass_k) {
+						if (mass_k * units.mstar / FB_CONST_MSUN < 0.001) {
+							collisions_multiple = pow(mass_kp/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
+						} else {
+							collisions_multiple = pow(mass_kp/mass_k,1./3.);
+						}
+					} else if (star[k].se_k >= 13 && star[kp].se_k <= 1 && mass_k >= mass_kp) {
+						if (mass_kp * units.mstar / FB_CONST_MSUN < 0.001) {
+							collisions_multiple = pow(mass_k/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
+						} else {
+							collisions_multiple = pow(mass_k/mass_kp, 1./3.);
+						}
+					} else {
+						collisions_multiple = 1.0;
+					}
+                                        rperi = collisions_multiple * (star[k].rad + star[kp].rad);
+                                        S_tde = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
+                                        
+                                        S_tmp = MAX(S_tmp, S_tde);
+				}
+
                                 
                                 S_tc = 0.0;
 				if (TC_POLYTROPE) {
@@ -545,6 +569,8 @@ are skipped if they already interacted in 3bb loop!  */
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
 			set_star_EJ(kp);
+
+
 		}
 	}
 #ifndef USE_MPI

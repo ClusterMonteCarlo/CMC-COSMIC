@@ -192,7 +192,7 @@ AC_SUBST([LIBTOOL_LDFLAGS])
 AC_CHECK_LIB([m], [sinl], [],[AC_MSG_ERROR([cannot link with libm])], [])
 AC_CHECK_LIB([dl], [dlopen])
 AC_CHECK_LIB([z], [gzopen], [], [AC_MSG_ERROR([cannot link with zlib])])
-AC_SEARCH_LIBS([crypt], [crypt])
+#AC_SEARCH_LIBS([crypt], [crypt])
 AC_SEARCH_LIBS([getopt_long], [gnugetopt], [],
                [AC_MSG_ERROR([cannot link with libgnugetopt], [])], [])
 AC_CHECK_LIB([cfitsio], [ffopen], [],[cfitsio_not_found=yes])

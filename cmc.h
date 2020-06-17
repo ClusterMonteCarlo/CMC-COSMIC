@@ -649,6 +649,30 @@ typedef struct{
 * units, it should be Time [Myr] T_xx T_yy T_zz T_xy T_xz T_yz [1/Myr^2] 
 */
 	int TT_FILE;
+#define PARAMDOC_USE_DF_CUTOFF "Dynamical Friction cutoff"
+/**
+* @brief Whether to use the properties of the host galaxy to compute the 
+* dynamical friction timescale (must specify the file name) 
+*/
+	int USE_DF_CUTOFF;
+#define PARAMDOC_DF_FILE "Dynamical Friction file"
+/**
+* @brief The dynamical friciton timescale to abort the computation 
+* Needs: Time[Myr] Radius[Kpc] V_circ[km/s] M_enc[solMass] sigma[km/s] J[Kpc*km/s]  
+*/
+	int DF_FILE;
+#define PARAMDOC_DF_INTEGRATED_CRITERION "Dynamical Friction termination criterion"
+/**
+* @brief How do we decide the cluster has spiraled into the galaxy: when 
+* int(dt/t_df) > 1 ( = 1) or when t_df > TotalTime ( = 0)
+*/
+	int DF_INTEGRATED_CRITERION;
+#define PARAMDOC_INITIAL_VALUE_DF_INTEGRAND "where to start the dynamical friction integral"
+/**
+* @brief if DF_INTEGRATED_CRITERION = 1, this lets us start the integral 
+* somewhere other than 0 
+*/
+	int INITIAL_VALUE_DF_INTEGRAND; 
 #define PARAMDOC_MASS_PC "mass fractions for Lagrange radii"
 /**
 * @brief mass fractions for Lagrange radii
@@ -942,9 +966,14 @@ typedef struct{
  * @brief Write out information about neutron stars (0=off, 1=on)
  * */
         int WRITE_MOREPULSAR_INFO;
+#define PARAMDOC_BHNS_TDE "Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)"
+/**
+ * @brief Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)
+ * */
+        int BHNS_TDE;
 #define PARAMDOC_PULSAR_DELTACOUNT "Pulsar output interval in time steps"
 /**
- * * @brief Pulsar output interval in time steps
+ * @brief Pulsar output interval in time steps
  * */
         int PULSAR_DELTACOUNT;
 #define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"
