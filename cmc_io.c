@@ -1179,6 +1179,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BH_CAPTURE);
 				sscanf(values, "%ld", &BH_CAPTURE);
 				parsed.BH_CAPTURE = 1;
+                        } else if (strcmp(parameter_name, "TC_POLYTROPE") == 0) {
+                                PRINT_PARSED(PARAMDOC_TC_POLYTROPE);
+                                sscanf(values, "%ld", &TC_POLYTROPE);
+                                parsed.TC_POLYTROPE = 1;
                         } else if (strcmp(parameter_name, "TC_FACTOR") == 0) {
                                 PRINT_PARSED(PARAMDOC_TC_FACTOR);
                                 sscanf(values, "%lf", &TC_FACTOR);
@@ -1619,6 +1623,7 @@ if(myid==0) {
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
 	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
 	CHECK_PARSED(BH_CAPTURE, 0, PARAMDOC_BH_CAPTURE);
+        CHECK_PARSED(TC_POLYTROPE, 0, PARAMDOC_TC_POLYTROPE);
         CHECK_PARSED(TC_FACTOR, 1.0, PARAMDOC_TC_FACTOR);
         CHECK_PARSED(COLL_FACTOR, 1.0, PARAMDOC_COLL_FACTOR);
 	/*Sourav: new parameter*/

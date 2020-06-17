@@ -17,7 +17,7 @@
 void dynamics_apply(double dt, gsl_rng *rng)
 {
 	long j, si, p=AVEKERNEL, N_LIMIT, k, kp, ksin, kbin;
-	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, S_brem, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
+	double SaveDt, S, S_tc, S_coll, S_lombardi, S_tmp, S_brem, S_tc_simple, W, v[4], vp[4], w[4], psi, beta, wp, w1[4], w2[4];
 	double v_new[4], vp_new[4], w_new[4], P_enc, n_local, vcm[4], rcm=0.0, rperi=0;
 //	double vel1[4], vel2[4], vel3[4], vel1a[4], vel2a[4], vel1b[4], vel3b[4];
 	double Trel12;
@@ -347,40 +347,50 @@ are skipped if they already interacted in 3bb loop!  */
 			if (SS_COLLISION) {
 
 				S_tmp = 0.0;
-
-				if (TIDAL_CAPTURE) {
+                                
+                                S_tc = 0.0;
+				if (TC_POLYTROPE) {
 					/* single--single tidal capture cross section (Kim & Lee 1999);
 					   here we treat a compact object (k>=10) as a point mass, a massive MS star (k=1) as an 
 					   n=3 polytrope, and everything else (k=0,2-9) as an n=1.5 polytrope. */
+                                        /*Shi: Update-this flag does not treat giants (2-6, 8-9). n=3 polytrope is for k=1, n=1.5                                         is for k=0 and 7 naked helium MS star. k>=10 compact object is still treated as point mass                                        */
 					if (star[k].se_k >= 10 && star[kp].se_k >= 10) {
 						/* two compact objects, so simply use sticky sphere approximation */
 						S_tc = 0.0;
 					} else if (star[k].se_k >= 10 && star[kp].se_k == 1) {
 						/* compact object plus n=3 polytrope */
 						S_tc = sigma_tc_nd(3.0, madhoc * mass_kp, star[kp].rad, madhoc * mass_k, W);
-					} else if (star[k].se_k >= 10) {
+					} else if (star[k].se_k >= 10 && (star[kp].se_k == 0 || star[kp].se_k == 7)) {
 						/* compact object plus n=1.5 polytrope */
 						S_tc = sigma_tc_nd(1.5, madhoc * mass_kp, star[kp].rad, madhoc * mass_k, W);
 					} else if (star[k].se_k == 1 && star[kp].se_k >= 10) {
 						/* n=3 polytrope plus compact object */
 						S_tc = sigma_tc_nd(3.0, madhoc * mass_k, star[k].rad, madhoc * mass_kp, W);
-					} else if (star[kp].se_k >= 10) {
+					} else if (star[kp].se_k >= 10 && (star[k].se_k == 0 || star[k].se_k == 7)) {
 						/* n=1.5 polytrope plus compact object */
 						S_tc = sigma_tc_nd(1.5, madhoc * mass_k, star[k].rad, madhoc * mass_kp, W);
 					} else if (star[k].se_k == 1 && star[kp].se_k == 1) {
 						/* n=3 polytrope plus n=3 polytrope */
 						S_tc = sigma_tc_nn(3.0, madhoc * mass_k, star[k].rad, 3.0, madhoc * mass_kp, star[kp].rad, W);
-					} else if (star[k].se_k == 1) {
+					} else if (star[k].se_k == 1 && (star[kp].se_k == 0 || star[kp].se_k == 7)) {
 						/* n=3 polytrope plus n=1.5 polytrope */
 						S_tc = sigma_tc_nn(3.0, madhoc * mass_k, star[k].rad, 1.5, madhoc * mass_kp, star[kp].rad, W);
-					} else if (star[kp].se_k == 1) {
+					} else if (star[kp].se_k == 1 && (star[k].se_k == 0 || star[k].se_k == 7)) {
 						/* n=1.5 polytrope plus n=3 polytrope */
 						S_tc = sigma_tc_nn(1.5, madhoc * mass_k, star[k].rad, 3.0, madhoc * mass_kp, star[kp].rad, W);
-					} else {
+					} else if ((star[k].se_k == 0 || star[k].se_k == 7) && (star[kp].se_k == 0 || star[kp].se_k == 7)){
 						/* n=1.5 polytrope plus n=1.5 polytrope */
 						S_tc = sigma_tc_nn(1.5, madhoc * mass_k, star[k].rad, 1.5, madhoc * mass_kp, star[kp].rad, W);
-					}
+					} else {
+                                                /* For giants */
+                                                S_tc = 0.0;
+                                        }
+
+                                        S_tmp=MAX(S_tmp, S_tc);
 					
+                                }
+
+                                if (TIDAL_CAPTURE) { 
 					/* cross section estimate for Lombardi, et al. (2006) */
 					if ((star[k].se_k <= 1 || star[k].se_k >= 10) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7)) {
 						rperi = 1.3 * star[kp].rad;
@@ -392,7 +402,7 @@ are skipped if they already interacted in 3bb loop!  */
 						S_lombardi = 0.0;
 					}
 
-					S_tmp = MAX(S_tc, S_lombardi);
+					S_tmp = MAX(S_tmp, S_lombardi);
 
 				}
 
@@ -400,8 +410,8 @@ are skipped if they already interacted in 3bb loop!  */
 
 				if (BH_CAPTURE) {
 					/* cross section for single-single GW capture, from Quinlan and Shapiro 1987 */
-					if (star[k].se_k == 14 && star[kp].se_k == 14){
-						clight10o7 = pow(2.9979e10 / (units.l/units.t) ,1.428571);
+                                        if (star[k].se_k == 14 && star[kp].se_k == 14){
+                                                clight10o7 = pow(2.9979e10 / (units.l/units.t) ,1.428571);
 						rperi = 2.957852 * madhoc * (mass_k + mass_kp) / pow(W,0.57142857) / clight10o7;
 						S_brem = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 						S_tmp = MAX(S_tmp, S_brem);
@@ -409,13 +419,19 @@ are skipped if they already interacted in 3bb loop!  */
 				}
 
 				
-				/* standard sticky sphere collision cross section */
-				/*Shi: If one of the star in sscollision is not a black hole, do tidal capture */
-                                if (star[k].se_k != 14 || star[kp].se_k != 14){
-                                	rperi = TC_FACTOR * (star[k].rad + star[kp].rad);
-                                }else{
-                                	rperi = COLL_FACTOR * (star[k].rad+star[kp].rad);
+				/*Shi: If one of the star in sscollision is not a black hole or a giant, do tidal capture */
+                                S_tc_simple = 0.0;
+                                if (TC_FACTOR > 1) {
+                                        if ((star[k].se_k <= 1 || star[k].se_k == 7 || star[k].se_k >= 10) && (star[kp].se_k <= 1 || star[kp].se_k == 7 || star[kp].se_k >= 10)){
+                                	        rperi = TC_FACTOR * (star[k].rad + star[kp].rad);
+                                                S_tc_simple = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
+                                                S_tmp = MAX(S_tmp, S_tc_simple);
+                                        }
+
                                 }
+
+                                /* standard sticky sphere collision cross section */
+                                rperi = COLL_FACTOR * (star[k].rad + star[kp].rad);
 				S_coll = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 				
 				/* take the max of all cross sections; the event type will be chosen by sampling the impact parameter */

@@ -729,9 +729,9 @@ typedef struct{
 * @brief perform physical stellar collisions (0=off, 1=on)
 */
 	int SS_COLLISION;
-#define PARAMDOC_TIDAL_CAPTURE "allow for tidal capture in single-single interactions, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)"
+#define PARAMDOC_TIDAL_CAPTURE "allow for tidal capture in single-single interactions for Giants, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)"
 /**
-* @brief allow for tidal capture in single-single interactions, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)
+* @brief allow for tidal capture in single-single interactions for Giants, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)
 */
 	int TIDAL_CAPTURE;
 #define PARAMDOC_BH_CAPTURE "Allow for the formation of binary black holes from gravitational-wave emission during single-single encounters; SS_COLLISION must be 1"
@@ -739,7 +739,13 @@ typedef struct{
 * @brief Allow for the formation of binary black holes from gravitational-wave emission during single-single encounters; SS_COLLISION must be 1
 */
 	int BH_CAPTURE;
-//Shi: simple tidal capture prescription for all stars with a radius.
+//Shi: simple tidal capture prescription in Kim & Lee 1999 based on polytropic star models.
+#define PARAMDOC_TC_POLYTROPE "allow for tidal capture in single-single interactions for non-giant stars (0=off, 1=on)"
+/**
+* @brief allow for tidal capture in single-single interactions for non-giant stars (0=off, 1=on)
+*/
+        int TC_POLYTROPE;
+//Shi: simple tidal capture prescription for all stars with a radius except Giants.
 #define PARAMDOC_TC_FACTOR "allow for tidal capture (a multiple of the set factor of the pericenter) during single-single collision (1=off, greater than 1 sets different multiplyers)"
 /**
 * @brief allow for tidal capture (a multiple of the set factor of the pericenter) during single-single collision (1=off, greater than 1 sets different multiplyers)

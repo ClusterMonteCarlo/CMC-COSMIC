@@ -3263,6 +3263,7 @@ double Tl(int order, double polytropicindex, double eta)
 		exit(1);
 	}
 
+        /* From Portegies Zwart & Meinen 1993 */
 	if (floateq(n, 1.5)) {
 		if (l == 2) {
 			return(pow(10.0, -0.397 + 1.678*x + 1.277*x2 - 12.42*x3 + 9.446*x4 - 5.550*x5));

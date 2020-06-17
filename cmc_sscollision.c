@@ -69,14 +69,14 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	    rperi <= 1.3 * star[kp].rad) {
 
 		/* log stuff */
-		parafprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
+		parafprintf(tidalcapturefile, "%.3g SS_COLL_TC_G %s+%s->", TotalTime, 
 			sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
 
 		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
+                /* Shi: Someone added this, and the prescription is referred to the equations in Ivanova et al. 2006, eqn. (5) and (6)*/
 		ecoll = 0.88 - rperi/(3.0*star[kp].rad);
 		acoll = rperi/(3.3*(1.0-sqr(ecoll)));
 		
-		ace = coll_CE(mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.mstar, star[kp].se_radius*RSUN/units.l, W);
 		ace = coll_CE(mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.mstar, star[kp].se_radius*RSUN/units.l, W);
 		ece = 0.0;
 
@@ -216,7 +216,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		   rperi <= 1.3 * star[k].rad) {
 
 		/* log stuff */
-		parafprintf(tidalcapturefile, "%.3g SS_COLL_TC %s+%s->", TotalTime, 
+		parafprintf(tidalcapturefile, "%.3g SS_COLL_TC_G %s+%s->", TotalTime, 
 				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
 
 		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
@@ -248,7 +248,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		bse_star(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars);
 		bse_hrdiag(&(star[k].se_mass), &aj, &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars,
 			   &(star[k].se_radius), &(star[k].se_lum), &(star[k].se_k), &(star[k].se_mc), &(star[k].se_rc), 
-			   &(star[k].se_menv), &(star[k].se_renv), &k2, &(star[kp].se_bhspin));
+			   &(star[k].se_menv), &(star[k].se_renv), &k2, &(star[k].se_bhspin));
 		star[k].se_epoch = star[k].se_tphys - aj;
 		star[k].rad = star[k].se_radius * RSUN / units.l;
 		mass_k = star[k].se_mt * MSUN / units.mstar;
@@ -444,9 +444,9 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		destroy_obj(k);
 		destroy_obj(kp);
 
-        } else if (TC_FACTOR > 1 && (star[k].se_k != 14 || star[kp].se_k != 14) && rperi > COLL_FACTOR * (star[k].rad + star[kp].rad) && rperi <= TC_FACTOR * (star[k].rad + star[kp].rad)){
-                /* Shi: single-single tidal capture for all stars with a radius*/
-                /* put new binary together and destroy original stars*/
+        } else if (TC_FACTOR > 1 && (star[k].se_k != 14 || star[kp].se_k != 14) && (star[k].se_k <= 1 || star[k].se_k == 7 || star[k].se_k >= 10) && (star[kp].se_k <= 1 || star[kp].se_k == 7 || star[kp].se_k >= 10) && rperi > COLL_FACTOR * (star[k].rad + star[kp].rad) && rperi <= TC_FACTOR * (star[k].rad + star[kp].rad)){
+                /* Shi: single-single tidal capture for all stars with a radius, except giants. */
+                /* put new binary together and destroy original stars */
                 /* log stuff */
                 parafprintf(tidalcapturefile, "%.6g SS_COLL_TC %s+%s->", TotalTime,
                                 sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
@@ -480,7 +480,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                 binary[star[knew].binind].e = efinal;
                 binary[star[knew].binind].m1 = mass_k;
                 binary[star[knew].binind].m2 = mass_kp;
-                binary[star[knew].binind].rad1 = star[k].rad;
+                binary[star[knew].binind].rad2 = star[k].rad;
                 binary[star[knew].binind].rad2 = star[kp].rad;
                 binary[star[knew].binind].Eint1 = star[k].Eint;
                 binary[star[knew].binind].Eint2 = star[kp].Eint;
@@ -540,7 +540,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 #ifdef USE_MPI
 		g_knew = get_global_idx(knew);
 		star_r[g_knew] = rcm;
-        star_m[g_knew] = star[knew].m;
+                star_m[g_knew] = star[knew].m;
 #else
 		star[knew].r = rcm;
 #endif
@@ -606,8 +606,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		/* destroy two progenitors */
 		destroy_obj(k);
 		destroy_obj(kp);
-	} else if (TIDAL_CAPTURE)  {
+
+	} else if (TC_POLYTROPE && (star[k].se_k != 14 || star[kp].se_k != 14) && (star[k].se_k <= 1 || star[k].se_k == 7 || star[k].se_k >= 10) && (star[kp].se_k <= 1 || star[kp].se_k == 7 || star[kp].se_k >= 10))  {
 		/* apply tidal capture / common envelope test */
+                /* Shi: Again, somebody added this. And the prescription is probably referred to the fitting fomulae in Kim & Lee 1999 */
+                /* Shi: Don't turn this on at the same time as the TC_FACTOR! */
 		Eorbnew = 0.5*madhoc*mass_k*mass_kp/(mass_k+mass_kp)*sqr(W);
 
 		if (star[k].se_k == 1) {
@@ -625,8 +628,9 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		if (Eorbnew < 0.0) {
 			/* bound system; don't worry about RL overflow here, since BSE will take care of that automatically */
 			anew = madhoc * mass_k * madhoc * mass_kp / (2.0 * fabs(Eorbnew));
-			enew = MIN(0.0, 1.0-rperi/anew);
-			
+			//enew = MIN(0.0, 1.0-rperi/anew); //Why min?
+                        enew = MAX(0.0, 1.0-rperi/anew);
+
 			/* apply rapid tidal circularization of orbit, assuming no angular momentum is transferred to 
 			   stars' internal rotation for simplicity; but only if there is no Roche-lobe overflow at 
 			   pericenter */
@@ -716,13 +720,13 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			compress_binary(&star[knew], &binary[star[knew].binind]);
 
 			/* log stuff */
-			parafprintf(tidalcapturefile, "%.3g SS_TC %s+%s->%s\n", TotalTime, 
+			parafprintf(tidalcapturefile, "%.3g SS_COLL_TC_P %s+%s->%s\n", TotalTime, 
 				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), sprint_bin_dyn(knew, dummystring3));
 			
 			destroy_obj(k);
 			destroy_obj(kp);
 		} else {
-			parafprintf(tidalcapturefile, "%.3g SS_TC_FAILED %s+%s->%s+%s\n", TotalTime, 
+			parafprintf(tidalcapturefile, "%.3g SS_COLL_TC_P_FAILED %s+%s->%s+%s\n", TotalTime, 
 				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2),
 				sprint_star_dyn(k, dummystring3), sprint_star_dyn(kp, dummystring4));
 		}
@@ -841,7 +845,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    bseaj[1] = tempbinary.bse_tphys - tempbinary.bse_epoch[1];
 		    bse_mix(&(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &(bseaj[0]), &(tempbinary.bse_kw[0]), zpars, &(tempbinary.bse_bhspin[0]));
 		    
-		    bse_star(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars);
+		    bse_star(&(tempbinary.bse_kw[2]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars);
 		    
 		    bse_hrdiag(&(tempbinary.bse_mass0[0]), &(bseaj[0]), &(tempbinary.bse_mass[0]), &tm, &tn, tscls, lums, GB, zpars,
 			       &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_kw[0]), &(tempbinary.bse_massc[0]), &(tempbinary.bse_radc[0]), 
@@ -1342,6 +1346,6 @@ double coll_CE(double Mrg, double Mint, double Mwd, double Rrg, double vinf)
 	alpha = bse_get_alpha1();
 	lambda = bse_get_lambdaf();
 
-	return(1.0/(2.0*Mrg*(Mrg-Mwd)/(Mwd*Mint*alpha*lambda*Rrg)-(Mrg+Mint)/(Mwd*Mint)*vinf*vinf));
+	return(1.0/(2.0*Mrg*(Mrg-Mwd)/(Mwd*Mint*alpha*lambda*Rrg)-(Mrg+Mint)/(Mwd*Mint*alpha)*vinf*vinf));
 
 }
