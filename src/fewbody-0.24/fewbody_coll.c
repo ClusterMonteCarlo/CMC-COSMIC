@@ -25,17 +25,47 @@
 #include "fewbody.h"
 
 /* the main collision criterion */
-int fb_is_collision(double r, double R1, double R2)
+int fb_is_collision(double r, double R1, double R2, double M1, double M2, double k1, double k2, double mass_units, double length_units, double bhns_tde_flag)
 {
-	if (r < R1 + R2) {
-		return(1);
-	} else {
-		return(0);
-	}
+        double collisions_multiple;
+        k1 = abs(k1);
+        k2 = abs(k2);
+        M1 = M1*mass_units/FB_CONST_MSUN;
+        M2 = M2*mass_units/FB_CONST_MSUN;
+        R1 = R1*length_units/FB_CONST_RSUN;
+        R2 = R2*length_units/FB_CONST_RSUN;
+        r = r*length_units/FB_CONST_RSUN;
+
+	if (bhns_tde_flag == 1) {
+		if (k1 >= 13 && k2 <= 1 && M1 >= M2) {    // for BH/NS-star collisions, use beta=(M1/M2)**(1/3)
+			if (M2 < 0.001) {
+				collisions_multiple = pow(M1/0.001,1./3.);
+			} else {
+				collisions_multiple = pow(M1/M2,1./3.);
+			}
+		} else if (k2 >= 13 && k1 <= 1 && M2 >= M1) {
+			if (M1 < 0.001) {
+				collisions_multiple = pow(M2/0.001,1./3.);
+			} else {
+				collisions_multiple = pow(M2/M1,1./3.);
+			}
+		} else {
+                collisions_multiple = 1.0;    // for star-star collisions, just use beta = 1 (physical collision limit)
+		}
+        } else {
+                collisions_multiple = 1.0;
+        }
+
+        if (r < collisions_multiple*(R1 + R2)) {
+                //fprintf(stdout, "Performed a fb collision. Merging stars: k1=%g, k2=%g, M1=%g, M2=%g, R1=%g, R2=%g, Beta=%g, impact param=%g, r_peri=%g \n", k1, k2, M1, M2,R1, R2, collisions_multiple, collisions_multiple*(R1 + R2), r);
+                return(1);
+        } else {
+                return(0);
+        }
 }
 
 // PAU int fb_collide(fb_hier_t *hier, double f_exp)
-int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff)
+int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff, fb_input_t input)
 {
 	int i, j=-1, k, retval=0, cont=1;
 	double R[3], peinit;
@@ -52,7 +82,7 @@ int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, st
 				}
 
 				/* test collision criterion */
-				if (fb_is_collision(fb_mod(R), hier->hier[hier->hi[1]+i].R, hier->hier[hier->hi[1]+j].R)) {
+				if (fb_is_collision(fb_mod(R), hier->hier[hier->hi[1]+i].R, hier->hier[hier->hi[1]+j].R, hier->hier[hier->hi[1]+i].m, hier->hier[hier->hi[1]+j].m, hier->hier[hier->hi[1]+i].k_type, hier->hier[hier->hi[1]+j].k_type, units.m, units.l, input.BHNS_TDE_FLAG)) {
 					cont = 1;
 					/* break out of the double loop if there is a collision, so we can merge
 					   the stars immediately */

@@ -526,6 +526,8 @@ long DynamicalFrictionTimescale(){
 	double slope, t_df, t_df_p1, t_df_1;
 	double TimeNbody = TotalTime * clus.N_STAR / log(GAMMA*clus.N_STAR);
 
+	if(USE_DF_CUTOFF == 0)
+		return(0);
 
 	/* First find where we are in time; note we need the "-1" since we want 
 	 * to use N and N+1 to do the linear extrapolation */
@@ -546,9 +548,6 @@ long DynamicalFrictionTimescale(){
 
 	slope = (t_df_p1 - t_df_1) / (DF_times[DF_num+1] - DF_times[DF_num]);
 	t_df = t_df_1 + slope * (TimeNbody - DF_times[DF_num]);
-
-	if(myid == 0)
-		printf("tdfp1=%g tdf1=%g slope=%g t_df=%g timeNbody=%g\n",t_df_p1,t_df_1,slope,t_df,TimeNbody);
 
 	if(tcount <= 1){
 		t_df_prev = t_df;

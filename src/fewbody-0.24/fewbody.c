@@ -186,7 +186,7 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 				}
 			}
 			fb_elkcirt(&phier, *t);
-		} else if (tnew >= texpand && fb_collapse(&phier, tnew, input.tidaltol, input.speedtol, units, nonks_params)) {
+		} else if (tnew >= texpand && fb_collapse(&phier, tnew, input.tidaltol, input.speedtol, units, nonks_params, input)) {
 			*t = tnew;
 			/* if there is only one object, then it's stable---force classify() */
 			if (phier.nobj == 1) {
@@ -241,7 +241,7 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 			}
 			
 			/* do physical collisions */
-			if (fb_collide(hier, input.fexp, units, rng, curr_st, input.BH_REFF)) {
+			if (fb_collide(hier, input.fexp, units, rng, curr_st, input.BH_REFF, input)) {
 				/* initialize phier to a flat tree */
 				phier.nstar = hier->nstar;
 				fb_init_hier(&phier);
@@ -295,7 +295,7 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 			/* see if we're done */
 			if (retval.count % input.ncount == 0 || forceclassify) {
 				// PAU status = fb_classify(hier, *t, input.tidaltol);
-				status = fb_classify(hier, *t, input.tidaltol, input.speedtol, units);
+				status = fb_classify(hier, *t, input.tidaltol, input.speedtol, units, input);
 				retval.iclassify++;
 				fb_dprintf("fewbody: current status:  t=%.6g  %s  (%s)\n",
 					   *t, fb_sprint_hier(*hier, string1),
@@ -372,7 +372,7 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 	
 	/* do final classification */
 	// PAU retval.retval = fb_classify(hier, *t, input.tidaltol);
-	retval.retval = fb_classify(hier, *t, input.tidaltol, input.speedtol, units);
+	retval.retval = fb_classify(hier, *t, input.tidaltol, input.speedtol, units, input);
 	retval.iclassify++;
 	fb_dprintf("fewbody: current status:  t=%.6g  %s  (%s)\n",
 		   *t, fb_sprint_hier(*hier, string1),
