@@ -6,12 +6,27 @@
 #else
 #define _EXTERN_
 #endif
+#include "hdf5.h"
 
 _EXTERN_ clus_struct_t clus;
 _EXTERN_ Etotal_struct_t Etotal;
 _EXTERN_ clusdyn_struct_t clusdyn;
 _EXTERN_ long RESTART_TCOUNT;
 _EXTERN_ long NEW_IDUM;
+_EXTERN_ LightCollision LIGHTCOLLISION_TABLE[5000];
+_EXTERN_ int LIGHTCOLLISION_NRECORDS;
+_EXTERN_ herr_t status;
+_EXTERN_ char *light_collision_field_names[NFIELDS_LIGHT_COLLISION];
+_EXTERN_ hid_t light_collision_field_type[NFIELDS_LIGHT_COLLISION];
+
+/* Define an array of Particles */
+_EXTERN_ LightCollision light_collision_data[1];
+/* Calculate the size and the offsets of our struct members in memory */
+_EXTERN_ size_t light_collision_dst_size;
+_EXTERN_ size_t light_collision_dst_offset[NFIELDS_LIGHT_COLLISION];
+
+_EXTERN_ size_t light_collision_dst_sizes[NFIELDS_LIGHT_COLLISION];
+
 
 /* tidal truncation stuff */
 _EXTERN_ double max_r, Rtidal, TidalMassLoss, orbit_r;

@@ -9,6 +9,7 @@
 #include <getopt.h>
 #include <fitsio.h>
 #include "fitslib.h"
+#include "hdf5.h"
 
 #define LARGE_DISTANCE 1.0e40
 
@@ -199,67 +200,253 @@ void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 * @param filename input fits file that needs to be read
 */
 void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUNT){
-	int status=0, hdunum, hdutype, anynull;
-	fitsfile *fptr;
-	long frow=1, felem=1, nelem;
-	float floatnull=0.0;
+    hid_t       file, filetype, memtype, space, dset, attr1, dset1;
+    hsize_t     dims[2] = {1, 1};
 
-	/* open file for reading */
-	fits_open_file(&fptr, filename, READONLY, &status);
-	cmc_fits_printerror(status);
-	hdunum = 2;
-	fits_movabs_hdu(fptr, hdunum, &hdutype, &status);
-	cmc_fits_printerror(status);
+    herr_t      status;
+    double      **read_stellar_objects;                       /* Read buffer */
+    double      **read_binary_objects;                       /* Read buffer */
+    int         ndims,
+                i, j, k;
 
-	/* read keys and then malloc data structure */
-	fits_read_key(fptr, TLONG, "NOBJ", &(cfd->NOBJ), NULL, &status);
-	fits_read_key(fptr, TLONG, "NBINARY", &(cfd->NBINARY), NULL, &status);
-	fits_read_key(fptr, TDOUBLE, "MCLUS", &(cfd->Mclus), NULL, &status);
-	fits_read_key(fptr, TDOUBLE, "RVIR", &(cfd->Rvir), NULL, &status);
-	fits_read_key(fptr, TDOUBLE, "RTID", &(cfd->Rtid), NULL, &status);
-	fits_read_key(fptr, TDOUBLE, "Z", &(cfd->Z), NULL, &status);
-	cmc_fits_printerror(status);
+    char **read_ext_name = (char **) malloc (dims[0] * sizeof (char *));
 
-	/*if we're restarting from a checkpoint, we don't need to allocate or read
-	 * in the original star files from the fits file...just the header info*/
-	if(RESTART_TCOUNT != 0){
-		fits_close_file(fptr, &status);
-		return;
-	}
+    double **read_z = (double **) malloc (dims[0] * sizeof (double *));
+    read_z[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
+    for (i=1; i<dims[0]; i++)
+        read_z[i] = read_z[0] + i * dims[1];
 
-	cmc_malloc_fits_data_t(cfd);
+    double **read_rtid = (double **) malloc (dims[0] * sizeof (double *));
+    read_rtid[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
+    for (i=1; i<dims[0]; i++)
+        read_rtid[i] = read_rtid[0] + i * dims[1];
 
-	/* read in data columns */
-	nelem = cfd->NOBJ+2;
-	fits_read_col(fptr, TLONG, 1, frow, felem, nelem, &floatnull, cfd->obj_id, &anynull, &status);
-	fits_read_col(fptr, TINT, 2, frow, felem, nelem, &floatnull, cfd->obj_k, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 3, frow, felem, nelem, &floatnull, cfd->obj_m, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 4, frow, felem, nelem, &floatnull, cfd->obj_Reff, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 5, frow, felem, nelem, &floatnull, cfd->obj_r, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 6, frow, felem, nelem, &floatnull, cfd->obj_vr, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 7, frow, felem, nelem, &floatnull, cfd->obj_vt, &anynull, &status);
-	fits_read_col(fptr, TLONG, 8, frow, felem, nelem, &floatnull, cfd->obj_binind, &anynull, &status);
-	cmc_fits_printerror(status);
-	
-	hdunum = 3;
-	fits_movabs_hdu(fptr, hdunum, &hdutype, &status);
-	cmc_fits_printerror(status);
+    double **read_rvir = (double **) malloc (dims[0] * sizeof (double *));
+    read_rvir[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
+    for (i=1; i<dims[0]; i++)
+        read_rvir[i] = read_rvir[0] + i * dims[1];
 
-	/* read in data columns */
-	nelem = cfd->NBINARY+1;
-	fits_read_col(fptr, TLONG, 1, frow, felem, nelem, &floatnull, cfd->bs_index, &anynull, &status);
-	fits_read_col(fptr, TLONG, 2, frow, felem, nelem, &floatnull, cfd->bs_id1, &anynull, &status);
-	fits_read_col(fptr, TINT, 3, frow, felem, nelem, &floatnull, cfd->bs_k1, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 4, frow, felem, nelem, &floatnull, cfd->bs_m1, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 5, frow, felem, nelem, &floatnull, cfd->bs_Reff1, &anynull, &status);
-	fits_read_col(fptr, TLONG, 6, frow, felem, nelem, &floatnull, cfd->bs_id2, &anynull, &status);
-	fits_read_col(fptr, TINT, 7, frow, felem, nelem, &floatnull, cfd->bs_k2, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 8, frow, felem, nelem, &floatnull, cfd->bs_m2, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 9, frow, felem, nelem, &floatnull, cfd->bs_Reff2, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 10, frow, felem, nelem, &floatnull, cfd->bs_a, &anynull, &status);
-	fits_read_col(fptr, TDOUBLE, 11, frow, felem, nelem, &floatnull, cfd->bs_e, &anynull, &status);
-	cmc_fits_printerror(status);
-	
-	fits_close_file(fptr, &status);
-	cmc_fits_printerror(status);
+
+    double **read_mclus = (double **) malloc (dims[0] * sizeof (double *));
+    read_mclus[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
+    for (i=1; i<dims[0]; i++)
+        read_mclus[i] = read_mclus[0] + i * dims[1];
+
+    int **read_nobj = (int **) malloc (dims[0] * sizeof (int *));
+
+    int **read_nbinary = (int **) malloc (dims[0] * sizeof (int *));
+
+    /*
+     * Now we simply read back the data and output it to the screen.
+     */
+    hsize_t dims_attr1[1] = {1};
+
+    /*
+     * Open file and dataset using the default properties.
+     */
+    file = H5Fopen (filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+    dset = H5Dopen (file, "CLUS_OBJ_DATA/block0_values", H5P_DEFAULT);
+    dset1 = H5Dopen (file, "CLUS_BINARY_DATA/block0_values", H5P_DEFAULT);
+    attr1 = H5Aopen (dset, "EXTNAME", H5P_DEFAULT);
+
+    /*
+     * Get the datatype and its size.
+     */
+    filetype = H5Aget_type (attr1);
+
+    /*
+     * Get dataspace and allocate memory for read buffer.
+     */
+    space = H5Aget_space (attr1);
+    ndims = H5Sget_simple_extent_dims(space, dims_attr1, NULL);
+
+    /*
+     * Create the memory datatype.
+     */
+    memtype = H5Tcopy (H5T_C_S1);
+    status = H5Tset_size (memtype, H5T_VARIABLE);
+    status = H5Tset_cset(memtype, H5T_CSET_UTF8); // Specify UTF8 here
+
+    /*
+     * Read the data.
+     */
+    status = H5Aread (attr1, memtype, read_ext_name);
+    status = H5Aclose (attr1);
+
+
+    /*
+     * Read next attribute
+     */
+    attr1 = H5Aopen (dset, "Z", H5P_DEFAULT);
+    filetype = H5Aget_type (attr1);
+    space = H5Aget_space (attr1);
+    ndims = H5Sget_simple_extent_dims(space, dims_attr1, NULL);
+    status = H5Aread (attr1, H5T_NATIVE_DOUBLE, read_z[0]);
+    status = H5Aclose (attr1);
+
+    attr1 = H5Aopen (dset, "NOBJ", H5P_DEFAULT);
+    filetype = H5Aget_type (attr1);
+    space = H5Aget_space (attr1);
+    ndims = H5Sget_simple_extent_dims(space, dims_attr1, NULL);
+    status = H5Aread (attr1, H5T_STD_I64LE, read_nobj);
+    status = H5Aclose (attr1);
+
+    attr1 = H5Aopen (dset, "NBINARY", H5P_DEFAULT);
+    filetype = H5Aget_type (attr1);
+    space = H5Aget_space (attr1);
+    ndims = H5Sget_simple_extent_dims(space, dims_attr1, NULL);
+    status = H5Aread (attr1, H5T_STD_I64LE, read_nbinary);
+    status = H5Aclose (attr1);
+
+    attr1 = H5Aopen (dset, "RVIR", H5P_DEFAULT);
+    filetype = H5Aget_type (attr1);
+    space = H5Aget_space (attr1);
+    ndims = H5Sget_simple_extent_dims(space, dims_attr1, NULL);
+    status = H5Aread (attr1, H5T_NATIVE_DOUBLE, read_rvir[0]);
+    status = H5Aclose (attr1);
+
+    attr1 = H5Aopen (dset, "RTID", H5P_DEFAULT);
+    filetype = H5Aget_type (attr1);
+    space = H5Aget_space (attr1);
+    ndims = H5Sget_simple_extent_dims(space, dims_attr1, NULL);
+    status = H5Aread (attr1, H5T_NATIVE_DOUBLE, read_rtid[0]);
+    status = H5Aclose (attr1);
+
+    attr1 = H5Aopen (dset, "MCLUS", H5P_DEFAULT);
+    filetype = H5Aget_type (attr1);
+    space = H5Aget_space (attr1);
+    ndims = H5Sget_simple_extent_dims(space, dims_attr1, NULL);
+    status = H5Aread (attr1, H5T_IEEE_F64LE, read_mclus[0]);
+    status = H5Aclose (attr1);
+
+    cfd->NOBJ = read_nobj[0];
+    cfd->NBINARY = read_nbinary[0];
+    cfd->Mclus = read_mclus[0][0];
+    cfd->Rvir = read_rvir[0][0];
+    cfd->Rtid = read_rtid[0][0];
+    cfd->Z = read_z[0][0];
+
+    printf("EXTNAME: %s\n", read_ext_name[0]);
+    printf("Z: %f\n", cfd->Z);
+    printf("RTID: %f\n", cfd->Rtid);
+    printf("RVIR: %f\n", cfd->Rvir);
+    printf("MCLUS: %f\n", cfd->Mclus);
+    printf("NOBJ: %d\n", cfd->NOBJ );
+    printf("NBINARY: %d\n", cfd->NBINARY);
+
+    if(RESTART_TCOUNT != 0){
+        free (read_stellar_objects[0]);
+        free(read_stellar_objects);
+        free (read_binary_objects[0]);
+        free(read_binary_objects);
+        free (read_z[0]);
+        free (read_z);
+        free (read_mclus[0]);
+        free (read_mclus);
+        free (read_rvir[0]);
+        free (read_rvir);
+        free (read_rtid[0]);
+        free (read_rtid);
+
+
+        free (read_ext_name);
+        free (read_nobj);
+        free (read_nbinary);
+
+        status = H5Dclose (dset);
+        status = H5Dclose (dset1);
+        status = H5Sclose (space);
+        status = H5Tclose (memtype);
+        status = H5Tclose (filetype);
+        status = H5Fclose (file);
+        return;
+    }
+
+    /* Allocate cfd */
+    cmc_malloc_fits_data_t(cfd);
+
+    /*
+     * Get dataspace and allocate memory for the read buffer as before.
+     */
+    space = H5Dget_space (dset);
+    ndims = H5Sget_simple_extent_dims (space, dims, NULL);
+    read_stellar_objects = (double **) malloc (dims[0] * sizeof (double *));
+    read_stellar_objects[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
+    for (i=1; i<dims[0]; i++)
+        read_stellar_objects[i] = read_stellar_objects[0] + i * dims[1];
+    status = H5Dread (dset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                read_stellar_objects[0]);
+
+    for (i=0; i<dims[0]; i++) {
+        cfd->obj_id[i] = read_stellar_objects[i][0];
+        cfd->obj_k[i] = read_stellar_objects[i][1];
+        cfd->obj_m[i] = read_stellar_objects[i][2];
+        cfd->obj_Reff[i] = read_stellar_objects[i][3];
+        cfd->obj_r[i] = read_stellar_objects[i][4];
+        cfd->obj_vr[i] = read_stellar_objects[i][5];
+        cfd->obj_vt[i] = read_stellar_objects[i][6];
+        cfd->obj_binind[i] = read_stellar_objects[i][7];
+    }
+
+    space = H5Dget_space (dset1);
+    ndims = H5Sget_simple_extent_dims (space, dims, NULL);
+    read_binary_objects = (double **) malloc (dims[0] * sizeof (double *));
+    read_binary_objects[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
+    for (i=1; i<dims[0]; i++)
+        read_binary_objects[i] = read_binary_objects[0] + i * dims[1];
+
+    /*
+     * Read the data using the default properties.
+     */
+    status = H5Dread (dset1, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                      read_binary_objects[0]);
+
+    for (i=0; i<dims[0]; i++) {
+        printf("%f %f %f %f %f %f %f\n", read_binary_objects[i][0], read_binary_objects[i][1], read_binary_objects[i][2], read_binary_objects[i][3], read_binary_objects[i][4], read_binary_objects[i][5], read_binary_objects[i][6], read_binary_objects[i][7]);
+    }
+
+
+    for (i=0; i<dims[0]; i++) {
+        cfd->bs_index[i] = read_binary_objects[i][0];
+        cfd->bs_id1[i] = read_binary_objects[i][1];
+        cfd->bs_k1[i] = read_binary_objects[i][2];
+        cfd->bs_m1[i] = read_binary_objects[i][3];
+        cfd->bs_Reff1[i] = read_binary_objects[i][4];
+        cfd->bs_id2[i] = read_binary_objects[i][5];
+        cfd->bs_k2[i] = read_binary_objects[i][6];
+        cfd->bs_m2[i] = read_binary_objects[i][7];
+        cfd->bs_Reff2[i] = read_binary_objects[i][8];
+        cfd->bs_a[i] = read_binary_objects[i][9];
+        cfd->bs_e[i] = read_binary_objects[i][10]; 
+    }
+
+    /*
+     * Close and release resources.
+     */
+    free (read_stellar_objects[0]);
+    free(read_stellar_objects);
+    free (read_binary_objects[0]);
+    free(read_binary_objects);
+    free (read_z[0]);
+    free (read_z);
+    free (read_mclus[0]);
+    free (read_mclus);
+    free (read_rvir[0]);
+    free (read_rvir);
+    free (read_rtid[0]);
+    free (read_rtid);
+
+
+    free (read_ext_name);
+    free (read_nobj);
+    free (read_nbinary);
+
+    status = H5Dclose (dset);
+    status = H5Dclose (dset1);
+    status = H5Sclose (space);
+    status = H5Tclose (memtype);
+    status = H5Tclose (filetype);
+    status = H5Fclose (file);
+
+
 }

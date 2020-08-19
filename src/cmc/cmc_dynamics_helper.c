@@ -705,6 +705,7 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 		star[k3].threebb_interacted = 0;
 
 		parafprintf(lightcollisionfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %d %d %d %g %g %g %g %g %g %g\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2 * (units.m / clus.N_STAR / MSUN), m3 *(units.m / clus.N_STAR / MSUN), star[k1].se_k, star[k2].se_k, star[k3].se_k, star[k1].rad * units.l / AU, star[k2].rad * units.l / AU, star[k3].rad * units.l / AU, Eb, ecc, semi_major * units.l / AU, r_p * units.l / AU);
+                append_to_table(LIGHTCOLLISION_ID, NFIELDS_LIGHT_COLLISION, TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2 * (units.m / clus.N_STAR / MSUN), m3 *(units.m / clus.N_STAR / MSUN),  star[k1].se_k,  star[k2].se_k,  star[k3].se_k,  star[k1].rad * units.l / AU,  star[k2].rad * units.l / AU,  star[k3].rad * units.l / AU,  Eb,  ecc,  semi_major * units.l / AU,  r_p * units.l / AU);
 	}
 	// IF binary IS TO BE FORMED, set star and binary properties for new binary, as well as properties of single star
 	else if (form_binary == 1) {

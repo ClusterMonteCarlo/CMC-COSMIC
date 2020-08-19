@@ -19,10 +19,28 @@
 #include "../fewbody-0.24/fewbody.h"
 #include "cmc_core.h"
 #include "CMCConfig.h"
+#include "stdarg.h"
 
 #ifdef USE_MPI
 #include "cmc_mpi.h"
 #endif
+
+#define H5FILE_NAME "logfile.h5"
+#define LOGFILE_ID 0
+#define LOGFILE_TABLENAME "LOGFILE"
+#define LIGHTCOLLISION_ID 1
+#define NFIELDS_LIGHT_COLLISION 20
+#define LIGHTCOLLISION_TABLENAME "LIGHTCOLLISION"
+
+//enum types {
+//    Integer, Double, String, Float = Double, /* unless you want to store the value in a poitner
+//                                              * there is normally no difference between these
+//                                              */
+//    EndList
+//};
+
+void append_to_table(int which_table, int num, ...);
+
 
 /*-------------------------------------------------------------------------
  * Table API example
@@ -183,6 +201,30 @@
   double formation;
  } Snapshot;
 
+//#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:type1 #12:type2 #13:type3 #14:rad1 #15:rad2 #16:rad3 #17:Eb #18:ecc #19:a(au) #20:rp(au)
+typedef struct LightCollision
+{
+  double time;
+  int k1;
+  int k2;
+  int k3;
+  int id1;
+  int id2;
+  int id3;
+  double m1;
+  double m2;
+  double m3;
+  int type1;
+  int type2;
+  int type3;
+  double rad1;
+  double rad2;
+  double rad3;
+  double Eb;
+  double ecc;
+  double a;
+  double rp;
+} LightCollision;
 
 /**
 * @brief Data structure for storing binary properties.
