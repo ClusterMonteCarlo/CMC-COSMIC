@@ -827,49 +827,49 @@ void mpi_para_file_write(char* wrbuf, long long* len, long long* prev_cum_offset
     *len=0;
 }
 
-void write_logs(){
-    hid_t      snapfile_hdf5;
-
-    snapfile_hdf5 = H5Fopen("logfile.h5", H5F_ACC_RDWR, H5P_DEFAULT);
-    H5TBappend_records(snapfile_hdf5, LIGHTCOLLISION_TABLENAME, LIGHTCOLLISION_NRECORDS, light_collision_dst_size, light_collision_dst_offset, light_collision_dst_sizes, &LIGHTCOLLISION_TABLE);
-    H5Fclose( snapfile_hdf5 );
-
-};
-
-void append_to_table(int which_table, int num, ...) {
-    va_list valist;
-    int count = 0;
-    if(which_table==1){
-        /* initialize valist num number of arguments */
-        va_start(valist, num);
-
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].time = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].k1 = va_arg(valist, int);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].k2 = va_arg(valist, int);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].k3 = va_arg(valist, int);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].id1 = va_arg(valist, int);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].id2 = va_arg(valist, int);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].id3 = va_arg(valist, int);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].m1 = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].m2 = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].m3 = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].type1 = va_arg(valist, int);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].type2 = va_arg(valist, int);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].type3 = va_arg(valist, int);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].rad1 = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].rad2 = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].rad3 = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].Eb = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].ecc = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].a = va_arg(valist, double);
-        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].rp = va_arg(valist, double);
-
-        /* clean memory reserved for valist */
-        va_end(valist);
-        LIGHTCOLLISION_NRECORDS += 1;
-    };
-
-}
+//void write_logs(){
+//    hid_t      snapfile_hdf5;
+//
+//    snapfile_hdf5 = H5Fopen("logfile.h5", H5F_ACC_RDWR, H5P_DEFAULT);
+//    H5TBappend_records(snapfile_hdf5, LIGHTCOLLISION_TABLENAME, LIGHTCOLLISION_NRECORDS, light_collision_dst_size, light_collision_dst_offset, light_collision_dst_sizes, &LIGHTCOLLISION_TABLE);
+//    H5Fclose( snapfile_hdf5 );
+//
+//};
+//
+//void append_to_table(int which_table, int num, ...) {
+//    va_list valist;
+//    int count = 0;
+//    if(which_table==1){
+//        /* initialize valist num number of arguments */
+//        va_start(valist, num);
+//
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].time = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].k1 = va_arg(valist, int);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].k2 = va_arg(valist, int);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].k3 = va_arg(valist, int);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].id1 = va_arg(valist, int);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].id2 = va_arg(valist, int);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].id3 = va_arg(valist, int);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].m1 = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].m2 = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].m3 = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].type1 = va_arg(valist, int);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].type2 = va_arg(valist, int);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].type3 = va_arg(valist, int);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].rad1 = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].rad2 = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].rad3 = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].Eb = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].ecc = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].a = va_arg(valist, double);
+//        LIGHTCOLLISION_TABLE[LIGHTCOLLISION_NRECORDS].rp = va_arg(valist, double);
+//
+//        /* clean memory reserved for valist */
+//        va_end(valist);
+//        LIGHTCOLLISION_NRECORDS += 1;
+//    };
+//
+//}
 #endif
 
 /**
@@ -3320,10 +3320,10 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
 					}
 				}
 			}
-                        if(LIGHTCOLLISION_NRECORDS >200){
-                            write_logs();
-                            LIGHTCOLLISION_NRECORDS = 0;
-                        }
+//                        if(LIGHTCOLLISION_NRECORDS >200){
+//                            write_logs();
+//                            LIGHTCOLLISION_NRECORDS = 0;
+//                        }
                         if(myid==0){
                             snapfile_hdf5 = H5Fopen("test.h5", H5F_ACC_RDWR, H5P_DEFAULT);
                             H5TBmake_table( "Table Title",snapfile_hdf5, tablename, NFIELDS,NRECORDS,

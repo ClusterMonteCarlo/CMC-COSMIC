@@ -2258,82 +2258,82 @@ void create_timing_files()
 /**
  * @brief  sets_global_variable_for_tracking_events
  */
-void set_global_logfile_vars()
-{
-        const char *light_collision_field_names_tmp[NFIELDS_LIGHT_COLLISION] = {"time", "k1", "k2", "k3", "id1", "id2", "id3", "m1", "m2", "m3", "type1", "type2", "type3" , "rad1" , "rad2" , "rad3" , "Eb","ecc","a(au)","rp(au)"};
-        LightCollision light_collision_data_tmp[1] = {0.0,0,0,0,0,0,0,0.0,0.0,0.0,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-        light_collision_dst_size =  sizeof( LightCollision );
-        size_t light_collision_dst_offset_tmp[NFIELDS_LIGHT_COLLISION] = {
-                                        HOFFSET( LightCollision, time),
-                                        HOFFSET( LightCollision, k1),
-                                        HOFFSET( LightCollision, k2),
-                                        HOFFSET( LightCollision, k3),
-                                        HOFFSET( LightCollision, id1),
-                                        HOFFSET( LightCollision, id2),
-                                        HOFFSET( LightCollision, id3),
-                                        HOFFSET( LightCollision, m1),
-                                        HOFFSET( LightCollision, m2),
-                                        HOFFSET( LightCollision, m3),
-                                        HOFFSET( LightCollision, type1),
-                                        HOFFSET( LightCollision, type2),
-                                        HOFFSET( LightCollision, type3),
-                                        HOFFSET( LightCollision, rad1),
-                                        HOFFSET( LightCollision, rad2),
-                                        HOFFSET( LightCollision, rad3),
-                                        HOFFSET( LightCollision, Eb),
-                                        HOFFSET( LightCollision, ecc),
-                                        HOFFSET( LightCollision, a),
-                                        HOFFSET( LightCollision, rp),
-                                    };
-
-        size_t light_collision_dst_sizes_tmp[NFIELDS_LIGHT_COLLISION]  = {
-                                        sizeof(light_collision_data_tmp[0].time),
-                                        sizeof(light_collision_data_tmp[0].k1),
-                                        sizeof(light_collision_data_tmp[0].k2),
-                                        sizeof(light_collision_data_tmp[0].k3),
-                                        sizeof(light_collision_data_tmp[0].id1),
-                                        sizeof(light_collision_data_tmp[0].id2),
-                                        sizeof(light_collision_data_tmp[0].id3),
-                                        sizeof(light_collision_data_tmp[0].m1),
-                                        sizeof(light_collision_data_tmp[0].m2),
-                                        sizeof(light_collision_data_tmp[0].m3),
-                                        sizeof(light_collision_data_tmp[0].type1),
-                                        sizeof(light_collision_data_tmp[0].type2),
-                                        sizeof(light_collision_data_tmp[0].type3),
-                                        sizeof(light_collision_data_tmp[0].rad1),
-                                        sizeof(light_collision_data_tmp[0].rad2),
-                                        sizeof(light_collision_data_tmp[0].rad3),
-                                        sizeof(light_collision_data_tmp[0].Eb),
-                                        sizeof(light_collision_data_tmp[0].ecc),
-                                        sizeof(light_collision_data_tmp[0].a),
-                                        sizeof(light_collision_data_tmp[0].rp),
-                                    };
-
-
-
-        LIGHTCOLLISION_NRECORDS = 0;
-
-        for (int ii = 0; ii < NFIELDS_LIGHT_COLLISION; ++ii){
-          light_collision_field_type[ii] = H5T_NATIVE_INT;
-        }
-        light_collision_field_type[0] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[7] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[8] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[9] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[13] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[14] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[15] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[16] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[17] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[18] = H5T_NATIVE_DOUBLE;
-        light_collision_field_type[19] = H5T_NATIVE_DOUBLE;
-
-        for (int ii = 0; ii < NFIELDS_LIGHT_COLLISION; ++ii){
-            light_collision_field_names[ii] = light_collision_field_names_tmp[ii];
-            light_collision_dst_offset[ii] = light_collision_dst_offset_tmp[ii];
-            light_collision_dst_sizes[ii] = light_collision_dst_sizes_tmp[ii];
-        }
-
+//void set_global_logfile_vars()
+//{
+//        const char *light_collision_field_names_tmp[NFIELDS_LIGHT_COLLISION] = {"time", "k1", "k2", "k3", "id1", "id2", "id3", "m1", "m2", "m3", "type1", "type2", "type3" , "rad1" , "rad2" , "rad3" , "Eb","ecc","a(au)","rp(au)"};
+//        LightCollision light_collision_data_tmp[1] = {0.0,0,0,0,0,0,0,0.0,0.0,0.0,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+//        light_collision_dst_size =  sizeof( LightCollision );
+//        size_t light_collision_dst_offset_tmp[NFIELDS_LIGHT_COLLISION] = {
+//                                        HOFFSET( LightCollision, time),
+//                                        HOFFSET( LightCollision, k1),
+//                                        HOFFSET( LightCollision, k2),
+//                                        HOFFSET( LightCollision, k3),
+//                                        HOFFSET( LightCollision, id1),
+//                                        HOFFSET( LightCollision, id2),
+//                                        HOFFSET( LightCollision, id3),
+//                                        HOFFSET( LightCollision, m1),
+//                                        HOFFSET( LightCollision, m2),
+//                                        HOFFSET( LightCollision, m3),
+//                                        HOFFSET( LightCollision, type1),
+//                                        HOFFSET( LightCollision, type2),
+//                                        HOFFSET( LightCollision, type3),
+//                                        HOFFSET( LightCollision, rad1),
+//                                        HOFFSET( LightCollision, rad2),
+//                                        HOFFSET( LightCollision, rad3),
+//                                        HOFFSET( LightCollision, Eb),
+//                                        HOFFSET( LightCollision, ecc),
+//                                        HOFFSET( LightCollision, a),
+//                                        HOFFSET( LightCollision, rp),
+//                                    };
+//
+//        size_t light_collision_dst_sizes_tmp[NFIELDS_LIGHT_COLLISION]  = {
+//                                        sizeof(light_collision_data_tmp[0].time),
+//                                        sizeof(light_collision_data_tmp[0].k1),
+//                                        sizeof(light_collision_data_tmp[0].k2),
+//                                        sizeof(light_collision_data_tmp[0].k3),
+//                                        sizeof(light_collision_data_tmp[0].id1),
+//                                        sizeof(light_collision_data_tmp[0].id2),
+//                                        sizeof(light_collision_data_tmp[0].id3),
+//                                        sizeof(light_collision_data_tmp[0].m1),
+//                                        sizeof(light_collision_data_tmp[0].m2),
+//                                        sizeof(light_collision_data_tmp[0].m3),
+//                                        sizeof(light_collision_data_tmp[0].type1),
+//                                        sizeof(light_collision_data_tmp[0].type2),
+//                                        sizeof(light_collision_data_tmp[0].type3),
+//                                        sizeof(light_collision_data_tmp[0].rad1),
+//                                        sizeof(light_collision_data_tmp[0].rad2),
+//                                        sizeof(light_collision_data_tmp[0].rad3),
+//                                        sizeof(light_collision_data_tmp[0].Eb),
+//                                        sizeof(light_collision_data_tmp[0].ecc),
+//                                        sizeof(light_collision_data_tmp[0].a),
+//                                        sizeof(light_collision_data_tmp[0].rp),
+//                                    };
+//
+//
+//
+//        LIGHTCOLLISION_NRECORDS = 0;
+//
+//        for (int ii = 0; ii < NFIELDS_LIGHT_COLLISION; ++ii){
+//          light_collision_field_type[ii] = H5T_NATIVE_INT;
+//        }
+//        light_collision_field_type[0] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[7] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[8] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[9] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[13] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[14] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[15] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[16] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[17] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[18] = H5T_NATIVE_DOUBLE;
+//        light_collision_field_type[19] = H5T_NATIVE_DOUBLE;
+//
+//        for (int ii = 0; ii < NFIELDS_LIGHT_COLLISION; ++ii){
+//            light_collision_field_names[ii] = light_collision_field_names_tmp[ii];
+//            light_collision_dst_offset[ii] = light_collision_dst_offset_tmp[ii];
+//            light_collision_dst_sizes[ii] = light_collision_dst_sizes_tmp[ii];
+//        }
+//
 
 //        const char *binint_field_names_tmp[NFIELDS_BININT] = {"interaction_type", "t", "b", "v", "input_1_type", "input_1_m0", "input_1_m1", "input_1_R0","input_1_R1","input_1_Eint1","input_1_Eint2","input_1_id0","input_1_id1","input_1_a","input_1_e","input_1_ktype1","input_1_ktype2","input_2_type","input_2_m0","input_2_m1","input_2_R0","input_2_R1","input_2_Eint1","input_2_Eint2","input_2_id0","input_2_id1","input_2_a","input_2_e","input_2_ktype1","input_2_ktype2", "output_1_type", "output_1_m0", "output_1_m1", "output_1_R0","output_1_R1","output_1_Eint1","output_1_Eint2","output_1_id0","output_1_id1","output_1_a","output_1_e","output_1_ktype1","output_1_ktype2","output_2_type","output_2_m0","output_2_m1","output_2_R0","output_2_R1","output_2_Eint1","output_2_Eint2","output_2_id0","output_2_id1","output_2_a","output_2_e","output_2_ktype1","output_2_ktype2",}
 //        LightCollision binint_data_tmp[1] = {0.0,0,0,0,0,0,0,0.0,0.0,0.0,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
@@ -2409,7 +2409,7 @@ void set_global_logfile_vars()
 //            binint_dst_sizes[ii] = binint_dst_sizes_tmp[ii];
 //        }
 //
-};
+//};
 
 
 

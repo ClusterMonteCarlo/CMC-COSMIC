@@ -106,25 +106,25 @@ int main(int argc, char *argv[])
 	set_global_vars1();
 
         /* sets some important global logging variables */
-        set_global_logfile_vars();
+        //set_global_logfile_vars();
 
-        hid_t snapfile_hdf5;
-        //Serializing the snapshot printing.
-        for(int k=0; k<procs; k++)
-        {
-                if(myid==k)
-                {
-                        //Initial file created only by root node.
-                        if(myid==0){
-                            snapfile_hdf5 = H5Fcreate("logfile.h5", H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
-                            H5TBmake_table("Table Title",snapfile_hdf5, LIGHTCOLLISION_TABLENAME, NFIELDS_LIGHT_COLLISION, LIGHTCOLLISION_NRECORDS,
-                                           light_collision_dst_size, light_collision_field_names, light_collision_dst_offset, light_collision_field_type,
-                                           1000, NULL, 0, LIGHTCOLLISION_TABLE);
-                            H5Fclose( snapfile_hdf5 );
-                        }
-                }
-                MPI_Barrier(MPI_COMM_WORLD);
-        }
+//        hid_t snapfile_hdf5;
+//        //Serializing the snapshot printing.
+//        for(int k=0; k<procs; k++)
+//        {
+//                if(myid==k)
+//                {
+//                        //Initial file created only by root node.
+//                        if(myid==0){
+//                            snapfile_hdf5 = H5Fcreate("logfile.h5", H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+//                            H5TBmake_table("Table Title",snapfile_hdf5, LIGHTCOLLISION_TABLENAME, NFIELDS_LIGHT_COLLISION, LIGHTCOLLISION_NRECORDS,
+//                                           light_collision_dst_size, light_collision_field_names, light_collision_dst_offset, light_collision_field_type,
+//                                           1000, NULL, 0, LIGHTCOLLISION_TABLE);
+//                            H5Fclose( snapfile_hdf5 );
+//                        }
+//                }
+//                MPI_Barrier(MPI_COMM_WORLD);
+//        }
 
 	/* captures i/o signals to close */
 	trap_sigs();

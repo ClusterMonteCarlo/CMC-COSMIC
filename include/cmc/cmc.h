@@ -25,12 +25,12 @@
 #include "cmc_mpi.h"
 #endif
 
-#define H5FILE_NAME "logfile.h5"
-#define LOGFILE_ID 0
-#define LOGFILE_TABLENAME "LOGFILE"
-#define LIGHTCOLLISION_ID 1
-#define NFIELDS_LIGHT_COLLISION 20
-#define LIGHTCOLLISION_TABLENAME "LIGHTCOLLISION"
+//#define H5FILE_NAME "logfile.h5"
+//#define LOGFILE_ID 0
+//#define LOGFILE_TABLENAME "LOGFILE"
+//#define LIGHTCOLLISION_ID 1
+//#define NFIELDS_LIGHT_COLLISION 20
+//#define LIGHTCOLLISION_TABLENAME "LIGHTCOLLISION"
 
 //enum types {
 //    Integer, Double, String, Float = Double, /* unless you want to store the value in a poitner
@@ -39,7 +39,7 @@
 //    EndList
 //};
 
-void append_to_table(int which_table, int num, ...);
+//void append_to_table(int which_table, int num, ...);
 
 
 /*-------------------------------------------------------------------------
