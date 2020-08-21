@@ -194,12 +194,12 @@ void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 }
 
 /**
-* @brief Reads from the given fits file and stores into the corrsponding members of the given cmc_fits_data_t data structure
+* @brief Reads from the given hdf5 file and stores into the corrsponding members of the given cmc_hdf5_data_t data structure
 *
-* @param cfd Struct of type cmc_fits_data_t where the data is stored after reading from the file
+* @param cfd Struct of type cmc_hdf5_data_t where the data is stored after reading from the file
 * @param filename input fits file that needs to be read
 */
-void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUNT){
+void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUNT){
     hid_t       file, filetype, memtype, space, dset, attr1, dset1;
     hsize_t     dims[2] = {1, 1};
 
@@ -326,14 +326,6 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     cfd->Rtid = read_rtid[0][0];
     cfd->Z = read_z[0][0];
 
-    printf("EXTNAME: %s\n", read_ext_name[0]);
-    printf("Z: %f\n", cfd->Z);
-    printf("RTID: %f\n", cfd->Rtid);
-    printf("RVIR: %f\n", cfd->Rvir);
-    printf("MCLUS: %f\n", cfd->Mclus);
-    printf("NOBJ: %d\n", cfd->NOBJ );
-    printf("NBINARY: %d\n", cfd->NBINARY);
-
     if(RESTART_TCOUNT != 0){
         free (read_stellar_objects[0]);
         free(read_stellar_objects);
@@ -374,6 +366,7 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     read_stellar_objects[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
     for (i=1; i<dims[0]; i++)
         read_stellar_objects[i] = read_stellar_objects[0] + i * dims[1];
+
     status = H5Dread (dset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                 read_stellar_objects[0]);
 
@@ -400,11 +393,6 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
      */
     status = H5Dread (dset1, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                       read_binary_objects[0]);
-
-    for (i=0; i<dims[0]; i++) {
-        printf("%f %f %f %f %f %f %f\n", read_binary_objects[i][0], read_binary_objects[i][1], read_binary_objects[i][2], read_binary_objects[i][3], read_binary_objects[i][4], read_binary_objects[i][5], read_binary_objects[i][6], read_binary_objects[i][7]);
-    }
-
 
     for (i=0; i<dims[0]; i++) {
         cfd->bs_index[i] = read_binary_objects[i][0];
@@ -449,4 +437,76 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     status = H5Fclose (file);
 
 
+}
+
+/**
+* @brief Reads from the given fits file and stores into the corrsponding members of the given cmc_fits_data_t data structure
+*
+* @param cfd Struct of type cmc_fits_data_t where the data is stored after reading from the file
+* @param filename input fits file that needs to be read
+*/
+void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUNT){
+	int status=0, hdunum, hdutype, anynull;
+	fitsfile *fptr;
+	long frow=1, felem=1, nelem;
+	float floatnull=0.0;
+
+	/* open file for reading */
+	fits_open_file(&fptr, filename, READONLY, &status);
+	cmc_fits_printerror(status);
+	hdunum = 2;
+	fits_movabs_hdu(fptr, hdunum, &hdutype, &status);
+	cmc_fits_printerror(status);
+
+	/* read keys and then malloc data structure */
+	fits_read_key(fptr, TLONG, "NOBJ", &(cfd->NOBJ), NULL, &status);
+	fits_read_key(fptr, TLONG, "NBINARY", &(cfd->NBINARY), NULL, &status);
+	fits_read_key(fptr, TDOUBLE, "MCLUS", &(cfd->Mclus), NULL, &status);
+	fits_read_key(fptr, TDOUBLE, "RVIR", &(cfd->Rvir), NULL, &status);
+	fits_read_key(fptr, TDOUBLE, "RTID", &(cfd->Rtid), NULL, &status);
+	fits_read_key(fptr, TDOUBLE, "Z", &(cfd->Z), NULL, &status);
+	cmc_fits_printerror(status);
+
+	/*if we're restarting from a checkpoint, we don't need to allocate or read
+	 * in the original star files from the fits file...just the header info*/
+	if(RESTART_TCOUNT != 0){
+		fits_close_file(fptr, &status);
+		return;
+	}
+
+	cmc_malloc_fits_data_t(cfd);
+
+	/* read in data columns */
+	nelem = cfd->NOBJ+2;
+	fits_read_col(fptr, TLONG, 1, frow, felem, nelem, &floatnull, cfd->obj_id, &anynull, &status);
+	fits_read_col(fptr, TINT, 2, frow, felem, nelem, &floatnull, cfd->obj_k, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 3, frow, felem, nelem, &floatnull, cfd->obj_m, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 4, frow, felem, nelem, &floatnull, cfd->obj_Reff, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 5, frow, felem, nelem, &floatnull, cfd->obj_r, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 6, frow, felem, nelem, &floatnull, cfd->obj_vr, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 7, frow, felem, nelem, &floatnull, cfd->obj_vt, &anynull, &status);
+	fits_read_col(fptr, TLONG, 8, frow, felem, nelem, &floatnull, cfd->obj_binind, &anynull, &status);
+	cmc_fits_printerror(status);
+	
+	hdunum = 3;
+	fits_movabs_hdu(fptr, hdunum, &hdutype, &status);
+	cmc_fits_printerror(status);
+
+	/* read in data columns */
+	nelem = cfd->NBINARY+1;
+	fits_read_col(fptr, TLONG, 1, frow, felem, nelem, &floatnull, cfd->bs_index, &anynull, &status);
+	fits_read_col(fptr, TLONG, 2, frow, felem, nelem, &floatnull, cfd->bs_id1, &anynull, &status);
+	fits_read_col(fptr, TINT, 3, frow, felem, nelem, &floatnull, cfd->bs_k1, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 4, frow, felem, nelem, &floatnull, cfd->bs_m1, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 5, frow, felem, nelem, &floatnull, cfd->bs_Reff1, &anynull, &status);
+	fits_read_col(fptr, TLONG, 6, frow, felem, nelem, &floatnull, cfd->bs_id2, &anynull, &status);
+	fits_read_col(fptr, TINT, 7, frow, felem, nelem, &floatnull, cfd->bs_k2, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 8, frow, felem, nelem, &floatnull, cfd->bs_m2, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 9, frow, felem, nelem, &floatnull, cfd->bs_Reff2, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 10, frow, felem, nelem, &floatnull, cfd->bs_a, &anynull, &status);
+	fits_read_col(fptr, TDOUBLE, 11, frow, felem, nelem, &floatnull, cfd->bs_e, &anynull, &status);
+	cmc_fits_printerror(status);
+	
+	fits_close_file(fptr, &status);
+	cmc_fits_printerror(status);
 }

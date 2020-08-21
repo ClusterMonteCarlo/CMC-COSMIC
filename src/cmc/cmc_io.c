@@ -1010,8 +1010,17 @@ if(myid==0) {
 			exit(1);
 		}
 		/* strip comments and newline character */
-		line[strcspn(line, "#\n")] = '\0';
-		
+		line[strcspn(line, ";#\n")] = '\0';
+
+                if (line[0] == '['){
+                    line[0] = '\0';
+                }
+
+                if (strcmp(line, "timestep_conditions = 'dtp=None'")==0)
+                    {
+                        line[0] = '\0';
+                    }
+
 		/* replace equal sign with a space */
 		while (strchr(line, '=') != NULL) {
 			line[strcspn(line, "=")] = ' ';
@@ -1182,21 +1191,21 @@ if(myid==0) {
 				curr_mass = (char *) strtok(values, ",; ");
 				for (NO_MASS_BINS = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_MASS_BINS++);
 				parsed.MASS_BINS = 1;
-			} else if (strcmp(parameter_name, "BSE_NATAL_KICK_ARRAY") == 0) {
+			} else if (strcmp(parameter_name, "NATAL_KICK_ARRAY") == 0) {
 				PRINT_PARSED(PARAMDOC_BSE_NATAL_KICK_ARRAY);
 				/* we recycle variable "curr_mass" for mass bins */
 				strcpy(BSE_NATAL_KICK_ARRAY, values);
 				curr_mass = (char *) strtok(values, ",; ");
 				for (NO_BSE_NATAL_KICK_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_BSE_NATAL_KICK_ARRAY++);
 				parsed.BSE_NATAL_KICK_ARRAY = 1;
-			} else if (strcmp(parameter_name, "BSE_QCRIT_ARRAY") == 0) {
+			} else if (strcmp(parameter_name, "QCRIT_ARRAY") == 0) {
 				PRINT_PARSED(PARAMDOC_BSE_QCRIT_ARRAY);
 				/* we recycle variable "curr_mass" for mass bins */
 				strcpy(BSE_QCRIT_ARRAY, values);
 				curr_mass = (char *) strtok(values, ",; ");
 				for (NO_BSE_QCRIT_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_BSE_QCRIT_ARRAY++);
 				parsed.BSE_QCRIT_ARRAY = 1;
-			} else if (strcmp(parameter_name, "BSE_FPRIMC_ARRAY") == 0) {
+			} else if (strcmp(parameter_name, "FPRIMC_ARRAY") == 0) {
 				PRINT_PARSED(PARAMDOC_BSE_FPRIMC_ARRAY);
 				/* we recycle variable "curr_mass" for mass bins */
 				strcpy(BSE_FPRIMC_ARRAY, values);
@@ -1296,7 +1305,7 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_WIND_FACTOR);
 				sscanf(values, "%lf", &WIND_FACTOR);
 				parsed.WIND_FACTOR = 1;
-			} else if (strcmp(parameter_name, "GAMMA") == 0) {
+			} else if (strcmp(parameter_name, "CMC_GAMMA") == 0) {
 				PRINT_PARSED(PARAMDOC_GAMMA);
 				sscanf(values, "%lf", &GAMMA);
 				parsed.GAMMA = 1;
@@ -1427,175 +1436,175 @@ if(myid==0) {
 				sscanf(values, "%lf", &OVERWRITE_MCLUS);
 				parsed.OVERWRITE_MCLUS = 1;
 				// Begin reading in stellar and binary evolution assumptions.
-                        } else if (strcmp(parameter_name, "BSE_PTS1")== 0) {
+                        } else if (strcmp(parameter_name, "PTS1")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_PTS1);
                                 sscanf(values, "%lf", &BSE_PTS1);
                                 parsed.BSE_PTS1 = 1;
-                        } else if (strcmp(parameter_name, "BSE_PTS2")== 0) {
+                        } else if (strcmp(parameter_name, "PTS2")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_PTS2);
                                 sscanf(values, "%lf", &BSE_PTS2);
                                 parsed.BSE_PTS2 = 1;
-                        } else if (strcmp(parameter_name, "BSE_PTS3")== 0) {
+                        } else if (strcmp(parameter_name, "PTS3")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_PTS3);
                                 sscanf(values, "%lf", &BSE_PTS3);
                                 parsed.BSE_PTS3 = 1;
-			} else if (strcmp(parameter_name, "BSE_WINDFLAG")==0) {
+			} else if (strcmp(parameter_name, "WINDFLAG")==0) {
 				PRINT_PARSED(PARAMDOC_BSE_WINDFLAG);
 				sscanf(values, "%d", &BSE_WINDFLAG);
 				parsed.BSE_WINDFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_EDDLIMFLAG")== 0) {
+                        } else if (strcmp(parameter_name, "EDDLIMFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_EDDLIMFLAG);
                                 sscanf(values, "%d", &BSE_EDDLIMFLAG);
                                 parsed.BSE_EDDLIMFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_NETA")== 0) {
+                        } else if (strcmp(parameter_name, "NETA")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_NETA);
                                 sscanf(values, "%lf", &BSE_NETA);
                                 parsed.BSE_NETA = 1;
-                        } else if (strcmp(parameter_name, "BSE_BWIND")== 0) {
+                        } else if (strcmp(parameter_name, "BWIND")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BWIND);
                                 sscanf(values, "%lf", &BSE_BWIND);
                                 parsed.BSE_BWIND = 1;
-                        } else if (strcmp(parameter_name, "BSE_HEWIND")== 0) {
+                        } else if (strcmp(parameter_name, "HEWIND")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_HEWIND);
                                 sscanf(values, "%lf", &BSE_HEWIND);
                                 parsed.BSE_HEWIND = 1;
-                        } else if (strcmp(parameter_name, "BSE_BETA")== 0) {
+                        } else if (strcmp(parameter_name, "BETA")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BETA);
                                 sscanf(values, "%lf", &BSE_BETA);
                                 parsed.BSE_BETA = 1;
-                        } else if (strcmp(parameter_name, "BSE_XI")== 0) {
+                        } else if (strcmp(parameter_name, "XI")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_XI);
                                 sscanf(values, "%lf", &BSE_XI);
                                 parsed.BSE_XI = 1;
-                        } else if (strcmp(parameter_name, "BSE_ACC2")== 0) {
+                        } else if (strcmp(parameter_name, "ACC2")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ACC2);
                                 sscanf(values, "%lf", &BSE_ACC2);
                                 parsed.BSE_ACC2 = 1;
-                        } else if (strcmp(parameter_name, "BSE_ALPHA1")== 0) {
+                        } else if (strcmp(parameter_name, "ALPHA1")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ALPHA1);
                                 sscanf(values, "%lf", &BSE_ALPHA1);
                                 parsed.BSE_ALPHA1 = 1;
-                        } else if (strcmp(parameter_name, "BSE_LAMBDAF")== 0) {
+                        } else if (strcmp(parameter_name, "LAMBDAF")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_LAMBDAF);
                                 sscanf(values, "%lf", &BSE_LAMBDAF);
                                 parsed.BSE_LAMBDAF = 1;
-                        } else if (strcmp(parameter_name, "BSE_CEFLAG")== 0) {
+                        } else if (strcmp(parameter_name, "CEFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_CEFLAG);
                                 sscanf(values, "%i", &BSE_CEFLAG);
                                 parsed.BSE_CEFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_CEKICKFLAG")== 0) {
+                        } else if (strcmp(parameter_name, "CEKICKFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_CEKICKFLAG);
                                 sscanf(values, "%i", &BSE_CEKICKFLAG);
                                 parsed.BSE_CEKICKFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_CEMERGEFLAG")== 0) {
+                        } else if (strcmp(parameter_name, "CEMERGEFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_CEMERGEFLAG);
                                 sscanf(values, "%i", &BSE_CEMERGEFLAG);
                                 parsed.BSE_CEMERGEFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_CEHESTARFLAG")== 0) {
+                        } else if (strcmp(parameter_name, "CEHESTARFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_CEHESTARFLAG);
                                 sscanf(values, "%i", &BSE_CEHESTARFLAG);
                                 parsed.BSE_CEHESTARFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_QCFLAG")== 0) {
+                        } else if (strcmp(parameter_name, "QCFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_QCFLAG);
                                 sscanf(values, "%i", &BSE_QCFLAG);
                                 parsed.BSE_QCFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_SIGMA")== 0) {
+                        } else if (strcmp(parameter_name, "SIGMA")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_SIGMA);
                                 sscanf(values, "%lf", &BSE_SIGMA);
                                 parsed.BSE_SIGMA = 1;
-                        } else if (strcmp(parameter_name, "BSE_BHFLAG")== 0) {
+                        } else if (strcmp(parameter_name, "BHFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BHFLAG);
                                 sscanf(values, "%i", &BSE_BHFLAG);
                                 parsed.BSE_BHFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_ECSN")==0) {
+                        } else if (strcmp(parameter_name, "ECSN")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ECSN);
                                 sscanf(values, "%lf", &BSE_ECSN);
                                 parsed.BSE_ECSN = 1;
-                        } else if (strcmp(parameter_name, "BSE_ECSN_MLOW")==0) {
+                        } else if (strcmp(parameter_name, "ECSN_MLOW")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ECSN_MLOW);
                                 sscanf(values, "%lf", &BSE_ECSN_MLOW);
                                 parsed.BSE_ECSN_MLOW = 1;
-                        } else if (strcmp(parameter_name, "BSE_SIGMADIV")==0) {
+                        } else if (strcmp(parameter_name, "SIGMADIV")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_SIGMADIV);
                                 sscanf(values, "%lf", &BSE_SIGMADIV);
                                 parsed.BSE_SIGMADIV = 1;
-                        } else if (strcmp(parameter_name, "BSE_AIC")==0) {
+                        } else if (strcmp(parameter_name, "AIC")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_AIC);
                                 sscanf(values, "%d", &BSE_AIC);
                                 parsed.BSE_AIC = 1;
-                        } else if (strcmp(parameter_name, "BSE_BDECAYFAC")==0) {
+                        } else if (strcmp(parameter_name, "BDECAYFAC")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BDECAYFAC);
                                 sscanf(values, "%d", &BSE_BDECAYFAC);
                                 parsed.BSE_BDECAYFAC = 1;
-                        } else if (strcmp(parameter_name, "BSE_HTPMB")==0) {
+                        } else if (strcmp(parameter_name, "HTPMB")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_HTPMB);
                                 sscanf(values, "%d", &BSE_HTPMB);
                                 parsed.BSE_HTPMB = 1;
-                        } else if (strcmp(parameter_name, "BSE_ST_CR")==0) {
+                        } else if (strcmp(parameter_name, "ST_CR")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ST_CR);
                                 sscanf(values, "%d", &BSE_ST_CR);
                                 parsed.BSE_ST_CR = 1;
-                        } else if (strcmp(parameter_name, "BSE_ST_TIDE")==0) {
+                        } else if (strcmp(parameter_name, "ST_TIDE")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ST_TIDE);
                                 sscanf(values, "%d", &BSE_ST_TIDE);
                                 parsed.BSE_ST_TIDE = 1;
-                        } else if (strcmp(parameter_name, "BSE_REJUVFLAG")==0) {
+                        } else if (strcmp(parameter_name, "REJUVFLAG")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_REJUVFLAG);
                                 sscanf(values, "%d", &BSE_REJUVFLAG);
                                 parsed.BSE_REJUVFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_USSN")==0) {
+                        } else if (strcmp(parameter_name, "USSN")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_USSN);
                                 sscanf(values, "%d", &BSE_USSN);
                                 parsed.BSE_USSN = 1;
-			} else if (strcmp(parameter_name, "BSE_PISN")==0) {
+			} else if (strcmp(parameter_name, "PISN")==0) {
 				PRINT_PARSED(PARAMDOC_BSE_PISN);
 				sscanf(values, "%lf", &BSE_PISN);
 				parsed.BSE_PISN = 1;
-                        } else if (strcmp(parameter_name, "BSE_BHSIGMAFRAC")== 0) {
+                        } else if (strcmp(parameter_name, "BHSIGMAFRAC")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BHSIGMAFRAC);
                                 sscanf(values, "%lf", &BSE_BHSIGMAFRAC);
                                 parsed.BSE_BHSIGMAFRAC = 1;
-                        } else if (strcmp(parameter_name, "BSE_POLAR_KICK_ANGLE")== 0) {
+                        } else if (strcmp(parameter_name, "POLAR_KICK_ANGLE")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_POLAR_KICK_ANGLE);
                                 sscanf(values, "%lf", &BSE_POLAR_KICK_ANGLE);
                                 parsed.BSE_POLAR_KICK_ANGLE = 1;
-                        } else if (strcmp(parameter_name, "BSE_NSFLAG")== 0) {
+                        } else if (strcmp(parameter_name, "NSFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_NSFLAG);
                                 sscanf(values, "%i", &BSE_NSFLAG);
                                 parsed.BSE_NSFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_MXNS")== 0) {
+                        } else if (strcmp(parameter_name, "MXNS")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_MXNS);
                                 sscanf(values, "%lf", &BSE_MXNS);
                                 parsed.BSE_MXNS = 1;
-                        } else if (strcmp(parameter_name, "BSE_BHSPINMAG")== 0) {
+                        } else if (strcmp(parameter_name, "BHSPINMAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BHSPINMAG);
                                 sscanf(values, "%lf", &BSE_BHSPINMAG);
                                 parsed.BSE_BHSPINMAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_BHSPINFLAG")== 0) {
+                        } else if (strcmp(parameter_name, "BHSPINFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BHSPINFLAG);
                                 sscanf(values, "%i", &BSE_BHSPINFLAG);
                                 parsed.BSE_BHSPINFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_EDDFAC")== 0) {
+                        } else if (strcmp(parameter_name, "EDDFAC")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_EDDFAC);
                                 sscanf(values, "%lf", &BSE_EDDFAC);
                                 parsed.BSE_EDDFAC = 1;
-                        } else if (strcmp(parameter_name, "BSE_GAMMA")== 0) {
+                        } else if (strcmp(parameter_name, "GAMMA")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_GAMMA);
                                 sscanf(values, "%lf", &BSE_GAMMA);
                                 parsed.BSE_GAMMA = 1;
-			} else if (strcmp(parameter_name, "BSE_TFLAG")== 0) {
+			} else if (strcmp(parameter_name, "TFLAG")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_TFLAG);
 				sscanf(values, "%i", &BSE_TFLAG);
 				parsed.BSE_TFLAG = 1;
-			} else if (strcmp(parameter_name, "BSE_IFFLAG")== 0) {
+			} else if (strcmp(parameter_name, "IFFLAG")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_IFFLAG);
 				sscanf(values, "%i", &BSE_IFFLAG);
 				parsed.BSE_IFFLAG = 1;
-			} else if (strcmp(parameter_name, "BSE_WDFLAG")== 0) {
+			} else if (strcmp(parameter_name, "WDFLAG")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_WDFLAG);
 				sscanf(values, "%i", &BSE_WDFLAG);
 				parsed.BSE_WDFLAG = 1;
-                        } else if (strcmp(parameter_name, "BSE_EPSNOV")== 0) {
+                        } else if (strcmp(parameter_name, "EPSNOV")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_EPSNOV);
                                 sscanf(values, "%lf", &BSE_EPSNOV);
                                 parsed.BSE_EPSNOV = 1;
@@ -1603,15 +1612,15 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BH_RADIUS_MULTIPLYER);
 				sscanf(values, "%lf", &BH_RADIUS_MULTIPLYER);
 				parsed.BH_RADIUS_MULTIPLYER = 1;
-			} else if (strcmp(parameter_name, "BSE_BCONST")== 0) {
+			} else if (strcmp(parameter_name, "BCONST")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_BCONST);
 				sscanf(values, "%lf", &BSE_BCONST);
 				parsed.BSE_BCONST = 1;
-			} else if (strcmp(parameter_name, "BSE_CK")== 0) {
+			} else if (strcmp(parameter_name, "CK")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_CK);
 				sscanf(values, "%lf", &BSE_CK);
 				parsed.BSE_CK = 1;
-			} else if (strcmp(parameter_name, "BSE_REJUV_FAC")== 0) {
+			} else if (strcmp(parameter_name, "REJUV_FAC")== 0) {
 				PRINT_PARSED(PARAMDOC_BSE_REJUV_FAC);
 				sscanf(values, "%lf", &BSE_REJUV_FAC);
 				parsed.BSE_REJUV_FAC = 1;
@@ -2000,7 +2009,15 @@ if(myid==0)
 
 	/* read the number of stars and possibly other parameters */
 	/* MPI: Currently, all processors read the entire data (entire list of stars and binaries) from the file. The data partitioning is done in load_fits_file_data(). This might limit scalability since each node requires enough memory to store the entire data set. */
-	cmc_read_fits_file(INPUT_FILE, &cfd, RESTART_TCOUNT);
+        char* point;
+        if((point = strrchr(INPUT_FILE, '.')) != NULL ) {
+            if((strcmp(point,".h5") == 0) | (strcmp(point,".hdf5") == 0)) {
+                cmc_read_hdf5_file(INPUT_FILE, &cfd, RESTART_TCOUNT);
+            }
+            else{
+                cmc_read_fits_file(INPUT_FILE, &cfd, RESTART_TCOUNT);
+            }
+        }
 	clus.N_STAR = cfd.NOBJ;
 	clus.N_BINARY = cfd.NBINARY;
 	if (OVERWRITE_RVIR>0.) {
