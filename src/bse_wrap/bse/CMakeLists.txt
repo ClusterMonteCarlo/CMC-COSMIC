@@ -5,3 +5,7 @@ add_library(bse STATIC ./COSMIC/cosmic/src/comenv.f ./COSMIC/cosmic/src/corerd.f
 include_directories (./COSMIC/cosmic/src/)
 
 install(TARGETS bse DESTINATION lib)
+
+set(SETUP_PY "setup.py")
+
+install(CODE "execute_process(COMMAND ${Python_EXECUTABLE} ${SETUP_PY} install WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/COSMIC/)")
