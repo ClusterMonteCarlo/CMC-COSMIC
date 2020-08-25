@@ -45,10 +45,10 @@ void restart_stellar_evolution(void){
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_bhflag(BSE_BHFLAG);
-  bse_set_nsflag(BSE_NSFLAG);
+  bse_set_remnantflag(BSE_REMNANTFLAG);
   bse_set_bhspinflag(BSE_BHSPINFLAG);
   bse_set_bhspinmag(BSE_BHSPINMAG);
-  bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
+  bse_set_mxns(BSE_MXNS); //3 if remnantflag=1 or 2, 1.8 if remnantflag=0 (see evolv2.f)
   bse_set_bconst(BSE_BCONST);
   bse_set_CK(BSE_CK);
   bse_set_rejuv_fac(BSE_REJUV_FAC);
@@ -117,9 +117,9 @@ void stellar_evolution_init(void){
   bse_set_htpmb(BSE_HTPMB);
   bse_set_rejuvflag(BSE_REJUVFLAG);
   bse_set_ussn(BSE_USSN);
-  bse_set_qcrit_array(bse_qcrit_array, NO_BSE_QCRIT_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-  bse_set_fprimc_array(bse_fprimc_array, NO_BSE_FPRIMC_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-  bse_set_natal_kick_array(bse_natal_kick_array, NO_BSE_NATAL_KICK_ARRAY); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_qcrit_array(bse_qcrit_array, NO_BSE_QCRIT_ARRAY); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_fprimc_array(bse_fprimc_array, NO_BSE_FPRIMC_ARRAY); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+  bse_set_natal_kick_array(bse_natal_kick_array, NO_BSE_NATAL_KICK_ARRAY); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
   bse_set_sigmadiv(BSE_SIGMADIV);
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambdaf(BSE_LAMBDAF);
@@ -132,10 +132,10 @@ void stellar_evolution_init(void){
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_bhflag(BSE_BHFLAG);
-  bse_set_nsflag(BSE_NSFLAG);
+  bse_set_remnantflag(BSE_REMNANTFLAG);
   bse_set_bhspinflag(BSE_BHSPINFLAG);
   bse_set_bhspinmag(BSE_BHSPINMAG);
-  bse_set_mxns(BSE_MXNS); //3 if nsflag=1 or 2, 1.8 if nsflag=0 (see evolv2.f)
+  bse_set_mxns(BSE_MXNS); //3 if remnantflag=1 or 2, 1.8 if remnantflag=0 (see evolv2.f)
   bse_set_bconst(BSE_BCONST);
   bse_set_CK(BSE_CK);
   bse_set_rejuv_fac(BSE_REJUV_FAC);
@@ -166,7 +166,7 @@ void stellar_evolution_init(void){
 
   /* set collisions matrix */
   bse_instar();
-  dprintf("se_init: %g %g %g %d %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PISN, BSE_ALPHA1, BSE_LAMBDAF, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_NSFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_POLAR_KICK_ANGLE);
+  dprintf("se_init: %g %g %g %d %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PISN, BSE_ALPHA1, BSE_LAMBDAF, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_REMNANTFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_POLAR_KICK_ANGLE);
 
 #ifdef USE_MPI 
   for (k=1; k<=mpiEnd-mpiBegin+1; k++) {

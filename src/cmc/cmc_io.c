@@ -1568,10 +1568,10 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_POLAR_KICK_ANGLE);
                                 sscanf(values, "%lf", &BSE_POLAR_KICK_ANGLE);
                                 parsed.BSE_POLAR_KICK_ANGLE = 1;
-                        } else if (strcmp(parameter_name, "NSFLAG")== 0) {
-                                PRINT_PARSED(PARAMDOC_BSE_NSFLAG);
-                                sscanf(values, "%i", &BSE_NSFLAG);
-                                parsed.BSE_NSFLAG = 1;
+                        } else if (strcmp(parameter_name, "REMNANTFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_REMNANTFLAG);
+                                sscanf(values, "%i", &BSE_REMNANTFLAG);
+                                parsed.BSE_REMNANTFLAG = 1;
                         } else if (strcmp(parameter_name, "MXNS")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_MXNS);
                                 sscanf(values, "%lf", &BSE_MXNS);
@@ -1925,12 +1925,12 @@ if(myid==0) {
         // default=90.0
         CHECK_PARSED(BSE_POLAR_KICK_ANGLE, 90.00, PARAMDOC_BSE_POLAR_KICK_ANGLE);
 
-        // nsflag determines the remnant mass prescription used
-        // nsflag=0: default BSE// nsflag=1: Belczynski et al. 2002, ApJ, 572, 407
-        // nsflag=2: Belczynski et al. 2008// nsflag=3: rapid prescription (Fryer+ 2012)
-        // nsflag=4: delayed prescription (Fryer+ 2012)
+        // remnantflag determines the remnant mass prescription used
+        // remnantflag=0: default BSE// remnantflag=1: Belczynski et al. 2002, ApJ, 572, 407
+        // remnantflag=2: Belczynski et al. 2008// remnantflag=3: rapid prescription (Fryer+ 2012)
+        // remnantflag=4: delayed prescription (Fryer+ 2012)
         // default=4
-        CHECK_PARSED(BSE_NSFLAG, 4, PARAMDOC_BSE_NSFLAG);
+        CHECK_PARSED(BSE_REMNANTFLAG, 4, PARAMDOC_BSE_REMNANTFLAG);
 
         // mxns sets the maximum NS mass
         // default=3.0

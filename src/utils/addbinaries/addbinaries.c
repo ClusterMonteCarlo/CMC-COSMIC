@@ -175,7 +175,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
         double BSE_PISN= 45.00;
         double BSE_BHSIGMAFRAC= 1.00;
         double BSE_POLAR_KICK_ANGLE= 90.00;
-        int BSE_NSFLAG= 4;
+        int BSE_REMNANTFLAG= 4;
         double BSE_MXNS= 3.00;
         int BSE_BHSPINFLAG= 0;
         double BSE_WINDFLAG= 3;
@@ -224,7 +224,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	bse_set_ifflag(BSE_IFFLAG);
 	bse_set_wdflag(BSE_WDFLAG);
 	bse_set_bhflag(BSE_BHFLAG);
-	bse_set_nsflag(BSE_NSFLAG);
+	bse_set_remnantflag(BSE_REMNANTFLAG);
 	bse_set_bhspinflag(BSE_BHSPINFLAG);
 	bse_set_bhspinmag(BSE_BHSPINMAG);
 	bse_set_mxns(BSE_MXNS);
