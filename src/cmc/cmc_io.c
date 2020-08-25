@@ -907,7 +907,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	quiet = 0;
 	debug = 0;
 	NO_MASS_BINS = 0;
-	NO_BSE_NATAL_KICK_ARRAY = 6;
+	NO_BSE_NATAL_KICK_ARRAY = 5;
 	NO_BSE_FPRIMC_ARRAY = 16;
 	NO_BSE_QCRIT_ARRAY = 16;
 	snapshot_window_count=0;
@@ -1143,11 +1143,11 @@ if(myid==0) {
 				parsed.DF_FILE= 1;
 			} else if (strcmp(parameter_name, "DF_INTEGRATED_CRITERION") == 0) {
 				PRINT_PARSED(PARAMDOC_DF_INTEGRATED_CRITERION);
-				sscanf(values, "%lf", &DF_INTEGRATED_CRITERION);
+				sscanf(values, "%d", &DF_INTEGRATED_CRITERION);
 				parsed.DF_INTEGRATED_CRITERION = 1;
 			} else if (strcmp(parameter_name, "INITIAL_VALUE_DF_INTEGRAND") == 0) {
 				PRINT_PARSED(PARAMDOC_INITIAL_VALUE_DF_INTEGRAND);
-				sscanf(values, "%d", &INITIAL_VALUE_DF_INTEGRAND);
+				sscanf(values, "%lf", &INITIAL_VALUE_DF_INTEGRAND);
 				parsed.INITIAL_VALUE_DF_INTEGRAND = 1;
 			} else if (strcmp(parameter_name, "USE_TT_FILE") == 0) {
 				PRINT_PARSED(PARAMDOC_USE_TT_FILE);
