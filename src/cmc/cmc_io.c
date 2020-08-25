@@ -1143,7 +1143,7 @@ if(myid==0) {
 				parsed.DF_FILE= 1;
 			} else if (strcmp(parameter_name, "DF_INTEGRATED_CRITERION") == 0) {
 				PRINT_PARSED(PARAMDOC_DF_INTEGRATED_CRITERION);
-				sscanf(values, "%d", &DF_INTEGRATED_CRITERION);
+				sscanf(values, "%lf", &DF_INTEGRATED_CRITERION);
 				parsed.DF_INTEGRATED_CRITERION = 1;
 			} else if (strcmp(parameter_name, "INITIAL_VALUE_DF_INTEGRAND") == 0) {
 				PRINT_PARSED(PARAMDOC_INITIAL_VALUE_DF_INTEGRAND);
@@ -1572,6 +1572,22 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_REMNANTFLAG);
                                 sscanf(values, "%i", &BSE_REMNANTFLAG);
                                 parsed.BSE_REMNANTFLAG = 1;
+                        } else if (strcmp(parameter_name, "GRFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_GRFLAG);
+                                sscanf(values, "%i", &BSE_GRFLAG);
+                                parsed.BSE_GRFLAG = 1;
+                        } else if (strcmp(parameter_name, "KICKFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_KICKFLAG);
+                                sscanf(values, "%i", &BSE_KICKFLAG);
+                                parsed.BSE_KICKFLAG = 1;
+                        } else if (strcmp(parameter_name, "ZSUN")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_ZSUN);
+                                sscanf(values, "%lf", &BSE_ZSUN);
+                                parsed.BSE_ZSUN = 1;
+                        } else if (strcmp(parameter_name, "REMBAR_MASSLOSS")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_REMBAR_MASSLOSS);
+                                sscanf(values, "%lf", &BSE_REMBAR_MASSLOSS);
+                                parsed.BSE_REMBAR_MASSLOSS = 1;
                         } else if (strcmp(parameter_name, "MXNS")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_MXNS);
                                 sscanf(values, "%lf", &BSE_MXNS);

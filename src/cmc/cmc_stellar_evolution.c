@@ -45,6 +45,10 @@ void restart_stellar_evolution(void){
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_bhflag(BSE_BHFLAG);
+  bse_set_grflag(BSE_GRFLAG);
+  bse_set_kickflag(BSE_KICKFLAG);
+  bse_set_zsun(BSE_ZSUN);
+  bse_set_rembar_massloss(BSE_REMBAR_MASSLOSS);
   bse_set_remnantflag(BSE_REMNANTFLAG);
   bse_set_bhspinflag(BSE_BHSPINFLAG);
   bse_set_bhspinmag(BSE_BHSPINMAG);
@@ -132,6 +136,10 @@ void stellar_evolution_init(void){
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_bhflag(BSE_BHFLAG);
+  bse_set_grflag(BSE_GRFLAG);
+  bse_set_kickflag(BSE_KICKFLAG);
+  bse_set_zsun(BSE_ZSUN);
+  bse_set_rembar_massloss(BSE_REMBAR_MASSLOSS);
   bse_set_remnantflag(BSE_REMNANTFLAG);
   bse_set_bhspinflag(BSE_BHSPINFLAG);
   bse_set_bhspinmag(BSE_BHSPINMAG);

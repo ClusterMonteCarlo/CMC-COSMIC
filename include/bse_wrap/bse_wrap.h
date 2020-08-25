@@ -181,20 +181,21 @@ extern struct { int idum2, iy, ir[32]; } rand2_;
 extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
-extern struct { int  tflag, ifflag, remnantflag, wdflag, bhflag, windflag, qcflag, eddlimflag, bhspinflag, aic, rejuvflag, htpmb, st_cr, st_tide, bdecayfac; } flags_;
+extern struct { int  tflag, ifflag, remnantflag, wdflag, bhflag, windflag,  qcflag, eddlimflag, bhspinflag, aic, rejuvflag,  htpmb, st_cr, st_tide, bdecayfac, grflag; } flags_;
 extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
+extern struct { double zsun; } metvars_;
 
-extern struct { double neta, bwind, hewind, mxns, beta, xi, acc2, epsnov, eddfac, gamma; } windvars_;
+extern struct { double neta, bwind, hewind, beta, xi, acc2, epsnov, eddfac, gamma; } windvars_;
 extern struct { double qcrit_array[16], alpha1, lambdaf; } cevars_;
 extern struct { double bconst, ck; } magvars_;
 extern struct { double rejuv_fac; } mixvars_;
-extern struct { double natal_kick_array[6], sigma, sigmadiv, bhsigmafrac, polar_kick_angle, mu_sn1,omega_sn1, pisn, ecsn, ecsn_mlow, bhspinmag; } snvars_;
+extern struct { double natal_kick_array[5][2], sigma, sigmadiv, bhsigmafrac, polar_kick_angle, pisn, ecsn, ecsn_mlow, bhspinmag, mxns, rembar_massloss; int kickflag;} snvars_;
 extern struct { double fprimc_array[16]; } tidalvars_;
 extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
 extern struct { double scm[14][50000], spp[3][20]; } single_;
-extern struct { double bcm[42][50000], bpp[23][1000]; } binary_;
+extern struct { double bcm[38][50000], bpp[43][1000]; } binary_;
 extern struct { double merger; long int id1_pass, id2_pass; long int using_cmc; } cmcpass_;
 
 /* setters */
@@ -211,6 +212,8 @@ void bse_set_eddlimflag(int eddlimflag); /* Sets wind prescription (0=BSE, 1=Sta
 // at the base of the first ascent of the giant branch to determine relative to the
 // helium core mass of the merger product at the base of the giant branch
 void bse_set_rejuvflag(int rejuvflag);
+void bse_set_grflag(int grflag);
+void bse_set_kickflag(int kickflag);
 void bse_set_using_cmc(void);
 void bse_set_pisn(double pisn); /* Sets Pair-instability pulsations and supernoa */ 
 void bse_set_aic(int aic); /* Sets Pair-instability pulsations and supernoa */
@@ -220,6 +223,9 @@ void bse_set_st_tide(int st_tide); /* Sets Pair-instability pulsations and super
 void bse_set_st_cr(int st_cr); /* Sets Pair-instability pulsations and supernoa */
 void bse_set_ussn(int ussn); /* Sets Pair-instability pulsations and supernoa */
 
+void bse_set_zsun(double zsun);
+
+void bse_set_rembar_massloss(double rembar_massloss);
 void bse_set_ecsn(double ecsn);
 void bse_set_ecsn_mlow(double ecsn_mlow);
 void bse_set_sigma(double sigma); /* dispersion in the Maxwellian for the SN kick speed (190 km/s) */
@@ -233,7 +239,7 @@ void bse_set_remnantflag(int remnantflag); /* remnantflag > 0 takes NS/BH mass f
 void bse_set_qcflag(int qcflag); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_qcrit_array(double qcrit_array[16], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_fprimc_array(double fprimc_array[16], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_natal_kick_array(double natal_kick_array[6], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_natal_kick_array(double natal_kick_array[5][2], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=[bhspinmag], 1=Uniform(0-1)*[bhspinmag], 2=Belczynski2017)*/
 void bse_set_bhspinmag(double bhspinmag);/* value of BH spins (default=0.0) */ 
 void bse_set_mxns(double mxns); /* maximum NS mass (1.8, remnantflag=0; 3.0, remnantflag=1) */

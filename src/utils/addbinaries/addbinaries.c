@@ -140,13 +140,17 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	 * that much, but best to be consistant*/
 	double BSE_FPRIMC_ARRAY[16] = {0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095,0.095238095};
 	double BSE_QCRIT_ARRAY[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-	double BSE_NATAL_KICK_ARRAY[6] = {-100,-100,-100,-100,-100,-100};
-	int NO_BSE_NATAL_KICK_ARRAY = 6;
+        double BSE_NATAL_KICK_ARRAY[5][2] = {{-100.0, -100.0}, {-100.0, -100.0}, {-100.0, -100.0}, {-100.0, -100.0}, {0.0, 0.0}};
+        int NO_BSE_NATAL_KICK_ARRAY = 5;
 	int NO_BSE_FPRIMC_ARRAY = 16;
 	int NO_BSE_QCRIT_ARRAY = 16;
         double BSE_NETA= 0.5;
         double BSE_BWIND= 0.0;
         double BSE_HEWIND= 1.0;
+        double BSE_REMBAR_MASSLOSS = 0.5;
+        int BSE_KICKFLAG = 0;
+        int BSE_GRFLAG = 0;
+        double BSE_ZSUN = 0.017;
         double BSE_BETA= -1.0;
         double BSE_XI= 0.5;
         double BSE_ACC2= 1.5;
@@ -225,6 +229,10 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	bse_set_wdflag(BSE_WDFLAG);
 	bse_set_bhflag(BSE_BHFLAG);
 	bse_set_remnantflag(BSE_REMNANTFLAG);
+        bse_set_grflag(BSE_GRFLAG);
+        bse_set_kickflag(BSE_KICKFLAG);
+        bse_set_zsun(BSE_ZSUN);
+        bse_set_rembar_massloss(BSE_REMBAR_MASSLOSS);
 	bse_set_bhspinflag(BSE_BHSPINFLAG);
 	bse_set_bhspinmag(BSE_BHSPINMAG);
 	bse_set_mxns(BSE_MXNS);
