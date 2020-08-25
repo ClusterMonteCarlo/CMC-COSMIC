@@ -181,7 +181,7 @@ extern struct { int idum2, iy, ir[32]; } rand2_;
 extern struct { long long int state[4]; int first;} taus113state_;
 #endif
 extern struct { int ktype[15][15]; } types_;
-extern struct { int  tflag, ifflag, nsflag, wdflag, bhflag, windflag, qcflag, eddlimflag, bhspinflag, aic, rejuvflag, htpmb, st_cr, st_tide, bdecayfac; } flags_;
+extern struct { int  tflag, ifflag, remnantflag, wdflag, bhflag, windflag, qcflag, eddlimflag, bhspinflag, aic, rejuvflag, htpmb, st_cr, st_tide, bdecayfac; } flags_;
 extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 
@@ -229,14 +229,14 @@ void bse_set_polar_kick_angle(int polar_kick_angle); /* Switch to set the allowe
 void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0) */
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
-void bse_set_nsflag(int nsflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_qcflag(int qcflag); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_qcrit_array(double qcrit_array[16], long len); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_fprimc_array(double fprimc_array[16], long len); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_natal_kick_array(double natal_kick_array[6], long len); /* nsflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_remnantflag(int remnantflag); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_qcflag(int qcflag); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_qcrit_array(double qcrit_array[16], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_fprimc_array(double fprimc_array[16], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_natal_kick_array(double natal_kick_array[6], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=[bhspinmag], 1=Uniform(0-1)*[bhspinmag], 2=Belczynski2017)*/
 void bse_set_bhspinmag(double bhspinmag);/* value of BH spins (default=0.0) */ 
-void bse_set_mxns(double mxns); /* maximum NS mass (1.8, nsflag=0; 3.0, nsflag=1) */
+void bse_set_mxns(double mxns); /* maximum NS mass (1.8, remnantflag=0; 3.0, remnantflag=1) */
 void bse_set_bconst(double bconst); /* isolated pulsar field decay timescale */
 void bse_set_CK(double CK); /* Pulsar mass accretion field decay factor */
 void bse_set_rejuv_fac(double rejuv_fac);
