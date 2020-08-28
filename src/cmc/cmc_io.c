@@ -1936,6 +1936,12 @@ if(myid==0) {
         // default=1.0
         CHECK_PARSED(BSE_BHSIGMAFRAC, 1.00, PARAMDOC_BSE_BHSIGMAFRAC);
 
+        CHECK_PARSED(BSE_GRFLAG, 1, PARAMDOC_BSE_GRFLAG);
+
+        CHECK_PARSED(BSE_KICKFLAG, 0, PARAMDOC_BSE_KICKFLAG);
+
+        CHECK_PARSED(BSE_ZSUN, 0.017, PARAMDOC_BSE_ZSUN);
+
         // polar_kick_angle sets the opening angle of the kick relative to the pole of the exploding star
         // this can range from 0 (strictly polar kicks) to 90 (fully isotropic kicks)
         // default=90.0
