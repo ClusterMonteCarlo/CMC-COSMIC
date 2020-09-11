@@ -13,7 +13,9 @@ conda create -c conda-forge --name cmc-py37 openmpi-mpicc clang_osx-64 clangxx_o
 
 ## install CMC
 ```
+source activate cmc-py37
 git clone https://github.com/ClusterMonteCarlo/CMC-COSMIC.git --recurse-submodules
+cd CMC-COSMIC
 mkdir build
 cd build
 CONDA_BUILD_SYSROOT=/ FC=mpifort CC=mpicc cmake .. -DCMAKE_INSTALL_PREFIX=.
