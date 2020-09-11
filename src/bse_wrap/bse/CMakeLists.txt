@@ -8,4 +8,5 @@ install(TARGETS bse DESTINATION lib)
 
 set(SETUP_PY "setup.py")
 
+install(CODE "execute_process(COMMAND ${Python_EXECUTABLE} -m pip install numpy)")
 install(CODE "execute_process(COMMAND ${Python_EXECUTABLE} ${SETUP_PY} install WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/COSMIC/)")
