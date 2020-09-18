@@ -348,7 +348,6 @@ are skipped if they already interacted in 3bb loop!  */
 			if (SS_COLLISION) {
                                 S_tmp = 0.0;
 
-                                S_tde = 0.0;
 				if (BHNS_TDE) {
 					if (star[kp].se_k >= 13 && star[k].se_k <= 1 && mass_kp >= mass_k) {
 						if (mass_k * units.mstar / FB_CONST_MSUN < 0.001) {
@@ -363,12 +362,10 @@ are skipped if they already interacted in 3bb loop!  */
 							collisions_multiple = pow(mass_k/mass_kp, 1./3.);
 						}
 					} else {
-						collisions_multiple = 1.0;
+						collisions_multiple = COLL_FACTOR;
 					}
-                                        rperi = collisions_multiple * (star[k].rad + star[kp].rad);
-                                        S_tde = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
-                                        
-                                        S_tmp = MAX(S_tmp, S_tde);
+                                } else {
+                                        collisions_multiple = COLL_FACTOR;
 				}
 
                                 
@@ -455,7 +452,7 @@ are skipped if they already interacted in 3bb loop!  */
                                 }
 
                                 /* standard sticky sphere collision cross section */
-                                rperi = COLL_FACTOR * (star[k].rad + star[kp].rad);
+                                rperi = collisions_multiple * (star[k].rad + star[kp].rad);
 				S_coll = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 				
 				/* take the max of all cross sections; the event type will be chosen by sampling the impact parameter */
