@@ -163,6 +163,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
         int BSE_QCFLAG= 2;
         double BSE_SIGMA= 265.0;
         int BSE_BHFLAG= 1;
+        int BSE_BHMS_COLL_FLAG= 0;
         double BSE_ECSN= 2.5;
         double BSE_ECSN_MLOW= 1.4;
         double BSE_SIGMADIV= -20.0;
@@ -228,6 +229,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	bse_set_ifflag(BSE_IFFLAG);
 	bse_set_wdflag(BSE_WDFLAG);
 	bse_set_bhflag(BSE_BHFLAG);
+        bse_set_bhms_coll_flag(BSE_BHMS_COLL_FLAG);
 	bse_set_remnantflag(BSE_REMNANTFLAG);
         bse_set_grflag(BSE_GRFLAG);
         bse_set_kickflag(BSE_KICKFLAG);
