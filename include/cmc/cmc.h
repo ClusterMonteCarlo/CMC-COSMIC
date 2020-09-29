@@ -1287,6 +1287,11 @@ typedef struct{
 * @brief bhspinflag sets the spin magnitude for BH merger kicks(0=[BHSPINMAG], 1=Uniform(0-1)*[BHSPINMAG], 2=Belczynski2017) 
 */
 	int BSE_BHSPINFLAG;
+#define PARAMDOC_BSE_BHMS_COLL_FLAG "If set to 1 then if BH+star collision and if Mstar > Mbh, do not destroy the star"
+/**
+* @brief If set to 1 then if BH+star collision and if Mstar > Mbh, do not destroy the star 
+*/
+        int BSE_BHMS_COLL_FLAG;
 #define PARAMDOC_BH_RADIUS_MULTIPLYER "Factor to multiply the radii of BHs by for collisions (default is 5, since PN breaks down at ~10M)"
 /**
 * @brief Factor to multiply the rdii of BHs by when they're being integrated by fewbody (saves times for BH collisions).  The default is the Schwarzschild ISCO 

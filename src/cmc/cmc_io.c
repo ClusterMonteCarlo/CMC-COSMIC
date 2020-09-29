@@ -1600,6 +1600,10 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BHSPINFLAG);
                                 sscanf(values, "%i", &BSE_BHSPINFLAG);
                                 parsed.BSE_BHSPINFLAG = 1;
+                        } else if (strcmp(parameter_name, "BHMS_COLL_FLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_BHMS_COLL_FLAG);
+                                sscanf(values, "%i", &BSE_BHMS_COLL_FLAG);
+                                parsed.BSE_BHMS_COLL_FLAG = 1;
                         } else if (strcmp(parameter_name, "EDDFAC")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_EDDFAC);
                                 sscanf(values, "%lf", &BSE_EDDFAC);
@@ -1969,6 +1973,11 @@ if(myid==0) {
         // distribution for BH spins 
         // default=0.0
         CHECK_PARSED(BSE_BHSPINMAG, 0.0, PARAMDOC_BSE_BHSPINMAG);
+
+        // bhms_coll_flag 
+        // If set to 1 then if BH+star collision and if Mstar > Mbh, do not destroy the star
+        // default = 0
+        CHECK_PARSED(BSE_BHMS_COLL_FLAG, 0, PARAMDOC_BSE_BHMS_COLL_FLAG);
 
         //////////////////////////////////////////////////////
         ////// MASS TRANSFER FLAGS //////

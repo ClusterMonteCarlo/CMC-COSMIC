@@ -51,6 +51,7 @@ void restart_stellar_evolution(void){
   bse_set_rembar_massloss(BSE_REMBAR_MASSLOSS);
   bse_set_remnantflag(BSE_REMNANTFLAG);
   bse_set_bhspinflag(BSE_BHSPINFLAG);
+  bse_set_bhms_coll_flag(BSE_BHMS_COLL_FLAG);
   bse_set_bhspinmag(BSE_BHSPINMAG);
   bse_set_mxns(BSE_MXNS); //3 if remnantflag=1 or 2, 1.8 if remnantflag=0 (see evolv2.f)
   bse_set_bconst(BSE_BCONST);
@@ -142,6 +143,7 @@ void stellar_evolution_init(void){
   bse_set_rembar_massloss(BSE_REMBAR_MASSLOSS);
   bse_set_remnantflag(BSE_REMNANTFLAG);
   bse_set_bhspinflag(BSE_BHSPINFLAG);
+  bse_set_bhms_coll_flag(BSE_BHMS_COLL_FLAG);
   bse_set_bhspinmag(BSE_BHSPINMAG);
   bse_set_mxns(BSE_MXNS); //3 if remnantflag=1 or 2, 1.8 if remnantflag=0 (see evolv2.f)
   bse_set_bconst(BSE_BCONST);
