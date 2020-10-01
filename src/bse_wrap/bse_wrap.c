@@ -470,8 +470,8 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb)
   int jp=0,switchedCE=0, disrupt=0;
   int sigmahold=265;
   double tphys=0, evolve_type=0;
-  double tms[2]; rad[2]; lumin[2]; B_0[2]; bacc[2]; tacc[2]; epoch[2]menv_bpp[2]; renv_bpp[2]
-  double kick_info[17,2];
+  double tms[2], rad[2], lumin[2], B_0[2], bacc[2], tacc[2], epoch[2], menv_bpp[2], renv_bpp[2];
+  double kick_info[17][2];
   k3 = 0.21;
   PI = acos(-1.0);
   //
