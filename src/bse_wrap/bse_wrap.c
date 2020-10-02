@@ -429,7 +429,8 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
    */
   /* LOGICAL used by COSMIC, but not needed here */
   int disrupt=0;
-  kick_(kw, m1, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, vs, &disrupt);
+  double kick_info[17][2];
+  kick_(kw, m1, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, kick_info, &disrupt, vs);
 }
 
 /**
