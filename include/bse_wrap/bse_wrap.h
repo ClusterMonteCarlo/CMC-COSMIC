@@ -131,7 +131,7 @@ void evolv2_(int *kstar, double *mass, double *tb, double *ecc, double *z,
 	     double *tphysf, double *dtp, double *mass0, double *rad, double *lum,
              double *massc, double *radc, double *menv, double *renv,
 	     double *ospin, double *B_0, double *bacc, double *tacc, double *epoch,
-	     double *tms, double *bhspin, double *tphys, double *zpars, double *vs);
+	     double *tms, double *bhspin, double *tphys, double *zpars, double *vs, double *kick_info);
 void instar_(void);
 float ran3_(int *idum);
 void star_(int *kw, double *mass, double *mt, double *tm, double *tn, double *tscls, 
@@ -140,10 +140,10 @@ void hrdiag_(double *mass, double *aj, double *mt, double *tm, double *tn, doubl
 	     double *lums, double *GB, double *zpars, double *r, double *lum, int *kw, 
 	     double *mc, double *rc, double *menv, double *renv, double *k2,  double *bhspin, int *kidx);
 void kick_(int *kw, double *m1, double *m1n, double *m2, double *ecc, double *sep, 
-	   double *jorb, double *vk, int *snstar, double *r2, double *fallback, double kick_info[17][2], int *disrupt, double *vs);
+	   double *jorb, double *vk, int *snstar, double *r2, double *fallback, double *sigmahold, double *kick_info, int *disrupt, double *vs);
 void mix_(double *mass, double *mt, double *aj, int *kw, double *zpars, double *bhspin);
 // note: these function names only work if in lowercase here, even though FORTRAN versions in uppercase.
-void comenv_(double *M01, double *M1, double *MC1, double *AJ1, double *JSPIN1, int *KW1, double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2, double *ZPARS, double *ECC, double *SEP, double *JORB, int *COEL, int *star1, int *star2, double *vk, double kick_info[17][2], int *formation1, int *formation2, int *sigmahold, double *bhspin1, double *bhspin2, int *binstate, int *mergertype, int *jp, double *tphys,int *swtichedCE, double *rad, double *tms, double *evolve_type, int *disrupt, double * lumin, double * B_0, double * bacc, double * tacc, double * epoch, double * menv_bpp, double * renv_bpp, double *bkick);
+void comenv_(double *M01, double *M1, double *MC1, double *AJ1, double *JSPIN1, int *KW1, double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2, double *ZPARS, double *ECC, double *SEP, double *JORB, int *COEL, int *star1, int *star2, double *vk, double *kick_info, int *formation1, int *formation2, double *sigmahold, double *bhspin1, double *bhspin2, int *binstate, int *mergertype, int *jp, double *tphys,int *swtichedCE, double *rad, double *tms, double *evolve_type, int *disrupt, double * lumin, double * B_0, double * bacc, double * tacc, double * epoch, double * menv_bpp, double * renv_bpp, double *bkick);
 
 
 /* wrapped BSE functions */
