@@ -24,7 +24,7 @@ jobs:
       uses: textbook/git-checkout-submodule-action@master
     - name: Install dependencies
       run: |
-        sudo apt-get install gcc gfortran openmpi-bin libopenmpi-dev cmake libhdf5-serial-dev libgsl-dev
+        sudo apt-get install gcc gfortran openmpi-bin libopenmpi-dev cmake libhdf5-serial-dev libgsl-dev libcfitsio-dev
     - name: Build CMC
       run: |
         mkdir build
