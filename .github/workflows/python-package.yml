@@ -1,0 +1,38 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Unit Test CMC
+
+on: [pull_request, push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Checkout submodules
+      uses: textbook/git-checkout-submodule-action@master
+    - name: Install dependencies
+      run: |
+        sudo apt-get install gcc gfortran mpi cmake libhdf5-serial-dev libgsl-dev
+    - name: Build CMC
+      run: |
+        mkdir build
+        cd build
+        FC=mpifort CC=mpicc cmake .. -DCMAKE_INSTALL_PREFIX=../ci
+        make install
+    - name: Test with pytest
+      run: |
+        bash ci/run_cmc_tests.sh
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
