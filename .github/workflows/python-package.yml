@@ -33,6 +33,7 @@ jobs:
         make install
     - name: Test with pytest
       run: |
-        bash ci/run_cmc_tests.sh
+        cd ci
+        bash run_cmc_tests.sh
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
