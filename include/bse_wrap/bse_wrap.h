@@ -241,7 +241,7 @@ void bse_set_remnantflag(int remnantflag); /* remnantflag > 0 takes NS/BH mass f
 void bse_set_qcflag(int qcflag); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_qcrit_array(double qcrit_array[16], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_fprimc_array(double fprimc_array[16], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
-void bse_set_natal_kick_array(double natal_kick_array[5][2], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
+void bse_set_natal_kick_array(double natal_kick_array[10], long len); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_bhspinflag(int bhflag);/* bhspinflag (0=[bhspinmag], 1=Uniform(0-1)*[bhspinmag], 2=Belczynski2017)*/
 void bse_set_bhspinmag(double bhspinmag);/* value of BH spins (default=0.0) */ 
 void bse_set_mxns(double mxns); /* maximum NS mass (1.8, remnantflag=0; 3.0, remnantflag=1) */
