@@ -31,9 +31,9 @@ jobs:
         cd build
         FC=mpifort CC=mpicc cmake .. -DCMAKE_INSTALL_PREFIX=../ci
         make install
-#    - name: Test with pytest
-#      run: |
-#        cd ci
-#        bash run_cmc_tests.sh
-#    - name: Upload coverage to Codecov
-#      uses: codecov/codecov-action@v1
+    - name: Test with pytest
+      run: |
+        cd ci
+        bash run_cmc_tests.sh
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
