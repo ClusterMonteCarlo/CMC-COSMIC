@@ -1195,22 +1195,22 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_NATAL_KICK_ARRAY);
 				/* we recycle variable "curr_mass" for mass bins */
 				strcpy(BSE_NATAL_KICK_ARRAY, values);
-				curr_mass = (char *) strtok(values, ",; ");
-				for (NO_BSE_NATAL_KICK_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_BSE_NATAL_KICK_ARRAY++);
+				curr_mass = (char *) strtok(values, ",;[] ");
+				for (NO_BSE_NATAL_KICK_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;[]")) != NULL; NO_BSE_NATAL_KICK_ARRAY++);
 				parsed.BSE_NATAL_KICK_ARRAY = 1;
 			} else if (strcmp(parameter_name, "QCRIT_ARRAY") == 0) {
 				PRINT_PARSED(PARAMDOC_BSE_QCRIT_ARRAY);
 				/* we recycle variable "curr_mass" for mass bins */
 				strcpy(BSE_QCRIT_ARRAY, values);
-				curr_mass = (char *) strtok(values, ",; ");
-				for (NO_BSE_QCRIT_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_BSE_QCRIT_ARRAY++);
+				curr_mass = (char *) strtok(values, ",;[] ");
+				for (NO_BSE_QCRIT_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;[]")) != NULL; NO_BSE_QCRIT_ARRAY++);
 				parsed.BSE_QCRIT_ARRAY = 1;
 			} else if (strcmp(parameter_name, "FPRIMC_ARRAY") == 0) {
 				PRINT_PARSED(PARAMDOC_BSE_FPRIMC_ARRAY);
 				/* we recycle variable "curr_mass" for mass bins */
 				strcpy(BSE_FPRIMC_ARRAY, values);
-				curr_mass = (char *) strtok(values, ",; ");
-				for (NO_BSE_FPRIMC_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; NO_BSE_FPRIMC_ARRAY++);
+				curr_mass = (char *) strtok(values, ",;[] ");
+				for (NO_BSE_FPRIMC_ARRAY = 1; (curr_mass = (char *) strtok(NULL, " ,;[]")) != NULL; NO_BSE_FPRIMC_ARRAY++);
 				parsed.BSE_FPRIMC_ARRAY = 1;
 			} else if (strcmp(parameter_name, "MINIMUM_R") == 0) {
 				PRINT_PARSED(PARAMDOC_MINIMUM_R);
@@ -2145,26 +2145,26 @@ if(myid==0)
 	}
 
 	/*======= Reading values for the BSE natal Kick array =======*/
-	curr_mass = (char *) strtok(BSE_NATAL_KICK_ARRAY, ",; ");
+	curr_mass = (char *) strtok(BSE_NATAL_KICK_ARRAY, ",;[] ");
 	sscanf(curr_mass, "%lf", &bse_natal_kick_array[0]);
 
-	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
+	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;[]")) != NULL; i++){
 		sscanf(curr_mass, "%lf", &bse_natal_kick_array[i]);
 	}
 
 	/*======= Reading values for the BSE fprinc Array =======*/
-	curr_mass = (char *) strtok(BSE_FPRIMC_ARRAY, ",; ");
+	curr_mass = (char *) strtok(BSE_FPRIMC_ARRAY, ",;[] ");
 	sscanf(curr_mass, "%lf", &bse_fprimc_array[0]);
 
-	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
+	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;[]")) != NULL; i++){
 		sscanf(curr_mass, "%lf", &bse_fprimc_array[i]);
 	}
 
 	/*======= Reading values for the BSE qcrit array =======*/
-	curr_mass = (char *) strtok(BSE_QCRIT_ARRAY, ",; ");
+	curr_mass = (char *) strtok(BSE_QCRIT_ARRAY, ",;[] ");
 	sscanf(curr_mass, "%lf", &bse_qcrit_array[0]);
 
-	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;")) != NULL; i++){
+	for (i=1; (curr_mass = (char *) strtok(NULL, " ,;[]")) != NULL; i++){
 		sscanf(curr_mass, "%lf", &bse_qcrit_array[i]);
 	}
 
