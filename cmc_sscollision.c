@@ -30,6 +30,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	double Einit;
 	double mass_k, mass_kp, phi_k, phi_kp, r_k, r_kp;
 	double collisions_multiple; //used with BHNS_TDE parameter
+        double collisions_multiple_hold;
         int MS_vanish_flag = 0; //Shi: use with giant collision
 
 #ifdef USE_MPI
@@ -88,12 +89,12 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	}
 
 	if (TIDAL_CAPTURE && (star[k].se_k <= 1 || star[k].se_k >= 10 || star[k].se_k == 7) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7) && rperi <= 1.3 * star[kp].rad) {
-
+                collisions_multiple_hold = rperi/star[kp].rad;
 		/* log stuff */
                 //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
-		parafprintf(tidalcapturefile, "%.6g SS_COLL_TC_G %s+%s+(%.3g,%.3g,%.3g)->", TotalTime, 
+		parafprintf(tidalcapturefile, "%.6g SS_COLL_Giant %s+%s+(%g,%g,%g)+%g->", TotalTime, 
 			sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), 
-                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN);
+                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, W*units.l/units.t/1.e5);
 
 		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
                 /* Shi: Someone added this, and the prescription is referred to the equations in Ivanova et al. 2006, eqn. (5) and (6)*/
@@ -169,83 +170,169 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 			destroy_obj(k);
 		} else {
-			/* form compact binary with stripped RG core*/
-			/* put new binary together and destroy original stars */
-			knew = create_binary(k, 0);
+                        if (afinal > star[k].rad + star[kp].rad) {
+			        /* form compact binary with stripped RG core*/
+			        /* put new binary together and destroy original stars */
+			        knew = create_binary(k, 0);
 
 #ifdef USE_MPI
-			g_knew = get_global_idx(knew);
-			star_m[g_knew] = mass_k + mass_kp;
-			star_r[g_knew] = rcm;
-			star_phi[g_knew] = potential(star_r[g_knew]);
+			        g_knew = get_global_idx(knew);
+			        star_m[g_knew] = mass_k + mass_kp;
+			        star_r[g_knew] = rcm;
+			        star_phi[g_knew] = potential(star_r[g_knew]);
 #else
 
-			star[knew].m = mass_k + mass_kp;
-			star[knew].r = rcm;
-			star[knew].phi = potential(star[knew].r);
+			        star[knew].m = mass_k + mass_kp;
+			        star[knew].r = rcm;
+			        star[knew].phi = potential(star[knew].r);
 #endif
-			star[knew].vr = vcm[3];
-			star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-			set_star_EJ(knew);
-			set_star_news(knew);
-			set_star_olds(knew);
+			        star[knew].vr = vcm[3];
+			        star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+			        set_star_EJ(knew);
+			        set_star_news(knew);
+			        set_star_olds(knew);
 
-			star[knew].interacted = 1;
+			        star[knew].interacted = 1;
 			
-			binary[star[knew].binind].a = afinal;
-			binary[star[knew].binind].e = efinal;
-			binary[star[knew].binind].m1 = mass_k;
-			binary[star[knew].binind].m2 = mass_kp;
-			binary[star[knew].binind].rad1 = star[k].rad;
-			binary[star[knew].binind].rad2 = star[kp].rad;
-			binary[star[knew].binind].Eint1 = star[k].Eint;
-			binary[star[knew].binind].Eint2 = star[kp].Eint;
+			        binary[star[knew].binind].a = afinal;
+			        binary[star[knew].binind].e = efinal;
+			        binary[star[knew].binind].m1 = mass_k;
+			        binary[star[knew].binind].m2 = mass_kp;
+			        binary[star[knew].binind].rad1 = star[k].rad;
+			        binary[star[knew].binind].rad2 = star[kp].rad;
+			        binary[star[knew].binind].Eint1 = star[k].Eint;
+			        binary[star[knew].binind].Eint2 = star[kp].Eint;
 
-			/* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
+			        /* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
 #ifdef USE_MPI
-			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
-				 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
-				 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+			        binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+				         - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				         - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
+				         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+			        binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+				         - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				         - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
+				         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
 #else
 
-			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+			        binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+				         - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				         - 0.5 * star[knew].m * madhoc * star[knew].phi
+				         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+			        binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+				         - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				         - 0.5 * star[knew].m * madhoc * star[knew].phi
+				         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
 #endif
 
-			binary[star[knew].binind].id1 = star[k].id;
-			binary[star[knew].binind].id2 = star[kp].id;
-			cp_SEvars_to_newbinary(k, -1, knew, 0);
-			cp_SEvars_to_newbinary(kp, -1, knew, 1);
-			binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
-			compress_binary(&star[knew], &binary[star[knew].binind]);
+			        binary[star[knew].binind].id1 = star[k].id;
+			        binary[star[knew].binind].id2 = star[kp].id;
+			        cp_SEvars_to_newbinary(k, -1, knew, 0);
+			        cp_SEvars_to_newbinary(kp, -1, knew, 1);
+			        binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
+			        compress_binary(&star[knew], &binary[star[knew].binind]);
 			
-			/* log stuff */
-			parafprintf(tidalcapturefile, "%s+(%.3g,%.3g)\n", sprint_bin_dyn(knew, dummystring), 
-                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
+			        /* log stuff */
+			        parafprintf(tidalcapturefile, "%s+(%g,%g)\n", sprint_bin_dyn(knew, dummystring), 
+                                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
                         
-                        //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
+                                //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
 
-			destroy_obj(k);
-			destroy_obj(kp);
+			        destroy_obj(k);
+			        destroy_obj(kp);
+                        } else {
+                                /* log stuff */
+                                parafprintf(tidalcapturefile, "merged\n");
+
+                                /* create new star */
+                                knew = create_star(k, 0);
+
+                                /* merge parent stars, setting mass, stellar radius, and SE params */
+                        //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
+#ifdef USE_MPI
+                                copy_globals_to_locals(k);
+                                copy_globals_to_locals(kp);
+#endif
+                                merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+                                
+#ifdef USE_MPI
+                                g_knew = get_global_idx(knew);
+                                star_r[g_knew] = rcm;
+                                star_m[g_knew] = star[knew].m;
+#else
+                                star[knew].r = rcm;
+#endif
+                                star[knew].vr = vcm[3];
+                                star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+                                star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
+                                vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                                //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                                
+#ifdef USE_MPI
+                                star_phi[g_knew] = potential(star_r[g_knew]);
+#else
+                                star[knew].phi = potential(star[knew].r);
+#endif
+                                set_star_EJ(knew);
+                                set_star_news(knew);
+                                set_star_olds(knew);
+
+                                /* mark stars as interacted so they don't undergo E_CONS mode stuff */
+                                //star[knew].id = star_get_id_new();
+
+                                star[knew].id = star_get_merger_id_new(star[k].id, star[kp].id);
+                                star[knew].interacted = 1;
+
+#ifdef USE_MPI
+                                star[knew].Eint = star[k].Eint + star[kp].Eint
+                                        + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                        + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                        - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                        + 0.5 * mass_k * madhoc * phi_k
+                                        + 0.5 * mass_kp * madhoc * phi_kp
+                                        - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew];
+#else
+
+                                star[knew].Eint = star[k].Eint + star[kp].Eint
+                                        + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                        + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                        - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                        + 0.5 * mass_k * madhoc * phi_k
+                                        + 0.5 * mass_kp * madhoc * phi_kp
+                                        - 0.5 * star[knew].m * madhoc * star[knew].phi;
+#endif
+
+                                /* log collision */
+#ifdef USE_MPI
+                                parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                        TotalTime,
+                                        star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
+                                        star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                        star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                        star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
+                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+#else
+                                parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                        TotalTime,
+                                        star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
+                                        star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                        star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                        star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
+                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+#endif
+
+                                /* destroy two progenitors */
+                                destroy_obj(k);
+                                destroy_obj(kp);
+                        }   
 		}
 	} else if (TIDAL_CAPTURE && (star[kp].se_k <= 1 || star[kp].se_k >= 10 || star[kp].se_k == 7) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7) && rperi <= 1.3 * star[k].rad) {
-
+                collisions_multiple_hold = rperi/star[k].rad;
 		/* log stuff */
                 //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_k*madhoc, mass_kp*madhoc, star[k].se_mc*MSUN/units.m, star[k].se_radius*RSUN/units.l, W);
-		parafprintf(tidalcapturefile, "%.6g SS_COLL_TC_G %s+%s+(%.3g,%.3g,%.3g)->", TotalTime, 
+		parafprintf(tidalcapturefile, "%.6g SS_COLL_Giant %s+%s+(%g,%g,%g)+%g->", TotalTime, 
 				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), 
-                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN);
+                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, W*units.l/units.t/1.e5);
 
 		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
 		ecoll = 0.88 - rperi/(3.0*star[k].rad);
@@ -321,82 +408,169 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 			destroy_obj(kp);
 		} else {
-			/* form compact binary with stripped RG core*/
-			/* put new binary together and destroy original stars */
-			knew = create_binary(k, 0);
+                        if (afinal > star[k].rad + star[kp].rad) {
+			        /* form compact binary with stripped RG core*/
+			        /* put new binary together and destroy original stars */
+			        knew = create_binary(k, 0);
 
 #ifdef USE_MPI
-			g_knew = get_global_idx(knew);
-			star_m[g_knew] = mass_k + mass_kp;
-			star_r[g_knew] = rcm;
-			star_phi[g_knew] = potential(star_r[g_knew]);
+			        g_knew = get_global_idx(knew);
+			        star_m[g_knew] = mass_k + mass_kp;
+			        star_r[g_knew] = rcm;
+			        star_phi[g_knew] = potential(star_r[g_knew]);
 #else
 
-			star[knew].m = mass_k + mass_kp;
-			star[knew].r = rcm;
-			star[knew].phi = potential(star[knew].r);
+			        star[knew].m = mass_k + mass_kp;
+			        star[knew].r = rcm;
+			        star[knew].phi = potential(star[knew].r);
 #endif
-			star[knew].vr = vcm[3];
-			star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-			set_star_EJ(knew);
-			set_star_news(knew);
-			set_star_olds(knew);
-			star[knew].interacted = 1;
+			        star[knew].vr = vcm[3];
+			        star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+			        set_star_EJ(knew);
+			        set_star_news(knew);
+			        set_star_olds(knew);
+			        star[knew].interacted = 1;
 			
-			binary[star[knew].binind].a = afinal;
-			binary[star[knew].binind].e = efinal;
-			binary[star[knew].binind].m1 = mass_k;
-			binary[star[knew].binind].m2 = mass_kp;
-			binary[star[knew].binind].rad1 = star[k].rad;
-			binary[star[knew].binind].rad2 = star[kp].rad;
-			binary[star[knew].binind].Eint1 = star[k].Eint;
-			binary[star[knew].binind].Eint2 = star[kp].Eint;
+			        binary[star[knew].binind].a = afinal;
+			        binary[star[knew].binind].e = efinal;
+			        binary[star[knew].binind].m1 = mass_k;
+			        binary[star[knew].binind].m2 = mass_kp;
+			        binary[star[knew].binind].rad1 = star[k].rad;
+			        binary[star[knew].binind].rad2 = star[kp].rad;
+			        binary[star[knew].binind].Eint1 = star[k].Eint;
+			        binary[star[knew].binind].Eint2 = star[kp].Eint;
 
-			/* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
+			        /* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
 
 #ifdef USE_MPI
-			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
-				 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
-				 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+			        binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+				         - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				         - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
+				         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+			        binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+				         - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				         - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
+				         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
 #else
 
-			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+			        binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+				         - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				         - 0.5 * star[knew].m * madhoc * star[knew].phi
+				         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+			        binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+				         - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+				         - 0.5 * star[knew].m * madhoc * star[knew].phi
+				         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
 #endif
 
-			binary[star[knew].binind].id1 = star[k].id;
-			binary[star[knew].binind].id2 = star[kp].id;
-			cp_SEvars_to_newbinary(k, -1, knew, 0);
-			cp_SEvars_to_newbinary(kp, -1, knew, 1);
-			binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
-			compress_binary(&star[knew], &binary[star[knew].binind]);
+			        binary[star[knew].binind].id1 = star[k].id;
+			        binary[star[knew].binind].id2 = star[kp].id;
+			        cp_SEvars_to_newbinary(k, -1, knew, 0);
+			        cp_SEvars_to_newbinary(kp, -1, knew, 1);
+			        binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
+			        compress_binary(&star[knew], &binary[star[knew].binind]);
 			
-			/* log stuff */
-			parafprintf(tidalcapturefile, "%s+(%.3g,%.3g)\n", sprint_bin_dyn(knew, dummystring), 
-                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
-                        //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_k*madhoc, mass_kp*madhoc, star[k].se_mc*MSUN/units.m, star[k].se_radius*RSUN/units.l, W);
+			        /* log stuff */
+			        parafprintf(tidalcapturefile, "%s+(%g,%g)\n", sprint_bin_dyn(knew, dummystring), 
+                                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
+                                //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_k*madhoc, mass_kp*madhoc, star[k].se_mc*MSUN/units.m, star[k].se_radius*RSUN/units.l, W);
 
-			destroy_obj(k);
-			destroy_obj(kp);
+			        destroy_obj(k);
+			        destroy_obj(kp);
+                        } else {
+                                /* log stuff */
+                                parafprintf(tidalcapturefile, "merged\n");
+
+                                /* create new star */
+                                knew = create_star(k, 0);
+
+                                /* merge parent stars, setting mass, stellar radius, and SE params */
+                        //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
+#ifdef USE_MPI
+                         copy_globals_to_locals(k);
+                         copy_globals_to_locals(kp);
+#endif
+                                merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+
+#ifdef USE_MPI
+                                g_knew = get_global_idx(knew);
+                                star_r[g_knew] = rcm;
+                                star_m[g_knew] = star[knew].m;
+#else
+                                star[knew].r = rcm;
+#endif
+                                star[knew].vr = vcm[3];
+                                star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+                                star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
+                                vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                                //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+
+#ifdef USE_MPI
+                                star_phi[g_knew] = potential(star_r[g_knew]);
+#else
+                                star[knew].phi = potential(star[knew].r);
+#endif
+                                set_star_EJ(knew);
+                                set_star_news(knew);
+                                set_star_olds(knew);
+
+                                /* mark stars as interacted so they don't undergo E_CONS mode stuff */
+                                //star[knew].id = star_get_id_new();
+
+                                star[knew].id = star_get_merger_id_new(star[k].id, star[kp].id);
+                                star[knew].interacted = 1;
+
+#ifdef USE_MPI
+                                star[knew].Eint = star[k].Eint + star[kp].Eint
+                                        + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                        + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                        - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                        + 0.5 * mass_k * madhoc * phi_k
+                                        + 0.5 * mass_kp * madhoc * phi_kp
+                                        - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew];
+#else
+
+                                star[knew].Eint = star[k].Eint + star[kp].Eint
+                                        + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                        + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                        - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                        + 0.5 * mass_k * madhoc * phi_k
+                                        + 0.5 * mass_kp * madhoc * phi_kp
+                                        - 0.5 * star[knew].m * madhoc * star[knew].phi;
+#endif
+
+                                /* log collision */
+#ifdef USE_MPI
+                                parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                        TotalTime,
+                                        star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
+                                        star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                        star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                        star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
+                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+#else
+                                parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                        TotalTime,
+                                        star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
+                                        star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                        star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                        star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
+                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+#endif
+
+                                /* destroy two progenitors */
+                                destroy_obj(k);
+                                destroy_obj(kp);
+                        }
 		}
 
         //Shi: Special treatment for giant-giant collision
-        } else if (TIDAL_CAPTURE && (2 <= star[k].se_k && star[k].se_k <= 9 && star[k].se_k != 7) && (2 <= star[kp].se_k && star[kp].se_k <= 9 && star[kp].se_k != 7) && rperi < collisions_multiple*(star[k].rad+star[kp].rad)){
+        } else if (TIDAL_CAPTURE && (2 <= star[k].se_k && star[k].se_k <= 9 && star[k].se_k != 7) && (2 <= star[kp].se_k && star[kp].se_k <= 9 && star[kp].se_k != 7) && rperi < 1.3*(star[k].rad+star[kp].rad)){
+                collisions_multiple_hold = rperi/(star[k].rad+star[kp].rad);
                 /*log stuff*/
-                parafprintf(tidalcapturefile, "%.6g SS_COLL_Giant %s+%s+(%.3g,%.3g,%.3g)->", TotalTime,
+                parafprintf(tidalcapturefile, "%.6g SS_COLL_Giant %s+%s+(%g,%g,%g)+%g->", TotalTime,
                                 sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), 
-                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN);
+                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, W*units.l/units.t/1.e5);
 
                 /* instead of a merger, form a WD-WD binary */
                 afinal = coll_CE_twogiant(mass_k*madhoc, mass_kp*madhoc, star[k].se_mc*MSUN/units.m, star[kp].se_mc*MSUN/units.m, star[k].se_radius*RSUN/units.l, star[kp].se_radius*RSUN/units.l, W);
@@ -440,81 +614,169 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
         DMse_mimic[findProcForIndex(k)] -= mass_kp * madhoc;
 #endif
 
-                /* form compact binary with stripped RG cores*/
-                /* put new binary together and destroy original stars */
-                knew = create_binary(k, 0);
+                if (afinal > star[k].rad + star[kp].rad) {
+                        /* form compact binary with stripped RG cores*/
+                        /* put new binary together and destroy original stars */
+                        knew = create_binary(k, 0);
 
 #ifdef USE_MPI
-                g_knew = get_global_idx(knew);
-                star_m[g_knew] = mass_k + mass_kp;
-                star_r[g_knew] = rcm;
-                star_phi[g_knew] = potential(star_r[g_knew]);
+                        g_knew = get_global_idx(knew);
+                        star_m[g_knew] = mass_k + mass_kp;
+                        star_r[g_knew] = rcm;
+                        star_phi[g_knew] = potential(star_r[g_knew]);
 #else
-                star[knew].m = mass_k + mass_kp;
-                star[knew].r = rcm;
-                star[knew].phi = potential(star[knew].r);
+                        star[knew].m = mass_k + mass_kp;
+                        star[knew].r = rcm;
+                        star[knew].phi = potential(star[knew].r);
 #endif
-                star[knew].vr = vcm[3];
-                star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-                set_star_EJ(knew);
-                set_star_news(knew);
-                set_star_olds(knew);
+                        star[knew].vr = vcm[3];
+                        star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+                        set_star_EJ(knew);
+                        set_star_news(knew);
+                        set_star_olds(knew);
 
-                star[knew].interacted = 1;
+                        star[knew].interacted = 1;
 
-                binary[star[knew].binind].a = afinal;
-                binary[star[knew].binind].e = efinal;
-                binary[star[knew].binind].m1 = mass_k;
-                binary[star[knew].binind].m2 = mass_kp;
-                binary[star[knew].binind].rad1 = star[k].rad;
-                binary[star[knew].binind].rad2 = star[kp].rad;
-                binary[star[knew].binind].Eint1 = star[k].Eint;
-                binary[star[knew].binind].Eint2 = star[kp].Eint;
+                        binary[star[knew].binind].a = afinal;
+                        binary[star[knew].binind].e = efinal;
+                        binary[star[knew].binind].m1 = mass_k;
+                        binary[star[knew].binind].m2 = mass_kp;
+                        binary[star[knew].binind].rad1 = star[k].rad;
+                        binary[star[knew].binind].rad2 = star[kp].rad;
+                        binary[star[knew].binind].Eint1 = star[k].Eint;
+                        binary[star[knew].binind].Eint2 = star[kp].Eint;
 
-                /* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
+                        /* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
 #ifdef USE_MPI
-                binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
-                         - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-                         - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
-                         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-                binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
-                         - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-                         - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
-                         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+                        binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+                                 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
+                                 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+                        binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+                                 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
+                                 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
 #else
-                binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
-                         - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-                         - 0.5 * star[knew].m * madhoc * star[knew].phi
-                         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-                binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
-                         - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-                         - 0.5 * star[knew].m * madhoc * star[knew].phi
-                         + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+                        binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
+                                 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                 - 0.5 * star[knew].m * madhoc * star[knew].phi
+                                 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
+                        binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
+                                 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                 - 0.5 * star[knew].m * madhoc * star[knew].phi
+                                 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
 #endif
 
-                binary[star[knew].binind].id1 = star[k].id;
-                binary[star[knew].binind].id2 = star[kp].id;
-                cp_SEvars_to_newbinary(k, -1, knew, 0);
-                cp_SEvars_to_newbinary(kp, -1, knew, 1);
-                binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
-                compress_binary(&star[knew], &binary[star[knew].binind]);
+                        binary[star[knew].binind].id1 = star[k].id;
+                        binary[star[knew].binind].id2 = star[kp].id;
+                        cp_SEvars_to_newbinary(k, -1, knew, 0);
+                        cp_SEvars_to_newbinary(kp, -1, knew, 1);
+                        binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
+                        compress_binary(&star[knew], &binary[star[knew].binind]);
 
-                /* log stuff */
-                parafprintf(tidalcapturefile, "%s+(%.3g,%.3g)\n", sprint_bin_dyn(knew, dummystring),
-                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
+                        /* log stuff */
+                        parafprintf(tidalcapturefile, "%s+(%g,%g)\n", sprint_bin_dyn(knew, dummystring),
+                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
 
-                //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
+                        //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
                 
-                destroy_obj(k);
-                destroy_obj(kp);
+                        destroy_obj(k);
+                        destroy_obj(kp);
+
+                } else {
+                        /* log stuff */
+                        parafprintf(tidalcapturefile, "merged\n");
+
+                        /* create new star */
+                        knew = create_star(k, 0);
+
+                        /* merge parent stars, setting mass, stellar radius, and SE params */
+                        //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
+
+#ifdef USE_MPI
+                        copy_globals_to_locals(k);
+                        copy_globals_to_locals(kp);
+#endif
+                        merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+
+#ifdef USE_MPI
+                        g_knew = get_global_idx(knew);
+                        star_r[g_knew] = rcm;
+                        star_m[g_knew] = star[knew].m;
+#else
+                        star[knew].r = rcm;
+#endif
+                        star[knew].vr = vcm[3];
+                        star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+                        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
+                        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+
+#ifdef USE_MPI
+                        star_phi[g_knew] = potential(star_r[g_knew]);
+#else
+                        star[knew].phi = potential(star[knew].r);
+#endif
+                        set_star_EJ(knew);
+                        set_star_news(knew);
+                        set_star_olds(knew);
+
+                        /* mark stars as interacted so they don't undergo E_CONS mode stuff */
+                        //star[knew].id = star_get_id_new();
+
+                        star[knew].id = star_get_merger_id_new(star[k].id, star[kp].id);
+                        star[knew].interacted = 1;
+
+#ifdef USE_MPI
+                        star[knew].Eint = star[k].Eint + star[kp].Eint
+                                + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                + 0.5 * mass_k * madhoc * phi_k
+                                + 0.5 * mass_kp * madhoc * phi_kp
+                                - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew];
+#else
+
+                        star[knew].Eint = star[k].Eint + star[kp].Eint
+                                + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                + 0.5 * mass_k * madhoc * phi_k
+                                + 0.5 * mass_kp * madhoc * phi_kp
+                                - 0.5 * star[knew].m * madhoc * star[knew].phi;
+#endif
+
+                        /* log collision */
+#ifdef USE_MPI
+                        parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                TotalTime,
+                                star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
+                                star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
+                    b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+#else
+                        parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                TotalTime,
+                                star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
+                                star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
+                    b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+#endif
+
+                        /* destroy two progenitors */
+                        destroy_obj(k);
+                        destroy_obj(kp);
+                }
 
 	} else if (BH_CAPTURE && star[k].se_k == 14 && star[kp].se_k == 14){
 		/* form compact binary from gravitational-wave bremsstrahlung*/
 		/* put new binary together and destroy original black holes*/
 
 		/* log stuff */
-		parafprintf(tidalcapturefile, "%.6g SS_COLL_GW %s+%s->", TotalTime, 
-				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2));
+		parafprintf(tidalcapturefile, "%.6g SS_COLL_GW %s+%s+%g->", TotalTime, 
+				sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), W*units.l/units.t/1.e5);
 		
 
 		/* Compute the total energy at infinity, then subtract the total 
@@ -598,9 +860,9 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                 /* Shi: single-single tidal capture for all stars with a radius, except giants. */
                 /* put new binary together and destroy original stars */
                 /* log stuff */
-                parafprintf(tidalcapturefile, "%.6g SS_COLL_TC %s+%s+(%.3g,%.3g,%.3g)->", TotalTime,
+                parafprintf(tidalcapturefile, "%.6g SS_COLL_TC %s+%s+(%g,%g,%g)+%g->", TotalTime,
                                 sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), 
-                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN);
+                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, W*units.l/units.t/1.e5);
                 
                 /* form a binary with zero eccentricity and semi-major axis = 2*rperi */
                 afinal = 2 * rperi;
@@ -666,7 +928,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                 compress_binary(&star[knew], &binary[star[knew].binind]);
 
                 /* log stuff */
-                parafprintf(tidalcapturefile, "%s+(%.3g,%.3g)\n", sprint_bin_dyn(knew, dummystring), 
+                parafprintf(tidalcapturefile, "%s+(%g,%g)\n", sprint_bin_dyn(knew, dummystring), 
                                 star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
 
                 destroy_obj(k);
@@ -743,7 +1005,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
                         star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
                         star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
-            b*units.l/RSUN,W*units.l/units.t/1.e5, star[kp].rad*units.l/RSUN, star[k].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple);
+            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple);
 #else
                 parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
                         TotalTime,
@@ -751,7 +1013,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
                         star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
                         star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
-            b*units.l/RSUN,W*units.l/units.t/1.e5, star[kp].rad*units.l/RSUN, star[k].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple);
+            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple);
 #endif
 
                 /* destroy two progenitors */
@@ -800,7 +1062,14 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
                         /* Check if the binary is filling its Roche Lobe */
                         /* If yes, treat it as TDE and merge the binary immediately */
-                        if (bse_rl(mass_k/mass_kp)*afinal > star[k].rad || bse_rl(mass_kp/mass_k)*afinal > star[kp].rad) {
+                        if (bse_rl(mass_k/mass_kp)*afinal < star[k].rad || bse_rl(mass_kp/mass_k)*afinal < star[kp].rad) {
+                                /* log stuff */
+                                parafprintf(tidalcapturefile, "%.6g SS_COLL_TC_P %s+%s+(%g,%g,%g)+%g->merged\n", 
+                                        TotalTime,
+                                        sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2),
+                                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN,
+                                        W*units.l/units.t/1.e5);
+
                                 /* create new star */
 		                knew = create_star(k, 0);
                               
@@ -867,7 +1136,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                                         star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
                                         star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
                                         star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
-                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[kp].rad*units.l/RSUN, star[k].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple);
+                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, rperi/(star[k].rad+star[kp].rad));
 #else
                                 parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
                                         TotalTime,
@@ -875,7 +1144,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                                         star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
                                         star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
                                         star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
-                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[kp].rad*units.l/RSUN, star[k].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple);
+                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, rperi/(star[k].rad+star[kp].rad));
 #endif
 
                                 /* destroy two progenitors */
@@ -960,9 +1229,10 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			        compress_binary(&star[knew], &binary[star[knew].binind]);
 
 			        /* log stuff */
-			        parafprintf(tidalcapturefile, "%.6g SS_COLL_TC_P %s+%s+(%.3g,%.3g,%.3g)->%s+(%.3g,%.3g)\n", TotalTime, 
+			        parafprintf(tidalcapturefile, "%.6g SS_COLL_TC_P %s+%s+(%g,%g,%g)+%g->%s+(%g,%g)\n", TotalTime, 
 				        sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), 
                                         star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, 
+                                        W*units.l/units.t/1.e5,  
                                         sprint_bin_dyn(knew, dummystring3), star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
 			
 			        destroy_obj(k);
@@ -985,7 +1255,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 * @param vs ?
 * @param s rng state
 */
-void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s) {
+void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s, double lamb_fac, int ktry_lim) {
 	double tphysf, dtp, age, temp_rad, bseaj[2];
 	//double vsaddl[12], 
 	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
@@ -1111,8 +1381,9 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    ktry = 1;
 		    while (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0 && ktry < 10) {
 		      dprintf("Attempting to force merger in CE possibly by repeating evolution with a change of sep and lambda.\n");
-		      if(ktry>2){
-			lamb_val = -0.0001/((float)ktry);
+                      /* Shi: Added ktry_lim and lamb_fac. Default ktry_lim = 2, and lamb_fac = -0.0001. */
+		      if(ktry>ktry_lim){
+			lamb_val = lamb_fac/((float)ktry);
 			bse_set_lambdaf(lamb_val); //perhaps should do this in the second attempt? 
 		      }
 		      tempbinary.a = tbcopy.a/ktry;
