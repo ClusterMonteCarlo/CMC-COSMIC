@@ -16,6 +16,7 @@ _EXTERN_ long NEW_IDUM;
 //_EXTERN_ LightCollision LIGHTCOLLISION_TABLE[5000];
 //_EXTERN_ int LIGHTCOLLISION_NRECORDS;
 _EXTERN_ herr_t status;
+_EXTERN_ double MYVARIABLE;
 //_EXTERN_ char *light_collision_field_names[NFIELDS_LIGHT_COLLISION];
 //_EXTERN_ hid_t light_collision_field_type[NFIELDS_LIGHT_COLLISION];
 //

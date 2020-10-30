@@ -1085,6 +1085,10 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_PULSAR_DELTACOUNT);
                                 sscanf(values, "%ld", &PULSAR_DELTACOUNT);
                                 parsed.PULSAR_DELTACOUNT = 1;
+                        } else if (strcmp(parameter_name, "MYVARIABLE") == 0) {
+                                PRINT_PARSED(PARAMDOC_MYVARIABLE);
+                                sscanf(values, "%ld", &MYVARIABLE);
+                                parsed.MYVARIABLE = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOTTING") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOTTING);
 				sscanf(values, "%d", &SNAPSHOTTING);
@@ -1752,6 +1756,7 @@ if(myid==0) {
 
 	CHECK_PARSED(BH_SNAPSHOTTING, 0, PARAMDOC_BH_SNAPSHOTTING);
 	CHECK_PARSED(BH_SNAPSHOT_DELTACOUNT, 50, PARAMDOC_BH_SNAPSHOT_DELTACOUNT);
+        CHECK_PARSED(MYVARIABLE, 50, PARAMDOC_MYVARIABLE);  
 	CHECK_PARSED(PULSAR_DELTACOUNT, 50, PARAMDOC_PULSAR_DELTACOUNT);    //Shi: new parameter
 	CHECK_PARSED(SNAPSHOTTING, 0, PARAMDOC_SNAPSHOTTING);
 	CHECK_PARSED(SNAPSHOT_DELTACOUNT, 250, PARAMDOC_SNAPSHOT_DELTACOUNT);

@@ -1078,6 +1078,11 @@ typedef struct{
  * @brief Pulsar output interval in time steps
  * */
         int PULSAR_DELTACOUNT;
+#define PARAMDOC_MYVARIABLE "Pulsar output interval in time steps"
+/**
+ * @brief Pulsar output interval in time steps
+ * */
+        double MYVARIABLE;
 #define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"
 /**
 * @brief Write out information about 10\% lagrange radius (0=off, 1=on)
