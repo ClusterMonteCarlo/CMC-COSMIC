@@ -241,6 +241,8 @@ void bse_evolv2_safely(int *kstar, double *mass0, double *mass, double *rad, dou
   if(isnan(myrad[0])){
 	fprintf(stderr, "An isnan occured for r1\n");
 	fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", *tphys, *tphysf, kstar[0], kstar[1], mass[0], mass[1], rad[0], rad[1], lum[0], lum[1]);
+        fprintf(stderr, "kstar_1,kstar_2,mass_1,mass_2,porb,ecc,metallicity,tphysf,mass0_1,mass0_2,rad_1,rad_2,lum_1,lum_2,massc_1,massc_2,radc_1,radc_2,menv_1,menv_2,renv_1,renv_2,omega_spin_1,omega_spin_2,B_1,B_2,bacc_1,bacc_2,tacc_1,tacc_2,epoch_1,epoch_2,tms_1,tms_2,bhspin_1,bhspin_2,tphys\n");
+        fprintf(stderr, "%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g\n", kstar[0], kstar[1], mass[0], mass[1], *tb, *ecc, *z, *tphysf, mass0[0], mass0[1], rad[0], rad[1], lum[0], lum[1], massc[0], massc[1], radc[0], radc[1], menv[0], menv[1], renv[0], renv[1], ospin[0], ospin[1], B_0[0], B_0[1], bacc[0], bacc[1], tacc[0], tacc[1], epoch[0], epoch[1], tms[0], tms[1], bhspin[0], bhspin[1], *tphys);
 	fprintf(stderr, "mytphys=%g mytphysf=%g mykw1=%d mykw2=%d mym1=%g mym2=%g myr1=%g myr2=%g myl1=%g myl2=%g \n", mytphys, mytphysf, mykstar[0], mykstar[1], mymass[0], mymass[1], myrad[0], myrad[1], mylum[0], mylum[1]);
 	//exit(1);
   }
