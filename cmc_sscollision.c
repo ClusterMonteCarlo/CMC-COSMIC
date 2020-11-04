@@ -97,7 +97,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, W*units.l/units.t/1.e5);
 
 		/* instead of a merger, form a CV, WD-WD binary, or UCXB from the Ivanova & Lombardi collision mechanism */
-                /* Shi: Someone added this, and the prescription is referred to the equations in Ivanova et al. 2006, eqn. (5) and (6)*/
+                /* Shi: The prescription is referred to the equations in Ivanova et al. 2006, eqn. (5) and (6)*/
 		ecoll = 0.88 - rperi/(3.0*star[kp].rad);
 		acoll = rperi/(3.3*(1.0-sqr(ecoll)));
 		
@@ -111,66 +111,72 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			afinal = acoll;
 			efinal = ecoll;
 		}
+
+                /* Decide if there is Roche Lobe Overflow between the star and the giant core. 
+                   If not, eject envelope and form binary. 
+                   If yes, and the star is not a BH/NS, merge the giant and the star (keep envelope)
+                   If yes but the star is a BH/NS, merge the giant core and the star (eject envelope) */
+                if (bse_rl(mass_k/(star[kp].se_mc* MSUN / units.mstar))*afinal > star[k].rad && bse_rl((star[kp].se_mc* MSUN / units.mstar)/mass_k)*afinal > star[kp].se_rc*RSUN/units.l) { 
 		
-		/* strip envelope of RG */
-		Einit = 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
-		        0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
-			0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
+		        /* strip envelope of RG */
+		        Einit = 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
+		                0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
+			        0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
 #ifdef USE_MPI
-		DMse += mass_kp * madhoc;
+		        DMse += mass_kp * madhoc;
 #else
-        DMse_mimic[findProcForIndex(k)] += mass_kp * madhoc;
+                DMse_mimic[findProcForIndex(k)] += mass_kp * madhoc;
 #endif
 
-		aj = star[kp].se_tphys - star[kp].se_epoch;
-		star[kp].se_mt = star[kp].se_mc;
-		bse_star(&(star[kp].se_k), &(star[kp].se_mass), &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars);
-		bse_hrdiag(&(star[kp].se_mass), &aj, &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars,
-			   &(star[kp].se_radius), &(star[kp].se_lum), &(star[kp].se_k), &(star[kp].se_mc), &(star[kp].se_rc), 
-			   &(star[kp].se_menv), &(star[kp].se_renv), &k2, &(star[kp].se_bhspin));
-		star[kp].se_epoch = star[kp].se_tphys - aj;
-		star[kp].rad = star[kp].se_radius * RSUN / units.l;
-		mass_kp = star[kp].se_mt * MSUN / units.mstar;
+		        aj = star[kp].se_tphys - star[kp].se_epoch;
+		        star[kp].se_mt = star[kp].se_mc;
+		        bse_star(&(star[kp].se_k), &(star[kp].se_mass), &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars);
+		        bse_hrdiag(&(star[kp].se_mass), &aj, &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars,
+			           &(star[kp].se_radius), &(star[kp].se_lum), &(star[kp].se_k), &(star[kp].se_mc), 
+                                   &(star[kp].se_rc), &(star[kp].se_menv), &(star[kp].se_renv), &k2, &(star[kp].se_bhspin));
+		        star[kp].se_epoch = star[kp].se_tphys - aj;
+		        star[kp].rad = star[kp].se_radius * RSUN / units.l;
+		        mass_kp = star[kp].se_mt * MSUN / units.mstar;
 #ifdef USE_MPI
-		DMse -= mass_kp * madhoc;
+		        DMse -= mass_kp * madhoc;
 #else
-        DMse_mimic[findProcForIndex(k)] -= mass_kp * madhoc;
+                DMse_mimic[findProcForIndex(k)] -= mass_kp * madhoc;
 #endif
 
-		/* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
-		if (MS_vanish_flag && star[k].se_k <= 1 && star[k].se_radius*RSUN/units.l >= bse_rl(mass_k/mass_kp)*(1.0-efinal)*afinal) {
+		        /* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
+                        /* Shi: this is turned off by the MS_vanish_flag */
+		        if (MS_vanish_flag && star[k].se_k <= 1 && star[k].se_radius*RSUN/units.l >= bse_rl(mass_k/mass_kp)*(1.0-efinal)*afinal) {
 			/* keep only RG core as single star */
 #ifdef USE_MPI
-            star_r[g_kp] = rcm;
+                    star_r[g_kp] = rcm;
 #else
-            star[kp].r = rcm;
+                    star[kp].r = rcm;
 #endif
-			star[kp].vr = vcm[3];
-			star[kp].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+			        star[kp].vr = vcm[3];
+			        star[kp].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 #ifdef USE_MPI
-            star_phi[g_kp] = potential(star_r[g_kp]);
-            phi_kp = star_phi[g_kp];
+                    star_phi[g_kp] = potential(star_r[g_kp]);
+                    phi_kp = star_phi[g_kp];
 #else
-            star[kp].phi = potential(star[kp].r);
-            phi_kp = star[kp].phi;
+                    star[kp].phi = potential(star[kp].r);
+                    phi_kp = star[kp].phi;
 #endif
-			set_star_EJ(kp);
-			set_star_news(kp);
-			set_star_olds(kp);
+			        set_star_EJ(kp);
+			        set_star_news(kp);
+			        set_star_olds(kp);
 			
-			/* mark stars as interacted so they don't undergo E_CONS mode stuff */
-			star[kp].interacted = 1;
-			star[kp].Eint = star[k].Eint + star[kp].Eint + Einit 
-				- 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt)) 
-				- 0.5 * mass_kp * madhoc * phi_kp;
+			        /* mark stars as interacted so they don't undergo E_CONS mode stuff */
+			        star[kp].interacted = 1;
+			        star[kp].Eint = star[k].Eint + star[kp].Eint + Einit 
+				        - 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt)) 
+				        - 0.5 * mass_kp * madhoc * phi_kp;
 		
-			/* log stuff */
-			parafprintf(tidalcapturefile, "%s\n", sprint_star_dyn(kp, dummystring));
-                        //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
+			        /* log stuff */
+			        parafprintf(tidalcapturefile, "%s\n", sprint_star_dyn(kp, dummystring));
+                                //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
 
-			destroy_obj(k);
-		} else {
-                        if (afinal > star[k].rad + star[kp].rad) {
+			        destroy_obj(k);
+		        } else {
 			        /* form compact binary with stripped RG core*/
 			        /* put new binary together and destroy original stars */
 			        knew = create_binary(k, 0);
@@ -240,92 +246,95 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 			        destroy_obj(k);
 			        destroy_obj(kp);
-                        } else {
-                                /* log stuff */
-                                parafprintf(tidalcapturefile, "merged\n");
+                        }
+                
+                } else if (bse_rl(mass_k/(star[kp].se_mc* MSUN / units.mstar))*afinal <= star[k].rad || bse_rl((star[kp].se_mc* MSUN / units.mstar)/mass_k)*afinal <= star[kp].se_rc*RSUN/units.l) {
 
-                                /* create new star */
-                                knew = create_star(k, 0);
+                        /* log stuff */
+                        parafprintf(tidalcapturefile, "merged\n");
 
-                                /* merge parent stars, setting mass, stellar radius, and SE params */
+                        /* create new star */
+                        knew = create_star(k, 0);
+
+                        /* merge parent stars, setting mass, stellar radius, and SE params */
                         //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
 #ifdef USE_MPI
-                                copy_globals_to_locals(k);
-                                copy_globals_to_locals(kp);
+                        copy_globals_to_locals(k);
+                        copy_globals_to_locals(kp);
 #endif
-                                merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+                        merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
                                 
 #ifdef USE_MPI
-                                g_knew = get_global_idx(knew);
-                                star_r[g_knew] = rcm;
-                                star_m[g_knew] = star[knew].m;
+                        g_knew = get_global_idx(knew);
+                        star_r[g_knew] = rcm;
+                        star_m[g_knew] = star[knew].m;
 #else
-                                star[knew].r = rcm;
+                        star[knew].r = rcm;
 #endif
-                                star[knew].vr = vcm[3];
-                                star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-                                star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-                                vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-                                //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        star[knew].vr = vcm[3];
+                        star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+                        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
+                        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
                                 
 #ifdef USE_MPI
-                                star_phi[g_knew] = potential(star_r[g_knew]);
+                        star_phi[g_knew] = potential(star_r[g_knew]);
 #else
-                                star[knew].phi = potential(star[knew].r);
+                        star[knew].phi = potential(star[knew].r);
 #endif
-                                set_star_EJ(knew);
-                                set_star_news(knew);
-                                set_star_olds(knew);
+                        set_star_EJ(knew);
+                        set_star_news(knew);
+                        set_star_olds(knew);
 
-                                /* mark stars as interacted so they don't undergo E_CONS mode stuff */
-                                //star[knew].id = star_get_id_new();
+                        /* mark stars as interacted so they don't undergo E_CONS mode stuff */
+                        //star[knew].id = star_get_id_new();
 
-                                star[knew].id = star_get_merger_id_new(star[k].id, star[kp].id);
-                                star[knew].interacted = 1;
+                        star[knew].id = star_get_merger_id_new(star[k].id, star[kp].id);
+                        star[knew].interacted = 1;
 
 #ifdef USE_MPI
-                                star[knew].Eint = star[k].Eint + star[kp].Eint
-                                        + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
-                                        + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
-                                        - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-                                        + 0.5 * mass_k * madhoc * phi_k
-                                        + 0.5 * mass_kp * madhoc * phi_kp
-                                        - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew];
+                        star[knew].Eint = star[k].Eint + star[kp].Eint
+                                + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                + 0.5 * mass_k * madhoc * phi_k
+                                + 0.5 * mass_kp * madhoc * phi_kp
+                                - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew];
 #else
 
-                                star[knew].Eint = star[k].Eint + star[kp].Eint
-                                        + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
-                                        + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
-                                        - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-                                        + 0.5 * mass_k * madhoc * phi_k
-                                        + 0.5 * mass_kp * madhoc * phi_kp
-                                        - 0.5 * star[knew].m * madhoc * star[knew].phi;
+                        star[knew].Eint = star[k].Eint + star[kp].Eint
+                                + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                + 0.5 * mass_k * madhoc * phi_k
+                                + 0.5 * mass_kp * madhoc * phi_kp
+                                - 0.5 * star[knew].m * madhoc * star[knew].phi;
 #endif
 
-                                /* log collision */
+                        /* log collision */
 #ifdef USE_MPI
-                                parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
-                                        TotalTime,
-                                        star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
-                                        star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
-                                        star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
-                                        star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
-                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+                        parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                TotalTime,
+                                star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
+                                star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
+                    b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
 #else
-                                parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
-                                        TotalTime,
-                                        star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
-                                        star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
-                                        star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
-                                        star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
-                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+                        parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                TotalTime,
+                                star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
+                                star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
+                    b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
 #endif
 
-                                /* destroy two progenitors */
-                                destroy_obj(k);
-                                destroy_obj(kp);
-                        }   
-		}
+                        /* destroy two progenitors */
+                        destroy_obj(k);
+                        destroy_obj(kp);
+                }   
+
 	} else if (TIDAL_CAPTURE && (star[kp].se_k <= 1 || star[kp].se_k >= 10 || star[kp].se_k == 7) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7) && rperi <= 1.3 * star[k].rad) {
                 collisions_multiple_hold = rperi/star[k].rad;
 		/* log stuff */
@@ -349,66 +358,69 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			efinal = ecoll;
 		}
 		
-		/* strip envelope of RG */
-		Einit = 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
-			0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
-			0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
+                /* Form binary */
+                if (bse_rl(mass_kp/(star[k].se_mc* MSUN / units.mstar))*afinal > star[kp].rad && bse_rl((star[k].se_mc* MSUN / units.mstar)/mass_kp)*afinal > star[k].se_rc*RSUN/units.l) {
+
+		        /* strip envelope of RG */
+		        Einit = 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
+			        0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
+			        0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
 #ifdef USE_MPI
-		DMse += mass_k * madhoc;
-                DMse += mass_kp * madhoc;
+		        DMse += mass_k * madhoc;
+                        DMse += mass_kp * madhoc;
 #else
-        DMse_mimic[findProcForIndex(k)] += mass_k * madhoc;
-        DMse_mimic[findProcForIndex(k)] += mass_kp * madhoc;
+                DMse_mimic[findProcForIndex(k)] += mass_k * madhoc;
+                DMse_mimic[findProcForIndex(k)] += mass_kp * madhoc;
 #endif
-		aj = star[k].se_tphys - star[k].se_epoch;
-		star[k].se_mt = star[k].se_mc;
-		bse_star(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars);
-		bse_hrdiag(&(star[k].se_mass), &aj, &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars,
-			   &(star[k].se_radius), &(star[k].se_lum), &(star[k].se_k), &(star[k].se_mc), &(star[k].se_rc), 
-			   &(star[k].se_menv), &(star[k].se_renv), &k2, &(star[k].se_bhspin));
-		star[k].se_epoch = star[k].se_tphys - aj;
-		star[k].rad = star[k].se_radius * RSUN / units.l;
-		mass_k = star[k].se_mt * MSUN / units.mstar;
+		        aj = star[k].se_tphys - star[k].se_epoch;
+		        star[k].se_mt = star[k].se_mc;
+		        bse_star(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars);
+		        bse_hrdiag(&(star[k].se_mass), &aj, &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars,
+			           &(star[k].se_radius), &(star[k].se_lum), &(star[k].se_k), &(star[k].se_mc), 
+                                   &(star[k].se_rc), &(star[k].se_menv), &(star[k].se_renv), &k2, &(star[k].se_bhspin));
+		        star[k].se_epoch = star[k].se_tphys - aj;
+		        star[k].rad = star[k].se_radius * RSUN / units.l;
+		        mass_k = star[k].se_mt * MSUN / units.mstar;
 #ifdef USE_MPI
-		DMse -= mass_k * madhoc;
+		        DMse -= mass_k * madhoc;
 #else
-        DMse_mimic[findProcForIndex(k)] -= mass_k * madhoc;
+                DMse_mimic[findProcForIndex(k)] -= mass_k * madhoc;
 #endif
 
-		/* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
-		if (MS_vanish_flag && star[kp].se_k <= 1 && star[kp].se_radius*RSUN/units.l >= bse_rl(mass_kp/mass_k)*(1.0-efinal)*afinal) {
-			/* keep only RG core as single star */
+		        /* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
+                        /* This is turned off by the MS_vanish_flag */
+		        if (MS_vanish_flag && star[kp].se_k <= 1 && star[kp].se_radius*RSUN/units.l >= bse_rl(mass_kp/mass_k)*(1.0-efinal)*afinal) {
+			        /* keep only RG core as single star */
 #ifdef USE_MPI
-
+                                star_r[g_kp] = rcm;
 #else
-            star[k].r = rcm;
+                    star[k].r = rcm;
 #endif
-            star[k].vr = vcm[3];
-            star[k].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+                                star[k].vr = vcm[3];
+                                star[k].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 #ifdef USE_MPI
-            star_phi[g_k] = potential(star_r[g_k]);
-            phi_k = star_phi[g_k];
+                                star_phi[g_k] = potential(star_r[g_k]);
+                                phi_k = star_phi[g_k];
 #else
-            star[k].phi = potential(star[k].r);
-            phi_k = star[k].phi;
+                    star[k].phi = potential(star[k].r);
+                    phi_k = star[k].phi;
 #endif
-			set_star_EJ(k);
-			set_star_news(k);
-			set_star_olds(k);
+			        set_star_EJ(k);
+			        set_star_news(k);
+			        set_star_olds(k);
 			
-			/* mark stars as interacted so they don't undergo E_CONS mode stuff */
-			star[k].interacted = 1;
-			star[k].Eint = star[k].Eint + star[kp].Eint + Einit 
-				- 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
-				- 0.5 * mass_k * madhoc * phi_k;
+			        /* mark stars as interacted so they don't undergo E_CONS mode stuff */
+			        star[k].interacted = 1;
+			        star[k].Eint = star[k].Eint + star[kp].Eint + Einit 
+				        - 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
+				        - 0.5 * mass_k * madhoc * phi_k;
 	
-			/* log stuff */
-			parafprintf(tidalcapturefile, "%s\n", sprint_star_dyn(k, dummystring));
-                        //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_k*madhoc, mass_kp*madhoc, star[k].se_mc*MSUN/units.m, star[k].se_radius*RSUN/units.l, W);
+			        /* log stuff */
+			        parafprintf(tidalcapturefile, "%s\n", sprint_star_dyn(k, dummystring));
+                                //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_k*madhoc, mass_kp*madhoc, star[k].se_mc*MSUN/units.m, star[k].se_radius*RSUN/units.l, W);
 
-			destroy_obj(kp);
-		} else {
-                        if (afinal > star[k].rad + star[kp].rad) {
+			        destroy_obj(kp);
+		        } else {
 			        /* form compact binary with stripped RG core*/
 			        /* put new binary together and destroy original stars */
 			        knew = create_binary(k, 0);
@@ -477,95 +489,95 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 			        destroy_obj(k);
 			        destroy_obj(kp);
-                        } else {
-                                /* log stuff */
-                                parafprintf(tidalcapturefile, "merged\n");
+                        }
+                } else if (bse_rl(mass_kp/(star[k].se_mc* MSUN / units.mstar))*afinal <= star[kp].rad || bse_rl((star[k].se_mc* MSUN / units.mstar)/mass_kp)*afinal <= star[k].se_rc*RSUN/units.l) {        
+                        /* log stuff */
+                        parafprintf(tidalcapturefile, "merged\n");
 
-                                /* create new star */
-                                knew = create_star(k, 0);
+                        /* create new star */
+                        knew = create_star(k, 0);
 
-                                /* merge parent stars, setting mass, stellar radius, and SE params */
+                        /* merge parent stars, setting mass, stellar radius, and SE params */
                         //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
 #ifdef USE_MPI
-                         copy_globals_to_locals(k);
-                         copy_globals_to_locals(kp);
+                        copy_globals_to_locals(k);
+                        copy_globals_to_locals(kp);
 #endif
-                                merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+                        merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
 
 #ifdef USE_MPI
-                                g_knew = get_global_idx(knew);
-                                star_r[g_knew] = rcm;
-                                star_m[g_knew] = star[knew].m;
+                        g_knew = get_global_idx(knew);
+                        star_r[g_knew] = rcm;
+                        star_m[g_knew] = star[knew].m;
 #else
-                                star[knew].r = rcm;
+                        star[knew].r = rcm;
 #endif
-                                star[knew].vr = vcm[3];
-                                star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-                                star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-                                vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-                                //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        star[knew].vr = vcm[3];
+                        star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
+                        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
+                        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 
 #ifdef USE_MPI
-                                star_phi[g_knew] = potential(star_r[g_knew]);
+                        star_phi[g_knew] = potential(star_r[g_knew]);
 #else
-                                star[knew].phi = potential(star[knew].r);
+                        star[knew].phi = potential(star[knew].r);
 #endif
-                                set_star_EJ(knew);
-                                set_star_news(knew);
-                                set_star_olds(knew);
+                        set_star_EJ(knew);
+                        set_star_news(knew);
+                        set_star_olds(knew);
 
-                                /* mark stars as interacted so they don't undergo E_CONS mode stuff */
-                                //star[knew].id = star_get_id_new();
+                        /* mark stars as interacted so they don't undergo E_CONS mode stuff */
+                        //star[knew].id = star_get_id_new();
 
-                                star[knew].id = star_get_merger_id_new(star[k].id, star[kp].id);
-                                star[knew].interacted = 1;
+                        star[knew].id = star_get_merger_id_new(star[k].id, star[kp].id);
+                        star[knew].interacted = 1;
 
 #ifdef USE_MPI
-                                star[knew].Eint = star[k].Eint + star[kp].Eint
-                                        + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
-                                        + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
-                                        - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-                                        + 0.5 * mass_k * madhoc * phi_k
-                                        + 0.5 * mass_kp * madhoc * phi_kp
-                                        - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew];
+                        star[knew].Eint = star[k].Eint + star[kp].Eint
+                                + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                + 0.5 * mass_k * madhoc * phi_k
+                                + 0.5 * mass_kp * madhoc * phi_kp
+                                - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew];
 #else
 
-                                star[knew].Eint = star[k].Eint + star[kp].Eint
-                                        + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
-                                        + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
-                                        - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-                                        + 0.5 * mass_k * madhoc * phi_k
-                                        + 0.5 * mass_kp * madhoc * phi_kp
-                                        - 0.5 * star[knew].m * madhoc * star[knew].phi;
+                        star[knew].Eint = star[k].Eint + star[kp].Eint
+                                + 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt))
+                                + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
+                                - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
+                                + 0.5 * mass_k * madhoc * phi_k
+                                + 0.5 * mass_kp * madhoc * phi_kp
+                                - 0.5 * star[knew].m * madhoc * star[knew].phi;
 #endif
 
-                                /* log collision */
+                        /* log collision */
 #ifdef USE_MPI
-                                parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
-                                        TotalTime,
-                                        star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
-                                        star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
-                                        star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
-                                        star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
-                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+                        parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                TotalTime,
+                                star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
+                                star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
+                    b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
 #else
-                                parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
-                                        TotalTime,
-                                        star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
-                                        star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
-                                        star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
-                                        star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
-                            b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
+                        parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
+                                TotalTime,
+                                star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
+                                star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
+                                star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
+                                star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
+                    b*units.l/RSUN,W*units.l/units.t/1.e5, star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple_hold);
 #endif
 
-                                /* destroy two progenitors */
-                                destroy_obj(k);
-                                destroy_obj(kp);
-                        }
+                        /* destroy two progenitors */
+                        destroy_obj(k);
+                        destroy_obj(kp);
 		}
 
-        //Shi: Special treatment for giant-giant collision
-        } else if (TIDAL_CAPTURE && (2 <= star[k].se_k && star[k].se_k <= 9 && star[k].se_k != 7) && (2 <= star[kp].se_k && star[kp].se_k <= 9 && star[kp].se_k != 7) && rperi < 1.3*(star[k].rad+star[kp].rad)){
+        /* Shi: Special treatment for giant-giant collision. */
+        } else if (TIDAL_CAPTURE && (2 <= star[k].se_k && star[k].se_k <= 9 && star[k].se_k != 7) && (2 <= star[kp].se_k && star[kp].se_k <= 9 && star[kp].se_k != 7) && rperi <= 1.3*(star[k].rad+star[kp].rad)){
                 collisions_multiple_hold = rperi/(star[k].rad+star[kp].rad);
                 /*log stuff*/
                 parafprintf(tidalcapturefile, "%.6g SS_COLL_Giant %s+%s+(%g,%g,%g)+%g->", TotalTime,
@@ -576,45 +588,45 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                 afinal = coll_CE_twogiant(mass_k*madhoc, mass_kp*madhoc, star[k].se_mc*MSUN/units.m, star[kp].se_mc*MSUN/units.m, star[k].se_radius*RSUN/units.l, star[kp].se_radius*RSUN/units.l, W);
                 efinal = 0.0;
 
-                /* strip envelope of both giants */
-                Einit = 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
-                        0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) +
-                        0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
+                if (bse_rl(star[kp].se_mc/star[k].se_mc)*afinal > star[kp].se_rc*RSUN/units.l && bse_rl(star[k].se_mc/star[kp].se_mc)*afinal > star[k].se_rc*RSUN/units.l) {
+                        /* strip envelope of both giants */
+                        Einit = 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
+                                0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) +
+                                0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
 
 #ifdef USE_MPI
-                DMse += mass_k * madhoc;
+                        DMse += mass_k * madhoc;
 #else
-        DMse_mimic[findProcForIndex(k)] += mass_k * madhoc;
+                DMse_mimic[findProcForIndex(k)] += mass_k * madhoc;
 #endif
-                aj_k = star[k].se_tphys - star[k].se_epoch;
-                star[k].se_mt = star[k].se_mc;
-                bse_star(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars);
-                bse_hrdiag(&(star[k].se_mass), &aj_k, &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars,
-                           &(star[k].se_radius), &(star[k].se_lum), &(star[k].se_k), &(star[k].se_mc), &(star[k].se_rc),
-                           &(star[k].se_menv), &(star[k].se_renv), &k2, &(star[k].se_bhspin));
-                star[k].se_epoch = star[k].se_tphys - aj_k;
-                star[k].rad = star[k].se_radius * RSUN / units.l;
-                mass_k = star[k].se_mt * MSUN / units.mstar;
+                        aj_k = star[k].se_tphys - star[k].se_epoch;
+                        star[k].se_mt = star[k].se_mc;
+                        bse_star(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars);
+                        bse_hrdiag(&(star[k].se_mass), &aj_k, &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars,
+                                   &(star[k].se_radius), &(star[k].se_lum), &(star[k].se_k), &(star[k].se_mc), &(star[k].se_rc),
+                                   &(star[k].se_menv), &(star[k].se_renv), &k2, &(star[k].se_bhspin));
+                        star[k].se_epoch = star[k].se_tphys - aj_k;
+                        star[k].rad = star[k].se_radius * RSUN / units.l;
+                        mass_k = star[k].se_mt * MSUN / units.mstar;
 
-                aj_kp = star[kp].se_tphys - star[kp].se_epoch;
-                star[kp].se_mt = star[kp].se_mc;
-                bse_star(&(star[kp].se_k), &(star[kp].se_mass), &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars);
-                bse_hrdiag(&(star[kp].se_mass), &aj_kp, &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars,
-                           &(star[kp].se_radius), &(star[kp].se_lum), &(star[kp].se_k), &(star[kp].se_mc), &(star[kp].se_rc),
-                           &(star[kp].se_menv), &(star[kp].se_renv), &k2, &(star[kp].se_bhspin));
-                star[kp].se_epoch = star[kp].se_tphys - aj_kp;
-                star[kp].rad = star[kp].se_radius * RSUN / units.l;
-                mass_kp = star[kp].se_mt * MSUN / units.mstar;
+                        aj_kp = star[kp].se_tphys - star[kp].se_epoch;
+                        star[kp].se_mt = star[kp].se_mc;
+                        bse_star(&(star[kp].se_k), &(star[kp].se_mass), &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars);
+                        bse_hrdiag(&(star[kp].se_mass), &aj_kp, &(star[kp].se_mt), &tm, &tn, tscls, lums, GB, zpars,
+                                   &(star[kp].se_radius), &(star[kp].se_lum), &(star[kp].se_k), &(star[kp].se_mc), &(star[kp].se_rc),
+                                   &(star[kp].se_menv), &(star[kp].se_renv), &k2, &(star[kp].se_bhspin));
+                        star[kp].se_epoch = star[kp].se_tphys - aj_kp;
+                        star[kp].rad = star[kp].se_radius * RSUN / units.l;
+                        mass_kp = star[kp].se_mt * MSUN / units.mstar;
 
 #ifdef USE_MPI
-                DMse -= mass_k * madhoc;
-                DMse -= mass_kp * madhoc;
+                        DMse -= mass_k * madhoc;
+                        DMse -= mass_kp * madhoc;
 #else
-        DMse_mimic[findProcForIndex(k)] -= mass_k * madhoc;
-        DMse_mimic[findProcForIndex(k)] -= mass_kp * madhoc;
+                DMse_mimic[findProcForIndex(k)] -= mass_k * madhoc;
+                DMse_mimic[findProcForIndex(k)] -= mass_kp * madhoc;
 #endif
 
-                if (afinal > star[k].rad + star[kp].rad) {
                         /* form compact binary with stripped RG cores*/
                         /* put new binary together and destroy original stars */
                         knew = create_binary(k, 0);
@@ -683,7 +695,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         destroy_obj(k);
                         destroy_obj(kp);
 
-                } else {
+                } else if (bse_rl(star[kp].se_mc/star[k].se_mc)*afinal <= star[kp].se_rc*RSUN/units.l || bse_rl(star[k].se_mc/star[kp].se_mc)*afinal <= star[k].se_rc*RSUN/units.l) {
                         /* log stuff */
                         parafprintf(tidalcapturefile, "merged\n");
 
@@ -1255,7 +1267,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 * @param vs ?
 * @param s rng state
 */
-void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s, double lamb_fac, int ktry_lim) {
+void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s) {
 	double tphysf, dtp, age, temp_rad, bseaj[2];
 	//double vsaddl[12], 
 	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
@@ -1381,9 +1393,8 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    ktry = 1;
 		    while (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0 && ktry < 10) {
 		      dprintf("Attempting to force merger in CE possibly by repeating evolution with a change of sep and lambda.\n");
-                      /* Shi: Added ktry_lim and lamb_fac. Default ktry_lim = 2, and lamb_fac = -0.0001. */
-		      if(ktry>ktry_lim){
-			lamb_val = lamb_fac/((float)ktry);
+		      if(ktry>2){
+			lamb_val = -0.0001/((float)ktry);
 			bse_set_lambdaf(lamb_val); //perhaps should do this in the second attempt? 
 		      }
 		      tempbinary.a = tbcopy.a/ktry;
