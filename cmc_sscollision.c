@@ -239,8 +239,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			        compress_binary(&star[knew], &binary[star[knew].binind]);
 			
 			        /* log stuff */
-			        parafprintf(tidalcapturefile, "%s+(%g,%g)\n", sprint_bin_dyn(knew, dummystring), 
-                                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
+			        parafprintf(tidalcapturefile, "%s+(%g,%g)+%g\n", sprint_bin_dyn(knew, dummystring), 
+                                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rcm*units.l/PARSEC);
                         
                                 //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
 
@@ -483,8 +483,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			        compress_binary(&star[knew], &binary[star[knew].binind]);
 			
 			        /* log stuff */
-			        parafprintf(tidalcapturefile, "%s+(%g,%g)\n", sprint_bin_dyn(knew, dummystring), 
-                                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
+			        parafprintf(tidalcapturefile, "%s+(%g,%g)+%g\n", sprint_bin_dyn(knew, dummystring), 
+                                        star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rcm*units.l/PARSEC);
                                 //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_k*madhoc, mass_kp*madhoc, star[k].se_mc*MSUN/units.m, star[k].se_radius*RSUN/units.l, W);
 
 			        destroy_obj(k);
@@ -687,8 +687,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         compress_binary(&star[knew], &binary[star[knew].binind]);
 
                         /* log stuff */
-                        parafprintf(tidalcapturefile, "%s+(%g,%g)\n", sprint_bin_dyn(knew, dummystring),
-                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
+                        parafprintf(tidalcapturefile, "%s+(%g,%g)+%g\n", sprint_bin_dyn(knew, dummystring),
+                                star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rcm*units.l/PARSEC);
 
                         //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
                 
@@ -1241,11 +1241,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			        compress_binary(&star[knew], &binary[star[knew].binind]);
 
 			        /* log stuff */
-			        parafprintf(tidalcapturefile, "%.6g SS_COLL_TC_P %s+%s+(%g,%g,%g)+%g->%s+(%g,%g)\n", TotalTime, 
+			        parafprintf(tidalcapturefile, "%.6g SS_COLL_TC_P %s+%s+(%g,%g,%g)+%g->%s+(%g,%g)+%g\n", TotalTime, 
 				        sprint_star_dyn(k, dummystring), sprint_star_dyn(kp, dummystring2), 
                                         star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rperi*units.l/RSUN, 
                                         W*units.l/units.t/1.e5,  
-                                        sprint_bin_dyn(knew, dummystring3), star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN);
+                                        sprint_bin_dyn(knew, dummystring3), star[k].rad*units.l/RSUN, star[kp].rad*units.l/RSUN, rcm*units.l/PARSEC);
 			
 			        destroy_obj(k);
 			        destroy_obj(kp);
