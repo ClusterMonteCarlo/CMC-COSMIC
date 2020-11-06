@@ -783,6 +783,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                 }
 
 	} else if (BH_CAPTURE && star[k].se_k == 14 && star[kp].se_k == 14){
+                
+                Einit = 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
+                        0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) +
+                        0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
+
 		/* form compact binary from gravitational-wave bremsstrahlung*/
 		/* put new binary together and destroy original black holes*/
 
@@ -869,6 +874,11 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		destroy_obj(kp);
 
         } else if (TC_FACTOR > 1 && (star[k].se_k != 14 || star[kp].se_k != 14) && (star[k].se_k <= 1 || star[k].se_k == 7 || star[k].se_k >= 10) && (star[kp].se_k <= 1 || star[kp].se_k == 7 || star[kp].se_k >= 10) && rperi > collisions_multiple * (star[k].rad + star[kp].rad) && rperi <= TC_FACTOR * (star[k].rad + star[kp].rad)){
+                
+                Einit = 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
+                        0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) +
+                        0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
+
                 /* Shi: single-single tidal capture for all stars with a radius, except giants. */
                 /* put new binary together and destroy original stars */
                 /* log stuff */
