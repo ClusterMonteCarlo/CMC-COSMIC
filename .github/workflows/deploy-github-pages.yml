@@ -1,0 +1,41 @@
+name: Website Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Checkout submodules
+      uses: textbook/git-checkout-submodule-action@master
+    - name: Install dependencies
+      run: |
+        sudo apt-get install gcc gfortran openmpi-bin libopenmpi-dev cmake libhdf5-serial-dev libgsl-dev libcfitsio-dev doxygen
+        pip install -r requirements.txt
+    - name: Make documentation
+      run: |
+        cd docs/sphinx/ && make html; cd ../../
+        touch docs/sphinx/build/html/.nojekyll
+
+    - name: Deploy to GitHub Pages
+      if: success()
+      uses: crazy-max/ghaction-github-pages@v2
+      with:
+        target_branch: gh-pages
+        build_dir: docs/sphinx/build/html/
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
