@@ -73,6 +73,10 @@ find_package(Python3 REQUIRED)
 option(WITH_MPI "Option description" ON)
 add_definitions(-DUSE_MPI)
 
+# compiler flags
+SET(GCC_SET_COMMON_FLAG "-fcommon")
+add_definitions(${GCC_SET_COMMON_FLAG})
+
 # Internal products
 
 add_subdirectory(src)
