@@ -1081,42 +1081,6 @@ common envelope occurs regardless of the choices below:
     ; default=1
     ST_cr=1
 
-
-[bse]
------
-
-.. note::
-
-    Although this is all one section, we have grouped the
-    flags/parameters which get passed to the binary stellar evolution
-    code into types. Each group will start with a note to indicate
-    the type of parameter or flag.
-
-.. note::
-
-    SAMPLING FLAGS
-
-=======================  =====================================================
-``pts1``                 determines the timesteps chosen in each evolution phase as
-                         decimal fractions of the time taken in that phase for
-                         Main Sequence (MS) stars
-
-                         **pts1 = 0.001** following `Bannerjee+2019 <https://ui.adsabs.harvard.edu/abs/2019arXiv190207718B/abstract>`_
-
-``pts2``                 determines the timesteps chosen in each evolution phase as
-                         decimal fractions of the time taken in that phase for
-                         Giant Branch (GB, CHeB, AGB, HeGB) stars
-
-                         **pts2 = 0.01** following `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
-
-``pts3``                 determines the timesteps chosen in each evolution phase as
-                         decimal fractions of the time taken in that phase for
-                         HG, HeMS stars
-
-                         **pts3 = 0.02** following `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
-=======================  =====================================================
-
-
 [cmc]
 -----
 
