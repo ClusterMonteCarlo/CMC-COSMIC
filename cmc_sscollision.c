@@ -69,13 +69,13 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	   rperimax, rperimax * units.l / RSUN, bmax, bmax * units.l / RSUN, b, b*units.l/RSUN, rperi, rperi*units.l/RSUN); */
 
 	if (BHNS_TDE) {
-		if (star[kp].se_k >= 13 && star[k].se_k <= 1 && mass_kp >= mass_k) {
+		if (star[kp].se_k >= 13 && (star[k].se_k <= 1 || star[k].se_k == 7) && mass_kp >= mass_k) {
 			if (mass_k * units.mstar / FB_CONST_MSUN < 0.001) {
 				collisions_multiple = pow(mass_kp/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
 			} else {
 				collisions_multiple = pow(mass_kp/mass_k,1./3.);
 			}
-		} else if (star[k].se_k >= 13 && star[kp].se_k <= 1 && mass_k >= mass_kp) {
+		} else if (star[k].se_k >= 13 && (star[kp].se_k <= 1 || star[kp].se_k == 7) && mass_k >= mass_kp) {
 			if (mass_kp * units.mstar / FB_CONST_MSUN < 0.001) {
 				collisions_multiple = pow(mass_k/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
 			} else {
@@ -251,7 +251,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                 } else if (bse_rl(mass_k/(star[kp].se_mc* MSUN / units.mstar))*afinal <= star[k].rad || bse_rl((star[kp].se_mc* MSUN / units.mstar)/mass_k)*afinal <= star[kp].se_rc*RSUN/units.l) {
 
                         /* log stuff */
-                        parafprintf(tidalcapturefile, "merged\n");
+                        parafprintf(tidalcapturefile, "(-100,%g,-100,%g)+merged\n", star[kp].se_mc, star[kp].se_rc);
 
                         /* create new star */
                         knew = create_star(k, 0);
@@ -492,7 +492,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         }
                 } else if (bse_rl(mass_kp/(star[k].se_mc* MSUN / units.mstar))*afinal <= star[kp].rad || bse_rl((star[k].se_mc* MSUN / units.mstar)/mass_kp)*afinal <= star[k].se_rc*RSUN/units.l) {        
                         /* log stuff */
-                        parafprintf(tidalcapturefile, "merged\n");
+                        parafprintf(tidalcapturefile, "(%g,-100,%g,-100)+merged\n", star[k].se_mc, star[k].se_rc);
 
                         /* create new star */
                         knew = create_star(k, 0);
@@ -697,7 +697,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
                 } else if (bse_rl(star[kp].se_mc/star[k].se_mc)*afinal <= star[kp].se_rc*RSUN/units.l || bse_rl(star[k].se_mc/star[kp].se_mc)*afinal <= star[k].se_rc*RSUN/units.l) {
                         /* log stuff */
-                        parafprintf(tidalcapturefile, "merged\n");
+                        parafprintf(tidalcapturefile, "(%g,%g,%g,%g)+merged\n", star[k].se_mc, star[kp].se_mc, star[k].se_rc, star[kp].se_rc);
 
                         /* create new star */
                         knew = create_star(k, 0);
