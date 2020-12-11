@@ -1085,41 +1085,41 @@ common envelope occurs regardless of the choices below:
 -----
 
 ===============================  =====================================================
-INPUT_FILE                       
-CMC_GAMMA                        
-MASS_PC                          
-MASS_BINS                        
-OVERWRITE_RVIR                   
-THETASEMAX                       
-BH_AVEKERNEL                     
-T_MAX_PHYS
-T_MAX_COUNT
-MIN_CHUNK_SIZE
-STELLAR_EVOLUTION
-SS_COLLISION
-RELAXATION
-PERTURB
-BINBIN
-BINSINGLE
-BH_CAPTURE
-THREEBODYBINARIES
-ONLY_FORM_BH_THREEBODYBINARIES
-IDUM
-SNAPSHOTTING
-SNAPSHOT_DELTACOUNT
-WRITE_STELLAR_INFO
-STOPATCORECOLLAPSE
-WRITE_EXTRA_CORE_INFO
-TIDAL_TREATMENT
-WRITE_BH_INFO
-BH_SNAPSHOTTING
-BH_SNAPSHOT_DELTACOUNT
-MAX_WCLOCK_TIME
-CHECKPOINT_INTERVAL
-CHECKPOINTS_TO_KEEP
-TERMINAL_ENERGY_DISPLACEMENT
-USE_TT_FILE
-USE_DF_CUTOFF
+INPUT_FILE                       Input FITS file
+CMC_GAMMA                        Gamma in Coulomb logarithm
+MASS_PC                          Mass fractions for Lagrange radii
+MASS_BINS                        Mass ranges for calculating derived quantities
+OVERWRITE_RVIR                   Instead of reading the virial radius from the fits file use this value [pc]
+THETASEMAX                       Maximum super-encounter scattering angle (radians)
+BH_AVEKERNEL                     One half the number of stars over which to average 3bb related quantities
+T_MAX_PHYS                       Maximum integration time (Gyr)
+T_MAX_COUNT                      Maximum number of time steps
+MIN_CHUNK_SIZE                   Minimum size of chunks that get partitioned across processors in the parallel code
+STELLAR_EVOLUTION                Stellar evolution (0=off, 1=on)
+SS_COLLISION                     Perform physical stellar collisions (0=off, 1=on)
+RELAXATION                       Perform two-body relaxation (0=off, 1=on)
+PERTURB                          Perform dynamical perturbations on objects (0=off, 1=on)
+BINBIN                           Toggles binary--binary interactions (0=off, 1=on)
+BINSINGLE                        Toggles binary--single interactions (0=off, 1=on)
+BH_CAPTURE                       Allow for the formation of binary black holes from gravitational-wave emission during single-single encounters;                                  SS_COLLISION must be 1
+THREEBODYBINARIES                Toggles three-body binary formation (0=off, 1=on)
+ONLY_FORM_BH_THREEBODYBINARIES   Allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)
+IDUM                             Random number generator seed
+SNAPSHOTTING                     Toggles output snapshotting (0=off, 1=on)
+SNAPSHOT_DELTACOUNT              Snapshotting interval in time steps
+WRITE_STELLAR_INFO               Write out information about stellar evolution for each single and binary star, (0=off, 1=on)
+STOPATCORECOLLAPSE               Stop calculation at core collapse (0=no, 1=yes)
+WRITE_EXTRA_CORE_INFO            Write out information about cores that are defined differently from the standard (0=off, 1=on)
+TIDAL_TREATMENT                  Choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)
+WRITE_BH_INFO                    Write out information about BHs each timestep, (0=off, 1=on)
+BH_SNAPSHOTTING                  Toggles output bh snapshotting (0=off, 1=on)
+BH_SNAPSHOT_DELTACOUNT           BH snapshotting interval in time steps
+MAX_WCLOCK_TIME.                 Maximum wall clock time (seconds)
+CHECKPOINT_INTERVAL              How often to save checkpoint (seconds)
+CHECKPOINTS_TO_KEEP              How many checkpoints to keep
+TERMINAL_ENERGY_DISPLACEMENT     Energy change calculation stopping criterion
+USE_TT_FILE                      Whether to use a Tidal Tensor file
+USE_DF_CUTOFF                    Dynamical Friction cutoff
 ===============================  =====================================================
 
 
