@@ -154,6 +154,7 @@ typedef struct{
 	int PN3;
 	int PN35;
 	double BH_REFF;
+	double BHNS_TDE_FLAG;
 } fb_input_t;
 
 /* return parameters */
@@ -179,16 +180,16 @@ typedef struct{
 fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t, gsl_rng *rng, struct rng_t113_state *curr_st);
 
 /* fewbody_classify.c */
-int fb_classify(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units);
-int fb_is_stable(fb_obj_t *obj, double speedtol, fb_units_t units);
-int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units);
+int fb_classify(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units, fb_input_t input);
+int fb_is_stable(fb_obj_t *obj, double speedtol, fb_units_t units, fb_input_t input);
+int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units, fb_input_t input);
 int fb_is_stable_triple(fb_obj_t *obj);
 int fb_is_stable_quad(fb_obj_t *obj);
 int fb_mardling(fb_obj_t *obj, int ib, int is);
 
 /* fewbody_coll.c */
-int fb_is_collision(double r, double R1, double R2);
-int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff);
+int fb_is_collision(double r, double R1, double R2, double M1, double M2, double k1, double k2, double mass_units, double length_units, double bhns_tde_flag);
+int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff, fb_input_t input);
 void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff);
 void fb_bh_merger(double m1, double m2, double a1, double a2, double *mass_frac, double *afinal, double *v_para, double *v_perp, struct rng_t113_state *curr_st);
 
@@ -220,7 +221,7 @@ void fb_print_version(FILE *stream);
 void fb_print_story(fb_obj_t *star, int nstar, double t, char *logentry);
 
 /* fewbody_isolate.c */
-int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units, fb_nonks_params_t nonks_params);
+int fb_collapse(fb_hier_t *hier, double t, double tidaltol, double speedtol, fb_units_t units, fb_nonks_params_t nonks_params, fb_input_t input);
 int fb_expand(fb_hier_t *hier, double t, double tidaltol);
 
 /* fewbody_ks.c */

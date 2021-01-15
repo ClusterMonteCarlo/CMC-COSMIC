@@ -23,8 +23,10 @@
 #define PEAK_A 30.0  //in AU
 #define MIN_A 0.01  //in AU
 #define MAX_A 100.0  //in AU
+#define MAX_A_HS 1.0 //max SMA in units of HS boundary (1 is default) 
 #define NPLANETS 0
 #define HIGHMASSFB 0.
+#define MCRIT 15. //in Msun
 #define HIGHMASSAINDEX -1.75  //default taken from Sana et al. 2012
 #define HIGHMASSMRATIOLOW -1. //default is the lowest stellar mass in the IMF
 
@@ -57,14 +59,16 @@ void print_usage(FILE *stream)
 	fprintf(stream, "  -l --limits <limits algorithm> : algorithm for setting limits on binary semimajor axes (0=physical, 1=kT prescription, 2=M67 model of Hurley, et al. (2005), 3=Ivanova, et al. (2005)), 4=Eq. 16 Egleton, Fitchett & Tout 1989 with peak at 30AU [%d]\n", LIMITS);
 	fprintf(stream, "  -p --peak_a <peak in a dist.>           : choosing where the peak in lognormal a dist. is; need to choose for -l 4: [%g] AU\n", PEAK_A);
 	fprintf(stream, "  -a --min_a <minimum a in a dist.>           : choosing amin in lognormal dist.; need to choose for -l 4: [%g] AU\n", MIN_A);
-	fprintf(stream, "  -A --max_a <max a in a dist.>           : choosing amax in lognormal dist.; need to choose for -l 4: [%g] AU\n", MIN_A);
+	fprintf(stream, "  -A --max_a <max a in a dist.>           : choosing amax in lognormal dist.; need to choose for -l 4: [%g] AU\n", MAX_A);
+	fprintf(stream, "  -H --max_a_hs <select max_a as multiple (H) of hard-soft boundary>           : amax is [%g] times HS boundary; use with -l 0 or -l 5\n", MAX_A_HS);
 	fprintf(stream, "  -m --Ebmin <E_b,min>           : minimum binding energy, in kT [%g]\n", EBMIN);
 	fprintf(stream, "  -M --Ebmax <E_b,max>           : maximum binding energy, in kT [%g]\n", EBMAX);
 	fprintf(stream, "  -I --ignoreradii               : ignore radii when setting binary properties\n");
 	fprintf(stream, "  -s --seed <seed>               : random seed [%ld]\n", SEED);
 	fprintf(stream, "  -b --binary_mf <choosing bin MF> : set a different MF (KTG91 for now) for binaries [%d]\n", BINMF);
-	fprintf(stream, "  -f --highmass_fb <choosing binary fraction for high-mass stars separately> : set a different binary fraction for M>15 Msun [%g]\nNeeds this for binmf=98\n", HIGHMASSFB);
-	fprintf(stream, "  -q --highmass_mratio_low <choosing the lower limit in mass ratios for high-mass stars>: \nallows to change the lower limit in mass ratio dist. for high-mass stars [%g]. \nAt the moment required only for binmf 98\n", HIGHMASSMRATIOLOW);
+	fprintf(stream, "  -f --highmass_fb <choosing binary fraction for high-mass stars separately> : set a different binary fraction for M>mcrit [%g]\nNeeds this for binmf=98\n", HIGHMASSFB);
+	fprintf(stream, "  -G --mcrit <choosing mcrit for binary fraction for high-mass stars separately> [%g]\nNeeds this for binmf=98\n", MCRIT);
+	fprintf(stream, "  -q --highmass_mratio_low <choosing the lower limit in mass ratios for high-mass stars>: \nallows to change the lower limit in mass ratio dist. for high-mass stars ; if >1 stars with mass>mcrit are coupled among themselves [%g]. \nAt the moment required only for binmf 98\n", HIGHMASSMRATIOLOW);
 	fprintf(stream, "  -k --highmass_aind <choosing power-law a-dist for high-mass stars> : set a power-law a-dist. in dn/da [%g].\nMust have l=5\n", HIGHMASSAINDEX);	
 	fprintf(stream, "  -h --help                      : display this help text\n");
 }
@@ -112,7 +116,7 @@ void addbin_calc_sigma_r(cmc_fits_data_t *cfd, double *r, double *sigma, double 
 	}
 }
 
-void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a, double min_a, double max_a, double EbminkT, double EbmaxkT, int ignoreradii, int binmf, long nplanets, double highmassfb, double highmass_aindex, double highmass_mratio_low)
+void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a, double min_a, double max_a, double max_a_hs, double EbminkT, double EbmaxkT, int ignoreradii, int binmf, long nplanets, double highmassfb, double masscrit, double highmass_aindex, double highmass_mratio_low)
 {
 	int success, success_a;
 	long i, j, planetntry;
@@ -252,7 +256,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	if (binmf==98){
 		for (i=0; i<=cfd->NOBJ; i++){
 			//fprintf (stdout, "m=%g\n", cfd->obj_m[i]);
-			if (cfd->obj_m[i]>15./cfd->Mclus) {
+			if (cfd->obj_m[i]>masscrit/cfd->Mclus) {
 				nhighmass++;
 			}
 		}
@@ -317,7 +321,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 		//for (i=0; i<=cfd->NOBJ; i++){
 		while (counthighmassbinary<nhighmassbinary){
 			i = (long) floor(rng_t113_dbl() * cfd->NOBJ + 1.0);
-			if (i <= cfd->NOBJ && cfd->obj_binind[i] == 0 && cfd->obj_m[i]>15./cfd->Mclus){
+			if (i <= cfd->NOBJ && cfd->obj_binind[i] == 0 && cfd->obj_m[i]>masscrit/cfd->Mclus){
 				counthighmassbinary++;
 				j++;
 				//dummy = rng_t113_dbl();
@@ -339,11 +343,15 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				/* set secondary mass from dP/dq=1 distribution */
 				if (highmass_mratio_low<=0){
 					cfd->bs_m2[j] = Mmin + rng_t113_dbl() * (cfd->bs_m1[j] - Mmin);
-					fprintf (stderr, "highmass comp masses: %g %g\n", cfd->bs_m2[j], cfd->bs_m1[j]);
+					//fprintf (stderr, "highmass comp masses: %g %g %g\n", cfd->bs_m2[j]*cfd->Mclus, cfd->bs_m1[j]*cfd->Mclus, masscrit);
+				} else if (highmass_mratio_low>1){
+					dummy = masscrit;
+					cfd->bs_m2[j] = dummy + rng_t113_dbl() * (cfd->bs_m1[j] - dummy);
+					//fprintf (stderr, "highmass comp masses: %g %g %g\n", cfd->bs_m2[j]*cfd->Mclus, cfd->bs_m1[j]*cfd->Mclus, masscrit);
 				} else {
 					dummy = cfd->bs_m1[j]*highmass_mratio_low;
 					cfd->bs_m2[j] = dummy + rng_t113_dbl() * (cfd->bs_m1[j] - dummy);
-					fprintf (stderr, "highmass comp masses: %g %g\n", cfd->bs_m2[j], cfd->bs_m1[j]);
+					//fprintf (stderr, "highmass comp masses: %g %g %g\n", cfd->bs_m2[j]*cfd->Mclus, cfd->bs_m1[j]*cfd->Mclus, masscrit);
 				}
 		
 				/* stellar evolution stuff */
@@ -381,7 +389,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 		}
 		while (j < Nbin+nhighmassbinary) {
 			i = (long) floor(rng_t113_dbl() * cfd->NOBJ + 1.0);
-			if (i <= cfd->NOBJ && cfd->obj_binind[i] == 0 && cfd->obj_m[i]<=15./cfd->Mclus){
+			if (i <= cfd->NOBJ && cfd->obj_binind[i] == 0 && cfd->obj_m[i]<=masscrit/cfd->Mclus){
 				j++;
 				//dummy = rng_t113_dbl();
 				//fprintf(stdout, "count=%ld; assigning binary for low mass=%g and i=%ld\n", counthighmassbinary, cfd->obj_m[i]*cfd->Mclus, i);
@@ -401,7 +409,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				cfd->bs_id2[j] = star_get_id_new();
 				/* set secondary mass from dP/dq=1 distribution */
 				cfd->bs_m2[j] = Mmin + rng_t113_dbl() * (cfd->bs_m1[j] - Mmin);
-				fprintf (stderr, "comp masses: %g %g\n", cfd->bs_m2[j], cfd->bs_m1[j]);	
+				//fprintf (stderr, "comp masses: %g %g %g\n", cfd->bs_m2[j]*cfd->Mclus, cfd->bs_m1[j]*cfd->Mclus,masscrit);	
 					
 				/* stellar evolution stuff */
 				star.se_mass = cfd->bs_m2[j] * cfd->Mclus;
@@ -441,7 +449,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 		while (j < Nbin+nhighmassbinary){
 			i = (long) floor(rng_t113_dbl() * cfd->NOBJ + 1.0);
 			/* make it a binary if it's not already */
-			if (i <= cfd->NOBJ && cfd->obj_binind[i] == 0 && cfd->obj_m[i]<15./cfd->Mclus) {
+			if (i <= cfd->NOBJ && cfd->obj_binind[i] == 0 && cfd->obj_m[i]<masscrit/cfd->Mclus) {
 				j++;
 
 				/* make this object a binary */
@@ -856,9 +864,9 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 				W = 4.0 * vcore / sqrt(3.0 * PI);
 				vorb = XHS * W;
-				amax = cfd->obj_m[i] / (vorb * vorb);
+				amax = max_a_hs * cfd->obj_m[i] / (vorb * vorb);
 				if (amax <= amin && ignoreradii == 0) {
-				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
+				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g M=%g\n", amax, amin, cfd->obj_m[i]*cfd->Mclus);
 				  fprintf(stderr, "WARNING: setting amax = amin\n");
 				  amax = amin;
 				}
@@ -1030,15 +1038,15 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 			if (cfd->bs_m2[i]*cfd->Mclus < 0.002){  //If planetary, then put them in circular orbits at 5 AU
 				cfd->bs_a[i] = 5. * AU / (cfd->Rvir * PARSEC);
 				cfd->bs_e[i] = 0.;
-			} else if (cfd->bs_m1[i]*cfd->Mclus > 15.) {  //If high-mass primary, > 15 Msun, use a user-defined power-law a-dist
+			} else if (cfd->bs_m1[i]*cfd->Mclus > masscrit) {  //If high-mass primary, > masscrit, use a user-defined power-law a-dist
 				/* choose a from a powerlaw distribution from near contact to hard/soft boundary */
 				
 				amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 				W = 4.0 * vcore / sqrt(3.0 * PI);
 				vorb = XHS * W;
-				amax = cfd->obj_m[i] / (vorb * vorb);
+				amax = max_a_hs * cfd->obj_m[i] / (vorb * vorb);
 				if (amax <= amin && ignoreradii == 0) {
-				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
+				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g M=%g\n", amax, amin, cfd->obj_m[i]*cfd->Mclus);
 				  fprintf(stderr, "WARNING: setting amax = amin\n");
 				  amax = amin;
 				  cfd->bs_a[i] = amin;
@@ -1089,7 +1097,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 				W = 4.0 * vcore / sqrt(3.0 * PI);
 				vorb = XHS * W;
-				amax = cfd->obj_m[i] / (vorb * vorb);
+				amax = max_a_hs * cfd->obj_m[i] / (vorb * vorb);
 				if (amax <= amin && ignoreradii == 0) {
 				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
 				  fprintf(stderr, "WARNING: setting amax = amin\n");
@@ -1131,10 +1139,10 @@ int main(int argc, char *argv[]){
         int i, limits, ignoreradii, binary_mf;
 	long Nbin, nplanets;
 	unsigned long seed;
-	double Ebmin, Ebmax, peak_a, min_a, max_a, highmass_fb, highmass_aind, highmass_mratio_low;
+	double Ebmin, Ebmax, peak_a, min_a, max_a, max_a_hs, highmass_fb, mcrit, highmass_aind, highmass_mratio_low;
 	cmc_fits_data_t cfd;
 	char infilename[1024], outfilename[1024];
-	const char *short_opts = "i:o:N:l:p:a:A:m:M:I:s:b:n:f:k:q:h";
+	const char *short_opts = "i:o:N:l:p:a:A:H:m:M:I:s:b:n:f:G:k:q:h";
 	const struct option long_opts[] = {
 		{"infile", required_argument, NULL, 'i'},
 		{"outfile", required_argument, NULL, 'o'},
@@ -1143,6 +1151,7 @@ int main(int argc, char *argv[]){
 		{"peak_a", required_argument, NULL, 'p'},
 		{"min_a", required_argument, NULL, 'a'},
 		{"max_a", required_argument, NULL, 'A'},
+		{"max_a_hs", required_argument, NULL, 'H'},
 		{"Ebmin", required_argument, NULL, 'm'},
 		{"Ebmax", required_argument, NULL, 'M'},
 		{"ignoreradii", no_argument, NULL, 'I'},
@@ -1150,6 +1159,7 @@ int main(int argc, char *argv[]){
 		{"binary_mf", required_argument, NULL, 'b'},
 		{"Nplanets", required_argument, NULL, 'n'},
 		{"highmass_fb", required_argument, NULL, 'f'},
+		{"mcrit", required_argument, NULL, 'G'},
 		{"highmass_aind", required_argument, NULL, 'k'},
 		{"highmass_mratio_low", required_argument, NULL, 'q'},
 		{"help", no_argument, NULL, 'h'},
@@ -1164,6 +1174,7 @@ int main(int argc, char *argv[]){
 	peak_a = PEAK_A;
 	min_a = MIN_A;
 	max_a = MAX_A;
+	max_a_hs = MAX_A_HS;
 	Ebmin = EBMIN;
 	Ebmax = EBMAX;
 	ignoreradii = 0;
@@ -1171,6 +1182,7 @@ int main(int argc, char *argv[]){
 	nplanets = NPLANETS;
 	binary_mf = BINMF;
 	highmass_fb = HIGHMASSFB;
+	mcrit = MCRIT;
 	highmass_aind = HIGHMASSAINDEX;
 	highmass_mratio_low = HIGHMASSMRATIOLOW;
 	
@@ -1205,6 +1217,10 @@ int main(int argc, char *argv[]){
 			max_a = strtod(optarg, NULL);
 			fprintf (stderr, "maximum of a = %g\n", max_a);
 			break;
+		case 'H':
+                        max_a_hs = strtod(optarg, NULL);
+                        //fprintf (stderr, "maximum a is %g times HS boundary\n", max_a_hs);
+                        break;
 		case 'm':
 			Ebmin = strtod(optarg, NULL);
 			if (Ebmin <= 0.0) {
@@ -1242,6 +1258,14 @@ int main(int argc, char *argv[]){
 			highmass_fb = strtod(optarg, NULL);
 			if (highmass_fb<0 || highmass_fb>1){
 				fprintf (stderr, "highmass binary fraction must bee >=0 and <=1![%g]\n", highmass_fb);
+			} else if (binary_mf!=98) {
+				fprintf (stderr, "binary_mf is expected to be 98. Do you know what your are doing?\n");
+			}
+			break;
+		case 'G':
+			mcrit = strtod(optarg, NULL);
+			if (mcrit<1 || mcrit>150){
+				fprintf (stderr, "mcrit for highmass binary fraction must bee >=1 and <=150![%g]\n", mcrit);
 			} else if (binary_mf!=98) {
 				fprintf (stderr, "binary_mf is expected to be 98. Do you know what your are doing?\n");
 			}
@@ -1285,7 +1309,7 @@ int main(int argc, char *argv[]){
 
 	METALLICITY = cfd.Z;
 	//fprintf(stderr, "l=%d, p=%g AU, a=%g AU, A=%g AU, m=%g M=%g b=%d\n", limits, peak_a, min_a, max_a, Ebmin, Ebmax, binary_mf);
-	assign_binaries(&cfd, Nbin, limits, peak_a, min_a, max_a, Ebmin, Ebmax, ignoreradii, binary_mf, nplanets, highmass_fb, highmass_aind, highmass_mratio_low);
+	assign_binaries(&cfd, Nbin, limits, peak_a, min_a, max_a, max_a_hs, Ebmin, Ebmax, ignoreradii, binary_mf, nplanets, highmass_fb, mcrit, highmass_aind, highmass_mratio_low);
 
 	cmc_write_fits_file(&cfd, outfilename);
 
