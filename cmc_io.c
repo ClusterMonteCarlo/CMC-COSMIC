@@ -2525,7 +2525,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 	   // print header
 		pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
 	   // print header
-		pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)+(r1,r2,r_peri)+vinf[km/s]+rcm[pc]+(mc0, mc1, rc0, rc1)->[(id1,m1,k1)-a[AU],e-(id2,m2,k2)]+(r1,r2)\n");
+		pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)+(r1,r2,r_peri)+vinf[km/s]+rcm[pc]+(mc0,mc1,rc0,rc1)->[(id1,m1,k1)-a[AU],e-(id2,m2,k2)]+(r1,r2)\n");
 	   // print header
 		pararootfprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
 	   //Sourav:  print header
