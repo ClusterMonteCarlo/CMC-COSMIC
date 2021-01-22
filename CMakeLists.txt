@@ -73,6 +73,10 @@ find_package(Python3 REQUIRED)
 option(WITH_MPI "Option description" ON)
 add_definitions(-DUSE_MPI)
 
+# enable EXPERIMENTAL
+option(EXPERIMENTAL "Option description" ON)
+add_definitions(-DEXPERIMENTAL)
+
 # compiler flags
 SET(GCC_SET_COMMON_FLAG "-fcommon")
 add_definitions(${GCC_SET_COMMON_FLAG})
