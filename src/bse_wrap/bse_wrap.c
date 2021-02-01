@@ -134,14 +134,16 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
     /*  vs[0] = 0.0;
     vs[1] = 0.0;
     vs[2] = 0.0; */
-    for(int i=0;i<20;i++) {
+	int i, j;
+    for(i=0;i<20;i++) {
         vs[i] = 0.0;
     }
 
     double kick_info[17][2];
 
-    for(int i=0;i<17;i++) {
-        for(int j=0;j<2;j++){
+
+    for(i=0;i<17;i++) {
+        for(j=0;j<2;j++){
             kick_info[i][j] = 0.0;
         }
     }
@@ -439,9 +441,10 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
   /* LOGICAL used by COSMIC, but not needed here */
     int disrupt=0;
     double kick_info[17][2];
+    int i, j ;
 
-    for(int i=0;i<17;i++) {
-        for(int j=0;j<2;j++){
+    for(i=0;i<17;i++) {
+        for(j=0;j<2;j++){
             kick_info[i][j] = 0.0;
         }
     }
@@ -478,7 +481,7 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb)
 		//                double *M02, double *M2, double *MC2, double *AJ2, double *JSPIN2, int *KW2,
                 //double *ZPARS, double *ECC, double *SEP, double *PORB,
 {
-  int i, kcomp1,kcomp2, star1, star2, COEL;
+  int i, j, kcomp1,kcomp2, star1, star2, COEL;
   double vk,OORB,JORB,mce[2],AJ[2], M0ce[2], PI, JSPIN1, JSPIN2;
   double tm, tn, tscls[20], lums[10], GB[10], k2, k3;
   double bhspin[2];
@@ -488,8 +491,8 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double *vs, int *fb)
   double tms[2], rad[2], lumin[2], B_0[2], bacc[2], tacc[2], epoch[2], menv_bpp[2], renv_bpp[2];
   double kick_info[17][2];
 
-  for(int i=0;i<17;i++) {
-      for(int j=0;j<2;j++){
+  for(i=0;i<17;i++) {
+      for(j=0;j<2;j++){
           kick_info[i][j] = 0.0;
       }
   }

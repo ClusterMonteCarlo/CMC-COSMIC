@@ -3039,8 +3039,9 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
         hsize_t    chunk_size = 10;
         int        *fill_data = NULL;
         int        compress  = 0;
+	int 	   ii;
 
-        for (int ii = 0; ii < NFIELDS; ++ii){
+        for (ii = 0; ii < NFIELDS; ++ii){
           field_type[ii] = H5T_NATIVE_DOUBLE;
         }
         field_type[0] = H5T_NATIVE_INT;

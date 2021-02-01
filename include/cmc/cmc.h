@@ -718,7 +718,7 @@ typedef struct{
 * @brief toggles output snapshotting (0=off, 1=on)
 */
 	int SNAPSHOTTING;
-#define PARAMDOC_SNAPSHOT_DELTAT "snapshotting time interval (FP units)"
+#define PARAMDOC_SNAPSHOT_DELTACOUNT "snapshotting time interval (FP units)"
 /**
 * @brief snapshotting time interval (FP units)
 */
