@@ -122,7 +122,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	M2ave= calc_average_mass_sqr(g_index, clus.N_MAX);
 	Trel= (PI/32.)*cub(W)/ ( ((double) clus.N_STAR) * n_local * (4.0* M2ave) );
 	//if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
-	if (index==1 && TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING && WRITE_RWALK_INFO) {
+	if (index==1 && tcount%SNAPSHOT_DELTACOUNT==0 && SNAPSHOTTING && WRITE_RWALK_INFO) {
 		is_in_ids=1;
 		create_rwalk_file(fname);
 	};
@@ -210,7 +210,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		} 
 	}; 
 #ifdef EXPERIMENTAL
-	if (TotalTime>= SNAPSHOT_DELTAT*(StepCount) && SNAPSHOTTING && WRITE_RWALK_INFO) {
+	if (tcount%SNAPSHOT_DELTACOUNT==0 && SNAPSHOTTING && WRITE_RWALK_INFO) {
 		write_rwalk_data(fname, g_index, Trel, dt, l2_scale, n_steps, beta,
 				n_local, W, P_orb, n_orb);
 	}
