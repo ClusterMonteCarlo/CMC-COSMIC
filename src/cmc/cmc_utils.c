@@ -678,45 +678,6 @@ long CheckStop() {
 		}
 	}
 
-	/* added by ato 
-	 * to try to take snapshots for core bounce as well. 
-	 * idea is if we reduced core density by 10 percent the
-	 * last time we took snapshot, take another one and adjust
-	 * parameters to take further snapshots if further collapse
-	 * occurs */
-	if (SNAPSHOT_CORE_BOUNCE) {
-		if (rho_core < 0.9e6 && Echeck == 10){
-			print_2Dsnapshot();
-			Echeck--;
-		} else if (rho_core < 0.9*5e5 && Echeck == 9){
-			print_2Dsnapshot();
-			Echeck--;
-		} else if (rho_core < 0.9e5 && Echeck == 8){
-			print_2Dsnapshot();
-			Echeck--;
-		} else if (rho_core < 0.9*5e4 && Echeck == 7){
-			print_2Dsnapshot();
-			Echeck--;
-		} else if (rho_core < 0.9e4 && Echeck == 6){
-			print_2Dsnapshot();
-			Echeck--;
-		} else if (rho_core < 0.9*5e3 && Echeck == 5){
-			print_2Dsnapshot();
-			Echeck--;
-		} else if (rho_core < 0.9e3 && Echeck == 4){
-			print_2Dsnapshot();
-			Echeck--;
-		} else if (rho_core < 0.9*5e2 && Echeck == 3){
-			print_2Dsnapshot();
-			Echeck--;
-		} else if (rho_core < 0.9e2 && Echeck == 2){
-			print_2Dsnapshot();
-			Echeck--;
-		} else if (rho_core < 0.9*50 && Echeck == 1){
-			print_2Dsnapshot();
-			Echeck--;
-		} 
-	}
 
 	/* If total Energy has diminished by TERMINAL_ENERGY_DISPLACEMENT, then stop */
 	if (Etotal.tot < Etotal.ini - TERMINAL_ENERGY_DISPLACEMENT) {

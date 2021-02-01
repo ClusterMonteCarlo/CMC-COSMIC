@@ -722,11 +722,6 @@ typedef struct{
 /**
 * @brief snapshotting time interval (FP units)
 */
-	int SNAPSHOT_DELTAT;
-#define PARAMDOC_SNAPSHOT_DELTACOUNT "snapshotting interval in time steps"
-/**
-* @brief snapshotting interval in time steps
-*/
 	int SNAPSHOT_DELTACOUNT;
 #define PARAMDOC_SNAPSHOT_CORE_COLLAPSE "output extra snapshotting information during core collapse (0=off, 1=on)"
 /**

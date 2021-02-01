@@ -78,8 +78,8 @@ void print_2Dsnapshot(void)
         char tablename[20];
 	if (SNAPSHOTTING) {
 		// open file for 2D snapshot 
-		sprintf(outfile, "%s.snap%04ld.dat.gz", outprefix, snap_num);
-                sprintf(tablename, "snapshot%04ld/", snap_num);
+	        sprintf(outfile, "%s.snapshots.h5", outprefix);
+                sprintf(tablename, "snapshot%04ld", snap_num);
 		write_snapshot(outfile, 0, tablename);
 		// global counter for snapshot output file 
 		snap_num++;
@@ -98,7 +98,7 @@ void print_bh_snapshot(void) {
 	if (BH_SNAPSHOTTING) {
 		/* open file for BH snapshot */
 	
-		sprintf(outfile, "%s.bhinfo%04ld.dat.gz", outprefix, bh_snap_num);
+	        sprintf(outfile, "%s.blackhole.snapshots.h5", outprefix);
                 sprintf(tablename, "bhinfo%04ld", bh_snap_num);
 		write_snapshot(outfile, 1, tablename);
 
@@ -552,14 +552,18 @@ void PrintFileOutput(void) {
     }
 
 	/* also saves INITIAL snapshot (StepCount=0) */
-	if (TotalTime >= SNAPSHOT_DELTAT * StepCount) {
-		StepCount++;
+	if (tcount%SNAPSHOT_DELTACOUNT==0){
 		print_2Dsnapshot();
 		if (WRITE_STELLAR_INFO){
 			write_stellar_data();	
 		}
 	}
 	print_snapshot_windows();
+
+	// Meagan - bh snapshot
+	if(tcount%BH_SNAPSHOT_DELTACOUNT==0) {
+		print_bh_snapshot();
+	}
 
 	free(multimassr_empty);
 
@@ -1093,14 +1097,6 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_DELTACOUNT);
 				sscanf(values, "%ld", &SNAPSHOT_DELTACOUNT);
 				parsed.SNAPSHOT_DELTACOUNT = 1;
-			} else if (strcmp(parameter_name, "SNAPSHOT_DELTAT") == 0) {
-				PRINT_PARSED(PARAMDOC_SNAPSHOT_DELTAT);
-				sscanf(values, "%lf", &SNAPSHOT_DELTAT);
-				parsed.SNAPSHOT_DELTAT = 1;
-			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_BOUNCE") == 0) {
-				PRINT_PARSED(PARAMDOC_SNAPSHOT_CORE_BOUNCE);
-				sscanf(values, "%d", &SNAPSHOT_CORE_BOUNCE);
-				parsed.SNAPSHOT_CORE_BOUNCE = 1;
 			} else if (strcmp(parameter_name, "SNAPSHOT_CORE_COLLAPSE") == 0) {
 				PRINT_PARSED(PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
 				sscanf(values, "%d", &SNAPSHOT_CORE_COLLAPSE);
@@ -1755,9 +1751,7 @@ if(myid==0) {
 	CHECK_PARSED(PULSAR_DELTACOUNT, 50, PARAMDOC_PULSAR_DELTACOUNT);    //Shi: new parameter
 	CHECK_PARSED(SNAPSHOTTING, 0, PARAMDOC_SNAPSHOTTING);
 	CHECK_PARSED(SNAPSHOT_DELTACOUNT, 250, PARAMDOC_SNAPSHOT_DELTACOUNT);
-	CHECK_PARSED(SNAPSHOT_DELTAT, 0.25, PARAMDOC_SNAPSHOT_DELTAT);
 	CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 0, PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
-	CHECK_PARSED(SNAPSHOT_CORE_BOUNCE, 0, PARAMDOC_SNAPSHOT_CORE_BOUNCE);
 	CHECK_PARSED(SNAPSHOT_WINDOWS, NULL, PARAMDOC_SNAPSHOT_WINDOWS);
 	CHECK_PARSED(SNAPSHOT_WINDOW_UNITS, "Trel", PARAMDOC_SNAPSHOT_WINDOW_UNITS);
 
@@ -2992,7 +2986,7 @@ void print_snapshot_windows(void) {
     if (total_time>= start+step_counter*step && total_time<=stop) {
       char outfile[100];
       char tablename[20];
-      sprintf(outfile, "%s.w%02i_snap%04d.dat.gz", outprefix, i+1, step_counter+1);
+      sprintf(outfile, "%s.window.snapshots.h5", outprefix);
       sprintf(tablename, "w%02i_snap%04d", i+1, step_counter+1);
       write_snapshot(outfile, 0, tablename);
 //		print_denprof_snapshot(outfile);
@@ -3197,7 +3191,7 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
                         //Initial file created only by root node.
                         if(myid==0){
                                 H5E_BEGIN_TRY {
-                                    snapfile_hdf5 = H5Fcreate("test.h5", H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+                                    snapfile_hdf5 = H5Fcreate(filename, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
                                     H5Fclose( snapfile_hdf5 );
                                 } H5E_END_TRY
                         }
@@ -3356,14 +3350,14 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
 //                            LIGHTCOLLISION_NRECORDS = 0;
 //                        }
                         if(myid==0){
-                            snapfile_hdf5 = H5Fopen("test.h5", H5F_ACC_RDWR, H5P_DEFAULT);
+                            snapfile_hdf5 = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
                             H5TBmake_table( "Table Title",snapfile_hdf5, tablename, NFIELDS,NRECORDS,
                                                 dst_size, field_names, dst_offset, field_type,
                                                 chunk_size, fill_data, compress, all_objects);
                             H5Fclose( snapfile_hdf5 );
                         }
                         else{
-                            snapfile_hdf5 = H5Fopen("test.h5", H5F_ACC_RDWR, H5P_DEFAULT);
+                            snapfile_hdf5 = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
                             H5TBappend_records(snapfile_hdf5, tablename, NRECORDS, dst_size, dst_offset, dst_sizes, &all_objects);
                             H5Fclose( snapfile_hdf5 );
                         }
@@ -4031,262 +4025,3 @@ void load_restart_file(){
 	rootprintf("******************************************************************************\n");
 
 }
-/*
-void alloc_bin_buf()
-{
-#ifdef USE_MPI
-	size_bin_buf = N_BIN_DIM / procs; //this is much more than what would be practically reqd. worst case scenario is N_BIN_DIM.
-
-	//OPT: Modularize by declaring variables in main fn, and pass as argument to reqd functions.
-	//the local binary array
-	binary_buf = (binary_t *) calloc( size_bin_buf, sizeof(binary_t) );
-
-	//array to store the indices of the local binary members in the original binary array
-	num_bin_buf = (int *) calloc( size_bin_buf, sizeof(int) );
-#endif
-}
-*/
-
-/*
-void mpi_merge_files()
-{
-#ifdef USE_MPI
-	int i;
-	char file_ext[64];
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	// Total of 22 files. Variable no.of files for lagrad***.dat, core.dat
-	// Using a simple brute force parallelization.
-	if(0 % procs == myid)
-		cat_and_rm_files("cmc.parsed");
-	if(1 % procs == myid)
-		cat_and_rm_files("lagrad.dat");
-	if(2 % procs == myid)
-		cat_and_rm_files("dyn.dat");
-	if(3 % procs == myid)
-		cat_and_rm_files("lagrad_10_info.dat");
-	if(4 % procs == myid)
-		cat_and_rm_files("avemass_lagrad.dat");
-	if(5 % procs == myid)
-		cat_and_rm_files("nostar_lagrad.dat");
-	if(6 % procs == myid)
-		cat_and_rm_files("rho_lagrad.dat");
-	if(7 % procs == myid)
-		cat_and_rm_files("ke_rad_lagrad.dat");
-	if(8 % procs == myid)
-		cat_and_rm_files("ke_tan_lagrad.dat");
-	if(9 % procs == myid)
-		cat_and_rm_files("v2_rad_lagrad.dat");
-	if(10 % procs == myid)
-		cat_and_rm_files("v2_tan_lagrad.dat");
-	if(11 % procs == myid)
-		cat_and_rm_files("centmass.dat");
-	if(12 % procs == myid)
-		cat_and_rm_files("log");
-	if(13 % procs == myid)
-		cat_and_rm_files("bin.dat");
-	if(14 % procs == myid)
-		cat_and_rm_files("binint.log");
-	if(15 % procs == myid)
-		cat_and_rm_files("esc.dat");
-	if(16 % procs == myid)
-		cat_and_rm_files("collision.log");
-	if(17 % procs == myid)
-		cat_and_rm_files("tidalcapture.log");
-	if(18 % procs == myid)
-		cat_and_rm_files("semergedisrupt.log");
-	if(19 % procs == myid)
-		cat_and_rm_files("removestar.log");
-	if(20 % procs == myid)
-		cat_and_rm_files("relaxation.dat");
-	if(21 % procs == myid)
-		for(i=0; i<NO_MASS_BINS-1; i++){
-			sprintf(file_ext, "lagrad%d-%g-%g.dat", i, mass_bins[i], mass_bins[i+1]);
-			cat_and_rm_files(file_ext);
-		}
-	if(22 % procs == myid)
-		if (WRITE_EXTRA_CORE_INFO)
-			cat_and_rm_files("core.dat");
-	//MPI2: Is barrier needed? Probably not.
-	MPI_Barrier(MPI_COMM_WORLD);
-#endif
-}
-*/
-/*
-void cat_and_rm_files(char* file_ext)
-{
-	char cmd[150];
-	int i;
-
-	for( i = 0; i < procs; ++i )
-	{
-		sprintf(cmd, "cat %s%d.%s >> %s.%s", outprefix_bak, i, file_ext, outprefix_bak, file_ext);
-		dprintf("command is %s\n", cmd);
-		system( cmd );
-		sprintf(cmd, "rm %s%d.%s", outprefix_bak, i, file_ext);
-		system( cmd );
-	}
-	dprintf("MPI Files merging: lag file = %s.%s\n", outprefix_bak, file_ext);
-}
-
-void cat_and_rm_files(char* file_ext)
-{
-   //char *filename_buf, temp[150];
-	char* filename_buf = (char*)malloc(40 * procs * sizeof(char)); //40 is assumed to be the worst case length of a filename including outprefix.
-	char* cmd = (char*)malloc(40 * procs * sizeof(char));
-   int i;
-
-   sprintf(filename_buf, "%s0.%s ", outprefix_bak, file_ext);
-   for( i = 1; i < procs; ++i )
-      sprintf( filename_buf, "%s%s%d.%s ", filename_buf, outprefix_bak, i, file_ext );
-
-   sprintf( cmd, "cat %s> %s.%s", filename_buf, outprefix_bak, file_ext);
-   system( cmd );
-   dprintf("MPI Files merging: file = %s\n", filename_buf);
-
-   for( i = 0; i < procs; ++i )
-   {
-      sprintf( cmd, "rm %s%d.%s", outprefix_bak, i, file_ext);
-      system( cmd );
-   }
-	//free(filename_buf);
-	//free(cmd);
-}
-*/
-/*
-void save_root_files()
-{
-#ifdef USE_MPI
-	int i;
-	char file_ext[64];
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	if(myid==0)
-	{
-		save_root_files_helper("cmc.parsed");
-		save_root_files_helper("lagrad.dat");
-		save_root_files_helper("dyn.dat");
-		save_root_files_helper("lagrad_10_info.dat");
-		save_root_files_helper("avemass_lagrad.dat");
-		save_root_files_helper("nostar_lagrad.dat");
-		save_root_files_helper("rho_lagrad.dat");
-		save_root_files_helper("ke_rad_lagrad.dat");
-		save_root_files_helper("ke_tan_lagrad.dat");
-		save_root_files_helper("v2_rad_lagrad.dat");
-		save_root_files_helper("v2_tan_lagrad.dat");
-		save_root_files_helper("centmass.dat");
-		save_root_files_helper("log");
-		save_root_files_helper("bin.dat");
-		save_root_files_helper("binint.log");
-		save_root_files_helper("esc.dat");
-		save_root_files_helper("collision.log");
-		save_root_files_helper("tidalcapture.log		save_root_files_helper("semergedisrupt.log");
-		save_root_files_helper("removestar.log");
-		save_root_files_helper("relaxation.dat");
-		for(i=0; i<NO_MASS_BINS-1; i++){
-			sprintf(file_ext, "lagrad%d-%g-%g.dat", i, mass_bins[i], mass_bins[i+1]);
-			save_root_files_helper(file_ext);
-		}
-		if (WRITE_EXTRA_CORE_INFO)
-			save_root_files_helper("core.dat");
-		//MPI2: Is barrier needed? Probably not.
-	}
-	MPI_Barrier(MPI_COMM_WORLD);
-#endif
-}
-*/
-/*
-void save_root_files_helper(char* file_ext)
-{
-   char cmd[150];
-
-   sprintf(cmd, "cp %s0.%s %s.%s", outprefix_bak, file_ext, outprefix_bak, file_ext);
-	system( cmd );
-*/
-/*
-   int i;
-   for( i = 0; i < procs; ++i )
-   {
-      sprintf( cmd, "rm %s%d.%s &", outprefix_bak, i, file_ext);
-      system( cmd );
-   }
-}
-*/
-/*
-void rm_files()
-{
-#ifdef USE_MPI
-   int i;
-   char file_ext[64];
-
-   rm_files_helper("cmc.parsed");
-   rm_files_helper("lagrad.dat");
-   rm_files_helper("dyn.dat");
-   rm_files_helper("lagrad_10_info.dat");
-   rm_files_helper("avemass_lagrad.dat");
-   rm_files_helper("nostar_lagrad.dat");
-   rm_files_helper("rho_lagrad.dat");
-   rm_files_helper("ke_rad_lagrad.dat");
-   rm_files_helper("ke_tan_lagrad.dat");
-   rm_files_helper("v2_rad_lagrad.dat");
-   rm_files_helper("v2_tan_lagrad.dat");
-   rm_files_helper("centmass.dat");
-   rm_files_helper("log");
-   rm_files_helper("bin.dat");
-   rm_files_helper("binint.log");
-   rm_files_helper("esc.dat");
-   rm_files_helper("collision.log");
-   rm_files_helper("tidalcapture.log");
-   rm_files_helper("semergedisrupt.log");
-   rm_files_helper("removestar.log");
-   rm_files_helper("relaxation.dat");
-   for(i=0; i<NO_MASS_BINS-1; i++){
-      sprintf(file_ext, "lagrad%d-%g-%g.dat", i, mass_bins[i], mass_bins[i+1]);
-      rm_files_helper(file_ext);
-   }
-   if (WRITE_EXTRA_CORE_INFO)
-      rm_files_helper("core.dat");
-
-   //MPI2: Is barrier needed? Probably not.
-   MPI_Barrier(MPI_COMM_WORLD);
-#endif
-}
-
-void rm_files_helper(char* file_ext)
-{
-   char cmd[150];
-
-   sprintf(cmd, "rm %s%d.%s", outprefix_bak, myid, file_ext);
-   system( cmd );
-}
-*/
-/*
-void print_small_output()
-{
-#ifdef USE_MPI
-	int i;
-	char filenm1[150], filenm2[150];
-
-	if(myid==0)
-	{
-		if (tcount == 1)
-		{
-			sprintf(filenm1, "%s.%s", outprefix_bak, "small.lagrad.dat");
-			sprintf(filenm2, "%s.%s", outprefix_bak, "small.log.dat");
-
-			fp_lagrad = fopen(filenm1, "w");
-			fp_log = fopen(filenm2, "w");
-			fprintf(fp_lagrad, "# Lagrange radii [code units]\n");
-			fprintf(fp_log, "# TotalTime\tDt\ttcount\tclus.N_MAX\tMtotal\tEtotal.tot\n");
-		}
-
-		fprintf(fp_lagrad, "%ld\t%.16e\t", tcount, TotalTime);
-		for (i=0; i<MASS_PC_COUNT; i++)
-			fprintf(fp_lagrad, "%e\t", mass_r[i]);
-		fprintf(fp_lagrad, "\n");
-		
-		fprintf(fp_log, "%.8g\t%.8g\t%ld\t%ld\t%.8g\t%.8g\n", TotalTime, Dt, tcount, clus.N_MAX, Mtotal, Etotal.tot);
-	}
-#endif
-}
-*/
