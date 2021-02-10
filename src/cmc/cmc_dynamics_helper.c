@@ -1018,7 +1018,7 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	if (*W == 0.0) {
 		// If you're seeing this and it's during the first timestep, most likely the initial conditions are wrong 
 		// (e.g. if you've created a binary that is destroyed during stellar evolution initialization)
-		eprintf("W = 0! for star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\n", k, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
+		eprintf("W = 0! for star index = %ld\tv1k = %g\tv2k = %g\tv1kp = %g\tv2kp = %g\nIf you're seeing this and it's during the first timestep, most likely the initial conditions are wrong\n (e.g. if you've created a binary that is destroyed during stellar evolution initialization)", star[k].id, star[k].vr, star[k].vt, star[kp].vr, star[kp].vt);
 		exit_cleanly(1, __FUNCTION__);
 	}
 
@@ -2754,7 +2754,7 @@ void mpi_break_wide_binaries(struct rng_t113_state* rng_st)
     double Eexcess_prev, Eexcess_check;
     double hardness, mAveLocal, sigma2;
 	MPI_Status stat;
-	
+
 	for (k=1; k<=clus.N_MAX_NEW; k++)
 	{
 		g_k = get_global_idx(k);

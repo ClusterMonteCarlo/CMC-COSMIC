@@ -327,10 +327,6 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     cfd->Z = read_z[0][0];
 
     if(RESTART_TCOUNT != 0){
-        free (read_stellar_objects[0]);
-        free(read_stellar_objects);
-        free (read_binary_objects[0]);
-        free(read_binary_objects);
         free (read_z[0]);
         free (read_z);
         free (read_mclus[0]);
