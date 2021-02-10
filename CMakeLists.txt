@@ -77,6 +77,9 @@ add_definitions(-DUSE_MPI)
 option(EXPERIMENTAL "Option description" ON)
 add_definitions(-DEXPERIMENTAL)
 
+option(TAUSWORTH "Use the Tausworth RNG" ON)
+add_definitions(-DUSE_TAUS)
+
 # compiler flags
 SET(GCC_SET_COMMON_FLAG "-fcommon")
 add_definitions(${GCC_SET_COMMON_FLAG})
