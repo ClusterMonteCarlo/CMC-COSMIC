@@ -81,8 +81,10 @@ option(TAUSWORTH "Use the Tausworth RNG" ON)
 add_definitions(-DUSE_TAUS)
 
 # compiler flags
-SET(GCC_SET_COMMON_FLAG "-fcommon")
-add_definitions(${GCC_SET_COMMON_FLAG})
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+	SET(GCC_SET_COMMON_FLAG "-fcommon")
+	add_definitions(${GCC_SET_COMMON_FLAG})
+endif()
 
 # Internal products
 

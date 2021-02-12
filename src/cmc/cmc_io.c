@@ -79,7 +79,7 @@ void print_2Dsnapshot(void)
 	if (SNAPSHOTTING) {
 		// open file for 2D snapshot 
 	        sprintf(outfile, "%s.snapshots.h5", outprefix);
-                sprintf(tablename, "snapshot%04ld", snap_num);
+	        sprintf(tablename, "t=%.8g", TotalTime);
 		write_snapshot(outfile, 0, tablename);
 		// global counter for snapshot output file 
 		snap_num++;
@@ -99,7 +99,7 @@ void print_bh_snapshot(void) {
 		/* open file for BH snapshot */
 	
 	        sprintf(outfile, "%s.blackhole.snapshots.h5", outprefix);
-                sprintf(tablename, "bhinfo%04ld", bh_snap_num);
+	        sprintf(tablename, "t=%.8g", TotalTime);
 		write_snapshot(outfile, 1, tablename);
 
 		/* global counter for snapshot output file */
@@ -552,7 +552,7 @@ void PrintFileOutput(void) {
     }
 
 	/* also saves INITIAL snapshot (StepCount=0) */
-	if (tcount%SNAPSHOT_DELTACOUNT==0){
+	if (tcount%SNAPSHOT_DELTACOUNT==0 | tcount==0.){
 		print_2Dsnapshot();
 		if (WRITE_STELLAR_INFO){
 			write_stellar_data();	
@@ -2965,7 +2965,7 @@ void print_snapshot_windows(void) {
   double start, stop, step, total_time;
   total_time = 0;
 
-  if (!snapshot_window_count || !SNAPSHOTTING) return;
+  if (!snapshot_window_count || SNAPSHOT_WINDOWS == NULL) return;
 
   if (strncmp(SNAPSHOT_WINDOW_UNITS, "Trel", 5)==0) {
     total_time= TotalTime;
@@ -2987,7 +2987,7 @@ void print_snapshot_windows(void) {
       char outfile[100];
       char tablename[20];
       sprintf(outfile, "%s.window.snapshots.h5", outprefix);
-      sprintf(tablename, "w%02i_snap%04d", i+1, step_counter+1);
+      sprintf(tablename, "t=%.8g", TotalTime);
       write_snapshot(outfile, 0, tablename);
 //		print_denprof_snapshot(outfile);
 
@@ -3027,9 +3027,9 @@ int valid_snapshot_window_units(void) {
 void write_snapshot(char *filename, int bh_only, char *tablename) {
         /* Define field information */
         const char *field_names[NFIELDS]  =
-        { "id","m", "r", "vr", "vt", "E", "J", "binflag", "m0", "m1", "id0",
-        "id1", "a", "e", "startype", "luminosity", "radius", "bin_startype0", "bin_startype1",
-        "bin_star_lum0", "bin_star_lum1", "bin_star_radius0", "bin_star_radius1",
+        { "id","m[MSUN]", "r", "vr", "vt", "E", "J", "binflag", "m0[MSUN]", "m1[MSUN]", "id0",
+        "id1", "a[AU]", "e", "startype", "luminosity[LSUN]", "radius[RSUN]", "bin_startype0", "bin_startype1",
+        "bin_star_lum0[LSUN]", "bin_star_lum1[LSUN]", "bin_star_radius0[RSUN]", "bin_star_radius1[RSUN]",
         "bin_Eb", "eta", "star_phi", "rad0", "rad1", "tb", "lum0", "lum1", "massc0", "massc1", "radc0",
         "radc1", "menv0", "menv1", "renv0", "renv1", "tms0", "tms1", "dmdt0", "dmdt1", "radrol0",
         "radrol1", "ospin0", "ospin1", "B0", "B1", "formation0", "formation1", "bacc0", "bacc1",
@@ -3206,7 +3206,16 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
 		if(myid==k)
 		{
 			// then print data
-                        int NRECORDS = clus.N_MAX_NEW;
+			long NRECORDS = 0, k = 0;
+			if(bh_only == 0)
+				NRECORDS = clus.N_MAX_NEW;
+			else
+				for (i=1; i<=clus.N_MAX_NEW; i++){
+					j=star[i].binind;
+					if( star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14 ) 
+						NRECORDS++;
+				}
+
                         Snapshot all_objects[NRECORDS];
                         for (i=1; i<=clus.N_MAX_NEW; i++) {
                                 long g_i = get_global_idx(i);
@@ -3217,133 +3226,134 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
 				//if bh_only>0, print only BHs
 				if( (bh_only==0) || ( (bh_only!=0) && (star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14) ) )
 				{
-                                        all_objects[i-1].id = star[i].id;
-                                        all_objects[i-1].m = m * (units.m / clus.N_STAR) / MSUN;
-                                        all_objects[i-1].r = r;
-                                        all_objects[i-1].vr = star[i].vr;
-                                        all_objects[i-1].vt = star[i].vt;
-                                        all_objects[i-1].E = star[i].E;
-                                        all_objects[i-1].J = star[i].J;
+                                        all_objects[k].id = star[i].id;
+                                        all_objects[k].m = m * (units.m / clus.N_STAR) / MSUN;
+                                        all_objects[k].r = r;
+                                        all_objects[k].vr = star[i].vr;
+                                        all_objects[k].vt = star[i].vt;
+                                        all_objects[k].E = star[i].E;
+                                        all_objects[k].J = star[i].J;
 					if (j) {
-                                                all_objects[i-1].binflag = 1;
-                                                all_objects[i-1].m0 = binary[j].m1 * (units.m / clus.N_STAR) / MSUN;
-                                                all_objects[i-1].m1 = binary[j].m2 * (units.m / clus.N_STAR) / MSUN;
-                                                all_objects[i-1].id0 = binary[j].id1;
-                                                all_objects[i-1].id1 = binary[j].id2;
-                                                all_objects[i-1].a = binary[j].a * units.l / AU;
-                                                all_objects[i-1].e = binary[j].e;
+                                                all_objects[k].binflag = 1;
+                                                all_objects[k].m0 = binary[j].m1 * (units.m / clus.N_STAR) / MSUN;
+                                                all_objects[k].m1 = binary[j].m2 * (units.m / clus.N_STAR) / MSUN;
+                                                all_objects[k].id0 = binary[j].id1;
+                                                all_objects[k].id1 = binary[j].id2;
+                                                all_objects[k].a = binary[j].a * units.l / AU;
+                                                all_objects[k].e = binary[j].e;
 					} else {
-                                                all_objects[i-1].binflag = -100;
-                                                all_objects[i-1].m0 = -100;
-                                                all_objects[i-1].m1 = -100;
-                                                all_objects[i-1].id0 = -100;
-                                                all_objects[i-1].id1 = -100;
-                                                all_objects[i-1].a = -100;
-                                                all_objects[i-1].e = -100;
+                                                all_objects[k].binflag = -100;
+                                                all_objects[k].m0 = -100;
+                                                all_objects[k].m1 = -100;
+                                                all_objects[k].id0 = -100;
+                                                all_objects[k].id1 = -100;
+                                                all_objects[k].a = -100;
+                                                all_objects[k].e = -100;
 					}
 
 					if (j == 0) {
-                                                all_objects[i-1].startype = star[i].se_k;
-                                                all_objects[i-1].luminosity = star[i].se_lum;
-                                                all_objects[i-1].radius = star[i].rad * units.l / RSUN;
-                                                all_objects[i-1].bin_startype0 = -100;
-                                                all_objects[i-1].bin_startype1 = -100;
-                                                all_objects[i-1].bin_star_lum0 = -100;
-                                                all_objects[i-1].bin_star_lum1 = -100;
-                                                all_objects[i-1].bin_star_radius0 = -100;
-                                                all_objects[i-1].bin_star_radius1 = -100;
-                                                all_objects[i-1].bin_Eb = -100;
-                                                all_objects[i-1].eta = -100;
+                                                all_objects[k].startype = star[i].se_k;
+                                                all_objects[k].luminosity = star[i].se_lum;
+                                                all_objects[k].radius = star[i].rad * units.l / RSUN;
+                                                all_objects[k].bin_startype0 = -100;
+                                                all_objects[k].bin_startype1 = -100;
+                                                all_objects[k].bin_star_lum0 = -100;
+                                                all_objects[k].bin_star_lum1 = -100;
+                                                all_objects[k].bin_star_radius0 = -100;
+                                                all_objects[k].bin_star_radius1 = -100;
+                                                all_objects[k].bin_Eb = -100;
+                                                all_objects[k].eta = -100;
 					} else {
-                                                all_objects[i-1].startype = -100;
-                                                all_objects[i-1].luminosity = -100;
-                                                all_objects[i-1].radius = -100;
-                                                all_objects[i-1].bin_startype0 = binary[j].bse_kw[0];
-                                                all_objects[i-1].bin_startype1 = binary[j].bse_kw[1];
-                                                all_objects[i-1].bin_star_lum0 = binary[j].bse_lum[0];
-                                                all_objects[i-1].bin_star_lum1 = binary[j].bse_lum[1];
-                                                all_objects[i-1].bin_star_radius0 = binary[j].rad1*units.l/RSUN;
-                                                all_objects[i-1].bin_star_radius1 =  binary[j].rad2*units.l/RSUN;
-                                                all_objects[i-1].bin_Eb = -(binary[j].m1/clus.N_STAR)*(binary[j].m2/clus.N_STAR)/(2*binary[j].a);
-                                                all_objects[i-1].eta = (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
+                                                all_objects[k].startype = -100;
+                                                all_objects[k].luminosity = -100;
+                                                all_objects[k].radius = -100;
+                                                all_objects[k].bin_startype0 = binary[j].bse_kw[0];
+                                                all_objects[k].bin_startype1 = binary[j].bse_kw[1];
+                                                all_objects[k].bin_star_lum0 = binary[j].bse_lum[0];
+                                                all_objects[k].bin_star_lum1 = binary[j].bse_lum[1];
+                                                all_objects[k].bin_star_radius0 = binary[j].rad1*units.l/RSUN;
+                                                all_objects[k].bin_star_radius1 =  binary[j].rad2*units.l/RSUN;
+                                                all_objects[k].bin_Eb = -(binary[j].m1/clus.N_STAR)*(binary[j].m2/clus.N_STAR)/(2*binary[j].a);
+                                                all_objects[k].eta = (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
                                  (binary[j].a * sqrt(calc_average_mass_sqr(i,clus.N_MAX)) * sqr(sigma_array.sigma[i]));
 					}
-                                        all_objects[i-1].star_phi = phi;
+                                        all_objects[k].star_phi = phi;
 					if (j == 0) {
-                                                all_objects[i-1].rad0 = 0.0 / 0.0;
-                                                all_objects[i-1].rad1 = 0.0 / 0.0;
-                                                all_objects[i-1].tb = 0.0 / 0.0;
-                                                all_objects[i-1].lum0 = 0.0 / 0.0;
-                                                all_objects[i-1].lum1 = 0.0 / 0.0;
-                                                all_objects[i-1].massc0 = 0.0 / 0.0;
-                                                all_objects[i-1].massc1 = 0.0 / 0.0;
-                                                all_objects[i-1].radc0 = 0.0 / 0.0;
-                                                all_objects[i-1].radc1 = 0.0 / 0.0;
-                                                all_objects[i-1].menv0 = 0.0 / 0.0;
-                                                all_objects[i-1].menv1 = 0.0 / 0.0;
-                                                all_objects[i-1].renv0 = 0.0 / 0.0;
-                                                all_objects[i-1].renv1 = 0.0 / 0.0;
-                                                all_objects[i-1].tms0 = 0.0 / 0.0;
-                                                all_objects[i-1].tms1 = 0.0 / 0.0;
-                                                all_objects[i-1].dmdt0 = 0.0 / 0.0;
-                                                all_objects[i-1].dmdt1 = 0.0 / 0.0;
-                                                all_objects[i-1].radrol0 = 0.0 / 0.0;
-                                                all_objects[i-1].radrol1 = 0.0 / 0.0;
-                                                all_objects[i-1].ospin0 = 0.0 / 0.0;
-                                                all_objects[i-1].ospin1 = 0.0 / 0.0;
-                                                all_objects[i-1].B0 = 0.0 / 0.0;
-                                                all_objects[i-1].B1 = 0.0 / 0.0;
-                                                all_objects[i-1].formation0 = 0.0 / 0.0;
-                                                all_objects[i-1].formation1 = 0.0 / 0.0;
-                                                all_objects[i-1].bacc0 = 0.0 / 0.0;
-                                                all_objects[i-1].bacc1 = 0.0 / 0.0;
-                                                all_objects[i-1].tacc0 = 0.0 / 0.0;
-                                                all_objects[i-1].tacc1 = 0.0 / 0.0;
-                                                all_objects[i-1].mass0_0 = 0.0 / 0.0;
-                                                all_objects[i-1].mass0_1 = 0.0 / 0.0;
-                                                all_objects[i-1].epoch0 = 0.0 / 0.0;
-                                                all_objects[i-1].epoch1 = 0.0 / 0.0;
-                                                all_objects[i-1].ospin = star[i].se_ospin;
-                                                all_objects[i-1].B = star[i].se_scm_B;
-                                                all_objects[i-1].formation = star[i].se_scm_formation;
+                                                all_objects[k].rad0 = 0.0 / 0.0;
+                                                all_objects[k].rad1 = 0.0 / 0.0;
+                                                all_objects[k].tb = 0.0 / 0.0;
+                                                all_objects[k].lum0 = 0.0 / 0.0;
+                                                all_objects[k].lum1 = 0.0 / 0.0;
+                                                all_objects[k].massc0 = 0.0 / 0.0;
+                                                all_objects[k].massc1 = 0.0 / 0.0;
+                                                all_objects[k].radc0 = 0.0 / 0.0;
+                                                all_objects[k].radc1 = 0.0 / 0.0;
+                                                all_objects[k].menv0 = 0.0 / 0.0;
+                                                all_objects[k].menv1 = 0.0 / 0.0;
+                                                all_objects[k].renv0 = 0.0 / 0.0;
+                                                all_objects[k].renv1 = 0.0 / 0.0;
+                                                all_objects[k].tms0 = 0.0 / 0.0;
+                                                all_objects[k].tms1 = 0.0 / 0.0;
+                                                all_objects[k].dmdt0 = 0.0 / 0.0;
+                                                all_objects[k].dmdt1 = 0.0 / 0.0;
+                                                all_objects[k].radrol0 = 0.0 / 0.0;
+                                                all_objects[k].radrol1 = 0.0 / 0.0;
+                                                all_objects[k].ospin0 = 0.0 / 0.0;
+                                                all_objects[k].ospin1 = 0.0 / 0.0;
+                                                all_objects[k].B0 = 0.0 / 0.0;
+                                                all_objects[k].B1 = 0.0 / 0.0;
+                                                all_objects[k].formation0 = 0.0 / 0.0;
+                                                all_objects[k].formation1 = 0.0 / 0.0;
+                                                all_objects[k].bacc0 = 0.0 / 0.0;
+                                                all_objects[k].bacc1 = 0.0 / 0.0;
+                                                all_objects[k].tacc0 = 0.0 / 0.0;
+                                                all_objects[k].tacc1 = 0.0 / 0.0;
+                                                all_objects[k].mass0_0 = 0.0 / 0.0;
+                                                all_objects[k].mass0_1 = 0.0 / 0.0;
+                                                all_objects[k].epoch0 = 0.0 / 0.0;
+                                                all_objects[k].epoch1 = 0.0 / 0.0;
+                                                all_objects[k].ospin = star[i].se_ospin;
+                                                all_objects[k].B = star[i].se_scm_B;
+                                                all_objects[k].formation = star[i].se_scm_formation;
 					} else {
-                                                all_objects[i-1].rad0 = binary[j].bse_radius[0];
-                                                all_objects[i-1].rad1 = binary[j].bse_radius[1];
-                                                all_objects[i-1].tb = binary[j].bse_tb;
-                                                all_objects[i-1].lum0 =binary[j].bse_lum[0];
-                                                all_objects[i-1].lum1 = binary[j].bse_lum[1];
-                                                all_objects[i-1].massc0 = binary[j].bse_massc[0];
-                                                all_objects[i-1].massc1 = binary[j].bse_massc[1];
-                                                all_objects[i-1].radc0 =  binary[j].bse_radc[0];
-                                                all_objects[i-1].radc1 =  binary[j].bse_radc[1];
-                                                all_objects[i-1].menv0 = binary[j].bse_menv[0];
-                                                all_objects[i-1].menv1 = binary[j].bse_menv[1];
-                                                all_objects[i-1].renv0 = binary[j].bse_renv[0];
-                                                all_objects[i-1].renv1 = binary[j].bse_renv[1];
-                                                all_objects[i-1].tms0 = binary[j].bse_tms[0];
-                                                all_objects[i-1].tms1 = binary[j].bse_tms[1];
-                                                all_objects[i-1].dmdt0 = binary[j].bse_bcm_dmdt[0];
-                                                all_objects[i-1].dmdt1 = binary[j].bse_bcm_dmdt[1];
-                                                all_objects[i-1].radrol0 = binary[j].bse_bcm_radrol[0];
-                                                all_objects[i-1].radrol1 = binary[j].bse_bcm_radrol[1];
-                                                all_objects[i-1].ospin0 = binary[j].bse_ospin[0];
-                                                all_objects[i-1].ospin1 = binary[j].bse_ospin[1];
-                                                all_objects[i-1].B0 = binary[j].bse_bcm_B[0];
-                                                all_objects[i-1].B1 = binary[j].bse_bcm_B[1];
-                                                all_objects[i-1].formation0 = binary[j].bse_bcm_formation[0];
-                                                all_objects[i-1].formation1 = binary[j].bse_bcm_formation[1];
-                                                all_objects[i-1].bacc0 = binary[j].bse_bacc[0];
-                                                all_objects[i-1].bacc1 = binary[j].bse_bacc[1];
-                                                all_objects[i-1].tacc0 = binary[j].bse_tacc[0];
-                                                all_objects[i-1].tacc1 = binary[j].bse_tacc[1];
-                                                all_objects[i-1].mass0_0 = binary[j].bse_mass0[0];
-                                                all_objects[i-1].mass0_1 = binary[j].bse_mass0[1];
-                                                all_objects[i-1].epoch0 = binary[j].bse_epoch[0];
-                                                all_objects[i-1].epoch1 = binary[j].bse_epoch[1];
-                                                all_objects[i-1].ospin = -100;
-                                                all_objects[i-1].B = -100;
-                                                all_objects[i-1].formation = -100;
+                                                all_objects[k].rad0 = binary[j].bse_radius[0];
+                                                all_objects[k].rad1 = binary[j].bse_radius[1];
+                                                all_objects[k].tb = binary[j].bse_tb;
+                                                all_objects[k].lum0 =binary[j].bse_lum[0];
+                                                all_objects[k].lum1 = binary[j].bse_lum[1];
+                                                all_objects[k].massc0 = binary[j].bse_massc[0];
+                                                all_objects[k].massc1 = binary[j].bse_massc[1];
+                                                all_objects[k].radc0 =  binary[j].bse_radc[0];
+                                                all_objects[k].radc1 =  binary[j].bse_radc[1];
+                                                all_objects[k].menv0 = binary[j].bse_menv[0];
+                                                all_objects[k].menv1 = binary[j].bse_menv[1];
+                                                all_objects[k].renv0 = binary[j].bse_renv[0];
+                                                all_objects[k].renv1 = binary[j].bse_renv[1];
+                                                all_objects[k].tms0 = binary[j].bse_tms[0];
+                                                all_objects[k].tms1 = binary[j].bse_tms[1];
+                                                all_objects[k].dmdt0 = binary[j].bse_bcm_dmdt[0];
+                                                all_objects[k].dmdt1 = binary[j].bse_bcm_dmdt[1];
+                                                all_objects[k].radrol0 = binary[j].bse_bcm_radrol[0];
+                                                all_objects[k].radrol1 = binary[j].bse_bcm_radrol[1];
+                                                all_objects[k].ospin0 = binary[j].bse_ospin[0];
+                                                all_objects[k].ospin1 = binary[j].bse_ospin[1];
+                                                all_objects[k].B0 = binary[j].bse_bcm_B[0];
+                                                all_objects[k].B1 = binary[j].bse_bcm_B[1];
+                                                all_objects[k].formation0 = binary[j].bse_bcm_formation[0];
+                                                all_objects[k].formation1 = binary[j].bse_bcm_formation[1];
+                                                all_objects[k].bacc0 = binary[j].bse_bacc[0];
+                                                all_objects[k].bacc1 = binary[j].bse_bacc[1];
+                                                all_objects[k].tacc0 = binary[j].bse_tacc[0];
+                                                all_objects[k].tacc1 = binary[j].bse_tacc[1];
+                                                all_objects[k].mass0_0 = binary[j].bse_mass0[0];
+                                                all_objects[k].mass0_1 = binary[j].bse_mass0[1];
+                                                all_objects[k].epoch0 = binary[j].bse_epoch[0];
+                                                all_objects[k].epoch1 = binary[j].bse_epoch[1];
+                                                all_objects[k].ospin = -100;
+                                                all_objects[k].B = -100;
+                                                all_objects[k].formation = -100;
 					}
+					k++;
 				}
 			}
 //                        if(LIGHTCOLLISION_NRECORDS >200){
