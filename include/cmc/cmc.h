@@ -1195,6 +1195,16 @@ typedef struct{
  *  * * @brief neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
  *   * */
         int BSE_QCFLAG;
+#define PARAMDOC_BSE_DON_LIM "don_lim is the donor limit during RLO mass transfer"
+/**
+*   * * @brief don_lim = 0 is standard BSE mass loss, don_lim = -1 is enhanced mass loss rate from Claeys+2014 
+*   * */
+        int BSE_DON_LIM
+#define PARAMDOC_BSE_ACC_LIM "acc_lim is the accretor limit during RLO mass transfer"
+/**
+*   * * @brief acc_lim = 0 is standard BSE limits, acc_lim=-1 is same as 0 but 1*thermal instaead of 10, acc_lim=-2 assumes 10*tkh for all fusing stars, acc_lim=-3 assumes 1*tkh for all fusing stars, acc_lim > 0 applies an overall fraction of donor mass loss as the accretion limit. 
+*   * */
+        int BSE_ACC_LIM
 #define PARAMDOC_BSE_SIGMA "sigma is the Maxwellian dispersion for SN kick speeds (265 km/s)."
 /**
  * * @brief sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).
