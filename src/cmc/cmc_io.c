@@ -2039,9 +2039,18 @@ if(myid==0)
             if((strcmp(point,".h5") == 0) | (strcmp(point,".hdf5") == 0)) {
                 cmc_read_hdf5_file(INPUT_FILE, &cfd, RESTART_TCOUNT);
             }
-            else{
+            else if (strcmp(point,".fits") == 0){
+#ifdef USE_FITS
                 cmc_read_fits_file(INPUT_FILE, &cfd, RESTART_TCOUNT);
+#else 
+		fprintf("stderr","ERROR: code not compiled against fits libraries\n Rerun cmake wtih FITS=ON\n");
+		exit(1);
+#endif
             }
+	    else {
+		fprintf(stderr,"ERROR: unrecognized input file format\n");
+		exit(1);
+	    }
         }
 	clus.N_STAR = cfd.NOBJ;
 	clus.N_BINARY = cfd.NBINARY;

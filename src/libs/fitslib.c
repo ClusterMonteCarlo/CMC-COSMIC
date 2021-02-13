@@ -7,12 +7,16 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
-#include <fitsio.h>
+#ifdef USE_FITS
+	#include <fitsio.h>
+#endif
 #include "fitslib.h"
 #include "hdf5.h"
 
 #define LARGE_DISTANCE 1.0e40
 
+
+#ifdef USE_FITS
 void cmc_fits_printerror(int status)
 {
     /*****************************************************/
@@ -25,6 +29,7 @@ void cmc_fits_printerror(int status)
 	}
 	return;
 }
+#endif
 
 /**
 * @brief malloc the input cmc_fits_data_t structure based on the NOBJ and NBINARY parameters of the struct.
@@ -118,6 +123,7 @@ void cmc_free_fits_data_t(cmc_fits_data_t *cfd){
 	free(cfd->bs_e);
 }
 
+#ifdef USE_FITS
 /**
 * @brief Writes the given cmc_fits_data_t data into the given fits file
 *
@@ -192,6 +198,7 @@ void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename){
 	fits_close_file(fptr, &status);
 	cmc_fits_printerror(status);
 }
+#endif
 
 /**
 * @brief Reads from the given hdf5 file and stores into the corrsponding members of the given cmc_hdf5_data_t data structure
@@ -435,6 +442,7 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
 
 }
 
+#ifdef USE_FITS
 /**
 * @brief Reads from the given fits file and stores into the corrsponding members of the given cmc_fits_data_t data structure
 *
@@ -506,3 +514,4 @@ void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
 	fits_close_file(fptr, &status);
 	cmc_fits_printerror(status);
 }
+#endif

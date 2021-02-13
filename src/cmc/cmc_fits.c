@@ -8,7 +8,9 @@
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
+#ifdef USE_FITS
 #include <fitsio.h>
+#endif
 #include <gsl/gsl_rng.h>
 #include "cmc.h"
 #include "cmc_vars.h"

@@ -39,11 +39,15 @@ void cmc_fits_printerror(int status);
 void cmc_malloc_fits_data_t(cmc_fits_data_t *cfd);
 /* free big data structure */
 void cmc_free_fits_data_t(cmc_fits_data_t *cfd);
+#ifdef USE_FITS
 /* read in FITS file and assign to data structure */
 void cmc_read_fits_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUNT);
+#endif 
 /* read in HDF5 file and assign to data structure */
 void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUNT);
+#ifdef USE_FITS
 /* write FITS file using data structure */
 void cmc_write_fits_file(cmc_fits_data_t *cfd, char *filename);
+#endif
 
 #endif /* _FITSLIB_H */

@@ -12,7 +12,6 @@
 #include <gsl/gsl_roots.h>
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_sort_vector.h>
-#include <fitsio.h>
 #include <string.h>
 #include "../common/fitslib.h"
 #include "../common/taus113-v2.h"
@@ -23,6 +22,10 @@
 
 #ifdef USE_MPI
 #include "cmc_mpi.h"
+#endif
+
+#ifdef USE_FITS
+#include <fitsio.h>
 #endif
 
 //#define H5FILE_NAME "logfile.h5"

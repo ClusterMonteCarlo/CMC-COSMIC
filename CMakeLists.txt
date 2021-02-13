@@ -61,8 +61,6 @@ find_package(MPI REQUIRED)
 
 find_package(GSL REQUIRED)
 
-find_package(CFITSIO REQUIRED)
-
 find_package(ZLIB REQUIRED)
 
 find_package(HDF5 COMPONENTS C HL REQUIRED)
@@ -71,14 +69,29 @@ find_package(Python3 REQUIRED)
 
 # enable USE_MPI
 option(WITH_MPI "Option description" ON)
-add_definitions(-DUSE_MPI)
+
+IF(WITH_MPI)
+	add_definitions(-DUSE_MPI)
+ENDIF(WITH_MPI)
 
 # enable EXPERIMENTAL
 option(EXPERIMENTAL "Option description" ON)
-add_definitions(-DEXPERIMENTAL)
+
+IF(WITH_EXPERIMENTAL)
+	add_definitions(-DEXPERIMENTAL)
+ENDIF(WITH_EXPERIMENTAL)
 
 option(TAUSWORTH "Use the Tausworth RNG" ON)
-add_definitions(-DUSE_TAUS)
+
+IF(WITH_TAUSWORTH)
+	add_definitions(-DUSE_TAUS)
+ENDIF(WITH_TAUSWORTH)
+
+option(FITS "Use the old fits file input/output" OFF)
+IF(FITS)
+	add_definitions(-DUSE_FITS)
+	find_package(CFITSIO REQUIRED)
+ENDIF(FITS)
 
 # compiler flags
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
