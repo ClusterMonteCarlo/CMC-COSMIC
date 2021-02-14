@@ -36,20 +36,12 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	long ktemp, kmin, kmax, i, i1, fevals;
 	double Qtemp, rk, rk1, Uk, Uk1, a, b, rmin, dQdr_min, rmax, dQdr_max;
 	double dQdr_min_num, dQdr_max_num, inside_sqrt, actual_rmin, actual_rmax;
-#ifdef USE_MPI
 	int g_si = get_global_idx(si);
-#else
-	int g_si = si;
-#endif
 	ktemp = g_si;
 
 	/* for newly created stars, position si is not ordered */
         //dprintf("clus.N_MAX= %li\n", clus.N_MAX);
-#ifdef USE_MPI
 	if (si > mpiEnd-mpiBegin+1) {
-#else
-	if (si > clus.N_MAX) {
-#endif
 		// Not sure how this stupid linear search got here in the first place...
 		//ktemp = 0;
 		//while (ktemp < clus.N_MAX && star[ktemp].r < star[si].rnew) {
@@ -91,22 +83,12 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		
 		/* check to see if star is on almost circular orbit */
 		if (function_Q(g_si, ktemp, E, J) < 0) {
-#ifdef USE_MPI
 			dprintf("circular orbit found: si=%d sr=%g svr=%g svt=%g J=%g E=%g\n",
 				g_si, star_r[g_si], star[si].vr, star[si].vt, star[si].J, star[si].E);
-#else
-			dprintf("circular orbit found: si=%ld sr=%g svr=%g svt=%g J=%g E=%g\n",
-				si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E);
-#endif
 		}
 		
-#ifdef USE_MPI
 		orbit_rs.rp = star_r[g_si];
 		orbit_rs.ra = star_r[g_si];
-#else
-		orbit_rs.rp = star[si].r;
-		orbit_rs.ra = star[si].r;
-#endif
 		orbit_rs.kmin = g_si;
 		orbit_rs.kmax = g_si;
 		orbit_rs.dQdrp = 0.0;
@@ -129,17 +111,10 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 	
 		i = kmin;
 		i1 = kmin + 1;
-#ifdef USE_MPI
 		rk = star_r[i];
 		rk1 = star_r[i1];
 		Uk = star_phi[i] + MPI_PHI_S(rk, g_si);
 		Uk1 = star_phi[i1] + MPI_PHI_S(rk1, g_si);
-#else
-		rk = star[i].r;
-		rk1 = star[i1].r;
-		Uk = star[i].phi + PHI_S(rk, si);
-		Uk1 = star[i1].phi + PHI_S(rk1, si);
-#endif
 		
 		a = (Uk1 - Uk) / (1 / rk1 - 1 / rk);
 		b = (Uk / rk1 - Uk1 / rk) / (1 / rk1 - 1 / rk);
@@ -153,15 +128,9 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			dprintf("It is, therefore, set to zero.\n");
 			dprintf("rmin_old= %g rmin_new= %g rmin_sqrt= %g\n", actual_rmin, rmin, inside_sqrt);
 
-#ifdef USE_MPI
             dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
                      star_r[kmin+1],star_r[kmin],star_r[kmin+1]-star_r[kmin]);
             dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star_r[kmin+1]-rmin,rmin-star_r[kmin]);
-#else
-            dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
-                    star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
-            dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
-#endif
 
             if ((rmin<rk) || (rmin>rk1)) {
                 dprintf("si=%ld rmin=%g outside of star interval (%g,%g), using bisection to get root. kmin=%ld kmax=%ld\n", si, rmin, rk, rk1, kmin, kmax);
@@ -176,11 +145,7 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		}
 		
 		dQdr_min = 2.0 * J * J / (rmin * rmin * rmin) + 2.0 * a / (rmin * rmin);
-#ifdef USE_MPI
 		dQdr_min_num = (function_Q(g_si, kmin+1, E, J)-function_Q(g_si, kmin, E, J))/(star_r[kmin+1]-star_r[kmin]);
-#else
-		dQdr_min_num = (function_Q(si, kmin+1, E, J)-function_Q(si, kmin, E, J))/(star[kmin+1].r-star[kmin].r);
-#endif              
  
 		/*  For rmax- Look for rk, rk1 such that 
 		 *  Q(rk) > 0 > Q(rk1) */
@@ -194,17 +159,10 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		i = kmax;
 		i1 = kmax + 1;
 
-#ifdef USE_MPI
 		rk = star_r[i];
 		rk1 = star_r[i1];
 		Uk = star_phi[i] + MPI_PHI_S(rk, g_si);
 		Uk1 = star_phi[i1] + MPI_PHI_S(rk1, g_si);
-#else		
-		rk = star[i].r;
-		rk1 = star[i1].r;
-		Uk = star[i].phi + PHI_S(rk, si);
-		Uk1 = star[i1].phi  + PHI_S(rk1, si);
-#endif
 
 		a = (Uk1 - Uk) / (1. / rk1 - 1. / rk);
 		b = (Uk / rk1 - Uk1 / rk) / (1. / rk1 - 1. / rk);
@@ -218,15 +176,9 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			dprintf("It is, therefore, set to zero.\n");
 			dprintf("rmax_old= %g rmax_new= %g rmax_sqrt= %g\n", actual_rmax, rmax, inside_sqrt);
 
-#ifdef USE_MPI
 			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
                     star_r[kmin+1],star_r[kmin],star_r[kmin+1]-star_r[kmin]);
             dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star_r[kmin+1]-rmin,rmin-star_r[kmin]);
-#else
-			dprintf("star[kmin+1].r= %g star[kmin].r= %g star[kmin+1].r-star[kmin].r= %g\n",
-                    star[kmin+1].r,star[kmin].r,star[kmin+1].r-star[kmin].r);
-            dprintf("star[kmin+1].r-rmin= %g, rmin-star[kmin].r= %g\n",star[kmin+1].r-rmin,rmin-star[kmin].r);
-#endif
 
             if ((rmax<rk) || (rmax>rk1)) {
                 dprintf("si=%ld rmax=%g outside of star interval (%g,%g), using bisection to get root.kmin=%ld kmax=%ld\n", si, rmax, rk, rk1, kmin, kmax);
@@ -241,34 +193,18 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 		}
 
 		dQdr_max = 2.0 * J * J / (rmax * rmax * rmax) + 2.0 * a / (rmax * rmax);
-#ifdef USE_MPI
 		dQdr_max_num = (function_Q(g_si, kmax+1, E, J)-function_Q(g_si, kmax, E, J))/(star_r[kmax+1]-star_r[kmax]);
-#else
-		dQdr_max_num = (function_Q(si, kmax+1, E, J)-function_Q(si, kmax, E, J))/(star[kmax+1].r-star[kmax].r);
-#endif
 
 		/* another case of a circular orbit */
 		if ((rmin > rmax)||(dQdr_min<=0.)||(dQdr_max>=0.)) {
 		        eprintf("circular orbit found!\n");
-#ifdef USE_MPI
 		 	eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%d r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
 				rmin, rmax, kmin, kmax, g_si, star_r[g_si], star[si].vr, star[si].vt, star[si].J, star[si].E,
 				function_Q(g_si, kmin, star[si].E, star[si].J), function_Q(g_si, kmax, star[si].E, star[si].J),
 				dQdr_min,dQdr_max,dQdr_min_num,dQdr_max_num);
-#else
-		 	eprintf("Check Here: rmin=%g>rmax=%g: kmin=%ld kmax=%ld si=%ld r=%g vr=%g vt=%g J=%g E=%g Q(kmin)=%g Q(kmax)=%g dQdr_min=%g dQdr_min=%g dQdr_min_num=%g dQdr_max_num=%g\n",
-				rmin, rmax, kmin, kmax, si, star[si].r, star[si].vr, star[si].vt, star[si].J, star[si].E,
-				function_Q(si, kmin, star[si].E, star[si].J), function_Q(si, kmax, star[si].E, star[si].J),
-				dQdr_min,dQdr_max,dQdr_min_num,dQdr_max_num);
-#endif
 
-#ifdef USE_MPI
 			orbit_rs.rp = star_r[g_si];
 			orbit_rs.ra = star_r[g_si];
-#else
-			orbit_rs.rp = star[si].r;
-			orbit_rs.ra = star[si].r;
-#endif
 			orbit_rs.kmin = g_si;
 			orbit_rs.kmax = g_si;
 			orbit_rs.dQdrp = 0.0;
@@ -286,7 +222,6 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 			orbit_rs.kmin= kmin;
 		}
 
-#ifdef EXPERIMENTAL
 		/* Consistency check for rmin and rmax. If it fails, we bisect our way through.*/
 		if (!orbit_rs.circular_flag) {
 			int rmax_in_interval=0, rmin_in_interval=0, vr_rmax_positive=0, vr_rmin_positive=0;
@@ -326,7 +261,6 @@ orbit_rs_t calc_orbit_rs(long si, double E, double J)
 				orbit_rs.dQdrp = dQdr_min;
 			};
 		};
-#endif
 	}
 	
 	return(orbit_rs);
@@ -390,12 +324,7 @@ double GetTimeStep(gsl_rng *rng) {
 		//Optimize simul_relax() later 
 		//DTrel = simul_relax(rng);
 
-#ifdef USE_MPI
-		DTrel = mpi_simul_relax_new();
-#else
-		//Optimized version of simul_relax(), adapted to ease parallelization and comparison with parallel runs
 		DTrel = simul_relax_new();
-#endif
 	} else {
 		DTrel = GSL_POSINF;
 	}
@@ -424,10 +353,8 @@ double GetTimeStep(gsl_rng *rng) {
 
     //MPI: Reorganizing this in order to minimize communication. If it were the way it was, the root will have to broadcast the entire central_hard struct to all nodes. This way, it only needs to broadcast the final value of Dt.
     if (DT_HARD_BINARIES) {
-#ifdef USE_MPI
         if(myid==0)
         {
-#endif
             central_hard= central_hard_binary(HARD_BINARY_KT, central);
             dprintf("number of hard binaries with ktmin< %g: %li\n", HARD_BINARY_KT, central_hard.N_bin);
 
@@ -444,10 +371,8 @@ double GetTimeStep(gsl_rng *rng) {
                 DTbs = 5.0e-3 * Tbs;
                 Dt = MIN(Dt, DTbs);
             }
-#ifdef USE_MPI
         }
         MPI_Bcast(&Dt, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
     }
     else
     {
@@ -542,16 +467,10 @@ void tidally_strip_stars(void) {
 		for (i = 1; i <= clus.N_MAX_NEW; i++) 
 		{
 
-#ifdef USE_MPI
 			int g_i = get_global_idx(i);
 			m = star_m[g_i];
 			r = star_r[g_i];
 			phi = star_phi[g_i];
-#else
-			m = star[i].m;
-			r = star[i].r;
-			phi = star[i].phi;
-#endif
 
 
 			if (TIDAL_TREATMENT == 0){
@@ -692,11 +611,9 @@ void tidally_strip_stars(void) {
 		j++;
 
 		//MPI: Here, we have to sum up the value across all processors for the condition in the while loop.
-#ifdef USE_MPI
 		double tmpTimeStart = timeStartSimple();
 		MPI_Allreduce(MPI_IN_PLACE, &DTidalMassLoss, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 		timeEndSimple(tmpTimeStart, &t_comm);
-#endif
 		TidalMassLoss += DTidalMassLoss;
 
         rootgprintf("tidally_strip_stars(): iteration %ld: TidalMassLoss=%.6g DTidalMassLoss=%.6g\n",
@@ -707,7 +624,6 @@ void tidally_strip_stars(void) {
 
 	} while (DTidalMassLoss > 0);
 
-#ifdef USE_MPI
 	//MPI: Packing into array to optimize communication.
 	double buf_reduce[5];
 	buf_reduce[0] = Eescaped;
@@ -727,7 +643,6 @@ void tidally_strip_stars(void) {
 	Ebescaped = buf_reduce[3];
 	//TidalMassLoss = buf_reduce[4];
 	Etidal = buf_reduce[4];
-#endif
 }
 
 /**
@@ -750,13 +665,8 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	star[j].vtnew = 0.0;
 
 
-#ifdef USE_MPI
 	m = star_m[get_global_idx(j)];
 	r = star_r[get_global_idx(j)];
-#else
-	m = star[j].m;
-	r = star[j].r;
-#endif
 	Eescaped += E * m / clus.N_STAR;
 	Jescaped += J * m / clus.N_STAR;
 
@@ -855,11 +765,7 @@ void count_esc_bhs(long j) {
 */
 void remove_star_center(long j) {
 	star[j].rnew = SF_INFINITY;	/* send star to infinity */
-#ifdef USE_MPI
 	star_m[get_global_idx(j)] = DBL_MIN;		/* set mass to very small number */
-#else
-	star[j].m = DBL_MIN;		/* set mass to very small number */
-#endif
 	star[j].vrnew = 0.0;		/* setup vr and vt for           */
 	star[j].vtnew = 0.0;		/*		future calculations  */
 }
@@ -897,11 +803,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		j = si;
 		g_j = get_global_idx(j);		
 
-#ifdef USE_MPI
 		E = star[j].E + MPI_PHI_S(star_r[g_j], g_j);
-#else
-		E = star[j].E + PHI_S(star[j].r, j);
-#endif
 		J = star[j].J;
 
 /*
@@ -911,13 +813,8 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		/* remove massless stars (boundary stars or stellar evolution victims) */
 		/* note that energy lost due to stellar evolution is subtracted
 		   at the time of mass loss in DoStellarEvolution */
-#ifdef USE_MPI
 		if (star_m[g_j] < ZERO) {
 			dprintf("id = %d\tindex of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",myid, j,star[j].E,star_m[g_j],star_r[g_j],star[j].vr,star[j].vt);
-#else
-		if (star[j].m < ZERO) {
-			dprintf("index of stripped star by mass = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n", j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
-#endif
 			destroy_obj(j);
 			continue;
 		}
@@ -925,30 +822,18 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		/* remove unbound stars */
 		if (E >= 0.0) {
 		/*	dprintf("tidally stripping star with E >= 0: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
-#ifdef USE_MPI
 			dprintf("index of stripped star by energy = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",j,star[j].E,star_m[g_j],star_r[g_j],star[j].vr,star[j].vt);
-#else
-			dprintf("index of stripped star by E = %ld\tE = %g\tm=%g\tr=%g\tvr=%g\tvt=%g\n",j,star[j].E,star[j].m,star[j].r,star[j].vr,star[j].vt);
-#endif
 			count_esc_bhs(j);
 			remove_star(j, phi_rtidal, phi_zero);
 			continue;
 		}
 
 		/* calculate peri- and apocenter of orbit */
-#ifdef EXPERIMENTAL
 		orbit_rs = calc_orbit_new(j, E, J);
-#else
-		orbit_rs = calc_orbit_rs(j, E, J);
-#endif		
 
 		/* skip the rest if the star is on a nearly circular orbit */
 		if (orbit_rs.circular_flag == 1) {
-#ifdef USE_MPI
 			star[j].rnew = star_r[g_j];
-#else
-			star[j].rnew = star[j].r;
-#endif
 			star[j].vrnew = star[j].vr;
 			star[j].vtnew = star[j].vt;
 			continue;
@@ -962,11 +847,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		/* Check for rmax > R_MAX (tidal radius) */
 		if (rmax >= Rtidal) {
 			/* dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind); */
-#ifdef USE_MPI
 			dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", g_j, star[j].id, star_m[g_j], star[j].E, star[j].binind);
-#else
-			dprintf("tidally stripping star with rmax >= Rtidal: i=%ld id=%ld m=%g E=%g binind=%ld\n", j, star[j].id, star[j].m, star[j].E, star[j].binind);
-#endif
 			star[j].r_apo= rmax;
 			star[j].r_peri= rmin;
 			remove_star(j, phi_rtidal, phi_zero);
@@ -978,12 +859,6 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 		F = 1.2 * MAX(g1, g2);
 
-#ifndef USE_MPI
-		curr_st = &st[findProcForIndex(j)];
-		if(j > clus.N_MAX)
-			dprintf("id = %ld\tDrawing rand. num from node %d \tN_MAX=%ld\n", j, findProcForIndex(j), clus.N_MAX);
-#endif
-
 		for (k = 1; k <= N_TRY; k++) {
 			X = rng_t113_dbl_new(curr_st);
 
@@ -993,11 +868,7 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 
 			r = 0.5 * (rmin + rmax) + 0.25 * (rmax - rmin) * (3.0 * s0 - s0 * s0 * s0);
 
-#ifdef USE_MPI
 			pot = potential(r) + MPI_PHI_S(r, g_j);
-#else
-			pot = potential(r) + PHI_S(r, j);
-#endif
 
 			drds = 0.25 * (rmax - rmin) * (3.0 - 3.0 * s0 * s0);
 			Q = 2.0 * E - 2.0 * pot - J * J / r / r;
@@ -1029,16 +900,10 @@ void get_positions_loop(struct get_pos_str *get_pos_dat){
 		MINIMUM_R = 2.0 * FB_CONST_G * cenma.m * units.mstar / fb_sqr(FB_CONST_C) / units.l;
 		if (0) {
 		/* if (r < MINIMUM_R) { */
-#ifdef USE_MPI
 			cenma.m += star_m[g_j];
 			cenma.E += (2.0*star_phi[g_j] + star[j].vr * star[j].vr + star[j].vt * star[j].vt) / 
 				2.0 * star_m[g_j] * madhoc;
 			//Reduction?? For now it is ok, since if(0) never runs :)
-#else
-			cenma.m += star[j].m;
-			cenma.E += (2.0*star[j].phi + star[j].vr * star[j].vr + star[j].vt * star[j].vt) / 
-				2.0 * star[j].m * madhoc;
-#endif
 			destroy_obj(j);
 			MINIMUM_R = 2.0 * FB_CONST_G * cenma.m * units.mstar / fb_sqr(FB_CONST_C) / units.l;
 			continue;

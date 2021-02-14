@@ -203,7 +203,6 @@ void qsorts(star_t *s, long N){
 
 
 
-#ifdef USE_MPI
 
 
 // ************************************************************** //
@@ -790,4 +789,3 @@ void load_balance( 	type 				*inbuf,
 	free(actual_cum_count);
 	free(expected_cum_count);
 }
-#endif

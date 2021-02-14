@@ -701,11 +701,6 @@ void bse_set_gamma(double gamma) { windvars_.gamma = gamma; }
 void bse_set_merger(double merger) {cmcpass_.merger = merger; }
 void bse_set_id1_pass(long int id1_pass) { cmcpass_.id1_pass = id1_pass; }
 void bse_set_id2_pass(long int id2_pass) { cmcpass_.id2_pass = id2_pass; }
-#ifndef USE_TAUS
-/* need to define this here, as it is not defined in the Fortran part
- * when we don't use the Tausworthe generator for BSE kicks */
-static struct { long long int state[4]; int first;} taus113state_;
-#endif
 
 /**
 * @brief copies the C tausworthe rng state variables to the Fortran states

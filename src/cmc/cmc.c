@@ -78,7 +78,6 @@ int main(int argc, char *argv[])
 	t_sort_oth=0.0;
 	t_comm=0.0;
 
-#ifdef USE_MPI
 	//MPI: Some code from the main branch might have been removed in the MPI version. Please check.
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD,&procs);
@@ -87,44 +86,15 @@ int main(int argc, char *argv[])
 	/* MPI: These variables are used for storing data partitioning related information in the parallel version. These are in particular useful for some MPI communication calls. */
 	mpiDisp = (int *) malloc(procs * sizeof(int));
 	mpiLen = (int *) malloc(procs * sizeof(int));
-#else
-	//If the serial version is being compiled, setting procs to 1.
-	procs = 1;
-#endif
 
 	/* Starting timer to measure the overall time taken */
-#ifdef USE_MPI
 	tmpTimeStart_init = MPI_Wtime();
-#else
-	struct timeval tim;
-	gettimeofday(&tim, NULL);
-	tmpTimeStart_init=tim.tv_sec+(tim.tv_usec/1000000.0);
-#endif
-
 
 	/* sets some important global variables */
 	set_global_vars1();
 
         /* sets some important global logging variables */
         //set_global_logfile_vars();
-
-//        hid_t snapfile_hdf5;
-//        //Serializing the snapshot printing.
-//        for(int k=0; k<procs; k++)
-//        {
-//                if(myid==k)
-//                {
-//                        //Initial file created only by root node.
-//                        if(myid==0){
-//                            snapfile_hdf5 = H5Fcreate("logfile.h5", H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
-//                            H5TBmake_table("Table Title",snapfile_hdf5, LIGHTCOLLISION_TABLENAME, NFIELDS_LIGHT_COLLISION, LIGHTCOLLISION_NRECORDS,
-//                                           light_collision_dst_size, light_collision_field_names, light_collision_dst_offset, light_collision_field_type,
-//                                           1000, NULL, 0, LIGHTCOLLISION_TABLE);
-//                            H5Fclose( snapfile_hdf5 );
-//                        }
-//                }
-//                MPI_Barrier(MPI_COMM_WORLD);
-//        }
 
 	/* captures i/o signals to close */
 	trap_sigs();
@@ -133,26 +103,12 @@ int main(int argc, char *argv[])
 	gsl_rng_env_setup();
 	rng = gsl_rng_alloc(rng_type);
 	
-
 	/* parse input parameter file, and read input data */
 	parser(argc, argv, rng);
 
 	/* MPI: These variables are used for storing data partitioning related information in the parallel version. These arrays store the start and end indices in the global array that each processor is responsible for processing. In the serial version, these are used to mimic the parallel version to obtain comparable results. */
 	Start = (int *) calloc(procs, sizeof(int));
 	End = (int *) calloc(procs, sizeof(int));
-
-
-#ifndef USE_MPI
-/*
-MPI: These are arrays used for mimicking the parallel version. In the parallel version new stars created are stored at the end of the local star array of each processor. In the serial version, the same is done i.e. they are placed at the end of the star array beyond the sentinel (which is a nullified star indicating the end of old stars and beginning of newly created ones). However, in order for the serial version to mimic the parallel, it is essential to know which node would have created these stars in a corresponding parallel run so as to draw a random number from the appropriate stream. Although this is trivial for the old stars since it is a just function of the index of the star, for newly created stars it is not, since they are stored at the end of the array and are mixed up.
-
-We use these two arrays to store the number of stars created by each node during a timestep. Stars can be created in two routines - dynamics, or stellar evolution, so we have an array for each of the two. These arrays are as large as the number of processors and their elements are used to store the number or stars that would have been created by each processor in a corresponding parallel run. With this supplementary information, we can deduce which proc would be having a given star, in the parallel version, and draw a random number from an appropriate stream.
-*/
-	created_star_dyn_node = (int *) calloc(procs, sizeof(int));
-	created_star_se_node = (int *) calloc(procs, sizeof(int));
-	/* MPI: Used to mimic the DMse quantity of the parallel version. */
-	DMse_mimic = (double *) calloc(procs, sizeof(double));
-#endif
 
 	if(RESTART_TCOUNT == 0){
 		/* MPI: Populating Start and End arrays based on data partitioning scheme */
@@ -178,11 +134,7 @@ We use these two arrays to store the number of stars created by each node during
 
 	}
 
-
-//Probably not needed anymore
-//	N_b_OLD = N_b;
-//	N_b_NEW = N_b;
-
+	/* Load the optional tidal tensor or dynamical friction files */
 	if(USE_TT_FILE){
 		load_tidal_tensor();
 		orbit_r = compute_tidal_boundary();
@@ -200,12 +152,6 @@ We use these two arrays to store the number of stars created by each node during
 
 	/* calculate central quantities */
 	central_calculate();
-
-	//MPI: Setting this because in the MPI version only _r is set, and will create problem while sorting.
-#ifndef USE_MPI
-	star[clus.N_MAX + 1].r = SF_INFINITY;
-	star[clus.N_MAX + 1].phi = 0.0;
-#endif
 
 	/* Meagan - 3bb */
 	N3bbformed = 0;
@@ -258,27 +204,18 @@ We use these two arrays to store the number of stars created by each node during
 	/* Calculates some global binary variables - total binary mass,and E. */
 	bin_vars_calculate();
 
-	/*
-		Skipping search grid for MPI
-		if (SEARCH_GRID) 
-		search_grid_update(r_grid);
-	 */	
 
 	/* compute energy initially */
 	star[0].E = star[0].J = 0.0;
 
-    set_energy_vars();
+	set_energy_vars();
 
 	compute_energy_new();
 
 
 	/* If we don't set it here, new stars created by breaking binaries (BSE) will
 	 * end up in the wrong place */
-#ifdef USE_MPI
-    clus.N_MAX_NEW = mpiEnd-mpiBegin+1;
-#else
-    clus.N_MAX_NEW = clus.N_MAX;
-#endif
+	clus.N_MAX_NEW = mpiEnd-mpiBegin+1;
 
 	comp_mass_percent();
 
@@ -287,13 +224,6 @@ We use these two arrays to store the number of stars created by each node during
 	/* initialize stellar evolution things */
 	DMse = 0.0;
 
-
-#ifndef USE_MPI
-	for(i=0; i<procs; i++)
-		DMse_mimic[i] = 0.0;
-#endif
-
-
 	if (STELLAR_EVOLUTION > 0) {
 		if(RESTART_TCOUNT == 0 )
 			stellar_evolution_init();
@@ -301,18 +231,10 @@ We use these two arrays to store the number of stars created by each node during
 			restart_stellar_evolution();
 	}
 
-
-#ifndef USE_MPI
-	for(i=0; i<procs; i++)
-		created_star_se_node[i] = 0;
-#endif
-
-	//OPT: M_b E_b calculated twice, also in bin_vars_calculate? Check for redundancy.
 	update_vars();
 
 	times(&tmsbufref);
 
-	//OPT: Check for redundancy. Ask Stefan
 	/* calculate central quantities */
 	central_calculate();
 
@@ -323,8 +245,8 @@ We use these two arrays to store the number of stars created by each node during
 	calc_clusdyn_new();
 
 	if(RESTART_TCOUNT == 0){
-	/* print out binary properties to a file */
-	//print_initial_binaries();
+		/* print out binary properties to a file */
+		//print_initial_binaries();
 	
 		/* Printing Results for initial model */
 		print_results();
@@ -336,7 +258,6 @@ We use these two arrays to store the number of stars created by each node during
 		cuInitialize();
 	#endif
 
-	#ifdef USE_MPI
 		tmpTimeStart = timeStartSimple();
 		//MPI: Apparently there are changes to the masses of the stars in stellar_evolution_init, so here before we start the timestep loop, we synchronize the mass array across all processors.
 		if (STELLAR_EVOLUTION > 0) {
@@ -356,16 +277,9 @@ We use these two arrays to store the number of stars created by each node during
 		}
 		timeEndSimple(tmpTimeStart, &t_comm);
 	}
-	#endif
 
-#ifdef USE_MPI
 	t_init = MPI_Wtime() - tmpTimeStart_init;
 	tmpTimeStart_full = MPI_Wtime();
-#else
-	gettimeofday(&tim, NULL);
-	t_init += tim.tv_sec+(tim.tv_usec/1000000.0) - tmpTimeStart_init;
-	tmpTimeStart_full=tim.tv_sec+(tim.tv_usec/1000000.0);
-#endif
 
 	/*******          Starting evolution               ************/
 	/******* This is the main loop in the program *****************/
@@ -373,15 +287,7 @@ We use these two arrays to store the number of stars created by each node during
 	{
 
 		tmpTimeStart = timeStartSimple();
-#ifndef USE_MPI
-		for(i=0; i<procs; i++)
-		{
-			created_star_dyn_node[i] = 0;
-			created_star_se_node[i] = 0;
-		}
-#endif
 
-#ifdef USE_MPI
 //MPI: These are some global variables that are update at various places during the timestep, and towards the end need to be summed up across all processors. So, we store the values of these variables from the previous timestep into corresponding _old variables, and reset the actual variables to zero. At the end of the timestep, we cumulate/reduce the actual variables across processors and finally add them to the _old value i.e. total value of the variable from the previous timestep to obtain the updated values for these variables.
 		Eescaped_old = Eescaped;
 		Jescaped_old = Jescaped;
@@ -396,7 +302,6 @@ We use these two arrays to store the number of stars created by each node during
 		Ebescaped = 0.0;
 		TidalMassLoss = 0.0;
 		Etidal = 0.0;
-#endif
 		timeEndSimple(tmpTimeStart, &t_oth);
 
 		/* calculate central quantities */
@@ -417,11 +322,7 @@ We use these two arrays to store the number of stars created by each node during
 		/* set N_MAX_NEW here since if PERTURB=0 it will not be set below in perturb_stars() */
 		tmpTimeStart = timeStartSimple();
 		//MPI: Note that N_MAX_NEW is the number of local stars (including newly created ones) in the parallel version, whereas in the serial it refers to the total number of stars including newly created ones. N_MAX is the total number of stars excluding newly created ones in both serial and parallel versions.
-#ifdef USE_MPI
 		clus.N_MAX_NEW = mpiEnd-mpiBegin+1;
-#else
-		clus.N_MAX_NEW = clus.N_MAX;
-#endif
 		timeEndSimple(tmpTimeStart, &t_oth);
 
 		/* Perturb velocities of all N_MAX stars. 
@@ -441,17 +342,6 @@ We use these two arrays to store the number of stars created by each node during
 
 		/* evolve stars up to new time */
 		DMse = 0.0;
-#ifndef USE_MPI
-		for(i=0; i<procs; i++)
-			DMse_mimic[i] = 0.0;
-#endif
-
-#ifndef USE_MPI
-		/* if N_MAX_NEW is not incremented here, then stars created using create_star()
-			will disappear! */
-		/* This really has to come after SE otherwise merger products will disappear. */
-		clus.N_MAX_NEW++;
-#endif
 
 		/* some numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
@@ -509,12 +399,6 @@ We use these two arrays to store the number of stars created by each node during
 		energy_conservation3();
 		timeEndSimple(tmpTimeStart, &t_ener_con3);
 
-		//commenting out for MPI
-		/*
-			if (SEARCH_GRID)
-			search_grid_update(r_grid);
-		 */
-	
 		tmpTimeStart = timeStartSimple();
 		comp_mass_percent();
 		timeEndSimple(tmpTimeStart, &t_calc_io_vars1);
@@ -540,33 +424,9 @@ We use these two arrays to store the number of stars created by each node during
 		calc_clusdyn_new();
 		timeEndSimple(tmpTimeStart, &t_oth);
 
-        if (WRITE_EXTRA_CORE_INFO) {
-            no_remnants= no_remnants_core(6);
-        }
-
-
-/* TESTING FOR KEVIN */
-/*
-#ifdef USE_MPI
-		// Only proc with id 0 prints out.
-		if(myid==0)
-		{
-			strcpy(tempstr, "test_out_par.dat");
-			ftest = fopen( tempstr, "w" );
-			for( i = 1; i <= clus.N_MAX; i++ )
-				fprintf(ftest, "%ld\t%.18g\n",i, star_r[i]);
-			fclose(ftest);
+		if (WRITE_EXTRA_CORE_INFO) {
+			no_remnants= no_remnants_core(6);
 		}
-		MPI_Barrier(MPI_COMM_WORLD);
-#else
-		strcpy(tempstr, "test_out_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].r);
-		fclose(ftest);
-#endif
-*/
-
 
 		tmpTimeStart = timeStartSimple();
 		print_results();
@@ -585,7 +445,7 @@ We use these two arrays to store the number of stars created by each node during
 		}
 		timeEndSimple(tmpTimeStart, &t_io_ignore);
 
-	    update_tspent(tmsbufref);
+		update_tspent(tmsbufref);
 
 		if(CheckCheckpoint())
 			save_restart_file();
@@ -595,12 +455,7 @@ We use these two arrays to store the number of stars created by each node during
 	save_restart_file();
 
 	times(&tmsbuf);
-#ifdef USE_MPI
 	t_full = MPI_Wtime() - tmpTimeStart_full;
-#else
-	gettimeofday(&tim, NULL);
-	t_full += tim.tv_sec+(tim.tv_usec/1000000.0) - tmpTimeStart_full;
-#endif
 
 	//Print overall timings to stdout
 	rootprintf("******************************************************************************\n");
@@ -619,17 +474,8 @@ We use these two arrays to store the number of stars created by each node during
 		rootfprintf(timerfile, "******************************************************************************\n");
 	}
 
-	dprintf("Usr time = %.6e ", (double)
-			(tmsbuf.tms_utime-tmsbufref.tms_utime)/sysconf(_SC_CLK_TCK));
-	dprintf("Sys time = %.6e\n", (double)
-			(tmsbuf.tms_stime-tmsbufref.tms_stime)/sysconf(_SC_CLK_TCK));
-	dprintf("Usr time (ch) = %.6e ", (double)
-			(tmsbuf.tms_cutime-tmsbufref.tms_cutime)/sysconf(_SC_CLK_TCK));
-	dprintf("Sys time (ch)= %.6e seconds\n", (double)
-			(tmsbuf.tms_cstime-tmsbufref.tms_cstime)/sysconf(_SC_CLK_TCK));
-
 	/* free RNG */
-	//gsl_rng_free(rng);
+	gsl_rng_free(rng);
 
 #ifdef USE_CUDA
 	cuCleanUp();
@@ -639,16 +485,9 @@ We use these two arrays to store the number of stars created by each node during
 	close_buffers();
 	free_arrays();
 
-#ifdef USE_MPI
 	free(mpiDisp);
 	free(mpiLen);
 	free(curr_st);
-//Probably not needed anymore
-//	free(binary_buf);
-//	free(num_bin_buf);
-#else
-	free(st);
-#endif
 
 	free(Start);
 	free(End);
@@ -664,309 +503,7 @@ We use these two arrays to store the number of stars created by each node during
 	g_array_free(id_array, TRUE);
 #endif
 
-#ifdef USE_MPI
 	MPI_Finalize();
-#endif
 
 	return(0);
 }
-/*
-#ifdef USE_MPI
-		strcpy(filename, "test_out_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = 1; j <= End[i]-Start[i]+1; j++ )
-				//for( j = mpiBegin; j <= mpiEnd; j++ )
-				//for( j = 1; j <= clus.N_MAX; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].vtnew);
-					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
-					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-MPI_Barrier(MPI_COMM_WORLD);
-#else
-		strcpy(tempstr, "test_out_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].vtnew);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-		fclose(ftest);
-#endif
-//return;
-
-*/
-
-/*
-#ifdef USE_MPI 
-   printf("id = %d\trng = %li\n", myid, rng_t113_int_new(curr_st));
-#else
-   for(i=0; i<procs; i++)
-      printf("i = %d\trng = %li\n", i, rng_t113_int_new(&st[i]));
-#endif
-*/
-
-/*
-#ifdef USE_MPI
-		if(myid==2)
-		{
-			strcpy(tempstr, "test_out_par.dat");
-			ftest = fopen( tempstr, "w" );
-			for( i = 1; i <= clus.N_MAX; i++ )
-				fprintf(ftest, "%.18g\n", star_r[i]);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-			fclose(ftest);
-		}
-#endif
-MPI_Barrier(MPI_COMM_WORLD);
-*/
-
-/*
-#ifdef USE_MPI
-		strcpy(filename, "test_out_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = Start[i]; j <= End[i]; j++ )
-				{
-					//if(star[j].binind>0)
-						//fprintf(ftest, "%ld\t%.18g\n", j, binary[star[j].binind].a);
-				if(star[j].id <= 0)
-					fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", j, star_r[j], star[j].id, binary[star[j].binind].id1, binary[star[j].binind].id2);
-				else
-					fprintf(ftest, "%ld\t%.18g\t%ld\n", j, star_r[j], star[j].id);
-				}
-				fclose(ftest);
-			}
-		}
-		if(myid==0)
-			system("./process.sh");
-#else
-		strcpy(tempstr, "test_out_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-		{
-			//if(star[i].binind>0)
-				//fprintf(ftest, "%ld\t%.18g\n", i, binary[star[i].binind].a);
-		if(star[i].id <= 0)
-			fprintf(ftest, "%ld\t%.18g\t%ld\t%ld\t%ld\n", i, star[i].r, star[i].id, binary[star[i].binind].id1, binary[star[i].binind].id2);
-		else
-			fprintf(ftest, "%ld\t%.18g\t%ld\n", i, star[i].r, star[i].id);
-		}
-		fclose(ftest);
-#endif
-*/
-
-/*
-
-#ifdef USE_MPI
-	//printf("%ld----------------------\n",clus.N_MAX);
-	if(myid==1)
-	{
-		strcpy(tempstr, "test_out_par.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n",i, star_m[i]);
-		//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-		//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-		fclose(ftest);
-	}
-	MPI_Barrier(MPI_COMM_WORLD);
-#else
-	strcpy(tempstr, "test_out_ser.dat");
-	ftest = fopen( tempstr, "w" );
-	for( i = 1; i <= clus.N_MAX; i++ )
-		fprintf(ftest, "%ld\t%.18g\n", i, star[i].m);
-	//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-	//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-	fclose(ftest);
-#endif
-return;
-
- 
-#ifdef USE_MPI
-		if(myid==0)
-		{
-			ftest = fopen("mpi_globvar.dat","w");
-#else
-		{
-			ftest = fopen("ser_globvar.dat","w");
-#endif
-			fprintf(ftest, "clus.N_MAX_NEW=%ld\nclus.N_MAX=%ld\nTidalMassLoss=%g\nOldTidalMassLoss=%g\nPrev_Dt=%g\nEescaped=%g\nJescaped=%g\nEintescaped=%g\nEbescaped=%g\nMtotal=%g\ninitial_total_mass=%g\nDMse=%g\nDMrejuv=%g\ncenma.m=%g\ncenma.m_new=%g\ncenma.E=%g\ntcount=%ld\nStepCount=%ld\nsnap_num=%ld\nEcheck=%ld\nnewstarid=%ld\n",
-					clus.N_MAX_NEW,
-					clus.N_MAX,
-					TidalMassLoss,
-					OldTidalMassLoss,
-					Prev_Dt,
-					Eescaped,
-					Jescaped,
-					Eintescaped,
-					Ebescaped,
-					Mtotal,
-					initial_total_mass,
-					DMse,
-					DMrejuv,
-					cenma.m,
-					cenma.m_new,
-					cenma.E,
-					tcount,
-					StepCount,
-					snap_num,
-					Echeck,
-					newstarid);
-			fclose(ftest);
-		}
-#ifdef USE_MPI
-		if(myid==2)
-		{
-			strcpy(tempstr, "test_out_par.dat");
-			ftest = fopen( tempstr, "w" );
-			for( i = 1; i <= clus.N_MAX; i++ )
-				fprintf(ftest, "%ld\t%.18g\n", i, star_r[i]);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-			fclose(ftest);
-		}
-
-		strcpy(filename, "test_out_par");
-		strcpy(tempstr, filename);
-		sprintf(num, "%d", myid);
-		strcat(tempstr, num);
-		strcat(tempstr, ".dat");
-		for( i = 0; i < procs; i++ )
-		{
-			if(myid == i)
-			{
-				//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-				ftest = fopen( tempstr, "w" );
-				for( j = 1; j <= End[i]-Start[i]+1; j++ )
-					//for( j = mpiBegin; j <= mpiEnd; j++ )
-					//for( j = 1; j <= clus.N_MAX; j++ )
-					fprintf(ftest, "%ld\t%.18g\n", mpiBegin+j-1, star[j].E);
-					//fprintf(ftest, "%ld\t%ld\n", mpiBegin+j-1, star[j].id);
-					//fprintf(ftest, "%ld\t%.18g\n", j, star_m[j]);
-				fclose(ftest);
-			}
-		}
-		MPI_Barrier(MPI_COMM_WORLD);
-		if(myid==0)
-		{
-			char process_str[30];
-			sprintf(process_str, "./process.sh %d", procs);
-			system(process_str);
-		}
-#else
-		strcpy(tempstr, "test_out_ser.dat");
-		ftest = fopen( tempstr, "w" );
-		for( i = 1; i <= clus.N_MAX; i++ )
-			fprintf(ftest, "%ld\t%.18g\n", i, star[i].E);
-			//fprintf(ftest, "%ld\t%.18g\t\n", i, star[i].r);
-			//fprintf(ftest, "%ld\t%ld\t\n", i, star[i].id);
-		fclose(ftest);
-#endif
-
-#ifdef USE_MPI
-	int j;
-	strcpy(filename, "test_out_par");
-	strcpy(tempstr, filename);
-	sprintf(num, "%d", myid);
-	strcat(tempstr, num);
-	strcat(tempstr, ".dat");
-	for( i = 0; i < procs; i++ )
-	{
-		if(myid == i)
-		{
-			//printf("Start[i]=%d\tend=\%d\n", Start[i], End[i]);
-			ftest = fopen( tempstr, "w" );
-			for( j = 1; j <= mpiEnd-mpiBegin+1; j++ )
-				fprintf(ftest, "%d\t%.18g\n", get_global_idx(j), sigma_array.sigma[j]);
-			fclose(ftest);
-		}
-	}
-	if(myid==0)
-	{
-		char process_str[30];
-		sprintf(process_str, "./process.sh %d", procs);
-		system(process_str);
-	}
-#else
-	int j;
-	strcpy(tempstr, "test_out_ser.dat");
-	ftest = fopen( tempstr, "w" );
-	for( j = 1; j <= clus.N_MAX; j++ )
-	fprintf(ftest, "%d\t%.18g\n", j, sigma_array.sigma[j]);
-	fclose(ftest);
-#endif
-
-*/
-/*
-//code for using gdb with mpi.
-//http://www.open-mpi.org/faq/?category=debugging#serial-debuggers
-{
-    int ii = 0;
-    char hostname[256];
-    gethostname(hostname, sizeof(hostname));
-    printf("PID %d on %s ready for attach\n", getpid(), hostname);
-    fflush(stdout);
-    while (0 == ii)
-        sleep(5);
-}
-*/
-
-//Testing MPI-IO
-/*
-#ifdef USE_MPI
-    char mpi_iotest_wrbuf[1000000];
-    char mpi_iotest_buf[100];
-    int mpi_iotest_len=0, foutoffset=0, cum_offset=0, tot_offset=0;
-    MPI_File fh;
-    MPI_Status mpistat;
-
-    //MPI3: Opening and closing file once in case it exists to delete it. Then opening again. Should find a better solution later.
-    MPI_File_delete ("mpiiotest.log", MPI_INFO_NULL);
-    MPI_File_open(MPI_COMM_WORLD, "mpiiotest.log", MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
-//---------------------
-    mpi_iotest_wrbuf[0] = '\0';
-    mpi_iotest_len=0;
-    foutoffset=0;
-
-    parafprintf(iotest, "My name is %d\n", myid);
-    //   sprintf(mpi_iotest_buf, "My name is %d\n", myid);
-    //   strcat(mpi_iotest_wrbuf, mpi_iotest_buf);
-    //   mpi_iotest_len += strlen(mpi_iotest_buf);
-    if(myid==2)
-        parafprintf(iotest, "My name is not at all fugu\n");
-    else
-        parafprintf(iotest, "My name is also fugu\n");
-    //   strcat(mpi_iotest_wrbuf, mpi_iotest_buf);
-    //   mpi_iotest_len += strlen(mpi_iotest_buf);
-    MPI_Exscan(&mpi_iotest_len, &foutoffset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    foutoffset += cum_offset;
-
-    MPI_File_write_at_all(fh, foutoffset, mpi_iotest_wrbuf, mpi_iotest_len, MPI_CHAR, &mpistat);
-    MPI_Allreduce (&mpi_iotest_len, &tot_offset, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    cum_offset += tot_offset;
-
-    //printf("----->%d strln=%d foutoffset=%d cum_off=%d\n", myid, lenstr, foutoffset, cum_offset);
-    MPI_File_close(&fh);
-#endif
-*/

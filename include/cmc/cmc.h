@@ -19,10 +19,8 @@
 #include "cmc_core.h"
 #include "CMCConfig.h"
 #include "stdarg.h"
-
-#ifdef USE_MPI
 #include "cmc_mpi.h"
-#endif
+
 
 #ifdef USE_FITS
 #include <fitsio.h>
@@ -63,10 +61,6 @@
 #define PI 3.14159265358979323
 
 #define N_TRY 50000
-
-#ifndef EXPERIMENTAL
-#define AVEKERNEL 20
-#endif
 
 #define MSUN 1.989e+33
 #define SOLAR_MASS MSUN
@@ -997,7 +991,6 @@ typedef struct{
 * @brief The minimum binary binding energy (in units of kT) for a binary to be considered 'hard' for the time step calculation.
 */
         int HARD_BINARY_KT; 
-#ifdef EXPERIMENTAL
 #define PARAMDOC_BH_LC_FDT "sub time step size on which the code tries to approximately advance particles that have a MC time step larger than BH_LC_FDT times the local relaxation time. In some versions of the code the particles are literally advanced while in other a simple scaling is used. None of them really work. (0)"
 /**
 * @brief sub time step size on which the code tries to approximately advance particles that have a MC time step larger than BH_LC_FDT times the local relaxation time. In some versions of the code the particles are literally advanced while in other a simple scaling is used. None of them really work. (0)
@@ -1008,7 +1001,6 @@ typedef struct{
 * @brief one half the number of stars over which to average certain quantities
 */
         int AVEKERNEL;
-#endif
 #define PARAMDOC_MIN_CHUNK_SIZE "minimum size of chunks that get partitioned across processors in the parallel code"
 /**
 * @brief minimum size of chunks that get partitioned across processors in the parallel code
@@ -1703,13 +1695,9 @@ void print_conversion_script(void);
 double potential(double r);	       /* get potential using star.phi */
 double potential_serial(double r);
 double fastpotential(double r, long kmin, long kmax);
-long potential_calculate(void);	/* calculate potential at star locations in star.phi */
-long potential_calculate_mimic(void); //to mimic the parallel version
-#ifdef USE_MPI
-long mpi_potential_calculate(void);
-long mpi_potential_calculate2(void);
+long potential_calculate(void);
+long potential_calculate2(void);
 MPI_Comm inv_comm_create();
-#endif
 
 /* Bharath: Timing Functions */ 
 double timeStartSimple();
@@ -1779,14 +1767,12 @@ long FindZero_r_serial(long kmin, long kmax, double r);
 long FindZero_r(long x1, long x2, double r);
 long FindZero_Q(long j, long x1, long x2, double E, double J);
 double potentialDifference(int particleIndex);
-void ComputeEnergy(void);
-
-#ifdef USE_MPI
-void mpi_ComputeEnergy(void);
 void mpi_para_file_write(char* wrbuf, long long *len, long long *prev_cum_offset, MPI_File* fh);
-void PrintParaFileOutput(void);
+void ComputeEnergy(void);
 void mpi_close_node_buffers(void);
-#endif
+void para_file_write(char* wrbuf, long long *len, long long *prev_cum_offset, MPI_File* fh);
+void PrintParaFileOutput(void);
+void close_node_buffers(void);
 
 void PrintLogOutput(void);
 double GetTimeStep(gsl_rng *rng);
@@ -1796,7 +1782,6 @@ int CheckCheckpoint();
 void ComputeIntermediateEnergy(void);
 void energy_conservation3(void);
 void set_velocities3(void);
-void mpi_set_velocities3(void);
 double rtbis(double (*func) (double), double x1, double x2, double xacc);
 double trapzd(double (*func) (double), double a, double b, long n);
 double qsimp(double (*func) (double), double a, double b);
@@ -1832,6 +1817,7 @@ void load_restart_file(void);
 
 /* misc */
 void load_tidal_tensor(void);
+void load_dynamical_friction_data(void);
 
 /* stellar evolution stuff */
 void stellar_evolution_init(void);
@@ -1865,7 +1851,6 @@ void units_set(void);
 double compute_tidal_boundary(void);
 void central_calculate(void);
 
-#ifdef USE_MPI
 typedef star_t type;
 typedef double keyType;
 void remove_stripped_stars(type* buf, int* local_N);
@@ -1887,14 +1872,10 @@ void load_balance( 	type 				*inbuf,
 							MPI_Datatype 	dataType, 	
 							MPI_Datatype 	b_dataType, 	
 							MPI_Comm			commgroup	);
-#endif
 
 central_t central_hard_binary(double ktmin, central_t old_cent);
 void clusdyn_calculate(void);
-#ifdef USE_MPI
-void mpi_clusdyn_calculate(void);
 void copy_globals_to_locals(long k);
-#endif
 
 void print_interaction_status(char status_text[]);
 void print_interaction_error(void);
@@ -1932,23 +1913,15 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 double simul_relax(gsl_rng *rng);
 double simul_relax_new(void);
 int destroy_bbh(double m1, double m2,double a,double e,double nlocal,double sigma,struct rng_t113_state* rng_st);
-#ifdef USE_MPI
-double mpi_simul_relax_new(void);
-void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r, double *sig_sigma, long* sig_n, int r_0_mave_1);
-void mpi_break_wide_binaries(struct rng_t113_state* rng_st);
-#endif
-
-void break_wide_binaries(void);
+double simul_relax_new(void);
 void calc_sigma_r(long p, long N_LIMIT, double *sig_r, double *sig_sigma, long* sig_n, int r_0_mave_1);
+void break_wide_binaries(struct rng_t113_state* rng_st);
 
 double sigma_r(double r);
 
 // Meagan
 /* three-body binary formation */
 void sort_three_masses(long sq, long *k1, long *k2, long *k3);
-#ifdef USE_MPI
-void mpi_sort_three_masses(long sq, long *k1, long *k2, long *k3);
-#endif
 double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], double vrel3[4]);
 void calc_3bb_encounter_dyns(long k1, long k2, long k3, double v1[4], double v2[4], double v3[4], double (*vrel12)[4], double (*vrel3)[4], gsl_rng *rng);
 void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_running, gsl_rng *rng);
@@ -2125,44 +2098,22 @@ void write_snapshot(char *filename, int bh_only, char *tablename);
 #define PHI_S(rad, j) ( ((rad)>=star[(j)].r ? star[(j)].m/(rad) : star[(j)].m/star[(j)].r) * (1.0/clus.N_STAR) )
 #define MPI_PHI_S(rad, j) ( ((rad)>=star_r[(j)] ? star_m[(j)]/(rad) : star_m[(j)]/star_r[(j)]) * (1.0/clus.N_STAR) )
 
-#ifdef USE_MPI
 #define function_Q(j, k, E, J) (2.0 * ((E) - (star_phi[(k)] + MPI_PHI_S(star_r[(k)], j))) - SQR((J) / star_r[(k)]))
-#else
-#define function_Q(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[(k)].r, j))) - SQR((J) / star[(k)].r))
-#endif
 
 #define gprintf(args...) if (!quiet) {fprintf(stdout, args);}
 
-#ifdef USE_MPI
 #define diaprintf(args...) if (!quiet) { if(myid == 0) { fprintf(stdout, "DIAGNOSTIC: %s(): ", __FUNCTION__); fprintf(stdout, args); }}
-#else
-#define diaprintf(args...) if (!quiet) {fprintf(stdout, "DIAGNOSTIC: %s(): ", __FUNCTION__); fprintf(stdout, args);}
-#endif
 
-#ifdef USE_MPI
 #define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: in proc %d, %s(): ", myid, __FUNCTION__); fprintf(stderr, args);}
 #define rootdprintf(args...) if (debug && myid==0) {fprintf(stderr, "DEBUG: in proc %d, %s(): ", myid, __FUNCTION__); fprintf(stderr, args);}
-#else
-#define dprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
-#define rootdprintf(args...) if (debug) {fprintf(stderr, "DEBUG: %s(): ", __FUNCTION__); fprintf(stderr, args);}
-#endif
 
 #define dmpiprintf(args...) if (mpi_debug) { fprintf(stderr, "DEBUG: in proc %d, %s(): ", myid, __FUNCTION__); fprintf(stderr, args); }
 
-#ifdef USE_MPI
 #define wprintf(args...) { if(myid==0) { fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}}
-#else
-#define wprintf(args...) { fprintf(stderr, "WARNING: %s(): ", __FUNCTION__); fprintf(stderr, args);}
-#endif
 
-#ifdef USE_MPI
 #define eprintf(args...) {fprintf(stderr, "ERROR: in proc %d: %s:%d in %s(): ", myid, __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}
-#else
-#define eprintf(args...) {fprintf(stderr, "ERROR: %s:%d in %s(): ", __FILE__, __LINE__, __FUNCTION__); fprintf(stderr, args);}
-#endif
 
 //MPI3-IO: This was the easiest way to convert hundreds of fprintf statements to do parallel IO without manually changing each one of them.
-#ifdef USE_MPI
 
 /**
 * @brief Macro that prints given args into char buffer of the corresponding file.
@@ -2206,21 +2157,6 @@ while(0)
 * @param args... arguments for standard printf
 */
 #define rootprintf(args...) {if(myid == 0) { fprintf(stdout, args); }}
-
-#else
-
-#define parafprintf(file, args...) { fprintf(file, args); }
-
-#define pararootfprintf(file, args...) { parafprintf(file, args); }
-
-#define rootfprintf(file, args...) { fprintf(file, args); }
-
-#define rootgprintf(args...) if (!quiet) {fprintf(stdout, args);}
-
-#define rootprintf(args...) { fprintf(stdout, args); }
-
-#endif
-
 
 #ifdef DEBUGGING
 #undef MAX

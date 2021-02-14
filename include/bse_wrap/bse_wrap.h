@@ -178,9 +178,7 @@ void bse_comenv(bse_binary *binary, double *zpars,
 /* note the index swap between fortran and C: i,j->j,i */
 extern struct { int idum1; } rand1_;
 extern struct { int idum2, iy, ir[32]; } rand2_;
-#ifdef USE_TAUS
 extern struct { long long int state[4]; int first;} taus113state_;
-#endif
 extern struct { int ktype[15][15]; } types_;
 extern struct { int  tflag, ifflag, remnantflag, wdflag, bhflag, windflag,  qcflag, eddlimflag, bhspinflag, aic, rejuvflag,  htpmb, st_cr, st_tide, bdecayfac, grflag, bhms_coll_flag; } flags_;
 extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;

@@ -56,10 +56,8 @@ void cmc_print_usage(FILE *stream, char *argv[])
 * @brief Writes output to stdout and all files required for post-simulation analysis.
 */
 void print_results(void){
-#ifdef USE_MPI
 	//MPI: Writes out files that need contribution from all/many processors.
     PrintParaFileOutput();
-#endif
 	 //MPI: These two routines mostly write files that are need data only from the root node.
     PrintLogOutput();
     PrintFileOutput();
@@ -121,7 +119,6 @@ void PrintLogOutput(void)
 	m = rh = trh = 0.0;
 	rh_binary = rh_single = m_binary = m_single = 0.0;
 
-#ifdef USE_MPI
 	//MPI: Do computations on duplicated arrays separately.
 	for (ih=1; ih<=clus.N_MAX; ih++) {
 		k = ih;
@@ -203,31 +200,6 @@ void PrintLogOutput(void)
 
 	 free(m_binary_arr);
 	 free(m_single_arr);
-#else
-	for (ih=1; ih<=clus.N_MAX; ih++) {
-		k = ih;
-		m += star[k].m / clus.N_STAR;
-		
-		if (star[k].binind > 0) {
-			m_binary += star[k].m / clus.N_STAR;
-		} else {
-			m_single += star[k].m / clus.N_STAR;
-		}
-		
-		if (m/Mtotal <= 0.5) {
-			rh = star[k].r;
-		}
-		if (m_single / (Mtotal - (M_b / clus.N_STAR)) <= 0.5) {
-			rh_single = star[k].r;
-		}
-		// avoid dividing by zero if there are no binaries
-		if (M_b > 0) {
-			if (m_binary / M_b * clus.N_STAR <= 0.5) {
-				rh_binary = star[k].r;
-			}
-		}
-	}
-#endif
 
 	/* t_rh calculated using r_h */
 	trh = ((0.138 * clus.N_MAX) / log((double) clus.N_MAX)) * sqrt((rh * rh * rh) / Mtotal) * log((double) clus.N_MAX) / clus.N_MAX;
@@ -277,10 +249,8 @@ void PrintLogOutput(void)
 	rootgprintf("******************************************************************************\n");
 	pararootfprintf(logfile, "******************************************************************************\n");
 
-#ifdef USE_MPI
 	//MPI: The log file is written both in parallel in PrintParaFileOutput before this where details of interactions between stars etc are printed out, as well as here by the root node where the summary of the timestep is printed out.
     mpi_para_file_write(mpi_logfile_wrbuf, &mpi_logfile_len, &mpi_logfile_ofst_total, &mpi_logfile);
-#endif
 
 }
 
@@ -355,7 +325,6 @@ void PrintFileOutput(void) {
 
 	//Sourav: printing properties at 10% lagrange radius
 	if (CALCULATE10){
-#ifdef USE_MPI
         int i;
         double m_10_prev=0;
 
@@ -426,35 +395,6 @@ void PrintFileOutput(void) {
         rootfprintf(lagrad10file, "%.8g %.8g %.ld %ld %.8g %ld %.8g %ld %.8g %.8g %.8g\n",
                 TotalTime, Dt, tcount, n_10, m_10, n_sing_10, m_sing_10, n_bin_10, m_bin_10, r_10, rho_10);
 
-#else
-		n_10=1;
-		m_bin_10 = 0.0;
-		m_sing_10 = 0.0;
-		m_10 = 0.0;
-		while (m_10 < 0.1 * Mtotal) {
-			m_10 += star[n_10].m / clus.N_STAR;
-			if (star[n_10].binind>0){
-				n_bin_10++;
-				m_bin_10 += star[n_10].m / clus.N_STAR;
-			}
-			else{
-				n_sing_10++;
-				m_sing_10 += star[n_10].m / clus.N_STAR;
-			}
-			n_10++;
-		}
-		/* exit if not enough stars */
-		if (n_10 <= 6 || n_10 >= clus.N_STAR-6) {
-			eprintf("clus.N_STAR <= 2*J || n_10 >= clus.N_STAR-6\n");
-			exit_cleanly(-1, __FUNCTION__);
-		}
-		else{
-			r_10=star[n_10].r;
-			rho_10 = m_10/(4.0 * 3.0 * PI * fb_cub(r_10));	
-		}
-		fprintf(lagrad10file, "%.8g %.8g %.ld %ld %.8g %ld %.8g %ld %.8g %.8g %.8g\n",
-					TotalTime, Dt, tcount, n_10, m_10, n_sing_10, m_sing_10, n_bin_10, m_bin_10, r_10, rho_10);
-#endif
 	}
 
 	/* Output binary data Note: N_BINARY counts ALL binaries (including escaped/destroyed ones)
@@ -474,11 +414,7 @@ void PrintFileOutput(void) {
     find_nstars_within_r(rc_nb, &n_single_nb, &n_binary_nb);
 
 	// calculate overall binary fraction
-#ifdef USE_MPI
 	for (i=1; i<=clus.N_MAX_NEW; i++) {
-#else
-	for (i=1; i<=clus.N_MAX; i++) {
-#endif
 		if (star[i].binind > 0) {
 			n_binary++;
 		} else {
@@ -486,7 +422,6 @@ void PrintFileOutput(void) {
 		}
 	}
 
-#ifdef USE_MPI
     long buf_comm[6];
     long buf_comm_recv[6];
 
@@ -511,7 +446,6 @@ void PrintFileOutput(void) {
         n_single = buf_comm_recv[4];
         n_binary = buf_comm_recv[5];
     }
-#endif
 
 	N_core_binary = n_binary_c;
 	N_core_binary_nb = n_binary_nb;
@@ -579,7 +513,6 @@ void PrintFileOutput(void) {
 */
 void print_bh_summary() {
 
-#ifdef USE_MPI
     long buf_comm[12];
     long buf_comm_recv[12];
     buf_comm[0] = bhsingle;
@@ -612,7 +545,6 @@ void print_bh_summary() {
     bh13 = buf_comm_recv[9];
     bh26 = buf_comm_recv[10];
     bh89 = buf_comm_recv[11];
-#endif
 
 	double fb_bh;	
 	if ((bhbinary + bhsingle) > 0) {
@@ -647,7 +579,6 @@ void print_bh_summary() {
 void print_esc_bh_summary() {
     // Meagan: log info about escaped bhs
 
-#ifdef USE_MPI
     long buf_comm[12];
     long buf_comm_recv[12];
     buf_comm[0] = esc_bhsingle;
@@ -680,7 +611,6 @@ void print_esc_bh_summary() {
     esc_bh13 = buf_comm_recv[9];
     esc_bh26 = buf_comm_recv[10];
     esc_bh89 = buf_comm_recv[11];
-#endif
 
     esc_bhsingle_tot += esc_bhsingle;
     esc_bhbinary_tot += esc_bhbinary;
@@ -746,11 +676,7 @@ void print_esc_bh_summary() {
 void find_nstars_within_r(double r, long *ns, long *nb)
 {
     long i;
-#ifdef USE_MPI
 	for (i=1; star_r[get_global_idx(i)]<=r && i<=clus.N_MAX_NEW; i++) {
-#else
-	for (i=1; star[i].r<=r; i++) {
-#endif
 		if (star[i].binind > 0) {
 			(*nb)++;
 		} else {
@@ -759,7 +685,6 @@ void find_nstars_within_r(double r, long *ns, long *nb)
 	}
 }
 
-#ifdef USE_MPI
 /**
 * @brief This is the function which actually writes the parallel file buffers into the file in parallel using MPI IO.
 */
@@ -874,7 +799,6 @@ void mpi_para_file_write(char* wrbuf, long long* len, long long* prev_cum_offset
 //    };
 //
 //}
-#endif
 
 /**
 * @brief Parsing of Input Parameters / Memory allocation / File I/O
@@ -967,10 +891,8 @@ void parser(int argc, char *argv[], gsl_rng *r)
 		sprintf(oldoutprefix, "%s", argv[optind+1]);
 		
 /*
-#ifdef USE_MPI
 	strcpy(outprefix_bak, outprefix);
 	sprintf(outprefix, "%s%d", outprefix, myid);
-#endif
 */
 	dprintf("inputfile=%s outprefix=%s\n", inputfile, outprefix);
 
@@ -981,17 +903,13 @@ void parser(int argc, char *argv[], gsl_rng *r)
 	}
 	
 //MPI: File printed out only by the root node.
-#ifdef USE_MPI
 if(myid==0) {
-#endif
 	sprintf(outfile, "%s.cmc.parsed", outprefix);
 	if ((parsedfp = fopen(outfile, "w")) == NULL) {
 		eprintf("cannot create output file \"%s\".\n", outfile);
 		exit(1);
 	}
-#ifdef USE_MPI
 }
-#endif
 
 	/* nothing is set yet, so assigning all zeros to variable parsed */
 	/* one way to do it is a complicated for loop (?which depends on the 
@@ -1037,11 +955,7 @@ if(myid==0) {
 			i++;
 		}
 
-#ifdef USE_MPI
 #define PRINT_PARSED(DOC) if(myid==0) fprintf(parsedfp, "# %s\n%s\n", DOC, line)
-#else
-#define PRINT_PARSED(DOC) fprintf(parsedfp, "# %s\n%s\n", DOC, line)
-#endif
 
 		/* see if there are too many values for parameter */
 		if (sscanf(line, "%s %s %s", parameter_name, values, dummy) == 3) {
@@ -1353,7 +1267,6 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_HARD_BINARY_KT);
 				sscanf(values, "%lf", &HARD_BINARY_KT);
 				parsed.HARD_BINARY_KT = 1;
-#ifdef EXPERIMENTAL
 			} else if (strcmp(parameter_name, "BH_LC_FDT")== 0) {
 				PRINT_PARSED(PARAMDOC_BH_LC_FDT);
 				sscanf(values, "%lf", &BH_LC_FDT);
@@ -1362,7 +1275,6 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_AVEKERNEL);
 				sscanf(values, "%li", &AVEKERNEL);
 				parsed.AVEKERNEL = 1;
-#endif
 			} else if (strcmp(parameter_name, "MIN_CHUNK_SIZE")== 0) {
 				PRINT_PARSED(PARAMDOC_MIN_CHUNK_SIZE);
 				sscanf(values, "%li", &MIN_CHUNK_SIZE);
@@ -1768,10 +1680,8 @@ if(myid==0) {
 	CHECK_PARSED(FORCE_RLX_STEP, 0, PARAMDOC_FORCE_RLX_STEP);
     CHECK_PARSED(DT_HARD_BINARIES, 0, PARAMDOC_DT_HARD_BINARIES);
     CHECK_PARSED(HARD_BINARY_KT, 1, PARAMDOC_HARD_BINARY_KT);
-#ifdef EXPERIMENTAL
 	CHECK_PARSED(BH_LC_FDT, 0.0, PARAMDOC_BH_LC_FDT);
 	CHECK_PARSED(AVEKERNEL, 20, PARAMDOC_AVEKERNEL);
-#endif
 	CHECK_PARSED(MIN_CHUNK_SIZE, 20, PARAMDOC_MIN_CHUNK_SIZE);
     CHECK_PARSED(BH_AVEKERNEL, 10, PARAMDOC_BH_AVEKERNEL);
 	CHECK_PARSED(APSIDES_PRECISION, 1.0e-11, PARAMDOC_APSIDES_PRECISION);
@@ -2024,9 +1934,7 @@ if(myid==0) {
 		exit(1);
 	}
 	
-#ifdef USE_MPI
 if(myid==0)
-#endif
 	fclose(parsedfp);
 	
     /* set-up snapshot window variables */
@@ -2043,7 +1951,7 @@ if(myid==0)
 #ifdef USE_FITS
                 cmc_read_fits_file(INPUT_FILE, &cfd, RESTART_TCOUNT);
 #else 
-		fprintf("stderr","ERROR: code not compiled against fits libraries\n Rerun cmake wtih FITS=ON\n");
+		fprintf(stderr,"ERROR: code not compiled against fits libraries\n Rerun cmake wtih FITS=ON\n");
 		exit(1);
 #endif
             }
@@ -2087,7 +1995,6 @@ if(myid==0)
 	/* allocate memory for velocity dispersion array */
 	sigma_array.n = 0;
 
-#ifdef USE_MPI
 	//MPI: Allocating only enough memory per processor.
 	N_STAR_DIM_OPT = 1 + clus.N_STAR / procs + 2 * clus.N_BINARY / procs;
 	N_BIN_DIM_OPT = clus.N_STAR / (2 * procs) + clus.N_BINARY / procs;
@@ -2102,14 +2009,6 @@ if(myid==0)
 	}
 	sigma_array.r = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
 	sigma_array.sigma = (double *) calloc(N_STAR_DIM_OPT, sizeof(double));
-#else
-	/* the main star array containing all star parameters */
-	star = (star_t *) calloc(N_STAR_DIM, sizeof(star_t));
-	/* the binary array containing all binary parameters */
-	binary = (binary_t *) calloc(N_BIN_DIM, sizeof(binary_t));
-	sigma_array.r = (double *) calloc(N_STAR_DIM, sizeof(double));
-	sigma_array.sigma = (double *) calloc(N_STAR_DIM, sizeof(double));
-#endif
 
 
 	/* quantities calculated for various lagrange radii */
@@ -2181,10 +2080,8 @@ if(myid==0)
 MPI: In the parallel version, IO is done in the following way. Some files require data only from the root node, and others need data from all nodes. The former are opened and written to only by the root node using C IO APIs. However, for the latter, the files are opened by all processors using MPI-IO. At places when the files are suposed to be written to in the serial version, in the parallel version, each processor writes the data into a string/char buffer. At the end of the timestep, all processors flush the data from the buffers into the corresponding files in parallel using MPI-IO. The code uses 5 variables for this process - the MPI-IO file pointer, which follows the format mpi_<serial fptr name>, 2 char buffers, which hav the format mpi_<serial fptr name>_buf and mpi_<ser fptr name>_wrbuf, and an int/longlong variables to maintain the length of the buffer (format mpi_<ser fptr name>_len) and the offset in the file (format mpi_<ser fptr name>_ofst_total) where data has to be written.
 */
 
-#ifdef USE_MPI
     //MPI-IO: Following are files that require data only from the root node, and are opened only by the root node using standard C IO APIs.
     if(myid==0) {
-#endif
 
         sprintf(outfile, "%s.lagrad.dat", outprefix);
         if ((lagradfile = fopen(outfile, outfilemode)) == NULL) {
@@ -2374,12 +2271,9 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 				fprintf(timerfile, "#1:tcount\t#2:t_cen_calc\t#3:t_timestep\t#4:t_dyn\t#5:t_se\t#6:t_orb\t#7:t_tid_str\t#8:t_sort\t#9:t_postsort_comm\t#10:t_pot_cal\t#11:t_ener_con3\t#12:t_calc_io_vars1\t#13:t_calc_io_vars1\t#14:t_comp_ener\t#15:t_upd_vars\t#16:t_io\t#17:t_io_ignore\t#18:t_oth\t#19:t_sort_lsort1\t#20:t_sort_splitters\t#21:t_sort_a2a\t#22:t_sort_lsort2\t#23:t_sort_oth\t#24:t_sort_lb\t#25:t_sort_only\n");
 		}/*if (RESTARTING_TCOUNT == 0)*/
 
-#ifdef USE_MPI
     }
-#endif
 
 
-#ifdef USE_MPI
     //MPI3-IO: Files that might require data from all nodes, and are opened by all procs using MPI-IO. In the serial version, these are just opened as normal (see under #else below).
 	
 	int MPI_MODE_RESTART;
@@ -2482,128 +2376,6 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 		MPI_File_set_size(mpi_morepulsarfile, 0);
     }
 
-#else
-
-	/* output files for binaries */
-	/* file for binary interaction information */
-	sprintf(outfile, "%s.binint.log", outprefix);
-	if ((binintfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create binintlog file \"%s\".\n", outfile);
-		exit(1);
-	}
-	
-	/* File for parameters of escaping stars */
-	sprintf(outfile, "%s.esc.dat", outprefix);
-	if ((escfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create escapers file \"%s\".\n", outfile);
-		exit(1);
-	}
-
-	/* Collision log file */
-	sprintf(outfile, "%s.collision.log", outprefix);
-	if ((collisionfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create collision log file \"%s\".\n", outfile);
-		exit(1);
-	}
-
-	/* Tidal capture log file */
-	sprintf(outfile, "%s.tidalcapture.log", outprefix);
-	if ((tidalcapturefile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create tidal capture log file \"%s\".\n", outfile);
-		exit(1);
-	}
-
-	/* Stellar evolution merger log file */
-	sprintf(outfile, "%s.semergedisrupt.log", outprefix);
-	if ((semergedisruptfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create stellar evolution merger/disruption log file \"%s\".\n", outfile);
-		exit(1);
-	}
-
-	/*Sourav: old star removal info file*/
-	sprintf(outfile, "%s.removestar.log", outprefix);
-	if ((removestarfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create old star removal log file \"%s\".\n", outfile);
-		exit(1);
-	}
-
-	/* Relaxation data file */
-	sprintf(outfile, "%s.relaxation.dat", outprefix);
-	if ((relaxationfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create relaxation data file \"%s\".\n", outfile);
-		exit(1);
-	}
-
-	sprintf(outfile, "%s.log", outprefix);
-	if ((logfile = fopen(outfile, outfilemode)) == NULL) {
-		eprintf("cannot create log output file \"%s\".\n", outfile);
-		exit(1);
-	}
-
-    if (THREEBODYBINARIES)
-    {
-        /* Meagan: output file for three-body binary formation */
-        sprintf(outfile, "%s.3bb.log", outprefix);
-        if ((threebbfile = fopen(outfile, outfilemode)) == NULL) {
-            eprintf("cannot create 3bb log output file \"%s\".\n", outfile);
-            exit(1);
-        }
-
-        sprintf(outfile, "%s.3bbprobability.log", outprefix);
-        if ((threebbprobabilityfile = fopen(outfile, outfilemode)) == NULL) {
-            eprintf("cannot create three-body formation probability log output file \"%s\".\n", outfile);
-            exit(1);
-        }
-
-        sprintf(outfile, "%s.lightcollision.log", outprefix);
-        if ((lightcollisionfile = fopen(outfile, outfilemode)) == NULL) {
-            eprintf("cannot create light collision log output file \"%s\".\n", outfile);
-            exit(1);
-        }
-
-        sprintf(outfile, "%s.3bbdebug.log", outprefix);
-        if ((threebbdebugfile = fopen(outfile, outfilemode)) == NULL) {
-            eprintf("cannot create 3bb debug output file \"%s\".\n", outfile);
-            exit(1);
-        }
-    }
-
-	// Meagan: extra output for black holes
-	if (WRITE_BH_INFO) {
-		// file for info about newly formed BHs
-		sprintf(outfile, "%s.bhformation.dat", outprefix);
-		if ((newbhfile = fopen(outfile, outfilemode)) == NULL) {
-			eprintf("cannot create bhformation.dat file %s\n", outfile);
-			exit(1);
-		}
-		sprintf(outfile, "%s.bhmerger.dat", outprefix);
-		if ((bhmergerfile = fopen(outfile, outfilemode)) == NULL) {
-			eprintf("cannot create bhmerger.dat file %s\n", outfile);
-			exit(1);
-		}
-    }
-
-	/* Pulsar log file */
-	if(WRITE_PULSAR_INFO)
-	{
-		sprintf(outfile, "%s.pulsars.dat", outprefix);
-		//if ((pulsarfile = gzopen(outfile, outfilemode)) == NULL) {
-		if ((pulsarfile = fopen(outfile, outfilemode)) == NULL) {
-			eprintf("cannot create pulsar file \"%s\".\n", outfile);
-			exit(1);
-		}
-	}
-
-       /* Shi */
-       if (WRITE_MOREPULSAR_INFO){
-               sprintf(outfile, "%s.morepulsars.dat", outprefix);
-               if ((morepulsarfile = fopen(outfoutfilemode)) == NULL) {
-                       eprintf("cannot create morepulsar file \"%s\".\n", outfile);
-                       exit(1);
-                }
-       }
-
-#endif
 
 	//MPI: Headers are written out only by the root node.
    // print header
@@ -2660,17 +2432,11 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 void close_buffers(void)
 {
 //MPI: These files are written to only by the root, and hence are closed only by root.
-#ifdef USE_MPI
     if(myid==0)
-#endif
         close_root_buffers();
 
 	 //MPI: These include the rest that are written to by all procs, and hence depending on whether the serial or parallel version is being compiled, close the corresponding file pointers.
-#ifdef USE_MPI
     mpi_close_node_buffers();
-#else
-    close_node_buffers();
-#endif
 }
 
 /**
@@ -2740,7 +2506,6 @@ void close_node_buffers(void)
     }
 }
 
-#ifdef USE_MPI
 /**
 * @brief Closes the MPI file pointers - of files which require writing only by the all nodes.
 */
@@ -2777,18 +2542,7 @@ void mpi_close_node_buffers(void)
     	MPI_File_close(&mpi_morepulsarfile);
     }
 
-	//TEMPORARY
-/*
-#ifdef USE_MPI
-	if(myid==0)
-	{
-		fclose(fp_lagrad);
-		fclose(fp_log);
-	}
-#endif
-*/
 }
-#endif
 
 /**
 * @brief traps signals
@@ -2811,10 +2565,8 @@ void trap_sigs(void)
 void print_conversion_script(void)
 {
 //MPI: Just letting the root node handle this.
-#ifdef USE_MPI
 if(myid==0)
 {
-#endif
 	char dummystring[1024];
 	FILE *ofp;
 	/* BOOKMARK */
@@ -2877,9 +2629,7 @@ if(myid==0)
 	fclose(ofp);
 
 	chmod(dummystring, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-#ifdef USE_MPI
 }
-#endif
 }
 
 /**
@@ -2892,13 +2642,8 @@ if(myid==0)
 */
 char *sprint_star_dyn(long k, char string[MAX_STRING_LENGTH])
 {
-#ifdef USE_MPI
 	snprintf(string, MAX_STRING_LENGTH, "(%ld,%.3g,%d)",
 		 star[k].id, star_m[get_global_idx(k)]*units.mstar/FB_CONST_MSUN, star[k].se_k);
-#else
-	snprintf(string, MAX_STRING_LENGTH, "(%ld,%.3g,%d)",
-		 star[k].id, star[k].m*units.mstar/FB_CONST_MSUN, star[k].se_k);
-#endif
 	return(string);
 }
 
@@ -3393,7 +3138,6 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
 */
 void print_denprof_snapshot(char* infile)
 {
-#ifdef USE_MPI
 	//char filenm[150];
 	//sprintf(filenm, "%s.%s", outprefix, "small.denprof.dat");
 
@@ -3414,7 +3158,6 @@ void print_denprof_snapshot(char* infile)
 	}			
 	//fprintf(fp_denprof, "\n");
 	fclose(fp_denprof);
-#endif
 }
 
 /**
@@ -3428,9 +3171,7 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 {
 	/* print version information to log file */
 	pararootfprintf(logfile, "** %s Version %d.%d **\n", CMCPRETTYNAME, CMC_VERSION_MAJOR, CMC_VERSION_MINOR);
-#ifdef USE_MPI
     mpi_para_file_write(mpi_logfile_wrbuf, &mpi_logfile_len, &mpi_logfile_ofst_total, &mpi_logfile);
-#endif
 
 	/* initialize the Search_Grid r_grid */
 	//If we use the GPU code, we dont need the SEARCH_GRID. So commenting it out
@@ -3475,12 +3216,10 @@ void get_star_data(int argc, char *argv[], gsl_rng *rng)
 */
 void mpiInitGlobArrays()
 {
-#ifdef USE_MPI
 	/*MPI: Allocating global/duplicated arrays that will be needed by all processors.*/
 	star_r = (double *) malloc(N_STAR_DIM * sizeof(double));
 	star_m = (double *) malloc(N_STAR_DIM * sizeof(double));
 	star_phi = (double *) malloc(N_STAR_DIM * sizeof(double));
-#endif
 }
 
 void load_dynamical_friction_data()
@@ -3568,9 +3307,7 @@ void load_dynamical_friction_data()
 	}
 
 	
-#ifdef USE_MPI
         MPI_Bcast(&DF_num_max, 1, MPI_LONG, 0, MPI_COMM_WORLD);
-#endif
 	DF_num = 0;
 
 	if(myid != 0){
@@ -3579,11 +3316,9 @@ void load_dynamical_friction_data()
 		DF_prefactor = (double *)malloc(sizeof(double)*(DF_num_max+1));
 	}
 
-#ifdef USE_MPI
         MPI_Bcast(DF_times,(DF_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Bcast(DF_Menc,(DF_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Bcast(DF_prefactor,(DF_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
 
 	DF_times[DF_num_max] = 1e10;
 	DF_Menc[DF_num_max] = 0;
@@ -3684,9 +3419,7 @@ void load_tidal_tensor()
 	}
 
 	
-#ifdef USE_MPI
         MPI_Bcast(&TT_num_max, 1, MPI_LONG, 0, MPI_COMM_WORLD);
-#endif
 	TT_num = 0;
 
 	if(myid != 0){
@@ -3694,10 +3427,8 @@ void load_tidal_tensor()
 		TT_l1e = (double *)malloc(sizeof(double)*(TT_num_max+1));
 	}
 
-#ifdef USE_MPI
         MPI_Bcast(TT_times,(TT_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Bcast(TT_l1e,(TT_num_max+1), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
 
 	TT_times[TT_num_max] = 1e10;
 	TT_l1e[TT_num_max] = 0;

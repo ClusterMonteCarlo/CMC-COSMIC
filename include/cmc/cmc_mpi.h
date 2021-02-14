@@ -1,12 +1,6 @@
 /* vi: set filetype=c.doxygen: */
 
 /* Contains all MPI related variables and functions */
-
-/*
-#ifndef USE_MPI
-#define USE_MPI
-#endif
-*/
 #include <mpi.h>
 #include <stdio.h>
 

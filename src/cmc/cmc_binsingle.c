@@ -51,17 +51,8 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 
 
 	/* v_inf should be in units of v_crit */
-#ifdef USE_MPI
 	vc = sqrt(binary[jbin].m1 * binary[jbin].m2 * (star_m[get_global_idx(kbin)] + star_m[get_global_idx(ksin)]) / \
 		  (binary[jbin].a * star_m[get_global_idx(kbin)] * star_m[get_global_idx(ksin)] * ((double) clus.N_STAR)));
-#else
-	vc = sqrt(binary[jbin].m1 * binary[jbin].m2 * (star[kbin].m + star[ksin].m) / \
-		  (binary[jbin].a * star[kbin].m * star[ksin].m * ((double) clus.N_STAR)));
-#endif
-
-#ifndef USE_MPI
-	curr_st = &st[findProcForIndex(ksin)];
-#endif
 	b = sqrt(rng_t113_dbl_new(curr_st)) * bmax / binary[jbin].a;
 	/* b should be in units of a */
 	//b = sqrt(rng_t113_dbl()) * bmax / binary[jbin].a;
@@ -142,11 +133,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 		hier->hier[hier->hi[1]+2].R = 0.0;
 	}
 
-#ifdef USE_MPI
 	hier->hier[hier->hi[1]+0].m = star_m[get_global_idx(ksin)] * units.mstar;
-#else
-	hier->hier[hier->hi[1]+0].m = star[ksin].m * units.mstar;
-#endif
 	hier->hier[hier->hi[1]+1].m = binary[jbin].m1 * units.mstar;
 	hier->hier[hier->hi[1]+2].m = binary[jbin].m2 * units.mstar;
 
@@ -198,10 +185,6 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 
 	fb_init_scattering(hier->obj, W/vc, b, rtid);
 	
-#ifndef USE_MPI
-	curr_st = &st[findProcForIndex(ksin)];
-#endif
-
 	/* trickle down the binary properties, then back up */
 	fb_randorient(&(hier->hier[hier->hi[2]+0]), rng, curr_st);
 	fb_downsync(&(hier->hier[hier->hi[2]+0]), *t);
