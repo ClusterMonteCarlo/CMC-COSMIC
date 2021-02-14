@@ -116,22 +116,12 @@ double potential(double r) {
 
 	/* root finding using indexed values of sr[] & bisection */
 	if (r== 0.0) {
-#ifdef USE_MPI
 		return (star_phi[0]);
-#else
-		return (star[0].phi);
-#endif
 	};
 
-#ifdef USE_MPI
 	if (r < star_r[1]) {
 	     return (star_phi[0]-(star_phi[0]-star_phi[1])*star_r[1]/r);
 	};
-#else
-	if (r < star[1].r) {
-	     return (star[0].phi-(star[0].phi-star[1].phi)*star[1].r/r);
-	};
-#endif
    //i = check_if_r_around_last_index(last_index, r);
    i=-1;
    if (i== -1) {
@@ -151,45 +141,24 @@ double potential(double r) {
 	   last_index= i;
    };
 
-#ifdef USE_MPI
 	if(star_r[i] > r || star_r[i+1] < r){
-#else
-	if(star[i].r > r || star[i+1].r < r){
-#endif
 
 		eprintf("binary search (FindZero_r) failed!!\n");
-#ifdef USE_MPI
 		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
 				i, star_r[i], star_r[i+1], star_r[i+2], star_r[i+3], r);
 		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
 			star_m[i], star_m[i+1], star_m[i+2], star_m[i+3]);
-#else
-		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
-				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
-		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
-			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
-#endif
 		exit_cleanly(-2, __FUNCTION__);
 	}
 
 	/* Henon's method of computing the potential using star[].phi */ 
 	if (i == 0){ /* I think this is impossible, due to early return earlier,
 			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
-#ifdef USE_MPI
 		henon = (star_phi[1]);
-#else
-		henon = (star[1].phi);
-#endif
 	} else {
-#ifdef USE_MPI
 		henon = (star_phi[i] + (star_phi[i + 1] - star_phi[i]) 
 			 * (1.0/star_r[i] - 1.0/r) /
 			 (1.0/star_r[i] - 1.0/star_r[i + 1]));
-#else
-		henon = (star[i].phi + (star[i + 1].phi - star[i].phi) 
-			 * (1.0/star[i].r - 1.0/r) /
-			 (1.0/star[i].r - 1.0/star[i + 1].r));
-#endif
 	}
 	
 	return (henon);
@@ -223,11 +192,9 @@ void exit_cleanly_old(int signal)
 	close_buffers();
 	free_arrays();
 
-#ifdef USE_MPI
 	//mpi_files_merge();
 	//OPT: Another way would be to use assert at all error checks
 	MPI_Abort(MPI_COMM_WORLD, signal);
-#endif
 
 	exit(signal);
 }
@@ -244,12 +211,10 @@ void exit_cleanly(int signal, const char* fn)
 	close_buffers();
 	free_arrays();
 
-#ifdef USE_MPI
 	//mpi_files_merge();
 	//OPT: Another way would be to use assert at all error checks
 	printf("------->MPI_Abort called in %s by proc %d\n", fn, myid);
 	MPI_Abort(MPI_COMM_WORLD, signal);
-#endif
 
 	exit(signal);
 }
@@ -264,11 +229,9 @@ void free_arrays(void){
 	free(star); free(binary);
 
 	/* MPI Stuff */
-#ifdef USE_MPI
 	free(star_r); free(star_m); free(star_phi);
 //Probably not needed anymore
 //	free(new_size); free(disp); free(len);
-#endif
 }
 
 /**
@@ -285,11 +248,10 @@ void sf_gsl_errhandler(const char *reason, const char *file, int line, int gsl_e
 	exit_cleanly(gsl_errno, __FUNCTION__);
 }
 
-#ifdef USE_MPI
 /**
 * @brief set velocities a la Stodolkiewicz to be able to conserve energy (parallel version of set_velocities3)
 */
-void mpi_set_velocities3(void){
+void set_velocities3(void){
 	/* set velocities a la Stodolkiewicz to be able to conserve energy */
 	double vold2, vnew2, Unewrold, Unewrnew;
 	double Eexcess, exc_ratio, Eexcess_prev;
@@ -390,77 +352,14 @@ void mpi_set_velocities3(void){
 	/* keep track of the energy that's vanishing due to our negligence */
 	Eoops += -Eexcess * madhoc;
 }
-#endif
 
-/**
-* @brief set velocities a la Stodolkiewicz to be able to conserve energy
-*/
-void set_velocities3(void){
-	/* set velocities a la Stodolkiewicz to be able to conserve energy */
-	double vold2, vnew2, Unewrold, Unewrnew;
-	double Eexcess, exc_ratio;
-	double q=0.5; /* q=0.5 -> Stodolkiewicz, q=0 -> Delta U all from rnew */
-	double alpha;
-	long i;
-	double m, v2, E_dump, E_dump_capacity;
-	double E_dump_factor = 0.8; //Percentage of excess energy to be dumped on each star.
-
-	Eexcess = 0.0;
-	for (i = 1; i <= clus.N_MAX; i++) {
-		m = star[i].m;
-
-		/* modify velocities of stars that have only undergone relaxation */
-		if (star[i].interacted == 0) {
-			Unewrold = potential_serial(star[i].rOld) + PHI_S(star[i].rOld, i);
-			Unewrnew = star[i].phi + PHI_S(star[i].r, i);
-
-			vold2 = star[i].vtold*star[i].vtold + 
-				star[i].vrold*star[i].vrold;
-
-			/* predict new velocity */
-			vnew2 = vold2 + 2.0*(1.0-q)*(star[i].Uoldrold - star[i].Uoldrnew)
-				+ 2.0*q*(Unewrold - Unewrnew);
-
-			/* new velocity can be unphysical, so just use value predicted by old potential
-				(this is already set in .vr and .vt) */
-			if (vnew2 <= 0.0) {
-				Eexcess += 0.5*(sqr(star[i].vr)+sqr(star[i].vt)-vnew2)*m;
-			} else {
-				/* scale velocity, preserving v_t/v_r */
-				alpha = sqrt(vnew2/(sqr(star[i].vr)+sqr(star[i].vt)));
-				star[i].vr *= alpha;
-				star[i].vt *= alpha;
-				v2 = sqr(star[i].vr)+sqr(star[i].vt);
-
-				/* if there is excess energy added, try to remove at 
-					least part of it from this star */
-				// MPI3: Check how the distribution of E_dump is but printing out E_dump to a log file.
-				E_dump_capacity =  E_dump_factor * 0.5 * m * v2;
-				E_dump = MIN( E_dump_capacity, Eexcess );
-				if(Eexcess > 0){
-					exc_ratio = sqrt( (v2 - 2 * E_dump / m) / v2 );
-					star[i].vr *= exc_ratio;
-					star[i].vt *= exc_ratio;
-					Eexcess -= E_dump;
-				}
-			}
-		}
-	}
-
-	/* keep track of the energy that's vanishing due to our negligence */
-	Eoops += -Eexcess * madhoc;
-}
 
 /**
 * @brief Wrapper function for energy conservation scheme
 */
 void energy_conservation3(void)
 {
-#ifdef USE_MPI
-	mpi_set_velocities3();
-#else
 	set_velocities3();
-#endif
 }
 
 /**
@@ -473,28 +372,19 @@ void ComputeIntermediateEnergy(void)
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
 		/* but do only for NON-Escaped stars */
 		if (star[j].rnew < 1.0e6) {
-#ifdef USE_MPI
 			int g_j = get_global_idx(j);
 			star[j].EI = sqr(star[j].vr) + sqr(star[j].vt) + star_phi[g_j] - potential(star[j].rnew);
-#else
-			star[j].EI = sqr(star[j].vr) + sqr(star[j].vt) + star[j].phi - potential(star[j].rnew);
-#endif
 		}
 	}
 
 	/* Transferring new positions to .r, .vr, and .vt from .rnew, .vrnew, and .vtnew */
 	for (j = 1; j <= clus.N_MAX_NEW; j++) {
-#ifdef USE_MPI
 		//MPI: Here, we copy the global values into the local arrays as a preparation for the sorting step where the star array is sorted based on the r values.
 		int g_j = get_global_idx(j);
 		star[j].rOld = star_r[g_j];
 		star[j].r = star[j].rnew;
 		//star_r[j] = star[j].rnew;
 		star[j].m = star_m[g_j];
-#else
-		star[j].rOld = star[j].r;
-		star[j].r = star[j].rnew;
-#endif
 		star[j].vr = star[j].vrnew;
 		star[j].vt = star[j].vtnew;
 	}
@@ -708,11 +598,10 @@ int CheckCheckpoint() {
 
 
 
-#ifdef USE_MPI
 /**
 * @brief Calculates E,J for every star. Also, calculates, global energy variabies (parallel version of ComputeEnergy)
 */
-void mpi_ComputeEnergy(void)
+void ComputeEnergy(void)
 {
 	//MPI: buffer for reduce
 	double buf_reduce[5], phi0 = 0.0;
@@ -760,70 +649,26 @@ void mpi_ComputeEnergy(void)
 
 	Etotal.tot += cenma.E + Eescaped + Ebescaped + Eintescaped;
 
-//	double temp = 0.0;
-//	MPI_Status stat;
-//if(myid==0)
-//	Etotal.K = buf_reduce[1];	
-
-	//MPI2: Avoiding reduce to improve accuracy.
-/*
-	if(myid!=0)
-		MPI_Send(&buf_reduce[1], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-	else
-		for(i=1;i<procs;i++)
-		{
-			MPI_Recv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &stat);
-			Etotal.K += temp;
-		}
-*/
-	//if(myid==0)
-	//	printf("Etotal.tot=%.18g Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n",Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
-}
-#endif
-
-/**
-* @brief Calculates E,J for every star. Also, calculates, global energy variabies.
-*/
-void ComputeEnergy(void)
-{
-	long i;
-	
-	Etotal.tot = 0.0;
-	Etotal.K = 0.0;
-	Etotal.P = 0.0;
-	Etotal.Eint = 0.0;
-	Etotal.Eb = 0.0;
-
-	for (i=1; i<=clus.N_MAX; i++) {
-		star[i].E = star[i].phi + 0.5 * (sqr(star[i].vr) + sqr(star[i].vt));
-		star[i].J = star[i].r * star[i].vt;
-		
-		Etotal.K += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star[i].m / clus.N_STAR;
-		Etotal.P += star[i].phi * star[i].m / clus.N_STAR;
-		Etotal.P += star[0].phi * cenma.m*madhoc/ clus.N_STAR;
-		
-		if (star[i].binind == 0) {
-			Etotal.Eint += star[i].Eint;
-		} else if (binary[star[i].binind].inuse) {
-			Etotal.Eb += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
-				(2.0 * binary[star[i].binind].a);
-			Etotal.Eint += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
-		}
-	}
-	
-	Etotal.P *= 0.5;
-	Etotal.tot = Etotal.K + Etotal.P + Etotal.Eint + Etotal.Eb + cenma.E + Eescaped + Ebescaped + Eintescaped;
-
-	//printf("Etotal.tot=%.18g Etotal.K=%.18g Etotal.P=%.18g Etotal.Eint=%.18g Etotal.Eb=%.18g cenma.E=%.18g Eescaped=%.18g Ebescaped=%.18g Eintescaped=%.18g\n", Etotal.tot, Etotal.K, Etotal.P, Etotal.Eint, Etotal.Eb, cenma.E, Eescaped, Ebescaped, Eintescaped);
 }
 
-#ifdef USE_MPI
+
 /**
 * @brief Parallel version of potential_calculate(). Currently the entire calculation is done by all nodes since it uses only the duplicated arrays r and m, but might consider parallelization in the long term to improve scalability.
+   Computing the potential at each star sorted by increasing
+   radius. Units: G = 1  and  Mass is in units of total INITIAL mass.
+   Total mass is computed by SUMMING over all stars that have NOT ESCAPED 
+   i.e., over all stars upto N_MAX <= N_STAR. N_MAX is computed in this 
+   routine by counting all stars with radius < SF_INFINITY and Radius of the 
+   (N_MAX+1)th star is set to infinity i.e., star[N_MAX+1].r = 
+   SF_INFINITY. Also setting star[N_MAX+1].phi = 0. Assuming 
+   star[0].r = 0. star[].phi is also indexed i.e. it
+   is the value of the potential at radius star[k].r 
+   NOTE: Assming here that NO two stars are at the SAME RADIUS upto 
+   double precision. Returns N_MAX. Potential given in star[].phi
 *
 * @return total number of stars
 */
-long mpi_potential_calculate(void) {
+long potential_calculate(void) {
 	long k;
 	double mprev;
 
@@ -884,89 +729,7 @@ long mpi_potential_calculate(void) {
 
 	return (clus.N_MAX);
 }
-#endif
 
-/**
-* @brief
-   Computing the potential at each star sorted by increasing
-   radius. Units: G = 1  and  Mass is in units of total INITIAL mass.
-   Total mass is computed by SUMMING over all stars that have NOT ESCAPED 
-   i.e., over all stars upto N_MAX <= N_STAR. N_MAX is computed in this 
-   routine by counting all stars with radius < SF_INFINITY and Radius of the 
-   (N_MAX+1)th star is set to infinity i.e., star[N_MAX+1].r = 
-   SF_INFINITY. Also setting star[N_MAX+1].phi = 0. Assuming 
-   star[0].r = 0. star[].phi is also indexed i.e. it
-   is the value of the potential at radius star[k].r 
-   NOTE: Assming here that NO two stars are at the SAME RADIUS upto 
-   double precision. Returns N_MAX. Potential given in star[].phi
-*
-* @return total number or stars
-*/
-long potential_calculate(void) {
-	long k;
-	double mprev;
-
-	/* count up all the mass and set N_MAX */
-	k = 1;
-	mprev = 0.0;
-
-	while (star[k].r < SF_INFINITY && k <= clus.N_STAR_NEW) {
-		mprev += star[k].m;
-		/* I guess NaNs do happen... */
-		if(isnan(mprev)){
-			eprintf("NaN (2) detected\n");
-			exit_cleanly(-1, __FUNCTION__);
-		}
-		k++;
-	}
-
-	/* New N_MAX */
-	clus.N_MAX = k - 1;
-
-	/* update central BH mass */
-	cenma.m= cenma.m_new;
-
-	/* New total Mass; This IS correct for multiple components */
-	Mtotal = mprev * madhoc + cenma.m * madhoc;	
-	dprintf("Mtotal is %lf, cenma.m is %lf, madhoc is %lg, mprev is %lf\n", Mtotal, cenma.m, madhoc, mprev);
-
-	/* Compute new tidal radius using new Mtotal */
-	Rtidal = orbit_r * pow(Mtotal, 1.0 / 3.0);
-
-	/* zero boundary star first for safety */
-	zero_star(clus.N_MAX + 1);
-
-	star[clus.N_MAX + 1].r = SF_INFINITY;
-	star[clus.N_MAX + 1].phi = 0.0;
-
-	mprev = Mtotal;
-	for (k = clus.N_MAX; k >= 1; k--) {/* Recompute potential at each r */
-		star[k].phi = star[k + 1].phi - mprev * (1.0 / star[k].r - 1.0 / star[k + 1].r);
-		mprev -= star[k].m / clus.N_STAR;
-		if (isnan(star[k].phi)) {
-		  eprintf("NaN in phi[%li] detected\n", k);
-		  eprintf("phi[k+1]=%g mprev=%g, r[k]=%g, r[k+1]=%g, m[k]=%g, clus.N_STAR=%li\n", 
-		  	star[k + 1].phi, mprev, star[k].r, star[k + 1].r, star[k].m, clus.N_STAR);
-		  exit_cleanly(-1, __FUNCTION__);
-		}
-	}
-
-	/*for (k = 1; k <= clus.N_MAX; k++){
-		star[k].phi -= cenma.m * madhoc / star[k].r;
-		if(isnan(star[k].phi)){
-			eprintf("NaN detected\n");
-			exit_cleanly(-1);
-		}
-	}*/
-	
-	star[0].phi = star[1].phi+ cenma.m*madhoc/star[1].r; /* U(r=0) is U_1 */
-	if (isnan(star[0].phi)) {
-		eprintf("NaN in phi[0] detected\n");
-		exit_cleanly(-1, __FUNCTION__);
-	}
-
-	return (clus.N_MAX);
-}
 
 #define GENSEARCH_NAME 				m_binsearch
 #define GENSEARCH_TYPE 				double
@@ -1022,21 +785,11 @@ void comp_multi_mass_percent(){
 	r_inbin = (double *) calloc(NO_MASS_BINS, sizeof(double));
 	star_bins = (int *) malloc((clus.N_MAX+2)*sizeof(int));
 	for (i = 1; i <= clus.N_MAX; i++) {
-#ifdef USE_MPI
 		star_bins[i] = find_stars_mass_bin(star_m[i]/SOLAR_MASS_DYN);
 		if (star_bins[i] == -1) continue; /* -1: star isn't in legal bin */
-        mtotal_inbin[star_bins[i]] += star_m[i];
+		mtotal_inbin[star_bins[i]] += star_m[i];
 		number_inbin[star_bins[i]]++;
 		r_inbin[star_bins[i]] = star_r[i];
-#else
-		star_bins[i] = find_stars_mass_bin(star[i].m/SOLAR_MASS_DYN);
-		if (star_bins[i] == -1) continue; /* -1: star isn't in legal bin */
-		mtotal_inbin[star_bins[i]] += star[i].m; /* no unit problem, since 
-								        we are interested in
-							   	        percentage only. */
-		number_inbin[star_bins[i]]++;
-		r_inbin[star_bins[i]] = star[i].r;
-#endif
 	}
 	/* populate arrays rs[NO_MASS_BINS][j] and percents[][] */
 	rs = (double **) malloc(NO_MASS_BINS*sizeof(double *));
@@ -1056,15 +809,9 @@ void comp_multi_mass_percent(){
 	for (i = 1; i <= clus.N_MAX; i++) {
 		int sbin = star_bins[i];
 		if (sbin == -1) continue;
-#ifdef USE_MPI
 		mcount_inbin[sbin] += star_m[i];
 		ncount_inbin[sbin]++;
 		rs[sbin][ncount_inbin[sbin]] = star_r[i];
-#else
-		mcount_inbin[sbin] += star[i].m;
-		ncount_inbin[sbin]++;
-		rs[sbin][ncount_inbin[sbin]] = star[i].r;
-#endif
 		percents[sbin][ncount_inbin[sbin]] = 
 				mcount_inbin[sbin]/mtotal_inbin[sbin];
 	}
@@ -1144,7 +891,6 @@ void comp_mass_percent(){
 	}
 
 	/* MPI: The parallelization of this part is not entirely trivial */
-#ifdef USE_MPI
 	/* MPI: Instead of cumulating a single value for these variables, we store all intermediate values in an array */
     double *ke_rad_prev_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
     double *ke_tan_prev_arr = (double*) calloc(clus.N_MAX_NEW+1, sizeof(double));
@@ -1230,30 +976,6 @@ void comp_mass_percent(){
     free(ke_tan_prev_arr);
     free(v2_rad_prev_arr);
     free(v2_tan_prev_arr);
-#else
-	for (k = 1; k <= clus.N_MAX; k++) {	/* Only need to count up to N_MAX */
-		mprev += star[k].m / clus.N_STAR;
-		ke_rad_prev += 0.5 * star[k].m * madhoc * star[k].vr * star[k].vr;
-		ke_tan_prev += 0.5 * star[k].m * madhoc * star[k].vt * star[k].vt;
-		v2_rad_prev += star[k].vr * star[k].vr;
-		v2_tan_prev += star[k].vt * star[k].vt;
-		if (mprev / Mtotal > mass_pc[mcount]) {
-			mass_r[mcount] = star[k].r;
-			ave_mass_r[mcount] = mprev/Mtotal/k*initial_total_mass;
-			no_star_r[mcount] = k;
-			densities_r[mcount] = mprev*clus.N_STAR/
-				(4/3*3.1416*pow(star[k].r,3));
-			ke_rad_r[mcount] = ke_rad_prev;
-			ke_tan_r[mcount] = ke_tan_prev;
-			v2_rad_r[mcount] = v2_rad_prev;
-			v2_tan_r[mcount] = v2_tan_prev;
-			mcount++;
-			if (mcount == MASS_PC_COUNT)
-				break;
-		}
-	}
-
-#endif
 }
 
 /* The potential computed using the star[].phi computed at the star locations in star[].r sorted by increasing r.*/
@@ -1271,36 +993,21 @@ double fastpotential(double r, long kmin, long kmax) {
 	double henon;
 
 	/* root finding using indexed values of sr[] & bisection */
-#ifdef USE_MPI
 	if (r < star_r[1])
 		return (star_phi[1]);
-#else
-	if (r < star[1].r)
-		return (star[1].phi);
-#endif
 
 	i = FindZero_r(kmin, kmax, r);
 	
-#ifdef USE_MPI
 	if(star_r[i] > r || star_r[i+1] < r){
 		eprintf("binary search (FindZero_r) failed!!\n");
 		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
 				i, star_r[i], star_r[i+1], star_r[i+2], star_r[i+3], r);
 		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
 			star_m[i], star_m[i+1], star_m[i+2], star_m[i+3]);
-#else
-	if(star[i].r > r || star[i+1].r < r){
-		eprintf("binary search (FindZero_r) failed!!\n");
-		eprintf("pars: i=%ld, star[i].r = %e, star[i+1].r = %e, star[i+2].r = %e, star[i+3].r = %e, r = %e\n",
-				i, star[i].r, star[i+1].r, star[i+2].r, star[i+3].r, r);
-		eprintf("pars: star[i].m=%g star[i+1].m=%g star[i+2].m=%g star[i+3].m=%g\n",
-			star[i].m, star[i+1].m, star[i+2].m, star[i+3].m);
-#endif
 		exit_cleanly(-2, __FUNCTION__);
 	}
 
 	/* Henon's method of computing the potential using star[].phi */ 
-#ifdef USE_MPI
 	if (i == 0){ /* I think this is impossible, due to early return earlier,
 			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
 		henon = (star_phi[1]);
@@ -1309,16 +1016,6 @@ double fastpotential(double r, long kmin, long kmax) {
 			 * (1.0/star_r[i] - 1.0/r) /
 			 (1.0/star_r[i] - 1.0/star_r[i + 1]));
 	}
-#else
-	if (i == 0){ /* I think this is impossible, due to early return earlier,
-			    but I am keeping it. -- ato 23:17,  3 Jan 2005 (UTC) */
-		henon = (star[1].phi);
-	} else {
-		henon = (star[i].phi + (star[i + 1].phi - star[i].phi) 
-			 * (1.0/star[i].r - 1.0/r) /
-			 (1.0/star[i].r - 1.0/star[i + 1].r));
-	}
-#endif
 
 	return (henon);
 }
@@ -1441,32 +1138,22 @@ void update_vars(void)
 	N_b = 0;
 	M_b = 0.0;
 	E_b = 0.0;
-#ifdef USE_MPI
 	for (i=1; i<=mpiEnd-mpiBegin+1; i++) 
-#else
-	for (i=1; i<=clus.N_MAX; i++)
-#endif
 	{
 		k = star[i].binind;
 		if (k != 0) {
 			N_b++;
-#ifdef USE_MPI
 			M_b += star_m[get_global_idx(i)];
-#else
-			M_b += star[i].m;
-#endif
 			if (binary[k].inuse){
 				E_b += (binary[k].m1/clus.N_STAR) * (binary[k].m2/clus.N_STAR) / (2.0 * binary[k].a);
 			}
 		}
 	}
-#ifdef USE_MPI
 	double tmpTimeStart = timeStartSimple();
 	MPI_Allreduce(MPI_IN_PLACE, &M_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 	MPI_Allreduce(MPI_IN_PLACE, &E_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 	MPI_Allreduce(MPI_IN_PLACE, &N_b, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD);		
 	timeEndSimple(tmpTimeStart, &t_comm);
-#endif
 }
 
 /**
@@ -1556,11 +1243,7 @@ void central_calculate(void)
 	/* average over all stars out to half-mass radius */
 	nave = 1;
 	while (m < 0.5 * Mtotal) {
-#ifdef USE_MPI
 		m += star_m[nave] / clus.N_STAR;
-#else
-		m += star[nave].m / clus.N_STAR;
-#endif
 		nave++;
 	}
 	
@@ -1581,17 +1264,10 @@ void central_calculate(void)
 		/* this is equivalent to their J-1 factor for the case of equal masses,
 		   and seems like a good generalization for unequal masses */
 		for (j=jmin+1; j<=jmax-1; j++) {
-#ifdef USE_MPI
 			mrho += star_m[j] * madhoc;
 		}
 		Vrj = 4.0/3.0 * PI * (fb_cub(star_r[jmax]) - fb_cub(star_r[jmin]));
 		rhoj[i] = mrho / Vrj;
-#else
-			mrho += star[j].m * madhoc;
-		}
-		Vrj = 4.0/3.0 * PI * (fb_cub(star[jmax].r) - fb_cub(star[jmin].r));
-		rhoj[i] = mrho / Vrj;
-#endif
 	}
 
 	/* calculate core quantities using density weighted averages (note that in 
@@ -1607,38 +1283,16 @@ void central_calculate(void)
 		rhojsum += rhoj[i];
 		rhoj2sum += sqr(rhoj[i]);
 		central.rho += sqr(rhoj[i]);
-#ifdef USE_MPI
 		if( i >= mpiBegin && i <= mpiEnd )
 			central.v_rms += rhoj[i] * (sqr(star[get_local_idx(i)].vr) + sqr(star[get_local_idx(i)].vt));
 
 		central.rc += rhoj[i] * star_r[i];
 		rc_nb += sqr(rhoj[i] * star_r[i]);
 		central.m_ave += rhoj[i] * star_m[i] * madhoc;
-#else
-		central.rc += rhoj[i] * star[i].r;
-		rc_nb += sqr(rhoj[i] * star[i].r);
-		central.m_ave += rhoj[i] * star[i].m * madhoc;
-#endif
 	}
 
-#ifndef USE_MPI
-    //MPI: Calculating v_rms separately to emulate parallel reduction.
-    double *temp_v_rms = (double*) calloc(procs, sizeof(double));
-    for(j=0; j<procs; j++)
-    {
-        for(i=Start[j]; i<=End[j]; i++)
-        {
-            if(i>nave) break;
-            temp_v_rms[j] += rhoj[i] * (sqr(star[i].vr) + sqr(star[i].vt));
-        }
-    }
-
-    for(j=0; j<procs; j++)
-	 	central.v_rms += temp_v_rms[j];
-#endif
 
 //MPI: This reduce gives round-off errors which affect the timestep mildly. So summing up in order.
-#ifdef USE_MPI
 /*
 	double tmpTimeStart = timeStartSimple();
 		MPI_Allreduce(MPI_IN_PLACE, &central.v_rms, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -1662,7 +1316,6 @@ void central_calculate(void)
     central.v_rms = v_rms;
     MPI_Bcast(&central.v_rms, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     timeEndSimple(tmpTimeStart, &t_comm);
-#endif
 
 	central.rho /= rhojsum;
 	/* correction for inherent bias in estimator */
@@ -1708,7 +1361,6 @@ void central_calculate(void)
 
 		//MPI: In the case when the central stars dont all lie in the root node, this just cant be done only by the root node. But assuming that case will never happen, we'll just throw an error for such cases.
 	for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
-#ifdef USE_MPI
 		if(NUM_CENTRAL_STARS > End[0] - Start[0]) 
 		{
 			eprintf("Central stars dont fit in root node!\n");
@@ -1717,55 +1369,31 @@ void central_calculate(void)
 
 		if(myid==0)
 		{
-#endif
 			Ncentral++;
 
 			j = get_global_idx(i);
 
 		/* use only code units here, so always divide star[].m by clus.N_STAR */
-#ifdef USE_MPI
 			central.w2_ave += 2.0 * star_m[j] / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
-#else
-			central.w2_ave += 2.0 * star[i].m / ((double) clus.N_STAR) * (sqr(star[i].vr) + sqr(star[i].vt));
-#endif
 
 			if (star[i].binind == 0) {
 				central.N_sin++;
-#ifdef USE_MPI
 				Msincentral += star_m[j] / ((double) clus.N_STAR);
-#else
-				Msincentral += star[i].m / ((double) clus.N_STAR);
-#endif
 				central.v_sin_rms += sqr(star[i].vr) + sqr(star[i].vt);
 				central.R2_ave += sqr(star[i].rad);
-#ifdef USE_MPI
 				central.mR_ave += star_m[j] / ((double) clus.N_STAR) * star[i].rad;
-#else
-				central.mR_ave += star[i].m / ((double) clus.N_STAR) * star[i].rad;
-#endif
 			} else {
 				central.N_bin++;
 
-#ifdef USE_MPI
 				Mbincentral += star_m[j] / ((double) clus.N_STAR);
-#else
-				Mbincentral += star[i].m / ((double) clus.N_STAR);
-#endif
 				central.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
 				central.a_ave += binary[star[i].binind].a;
 				central.a2_ave += sqr(binary[star[i].binind].a);
-#ifdef USE_MPI
 				central.ma_ave += star_m[j] / ((double) clus.N_STAR) * binary[star[i].binind].a;
-#else
-				central.ma_ave += star[i].m / ((double) clus.N_STAR) * binary[star[i].binind].a;
-#endif
 			}
-#ifdef USE_MPI
 		}
-#endif
 	}
 
-#ifdef USE_MPI
 	tmpTimeStart = timeStartSimple();
 	//MPI: Packing into array to optimize communication.
 	double *buf_bcast_dbl = (double*) malloc(10 * sizeof(double));
@@ -1807,14 +1435,9 @@ void central_calculate(void)
 
 	free(buf_bcast_long);
 	timeEndSimple(tmpTimeStart, &t_comm);
-#endif
 
 	/* object quantities */
-#ifdef USE_MPI
 	rcentral = star_r[Ncentral + 1];
-#else
-	rcentral = star[Ncentral + 1].r;
-#endif
 	Vcentral = 4.0/3.0 * PI * cub(rcentral);
 	central.w2_ave /= central.m_ave * ((double) Ncentral);
 	
@@ -1850,7 +1473,6 @@ void central_calculate(void)
 		central.ma_ave = 0.0;
 	}
 
-//printf("\n%d rho=%g v_rms=%g rc=%g m_ave=%g n=%g rc_s=%g N_sin=%ld N_bin=%ld n_sin=%g n_bin=%g\n rho_sin=%g rho_bin=%g m_sin_ave=%g m_bin_ave=%g v_sin=%g v_bin=%g w2=%g R2=%g mR=%g a=%g a2=%g ma=%g\n\n", myid, central.rho, central.v_rms, central.rc, central.m_ave, central.n, central.rc_spitzer, central.N_sin, central.N_bin, central.n_sin, central.n_bin, central.rho_sin, central.rho_bin, central.m_sin_ave, central.m_bin_ave, central.v_sin_rms, central.v_bin_rms, central.w2_ave, central.R2_ave, central.mR_ave, central.a_ave, central.a2_ave, central.ma_ave);
 
 	/* set global variables that are used throughout the code */
 	rho_core_single = central.rho_sin;
@@ -1881,11 +1503,7 @@ double local_kT(long si, int p) {
   for (j=simin; j< simax; j++) {
     //MPI: Here we are using global indices since this whole thing will be done only by the root node, so we dont need an index transformation.
     //Carl: Modified this back to global indices since this function can be in future used in other functions where more than one node might participate. Introducing an index transformation wont change the behavior in anyway since for the root node the index transformation is an identity transformation.
-#ifdef USE_MPI
     mave+= star_m[get_global_idx(j)] *madhoc;
-#else
-    mave+= star[j].m *madhoc;
-#endif
   }
   mave/= (double)(2 * p);
 
@@ -1940,21 +1558,15 @@ central_hard_binary(double ktmin, central_t old_cent) {
   cent.rho_bin=0.;
   cent.N_bin=0;
 
-#ifdef USE_MPI
   if(NUM_CENTRAL_STARS > End[0] - Start[0])
   {
       eprintf("central_hard_binary: Central stars dont fit in root node!\n");
       MPI_Abort(MPI_COMM_WORLD, -1);
   }
-#endif
 
   Ncentral= MIN(NUM_CENTRAL_STARS, clus.N_MAX);
   //MPI: Here we are using global indices since this whole thing will be done only by the root node, so we dont need an index transformation.
-#ifdef USE_MPI
   Rcentral= star_r[Ncentral+1];
-#else
-  Rcentral= star[Ncentral+1].r;
-#endif
   Vcentral= 4./3.*PI*cub(Rcentral);
   kTcore= core_kT(Ncentral, AVEKERNEL);
   rootprintf("kTcore is %g\n", kTcore);
@@ -1977,13 +1589,8 @@ central_hard_binary(double ktmin, central_t old_cent) {
     cent.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
     cent.a_ave += a;
     cent.a2_ave += a*a;
-#ifdef USE_MPI
     Mbincentral += star_m[i] * madhoc;
     cent.ma_ave += star_m[i] *madhoc * a;
-#else
-    Mbincentral += star[i].m * madhoc;
-    cent.ma_ave += star[i].m *madhoc * a;
-#endif
   }
   if (cent.N_bin>0) {
     cent.a_ave/= cent.N_bin;
@@ -1998,11 +1605,10 @@ central_hard_binary(double ktmin, central_t old_cent) {
   return(cent);
 }
 
-#ifdef USE_MPI
 /**
 * @brief Parallel version of clusdyn_calculate. Done by all nodes since accessing only duplicate arrays.
 */
-void mpi_clusdyn_calculate(void)
+void clusdyn_calculate(void)
 {
 	double m=0.0;
 	long k=1;
@@ -2013,22 +1619,6 @@ void mpi_clusdyn_calculate(void)
 		k++;
 	}
 	clusdyn.rh = star_r[k];
-}
-#endif
-
-/**
-* @brief calculate cluster dynamical quantities
-*/
-void clusdyn_calculate(void)
-{
-	double m=0.0;
-	long k=1;
-	
-	while (m < 0.5 * Mtotal) {
-		m += star[k].m / clus.N_STAR;
-		k++;
-	}
-	clusdyn.rh = star[k].r;
 }
 
 /**
@@ -2064,11 +1654,7 @@ double function_q(long j, long double r, long double pot, long double E, long do
   long double Jr, phis;
 
   Jr= SQR((J)/(r));
-#ifdef USE_MPI
   phis= MPI_PHI_S(r, j);
-#else
-  phis= PHI_S(r, j);
-#endif
   res= (2.0 * ((E) - (pot + phis)) - Jr);
   return (res);
 };
@@ -2095,14 +1681,8 @@ double timeStartSimple()
 	double timeStart=0;
 	if(TIMER)
 	{
-#ifdef USE_MPI
 		MPI_Barrier(MPI_COMM_WORLD);
 		timeStart = MPI_Wtime();
-#else
-		struct timeval tim;
-		gettimeofday(&tim, NULL);
-		timeStart=tim.tv_sec+(tim.tv_usec/1000000.0);
-#endif
 	}
 	return timeStart;
 }
@@ -2117,91 +1697,29 @@ void timeEndSimple(double timeStart, double *timeAccum)
 {
 	if(TIMER)
 	{
-#ifdef USE_MPI
 		MPI_Barrier(MPI_COMM_WORLD);
 
 		double timeEnd = MPI_Wtime();
 		*timeAccum += timeEnd - timeStart;
-#else
-		struct timeval tim;
-		gettimeofday(&tim, NULL);
-		double timeEnd=tim.tv_sec+(tim.tv_usec/1000000.0);
-		*timeAccum += timeEnd - timeStart;
-#endif
 	}
-}
-
-void timeStart()
-{
-/*
-#ifdef USE_MPI
-	MPI_Barrier(MPI_COMM_WORLD);
-	startTime = MPI_Wtime();
-#else
-	startTime = clock();
-#endif
-*/
-}
-
-void timeEnd(char* fileName, char *funcName, double *tTime)
-{
-/*
-	double temp;
-	double totTime = 0.0;
-	FILE *file;
-
-#ifdef USE_MPI
-	endTime = MPI_Wtime();
-	temp = endTime - startTime;
-	MPI_Reduce(&temp, tTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-#else
-	endTime = clock();
-	*tTime = ((double) (endTime - startTime)) / CLOCKS_PER_SEC;
-#endif
-
-#ifdef USE_MPI
-	if(myid==0)
-#endif
-	{
-		totTime += *tTime;
-		file = fopen(fileName,"a");
-		fprintf(file, "%-5.8lf\t\t%-25s\t\t\t%5.8lf\n", *tTime, funcName, totTime);
-		fclose(file);
-	}
-*/
 }
 
 void timeStart2(double *st)
 {
-#ifdef USE_MPI
 	MPI_Barrier(MPI_COMM_WORLD);
 	*st = MPI_Wtime();
-#else
-	*st = clock();
-#endif
 }
 
 void timeEnd2(char* fileName, char *funcName, double *st, double *end, double *tot)
 {
-	//FILE *file;
-#ifdef USE_MPI
 	double temp;
 	*end = MPI_Wtime();
 	temp = *end - *st;
    MPI_Reduce(&temp, tot, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-#else
-	*end = clock();
-	*tot = ((double) (*end - *st)) / CLOCKS_PER_SEC;
-#endif
 
-#ifdef USE_MPI
 	if(myid==0)
-#endif
 	{
-		//file = fopen(fileName,"a");
-		//fprintf(file, "%-5.8lf\t\t%-25s\t\t\t%5.8lf\n", *tot, funcName, 0.0 );
 		printf("Total time = %g\n", *tot);
-		//fclose(file);
 	}
 }
 
@@ -2390,7 +1908,6 @@ void set_global_vars1()
 	NEW_IDUM = 0;
 	NEXT_RESTART = 1;
 
-#ifdef USE_MPI
 	Eescaped_old = 0.0;
 	Jescaped_old = 0.0;
 	Eintescaped_old = 0.0;
@@ -2421,7 +1938,6 @@ void set_global_vars1()
     mpi_relaxationfile_ofst_total=0;
     mpi_pulsarfile_ofst_total=0;
     mpi_morepulsarfile_ofst_total=0;
-#endif
 }
 
 void set_global_vars2()
@@ -2451,11 +1967,7 @@ void set_global_vars2()
 void calc_sigma_new()
 {
 	//MPI: HASNT BEEN TESTED THOROUGHLY YET!
-#ifdef USE_MPI
-	mpi_calc_sigma_r(AVEKERNEL, mpiEnd-mpiBegin+1, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
-#else
-	calc_sigma_r(AVEKERNEL, clus.N_MAX, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
-#endif
+	calc_sigma_r(AVEKERNEL, mpiEnd-mpiBegin+1, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
 }
 
 /**
@@ -2466,28 +1978,18 @@ void bin_vars_calculate()
 	int i, j;
 	M_b = 0.0;
 	E_b = 0.0;
-#ifdef USE_MPI
 	for (i=1; i<=mpiEnd-mpiBegin+1; i++)
-#else
-	for (i=1; i<=clus.N_STAR; i++)
-#endif
 	{
 		j = star[i].binind;
 		if (j && binary[j].inuse) {
-#ifdef USE_MPI
 			M_b += star_m[get_global_idx(i)];
-#else
-			M_b += star[i].m;
-#endif
 			E_b += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
 		}
 	}
-#ifdef USE_MPI
 	double tmpTimeStart = timeStartSimple();
 	MPI_Allreduce(MPI_IN_PLACE, &M_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 	MPI_Allreduce(MPI_IN_PLACE, &E_b, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 	timeEndSimple(tmpTimeStart, &t_comm);
-#endif
 }
 
 /**
@@ -2495,14 +1997,10 @@ void bin_vars_calculate()
 */
 void calc_potential_new()
 {
-#ifdef USE_MPI
-	mpi_potential_calculate();
+	potential_calculate();
 
 	//MPI: Since N_MAX is updated here, we re-calculate the variables used for storing data partitioning related information.
 	mpiFindIndicesCustom( clus.N_MAX, MIN_CHUNK_SIZE, myid, &mpiBegin, &mpiEnd );
-#else
-	potential_calculate();
-#endif
 }
 
 /**
@@ -2510,7 +2008,6 @@ void calc_potential_new()
 */
 void compute_energy_new()
 {
-#ifdef USE_MPI
 
 	Eescaped += Eescaped_old;
 	Jescaped += Jescaped_old;
@@ -2519,10 +2016,7 @@ void compute_energy_new()
 	//TidalMassLoss += TidalMassLoss_old;
 	Etidal += Etidal_old;
 
-	mpi_ComputeEnergy();
-#else
 	ComputeEnergy();
-#endif
 }
 
 /**
@@ -2547,11 +2041,7 @@ void set_energy_vars()
 void reset_interaction_flags()
 {
 	int i;
-#ifdef USE_MPI
 		for (i = 1; i <= clus.N_MAX_NEW; i++)
-#else
-		for (i = 1; i <= clus.N_MAX; i++) 
-#endif
 		{
 			/* reset interacted flag */
 			star[i].interacted = 0;
@@ -2565,11 +2055,7 @@ void reset_interaction_flags()
 */
 void calc_clusdyn_new()
 {
-#ifdef USE_MPI
-	mpi_clusdyn_calculate();
-#else
 	clusdyn_calculate();
-#endif
 }
 
 /**
@@ -2583,11 +2069,7 @@ void calc_timestep(gsl_rng *rng)
    Dt = GetTimeStep(rng);
 
 	/* if tidal mass loss in previous time step is > 5% reduce PREVIOUS timestep by 20% */
-#ifdef USE_MPI
 	if ((TidalMassLoss_old - OldTidalMassLoss) > 0.01)
-#else
-	if ((TidalMassLoss - OldTidalMassLoss) > 0.01)
-#endif
     {
 		diaprintf("prev TidalMassLoss=%g: reducing Dt by 20%%\n", TidalMassLoss - OldTidalMassLoss);
 		Dt = Prev_Dt * 0.8;
@@ -2616,12 +2098,8 @@ void energy_conservation1()
 		/* the following will get updated after sorting and
 		 * calling potential_calculate(), needs to be saved 
 		 * now */  
-#ifdef USE_MPI
 		int g_i = get_global_idx(i);
 		star[i].Uoldrold = star_phi[g_i] + MPI_PHI_S(star_r[g_i], g_i);
-#else
-		star[i].Uoldrold = star[i].phi + PHI_S(star[i].r, i);
-#endif
 
 		/* Unewrold will be calculated after 
 		 * potential_calculate() using [].rOld
@@ -2639,11 +2117,7 @@ void toy_rejuvenation()
 	int i;
 	DMrejuv = 0.0;
 	if (STAR_AGING_SCHEME > 0) {
-#ifdef USE_MPI
 		for (i=1; i<=mpiEnd-mpiBegin+1; i++)
-#else
-		for (i=1; i<=clus.N_MAX; i++)
-#endif
 			remove_old_star(TotalTime, i);
 	}
 }
@@ -2653,7 +2127,6 @@ void toy_rejuvenation()
 */
 void new_orbits_calculate()
 {
-#ifdef USE_MPI
 		//MPI: The 2nd part of the original serial version of tidally_strip_stars() has been moved just before sort since it needs elaborate parallelization and hence has been refactored into a different function.
 		OldTidalMassLoss = TidalMassLoss_old;
 
@@ -2669,10 +2142,6 @@ void new_orbits_calculate()
 		timeEndSimple(tmpTimeStart, &t_comm);
 
 		TidalMassLoss += TidalMassLoss_old;
-#else
-		OldTidalMassLoss = TidalMassLoss;
-		max_r = get_positions();
-#endif
 }
 
 /**
@@ -2686,73 +2155,16 @@ void energy_conservation2()
 	{
 	/* the following cannot be calculated after sorting 
 	 * and calling potential_calculate() */
-#ifdef USE_MPI 
 		star[i].Uoldrnew = potential(star[i].rnew) + MPI_PHI_S(star[i].rnew, get_global_idx(i));
-#else
-		star[i].Uoldrnew = potential(star[i].rnew) + PHI_S(star[i].rnew, i);
-#endif
 	}
 }
 
-/*
-void pre_sort_comm()
-{
-#ifdef USE_MPI
-	int i;
-
-	mpiFindDispAndLenCustom( clus.N_MAX, MIN_CHUNK_SIZE, mpiDisp, mpiLen );
-
-	MPI_Datatype startype;
-	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
-	MPI_Type_commit( &startype );
-	
-	//MPI2: Collecting the r and m arrays into the original star structure for sorting.
-
-//	for(i=mpiBegin; i<=mpiEnd; i++) {
-//		star[i].r = star_r[i];
-//		star[i].m = star_m[i];
-//	}
-//	for(i=clus.N_MAX+2; i<=clus.N_MAX_NEW; i++) {
-//		star[i].r = star_r[i];
-//		star[i].m = star_m[i];
-//	}
-
-
-	//MPI2: Collection of old stars.
-	if(myid == 0)
-		MPI_Gatherv(MPI_IN_PLACE, mpiLen[myid], startype, star, mpiLen, mpiDisp , startype , 0, MPI_COMM_WORLD);
-	else
-		MPI_Gatherv(&star[mpiDisp[myid]], mpiLen[myid], startype, star, mpiLen, mpiDisp , startype , 0, MPI_COMM_WORLD);
-
-
-	//MPI2: Collection of new stars.
-	MPI_Gather( &(clus.N_MAX_NEW), 1, MPI_INT, disp, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	if(myid==0)
-	{
-		disp[0] = clus.N_MAX + 2;
-		len[0] = clus.N_MAX_NEW - clus.N_MAX - 1;
-		for(i=1; i<procs; i++)
-		{
-			len[i] = disp[i] - clus.N_MAX - 1;
-			disp[i] = disp[i-1] + len[i-1];
-		}
-		clus.N_MAX_NEW = disp[procs-1] + len[procs-1] - 1;
-	}
-
-	if(myid == 0)
-		MPI_Gatherv(MPI_IN_PLACE, len[0], startype, star, len, disp , startype , 0, MPI_COMM_WORLD);
-	else
-		MPI_Gatherv(&star[clus.N_MAX+2], clus.N_MAX_NEW - clus.N_MAX - 1, startype, star, len, disp , startype , 0, MPI_COMM_WORLD);
-#endif
-}
-*/
 
 /**
 * @brief Sort stars based on their radial positions. In the serial version, simple quick sort is used. In the parallel version, parallel sample sort is used.
 */
 void qsorts_new(void)
 {
-#ifdef USE_MPI
 	//MPI: We create an MPI_Datatype which comes in handy for communication calls in the sorting routine
 	MPI_Datatype startype;
 	MPI_Type_contiguous( sizeof(star_t), MPI_BYTE, &startype );
@@ -2773,12 +2185,6 @@ void qsorts_new(void)
 
 	MPI_Type_free(&startype);
 	MPI_Type_free(&binarytype);
-#else
-	/* Sorting stars by radius. The 0th star at radius 0 
-		and (N_STAR+1)th star at SF_INFINITY are already set earlier.
-	 */
-	qsorts(star+1,clus.N_MAX_NEW);
-#endif
 }
 
 /**
@@ -2786,7 +2192,6 @@ void qsorts_new(void)
 */
 void post_sort_comm()
 {
-#ifdef USE_MPI
 	double tmpTimeStart = timeStartSimple();
 	int i;
 	mpiFindDispAndLenCustom( clus.N_MAX, MIN_CHUNK_SIZE, mpiDisp, mpiLen );
@@ -2811,7 +2216,6 @@ void post_sort_comm()
 	free(temp_r);
 	free(temp_m);
 	timeEndSimple(tmpTimeStart, &t_comm);
-#endif
 }
 
 /**
@@ -2879,23 +2283,6 @@ int findProcForIndex( int j )
 			return i;
 
 	up_bound = clus.N_MAX + 1;
-#ifndef USE_MPI
-	//MPI: For newly created stars, we first scan to find if the stars were created during dynamics, and find the corresponding processor id. The created_star_dyn_node stores the number of stars created in each processor during dynamics, and is helpful for this purpose.
-	for( i=0; i<procs; i++ )
-	{
-		if( j <= up_bound + created_star_dyn_node[i] )
-			return i;
-		up_bound += created_star_dyn_node[i];
-	}
-
-	//MPI: If not found in dynamics, the stars must have been created during stellar evolution, and we do a similar scan with the help of the created_star_se_node array.
-	for( i=0; i<procs; i++ )
-	{
-		if( j <= up_bound + created_star_se_node[i] )
-			return i;
-		up_bound += created_star_se_node[i];
-	}
-#endif
 
 	eprintf("Star id out of bounds! for id = %d\n", j);
 	exit_cleanly(-2, __FUNCTION__);
@@ -2909,21 +2296,12 @@ void set_rng_states()
 {
 	int i;
 
-#ifdef USE_MPI
 	curr_st = (struct rng_t113_state*) malloc(sizeof(struct rng_t113_state));
 	reset_rng_t113_new(IDUM, curr_st);
 
 	//Using jump polynomials to assign the intial state for the current processor.
 	for(i = 0; i < myid; i++)
 		*curr_st = rng_t113_jump( *curr_st , JPoly_2_80);
-#else
-	st = (struct rng_t113_state*) malloc(procs * sizeof(struct rng_t113_state));
-	reset_rng_t113_new(IDUM, &st[0]);
-
-	//Using jump polynomials to assign the intial state for the all processors - to mimic the parallel rng.
-	for(i = 1; i < procs; i++)
-		st[i] = rng_t113_jump( st[i-1] , JPoly_2_80);
-#endif
 }
 
 

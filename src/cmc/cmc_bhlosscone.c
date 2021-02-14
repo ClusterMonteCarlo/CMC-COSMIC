@@ -18,7 +18,6 @@
 */
 void create_rwalk_file(char *fname) {
 
-#ifdef USE_MPI
     MPI_File mpi_rwalk_file;
     char mpi_rwalk_file_buf[10000];
     char mpi_rwalk_file_wrbuf[10000000];
@@ -26,20 +25,12 @@ void create_rwalk_file(char *fname) {
     MPI_File_open(MPI_COMM_WORLD, fname, MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &mpi_rwalk_file);
 	 if(tcount==1)
 		 MPI_File_set_size(mpi_rwalk_file, 0);
-#else
-  FILE *rwalk_file= NULL;
-  rwalk_file= fopen(fname, "a");
-#endif
 
   pararootfprintf(rwalk_file, "\n");
   pararootfprintf(rwalk_file, 
           "# 1:index, 2:Time, 3:r, 4:Trel, 5:dt, 6:l2_scale, 7:n_steps, 8:beta 9:n_local, 10:W, 11:P_orb, 12:n_orb\n");
-#ifdef USE_MPI
   mpi_para_file_write(mpi_rwalk_file_wrbuf, &mpi_rwalk_file_len, &mpi_rwalk_file_ofst_total, &mpi_rwalk_file);
   MPI_File_close(&mpi_rwalk_file);
-#else
-  fclose(rwalk_file);
-#endif
 }
 
 /**
@@ -61,7 +52,6 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
     double l2_scale, double n_steps, double beta, double n_local, double W, 
     double P_orb, double n_orb) {
 
-#ifdef USE_MPI
 	double r = star_r[index];
     MPI_File mpi_rwalk_file;
     char mpi_rwalk_file_buf[10000];
@@ -70,21 +60,12 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
     MPI_File_open(MPI_COMM_WORLD, fname, MPI_MODE_CREATE | MPI_MODE_APPEND, MPI_INFO_NULL, &mpi_rwalk_file);
 	 if(tcount==1)
 		 MPI_File_set_size(mpi_rwalk_file, 0);
-#else
-	 double r = star[index].r;
-  FILE *rwalk_file= NULL;
-  rwalk_file= fopen(fname, "a");
-#endif
 
   parafprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
       index, TotalTime, r, Trel, dt, sqrt(l2_scale), n_steps, beta, n_local, W, P_orb, n_orb);
 
-#ifdef USE_MPI
   mpi_para_file_write(mpi_rwalk_file_wrbuf, &mpi_rwalk_file_len, &mpi_rwalk_file_ofst_total, &mpi_rwalk_file);
   MPI_File_close(&mpi_rwalk_file);
-#else
-  fclose(rwalk_file);
-#endif
 }
 
 /**
@@ -103,13 +84,8 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	double w_mag, l2_scale;
 	int i;
     int g_index;
-#ifdef USE_MPI
 	g_index = get_global_idx(index);
-#else
-    g_index = index;
-#endif
 
-#ifdef EXPERIMENTAL
 	char fname[80];
 	long is_in_ids;
 	double Trel, n_local, M2ave; 
@@ -126,13 +102,11 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		is_in_ids=1;
 		create_rwalk_file(fname);
 	};
-#endif
 	/* simulate loss cone physics for central mass */
 	//MPI: Parallelized, but might have mistakes since I am not clear as to what some functions are doing.
 	P_orb = calc_P_orb(index);
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
 	l2_scale= 1.;
-#ifdef EXPERIMENTAL
 	/* scale down L2 if the time step is larger than BH_LC_FDT*Trel */
 	/* This is inconsistent, as for stars with dt< BH_LC_FDT*Trel the probability
 	 * of hitting the loss cone becomes smaller, compared to the case with 
@@ -143,7 +117,6 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		n_steps= dt/BH_LC_FDT/Trel;
 		l2_scale= 1./n_steps;
 	};
-#endif
 	deltabeta_orb = 1.0/sqrt(n_orb) * sqrt(l2_scale)*beta;
 	L2 = l2_scale*fb_sqr(beta);
 	if (BH_R_DISRUPT_NB>0.) {
@@ -151,26 +124,14 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	} else if (STELLAR_EVOLUTION){
 		double Rss;
 		//dprintf("cenma.m= %g, star[%li].m= %g\n", cenma.m, index, star[index].m);
-#ifdef USE_MPI
 		Rdisr= pow(2.*cenma.m/star_m[g_index], 1./3.)*star[index].rad*RSUN/units.l;
-#else
-		Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad*RSUN/units.l;
-#endif
 		Rss= 4.24e-06*cenma.m/SOLAR_MASS_DYN*RSUN/units.l;
 		Rdisr= MAX(Rdisr, Rss);
 	} else {
-#ifdef USE_MPI
 		Rdisr= pow(2.*cenma.m/star_m[g_index], 1./3.)*star[index].rad;
-#else
-		Rdisr= pow(2.*cenma.m/star[index].m, 1./3.)*star[index].rad;
-#endif
 	};
 	Jlc= sqrt(2.*cenma.m*madhoc*Rdisr);
-#ifdef USE_MPI
 	vlc= Jlc/star_r[g_index];
-#else
-	vlc= Jlc/star[index].r;
-#endif
 	for (i=0; i<3; i++) {
 		w[i]= v[i+1]- vcm[i+1];
 	}
@@ -180,11 +141,7 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		L2 -= fb_sqr(delta); 
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
 			dprintf("index=%d, id=%ld: star eaten by BH\n", g_index, star[index].id);
-#ifdef USE_MPI
 			cenma.m_new += star_m[g_index]; 
-#else
-			cenma.m_new += star[index].m; 
-#endif
 			destroy_obj(index);
 			L2 = 0.0; 
 		} else { 
@@ -194,27 +151,20 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 			//if (delta>sqrt(L2)) delta=sqrt(L2);
 			//delta = MAX(deltabeta_orb, MIN(deltamax, sqrt(L2)));
 
-#ifndef USE_MPI
-			curr_st = &st[findProcForIndex(index)];
-#endif
 			dbeta = 2.0 * PI * rng_t113_dbl_new(curr_st); 
 			//dbeta = 2.0 * PI * rng_t113_dbl(); 
 
 			do_random_step(w, dbeta, delta); 
-#ifdef EXPERIMENTAL
 			if (is_in_ids) {
 				//fprintf(rwalk_file, "%f %g %g %g %g %g %g %g %g %g\n",
 				//TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel, l2_scale);
 			};
-#endif
 		} 
 	}; 
-#ifdef EXPERIMENTAL
 	if (tcount%SNAPSHOT_DELTACOUNT==0 && SNAPSHOTTING && WRITE_RWALK_INFO) {
 		write_rwalk_data(fname, g_index, Trel, dt, l2_scale, n_steps, beta,
 				n_local, W, P_orb, n_orb);
 	}
-#endif
 };
 
 
@@ -298,31 +248,19 @@ double calc_P_orb(long index)
 	gsl_function F;
     struct Interval star_interval;
     int g_index;
-#ifdef USE_MPI
     g_index = get_global_idx(index);
-#else
-    g_index = index;
-#endif
 
         /* default values for star_interval */
 	star_interval.min= 1;
     star_interval.max= clus.N_MAX+1;
 
-#ifdef USE_MPI
 	E = star[index].E + MPI_PHI_S(star_r[g_index], g_index);
-#else
-	E = star[index].E + PHI_S(star[index].r, index);
-#endif
 	J = star[index].J;
 	
 	//dprintf("index=%ld ", index);
 
-#ifdef EXPERIMENTAL
         //if (index>80000) dprintf("Aaaaahhh index= %li\n", index);
 	orbit_rs = calc_orbit_new(index, E, J);
-#else
-	orbit_rs = calc_orbit_rs(index, E, J);
-#endif
 	
 	//dprintf("rp=%g ra=%g ", orbit_rs.rp, orbit_rs.ra);
 
@@ -345,11 +283,7 @@ double calc_P_orb(long index)
 		/* We're returning the azimuthal period here, which is not the same as the
 		   radial period for the general cluster potential.  This shouldn't make
 		   any difference for the BH loss cone stuff, since the orbit is circular. */
-#ifdef USE_MPI
 		return(2.0 * PI * star_r[g_index] / star[index].vt);
-#else
-		return(2.0 * PI * star[index].r / star[index].vt);		
-#endif
 	} else {
 		w = gsl_integration_workspace_alloc(1000);
 		tab = gsl_integration_qaws_table_alloc(-0.5, -0.5, 0.0, 0.0);
@@ -439,11 +373,7 @@ double calc_p_orb_f(double x, void *params) {
 	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
 	double radicand;
 
-#ifdef USE_MPI
 	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (potential(x) + MPI_PHI_S(x, myparams.index));
-#else
-	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (potential(x) + PHI_S(x, myparams.index));
-#endif
 
 	if (radicand < 0.0) {
 		dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, myparams.index);
@@ -465,11 +395,7 @@ double calc_p_orb_f2(double x, void *params) {
 	calc_p_orb_params_t myparams = *(calc_p_orb_params_t *) params;
 	double radicand;
 
-#ifdef USE_MPI
 	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (fastpotential(x, myparams.kmin, myparams.kmax) + MPI_PHI_S(x, myparams.index));
-#else
-	radicand = 2.0 * myparams.E - fb_sqr(myparams.J/x) - 2.0 * (fastpotential(x, myparams.kmin, myparams.kmax) + PHI_S(x, myparams.index));
-#endif
 
 	if (radicand < 0.0) {
 		dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, myparams.index);
@@ -503,23 +429,12 @@ double calc_p_orb_gc(double x, void *params) {
 	rp = myparams.rp;
 	ra = myparams.ra;
         
-#ifdef USE_MPI
 	if (x <= star_r[kmin+1]) { /* return integrand regularized at r=rp */
-#else
-	if (x <= star[kmin+1].r) { /* return integrand regularized at r=rp */
-#endif
 		//dprintf("regularizing near rp...\n");
-#ifdef USE_MPI
 		phik = star_phi[kmin] + MPI_PHI_S(star_r[kmin], index);
 		phik1 = star_phi[kmin+1] + MPI_PHI_S(star_r[kmin+1], index);
 		rk = star_r[kmin];
 		rk1 = star_r[kmin+1];
-#else
-		phik = star[kmin].phi + PHI_S(star[kmin].r, index);
-		phik1 = star[kmin+1].phi + PHI_S(star[kmin+1].r, index);
-		rk = star[kmin].r;
-		rk1 = star[kmin+1].r;
-#endif 
 		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1);
 		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1);
 		/* rplus = rperi, rminus = rapo-primed */
@@ -561,23 +476,12 @@ double calc_p_orb_gc(double x, void *params) {
 			};
 			return(2.0*x*sqrt((ra-x)/((2.0*phi0-2.0*E)*(rminus-x))));
 		}
-#ifdef USE_MPI
 	} else if (x >= star_r[kmax-1]) { /* return integrand regularized at r=ra*/
-#else
-	} else if (x >= star[kmax-1].r) { /* return integrand regularized at r=ra*/
-#endif
 		//dprintf("regularizing near ra...\n");
-#ifdef USE_MPI
 		phik = star_phi[kmax-1] + MPI_PHI_S(star_r[kmax-1], index);
 		phik1 = star_phi[kmax] + MPI_PHI_S(star_r[kmax], index);
 		rk = star_r[kmax-1];
 		rk1 = star_r[kmax];
-#else
-		phik = star[kmax-1].phi + PHI_S(star[kmax-1].r, index);
-		phik1 = star[kmax].phi + PHI_S(star[kmax].r, index);
-		rk = star[kmax-1].r;
-		rk1 = star[kmax].r;
-#endif
 		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1);
 		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1);
 		/* rplus = rperi-primed, rminus = rapo */
@@ -621,11 +525,7 @@ double calc_p_orb_gc(double x, void *params) {
 			return(2.0*x*sqrt((x-rp)/((2.0*phi0-2.0*E)*(x-rplus))));
 		}
 	} else {
-#ifdef USE_MPI
 		radicand = 2.0 * (E - (potential(x) + MPI_PHI_S(x, index)))- fb_sqr(J/x);
-#else
-		radicand = 2.0 * (E - (potential(x) + PHI_S(x, index)))- fb_sqr(J/x);
-#endif
 		if (radicand < 0.0) {
 			dprintf("radicand=%g<0; setting to zero; index=%ld\n", radicand, index);
 			dprintf("kmin= %li, kmax= %li, rp=%g, ra=%g, Id: %li\n",
@@ -639,13 +539,8 @@ double calc_p_orb_gc(double x, void *params) {
 		    kmax, kmin, index);
 		  dprintf("E= %g, J=%g, id=%li\n", E, J, star[index].id);
   	          dprintf("x=%g, ra= %g, rp= %g\n", x, ra, rp);
-#ifdef USE_MPI
                   dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star_r[kmin+1]);
                   dprintf("ra-r[kmax-1]= %g\n", ra-star_r[kmax-1]);
-#else
-                  dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star[kmin+1].r);
-                  dprintf("ra-r[kmax-1]= %g\n", ra-star[kmax-1].r);
-#endif
 		};
 		if (gsl_isnan(result)) {
 		  dprintf("result is NaN! Damn it!\n");
@@ -653,13 +548,8 @@ double calc_p_orb_gc(double x, void *params) {
 		    kmax, kmin, index);
 		  dprintf("E= %g, J=%g, id=%li\n", E, J, star[index].id);
   	          dprintf("x=%g, ra= %g, rp= %g, radicand= %g\n", x, ra, rp, radicand);
-#ifdef USE_MPI
                   dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star_r[kmin+1]);
                   dprintf("ra-r[kmax-1]= %g\n", ra-star_r[kmax-1]);
-#else
-                  dprintf("x-rp= %g, ra-x= %g, rp-r[kmin+1]= %g\n", x-rp, ra-x, rp-star[kmin+1].r);
-                  dprintf("ra-r[kmax-1]= %g\n", ra-star[kmax-1].r);
-#endif
 		};
 		return(2.0 * sqrt((x-rp)*(ra-x)/radicand));
 	}

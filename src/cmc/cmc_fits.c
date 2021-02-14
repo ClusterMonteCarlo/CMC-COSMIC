@@ -74,17 +74,11 @@ void load_fits_file_data(void)
 	//MPI: Just to load the 0th element (never used) with whatever is in the cfd struct.
 	load_binary_data(0, 0);
 
-#ifdef USE_MPI
 	//MPI: Copying only the data each process needs.
 	for (i=0; i<=End[myid] - Start[myid]+1; i++) {
 		//MPI: Getting global index to read only stars that belong to this processor.
 		if(i==0) g_i = 0;
 		else g_i = get_global_idx(i);
-#else
-	/* copy everything over from cfd */
-	for (i=0; i<=cfd.NOBJ+1; i++) {
-		g_i = i;
-#endif
 		star[i].id = cfd.obj_id[g_i];
 		if (star[i].id > newstarid) {
 			newstarid = star[i].id;
@@ -97,13 +91,8 @@ void load_fits_file_data(void)
 		//Copying binary info
       if(cfd.obj_binind[g_i])
       {
-#ifdef USE_MPI
          load_binary_data(b_i, cfd.obj_binind[g_i]);
          star[i].binind = b_i;
-#else
-			load_binary_data(cfd.obj_binind[g_i], cfd.obj_binind[g_i]);
-			star[i].binind = cfd.obj_binind[g_i];
-#endif
          b_i++;
       }
 
@@ -128,41 +117,25 @@ void load_fits_file_data(void)
 	}
 
 	N_b_local = b_i-1;
-#ifndef USE_MPI
-	if((b_i-1)!=cfd.NBINARY) eprintf("Binary number inconsistent: in binary array = %d, in cfd = %d\n", b_i-1, cfd.NBINARY);
-#endif
 
-#ifdef USE_MPI
 	//MPI: All procs read data for global arrays.
 	for (i=0; i<=cfd.NOBJ+1; i++) {
 		star_m[i] = cfd.obj_m[i] * ((double) clus.N_STAR);
 		star_r[i] = cfd.obj_r[i];
 	}
-#endif
 
 	/* some assignments so the code won't break */
-#ifdef USE_MPI
 	star_r[0] = ZERO; 
 	star_r[clus.N_STAR + 1] = SF_INFINITY;
-#else
-	star[0].r = ZERO; 
-	star[clus.N_STAR + 1].r = SF_INFINITY;
-#endif
 	Mtotal = 1.0;
 
 	// central mass business, read in from file
 	// I believe the normalization should be correct, from above
-#ifdef USE_MPI
 	cenma.m = star_m[0];
 	cenma.m_new= star_m[0];
 	star_m[0] = 0.0;
 	//MPI: The way newstarid is assigned above works in the serial version, but it wont be the same on all procs in the parallel version. Assuming it will be the sum of N_STAR and N_BINARY.
 	newstarid = clus.N_STAR+clus.N_BINARY;
-#else
-	cenma.m = star[0].m;
-	cenma.m_new= star[0].m;
-	star[0].m = 0.0;
-#endif
 
 	if (BH_R_DISRUPT_NB> 0) {
 		diaprintf("R_disrupt in NB-units for all stars, Rdisr=%lg\n", BH_R_DISRUPT_NB);

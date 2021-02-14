@@ -67,13 +67,6 @@ find_package(HDF5 COMPONENTS C HL REQUIRED)
 
 find_package(Python3 REQUIRED)
 
-# enable USE_MPI
-option(WITH_MPI "Option description" ON)
-
-IF(WITH_MPI)
-	add_definitions(-DUSE_MPI)
-ENDIF(WITH_MPI)
-
 # enable EXPERIMENTAL
 option(WITH_EXPERIMENTAL "Option description" ON)
 
@@ -81,11 +74,6 @@ IF(WITH_EXPERIMENTAL)
 	add_definitions(-DEXPERIMENTAL)
 ENDIF(WITH_EXPERIMENTAL)
 
-option(TAUSWORTH "Use the Tausworth RNG" ON)
-
-IF(WITH_TAUSWORTH)
-	add_definitions(-DUSE_TAUS)
-ENDIF(WITH_TAUSWORTH)
 
 option(FITS "Use the old fits file input/output" OFF)
 IF(FITS)

@@ -31,7 +31,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	double mass_k, mass_kp, phi_k, phi_kp, r_k, r_kp;
 	double collisions_multiple; //used with BHNS_TDE parameter
 
-#ifdef USE_MPI
 	int g_knew;
 	int g_k = get_global_idx(k);
 	int g_kp = get_global_idx(kp);
@@ -41,23 +40,12 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	phi_kp = star_phi[g_kp];
 	r_k = star_r[g_k];
 	r_kp = star_r[g_kp];
-#else
-	mass_k = star[k].m;
-	mass_kp = star[kp].m;
-	phi_k = star[k].phi;
-	phi_kp = star[kp].phi;
-	r_k = star[k].r;
-	r_kp = star[kp].r;
-#endif
 
 /* PDK addition for hrdiag... For now these are placed in by hand here and must match values given in evolv2.f.
    Will update later to be inputs within cmc_stellar_evolution.c. This will mean they must become a COMMON. */
         /*ST_tide = 0;*/
 
 	bmax = rperimax * sqrt(1.0 + 2.0 * ((mass_k + mass_kp) * madhoc) / (rperimax * sqr(W)));
-#ifndef USE_MPI
-	 curr_st = &st[findProcForIndex(k)];
-#endif
 	//b = sqrt(rng_t113_dbl()) * bmax;
 	b = sqrt(rng_t113_dbl_new(curr_st)) * bmax;
 
@@ -114,11 +102,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		Einit = star[k].Eint + 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
 			star[kp].Eint + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
 			0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
-#ifdef USE_MPI
 		DMse += mass_kp * madhoc;
-#else
-        DMse_mimic[findProcForIndex(k)] += mass_kp * madhoc;
-#endif
 
 		aj = star[kp].se_tphys - star[kp].se_epoch;
 		star[kp].se_mt = star[kp].se_mc;
@@ -129,29 +113,16 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		star[kp].se_epoch = star[kp].se_tphys - aj;
 		star[kp].rad = star[kp].se_radius * RSUN / units.l;
 		mass_kp = star[kp].se_mt * MSUN / units.mstar;
-#ifdef USE_MPI
 		DMse -= mass_kp * madhoc;
-#else
-        DMse_mimic[findProcForIndex(k)] -= mass_kp * madhoc;
-#endif
 
 		/* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
 		if (star[k].se_k <= 1 && star[k].se_radius*RSUN/units.l >= bse_rl(mass_k/mass_kp)*(1.0-efinal)*afinal) {
 			/* keep only RG core as single star */
-#ifdef USE_MPI
             star_r[g_kp] = rcm;
-#else
-            star[kp].r = rcm;
-#endif
 			star[kp].vr = vcm[3];
 			star[kp].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-#ifdef USE_MPI
             star_phi[g_kp] = potential(star_r[g_kp]);
             phi_kp = star_phi[g_kp];
-#else
-            star[kp].phi = potential(star[kp].r);
-            phi_kp = star[kp].phi;
-#endif
 			set_star_EJ(kp);
 			set_star_news(kp);
 			set_star_olds(kp);
@@ -171,17 +142,10 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			/* put new binary together and destroy original stars */
 			knew = create_binary(k, 0);
 
-#ifdef USE_MPI
 			g_knew = get_global_idx(knew);
 			star_m[g_knew] = mass_k + mass_kp;
 			star_r[g_knew] = rcm;
 			star_phi[g_knew] = potential(star_r[g_knew]);
-#else
-
-			star[knew].m = mass_k + mass_kp;
-			star[knew].r = rcm;
-			star[knew].phi = potential(star[knew].r);
-#endif
 			star[knew].vr = vcm[3];
 			star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 			set_star_EJ(knew);
@@ -200,7 +164,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			binary[star[knew].binind].Eint2 = star[kp].Eint;
 
 			/* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
-#ifdef USE_MPI
 			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
 				 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
 				 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
@@ -209,17 +172,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 				 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
 				 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
 				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-#else
-
-			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-#endif
 
 			binary[star[knew].binind].id1 = star[k].id;
 			binary[star[knew].binind].id2 = star[kp].id;
@@ -260,11 +212,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		Einit = star[k].Eint + 0.5 * mass_k * madhoc * (sqr(star[k].vr)+sqr(star[k].vt)) +
 			star[kp].Eint + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr)+sqr(star[kp].vt)) + 
 			0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
-#ifdef USE_MPI
 		DMse += mass_k * madhoc;
-#else
-        DMse_mimic[findProcForIndex(k)] += mass_k * madhoc;
-#endif
 		aj = star[k].se_tphys - star[k].se_epoch;
 		star[k].se_mt = star[k].se_mc;
 		bse_star(&(star[k].se_k), &(star[k].se_mass), &(star[k].se_mt), &tm, &tn, tscls, lums, GB, zpars);
@@ -274,29 +222,16 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		star[k].se_epoch = star[k].se_tphys - aj;
 		star[k].rad = star[k].se_radius * RSUN / units.l;
 		mass_k = star[k].se_mt * MSUN / units.mstar;
-#ifdef USE_MPI
 		DMse -= mass_k * madhoc;
-#else
-        DMse_mimic[findProcForIndex(k)] -= mass_k * madhoc;
-#endif
 
 		/* check to see if MS star overfills RL at pericenter, and destroy if this is the case */
 		if (star[kp].se_k <= 1 && star[kp].se_radius*RSUN/units.l >= bse_rl(mass_kp/mass_k)*(1.0-efinal)*afinal) {
 			/* keep only RG core as single star */
-#ifdef USE_MPI
             star_r[g_k] = rcm;
-#else
-            star[k].r = rcm;
-#endif
             star[k].vr = vcm[3];
             star[k].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-#ifdef USE_MPI
             star_phi[g_k] = potential(star_r[g_k]);
             phi_k = star_phi[g_k];
-#else
-            star[k].phi = potential(star[k].r);
-            phi_k = star[k].phi;
-#endif
 			set_star_EJ(k);
 			set_star_news(k);
 			set_star_olds(k);
@@ -316,17 +251,10 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			/* put new binary together and destroy original stars */
 			knew = create_binary(k, 0);
 
-#ifdef USE_MPI
 			g_knew = get_global_idx(knew);
 			star_m[g_knew] = mass_k + mass_kp;
 			star_r[g_knew] = rcm;
 			star_phi[g_knew] = potential(star_r[g_knew]);
-#else
-
-			star[knew].m = mass_k + mass_kp;
-			star[knew].r = rcm;
-			star[knew].phi = potential(star[knew].r);
-#endif
 			star[knew].vr = vcm[3];
 			star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 			set_star_EJ(knew);
@@ -345,7 +273,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 			/* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
 
-#ifdef USE_MPI
 			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
 				 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
 				 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
@@ -354,17 +281,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 				 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
 				 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
 				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-#else
-
-			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-#endif
 
 			binary[star[knew].binind].id1 = star[k].id;
 			binary[star[knew].binind].id2 = star[kp].id;
@@ -403,17 +319,10 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 		knew = create_binary(k, 0);
 
-#ifdef USE_MPI
 		g_knew = get_global_idx(knew);
 		star_m[g_knew] = mass_k + mass_kp;
 		star_r[g_knew] = rcm;
 		star_phi[g_knew] = potential(star_r[g_knew]);
-#else
-
-		star[knew].m = mass_k + mass_kp;
-		star[knew].r = rcm;
-		star[knew].phi = potential(star[knew].r);
-#endif
 		star[knew].vr = vcm[3];
 		star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 		set_star_EJ(knew);
@@ -432,7 +341,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		binary[star[knew].binind].Eint2 = star[kp].Eint;
 
 		/* put lost energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
-#ifdef USE_MPI
 		binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
 			 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
 			 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
@@ -441,17 +349,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			 - 0.5 * star_m[g_knew] * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
 			 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
 			 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-#else
-
-		binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * (Einit
-			 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-			 - 0.5 * star[knew].m * madhoc * star[knew].phi
-			 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-		binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * (Einit
-			 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-			 - 0.5 * star[knew].m * madhoc * star[knew].phi
-			 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-#endif
 
 		binary[star[knew].binind].id1 = star[k].id;
 		binary[star[knew].binind].id2 = star[kp].id;
@@ -476,20 +373,14 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		
 		/* merge parent stars, setting mass, stellar radius, and SE params */
         //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
-#ifdef USE_MPI
         copy_globals_to_locals(k);
         copy_globals_to_locals(kp);
-#endif
 		merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
 	
 
-#ifdef USE_MPI
 		g_knew = get_global_idx(knew);
 		star_r[g_knew] = rcm;
         star_m[g_knew] = star[knew].m;
-#else
-		star[knew].r = rcm;
-#endif
 		star[knew].vr = vcm[3];
 		star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 		star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
@@ -497,11 +388,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		//star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
 
 
-#ifdef USE_MPI
 		star_phi[g_knew] = potential(star_r[g_knew]);
-#else
-		star[knew].phi = potential(star[knew].r);
-#endif
 		set_star_EJ(knew);
 		set_star_news(knew);
 		set_star_olds(knew);
@@ -511,7 +398,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		star[knew].id = star_get_merger_id_new(star[k].id, star[kp].id);
 		star[knew].interacted = 1;
 
-#ifdef USE_MPI
 		star[knew].Eint = star[k].Eint + star[kp].Eint 
 			+ 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
 			+ 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
@@ -519,19 +405,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			+ 0.5 * mass_k * madhoc * phi_k
 			+ 0.5 * mass_kp * madhoc * phi_kp
 			- 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew];
-#else
-
-		star[knew].Eint = star[k].Eint + star[kp].Eint 
-			+ 0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
-			+ 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
-			- 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-			+ 0.5 * mass_k * madhoc * phi_k
-			+ 0.5 * mass_kp * madhoc * phi_kp
-			- 0.5 * star[knew].m * madhoc * star[knew].phi;
-#endif
 
 		/* log collision */
-#ifdef USE_MPI
                 parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
                         TotalTime,
                         star[knew].id, star_m[get_global_idx(knew)] * units.mstar / FB_CONST_MSUN,
@@ -539,15 +414,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
                         star_r[get_global_idx(knew)], star[knew].se_k, star[k].se_k, star[kp].se_k,
             b*units.l/RSUN,W*units.l/units.t/1.e5, star[kp].rad*units.l/RSUN, star[k].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple);
-#else
-                parafprintf(collisionfile, "t=%g single-single idm=%ld(mm=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typem=%d type1=%d type2=%d b[RSUN]=%g vinf[km/s]=%g rad1=%g rad2=%g rperi=%g coll_mult=%g\n",
-                        TotalTime,
-                        star[knew].id, star[knew].m * units.mstar / FB_CONST_MSUN,
-                        star[k].id, mass_k * units.mstar / FB_CONST_MSUN,
-                        star[kp].id, mass_kp * units.mstar / FB_CONST_MSUN,
-                        star[knew].r, star[knew].se_k, star[k].se_k, star[kp].se_k,
-            b*units.l/RSUN,W*units.l/units.t/1.e5, star[kp].rad*units.l/RSUN, star[k].rad*units.l/RSUN, rperi*units.l/RSUN, collisions_multiple);
-#endif
 
 		/* destroy two progenitors */
 		destroy_obj(k);
@@ -588,17 +454,10 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			/* put new binary together and destroy original stars */
 			knew = create_binary(k, 0);
 
-#ifdef USE_MPI
 			g_knew = get_global_idx(knew);
 			star_m[g_knew] = mass_k + mass_kp;
 			star_r[g_knew] = rcm;
 			star_phi[g_knew] = potential(star_r[g_knew]);
-#else
-
-			star[knew].m = mass_k + mass_kp;
-			star[knew].r = rcm;
-			star[knew].phi = potential(star[knew].r);
-#endif
 			star[knew].vr = vcm[3];
 			star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
 			set_star_EJ(knew);
@@ -617,7 +476,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 			/* put tidal energy into Eint of each star, divided equally (it's just for bookkeeping anyway) */
 
-#ifdef USE_MPI
 			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * 
 				(0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
 				 + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
@@ -634,25 +492,6 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 				 + 0.5 * mass_kp * madhoc * phi_kp
 				 - 0.5 * star_m[g_knew] * madhoc * star_phi[g_knew]
 				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-#else
-
-			binary[star[knew].binind].Eint1 = star[k].Eint + 0.5 * 
-				(0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
-				 + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 + 0.5 * mass_k * madhoc * phi_k
-				 + 0.5 * mass_kp * madhoc * phi_kp
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-			binary[star[knew].binind].Eint2 = star[kp].Eint + 0.5 * 
-				(0.5 * mass_k * madhoc * (sqr(star[k].vr) + sqr(star[k].vt)) 
-				 + 0.5 * mass_kp * madhoc * (sqr(star[kp].vr) + sqr(star[kp].vt))
-				 - 0.5 * star[knew].m * madhoc * (sqr(star[knew].vr) + sqr(star[knew].vt))
-				 + 0.5 * mass_k * madhoc * phi_k
-				 + 0.5 * mass_kp * madhoc * phi_kp
-				 - 0.5 * star[knew].m * madhoc * star[knew].phi
-				 + 0.5 * mass_k * madhoc * mass_kp * madhoc / binary[star[knew].binind].a);
-#endif
 
 			binary[star[knew].binind].id1 = star[k].id;
 			binary[star[knew].binind].id2 = star[kp].id;

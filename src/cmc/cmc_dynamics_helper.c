@@ -18,12 +18,10 @@
 */
 void zero_star(long j)
 {
-#ifdef USE_MPI
 	int g_j = get_global_idx(j);
 	star_r[g_j] = 0.0;
 	star_m[g_j] = 0.0;
 	star_phi[g_j] = 0.0;
-#endif
 	//OPT: Try using memset or bzero for better readable code.
 	star[j].r = 0.0;
 	star[j].vr = 0.0;
@@ -142,24 +140,14 @@ void destroy_obj(long i)
 	}
 
 	/* need to zero out E's, J, but can't zero out potential---this is the easiest way */
-#ifdef USE_MPI
 	int g_i = get_global_idx(i);
 	r = star_r[g_i];
 	phi = star_phi[g_i];
-#else
-	r = star[i].r;
-	phi = star[i].phi;
-#endif
 
 	zero_star(i);
 
-#ifdef USE_MPI
 	star_r[g_i] = r;
 	star_phi[g_i] = phi;
-#else
-	star[i].r = r;
-	star[i].phi = phi;
-#endif
 
 	remove_star_center(i);
 }
@@ -213,39 +201,10 @@ long create_star(int idx, int dyn_0_se_1)
 	clus.N_STAR_NEW++;
 	clus.N_MAX_NEW++;
 	
-#ifndef USE_MPI
-	//MPI: To mimic parallel rng and draw random numbers from the correct stream, and for that we need to keep metadata in these arrays so that findProcForIndex can find the right processor for the new stars.
-	if(procs > 1)
-	{
-		//MPI: This assumes that SE will create stars only after dynamics. If this is violated at some point, there are going to be problems :)
-		if(dyn_0_se_1 == 0)
-			//if star is created by dynamics
-			created_star_dyn_node[findProcForIndex(idx)]++;
-			//created_star_dyn_node[findProcForIndex(get_global_idx(idx))]++; //why is get_global_idx reqd in the serial version??
-		else if(dyn_0_se_1 ==1)
-			//if star is created by stellar evolution
-			created_star_se_node[findProcForIndex(idx)]++;
-			//created_star_se_node[findProcForIndex(get_global_idx(idx))]++;
-		else
-		{
-			eprintf("Invalid argument to create_star()");
-			exit_cleanly(-2, __FUNCTION__);
-		}
-	}
-#endif
 
-#ifdef USE_MPI
 	i = clus.N_MAX_NEW;
-#else
-	/* put new star at end; the +1 is to not overwrite the boundary star */
-	i = clus.N_MAX_NEW + 1;
-#endif
 
-#ifdef USE_MPI
 	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, myid, dyn_0_se_1);
-#else
-	dprintf("star created!!!, idx=%ld by star idx=%d\ton node=%d,\tdyn_or_se=%d\t\n", i, idx, findProcForIndex(idx), dyn_0_se_1);
-#endif
 
 	/* initialize to zero for safety */
 	zero_star(i);
@@ -279,10 +238,8 @@ long create_binary(int idx, int dyn_0_se_1)
 
 	dprintf("HOLE FOUND at %ld\t INSERTING STAR %d\n", i, idx);
 
-#ifdef USE_MPI
 	/* account for new binary */
 	++N_b_local;
-#endif
 	
 	/* initialize to zero for safety */
 	zero_binary(i);
@@ -295,67 +252,13 @@ long create_binary(int idx, int dyn_0_se_1)
 	
 	star[j].binind = i;
 	
-#ifdef USE_MPI
 	dprintf("Binary Created on node %d!! single star idx = %ld binind = %ld\n", myid, j, i);
-#else
-	dprintf("Binary Created!! single star idx = %ld binind = %ld\n", j, i);
-#endif	
 
 	return(j);
 }
 
 
-// BEGIN functions created for three-body binary formation by Meagan
 
-/**
-* @brief Sort by mass: k1, k2, k3 in order of most massive to least massive.
-*
-* @param sq index of the first of the three consecutive stars
-* @param k1 variable to store the most massive star's index
-* @param k2 variable to store the 2nd most massive star's index
-* @param k3 variable to store the least massive star's index
-*/
-void sort_three_masses(long sq, long *k1, long *k2, long *k3) {
-
-	//parafprintf(threebbfile, "beginning of sort_three_masses function" );
-	if ((star[sq].m >= star[sq+1].m) && (star[sq].m >= star[sq + 2].m)) {
-		*k1 = sq;
-		if (star[sq + 1].m >= star[sq + 2].m) {
-			*k2 = sq + 1;
-			*k3 = sq + 2;
-		}
-		else {
-			*k2 = sq + 2;
-			*k3 = sq + 1;
-		}
-	}
-	else if ((star[sq + 1].m >= star[sq].m) && (star[sq + 1].m >= star[sq + 2].m)) {
-		*k1 = sq + 1;
-		if (star[sq].m >= star[sq + 2].m) {
-			*k2 = sq;
-			*k3 = sq + 2;
-		}
-		else {
-			*k2 = sq + 2;
-			*k3 = sq;
-		}
-	}
-	else if ((star[sq + 2].m >= star[sq].m) && (star[sq + 2].m >= star[sq + 1].m)) {
-		*k1 = sq + 2;
-		if (star[sq].m > star[sq + 1].m) {
-			*k2 = sq;
-			*k3 = sq + 1;
-		}
-		else {
-			*k2 = sq + 1;
-			*k3 = sq;
-
-		}
-	}
-	//parafprintf(threebbfile, "end of sort_three_masses function" );
-}
-
-#ifdef USE_MPI
 /**
 * @brief Sort by mass: k1, k2, k3 in order of most massive to least massive. (parallel version of sort_three_masses)
 *
@@ -364,7 +267,7 @@ void sort_three_masses(long sq, long *k1, long *k2, long *k3) {
 * @param k2 variable to store the 2nd most massive star's index
 * @param k3 variable to store the least massive star's index
 */
-void mpi_sort_three_masses(long sq, long *k1, long *k2, long *k3) {
+void sort_three_masses(long sq, long *k1, long *k2, long *k3) {
 /* Sort by mass: k1, k2, k3 in order of most massive to least massive. */
 
     long g_sq0 = get_global_idx(sq);
@@ -408,7 +311,6 @@ void mpi_sort_three_masses(long sq, long *k1, long *k2, long *k3) {
 	}
 	//parafprintf(threebbfile, "end of sort_three_masses function" );
 }
-#endif
 
 /**
 * @brief
@@ -432,9 +334,6 @@ void calc_3bb_encounter_dyns(long k1, long k2, long k3, double v1[4], double v2[
 	long j;
 	double vcm12[4];
 
-#ifndef USE_MPI 
-    curr_st = &st[findProcForIndex(k1)];
-#endif
 	/* set random angle between vt's */
 	/* first store random variable */
 //	star[k].Y = rng_t113_dbl_new(curr_st);
@@ -467,11 +366,7 @@ void calc_3bb_encounter_dyns(long k1, long k2, long k3, double v1[4], double v2[
 		// COM velocity of candidate binary pair
 		// velocity of third star wrt com of binary pair
 
-#ifdef USE_MPI
         vcm12[j] = (star_m[get_global_idx(k1)] * v1[j] + star_m[get_global_idx(k2)] * v2[j])/(star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)]);
-#else
-        vcm12[j] = (star[k1].m * v1[j] + star[k2].m * v2[j])/(star[k1].m + star[k2].m);
-#endif
 		(*vrel12)[j] = v2[j] - v1[j];
 		(*vrel3)[j] = v3[j] - vcm12[j];
 		//vrel12[j] = v2[j] - v1[j];
@@ -515,20 +410,13 @@ double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], doub
 
 	// start by setting comp_value to something that will be rejected (above distribution for all eta)
 
-#ifdef USE_MPI
 	kk = 2.0 * ( (star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)] + star_m[get_global_idx(k3)]) / (star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)]) ) * sqr(vrel12[0] / vrel3[0]);
-#else
-	kk = 2.0 * ( (star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m) ) * sqr(vrel12[0] / vrel3[0]);
-#endif
 	comp_y=1e6;
 	found_eta = 0;
 
 	/* normalize distribution, d(Rate)/d(eta) (differential rate of 3bb formation); take abs. value*/
 	norm = fabs(1.0/(-1*(pow(eta_max, -5.5)) + (pow(eta_min, -5.5)) + (kk + 2) * ( -1*(pow(eta_max, -4.5)) + (pow(eta_min, -4.5)) ) + 2 * kk * ( -1*(pow(eta_max, -3.5)) + (pow(eta_min, -3.5)))));
 
-#ifndef USE_MPI
-    curr_st = &st[findProcForIndex(k1)];
-#endif
 	/* now start a while loop that will keep restarting as long as the last computed comp_value was rejected */
 	while (found_eta == 0) {
 
@@ -598,28 +486,15 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 
 	
 	// INITIAL VALUES
-#ifdef USE_MPI
     m1=star_m[get_global_idx(k1)];
     m2=star_m[get_global_idx(k2)];
     m3=star_m[get_global_idx(k3)];
     r1=star_r[get_global_idx(k1)];
     r2=star_r[get_global_idx(k2)];
     r3=star_r[get_global_idx(k3)];
-#else
-    m1=star[k1].m;
-    m2=star[k2].m;
-    m3=star[k3].m;
-    r1=star[k1].r;
-    r2=star[k2].r;
-    r3=star[k3].r;
-#endif
 
 	// Initial energy
-#ifdef USE_MPI
     PE_i = madhoc*(m1*star_phi[get_global_idx(k1)] + m2*star_phi[get_global_idx(k2)] + m3*star_phi[get_global_idx(k3)]);
-#else
-    PE_i = madhoc*(m1*star[k1].phi + m2*star[k2].phi + m3*star[k3].phi);
-#endif
 	KE_i = 0.5*madhoc*(m1 * sqr(v1[0]) + m2 * sqr(v2[0]) + m3 * sqr(v3[0]));
 
 	// COM of candidate binary pair
@@ -647,10 +522,6 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 
 	// Initial kinetic energy of three stars in COM frame (relative to COM motion)
 	KE_cmf_i = 0.5*madhoc*(m1 * sqr(v1_cmf[0]) + m2 * sqr(v2_cmf[0]) + m3 * sqr(v3_cmf[0]));
-
-#ifndef USE_MPI
-    curr_st = &st[findProcForIndex(k1)];
-#endif
 
 	// COMPUTE NEW QUANTITIES
 		// Binary orbital properties: 
@@ -734,13 +605,8 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 		binary[star[knew].binind].e = ecc;
 	
 		// star properties for the new binary
-#ifdef USE_MPI
         star_r[get_global_idx(knew)] = binary_cm;
         star_m[get_global_idx(knew)] = m1 + m2;
-#else
-		star[knew].r = binary_cm;
-		star[knew].m = m1 + m2;
-#endif
 
 		star[knew].vr = vb[3];
 		star[knew].vt = sqrt(sqr(vb[1]) + sqr(vb[2]));
@@ -767,17 +633,10 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 		//BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc)
 		// Do I need to worry about this binding energy??
 
-#ifdef USE_MPI
 		star_phi[get_global_idx(knew)] = potential(star_r[get_global_idx(knew)]); // set potential for binary to be potential at its new cm location (r)
 //		star_phi[get_global_idx(k3)] = potential(r3); // set potential for single to be same as original...should I adjust?
 		PE_f = madhoc*(star_m[get_global_idx(knew)]*star_phi[get_global_idx(knew)] + m3*star_phi[get_global_idx(k3)]);
 		KE_f = Eb + 0.5*madhoc*(star_m[get_global_idx(knew)] * sqr(vb[0]) + m3 * sqr(vs[0]));
-#else
-		star[knew].phi = potential(star[knew].r); // set potential for binary to be potential at its new cm location (r)
-//		star[k3].phi = potential(star[k3].r); // set potential for single to be same as original...should I adjust?
-		PE_f = madhoc*(star[knew].m*star[knew].phi + m3*star[k3].phi);
-		KE_f = Eb + 0.5*madhoc*(star[knew].m * sqr(vb[0]) + m3 * sqr(vs[0]));
-#endif
 
 
 		// In the right units for comparing to the Energies computed in cmc_utils.c ComputeEnergy(), and plotted in quick_cluster_plot
@@ -787,11 +646,7 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 
 		parafprintf(threebbdebugfile, "%ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g", k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, r1, r2, r3, m1, m2, m3, v1[0], v1[1], v1[2], v1[3], v2[0], v2[1], v2[2], v2[3], v3[0], v3[1], v3[2], v3[3], v1_cmf[0], v1_cmf[1], v1_cmf[2], v1_cmf[3], v2_cmf[0], v2_cmf[1], v2_cmf[2], v2_cmf[3], v3_cmf[0], v3_cmf[1], v3_cmf[2], v3_cmf[3]);
 
-#ifdef USE_MPI
 		parafprintf(threebbdebugfile, "%ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", knew, star[knew].id, star_r[get_global_idx(knew)], star_m[get_global_idx(knew)], vs_cmf[0], vs_cmf[1], vs_cmf[2], vs_cmf[3], vb_cmf[0], vb_cmf[1], vb_cmf[2], vb_cmf[3], vs[0], vs[1], vs[2], vs[3], vb[0], vb[1], vb[2], vb[3], ave_local_mass, n_local,sigma_local, eta, Eb, ecc, r_p, semi_major, PE_i, PE_f, KE_cmf_i, KE_cmf_f, KE_i, KE_f, delta_PE, delta_KE, delta_E);
-#else
-		fprintf(threebbdebugfile, "%ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", knew, star[knew].id, star[knew].r, star[knew].m, vs_cmf[0], vs_cmf[1], vs_cmf[2], vs_cmf[3], vb_cmf[0], vb_cmf[1], vb_cmf[2], vb_cmf[3], vs[0], vs[1], vs[2], vs[3], vb[0], vb[1], vb[2], vb[3], ave_local_mass, n_local,sigma_local, eta, Eb, ecc, r_p, semi_major, PE_i, PE_f, KE_cmf_i, KE_cmf_f, KE_i, KE_f, delta_PE, delta_KE, delta_E);
-#endif
 		//parafprintf(threebbdebugfile, "Internal Energies:  Eint1=%g  Eint2=%g  Eint_binary=%g\n", star[k1].Eint, star[k2].Eint, star[knew].Eint);
 
 		// running total for simulation - change in energy occuring during 3bb formation procedure
@@ -807,11 +662,7 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 
 		// destroy the two former single stars (which have now formed a binary)
 		// leave the remaining single star (properties have already been updated)
-#ifdef USE_MPI
 		parafprintf(threebbfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %ld\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2*(units.m / clus.N_STAR / MSUN), m3*(units.m / clus.N_STAR / MSUN), ave_local_mass, n_local, sigma_local, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star_r[get_global_idx(knew)], r3, star[knew].vr, star[knew].vt, star[k3].vr, star[k3].vt, star_phi[get_global_idx(knew)], star_phi[get_global_idx(k3)], delta_PE, delta_KE, delta_E, delta_E_3bb, N3bbformed);
-#else
-		fprintf(threebbfile, "%.16g %ld %ld %ld %ld %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %ld\n", TotalTime, k1, k2, k3, star[k1].id, star[k2].id, star[k3].id, m1*(units.m / clus.N_STAR / MSUN), m2*(units.m / clus.N_STAR / MSUN), m3*(units.m / clus.N_STAR / MSUN), ave_local_mass, n_local, sigma_local, eta, Eb, binary[star[knew].binind].e, binary[star[knew].binind].a * units.l / AU, r_p * units.l / AU, star[knew].r, r3, star[knew].vr, star[knew].vt, star[k3].vr, star[k3].vt, star[knew].phi, star[k3].phi, delta_PE, delta_KE, delta_E, delta_E_3bb, N3bbformed);
-#endif
 		destroy_obj(k1);
 		destroy_obj(k2);
 	//	parafprintf(threebbfile, "KE_cmf_i=%g  eta=%g  Eb=%g\n", KE_cmf_i, eta, Eb);
@@ -931,11 +782,7 @@ double calc_n_local(long k, long p, long N_LIMIT)
 		kmin = N_LIMIT - 2 * p - 1;
 	}
 
-#ifdef USE_MPI
 	return((2.0 * ((double) p)) * 3.0 / (4.0 * PI * (cub(star_r[kmax]) - cub(star_r[kmin]))));
-#else	
-	return((2.0 * ((double) p)) * 3.0 / (4.0 * PI * (cub(star[kmax].r) - cub(star[kmin].r))));
-#endif
 }
 
 /**
@@ -964,11 +811,7 @@ double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT)
 		kmin = N_LIMIT - 2 * p - 1;
 	}
 
-#ifdef USE_MPI
 	return(3.0 * ((double) p) * sqr(star_m[k] + star_m[kp]) / (cub(W) * (cub(star_r[kmax]) - cub(star_r[kmin]))));
-#else
-	return(3.0 * ((double) p) * sqr(star[k].m + star[kp].m) / (cub(W) * (cub(star[kmax].r) - cub(star[kmin].r))));
-#endif
 }
 
 /**
@@ -993,9 +836,6 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 	/* set random angle between vt's */
 	/* first store random variable */
 	if (setY) {
-#ifndef USE_MPI
-	curr_st = &st[findProcForIndex(k)];
-#endif
 		star[k].Y = rng_t113_dbl_new(curr_st);
 		//star[k].Y = rng_t113_dbl();
 
@@ -1022,20 +862,12 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 		exit_cleanly(1, __FUNCTION__);
 	}
 
-#ifdef USE_MPI		
 	int g_k = get_global_idx(k);
 	int g_kp = get_global_idx(kp);
 	*rcm = (star_m[g_k] * star_r[g_k] + star_m[g_kp] * star_r[g_kp]) / (star_m[g_k] + star_m[g_kp]);
 	for (j=1; j<=3; j++) {
 		vcm[j] = (star_m[g_k] * v[j] + star_m[g_kp] * vp[j]) / (star_m[g_k] + star_m[g_kp]);
 	}
-#else
-	/* compute CM quantities */
-	*rcm = (star[k].m * star[k].r + star[kp].m * star[kp].r) / (star[k].m + star[kp].m);
-	for (j=1; j<=3; j++) {
-		vcm[j] = (star[k].m * v[j] + star[kp].m * vp[j]) / (star[k].m + star[kp].m);
-	}
-#endif
 }
 
 /**
@@ -1045,13 +877,8 @@ void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4]
 */
 void set_star_EJ(long k)
 {
-#ifdef USE_MPI
 	star[k].E = star_phi[get_global_idx(k)] + 0.5 * (sqr(star[k].vr) + sqr(star[k].vt));
 	star[k].J = star_r[get_global_idx(k)] * star[k].vt;
-#else
-	star[k].E = star[k].phi + 0.5 * (sqr(star[k].vr) + sqr(star[k].vt));
-	star[k].J = star[k].r * star[k].vt;
-#endif
 }
 
 /**
@@ -1061,11 +888,7 @@ void set_star_EJ(long k)
 */
 void set_star_news(long k)
 {
-#ifdef USE_MPI
 	star[k].rnew = star_r[get_global_idx(k)];
-#else
-	star[k].rnew = star[k].r;
-#endif
 	star[k].vrnew = star[k].vr;
 	star[k].vtnew = star[k].vt;
 }
@@ -1077,19 +900,12 @@ void set_star_news(long k)
 */
 void set_star_olds(long k)
 {
-#ifdef USE_MPI
 	int g_k = get_global_idx(k);
 	star[k].rOld = star_r[g_k];
 	star[k].r_peri = star_r[g_k];
 	star[k].r_apo = star_r[g_k];
-#else
-	star[k].rOld = star[k].r;
-	star[k].r_peri = star[k].r;
-	star[k].r_apo = star[k].r;
-#endif
 }
 
-#ifdef USE_MPI
 /**
 * @brief copies the global/duplicated array values to the local star structure
 *
@@ -1102,7 +918,6 @@ void copy_globals_to_locals(long k)
     star[k].r = star_r[g_k];
     star[k].phi = star_phi[g_k];
 }
-#endif
 
 /**
 * @brief find masses of merging stars from binary interaction components
@@ -1118,11 +933,7 @@ double binint_get_mass(long k, long kp, long id)
 	/* first look at k */
 	if (star[k].binind == 0) {
 		if (star[k].id == id) {
-#ifdef USE_MPI
 			return(star_m[get_global_idx(k)]);
-#else
-			return(star[k].m);
-#endif
 		}
 	} else {
 		if (binary[star[k].binind].id1 == id) {
@@ -1135,11 +946,7 @@ double binint_get_mass(long k, long kp, long id)
 	/* then at kp */
 	if (star[kp].binind == 0) {
 		if (star[kp].id == id) {
-#ifdef USE_MPI
 			return(star_m[get_global_idx(kp)]);
-#else
-			return(star[kp].m);
-#endif
 		}
 	} else {
 		if (binary[star[kp].binind].id1 == id) {
@@ -1553,15 +1360,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			- binary[jbin].Eint1 - binary[jbin].Eint2
 			- binary[jbinp].Eint1 - binary[jbinp].Eint2;
 		
-#ifdef USE_MPI
 		cmc_units.v = sqrt((star_m[get_global_idx(k)]+star_m[get_global_idx(kp)])/(star_m[get_global_idx(k)]*star_m[get_global_idx(kp)]) * 
 				   (binary[jbin].m1*binary[jbin].m2/binary[jbin].a + 
 				    binary[jbinp].m1*binary[jbinp].m2/binary[jbinp].a) * madhoc);
-#else
-		cmc_units.v = sqrt((star[k].m+star[kp].m)/(star[k].m*star[kp].m) * 
-				   (binary[jbin].m1*binary[jbin].m2/binary[jbin].a + 
-				    binary[jbinp].m1*binary[jbinp].m2/binary[jbinp].a) * madhoc);
-#endif
 		cmc_units.l = binary[jbin].a + binary[jbinp].a;
 		cmc_units.t = cmc_units.l / cmc_units.v;
 		cmc_units.m = cmc_units.l * sqr(cmc_units.v);
@@ -1586,13 +1387,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 		BEi = binary[jbin].m1 * binary[jbin].m2 * sqr(madhoc) / (2.0 * binary[jbin].a)
 			- binary[jbin].Eint1 - binary[jbin].Eint2 - star[ksin].Eint;
 
-#ifdef USE_MPI
 		cmc_units.v = sqrt((star_m[get_global_idx(ksin)]+star_m[get_global_idx(kbin)])/(star_m[get_global_idx(ksin)]*star_m[get_global_idx(kbin)]) * 
 				   (binary[jbin].m1 * binary[jbin].m2 / binary[jbin].a) * madhoc);
-#else
-		cmc_units.v = sqrt((star[ksin].m+star[kbin].m)/(star[ksin].m*star[kbin].m) * 
-				   (binary[jbin].m1 * binary[jbin].m2 / binary[jbin].a) * madhoc);
-#endif
 		cmc_units.l = binary[jbin].a;
 		cmc_units.t = cmc_units.l / cmc_units.v;
 		cmc_units.m = cmc_units.l * sqr(cmc_units.v);
@@ -1607,11 +1403,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	fb_malloc_hier(&hier);
 
 	t=0;
-#ifdef USE_MPI
 	bmax = rperi * sqrt(1.0 + 2.0 * ((star_m[get_global_idx(k)] + star_m[get_global_idx(kp)]) * madhoc) / (rperi * sqr(W)));
-#else
-	bmax = rperi * sqrt(1.0 + 2.0 * ((star[k].m + star[kp].m) * madhoc) / (rperi * sqr(W)));
-#endif
 
 	/* call fewbody! */
 	if (isbinbin) {
@@ -1722,18 +1514,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			/* set radial position */
 
 
-#ifdef USE_MPI
 			star_r[get_global_idx(knew)] = rcm;
 			if (istriple) {
 				star_r[get_global_idx(knewp)] = rcm;
 			}
-#else
-
-			star[knew].r = rcm;
-			if (istriple) {
-				star[knewp].r = rcm;
-			}
-#endif
 
 			/* figure out new velocities */
 			for (j=1; j<=3; j++) {
@@ -1750,34 +1534,18 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 			}
 			
 			/* set mass; this gets overwritten later for collisions */
-#ifdef USE_MPI
 			if (istriple) {
 				star_m[get_global_idx(knew)] = hier.obj[i]->obj[bid]->m * cmc_units.m / madhoc;
 				star_m[get_global_idx(knewp)] = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
 			} else {
 				star_m[get_global_idx(knew)] = hier.obj[i]->m * cmc_units.m / madhoc;
 			}
-#else
-			if (istriple) {
-				star[knew].m = hier.obj[i]->obj[bid]->m * cmc_units.m / madhoc;
-				star[knewp].m = hier.obj[i]->obj[sid]->m * cmc_units.m / madhoc;
-			} else {
-				star[knew].m = hier.obj[i]->m * cmc_units.m / madhoc;
-			}
-#endif
 
 			/* set potential */
-#ifdef USE_MPI
 			star_phi[get_global_idx(knew)] = potential(star_r[get_global_idx(knew)]);
 			if (istriple) {
 				star_phi[get_global_idx(knewp)] = potential(star_r[get_global_idx(knewp)]);
 			}			
-#else
-			star[knew].phi = potential(star[knew].r);
-			if (istriple) {
-				star[knewp].phi = potential(star[knewp].r);
-			}			
-#endif
 
 			/* Calculate new energies by recomputing E = PE + KE using new velocity */
 			set_star_EJ(knew);
@@ -1803,9 +1571,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				star[knewp].interacted = 1;
 			}
 			
-#ifndef USE_MPI
-			curr_st = &st[findProcForIndex(k)];
-#endif
 			/* properties specific to single/binary/triple stars */
 			if (hier.obj[i]->n == 1) {
 				/* single star */
@@ -1875,18 +1640,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					}
 					
 					/* log collision */
-#ifdef USE_MPI
                     star_m[get_global_idx(knew)] = star[knew].m;
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
 						star[knew].id, star_m[get_global_idx(knew)],
 						star_r[get_global_idx(knew)],
 						*(hier.obj[i]), k, kp, star[knew].se_k);
-#else
-					binint_log_collision(isbinbin?"binary-binary":"binary-single",
-						star[knew].id, star[knew].m, 
-						star[knew].r,
-						*(hier.obj[i]), k, kp, star[knew].se_k);
-#endif
 				}
 				
 				star[knew].rad = star[knew].se_radius * RSUN / units.l;
@@ -1979,19 +1737,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					}
 					
 					/* log collision */
-#ifdef USE_MPI
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
 						binary[star[knew].binind].id1,
 						binary[star[knew].binind].m1,
 						star_r[get_global_idx(knew)],
 						*(hier.obj[i]->obj[0]), k, kp, binary[star[knew].binind].bse_kw[0]);
-#else
-					binint_log_collision(isbinbin?"binary-binary":"binary-single",
-						binary[star[knew].binind].id1,
-						binary[star[knew].binind].m1, 
-						star[knew].r,
-						*(hier.obj[i]->obj[0]), k, kp, binary[star[knew].binind].bse_kw[0]);
-#endif
 					if (binary[star[knew].binind].m1==0.) {
 						dprintf("Zero mass remnant! Parameters: knew=%li, binind=%li, kw[0]=%i, kw[1]=%i\n",
 								knew, star[knew].binind, binary[star[knew].binind].bse_kw[0], 
@@ -2068,19 +1818,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					}
 
 					/* log collision */
-#ifdef USE_MPI
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
 						binary[star[knew].binind].id2,
 						binary[star[knew].binind].m2,
 						star_r[get_global_idx(knew)],
 						*(hier.obj[i]->obj[1]), k, kp, binary[star[knew].binind].bse_kw[1]);
-#else
-					binint_log_collision(isbinbin?"binary-binary":"binary-single",
-						binary[star[knew].binind].id2,
-						binary[star[knew].binind].m2, 
-						star[knew].r,
-						*(hier.obj[i]->obj[1]), k, kp, binary[star[knew].binind].bse_kw[1]);
-#endif
 
 					if (binary[star[knew].binind].m2==0.)
 						dprintf("Zero mass remnant! Parameters: knew=%li, binind=%li, kw[0]=%i, kw[1]=%i\n",
@@ -2088,11 +1830,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 								binary[star[knew].binind].bse_kw[1]);
 				}
 				
-#ifdef USE_MPI
 				star_m[get_global_idx(knew)] = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
-#else
-				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
-#endif
 
 				/* radii, and tb */
 				binary[star[knew].binind].rad1 = binary[star[knew].binind].bse_radius[0] * RSUN / units.l;
@@ -2204,20 +1942,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						dprintf("dynhelp_merge4: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,star[knewp].id);
 					}
 					/* log collision */
-#ifdef USE_MPI
                     star_m[get_global_idx(knewp)] = star[knewp].m;
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
 						star[knewp].id, star_m[get_global_idx(knewp)],
 						star_r[get_global_idx(knewp)],
 						*(hier.obj[i]->obj[sid]), k, kp, star[knewp].se_k);
 				}
-#else
-					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
-						star[knewp].id, star[knewp].m, 
-						star[knewp].r,
-						*(hier.obj[i]->obj[sid]), k, kp, star[knewp].se_k);
-				}
-#endif
 				/* radius */
 				star[knewp].rad = star[knewp].se_radius * RSUN / units.l;
 
@@ -2304,19 +2034,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						dprintf("dynhelp_merge5: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id1);
 					}
 					/* log collision */
-#ifdef USE_MPI
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
 						binary[star[knew].binind].id1,
 						binary[star[knew].binind].m1,
 						star_r[get_global_idx(knew)],
 						*(hier.obj[i]->obj[bid]->obj[0]), k, kp, binary[star[knew].binind].bse_kw[0]);
-#else
-					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
-						binary[star[knew].binind].id1,
-						binary[star[knew].binind].m1, 
-						star[knew].r,
-						*(hier.obj[i]->obj[bid]->obj[0]), k, kp, binary[star[knew].binind].bse_kw[0]);
-#endif
 				}
 				if (hier.obj[i]->obj[bid]->obj[1]->ncoll == 1) {
 					binary[star[knew].binind].id2 = hier.obj[i]->obj[bid]->obj[1]->id[0];
@@ -2381,26 +2103,14 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					binary[star[knew].binind].id2 = tempstar.id;
 					//binary[star[knew].binind].id2 = star_get_id_new();
 					/* log collision */
-#ifdef USE_MPI
 					binint_log_collision(isbinbin?"binary-binary":"binary-single", 
 						binary[star[knew].binind].id2,
 						binary[star[knew].binind].m2, 
 						star_r[get_global_idx(knew)],
 						*(hier.obj[i]->obj[bid]->obj[1]), k, kp, binary[star[knew].binind].bse_kw[1]);
-#else
-					binint_log_collision(isbinbin?"binary-binary":"binary-single",
-						binary[star[knew].binind].id2,
-						binary[star[knew].binind].m2,
-						star[knew].r,
-						*(hier.obj[i]->obj[bid]->obj[1]), k, kp, binary[star[knew].binind].bse_kw[1]);
-#endif
 				}
 
-#ifdef USE_MPI
 				star_m[get_global_idx(knew)] = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
-#else
-				star[knew].m = binary[star[knew].binind].m1 + binary[star[knew].binind].m2;
-#endif
 
 				/* radii and tb */
 				binary[star[knew].binind].rad1 = binary[star[knew].binind].bse_radius[0] * RSUN / units.l;
@@ -2434,13 +2144,12 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	fb_free_hier(hier);
 }
 
-#ifdef USE_MPI
 /**
 * @brief Parallel version of simul_relax_new
 *
 * @return relaxation timestep
 */
-double mpi_simul_relax_new(void)
+double simul_relax_new(void)
 {
 	long si, k, j, p, N_LIMIT, simin, simax;
 	double dt, dtmin=GSL_POSINF, DTrel=0.0, W, n_local;
@@ -2493,67 +2202,6 @@ double mpi_simul_relax_new(void)
 	timeEndSimple(tmpTimeStart, &t_comm);
 
 	return(DTrel);
-}
-#endif
-
-/**
-* @brief Optimized version of simul_relax(), adapted to ease parallelization and comparison with parallel runs. simul_relax calculates the relaxation timestep for each star, and takes the minimum. Here, we compute the timesteps for only N/AVEKERNEL stars. This simplifies parallelization since typically AVEKERNEL is set to MIN_CHUNK_SIZE and due to this no communication of ghost particles is required between processors.
-*
-* @return relaxation timestep
-*/
-double simul_relax_new(void)
-{
-	long si, k, p, N_LIMIT, simin, simax;
-	double dt, dtmin=GSL_POSINF, W, n_local;
-	double Mv2ave, Mave, M2ave, sigma;
-	
-	N_LIMIT = clus.N_MAX;
-	p = AVEKERNEL; //For this value, the results are very close to the original simul_relax() function.
-
-	//Computing the timesteps only for every pth star.
-//   for (si=p+1; si<N_LIMIT-p; si+=2*p) {
-
-  //MPI: Changing this to do exactly emulate the parallel version.
-	int i;
-	for(i=0; i<procs; i++)
-	{
-		for (si=Start[i]+p; si<End[i]-p; si+=2*p) {
-		simin = si - p;
-		simax = simin + (2 * p - 1);
-
-		Mv2ave = 0.0;
-		Mave = 0.0;
-		M2ave = 0.0;
-		for (k=simin; k<=simax; k++) {
-			Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-			Mave += star[k].m * madhoc;
-			M2ave += sqr(star[k].m * madhoc);
-		}
-		Mv2ave /= (double) (2 * p);
-		Mave /= (double) (2 * p);
-		M2ave /= (double) (2 * p);
-		
-		/* sigma is the 3D velocity dispersion */
-		sigma = sqrt(Mv2ave/Mave);
-		/* average relative speed for a Maxwellian, from Binney & Tremaine */
-		W = 4.0 * sigma / sqrt(3.0 * PI);
-
-		/* Compute local density */
-		n_local = calc_n_local(si, p, clus.N_MAX);
-		
-		/* remember that code time units are t_cross * N/log(GAMMA*N) */
-		/* this expression is from Freitag & Benz (2001), eqs. (8) and (9), we're just
-		   inputting locally-averaged quantities */
-
-		dt = sqr(2.0*THETASEMAX/PI) * (PI/32.0) * 
-			cub(W) / ( ((double) clus.N_STAR) * n_local * (4.0 * M2ave) );
-
-		dtmin = MIN(dtmin, dt);
-		//dtmin = dt;
-		}
-	}
-
-	return(dtmin);
 }
 
 /**
@@ -2631,73 +2279,6 @@ double simul_relax(gsl_rng *rng)
 
 /**
 * @brief
-   Since the binary interactions are done in a vaccuum, it is possible for them
-   to produce pathologically wide binaries, which must be broken by hand, else 
-   they shorten the timestep to a crawl.
-*/
-void break_wide_binaries(void)
-{
-	long i,j, k, knew, knewp;
-    int breakBinary = 0;
-	double W, vorb, m, v2, Eexcess=0.0, exc_ratio, nlocal, llocal;
-    double E_dump, E_dump_capacity, E_dump_factor=0.8;
-    double length_factor = BINARY_DISTANCE_BREAKING;
-    double hardness, mAveLocal, sigma2;
-	
-	for (k=1; k<=clus.N_MAX_NEW; k++)
-	{
-		if (star[k].binind) {
-
-			/* binary index */
-			j = star[k].binind;
-			
-			nlocal = calc_n_local(k, AVEKERNEL, clus.N_MAX);
-            mAveLocal = sqrt(calc_average_mass_sqr(k,clus.N_MAX));
-            sigma2 = sqr(sigma_array.sigma[k]);
-			llocal = length_factor * pow(nlocal, -1.0/3.0);
-            hardness = (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
-                         (binary[j].a * mAveLocal * sigma2);
-
-            /*if Binary_breaking_min is set, then use the hardness and MIN_BINARY_HARDNESS as a breaking criterion
-            otherwise, use the length of the apoastron compared to the interparticule seperation as the criterion*/
-            if(BINARY_BREAKING_MIN)
-                breakBinary = (hardness <= MIN_BINARY_HARDNESS);
-            else
-                breakBinary = (binary[j].a*(1.0+binary[j].e) >= llocal);
-
-			if (breakBinary){
-				Eexcess += binary[j].m1 * binary[j].m2 * sqr(madhoc) / (2.0 * binary[j].a);
-
-				/* create two stars for the binary components */
-				knew = create_star(k, 0);
-				knewp = create_star(k, 0);
-				cp_binmemb_to_star(k, 0, knew);
-				cp_binmemb_to_star(k, 1, knewp);
-				/* destroy this binary */
-				destroy_obj(k);
-                breakBinary = 0;
-            }
-        } else if(Eexcess > 0. && star[k].interacted == 0 ){
-            m = star[k].m;
-            /* take excess energy from nearby field star (single or binary) */
-            v2 = sqr(star[k].vt)+sqr(star[k].vr);
-            E_dump_capacity = E_dump_factor * 0.5 * m * madhoc * v2; 
-            E_dump = MIN(E_dump_capacity,Eexcess);
-            exc_ratio = sqrt( (v2-2.0*E_dump/(m*madhoc) ) / v2 );
-            star[k].vr *= exc_ratio;
-            star[k].vt *= exc_ratio;
-            set_star_EJ(k);
-			//printf("stealing binary energy = %lg from star id = %ld\n", E_dump,g_k);
-            Eexcess -= E_dump;
-            star[k].interacted = 1;
-		   }
-	}
-	/* keep track of the energy that's vanishing due to our negligence */
-	Eoops += -Eexcess;
-}
-
-/**
-* @brief
    Here we need to compare the inspiral time for binary black holes to the typical
    timescale for another encounter.  Note that I'm not being careful with units, since we
    only need to compare timescales
@@ -2737,14 +2318,13 @@ int destroy_bbh(double m1, double m2,double a,double e,double nlocal,double sigm
     
 }
 
-#ifdef USE_MPI
 /**
 * @brief
    Since the binary interactions are done in a vaccuum, it is possible for them
    to produce pathologically wide binaries, which must be broken by hand, else 
    they shorten the timestep to a crawl.
 */
-void mpi_break_wide_binaries(struct rng_t113_state* rng_st)
+void break_wide_binaries(struct rng_t113_state* rng_st)
 {
 	long i,g_i,j, k, g_k, knew, knewp;
     int breakBinary = 0;
@@ -2853,9 +2433,7 @@ void mpi_break_wide_binaries(struct rng_t113_state* rng_st)
 	/* keep track of the energy that's vanishing due to our negligence */
 	Eoops += -Eexcess;
 }
-#endif
 
-#ifdef USE_MPI
 /**
 * @brief Computes the local average velocity dispersion value for each star (parallel version of calc_sigma_r).
 *
@@ -2866,7 +2444,7 @@ void mpi_break_wide_binaries(struct rng_t113_state* rng_st)
 * @param sig_n n value of sigma structure
 * @param r_0_mave_1 if 0, sig_r_or_mave is filled with r values, if not, average mass values
 */
-void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_sigma, long* sig_n, int r_0_mave_1)
+void calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_sigma, long* sig_n, int r_0_mave_1)
 {
 	long si, k, simin, simax, siminlast, simaxlast;
 	double Mv2ave, Mave;
@@ -3032,79 +2610,7 @@ void mpi_calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_s
 	free(ghost_pts_vr.next);
 	free(ghost_pts_vt.next);
 }
-#endif
 
-/**
-* @brief calculate and store the velocity dispersion profile
-*
-* @param p the window to be averaged over
-* @param N_LIMIT total number of stars in the processor
-* @param sig_r_or_mave gets filled up with either the radial positions or average masses
-* @param sig_sigma sigma array
-* @param sig_n n value of sigma structure
-* @param r_0_mave_1 if 0, sig_r_or_mave is filled with r values, if not, average mass values
-*/
-void calc_sigma_r(long p, long N_LIMIT, double *sig_r_or_mave, double *sig_sigma, long *sig_n, int r_0_mave_1)
-{
-	long si, k, simin, simax, siminlast, simaxlast;
-	double Mv2ave, Mave;
-	
-	*sig_n = N_LIMIT;
-
-	/* p = MAX((long) (1.0e-4 * ((double) clus.N_STAR) / 2.0), AVEKERNEL); */
-
-	/* MPI: Adapting this similar to the MPI version to enable comparison between the serial and parallel */
-	int i;
-	for(i=0; i<procs; i++)
-	{
-		Mv2ave = 0.0;
-		Mave = 0.0;
-
-		siminlast = Start[i];//set to min index
-		if (i!=0)
-			simaxlast = Start[i] - 1 - p;
-		else
-			simaxlast = Start[i] - 1;
-
-		for (si=Start[i]; si<=End[i]; si++) {
-			simin = si - p;
-			simax = simin + (2 * p - 1);
-			if (simin < 1) {
-				simin = 1;
-				simax = simin + (2 * p - 1);
-			} else if (simax > N_LIMIT) {
-				simax = N_LIMIT;
-				simin = simax - (2 * p - 1);
-			}
-
-			// do sliding sum
-			for (k=siminlast; k<simin; k++) {
-				Mv2ave -= star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-				Mave -= star[k].m * madhoc;
-			}
-
-			for (k=simaxlast+1; k<=simax; k++) {
-				Mv2ave += star[k].m * madhoc * (sqr(star[k].vr) + sqr(star[k].vt));
-				Mave += star[k].m * madhoc;
-			}
-			// don't need to average since one gets divided by the other
-			//Mv2ave /= (double) (2 * p);
-			//Mave /= (double) (2 * p);
-
-            /* depending on what is needed as the output, either r(for 2body dynamics), or mave(for 3bb stuff) is store */
-            if(r_0_mave_1 == 0)
-                sig_r_or_mave[si] = star[si].r;
-            else
-                sig_r_or_mave[si] = Mave/2./p;
-
-			/* store sigma (sigma is the 3D velocity dispersion) */
-			sig_sigma[si] = sqrt(Mv2ave/Mave);
-
-			siminlast = simin;
-			simaxlast = simax;
-		}
-	}
-}
 
 /**
 * @brief calculates sliding averages of mass^2 around given index
@@ -3134,11 +2640,7 @@ double calc_average_mass_sqr(long index, long N_LIMIT) {
 
   M2ave = 0.0;
   for (k=simin; k<=simax; k++) {
-#ifdef USE_MPI
     M2ave += sqr(star_m[get_global_idx(k)] * madhoc);
-#else
-    M2ave += sqr(star[k].m * madhoc);
-#endif
   }
   M2ave /= (double) (2 * p);
 
