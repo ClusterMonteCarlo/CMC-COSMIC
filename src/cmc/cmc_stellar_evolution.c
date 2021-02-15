@@ -953,28 +953,35 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
                 convert = 2;
         }
     }
-    while (bse_get_bcm(jj,1)>=0.0) {
-      if(jj > 1){
-        if(bse_get_bcm(jj,2) == 13 && bse_get_bcm(jj-1,2) < 13){
-           if(bse_get_bcm(jj+1,1) >= 0.0) {
-              binary[kb].bse_bcm_formation[0] = bse_get_bcm(jj+1,39); //again just being paranoid about bcm array, but here moving forward by one.
-//              printf("stel, pulsar bin. 1 : %g %g %g %g \n",binary[kb].bse_B_0[0],binary[kb].bse_ospin[0],bse_get_bcm(jj+1,33),binary[kb].bse_bcm_formation[0]);
-           } else {
-              binary[kb].bse_bcm_formation[0] = bse_get_bcm(jj,39);
-//              printf("stel, pulsar bin. 2 : %g %g %g %g \n",binary[kb].bse_B_0[0],binary[kb].bse_ospin[0],bse_get_bcm(jj,33),binary[kb].bse_bcm_formation[0]);
-           }
-        }
-        if(bse_get_bcm(jj,16) == 13 && bse_get_bcm(jj-1,16) < 13){
-           if(bse_get_bcm(jj+1,1) >= 0.0) {
-              binary[kb].bse_bcm_formation[1] = bse_get_bcm(jj+1,40);
-//              printf("stel, pulsar bin. 3 : %g %g %g %g \n",binary[kb].bse_B_0[1],binary[kb].bse_ospin[1],bse_get_bcm(jj+1,34),binary[kb].bse_bcm_formation[1]);
-           } else {
-              binary[kb].bse_bcm_formation[1] = bse_get_bcm(jj,40);
-//              printf("stel, pulsar bin. 4 : %g %g %g %g \n",binary[kb].bse_B_0[1],binary[kb].bse_ospin[1],bse_get_bcm(jj,34),binary[kb].bse_bcm_formation[1]);
-           }
-        }
-      }
-      jj++;
+
+    // If something's a neutron star, see if it formed this timestep
+    // Note I just added this because restarting will sometimes cause this to fail
+    // if the first object is a binary black hole (since those are evolved externally to BSE,
+    // and the BCM array isn't updated) 
+    if((bse_get_bcm(j,2) == 13) || (bse_get_bcm(jj,16) == 13)){
+	    while (bse_get_bcm(jj,1)>=0.0) {
+	      if(jj > 1){
+		if(bse_get_bcm(jj,2) == 13 && bse_get_bcm(jj-1,2) < 13){
+		   if(bse_get_bcm(jj+1,1) >= 0.0) {
+		      binary[kb].bse_bcm_formation[0] = bse_get_bcm(jj+1,39); //again just being paranoid about bcm array, but here moving forward by one.
+	//              printf("stel, pulsar bin. 1 : %g %g %g %g \n",binary[kb].bse_B_0[0],binary[kb].bse_ospin[0],bse_get_bcm(jj+1,33),binary[kb].bse_bcm_formation[0]);
+		   } else {
+		      binary[kb].bse_bcm_formation[0] = bse_get_bcm(jj,39);
+	//              printf("stel, pulsar bin. 2 : %g %g %g %g \n",binary[kb].bse_B_0[0],binary[kb].bse_ospin[0],bse_get_bcm(jj,33),binary[kb].bse_bcm_formation[0]);
+		   }
+		}
+		if(bse_get_bcm(jj,16) == 13 && bse_get_bcm(jj-1,16) < 13){
+		   if(bse_get_bcm(jj+1,1) >= 0.0) {
+		      binary[kb].bse_bcm_formation[1] = bse_get_bcm(jj+1,40);
+	//              printf("stel, pulsar bin. 3 : %g %g %g %g \n",binary[kb].bse_B_0[1],binary[kb].bse_ospin[1],bse_get_bcm(jj+1,34),binary[kb].bse_bcm_formation[1]);
+		   } else {
+		      binary[kb].bse_bcm_formation[1] = bse_get_bcm(jj,40);
+	//              printf("stel, pulsar bin. 4 : %g %g %g %g \n",binary[kb].bse_B_0[1],binary[kb].bse_ospin[1],bse_get_bcm(jj,34),binary[kb].bse_bcm_formation[1]);
+		   }
+		}
+	      }
+	      jj++;
+	    }
     }
 // Check convert to see if formation was updated incorrectly. If so then correct it.
     if(convert>0){

@@ -2043,7 +2043,7 @@ if(myid==0)
 #ifdef USE_FITS
                 cmc_read_fits_file(INPUT_FILE, &cfd, RESTART_TCOUNT);
 #else 
-		fprintf("stderr","ERROR: code not compiled against fits libraries\n Rerun cmake wtih FITS=ON\n");
+		fprintf(stderr,"ERROR: code not compiled against fits libraries\n Rerun cmake wtih FITS=ON\n");
 		exit(1);
 #endif
             }

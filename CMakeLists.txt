@@ -75,7 +75,7 @@ IF(WITH_MPI)
 ENDIF(WITH_MPI)
 
 # enable EXPERIMENTAL
-option(EXPERIMENTAL "Option description" ON)
+option(WITH_EXPERIMENTAL "Option description" ON)
 
 IF(WITH_EXPERIMENTAL)
 	add_definitions(-DEXPERIMENTAL)
