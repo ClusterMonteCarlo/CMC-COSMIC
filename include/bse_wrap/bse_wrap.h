@@ -186,7 +186,7 @@ extern struct { int  tflag, ifflag, remnantflag, wdflag, bhflag, windflag,  qcfl
 extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 extern struct { double zsun; } metvars_;
-extern struct { double don_lim, acc_lim; } mtvars; 
+extern struct { double don_lim, acc_lim; } mtvars_; 
 
 extern struct { double neta, bwind, hewind, beta, xi, acc2, epsnov, eddfac, gamma; } windvars_;
 extern struct { double qcrit_array[16], alpha1, lambdaf; } cevars_;

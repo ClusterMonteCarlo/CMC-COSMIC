@@ -1506,12 +1506,12 @@ if(myid==0) {
                                 parsed.BSE_QCFLAG = 1;
                         } else if (strcmp(parameter_name, "DON_LIM")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_DON_LIM);
-                                sscanf(values, "%lf", @BSE_DON_LIM);
-                                parsed.DON_LIM = 1;
+                                sscanf(values, "%lf", &BSE_DON_LIM);
+                                parsed.BSE_DON_LIM = 1;
                         } else if (strcmp(parameter_name, "ACC_LIM")==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ACC_LIM);
-                                sscanf(values, "%lf", @BSE_ACC_LIM);
-                                parsed.ACC_LIM = 1;
+                                sscanf(values, "%lf", &BSE_ACC_LIM);
+                                parsed.BSE_ACC_LIM = 1;
                         } else if (strcmp(parameter_name, "SIGMA")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_SIGMA);
                                 sscanf(values, "%lf", &BSE_SIGMA);
