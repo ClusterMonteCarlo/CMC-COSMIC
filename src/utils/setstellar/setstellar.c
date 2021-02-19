@@ -68,6 +68,8 @@ void stellar_evolve(cmc_fits_data_t *cfd)
         int BSE_CEMERGEFLAG= 0;
         int BSE_CEHESTARFLAG= 0;
         int BSE_QCFLAG= 2;
+        double BSE_DON_LIM= 0;
+        double BSE_ACC_LIM= 0;
         double BSE_SIGMA= 265.0;
         int BSE_BHFLAG= 1;
         int BSE_BHMS_COLL_FLAG= 0;
@@ -133,6 +135,8 @@ void stellar_evolve(cmc_fits_data_t *cfd)
 	bse_set_cekickflag(BSE_CEKICKFLAG);
 	bse_set_tflag(BSE_TFLAG);
 	bse_set_qcflag(BSE_QCFLAG);
+        bse_set_don_lim(BSE_DON_LIM);
+        bse_set_acc_lim(BSE_ACC_LIM);
 	bse_set_ifflag(BSE_IFFLAG);
 	bse_set_wdflag(BSE_WDFLAG);
 	bse_set_bhflag(BSE_BHFLAG);
