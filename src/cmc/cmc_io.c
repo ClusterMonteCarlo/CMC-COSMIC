@@ -486,7 +486,7 @@ void PrintFileOutput(void) {
     }
 
 	/* also saves INITIAL snapshot (StepCount=0) */
-	if (tcount%SNAPSHOT_DELTACOUNT==0 | tcount==0.){
+	if (tcount%SNAPSHOT_DELTACOUNT==0 || TotalTime==0.){
 		print_2Dsnapshot();
 		if (WRITE_STELLAR_INFO){
 			write_stellar_data();	
@@ -2790,10 +2790,35 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
         "tacc0", "tacc1","mass0_0", "mass0_1", "epoch0","epoch1","ospin", "B","formation"};
         hid_t      field_type[NFIELDS];
         hid_t      snapfile_hdf5;
+        htri_t          avail;
+        H5Z_filter_t    filter_type;
+        herr_t  status;
         hsize_t    chunk_size = 10;
         int        *fill_data = NULL;
-        int        compress  = 0;
-	int 	   ii;
+        int        compress  = 1;
+        int 	   ii;
+        unsigned int filter_info;
+
+	/*
+     * Check if gzip compression is available and can be used for both
+     * compression and decompression.  Normally we do not perform error
+     * checking in these examples for the sake of clarity, but in this
+     * case we will make an exception because this filter is an
+     * optional part of the hdf5 library.
+     */
+		avail = H5Zfilter_avail(H5Z_FILTER_DEFLATE);
+		if (!avail) {
+			fprintf (stderr, "WARNING: gzip filter not available for HDF5\n");
+			fprintf (stderr, "Snapshots will be VERY large\n");
+            compress = 0;
+		}
+        status = H5Zget_filter_info (H5Z_FILTER_DEFLATE, &filter_info);
+		if ( !(filter_info & H5Z_FILTER_CONFIG_ENCODE_ENABLED) ||
+                    !(filter_info & H5Z_FILTER_CONFIG_DECODE_ENABLED) ) {
+			fprintf (stderr, "WARNING: gzip filter not available for encoding and decoding HDF5 groups\n");
+			fprintf (stderr, "Snapshots will be VERY large\n");
+            compress = 0;
+		}
 
         for (ii = 0; ii < NFIELDS; ++ii){
           field_type[ii] = H5T_NATIVE_DOUBLE;
