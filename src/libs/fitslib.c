@@ -251,6 +251,11 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     /*
      * Open file and dataset using the default properties.
      */
+    if(access( filename, F_OK ) != 0 ){
+        fprintf(stderr,"ERROR: input file %s does not exist!\n",filename);
+        exit(1);
+    }
+
     file = H5Fopen (filename, H5F_ACC_RDONLY, H5P_DEFAULT);
     dset = H5Dopen (file, "CLUS_OBJ_DATA/block0_values", H5P_DEFAULT);
     dset1 = H5Dopen (file, "CLUS_BINARY_DATA/block0_values", H5P_DEFAULT);
