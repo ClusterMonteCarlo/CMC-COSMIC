@@ -1885,7 +1885,7 @@ if(myid==0) {
         // acc_lim = -1: assumes the accretion is limited to tkh_acc for MS/CHeB
         // acc_lim = -2: assumes the accretion is limited by 10*tkh_acc for all fusing stars
         // acc_lim = -3: assumes the accretion is limited by tkh_for all fusing stars
-        CHECK_PARSED(BSE_ACCL_IM, 0, PARAMDOC_BSE_ACC_LIM);
+        CHECK_PARSED(BSE_ACC_LIM, 0, PARAMDOC_BSE_ACC_LIM);
 
         // qcflag is an integer flag that sets the model to determine which critical mass ratios to use for the onset of unstable mass transfer and/or a common envelope. NOTE: this is overridden by qcrit_array if any of the values are non-zero.
         // 0: standard BSE
