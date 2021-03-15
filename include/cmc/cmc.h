@@ -134,25 +134,25 @@
 
  typedef struct Snapshot
  {
-  int id;
+  long id;
   double m;
   double r;
   double vr;
   double vt;
   double E;
   double J;
-  double binflag;
+  long binflag;
   double m0;
   double m1;
-  double id0;
-  double id1;
+  long id0;
+  long id1;
   double a;
   double e;
-  double startype;
+  int startype;
   double luminosity;
   double radius;
-  double bin_startype0;
-  double bin_startype1;
+  int bin_startype0;
+  int bin_startype1;
   double bin_star_lum0;
   double bin_star_lum1;
   double bin_star_radius0;
@@ -195,7 +195,6 @@
   double epoch1;
   double ospin;
   double B;
-  double formation;
  } Snapshot;
 
 //#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:type1 #12:type2 #13:type3 #14:rad1 #15:rad2 #16:rad3 #17:Eb #18:ecc #19:a(au) #20:rp(au)
