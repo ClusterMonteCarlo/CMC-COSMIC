@@ -3898,6 +3898,7 @@ void save_restart_file(){
 	fwrite(&clus, sizeof(clus_struct_t), 1, my_restart_file);
 	fwrite(star, sizeof(star_t), N_STAR_DIM_OPT, my_restart_file);
 	fwrite(binary, sizeof(binary_t), N_BIN_DIM_OPT, my_restart_file);
+	fwrite(snapshot_window_counters, sizeof(int), snapshot_window_count, my_restart_file);
 
 	fclose(my_restart_file);
 
@@ -3957,6 +3958,7 @@ void load_restart_file(){
 	fread(&clus, sizeof(clus_struct_t), 1, my_restart_file);
 	fread(star, sizeof(star_t), N_STAR_DIM_OPT, my_restart_file);
 	fread(binary, sizeof(binary_t), N_BIN_DIM_OPT, my_restart_file);
+	fread(snapshot_window_counters, sizeof(int), snapshot_window_count, my_restart_file);
 
 	fclose(my_restart_file);
 
