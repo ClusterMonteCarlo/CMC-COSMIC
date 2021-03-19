@@ -201,6 +201,7 @@
   double epoch1;
   double ospin;
   double B;
+  int formation;
  } Snapshot;
 
 //#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:type1 #12:type2 #13:type3 #14:rad1 #15:rad2 #16:rad3 #17:Eb #18:ecc #19:a(au) #20:rp(au)
