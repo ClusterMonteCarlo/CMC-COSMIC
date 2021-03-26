@@ -62,27 +62,15 @@ long FindZero_r_serial(long kmin, long kmax, double r){
 long FindZero_r(long kmin, long kmax, double r){
 	long ktry;
 
-#ifdef USE_MPI
 	if ((star_r[kmin]>r && kmin>1) || star_r[kmax]<r) {
 		dprintf("r is outside kmin kmax!!\n");
 		dprintf("star[kmin].r= %lf, star[kmax].r= %lf, kmin= %li, kmax= %li, r=%lf\n", 
 				star_r[kmin], star_r[kmax], kmin, kmax, r);
 	};
-#else
-	if ((star[kmin].r>r && kmin>1) || star[kmax].r<r) {
-		dprintf("r is outside kmin kmax!!\n");
-		dprintf("star[kmin].r= %lf, star[kmax].r= %lf, kmin= %li, kmax= %li, r=%lf\n", 
-				star[kmin].r, star[kmax].r, kmin, kmax, r);
-	};
-#endif
 
 	do {
 		ktry = (kmin+kmax+1)/2;
-#ifdef USE_MPI
 		if (star_r[ktry]<r)
-#else
-		if (star[ktry].r<r)
-#endif
 		{
 			kmin = ktry;
 		} else {
@@ -185,7 +173,6 @@ long FindZero_r(long x1, long x2, double r)
 #define FUNC(j, k, E, J) (2.0 * SQR(star[(k)].r) * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR(J))
 */
 
-#ifdef USE_MPI
 /**
 * @brief Parallel version of FUNC macro, requires global indices as input after index transformation
 *
@@ -197,19 +184,6 @@ long FindZero_r(long x1, long x2, double r)
 * @return ? 
 */
 #define FUNC(j, k, E, J) (2.0 * ((E) - (star_phi[(k)] + MPI_PHI_S(star_r[k], j))) - SQR((J)/star_r[(k)]))
-#else
-/**
-* @brief ?
-*
-* @param j ?
-* @param k ?
-* @param E energy
-* @param J angular momentum
-*
-* @return ? 
-*/
-#define FUNC(j, k, E, J) (2.0 * ((E) - (star[(k)].phi + PHI_S(star[k].r, j))) - SQR((J)/star[(k)].r))
-#endif
 
 /**
 * @brief another binary search, except FUNC(k) may be decreasing rather than increasing
@@ -271,19 +245,12 @@ double calc_pot_within_interval(double r, void *p) {
   index= params->index; k= params->k;
   E= params->E; J= params->J;
   
-#ifdef USE_MPI
   if (r< (star_r[k]-DBL_EPSILON) || r> star_r[k+1]+DBL_EPSILON) {
     eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r,
         star_r[k], star_r[k+1], r-star_r[k], r-star_r[k+1]);
-#else
-  if (r< (star[k].r-DBL_EPSILON) || r> star[k+1].r+DBL_EPSILON) {
-    eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r, 
-        star[k].r, star[k+1].r, r-star[k].r, r-star[k+1].r);
-#endif
     exit_cleanly(-1, __FUNCTION__);
   };
 
-#ifdef USE_MPI
   if (fabs(r-star_r[k])< DBL_EPSILON) {
     pot= star_phi[k];
   } else if (fabs(r-star_r[k+1])< DBL_EPSILON) {
@@ -297,21 +264,6 @@ double calc_pot_within_interval(double r, void *p) {
                            (1.0/star_r[k] - 1.0/star_r[k + 1]));
     }
   };
-#else
-  if (fabs(r-star[k].r)< DBL_EPSILON) {
-    pot= star[k].phi;
-  } else if (fabs(r-star[k+1].r)< DBL_EPSILON) {
-    pot= star[k+1].phi;
-  } else {
-    if (r< star[1].r) {
-      pot= star[0].phi-cenma.m*madhoc/r;
-    } else {
-      pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
-                           * (1.0/star[k].r - 1.0/r) /
-                           (1.0/star[k].r - 1.0/star[k + 1].r));
-    }
-  };
-#endif
 
   return(pot);
 };
@@ -326,19 +278,12 @@ double calc_pot_within_interval(double r, void *p) {
 */
 double calc_pot_in_interval(double r, long k) {
   double pot;
-#ifdef USE_MPI
   if (r< (star_r[k]-DBL_EPSILON) || r> star_r[k+1]+DBL_EPSILON) {
     eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r,
         star_r[k], star_r[k+1], r-star_r[k], r-star_r[k+1]);
-#else
-  if (r< (star[k].r-DBL_EPSILON) || r> star[k+1].r+DBL_EPSILON) {
-    eprintf("r= %g is not in [%g,%g]! r-r_low= %g, r-r_high= %g\n", r, 
-        star[k].r, star[k+1].r, r-star[k].r, r-star[k+1].r);
-#endif
     exit_cleanly(-1, __FUNCTION__);
   };
 
-#ifdef USE_MPI
   if (fabs(r-star_r[k])< DBL_EPSILON) {
     pot= star_phi[k];
   } else if (fabs(r-star_r[k+1])< DBL_EPSILON) {
@@ -352,21 +297,6 @@ double calc_pot_in_interval(double r, long k) {
                            (1.0/star_r[k] - 1.0/star_r[k + 1]));
     } 
   };
-#else
-  if (fabs(r-star[k].r)< DBL_EPSILON) {
-    pot= star[k].phi;
-  } else if (fabs(r-star[k+1].r)< DBL_EPSILON) {
-    pot= star[k+1].phi;
-  } else {
-    if (r< star[1].r) {
-      pot= star[0].phi-cenma.m*madhoc/r;
-    } else {
-      pot= (star[k].phi + (star[k + 1].phi - star[k].phi) 
-                           * (1.0/star[k].r - 1.0/r) /
-                           (1.0/star[k].r - 1.0/star[k + 1].r));
-    } 
-  };
-#endif
 
   return(pot);
 };
@@ -394,13 +324,8 @@ long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
 
   fevals= 0;
   kmax1= kmax;
-#ifdef USE_MPI
   rmax= star_r[kmax]; pot_max= star_phi[kmax];
   rmin= star_r[kmin]; pot_min= star_phi[kmin];
-#else
-  rmax= star[kmax].r; pot_max= star[kmax].phi;
-  rmin= star[kmin].r; pot_min= star[kmin].phi;
-#endif
   qmin= function_q(j, rmin, pot_min, E, J);
   qmax= function_q(j, rmax, pot_max, E, J);
   fevals+= 2;
@@ -418,11 +343,7 @@ long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
     //dprintf("increasing\n");
     do {
       ktry = (kmin+kmax+1)/2;
-#ifdef USE_MPI
       rtry= star_r[ktry]; pot_try= star_phi[ktry];
-#else
-      rtry= star[ktry].r; pot_try= star[ktry].phi;
-#endif
       qtry= function_q(j, rtry, pot_try, E, J);
       fevals++;
       //dprintf("ktry=%li, q[ktry]=%g\n", ktry, (double) qtry);
@@ -436,11 +357,7 @@ long find_zero_Q(long j, long kmin, long kmax, long double E, long double J){
     //dprintf("decreasing\n");
     do {
       ktry = (kmin+kmax+1)/2;
-#ifdef USE_MPI
       rtry= star_r[ktry]; pot_try= star_phi[ktry];
-#else
-      rtry= star[ktry].r; pot_try= star[ktry].phi;
-#endif
       qtry= function_q(j, rtry, pot_try, E, J);
       fevals++;
       if (qtry>0.e0){
@@ -527,11 +444,7 @@ double calc_Q_within_interval(double r, void *p) {
   E= params->E; J= params->J;
   pot= calc_pot_within_interval(r, p);
   
-#ifdef USE_MPI
   return(2.0 * SQR(r) * (E - pot - MPI_PHI_S(r, index))- SQR(J));
-#else
-  return(2.0 * SQR(r) * (E - pot - PHI_S(r, index))- SQR(J));
-#endif
 };
 
 /**
@@ -599,29 +512,16 @@ double find_root_vr(long index, long k, double E, double J) {
   F.params= &p;
 
   /* check if the values of F at the interval boundaries have different signs */
-#ifdef USE_MPI
   if (GSL_SIGN(GSL_FN_EVAL(&F, star_r[k]))==GSL_SIGN(GSL_FN_EVAL(&F, star_r[k+1]))) {
     eprintf("The signs of F[k] and F[k+1] are the same!\n");
     eprintf("k= %li, F[k]= %g, F[k+1]= %g, r[k]= %g, r[k+1]= %g\n", k, 
         GSL_FN_EVAL(&F, star_r[k]), GSL_FN_EVAL(&F, star_r[k+1]), star_r[k], star_r[k+1]);
     eprintf("FUNC[k]= %g, FUNC[k+1]= %g\n", FUNC(index, k, E, J), FUNC(index, k+1, E, J));
     eprintf("DBL_EPSILON= %g, r[k]= %g\n", DBL_EPSILON, star_r[k]);
-#else
-  if (GSL_SIGN(GSL_FN_EVAL(&F, star[k].r))==GSL_SIGN(GSL_FN_EVAL(&F, star[k+1].r))) {
-    eprintf("The signs of F[k] and F[k+1] are the same!\n");
-    eprintf("k= %li, F[k]= %g, F[k+1]= %g, r[k]= %g, r[k+1]= %g\n", k, 
-        GSL_FN_EVAL(&F, star[k].r), GSL_FN_EVAL(&F, star[k+1].r), star[k].r, star[k+1].r);
-    eprintf("FUNC[k]= %g, FUNC[k+1]= %g\n", FUNC(index, k, E, J), FUNC(index, k+1, E, J));
-    eprintf("DBL_EPSILON= %g, r[k]= %g\n", DBL_EPSILON, star[k].r);
-#endif
     exit(1);
   }
 
-#ifdef USE_MPI
   status= gsl_root_fsolver_set(q_root, &F, star_r[k], star_r[k+1]);
-#else
-  status= gsl_root_fsolver_set(q_root, &F, star[k].r, star[k+1].r);
-#endif
   if (status) {
     eprintf("Initialization of root solver failed! Error Code: %i\n", status);
   exit(1);
@@ -649,11 +549,7 @@ double find_root_vr(long index, long k, double E, double J) {
       dprintf("Iterated %li times and did not get apside error down to %g!\n", APSIDES_MAX_ITER-iter, APSIDES_PRECISION);
       dprintf("The current interval is [%.16g,%.16g]\n", r_low, r_high);
       dprintf("Interval width is %.14g\n", r_high-r_low);
-#ifdef USE_MPI
       dprintf("Distance between the stars is %g\n", star_r[k]- star_r[k+1]);
-#else
-      dprintf("Distance between the stars is %g\n", star[k].r- star[k+1].r);
-#endif
       dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
       if (prev_apsis< 0.) {
 	dprintf("Consider now APSIDES_CONVERGENCE= %g.\n", APSIDES_CONVERGENCE);
@@ -678,11 +574,7 @@ double find_root_vr(long index, long k, double E, double J) {
   } else {
     dprintf("Found NO zero in interval [%.12g,%.12g]\n", r_low, r_high);
     dprintf("Interval width is %g\n", r_high-r_low);
-#ifdef USE_MPI
     dprintf("Distance between the stars is %g\n", star_r[k]- star_r[k+1]);
-#else
-    dprintf("Distance between the stars is %g\n", star[k].r- star[k+1].r);
-#endif
     dprintf("Values of vr range from %g to %g\n", GSL_FN_EVAL(&F, r_low), GSL_FN_EVAL(&F, r_high));
     exit(1);
   };

@@ -120,7 +120,6 @@ _EXTERN_ FILE *fp_lagrad, *fp_log, *fp_denprof;
 _EXTERN_ FILE *timerfile;
 // Meagan: file for tracking potential fluctuations for innermost 1000 stars
 
-#ifdef USE_MPI
 /**
 * @brief MPI: MPI-IO file pointers corresponding to the C File(pointer)s used in the serial code for files that are needed to be written out using MPI-IO
 */
@@ -172,7 +171,6 @@ _EXTERN_ long long mpi_bhsummaryfile_len, mpi_escbhsummaryfile_len, mpi_newbhfil
 */
 _EXTERN_ long long mpi_bhsummaryfile_ofst_total, mpi_escbhsummaryfile_ofst_total, mpi_newbhfile_ofst_total, mpi_bhmergerfile_ofst_total, mpi_threebbfile_ofst_total, mpi_threebbprobabilityfile_ofst_total, mpi_lightcollisionfile_ofst_total, mpi_threebbdebugfile_ofst_total;
 
-#endif
 
 /* everything else except arrays */
 _EXTERN_ char outprefix[100];
@@ -213,7 +211,6 @@ _EXTERN_ long DF_num, DF_num_max;
 _EXTERN_ double t_df_cum, t_df_prev;
 
 /* mpi parallelization stuff */
-#ifdef USE_MPI
 /**
 * @brief MPI: Array to store the entire list of stellar positions. This is duplicated across processors in the beginning, and is synchronized at the end of each timestep.
 */
@@ -235,7 +232,6 @@ _EXTERN_ int *mpiDisp, *mpiLen;
 * @brief MPI: There are some global variables that are updated at various places during a timestep, and towards the end need to be summed up across all processors. So, we store the values of these variables from the previous timestep into corresponding _old variables, and reset the actual variables to zero. At the end of the timestep, we cumulate/reduce the actual variables across processors and finally add them to the _old value i.e. total value of the variable from the previous timestep to obtain the updated values for these variables.
 */
 _EXTERN_ double Eescaped_old, Jescaped_old, Eintescaped_old, Ebescaped_old, TidalMassLoss_old, Etidal_old;
-#endif
 /**
 * @brief Processor id of THIS processor.
 */
@@ -269,21 +265,6 @@ _EXTERN_ int size_bin_buf;
 */
 _EXTERN_ int N_b_local;
 
-/* for newly created stars - mimicking rng */
-#ifndef USE_MPI
-/**
-* @brief An array as big as the number of processors - during each timestep, this array stores the number stars created during dynamics by each processor.
-*/
-_EXTERN_ int *created_star_dyn_node;
-/**
-* @brief Array as big as the number of processors - during each timestep, this array stores the number stars created during stellar evolution by each processor.
-*/
-_EXTERN_ int *created_star_se_node;
-/**
-* @brief Array as big as the number or processors - to achieve comparability with the parallel version, we maintain an array of DMse values storing the value for each processor and then finally cumulate to avoid round-off errors.
-*/
-_EXTERN_ double *DMse_mimic;
-#endif
 _EXTERN_ FILE* ftest2;
 _EXTERN_ char num2[5],filename2[20], tempstr2[20];
 //Probably not needed anymore
@@ -358,7 +339,6 @@ _EXTERN_ int WRITE_MOREPULSAR_INFO;
 _EXTERN_ int BHNS_TDE;
 _EXTERN_ int CALCULATE10;
 
-#ifdef EXPERIMENTAL
 /**
 * @brief
 * scale the square of the deflection angle used for testing of entry into the loss
@@ -366,7 +346,6 @@ _EXTERN_ int CALCULATE10;
 */
 _EXTERN_ double BH_LC_FDT;
 _EXTERN_ long AVEKERNEL;
-#endif
 _EXTERN_ long MIN_CHUNK_SIZE;
 _EXTERN_ long BH_AVEKERNEL;
 _EXTERN_ long N_Q_TRACE;

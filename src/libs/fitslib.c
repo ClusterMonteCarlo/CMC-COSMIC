@@ -239,9 +239,9 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     for (i=1; i<dims[0]; i++)
         read_mclus[i] = read_mclus[0] + i * dims[1];
 
-    int **read_nobj = (int **) malloc (dims[0] * sizeof (int *));
+    long *read_nobj = (long *) malloc (dims[0] * sizeof (long));
 
-    int **read_nbinary = (int **) malloc (dims[0] * sizeof (int *));
+    long *read_nbinary = (long *) malloc (dims[0] * sizeof (long));
 
     /*
      * Now we simply read back the data and output it to the screen.

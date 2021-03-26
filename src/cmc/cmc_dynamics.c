@@ -35,12 +35,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	double clight10o7;
 	double collisions_multiple;
 
-#ifdef USE_MPI
-    mpi_calc_sigma_r(AVEKERNEL, mpiEnd-mpiBegin+1, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
-#else
-	//Calculate and store velocity dispersion profile for use with breaking binaries later. This can't be calculated later since the properties of the cluster members are changing with time.
-    calc_sigma_r(AVEKERNEL, clus.N_MAX, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
-#endif
+    calc_sigma_r(AVEKERNEL, mpiEnd-mpiBegin+1, sigma_array.r, sigma_array.sigma, &(sigma_array.n), 0);
 
     /* useful debugging and file headers */
     if (tcount == 1) {
@@ -55,29 +50,19 @@ void dynamics_apply(double dt, gsl_rng *rng)
     /* DEBUG: print out binary information every N steps */
     if (0) {
         /* if (tcount%50==0 || tcount==1) { */
-#ifdef USE_MPI
         MPI_File mpi_binfp;
         char mpi_binfp_buf[10000], mpi_binfp_wrbuf[10000000];
         long long mpi_binfp_len=0, mpi_binfp_ofst_total=0;
         sprintf(filename, "a_e2.%04ld.dat", tcount);
         MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_binfp);
         MPI_File_set_size(mpi_binfp, 0);
-#else
-        FILE *binfp;
-        sprintf(filename, "a_e2.%04ld.dat", tcount);
-        binfp = fopen(filename, "w");
-#endif
         for (j=1; j<=clus.N_MAX; j++) {
             if (star[j].binind) {
                 parafprintf(binfp, "%g %g\n", binary[star[j].binind].a, sqr(binary[star[j].binind].e));
             }
         }
-#ifdef USE_MPI
         mpi_para_file_write(mpi_binfp_wrbuf, &mpi_binfp_len, &mpi_binfp_ofst_total, &mpi_binfp);
         MPI_File_close(&mpi_binfp);
-#else
-        fclose(binfp);
-#endif
     }
     /* DEBUG */
 
@@ -125,29 +110,16 @@ void dynamics_apply(double dt, gsl_rng *rng)
         double *ave_local_mass_arr = (double *) malloc( ((int)(clus.N_MAX_NEW+1)) * sizeof(double) );
         double *sigma_local_arr = (double *) malloc( ((int)(clus.N_MAX_NEW+1)) * sizeof(double) );
         long temp; //the value in this is never used, but just for calc_sig function generalization.
-#ifdef USE_MPI
 		  //MPI: This loop isn't identical to the actual serial loop (commented out below) which would ignore at most 2 stars (the last 2 which won't be able to undergo a 3bb interaction). However, parallelization would be more tricky, so here we fixed this the quick and dirty way - by skipping at most 2 stars in each processor.
 		  // Local density about star k1, nearest 20 stars (10 inside, 10 outside)
-        mpi_calc_sigma_r(BH_AVEKERNEL, clus.N_MAX_NEW, ave_local_mass_arr, sigma_local_arr, &temp, 1);
+        calc_sigma_r(BH_AVEKERNEL, clus.N_MAX_NEW, ave_local_mass_arr, sigma_local_arr, &temp, 1);
 		  for (sq=1; sq<=(mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%3-2; sq+=3) // loop through objects, 3 at a time
-#else
-		  // Local density about star k1, nearest 20 stars (10 inside, 10 outside)
-		  calc_sigma_r(BH_AVEKERNEL, N_LIMIT, ave_local_mass_arr, sigma_local_arr, &temp, 1);
-		  //for (sq=1; sq<=N_LIMIT-N_LIMIT%3-2; sq+=3) // loop through objects, 3 at a time
-		  for(i=0; i<procs; i++)
-			  for (sq=Start[i]; sq<=Start[i]+(End[i]-Start[i]+1)-(End[i]-Start[i]+1)%3-2; sq+=3) // loop through objects, 3 at a time
-#endif
 			{
 				dt = SaveDt;
 				form_binary = 0; // reset this to zero; later we decide whether to form a binary, and if so, set form_binary=1
 				// Sort stars by mass (k1 is most massive)
-#ifdef USE_MPI
-				mpi_sort_three_masses(sq, &k1, &k2, &k3);
-				n_local = calc_n_local(get_global_idx(k1), BH_AVEKERNEL, N_LIMIT);
-#else
 				sort_three_masses(sq, &k1, &k2, &k3);
-				n_local = calc_n_local(k1, BH_AVEKERNEL, N_LIMIT);
-#endif
+				n_local = calc_n_local(get_global_idx(k1), BH_AVEKERNEL, N_LIMIT);
 				// If density above threshold, check for 3bb formation
 				if (n_local > n_threshold) {
 					// Are all stars singles? If not, exit loop - don't do binary formation
@@ -173,11 +145,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 						// Below is rate_3bb with all the velocity terms vrel_3 and vrel_12 replaced with the averaged local relative velocity, vrel_ave. We did this because we were finding that when we used the actual relative velocities, vrel12, if too large, the 3bb rate would be extremely low and binaries would not form (since it depends strongly on v: v^-9). When we replaced vrel12 with the average relative velocity (over 20 stars), the 3bb formation rate was high enough that binaries would form. We decided to use the average relative velocity for all relative velocity terms, vrel_3 and vrel_12.
 
 					// *Note* Factor of 0.5 in front of rate_3bb ensures that our sampling method produces the correct overall analytic 3bb rate
-#ifdef USE_MPI
 					rate_3bb = 0.5 * sqrt(2) * sqr(PI) * sqr(n_local) *  pow(vrel_ave, -9) * pow(((star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)]) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)] + star_m[get_global_idx(k3)]) / (star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)])) * eta_min);
-#else
-					rate_3bb = 0.5 * sqrt(2) * sqr(PI) * sqr(n_local) *  pow(vrel_ave, -9) * pow(((star[k1].m + star[k2].m) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star[k1].m + star[k2].m + star[k3].m) / (star[k1].m + star[k2].m)) * eta_min);
-#endif
 
 						// Calculate PROBABILITY of binary formation
 						P_3bb = rate_3bb * (dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)));
@@ -200,9 +168,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 						//  Monte Carlo - To form binary or not to form binary  |
 						//=======================================================
 
-#ifndef USE_MPI
-						curr_st = &st[findProcForIndex(k1)];
-#endif
 						Y1 = rng_t113_dbl_new(curr_st);
 						if (P_3bb > Y1) { // Binary should be formed
 							//  TODO: should really check if a three-body induced collision would happen - simply check rp to see if stars would be in contact - if so, make them collide instead.
@@ -252,27 +217,11 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	interaction, and should not be relaxed again. 
 	****  To handle this, switched from 'for' loop to 'while' loop   */
 
-/*
-#ifdef USE_MPI	
-	for (si=1; si<=(mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%2-1; si+=2) {
-#else
-*/
-
-	// previously: for (si=1; si<=N_LIMIT-N_LIMIT%2-1; si+=2) {
-    //	while (si<=N_LIMIT-N_LIMIT%2-1) {
         /* si is used to iterate over objects, and k, kp are the objects that will interact
 NOTE: objects k, kp will not always be nearest neighbors, since some stars
 are skipped if they already interacted in 3bb loop!  */
-#ifdef USE_MPI
 	si = 1;
 	while (si<=(mpiEnd-mpiBegin+1)-(mpiEnd-mpiBegin+1)%2-1) {
-#else
-	int m;
-	si = Start[0];
-	for (m=0; m<procs; m++, si=Start[m])
-	{
-	while (si<=Start[m] + (End[m]-Start[m]+1) - (End[m]-Start[m]+1)%2-1) {
-#endif
 		int g_k, g_kp;
 		dt = SaveDt;
 		
@@ -295,13 +244,8 @@ are skipped if they already interacted in 3bb loop!  */
 		si += 1; // iterate for the next interaction
 
 		/* The indices for the 2 stars that will interact are k and kp  */
-#ifdef USE_MPI
 		g_k = get_global_idx(k);
 		g_kp = get_global_idx(kp);
-#else
-		g_k = k;
-		g_kp = kp;
-#endif
 
 		/* set dynamical params for this pair */
 		calc_encounter_dyns(k, kp, v, vp, w, &W, &rcm, vcm, rng, 1);
@@ -310,13 +254,8 @@ are skipped if they already interacted in 3bb loop!  */
 		/* Compute local density */
 		n_local = calc_n_local(g_k, p, N_LIMIT);
 	
-#ifdef USE_MPI
 		mass_k = star_m[g_k];
 		mass_kp = star_m[g_kp];
-#else
-		mass_k = star[k].m;
-		mass_kp = star[kp].m;
-#endif
 	
 		if (star[k].binind > 0 && star[kp].binind > 0) {
 			/* binary--binary cross section */
@@ -451,9 +390,6 @@ are skipped if they already interacted in 3bb loop!  */
 			wprintf("P_enc = %g >= 1!\n", P_enc);
 		}
 
-#ifndef USE_MPI
-		curr_st = &st[findProcForIndex(k)];
-#endif
 		/* do encounter or two-body relaxation */
 		if(rng_t113_dbl_new(curr_st) < P_enc) { 
 			/* do encounter */
@@ -549,12 +485,8 @@ are skipped if they already interacted in 3bb loop!  */
 
 		}
 	}
-#ifndef USE_MPI
-     }
-#endif
 
     //MPI: Reduction for File IO - relaxationfile
-#ifdef USE_MPI
 	double tmpTimeStart = timeStartSimple();
     double buf_comm_dbl[3][4];
     double buf_comm_dbl_recv[3][4];
@@ -573,17 +505,14 @@ are skipped if they already interacted in 3bb loop!  */
     MPI_Reduce(buf_comm_long, buf_comm_long_recv, 5, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
     Nrel = buf_comm_long_recv[4];
 	 timeEndSimple(tmpTimeStart, &t_comm);
-#endif
 
     /* print relaxation information */
 	pararootfprintf(relaxationfile, "%g", TotalTime);
 	for (i=0; i<4; i++) {
-#ifdef USE_MPI
         Nrelbeta[i] = buf_comm_long_recv[i];
         qaverelbeta[i] = buf_comm_dbl_recv[0][i];
         maverelbeta[i] = buf_comm_dbl_recv[1][i];
         raverelbeta[i] = buf_comm_dbl_recv[2][i];
-#endif
 		pararootfprintf(relaxationfile, " %g %g %g %g", 
 				((double) Nrelbeta[i])/((double) Nrel), 
 				qaverelbeta[i]/((double) Nrelbeta[i]),
@@ -597,9 +526,5 @@ are skipped if they already interacted in 3bb loop!  */
 	pararootfprintf(logfile, "\n");
 
 	/* break pathologically wide binaries */
-#ifdef USE_MPI
-	mpi_break_wide_binaries(curr_st);
-#else
-	break_wide_binaries();
-#endif
+	break_wide_binaries(curr_st);
 }
