@@ -79,7 +79,7 @@ void print_2Dsnapshot(void)
 	if (SNAPSHOTTING) {
 		// open file for 2D snapshot 
 	        sprintf(outfile, "%s.snapshots.h5", outprefix);
-	        sprintf(tablename, "t=%.8g", TotalTime);
+	        sprintf(tablename, "%d(t=%.8g)", snap_num,TotalTime);
 		write_snapshot(outfile, 0, tablename);
 		// global counter for snapshot output file 
 		snap_num++;
@@ -552,7 +552,7 @@ void PrintFileOutput(void) {
     }
 
 	/* also saves INITIAL snapshot (StepCount=0) */
-	if (tcount%SNAPSHOT_DELTACOUNT==0 | tcount==0.){
+	if (tcount%SNAPSHOT_DELTACOUNT==0 || TotalTime==0.){
 		print_2Dsnapshot();
 		if (WRITE_STELLAR_INFO){
 			write_stellar_data();	
@@ -3014,10 +3014,10 @@ void print_snapshot_windows(void) {
     step=  snapshot_windows[i*3+1];
     stop=  snapshot_windows[i*3+2];
     if (total_time>= start+step_counter*step && total_time<=stop) {
-      char outfile[100];
-      char tablename[20];
+      char outfile[500];
+      char tablename[500];
       sprintf(outfile, "%s.window.snapshots.h5", outprefix);
-      sprintf(tablename, "t=%.8g", TotalTime);
+      sprintf(tablename, "%d(t=%.8g%s)",step_counter,total_time,SNAPSHOT_WINDOW_UNITS);
       write_snapshot(outfile, 0, tablename);
 //		print_denprof_snapshot(outfile);
 
@@ -3057,92 +3057,121 @@ int valid_snapshot_window_units(void) {
 void write_snapshot(char *filename, int bh_only, char *tablename) {
         /* Define field information */
         const char *field_names[NFIELDS]  =
-        { "id","m[MSUN]", "r", "vr", "vt", "E", "J", "binflag", "m0[MSUN]", "m1[MSUN]", "id0",
-        "id1", "a[AU]", "e", "startype", "luminosity[LSUN]", "radius[RSUN]", "bin_startype0", "bin_startype1",
-        "bin_star_lum0[LSUN]", "bin_star_lum1[LSUN]", "bin_star_radius0[RSUN]", "bin_star_radius1[RSUN]",
+        { "id","m_MSUN", "r", "vr", "vt", "E", "J", "binflag", "m0_MSUN", "m1_MSUN", "id0",
+        "id1", "a_AU", "e", "startype", "luminosity_LSUN", "radius_RSUN", "bin_startype0", "bin_startype1",
+        "bin_star_lum0_LSUN", "bin_star_lum1_LSUN", "bin_star_radius0_RSUN", "bin_star_radius1_RSUN",
         "bin_Eb", "eta", "star_phi", "rad0", "rad1", "tb", "lum0", "lum1", "massc0", "massc1", "radc0",
         "radc1", "menv0", "menv1", "renv0", "renv1", "tms0", "tms1", "dmdt0", "dmdt1", "radrol0",
         "radrol1", "ospin0", "ospin1", "B0", "B1", "formation0", "formation1", "bacc0", "bacc1",
         "tacc0", "tacc1","mass0_0", "mass0_1", "epoch0","epoch1","ospin", "B","formation"};
         hid_t      field_type[NFIELDS];
         hid_t      snapfile_hdf5;
+        htri_t          avail;
+        H5Z_filter_t    filter_type;
+        herr_t  status;
         hsize_t    chunk_size = 10;
         int        *fill_data = NULL;
-        int        compress  = 0;
-	int 	   ii;
+        int        compress  = 1;
+        int 	   ii;
+        unsigned int filter_info;
+
+	/*
+     * Check if gzip compression is available and can be used for both
+     * compression and decompression.
+     */
+		avail = H5Zfilter_avail(H5Z_FILTER_DEFLATE);
+		if (!avail) {
+			fprintf (stderr, "WARNING: gzip filter not available for HDF5\n");
+			fprintf (stderr, "Snapshots will be VERY large\n");
+            compress = 0;
+		}
+        status = H5Zget_filter_info (H5Z_FILTER_DEFLATE, &filter_info);
+		if ( !(filter_info & H5Z_FILTER_CONFIG_ENCODE_ENABLED) ||
+                    !(filter_info & H5Z_FILTER_CONFIG_DECODE_ENABLED) ) {
+			fprintf (stderr, "WARNING: gzip filter not available for encoding and decoding HDF5 groups\n");
+			fprintf (stderr, "Snapshots will be VERY large\n");
+            compress = 0;
+		}
 
         for (ii = 0; ii < NFIELDS; ++ii){
           field_type[ii] = H5T_NATIVE_DOUBLE;
         }
-        field_type[0] = H5T_NATIVE_INT;
+        field_type[0] = H5T_NATIVE_LONG;
+        field_type[7] = H5T_NATIVE_LONG;
+        field_type[10] = H5T_NATIVE_LONG;
+        field_type[11] = H5T_NATIVE_LONG;
+        field_type[14] = H5T_NATIVE_INT;
+        field_type[17] = H5T_NATIVE_INT;
+        field_type[18] = H5T_NATIVE_INT;
         /* Define an array of Particles */
-        Snapshot p_data[1] = {525,0.17924226,3.0778513,0.19755779,0.27799505,-0.15376079,0.85562742,-100,-100,-100,-100,-100,-100,-100,0,0.006673921,0.19985968,-100,-100,-100,-100,-100,-100,-100,-100,-0.211915956684,0.00000,0.00000/0.0000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,17.161,0,0};
+        Snapshot p_data[1] = {525,0.17924226,3.0778513,0.19755779,0.27799505,-0.15376079,0.85562742,-100.,-100.,-100.,-100,-100,-100.,-100.,0,0.006673921,0.19985968,-100,-100,-100.,-100.,-100.,-100,-100,-100,-0.211915956684,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,17.161,0,0.0000};
         /* Calculate the size and the offsets of our struct members in memory */
         size_t dst_size =  sizeof( Snapshot );
         size_t dst_offset[NFIELDS] = {
-                                        HOFFSET( Snapshot, id ),
-                                        HOFFSET( Snapshot, m ),
-                                        HOFFSET( Snapshot, r ),
-                                        HOFFSET( Snapshot, vr ),
-                                        HOFFSET( Snapshot, vt ),
-                                        HOFFSET( Snapshot, E ),
-                                        HOFFSET( Snapshot, J ),
-                                        HOFFSET( Snapshot, binflag ),
-                                        HOFFSET( Snapshot, m0 ),
-                                        HOFFSET( Snapshot, m1 ),
-                                        HOFFSET( Snapshot, id0 ),
-                                        HOFFSET( Snapshot, id1 ),
-                                        HOFFSET( Snapshot, a ),
-                                        HOFFSET( Snapshot, e ),
-                                        HOFFSET( Snapshot, startype ),
-                                        HOFFSET( Snapshot, luminosity ),
-                                        HOFFSET( Snapshot, radius ),
-                                        HOFFSET( Snapshot, bin_startype0 ),
-                                        HOFFSET( Snapshot, bin_startype1 ),
-                                        HOFFSET( Snapshot, bin_star_lum0 ),
-                                        HOFFSET( Snapshot, bin_star_lum1 ),
-                                        HOFFSET( Snapshot, bin_star_radius0 ),
-                                        HOFFSET( Snapshot, bin_star_radius1 ),
-                                        HOFFSET( Snapshot, bin_Eb ),
-                                        HOFFSET( Snapshot, eta ),
-                                        HOFFSET( Snapshot, star_phi ),
-                                        HOFFSET( Snapshot, rad0 ),
-                                        HOFFSET( Snapshot, rad1 ),
-                                        HOFFSET( Snapshot, tb ),
-                                        HOFFSET( Snapshot, lum0 ),
-                                        HOFFSET( Snapshot, lum1 ),
-                                        HOFFSET( Snapshot, massc0 ),
-                                        HOFFSET( Snapshot, massc1 ),
-                                        HOFFSET( Snapshot, radc0 ),
-                                        HOFFSET( Snapshot, radc1 ),
-                                        HOFFSET( Snapshot, menv0 ),
-                                        HOFFSET( Snapshot, menv1 ),
-                                        HOFFSET( Snapshot, renv0 ),
-                                        HOFFSET( Snapshot, renv1 ),
-                                        HOFFSET( Snapshot, tms0 ),
-                                        HOFFSET( Snapshot, tms1 ),
-                                        HOFFSET( Snapshot, dmdt0 ),
-                                        HOFFSET( Snapshot, dmdt1 ),
-                                        HOFFSET( Snapshot, radrol0 ),
-                                        HOFFSET( Snapshot, radrol1 ),
-                                        HOFFSET( Snapshot, ospin0 ),
-                                        HOFFSET( Snapshot, ospin1 ),
-                                        HOFFSET( Snapshot, B0 ),
-                                        HOFFSET( Snapshot, B1 ),
-                                        HOFFSET( Snapshot, formation0 ),
-                                        HOFFSET( Snapshot, formation1 ),
-                                        HOFFSET( Snapshot, bacc0 ),
-                                        HOFFSET( Snapshot, bacc1 ),
-                                        HOFFSET( Snapshot, tacc0 ),
-                                        HOFFSET( Snapshot, tacc1 ),
-                                        HOFFSET( Snapshot, mass0_0 ),
-                                        HOFFSET( Snapshot, mass0_1 ),
-                                        HOFFSET( Snapshot, epoch0 ),
-                                        HOFFSET( Snapshot, epoch1 ),
-                                        HOFFSET( Snapshot, ospin ),
-                                        HOFFSET( Snapshot, B ),
-                                        HOFFSET( Snapshot, formation ),
+                                    /*0*/    HOFFSET( Snapshot, id ),
+                                    /*1*/     HOFFSET( Snapshot, m ),
+                                    /*2*/     HOFFSET( Snapshot, r ),
+                                    /*3*/     HOFFSET( Snapshot, vr ),
+                                    /*4*/     HOFFSET( Snapshot, vt ),
+                                    /*5*/     HOFFSET( Snapshot, E ),
+                                    /*6*/     HOFFSET( Snapshot, J ),
+                                    /*7*/     HOFFSET( Snapshot, binflag ),
+                                    /*8*/     HOFFSET( Snapshot, m0 ),
+                                    /*9*/     HOFFSET( Snapshot, m1 ),
+                                    /*10*/    HOFFSET( Snapshot, id0 ),
+                                    /*11*/    HOFFSET( Snapshot, id1 ),
+                                    /*12*/    HOFFSET( Snapshot, a ),
+                                    /*13*/    HOFFSET( Snapshot, e ),
+                                    /*14*/    HOFFSET( Snapshot, startype ),
+                                    /*15*/    HOFFSET( Snapshot, luminosity ),
+                                    /*16*/    HOFFSET( Snapshot, radius ),
+                                    /*17*/    HOFFSET( Snapshot, bin_startype0 ),
+                                    /*18*/    HOFFSET( Snapshot, bin_startype1 ),
+                                    /*19*/    HOFFSET( Snapshot, bin_star_lum0 ),
+                                    /*20*/    HOFFSET( Snapshot, bin_star_lum1 ),
+                                    /*21*/    HOFFSET( Snapshot, bin_star_radius0),
+                                    /*22*/    HOFFSET( Snapshot, bin_star_radius1 ),
+                                    /*23*/    HOFFSET( Snapshot, bin_Eb ),
+                                    /*24*/    HOFFSET( Snapshot, eta ),
+                                    /*25*/    HOFFSET( Snapshot, star_phi ),
+                                    /*26*/    HOFFSET( Snapshot, rad0 ),
+                                    /*27*/    HOFFSET( Snapshot, rad1 ),
+                                    /*28*/    HOFFSET( Snapshot, tb ),
+                                    /*29*/    HOFFSET( Snapshot, lum0 ),
+                                    /*30*/    HOFFSET( Snapshot, lum1 ),
+                                    /*31*/    HOFFSET( Snapshot, massc0 ),
+                                    /*32*/    HOFFSET( Snapshot, massc1 ),
+                                    /*33*/    HOFFSET( Snapshot, radc0 ),
+                                    /*34*/    HOFFSET( Snapshot, radc1 ),
+                                    /*35*/    HOFFSET( Snapshot, menv0 ),
+                                    /*36*/    HOFFSET( Snapshot, menv1 ),
+                                    /*37*/    HOFFSET( Snapshot, renv0 ),
+                                    /*38*/    HOFFSET( Snapshot, renv1 ),
+                                    /*39*/    HOFFSET( Snapshot, tms0 ),
+                                    /*40*/    HOFFSET( Snapshot, tms1 ),
+                                    /*41*/    HOFFSET( Snapshot, dmdt0 ),
+                                    /*42*/    HOFFSET( Snapshot, dmdt1 ),
+                                    /*43*/    HOFFSET( Snapshot, radrol0 ),
+                                    /*44*/    HOFFSET( Snapshot, radrol1 ),
+                                    /*45*/    HOFFSET( Snapshot, ospin0 ),
+                                    /*46*/    HOFFSET( Snapshot, ospin1 ),
+                                    /*47*/    HOFFSET( Snapshot, B0 ),
+                                    /*48*/    HOFFSET( Snapshot, B1 ),
+                                    /*49*/    HOFFSET( Snapshot, formation0 ),
+                                    /*50*/    HOFFSET( Snapshot, formation1 ),
+                                    /*51*/    HOFFSET( Snapshot, bacc0 ),
+                                    /*52*/    HOFFSET( Snapshot, bacc1 ),
+                                    /*53*/    HOFFSET( Snapshot, tacc0 ),
+                                    /*54*/    HOFFSET( Snapshot, tacc1 ),
+                                    /*55*/    HOFFSET( Snapshot, mass0_0 ),
+                                    /*56*/    HOFFSET( Snapshot, mass0_1 ),
+                                    /*57*/    HOFFSET( Snapshot, epoch0 ),
+                                    /*58*/    HOFFSET( Snapshot, epoch1 ),
+                                    /*59*/    HOFFSET( Snapshot, ospin ),
+                                    /*60*/    HOFFSET( Snapshot, B ),
+                                    /*61*/    HOFFSET( Snapshot, formation ),
                                     };
+
 
         size_t dst_sizes[NFIELDS] = {
                                         sizeof( p_data[0].id ),
@@ -3919,6 +3948,7 @@ void save_restart_file(){
 	fwrite(&clus, sizeof(clus_struct_t), 1, my_restart_file);
 	fwrite(star, sizeof(star_t), N_STAR_DIM_OPT, my_restart_file);
 	fwrite(binary, sizeof(binary_t), N_BIN_DIM_OPT, my_restart_file);
+	fwrite(snapshot_window_counters, sizeof(int), snapshot_window_count, my_restart_file);
 
 	fclose(my_restart_file);
 
@@ -3978,6 +4008,7 @@ void load_restart_file(){
 	fread(&clus, sizeof(clus_struct_t), 1, my_restart_file);
 	fread(star, sizeof(star_t), N_STAR_DIM_OPT, my_restart_file);
 	fread(binary, sizeof(binary_t), N_BIN_DIM_OPT, my_restart_file);
+	fread(snapshot_window_counters, sizeof(int), snapshot_window_count, my_restart_file);
 
 	fclose(my_restart_file);
 

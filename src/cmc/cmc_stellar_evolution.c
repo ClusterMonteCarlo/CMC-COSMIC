@@ -541,10 +541,10 @@ void do_stellar_evolution(gsl_rng *rng)
           		if(i > 1) {
             			if(bse_get_bcm(i,2) == 13 && bse_get_bcm(i-1,2) < 13){
               				if(bse_get_bcm(i+1,1) >= 0.0){
-                				star[k].se_scm_formation = bse_get_bcm(i+1,39);
+                				star[k].se_scm_formation = bse_get_bcm(i+1,35);
                 //printf("stel, pulsar sin. 1 : %g %g %g %g %ld \n",star[k].se_B_0,star[k].se_ospin,bse_get_bcm(i+1,33),star[k].se_scm_formation,star[k].id);
               				} else {
-                				star[k].se_scm_formation = bse_get_bcm(i,39);
+                				star[k].se_scm_formation = bse_get_bcm(i,35);
                 //printf("stel, pulsar sin. 2 : %g %g %g %g %ld \n",star[k].se_B_0,star[k].se_ospin,bse_get_scm(i,33),star[k].se_scm_formation,star[k].id);
               				}
             			}
@@ -967,19 +967,19 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
 	      if(jj > 1){
 		if(bse_get_bcm(jj,2) == 13 && bse_get_bcm(jj-1,2) < 13){
 		   if(bse_get_bcm(jj+1,1) >= 0.0) {
-		      binary[kb].bse_bcm_formation[0] = bse_get_bcm(jj+1,39); //again just being paranoid about bcm array, but here moving forward by one.
+		      binary[kb].bse_bcm_formation[0] = bse_get_bcm(jj+1,35); //again just being paranoid about bcm array, but here moving forward by one.
 	//              printf("stel, pulsar bin. 1 : %g %g %g %g \n",binary[kb].bse_B_0[0],binary[kb].bse_ospin[0],bse_get_bcm(jj+1,33),binary[kb].bse_bcm_formation[0]);
 		   } else {
-		      binary[kb].bse_bcm_formation[0] = bse_get_bcm(jj,39);
+		      binary[kb].bse_bcm_formation[0] = bse_get_bcm(jj,35);
 	//              printf("stel, pulsar bin. 2 : %g %g %g %g \n",binary[kb].bse_B_0[0],binary[kb].bse_ospin[0],bse_get_bcm(jj,33),binary[kb].bse_bcm_formation[0]);
 		   }
 		}
 		if(bse_get_bcm(jj,16) == 13 && bse_get_bcm(jj-1,16) < 13){
 		   if(bse_get_bcm(jj+1,1) >= 0.0) {
-		      binary[kb].bse_bcm_formation[1] = bse_get_bcm(jj+1,40);
+		      binary[kb].bse_bcm_formation[1] = bse_get_bcm(jj+1,36);
 	//              printf("stel, pulsar bin. 3 : %g %g %g %g \n",binary[kb].bse_B_0[1],binary[kb].bse_ospin[1],bse_get_bcm(jj+1,34),binary[kb].bse_bcm_formation[1]);
 		   } else {
-		      binary[kb].bse_bcm_formation[1] = bse_get_bcm(jj,40);
+		      binary[kb].bse_bcm_formation[1] = bse_get_bcm(jj,36);
 	//              printf("stel, pulsar bin. 4 : %g %g %g %g \n",binary[kb].bse_B_0[1],binary[kb].bse_ospin[1],bse_get_bcm(jj,34),binary[kb].bse_bcm_formation[1]);
 		   }
 		}
