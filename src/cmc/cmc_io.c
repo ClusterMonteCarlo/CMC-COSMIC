@@ -1416,6 +1416,14 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_QCFLAG);
                                 sscanf(values, "%i", &BSE_QCFLAG);
                                 parsed.BSE_QCFLAG = 1;
+                        } else if (strcmp(parameter_name, "DON_LIM")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_DON_LIM);
+                                sscanf(values, "%lf", &BSE_DON_LIM);
+                                parsed.BSE_DON_LIM = 1;
+                        } else if (strcmp(parameter_name, "ACC_LIM")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_ACC_LIM);
+                                sscanf(values, "%lf", &BSE_ACC_LIM);
+                                parsed.BSE_ACC_LIM = 1;
                         } else if (strcmp(parameter_name, "SIGMA")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_SIGMA);
                                 sscanf(values, "%lf", &BSE_SIGMA);
@@ -1775,6 +1783,19 @@ if(myid==0) {
         // 2: fits for both final mass and final period
         // default=0
         CHECK_PARSED(BSE_CEHESTARFLAG, 0, PARAMDOC_BSE_CEHESTARFLAG);
+
+        // don_lim is a flag which determines how much mass is lost during thermal timescale MT
+        // don_lim = 0: assumes standard BSE choice as outlined in Hurley+2002
+        // don_lim = -1: Follows Claeys+2014
+        CHECK_PARSED(BSE_DON_LIM, 0, PARAMDOC_BSE_DON_LIM);
+
+        // acc_lim is a flag which determines how much mass is accreted from the donor
+        // if acc_lim > 0: this provides the fraction of mass accreted
+        // acc_lim = 0: assumes standard BSE choice as outlined in Hurley+2002 which limits to 10*tkh_acc for MS/CHeB
+        // acc_lim = -1: assumes the accretion is limited to tkh_acc for MS/CHeB
+        // acc_lim = -2: assumes the accretion is limited by 10*tkh_acc for all fusing stars
+        // acc_lim = -3: assumes the accretion is limited by tkh_for all fusing stars
+        CHECK_PARSED(BSE_ACC_LIM, 0, PARAMDOC_BSE_ACC_LIM);
 
         // qcflag is an integer flag that sets the model to determine which critical mass ratios to use for the onset of unstable mass transfer and/or a common envelope. NOTE: this is overridden by qcrit_array if any of the values are non-zero.
         // 0: standard BSE
@@ -2828,7 +2849,7 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
         field_type[17] = H5T_NATIVE_INT;
         field_type[18] = H5T_NATIVE_INT;
         /* Define an array of Particles */
-        Snapshot p_data[1] = {525,0.17924226,3.0778513,0.19755779,0.27799505,-0.15376079,0.85562742,-100.,-100.,-100.,-100,-100,-100.,-100.,0,0.006673921,0.19985968,-100,-100,-100.,-100.,-100.,-100,-100,-100,-0.211915956684,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,17.161,0,0};
+        Snapshot p_data[1] = {525,0.17924226,3.0778513,0.19755779,0.27799505,-0.15376079,0.85562742,-100.,-100.,-100.,-100,-100,-100.,-100.,0,0.006673921,0.19985968,-100,-100,-100.,-100.,-100.,-100,-100,-100,-0.211915956684,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,17.161,0,0.0000};
         /* Calculate the size and the offsets of our struct members in memory */
         size_t dst_size =  sizeof( Snapshot );
         size_t dst_offset[NFIELDS] = {

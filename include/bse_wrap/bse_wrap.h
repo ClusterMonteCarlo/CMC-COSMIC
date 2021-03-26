@@ -184,6 +184,7 @@ extern struct { int  tflag, ifflag, remnantflag, wdflag, bhflag, windflag,  qcfl
 extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 extern struct { double zsun; } metvars_;
+extern struct { double don_lim, acc_lim; } mtvars_; 
 
 extern struct { double neta, bwind, hewind, beta, xi, acc2, epsnov, eddfac, gamma; } windvars_;
 extern struct { double qcrit_array[16], alpha1, lambdaf; } cevars_;
@@ -222,6 +223,8 @@ void bse_set_htpmb(int htpmb); /* Sets Pair-instability pulsations and supernoa 
 void bse_set_st_tide(int st_tide); /* Sets Pair-instability pulsations and supernoa */
 void bse_set_st_cr(int st_cr); /* Sets Pair-instability pulsations and supernoa */
 void bse_set_ussn(int ussn); /* Sets Pair-instability pulsations and supernoa */
+void bse_set_don_lim(double don_lim); /* Set donor limits for RLO mass loss */
+void bse_set_acc_lim(double acc_lim); /* Set accretor limits for RLO mass accretion */
 
 void bse_set_zsun(double zsun);
 
