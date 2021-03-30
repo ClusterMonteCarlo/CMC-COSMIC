@@ -369,10 +369,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 			        0.5 * mass_k * madhoc * phi_k + 0.5 * mass_kp * madhoc * phi_kp;
 #ifdef USE_MPI
 		        DMse += mass_k * madhoc;
-                        DMse += mass_kp * madhoc;
 #else
                 DMse_mimic[findProcForIndex(k)] += mass_k * madhoc;
-                DMse_mimic[findProcForIndex(k)] += mass_kp * madhoc;
 #endif
 		        aj = star[k].se_tphys - star[k].se_epoch;
 		        star[k].se_mt = star[k].se_mc;
@@ -599,8 +597,10 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 #ifdef USE_MPI
                         DMse += mass_k * madhoc;
+                        DMse += mass_kp * madhoc;
 #else
                 DMse_mimic[findProcForIndex(k)] += mass_k * madhoc;
+                DMse_mimic[findProcForIndex(k)] += mass_kp * madhoc;
 #endif
                         aj_k = star[k].se_tphys - star[k].se_epoch;
                         star[k].se_mt = star[k].se_mc;
@@ -1047,7 +1047,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 	} else if (TC_POLYTROPE && (star[k].se_k != 14 || star[kp].se_k != 14) && (star[k].se_k <= 1 || star[k].se_k == 7 || star[k].se_k >= 10) && (star[kp].se_k <= 1 || star[kp].se_k == 7 || star[kp].se_k >= 10))  {
 		/* apply tidal capture / common envelope test */
-                /* Shi: Again, somebody added this. And the prescription is referring to the fitting fomulae in Kim & Lee 1999 */
+                /* Shi: The prescription is referring to the fitting fomulae in Kim & Lee 1999 */
                 /* Shi: Don't turn this on at the same time as the TC_FACTOR! */
 		Eorbnew = 0.5*madhoc*mass_k*mass_kp/(mass_k+mass_kp)*sqr(W);
 

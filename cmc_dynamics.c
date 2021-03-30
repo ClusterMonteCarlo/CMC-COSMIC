@@ -374,7 +374,8 @@ are skipped if they already interacted in 3bb loop!  */
 					/* single--single tidal capture cross section (Kim & Lee 1999);
 					   here we treat a compact object (k>=10) as a point mass, a massive MS star (k=1) as an 
 					   n=3 polytrope, and everything else (k=0,2-9) as an n=1.5 polytrope. */
-                                        /*Shi: Update-this flag does not treat giants (2-6, 8-9). n=3 polytrope is for k=1, n=1.5                                         is for k=0 and 7 naked helium MS star. k>=10 compact object is still treated as point mass                                        */
+                                        /*Shi: Update-this flag does not treat giants (2-6, 8-9). n=3 polytrope is for k=1, n=1.5 
+                                          is for k=0 and 7 naked helium MS star. k>=10 compact object is still treated as point mass. */
 					if (star[k].se_k >= 10 && star[kp].se_k >= 10) {
 						/* two compact objects, so simply use sticky sphere approximation */
 						S_tc = 0.0;
@@ -413,10 +414,10 @@ are skipped if they already interacted in 3bb loop!  */
 
                                 if (TIDAL_CAPTURE) { 
 					/* cross section estimate for Lombardi, et al. (2006) */
-					if ((star[k].se_k <= 1 || star[k].se_k >= 10) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7)) {
+					if ((star[k].se_k <= 1 || star[k].se_k >= 10 || star[k].se_k == 7) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7)) {
 						rperi = 1.3 * star[kp].rad;
 						S_lombardi = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
-					} else if ((star[kp].se_k <= 1 || star[kp].se_k >= 10) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7)) {
+					} else if ((star[kp].se_k <= 1 || star[kp].se_k >= 10 || star[kp].se_k == 7) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7)) {
 						rperi = 1.3 * star[k].rad;
 						S_lombardi = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
 					} else {
