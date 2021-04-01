@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'cmc'
-copyright = '2020, Fred Rasio'
+copyright = '2021, Carl Rodriguez & Scott Coughlin'
 author = 'ClusterMonteCarlo'
 
 # The full version, including alpha/beta/rc tags
