@@ -20,6 +20,8 @@ The original implementation of stellar evolution in CMC used the original binary
    :maxdepth: 1
 
    install/index
+   examples/index
+   output/index
    flowchart/index
    inifile/index
    parallel/index
