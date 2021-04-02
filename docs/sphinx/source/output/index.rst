@@ -1,27 +1,27 @@
 .. _output:
 
-############
+####################
 Analyzing CMC Output
-############
+####################
 
-=====
+==========
 Log Files
-=====
+==========
 FOR FULYA
 
-=====
+==========
 Snapshots
-=====
+==========
 FOR CARL
 
-=====
+====================
 Cluster Observables
-=====
+====================
 
 cmctoolkit
-_____
+__________
 FOR NICHOLAS (MAYBE)
 
 fresca
-_____
+______
 FOR CARL (MAYBE)

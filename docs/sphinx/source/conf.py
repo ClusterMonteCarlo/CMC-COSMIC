@@ -67,7 +67,3 @@ subprocess.call('cd ../../doxygen ; doxygen', shell=True)
 
 breathe_projects = { "cmc": "../../doxygen/xml/" }
 breathe_default_project = "cmc"
-breathe_projects_source = {
-     "cmc" : ( "../../../include/cmc", ["cmc.h", "cmc_vars.h"])
-     }
-
