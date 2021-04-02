@@ -5,32 +5,28 @@ Installation
 ############
 
 =====
-Conda
+Generic HPC Instuctions
+=====
+SCOTTY OR CARL
+also mention strong preference for using intel compilers when available
+
+=====
+Specific HPC Systems 
 =====
 
-MacOS
+Quest
 -----
-.. code-block:: bash
+FOR SCOTTY
 
-    conda create -c conda-forge --name cmc-py37 openmpi-mpicc clang_osx-64 clangxx_osx-64 gsl cfitsio gfortran_osx-64 python=3.7 autoconf libtool automake pkg-config binutils hdf5 cmake
-    source activate cmc-py37
-    git clone https://github.com/ClusterMonteCarlo/CMC-COSMIC.git --recurse-submodules
-    cd CMC-COSMIC
-    mkdir build
-    cd build
-    FC=mpifort CC=mpicc cmake .. -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
-    make install
+Bridges
+-----
+FOR CARL
 
+Vera 
+-----
+FOR CARL
 
-Unix
-----
-.. code-block:: bash
-
-    conda create -c conda-forge --name cmc-py37 openmpi-mpicc gcc_linux-64 gxx_linux-64 gsl cfitsio gfortran_linux-64 python=3.7 autoconf libtool automake pkg-config binutils hdf5 cmake --yes
-    source activate cmc-py37
-    git clone https://github.com/ClusterMonteCarlo/CMC-COSMIC.git --recurse-submodules
-    cd CMC-COSMIC
-    mkdir build
-    cd build
-    FC=mpifort CC=mpicc cmake .. -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
-    make install
+=====
+Docker Container
+=====
+FOR SCOTTY (+ Carl)

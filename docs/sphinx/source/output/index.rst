@@ -7,12 +7,12 @@ Analyzing CMC Output
 =====
 Log Files
 =====
-Put in some python code showing how to generate ICs, plus some example Params.ini files and how to run the code with mpi
+FOR FULYA
 
 =====
 Snapshots
 =====
-same shit here...
+FOR CARL
 
 =====
 Cluster Observables
@@ -20,9 +20,8 @@ Cluster Observables
 
 cmctoolkit
 _____
-some code
+FOR NICHOLAS (MAYBE)
 
 fresca
 _____
-some more code
-
+FOR CARL (MAYBE)
