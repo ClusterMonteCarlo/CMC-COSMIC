@@ -793,27 +793,27 @@ common envelope occurs regardless of the choices below:
 ``don_lim``              Calculates the rate of thermal mass loss through Roche
                          overflow mass transfer from the donor star
 
-                            ``0`` : donor mass loss rate is calculated following
+                            ``-1`` : donor mass loss rate is calculated following
                             `Hurley+2002 <https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract>`_
 
-                            ``-1`` : donor mass loss rate is calculated following
+                            ``-2`` : donor mass loss rate is calculated following
                              `Claeys+2014 <https://ui.adsabs.harvard.edu/abs/2014A%26A...563A..83C/abstract>`_
 
 ``acc_lim``              Limits the amount of mass accreted during Roche overflow
 
-                            ``0`` : limited to 10x's the thermal rate of the accretor
+                            ``-1`` : limited to 10x's the thermal rate of the accretor
                             for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars
 
-                            ``-1`` : limited to 1x's the thermal rate of the accretor
+                            ``-2`` : limited to 1x's the thermal rate of the accretor
                             for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars
 
-                            ``-2`` : limited to 10x's the thermal rate of the accretor
+                            ``-3`` : limited to 10x's the thermal rate of the accretor
                             for all stars
 
-                            ``-3`` : limited to 1x's the thermal rate of the accretor
+                            ``-4`` : limited to 1x's the thermal rate of the accretor
                             for all stars
 
-                            ``>0`` : sets overall accretion fraction of donor mass
+                            ``>=0`` : sets overall accretion fraction of donor mass
                             as in Belcyznski+2008 w/ acc_lim = 0.5
 
 =======================  =====================================================
