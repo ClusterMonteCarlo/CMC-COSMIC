@@ -14,6 +14,426 @@ inifile for CMC: `Stable Version INIFILE <https://github.com/COSMIC-PopSynth/COS
 
 Here is a link to the unstable development version of the default inifile for CMC: `Development Version INIFILE <https://github.com/COSMIC-PopSynth/COSMIC/blob/develop/examples/Params.ini>`_
 
+[cmc]
+-----
+
+.. note::
+
+    Although this is all one section, we have grouped the
+    flags/parameters which get passed to the binary stellar evolution
+    code into types. Each group will start with a note to indicate
+    the type of parameter or flag.
+
+.. note::
+
+    SNAPSHOT FLAGS
+
+===============================  =====================================================
+``SNAPSHOTTING``                 Turn snapshotting on or of (doesn't control black hole snapshots below)
+
+``SNAPSHOT_DELTACOUNT``          How many timesteps to write a snapshot
+
+``BH_SNAPSHOTTING``              Turn on snapshots for just the black holes
+
+``BH_SNAPSHOT_DELTACOUNT``       write the black hole snapshots every X timesteps
+
+``SNAPSHOT_CORE_COLLAPSE``       write additional snapshots around core collapse (in the mains snapshot file)
+
+``SNAPSHOT_WINDOWS``             2
+
+``SNAPSHOT_WINDOW_UNITS``        3
+===============================  =====================================================
+
+.. code-block:: ini
+
+    ;;;;;;;;;;;;;;;;;;;;;;
+    ;;; SNAPSHOT FLAGS ;;;
+    ;;;;;;;;;;;;;;;;;;;;;;
+
+    ; Turn snapshotting on or of (doesn't control black hole snapshots below)
+    ; Default = 1 (on)
+    SNAPSHOTTING = 1
+
+    ; How many timesteps to write a snapshot
+    ; default = 1000
+    SNAPSHOT_DELTACOUNT = 1000
+
+    ; Turn on snapshots for just the black holes
+    ; default = 0 (off)
+    BH_SNAPSHOTTING = 0
+
+    ; write the black hole snapshots every X timesteps
+    ; default = 500
+    BH_SNAPSHOT_DELTACOUNT = 500
+
+    ; write additional snapshots around core collapse (in the mains snapshot file)
+    ; default = 0 (off)
+    SNAPSHOT_CORE_COLLAPSE = 0
+
+    ; write snapshots every X units of time
+    ; The format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc
+    ; note that SNAPSHOTTING must be on
+    ; default = "0,0.1,13.8" (will write one snapshot to snapshot.h5 every 100 Myr) 
+    SNAPSHOT_WINDOWS = 0,0.1,13.8
+
+    ; units for snapshot windows
+    ; options are:
+    ; 	Gyr -- gigayears (default)
+    ; 	Trel -- relaxation times
+    ;	Tcr -- crossing times 
+    SNAPSHOT_WINDOW_UNITS = Gyr
+
+.. note::
+
+    RELAXATION FLAGS
+
+===============================  =====================================================
+``CMC_GAMMA``                    Value of the Coulomb Logarithm (lambda = log(gamma*N))
+                                 default = 0.01 (though use 0.1 for equal-mass clusters)
+
+``THETASEMAX``                   Maximum value of theta during two-body encounters
+===============================  =====================================================
+
+.. code-block:: ini
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;; RELAXATION FLAGS ;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;
+
+    ; Value of the Coulomb Logarithm (lambda = log(gamma*N))
+    ; default = 0.01 (though use 0.1 for equal-mass clusters)
+    CMC_GAMMA = 0.01
+
+    ; Maximum value of theta during two-body encounters
+    ; default = sqrt(2)
+    THETASEMAX = 1.4142
+
+.. note::
+
+    DYNAMICS FLAGS
+
+==================================  =====================================================
+``BINBIN``                          Turn on Fewbody encounters between two binaries
+
+``BINSINGLE``                       Turn on Fewbody encounters between binaries and single objects
+
+``BH_CAPTURE``                      Turn on GW capture between single black holes
+
+``THREEBODYBINARIES``               Turn on three-body binary formation  
+                                    semi-analytic treatment from Morscher et al., 2013
+                                    default = 1 (on)
+
+``ONLY_FORM_BH_THREEBODYBINARIES``  1
+
+``MIN_BINARY_HARDNESS``             2
+
+``BINARY_BREAKING_MIN``             3
+
+``SS_COLLISION``                    4
+
+``TIDAL_CAPTURE``                   5
+
+``BHNS_TDE``                        6
+==================================  =====================================================
+
+.. code-block:: ini
+
+    ;;;;;;;;;;;;;;;;;;;;;;
+    ;;; DYNAMICS FLAGS ;;;
+    ;;;;;;;;;;;;;;;;;;;;;;
+
+    ; Turn on Fewbody encoutners between two binaries  
+    ; default = 1 (on)
+    BINBIN = 1
+
+    ; between binaries and single objects 
+    ; default = 1 (on)
+    BINSINGLE = 1
+
+    ; Turn on GW capture between single black holes
+    ; default = 1 (on)
+    BH_CAPTURE = 1
+
+    ; Turn on three-body binary formation  
+    ; semi-analytic treatment from Morscher et al., 2013
+    ; default = 1 (on)
+    THREEBODYBINARIES = 1
+
+    ; Only form three-body binaries with 3 black holes 
+    ; default = 1 (on)
+    ONLY_FORM_BH_THREEBODYBINARIES = 1
+
+    ; Minimum hardness ratio for forming three-body binaries
+    ; (or breaking wide binaries if BINARY_BREAKING_MIN = 1) 
+    ; default = 1 (on)
+    MIN_BINARY_HARDNESS = 5.0
+
+    ; whether to use 10% of the interparticle seperation (0, default) 
+    ; or MIN_BINARY_HARDNESS (1) as the criterion for breaking wide binaries
+    BINARY_BREAKING_MIN = 0
+
+    ; Enable two-body collisions between individual stars
+    ; default = 1 (on)
+    SS_COLLISION = 1
+
+    ; Enable tidal captures bewteen individual stars
+    ; Uses cross sections from Kim & Lee 1999 and Lombardi et al., 2006
+    ; Only activated if SS_COLLISION = 1
+    ; default = 0 (off)
+    TIDAL_CAPTURE = 0
+
+    ; Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)
+    ; Follows prescription in Kremer et al., 2020
+    ; default = 0 (coll)
+    BHNS_TDE = 0
+
+
+.. note::
+
+    INPUT OPTIONS
+
+===============================  =====================================================
+``INPUT_FILE``                   the input hdf5 file for our intial conditions
+                                 generated using COSMIC
+===============================  =====================================================
+
+.. code-block:: ini
+
+    ;;;;;;;;;;;;;;;;;;;;;;
+    ;;; INPUT OPTIONS  ;;;
+    ;;;;;;;;;;;;;;;;;;;;;;
+
+    ; the input hdf5 file for our intial conditions
+    ; generated using COSMIC
+    ; default = input.hdf5
+    INPUT_FILE = input.hdf5
+
+.. note::
+
+    TIDAL FIELD OPTIONS
+
+===============================  =====================================================
+``TIDALLY_STRIP_STARS``          1
+
+``TIDAL_TREATMENT``              2
+
+``USE_TT_FILE``                  3
+
+``TT_FILE``                      4
+===============================  =====================================================
+
+.. code-block:: ini
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;; TIDAL FIELD OPTIONS ;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    ; Tidally strip stars that pass the tidal boundary
+    ; 0 = off, 1 = on (default)
+    TIDALLY_STRIP_STARS = 1
+
+    ; choose the tidal cut-off criteria 
+    ; 0 = radial criteria
+    ; 1=Giersz energy criteria (default)
+    TIDAL_TREATMENT = 1
+
+    ; whether to take the tidal boundary from a file (i.e. a tidal tensory)
+    ; default = 0 (off)
+    USE_TT_FILE=0
+
+    ; name of tidal tensor file to take tidal bondary from
+    ; should be formatted as Time [Myr] T_xx T_yy T_zz T_xy T_xz T_yz [1/Myr^2]
+    TT_FILE = NULL
+
+.. note::
+
+    TERMINATION OPTIONS
+
+================================  =====================================================
+``T_MAX_PHYS``                    0
+
+``T_MAX``                         1
+
+``T_MAX_COUNT``                   3
+
+``MAX_WCLOCK_TIME``               3
+
+``CHECKPOINT_INTERVAL``           3
+
+``CHECKPOINTS_TO_KEEP``           3
+
+``TERMINAL_ENERGY_DISPLACEMENT``  3
+
+``STOPATCORECOLLAPSE``            3
+
+``USE_DF_CUTOFF``                 3
+
+``DF_FILE``                       3
+
+``DF_INTEGRATED_CRITERION``       3
+================================  =====================================================
+
+.. code-block:: ini
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;; TERMINATION OPTIONS ;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    ; maximum integration time (Gyr)
+    ; default = 13.8 Gyr
+    T_MAX_PHYS = 13.8
+
+    ; maximum integration time (relaxation time)
+    ; default = 100
+    T_MAX = 100
+
+    ; maximum number of timesteps
+    ; default = 10000000
+    T_MAX_COUNT = 10000000
+
+    ; maximum amount of wallclock time to integrate for
+    ; default = 604800 (seconds, i.e. 1 week)
+    MAX_WCLOCK_TIME = 604800
+
+    ; how often to save checkpoint files (seconds)
+    ; default = 7200 (seconds, i.e. 2 hours)
+    CHECKPOINT_INTERVAL = 7200
+
+    ; how many previous checkpoints to keep at once
+    ; default = 2
+    CHECKPOINTS_TO_KEEP = 2
+
+    ; energy change calculation stopping criterion (i.e. if e/e0 changes by this much, stop calculation)
+    ; default = 10
+    TERMINAL_ENERGY_DISPLACEMENT = 10
+
+    ; stop once the cluster reaches core collapse (< 100 stars in core)
+    ; default = 0 (off)
+    STOPATCORECOLLAPSE = 0
+
+    ; whether to compute a lifetime according to dynamical friction criterion
+    ; this controls whether an external file is used
+    ; default = 0 (off)
+    USE_DF_CUTOFF=0
+
+    ; name of dynamical friction file to use as potential termination criterion
+    ; should be formatted as Time[Myr] Radius[Kpc] V_circ[km/s] M_enc[solMass] sigma[km/s] J[Kpc*km/s] 
+    DF_FILE = NULL
+
+    ; dynamical friction criterion to use for terminating the simulation
+    ; when integral(dt/t_df) > 1 ( = 1) or when t_df > TotalTime ( = 0)
+    DF_INTEGRATED_CRITERION = 1
+
+.. note::
+
+    OUTPUT OPTIONS
+
+===============================  =====================================================
+``MASS_PC``                      2
+
+``MASS_BINS``                    3
+
+``WRITE_EXTRA_CORE_INFO``        4
+
+``WRITE_BH_INFO``                5
+
+``WRITE_PULSAR_INFO``            6
+
+``WRITE_MOREPULSAR_INFO``        7
+
+``PULSAR_DELTACOUNT``            8
+
+``WRITE_STELLAR_INFO``           9
+===============================  =====================================================
+
+.. code-block:: ini
+
+    ;;;;;;;;;;;;;;;;;;;;;;
+    ;;; OUTPUT OPTIONS ;;;
+    ;;;;;;;;;;;;;;;;;;;;;;
+
+    ; mass fractions for Lagrange radii
+    MASS_PC = 0.0001,0.0003,0.0005,0.0007,0.0009,0.001,0.003,0.005,0.007,0.009,0.01,0.03,0.05,0.07,0.09,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.99
+
+    ; mass ranges for calculating derived quantities 
+    MASS_BINS = 0.1,1.0,10.0,100.0,1000.0
+
+    ; Write out information about cores that are defined differently from the standard 
+    ; default = 0 (off) 
+    WRITE_EXTRA_CORE_INFO = 0
+
+    ; Write out information about BHs each timestep, (0=off, 1=on)
+    ; default = 0 (off)
+    WRITE_BH_INFO = 0
+
+    ; Write out information about pulsars (0=off, 1=on)
+    ; default = 0 (off)
+    WRITE_PULSAR_INFO = 0
+
+    ; Write out information about neutron stars (0=off, 1=on)"
+    ; default = 0 (off)
+    WRITE_MOREPULSAR_INFO = 0;
+
+    ; Pulsar output interval in time steps
+    ; default = 1000
+    PULSAR_DELTACOUNT = 1000
+
+    ; Write out information about stellar evolution for each single and binary star, (0=off, 1=on)
+    ; note this creates a HUGE amount of output
+    ; default = 0 (off)
+    WRITE_STELLAR_INFO = 0
+
+.. note::
+
+    CMC Parameters
+
+===============================  =====================================================
+
+===============================  =====================================================
+
+.. code-block:: ini
+
+    ;;;;;;;;;;;;;;;;;;;;;;
+    ;;; CMC Parameters ;;;
+    ;;;;;;;;;;;;;;;;;;;;;;
+    ; don't touch these unless you know what you're doing
+
+    ; one half the number of stars over which to average certain quantities
+    ; default = 20
+    AVEKERNEL = 20
+
+    ; same as AVEKERNEL, but specifically for black holes (used for THREEBODYBINARIES)
+    ; default = 3
+    BH_AVEKERNEL = 3
+
+    ; minimum size of chunks that get partitioned across processors in the parallel code
+    ; default = 40
+    MIN_CHUNK_SIZE = 40
+
+    ; random number generator seed
+    ; note this is different from the BSE random number seed
+    IDUM = 1234 
+
+    ; the random number seed used by kick.f and setting initial pulsar spin period and magnetic field.
+    ; this is used specifically for BSE
+    BSE_IDUM = 1234
+
+    ; enable or disable timers 
+    ; This returns a detailed profiling of the code, but uses barriers, so might slow down the code a bit.
+    ; default = 0
+    TIMER = 0
+
+    ; force a relaxation step (useful when RELAXATION=0) (0=off, 1=on)
+    ; default = 0
+    FORCE_RLX_STEP = 0 
+
+    ; calculate the binary interaction time steps by only considering hard binaries (0=off, 1=on)"
+    ; default = 0
+    DT_HARD_BINARIES = 0  
+
+    ; The minimum binary binding energy (in units of kT) for a binary to be considered 'hard' for the time step calculation."
+    HARD_BINARY_KT = 0.7
+
 [bse]
 -----
 
@@ -793,27 +1213,27 @@ common envelope occurs regardless of the choices below:
 ``don_lim``              Calculates the rate of thermal mass loss through Roche
                          overflow mass transfer from the donor star
 
-                            ``0`` : donor mass loss rate is calculated following
+                            ``-1`` : donor mass loss rate is calculated following
                             `Hurley+2002 <https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract>`_
 
-                            ``-1`` : donor mass loss rate is calculated following
+                            ``-2`` : donor mass loss rate is calculated following
                              `Claeys+2014 <https://ui.adsabs.harvard.edu/abs/2014A%26A...563A..83C/abstract>`_
 
 ``acc_lim``              Limits the amount of mass accreted during Roche overflow
 
-                            ``0`` : limited to 10x's the thermal rate of the accretor
+                            ``-1`` : limited to 10x's the thermal rate of the accretor
                             for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars
 
-                            ``-1`` : limited to 1x's the thermal rate of the accretor
+                            ``-2`` : limited to 1x's the thermal rate of the accretor
                             for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars
 
-                            ``-2`` : limited to 10x's the thermal rate of the accretor
+                            ``-3`` : limited to 10x's the thermal rate of the accretor
                             for all stars
 
-                            ``-3`` : limited to 1x's the thermal rate of the accretor
+                            ``-4`` : limited to 1x's the thermal rate of the accretor
                             for all stars
 
-                            ``>0`` : sets overall accretion fraction of donor mass
+                            ``>=0`` : sets overall accretion fraction of donor mass
                             as in Belcyznski+2008 w/ acc_lim = 0.5
 
 =======================  =====================================================
@@ -1120,88 +1540,3 @@ common envelope occurs regardless of the choices below:
     ; 1=follows StarTrack (Belcyznski+2008)
     ; default=1
     ST_cr=1
-
-[cmc]
------
-
-===============================  =====================================================
-INPUT_FILE                       Input FITS file
-CMC_GAMMA                        Gamma in Coulomb logarithm
-MASS_PC                          Mass fractions for Lagrange radii
-MASS_BINS                        Mass ranges for calculating derived quantities
-OVERWRITE_RVIR                   Instead of reading the virial radius from the fits file use this value [pc]
-THETASEMAX                       Maximum super-encounter scattering angle (radians)
-BH_AVEKERNEL                     One half the number of stars over which to average 3bb related quantities
-T_MAX_PHYS                       Maximum integration time (Gyr)
-T_MAX_COUNT                      Maximum number of time steps
-MIN_CHUNK_SIZE                   Minimum size of chunks that get partitioned across processors in the parallel code
-STELLAR_EVOLUTION                Stellar evolution (0=off, 1=on)
-SS_COLLISION                     Perform physical stellar collisions (0=off, 1=on)
-RELAXATION                       Perform two-body relaxation (0=off, 1=on)
-PERTURB                          Perform dynamical perturbations on objects (0=off, 1=on)
-BINBIN                           Toggles binary--binary interactions (0=off, 1=on)
-BINSINGLE                        Toggles binary--single interactions (0=off, 1=on)
-BH_CAPTURE                       Allow for the formation of binary black holes from gravitational-wave emission during single-single encounters;                                  SS_COLLISION must be 1
-THREEBODYBINARIES                Toggles three-body binary formation (0=off, 1=on)
-ONLY_FORM_BH_THREEBODYBINARIES   Allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)
-IDUM                             Random number generator seed
-SNAPSHOTTING                     Toggles output snapshotting (0=off, 1=on)
-SNAPSHOT_DELTACOUNT              Snapshotting interval in time steps
-WRITE_STELLAR_INFO               Write out information about stellar evolution for each single and binary star, (0=off, 1=on)
-STOPATCORECOLLAPSE               Stop calculation at core collapse (0=no, 1=yes)
-WRITE_EXTRA_CORE_INFO            Write out information about cores that are defined differently from the standard (0=off, 1=on)
-TIDAL_TREATMENT                  Choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)
-WRITE_BH_INFO                    Write out information about BHs each timestep, (0=off, 1=on)
-BH_SNAPSHOTTING                  Toggles output bh snapshotting (0=off, 1=on)
-BH_SNAPSHOT_DELTACOUNT           BH snapshotting interval in time steps
-MAX_WCLOCK_TIME.                 Maximum wall clock time (seconds)
-CHECKPOINT_INTERVAL              How often to save checkpoint (seconds)
-CHECKPOINTS_TO_KEEP              How many checkpoints to keep
-TERMINAL_ENERGY_DISPLACEMENT     Energy change calculation stopping criterion
-USE_TT_FILE                      Whether to use a Tidal Tensor file
-USE_DF_CUTOFF                    Dynamical Friction cutoff
-===============================  =====================================================
-
-
-
-.. code-block:: ini
-
-    INPUT_FILE = input.fits
-    CMC_GAMMA = 0.01
-    MASS_PC = 0.0001,0.0003,0.0005,0.0007,0.0009,0.001,0.003,0.005,0.007,0.009,0.01,0.03,0.05,0.07,0.09,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.99
-    MASS_BINS = 0.1,1.0,10.0,100.0,1000.0
-    # additional parameters
-    OVERWRITE_RVIR = 5
-    THETASEMAX = 1.4142
-    BH_AVEKERNEL = 3
-    T_MAX_PHYS = 1.0
-    T_MAX_COUNT = 10000
-    MIN_CHUNK_SIZE = 40
-    STELLAR_EVOLUTION = 1
-    ### These flags are the key ones to turn off...
-    SS_COLLISION = 0
-    RELAXATION = 0
-    PERTURB = 0
-    BINBIN = 0
-    BINSINGLE = 0
-    BH_CAPTURE = 0
-    THREEBODYBINARIES = 0
-    ONLY_FORM_BH_THREEBODYBINARIES = 0
-    IDUM = 1729217
-    SNAPSHOTTING = 1
-    SNAPSHOT_DELTACOUNT = 100
-    WRITE_STELLAR_INFO = 0
-    STOPATCORECOLLAPSE = 0
-    WRITE_EXTRA_CORE_INFO = 1
-    TIDAL_TREATMENT = 0
-    WRITE_BH_INFO = 1
-    BH_SNAPSHOTTING = 0
-    BH_SNAPSHOT_DELTACOUNT = 2000
-    #Checkpoint Parameters
-    MAX_WCLOCK_TIME=2590000
-    CHECKPOINT_INTERVAL=7200
-    CHECKPOINTS_TO_KEEP=2
-    TERMINAL_ENERGY_DISPLACEMENT=50
-    #The TT testing
-    USE_TT_FILE=0
-    USE_DF_CUTOFF=0
