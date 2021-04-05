@@ -9,10 +9,12 @@ Log Files
 ==========
 FOR FULYA
 
+
+
 initial.conv.sh
 ---------------
 
-We use the standard N-body units `(He ́non 1971a) <https://link.springer.com/article/10.1007/BF00649159>`_ in our all numerical calculations: we set the gravitational constant :math:`{G=1}`, the initial total mas :math:`{M=1}`, and the initial total energy :math:`{E_0=-1/4}`. The conversion from code units to physical units for time is done by calculating the initial half-mass relaxation time in years. The file initial.conv.sh contains all conversion factors used to convert from code to physical units. For example, to convert from code units of time to Myr, multiply by the factor timeunitsmyr, and so on. 
+CMC uses the standard N-body units `(He ́non 1971a) <https://link.springer.com/article/10.1007/BF00649159>`_ in all numerical calculations: the gravitational constant :math:`{G=1}`, the initial total mas :math:`{M=1}`, and the initial total energy :math:`{E_0=-1/4}`. The conversion from code units to physical units for time is done by calculating the initial half-mass relaxation time in years. The ``file initial.conv.sh`` contains all conversion factors used to convert from code to physical units. For example, to convert from code units of time to Myr, multiply by the factor timeunitsmyr, and so on. 
 
 One can read the `initial.conv.sh` file, store the physical units and then call them as::
 
@@ -73,8 +75,9 @@ initial.dyn.dat
 ---------------
 The `initial.dyn.dat` files contains various theoretical quantities pertaining to the dynamical evolution of your cluster, such as theoretical core radius, total mass, central density, central velocity dispersion, etc. This file may be used to create, for example, plots of core radii or half-light radii versus time for a given simulation. 
 
+
 ================  =====================================================
-``t``               time [:math:`{\rm{Code\, units}}`]
+``t``               time
 ``dt``              timestep
 ``tcount``
 ``N``
@@ -109,31 +112,6 @@ initial.binint.log
 
 Over the course of the evolution of the cluster, single stars and binaries will frequently undergo three- and four-body dynamical encounters, which are integrated directly in CMC using the Fewbody package (Fregeau et al. 2007). The file `initial.binint.log` records all input and output parameters (e.g., component masses, IDS, stellar types, semi-major axes, etc.) each type fewbody is called. 
 
-Objects are labelled starting from 0 to 3. The binary-single and binary-binary are denoted as BS and BB, respectively. 
-
-Possible outcomes for type=BS:
-
-* single-binary 0 [1 2]
-* binary-single [2 0] 1
-* single-single-single 0 1 2
-* single-single 0:1 2
-* binary [0:1 2]
-* single 0:1:2
-
-Possible outcomes for type=BB: 
-
-* binary [0 1:2:3]
-* single-binary 0:1 [2 3]
-* binary-single [0:1 3] 2
-* binary-binary [0 1] [2 3] 
-* single-triple 0 [[1 3] 2]
-* triple-single [[0 1] 3] 2
-* single-single-binary 3 1 [2 0]
-* binary-single-single [0 1] 3 2
-* single-binary-single 0 [1 3] 2
-
-0:1 denotes the fact that objects 0 and 1 have merged, and [0 1] indicates that objects 0 and 1 form a binary. The same is true for any pairs from 0 to 3.
-
 Every encounter information is printed between two lines of asterisks.
 Below is an exemplary output::
 
@@ -148,53 +126,55 @@ Below is an exemplary output::
 >>> output: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.09094 e=0.123848 ktype1=0 ktype2=0
 >>> ********************************************************************************
 
-Explanation of the output above row by row:
+==============================  =====================================================
+``type``						encounter type (BS or BB)
+``t``							encounter time
+``b``							impact parameter
+``v``							relative velocity
+``m``							mass [:math:`{M_{\odot}}`]
+``R``							radius
+``Eint``			
+``id``							ID number
+``kytpe``						stellar type
+``a``							semi-major axis [AU]
+``e``							eccentricity
+``dE/E``			
+``DE``
+``DL/L``
+``DL``
+``DE_GW``
+``v_esc_cluster``				escape velocity [km/s]
+``tcpu``
+``nstar``						number of stars
+``nobj``						number of objects (single/binary)
+``i [j k]``					    final configuration after encounter, e.g.,  0 [1 2] (single-binary)
+==============================  =====================================================
 
-First row:
-	type = encounter type
-	t = interaction time
-Second row:
-	b = impact parameter
-	v = relative velocity
+Objects are labelled starting from 0 to 3. The binary-single and binary-binary encounters are denoted as BS and BB, respectively. For type=binary, indices 0 and 1 in mass, radius,id,etc. denote the primary and secondary objects in a binary.
 
-Input:
-	
-	input parameters of each object in the encounter:
-	type = single or binary
-	m = mass
-	R = radius
-	Eint = ?
-	id = ID number
-	kype = star type
+Possible outcomes for ``type=BS``:
 
-Status:
+* single-binary 0 [1 2]
+* binary-single [2 0] 1
+* single-single-single 0 1 2
+* single-single 0:1 2
+* binary [0:1 2]
+* single 0:1:2
 
-	DE/E = 
-	DE = 
-	DL/L = 
-	DL = 
-	DE_GW = 
-	v_esc_cluster[km/s] = 
-	tcpu = 
+Possible outcomes for ``type=BB``: 
 
-Outcome:
-	nstar = 
-	nobj = 
-	final configuration 0 [1 2] (single-binary)
-Output:
-	if type = single
-	if type = binary
-	Indices 0 and 1 denote the primary and secondary objects in a binary.
-	In addition to above-mentioned object parameters, we have the following orbital parameters:
-	a = semi-major axis
-	e = eccentricity  
-	
-	Also includes the same parameters for the other input and output pobjects.
-	
+* binary [0 1:2:3]
+* single-binary 0:1 [2 3]
+* binary-single [0:1 3] 2
+* binary-binary [0 1] [2 3] 
+* single-triple 0 [[1 3] 2]
+* triple-single [[0 1] 3] 2
+* single-single-binary 3 1 [2 0]
+* binary-single-single [0 1] 3 2
+* single-binary-single 0 [1 3] 2
 
+0:1 denotes the fact that objects 0 and 1 have merged, and [0 1] indicates that objects 0 and 1 have formed a binary. The same is true for any pairs from 0 to 3.
 
-	
-	
 
 initial.bh.dat
 --------------
