@@ -47,19 +47,20 @@ If you are using the intel compilers, you can instead use
     cd CMC-COSMIC
     mkdir build bin
     cd build
-    FC=mpif77 CC=mpiicc cmake .. -DCMAKE_INSTALL_PREFIX=../bin 
+    FC=mpiifort CC=mpiicc cmake .. -DCMAKE_INSTALL_PREFIX=../bin 
     make install
 
 ====================
 Specific HPC Systems 
 ====================
+If you're installing on a specific HPC system that we've used before, instructions are below
 
 Quest
------
+_____
 FOR SCOTTY
 
 Bridges
--------
+_____
 On Bridges 2 (the XSEDE machine) start by importing cmake and the intel compilers
 
 .. code-block:: bash
@@ -68,8 +69,8 @@ On Bridges 2 (the XSEDE machine) start by importing cmake and the intel compiler
 
 Then follow the **intel** instructions above 
 
-Vera 
-----
+Vera/Henon
+_____
 On Vera (McWilliams center machine) or Henon (Rodriguez group machine), first load
 
 .. code-block:: bash
