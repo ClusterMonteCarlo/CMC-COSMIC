@@ -26,6 +26,12 @@ jobs:
       run: |
         sudo apt-get install gcc gfortran openmpi-bin libopenmpi-dev cmake libhdf5-serial-dev libgsl-dev libcfitsio-dev doxygen
         pip install -r requirements.txt
+    - name: Install CMC and COSMIC
+      run: |
+        mkdir build
+        cd build
+        FC=mpifort CC=mpicc cmake ..
+        make install
     - name: Make documentation
       run: |
         cd docs/sphinx/ && make html; cd ../../
