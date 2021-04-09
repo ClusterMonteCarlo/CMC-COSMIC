@@ -16,65 +16,9 @@ initial.conv.sh
 
 CMC uses the standard N-body units `(He ́non 1971a) <https://link.springer.com/article/10.1007/BF00649159>`_ in all numerical calculations: the gravitational constant :math:`{G=1}`, the initial total mas :math:`{M=1}`, and the initial total energy :math:`{E_0=-1/4}`. The conversion from code units to physical units for time is done by calculating the initial half-mass relaxation time in years. The ``file initial.conv.sh`` contains all conversion factors used to convert from code to physical units. For example, to convert from code units of time to Myr, multiply by the factor timeunitsmyr, and so on. 
 
-One can read the `initial.conv.sh` file, store the physical units and then call them as::
-
->>> def read_units():
->>>		s = 'initial.conv.sh'
->>>		f=open(s,'r')
->>>		count=0
->>>		while count<10:;
->>>			a=f.readline()
->>>			b=a.split('=')
->>>			if b[0]=='massunitcgs':
->>>				massunitcgs = float(b[1])
->>>				count+=1
->>>			elif b[0]=='massunitmsun':
->>>				massunitmsun = float(b[1])
->>>				count+=1
->>>			elif b[0]=='mstarunitcgs':
->>>				mstarunitcgs = float(b[1])
->>>				count+=1
->>>			elif b[0]=='mstarunitmsun':
->>>				mstarunitmsun = float(b[1])
->>>				count+=1
->>>			elif b[0]=='lengthunitcgs':
->>>				lengthunitcgs = float(b[1])
->>>				count+=1
->>>			elif b[0]=='lengthunitparsec':
->>>				lengthunitparsec = float(b[1])
->>>				count+=1
->>>			elif b[0]=='timeunitcgs':
->>>				timeunitcgs = float(b[1])
->>>				count+=1
->>>			elif b[0]=='timeunitsmyr':
->>>				timeunitsmyr = float(b[1])
->>>				count+=1
->>>			elif b[0]=='nbtimeunitcgs':
->>>				nbtimeunitcgs = float(b[1])
->>>				count+=1
->>>			elif b[0]=='nbtimeunitsmyr':
->>>				nbtimeunitsmyr = float(b[1])
->>>				count+=1
->>>		f.close()
->>>		units = []
->>>		unittype = [('m_cgs', float), ('m_msun', float), ('mstar_cgs', float), ('mstar_msun', float), ('l_cgs', float), ('l_pc', float), ('t_cgs', float),('t_myr', float), ('nbt_cgs', float), ('nbt_myr', float)]
->>>		units.append((massunitcgs, massunitmsun, mstarunitcgs, mstarunitmsun, lengthunitcgs, lengthunitparsec, timeunitcgs, timeunitsmyr, nbtimeunitcgs, nbtimeunitsmyr))
->>>		units = array(units, dtype=unittype)	
->>>		return units
->>> units=read_units() 
->>> km = units[0]['l_cgs']*1.0e-5
->>> time_units = units[0]['t_myr']
->>> m_cgs = units[0]['l_cgs']*1.0e-2
->>> kg = units[0]['m_cgs']*1.0e-3
->>> time_cgs = units[0]['t_cgs']
->>> nbt = units[0]['nbt_cgs']
->>> M_total_units = units[0]['m_msun']
-
-
 initial.dyn.dat
 ---------------
 The `initial.dyn.dat` files contains various theoretical quantities pertaining to the dynamical evolution of your cluster, such as theoretical core radius, total mass, central density, central velocity dispersion, etc. This file may be used to create, for example, plots of core radii or half-light radii versus time for a given simulation. 
-
 
 ================  =====================================================
 ``t``               time
@@ -119,11 +63,14 @@ Below is an exemplary output::
 >>> type=BS t=5.85010072e-06
 >>> params: b=1.46611 v=0.379587
 >>> input: type=single m=0.0284732 R=0.215538 Eint=0 id=170307 ktype=0
->>> input: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.0908923 e=0.0641548 ktype1=0 ktype2=0
->>> status: DE/E=-1.79889e-08 DE=1.71461e-10 DL/L=2.54957e-08 DL=8.18406e-10 DE_GW/E=-0 DE_GW=0 v_esc_cluster[km/s]=77.9847 tcpu=0.01
+>>> input: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 
+>>> ... id0=33128 id1=1255329 a=0.0908923 e=0.0641548 ktype1=0 ktype2=0
+>>> status: DE/E=-1.79889e-08 DE=1.71461e-10 DL/L=2.54957e-08 DL=8.18406e-10 DE_GW/E=-0
+>>> ... DE_GW=0 v_esc_cluster[km/s]=77.9847 tcpu=0.01
 >>> outcome: nstar=3 nobj=2:  0 [1 2] (single-binary)
 >>> output: type=single m=0.0284732 R=0.215538 Eint=0 id=170307 ktype=0
->>> output: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.09094 e=0.123848 ktype1=0 ktype2=0
+>>> output: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0
+>>> ... id0=33128 id1=1255329 a=0.09094 e=0.123848 ktype1=0 ktype2=0
 >>> ********************************************************************************
 
 ==============================  =====================================================
@@ -136,7 +83,7 @@ Below is an exemplary output::
 ``Eint``			
 ``id``							ID number
 ``kytpe``						stellar type
-``a``							semi-major axis [AU]
+``a``							semi-major axis
 ``e``							eccentricity
 ``dE/E``			
 ``DE``
@@ -181,6 +128,23 @@ initial.bh.dat
 
 This file contains the number of BHs (as well as BH binaries, etc.) at each dynamical time step. This is useful to plot, for example, the number of retained BHs versus time. 
 
+==============================  =====================================================
+``tcount``						 time count
+``Totaltime``					 total time
+``Nbh,tot``						 total # BH
+``Nbh,single``					 # single BH
+``Nbinarybh``					 # binary BH
+``Nbh-bh``						 # BH-BH binaries
+``Nbh-nonbh``			         # BH-non BH binaries
+``Nbh-ns``					     # BH-NS binaries
+``Nbh-wd``						 # BH-WD binaries
+``N_bh-star``				 	 
+``Nbh-ms``						 # BH-MS binaries	
+``Nbh-postms``			         # BH-postMS binaries
+``fb_bh``						 # binaries containing a black hole / total # systems containing a black hole
+==============================  =====================================================
+
+
 
 initial.BBHmerger.dat
 ---------------------
@@ -188,11 +152,37 @@ initial.BBHmerger.dat
 This file lists masses and merger times for all binary BH mergers occurring in the given simulation. Also listed are merger channels (ejected, in-cluster, etc.) as described in Section 9 of Kremer et al. 2019. 
 
 
-
 initial.collision.log
 ---------------------
 
 This file lists stellar types and properties for all stellar collisions occurring in the given simulation. See Sections 6 and 7 of Kremer et al. 2019 for further detail. 
+
+==============================  =====================================================
+``t``						     collision time
+``interaction type``		     e.g., single-binary, binary-binary, etc.
+``idm(mm)``						 ID_merger(mass of the merged body)
+``id1(m1)``					     ID_1 (mass of the collided body_1)
+``id2(m2)``					 	 ID_2 (mass of the collided body_2)
+``r``						 
+``typem``			             merger stellar type
+``type1``					     body_1 stellar type
+``type2``						 body_2 stellar type
+``b``                            [:math:`R_{\odot}`]
+``vinf``                         [km/s]
+``rad1``                         radius of body_1
+``rad2``                         radius of body_2
+``rperi``
+``coll_mult``
+==============================  =====================================================
+
+
+The single-single, binary-single, etc tells whether the collision occurred during a binary encounter or not. When there are three stars listed for the collision it means that all three stars collided during the encounter. This is rare, but it does happen occasionally. Typically, one will see something like::
+
+>>> t=0.00266079 binary-single idm=717258(mm=1.0954) id1=286760(m1=0.669391):id2=415309 
+>>> (m2=0.426012) (r=0.370419) typem=1 type1=0 type2=0
+
+In this case the colliding stars are m1=0.66 and m2=0.42. The information about the third star in this binary--single encounter is not stored in the collision.log file. The only way to get information about the third star is to find this binary-single encounter in the initial.binint.log file (can be identified easily using the encounter time (here t=0.00266) and also cross-checking the id numbers for the two stars listed in the collision file.
+
 
 
 initial.semergedisrupt.log
@@ -200,11 +190,89 @@ initial.semergedisrupt.log
 
 This file lists all stellar mergers that occur through binary evolution in each simulation. 
 
+==============================  =====================================================
+``t``						     time
+``interaction type``		     e.g., disrupted1, disrupted2, disrupted both
+``idr(mr)``						 ID_remnant(mass of the remnant)
+``id1(r1)``					     ID_1 (mass of body_1)
+``id2(m2)``					 	 ID_2 (mass of body_2)
+``r``						 
+``typer``			             merger stellar type
+``type1``					     body_1 stellar type
+``type2``						 body_2 stellar type
+==============================  =====================================================
+
 
 initial.esc.dat
 ---------------
 
 As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected from the system. When this happens, the ejection is recorded in initial.esc.dat. 
+
+==============================  =====================================================
+``tcount``						     time count
+``t``		     					 time
+``m``						         mass
+``r``					             radius
+``vr``					 	         radial velocity
+``vt``						 		 tangential velocity
+``r_peri``			            
+``r_apo``					     
+``Rtidal``	
+``phi_rtidal``
+``phi_zero``
+``E``
+``J``
+``id``
+``binflag``
+``m0``                           [:math:`M_{\odot}`]
+``m1``                           [:math:`M_{\odot}`]
+``id0``
+``id1``
+``a``
+``e``
+``startype``
+``bin_startype0``	
+``bin_startype1``
+``rad0``
+``rad1``
+``tb``
+``lum0``
+``lum1``
+``massc0``
+``massc1``
+``radc0``
+``radc1``
+``menv0``
+``menv1``
+``renv0``
+``renv1``
+``tms0``
+``tms1``
+``dmdt0``
+``dmdt1``
+``radrol0``
+``radrol1``
+``ospin0``
+``ospin1``
+``B0``
+``B1``
+``formation0``
+``formation1``
+``bacc0``
+``bacc1``
+``tacc0``
+``tacc1``
+``mass0_0``
+``mass0_1``
+``epoch0``
+``epoch1``
+``bhspin``
+``bhspin1``
+``bhspin2``
+``ospin``
+``B``
+``formation``				 
+==============================  =====================================================
 
 
 initial.morepulsars.dat
