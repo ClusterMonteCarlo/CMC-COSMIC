@@ -455,7 +455,6 @@ long DynamicalFrictionTimescale(){
 		if(t_df_cum > 1)
 			return(1);
 	} else if(t_df < TimeNbody){
-		printf("killing it t_df=%g TimeNbody=%g\n",t_df,TimeNbody);
 		return (1);
 	} else {
 		return(0);
