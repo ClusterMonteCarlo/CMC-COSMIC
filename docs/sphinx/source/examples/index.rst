@@ -16,7 +16,7 @@ Initial Conditions
 
    In [144]: from matplotlib.pylab import *
 
-   In [145]: style.use('~/Desktop/matplotlib_style_file')
+   In [145]: style.use('./matplotlib_style_file')
 
    In [146]: ion()
 
