@@ -15,6 +15,8 @@ import re
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../../../COSMIC'))
 sys.path.insert(0, os.path.abspath('../../../COSMIC'))
+sys.path.insert(0, os.path.abspath('../../../src/bse_wrap/bse/COSMIC'))
+sys.path.insert(0, os.path.abspath('../../../../src/bse_wrap/bse/COSMIC'))
 print("HAHA WHAT" + str(sys.path))
 
 # If extensions (or modules to document with autodoc) are in another directory,
