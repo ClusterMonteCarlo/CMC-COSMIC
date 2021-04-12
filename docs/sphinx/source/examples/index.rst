@@ -129,16 +129,18 @@ clusters are better fit with :math:`\gamma\sim2-3`.  The enclosed mass is corres
 
 .. math::
 
-   M(<r) = \frac{4 \pi \rho_0}{3} r^3 \,_2F_1\left(\frac{3}{2},\frac{\gamma + 1}{2} ; \frac{5}{2} ; -\frac{r^2}{a^2}\right)  
+   M(r) = \frac{4 \pi \rho_0}{3} r^3 \,_2F_1\left(\frac{3}{2},\frac{\gamma + 1}{2} ; \frac{5}{2} ; -\frac{r^2}{a^2}\right)  
 
 Where :math:`\,_2F_1` is the ordinary hypergeometric function.  
 
 Unlike both the Plummer and King profiles, the distribution function for the Elson profile cannot be written analytically.  To genereate the initial conditions, 
-we directly integrate the density and potential functions to numerically compute :math:`f(E)`, and draw our velocity samples from that (`see appendix B of Grudic et al., 2018 <https://ui.adsabs.harvard.edu/abs/2018MNRAS.481..688G/abstract>`_).  This produces a handful 
+we directly integrate the density and potential functions to numerically compute :math:`f(E)`, and draw our velocity samples from that (see appendix B of `Grudic et al., 2018 <https://ui.adsabs.harvard.edu/abs/2018MNRAS.481..688G/abstract>`_).  This produces a handful 
 of warnings in the SciPy integrators, but the profiles that it generates are correct.
 
 To generate an Elson profile with :math:`\gamma=3`, we can use
+
 .. ipython:: python
+    :okwarning:
 
     from cosmic.sample import InitialCMCTable
     
