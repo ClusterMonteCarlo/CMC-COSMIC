@@ -1,9 +1,10 @@
-.. CMC documentation master file, created by
-   sphinx-quickstart on Mon Aug  3 21:43:57 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. _intro:
 
-Welcome to CMC's documentation!
+############
+Introduction
+############
+
+Code History
 =======================================
 This code offers one approach for solving the gravitational `N`-body problem. The basic problem is as follows: you have a system of `N` particles (stars, in our case) they are all interacting with one another via the gravitational force. How does the system evolve over time? There are several ways to solve the `N`-body problem, each method having its pros and cons. The two most common methods in use today are the directy `N`-body method and the Monte Carlo method. CMC uses the Monte Carlo method of `Henon (1971) <https://ui.adsabs.harvard.edu/abs/1971Ap%26SS..14..151H/abstract>`_. We will discuss them both briefly before moving into a more detailed discussion of our MC technique.
 
@@ -16,25 +17,20 @@ CMC has been developed over many years starting with `Joshi et al. (2000 <https:
 The original implementation of stellar evolution in CMC used the original binary stellar evolution package of `Hurley et al. (2002) <https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract>`_, with updates from `Chatterjee et al. 2010 <https://ui.adsabs.harvard.edu/abs/2010ApJ...719..915C/abstract>`_ and `Rodriguez et al. 2018 <https://ui.adsabs.harvard.edu/abs/2018PhRvL.120o1101R/abstract>`_.  The public release of CMC presented here is pinned to the `COSMIC <https://cosmic-popsynth.github.io/>`_ package for binary population synthesis (`Breivik et al. 2019 <https://ui.adsabs.harvard.edu/abs/2020ApJ...898...71B/abstract>`_).  This symbiosis is performed at a repository level: any changes to COSMIC are automatically propogated to CMC.  
 
 
+Flowchart
+=========================
 
+Here we show the basic flow of decisions made during every CMC timestep.  Each of these steps are described in one (or several of the CMC papers below).  As an 
+initial first guess, most of the relevant physics is described and properly cited in `Pattabiraman et al. 2013 <https://ui.adsabs.harvard.edu/abs/2013ApJS..204...15P/abstract>`_. Otherwise, the refences below are   
 
-For Users
-==================
-.. toctree::
-   :maxdepth: 2
+1. `Joshi et al. (2000 <https://ui.adsabs.harvard.edu/abs/2000ApJ...540..969J/abstract>`_, `2001) <https://ui.adsabs.harvard.edu/abs/2001ApJ...550..691J/abstract>`_
+2. `Fregeau & Rasio 2007 <https://ui.adsabs.harvard.edu/abs/2007ApJ...658.1047F/abstract>`_ 
+3. `Chatterjee et al. 2010 <https:/ui.adsabs.harvard.edu/abs/2010ApJ...719..915C/abstract>`_
+4. `Goswami et al. 2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...752...43G/abstract>`_ 
+5. `Pattabiraman et al. 2013 <https://ui.adsabs.harvard.edu/abs/2013ApJS..204...15P/abstract>`_
+6. `Breivik et al. 2020 <https://ui.adsabs.harvard.edu/abs/2020ApJ...898...71B/abstract>`_
+7. `Morscher et al., 2014 <https://ui.adsabs.harvard.edu/abs/2013ApJ...763L..15M/abstract>`_
 
-   intro/index
-   install/index
-   examples/index
-   output/index
-   inifile/index
+.. figure:: even_bigger_flowchart.jpg
 
-
-For Developers 
-==================
-.. toctree::
-   :maxdepth: 2
-
-   parallel/index
-   src/index
-
+   Flowchart of the main dynamics loop in CMC 
