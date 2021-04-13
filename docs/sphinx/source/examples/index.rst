@@ -7,9 +7,9 @@ Getting Started
 Running CMC comes in two distinct stages: generating the initial conditions, and then running CMC on those initial conditions.  We briefly cover here how to 
 create initial conditions and how to run and restart CMC. 
 
-==================
-Initial Conditions
-==================
+=============================
+Point-mass Initial Conditions
+=============================
 
 .. ipython::
    :suppress:
@@ -84,7 +84,7 @@ We can check that the Plummer function reproduces what we would expect from anal
 
    M(r) = M_{\rm total}\left(1 + \frac{a^2}{r^2}\right)^{-3/2}
 
-where :math:`a` is an arbitrary scale factor (which we set to :math:`3\pi / 16` when the virial radius is normalized to 1).  If we compare the mass-weighted 
+where :math:`a` is an arbitrary scale factor (which is :math:`3\pi / 16` when the virial radius is normalized to 1).  If we compare the mass-weighted 
 cumulative radii of our ``Singles`` Pandas table to the analytic results, we can see:
 
 .. ipython:: python
@@ -93,13 +93,13 @@ cumulative radii of our ``Singles`` Pandas table to the analytic results, we can
 
         import matplotlib.pyplot as plt
 
-        a = 3*np.pi/16
+        r_grid = np.logspace(-1.5,2,100)
 
-        r_grid = np.logspace(-1.5,1.5,100)
+        m_enc = (1 + 1/r_grid**2)**-1.5 
 
-        m_enc = (1 + a**2/r_grid**2)**-1.5 
+        rv = 16/(3*np.pi) # virial radius for a Plummer sphere
 
-        plt.plot(r_grid,m_enc,lw=3);
+        plt.plot(r_grid/rv,m_enc,lw=3);
 
         plt.hist(Singles.r,weights=Singles.m,cumulative=True,bins=r_grid);
 
@@ -109,8 +109,8 @@ cumulative radii of our ``Singles`` Pandas table to the analytic results, we can
 
         plt.ylabel(r"$M (< r) / M_{\rm total}$",fontsize=15);
 
-        @savefig plot_simple.png width=7in
-        plt.legend(("Theory","COSMIC Samples"),fontsize=14);
+        @savefig plot_plummer.png width=6in
+        plt.legend(("Plummer","COSMIC Samples"),fontsize=14);
 
 
 
@@ -142,22 +142,134 @@ To generate an Elson profile with :math:`\gamma=3`, we can use
 .. ipython:: python
     :okwarning:
 
-    from cosmic.sample import InitialCMCTable
-    
-    Singles, Binaries = InitialCMCTable.sampler('cmc_point_mass', cluster_profile='elson', gamma=3, size=10000, r_max=100)
+    Singles, Binaries = InitialCMCTable.sampler('cmc_point_mass', cluster_profile='elson', gamma=2.5, size=10000, r_max=100)
+
+
+Comparing with the theoretical calculation for the enclosed mass, we find similarly good agreement:
+
+.. ipython:: python
+
+        from scipy.special import hyp2f1
+
+        gamma = 2.5
+
+        def m_enc(gamma,r,rho_0):
+            return 4*np.pi*rho_0/3 * r**3 * hyp2f1(1.5,(gamma+1)/2,2.5,-r**2)
+
+        rv = 6. ## virial radius for a gamma=2.5 Elson profile
+
+        rho_0 = 1/m_enc(gamma,100*rv,1)
+
+        plt.plot(r_grid/rv,m_enc(gamma,r_grid,rho_0),lw=3); # note we scale by rv, rather than set scale factor
+
+        plt.hist(Singles.r,weights=Singles.m,cumulative=True,bins=r_grid);
+
+        plt.xscale('log')
+
+        plt.xlabel("Radii",fontsize=15);
+
+        plt.ylabel(r"$M (< r) / M_{\rm total}$",fontsize=15);
+
+        @savefig plot_elson.png width=6in
+        plt.legend(("Elson ($\gamma=2.5$)","COSMIC Samples"),fontsize=14);
 
 King Profile
 ------------
-same shit here...
+An idealized cluster in thermodynamic equilibrium could be described as an isothermal sphere, where the velocities of stars resembled a Maxwell-Boltzmann 
+distribution.  But the isothermal sphere has infinite mass, and in any realistic star cluster, the distribution of stars should go to zero near the tidal boundary.  The `King (1966) <https://ui.adsabs.harvard.edu/abs/1966AJ.....71...64K/abstract>`_ profile acomplishes this by sampling from a lowered isothermal distribution
+
+.. math::
+
+        f(E) = \begin{cases}
+            \rho_0 (2\pi\sigma^2)^{-3/2}(e^{E/\sigma^2})&    E > 0;\\
+            0& E \leq 0
+        \end{cases}
+
+The King initial conditions can be created with COSMIC using:
+
+.. ipython:: python
+    :okwarning:
+
+    Singles, Binaries = InitialCMCTable.sampler('cmc_point_mass', cluster_profile='king', w_0=6, size=10000, r_max=100)
+
+The analytic form of :math:`M(<r)` cannot be written down for a King profile, but we can solve the ODE directly (this is done when generating the samples)
+
+.. ipython:: python
+
+        from cosmic.sample.cmc import king
+        radii,rho,phi,m_enc = king.integrate_king_profile(6)
+
+        rho /= m_enc[-1]
+        m_enc /= m_enc[-1]
+
+        rv = king.virial_radius_numerical(radii, rho, m_enc) # just compute R_v numerically
+        plt.plot(radii/rv,m_enc,lw=3);
+        plt.hist(Singles.r,weights=Singles.m,cumulative=True,bins=r_grid);
+        plt.xscale('log')
+        plt.xlim(0.05,10);
+        plt.xlabel("Radii",fontsize=15);
+        plt.ylabel(r"$M (< r) / M_{\rm total}$",fontsize=15);
+
+        @savefig plot_king.png width=6in
+        plt.legend(("King ($w_0=6$)","COSMIC Samples"),fontsize=14);
+
+
+============================
+Realistic Initial Conditions
+============================
+
+So far the above examples have only used the ``cmc_point_mass`` sampler.  To generate `realistic` initial conditions, with stellar masses and binaries, we want 
+to use the ``cmc`` sampler instead.  This enables all the additional options found in the ``independent`` population sampler that COSMIC uses `(see here for more details) <https://cosmic-popsynth.github.io/COSMIC/runpop/index.html#independent>`_.  
+
+To generate the above King profile, but with all the additional stellar physics (initial mass function, binaries, etc.) we would use
+
+.. ipython:: python
+
+        Singles, Binaries = InitialCMCTable.sampler('cmc', binfrac_model=0.1, primary_model='kroupa01',
+                                                    ecc_model='thermal', porb_model='log_uniform', qmin=-1.0,
+                                                    cluster_profile='king', met=0.00017, size=100000,w_0=6,
+                                                    params=os.path.abspath('../../examples/KingProfileTemp.ini'),
+                                                    seed=12345,sample_porb_first=True,set_radii_with_BSE=True)
+
+This example is also found in the `examples <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ folder in the CMC repository.  Note that 
+unlike the above examples, here we require an ini file (or a BSEDict), to supply the necessary stellar physics options for generating stars and binaries with 
+BSE.
 
 ===========
 Running CMC
 ===========
-put some example C code here
 
+With our initial conditions in place, the hard part is actually over!  Assuming the ``cmc`` executable is the directory you want to run from, we need only to 
+call it with ``mpirun`` (or ``mpiexec``, depending on your mpi version):
+
+.. code-block:: bash 
+
+        mpirun ./cmc -np <n_cores> <params.ini> <output>
+
+Where
+
+ * <n_cores> is the number of cores you want to run on
+ * <params.ini> is the path to your .ini file (examples `here <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ or in the :ref:`inifile` page) 
+ * <output> is the prefix for all the output files that will be produced by CMC
 
 ==============
 Restarting CMC
 ==============
 
-`
+CMC allows for bit-for-bit restarting, by saving the state of each parallel process every few hours (2 by default).  These restart files will be saved in your run 
+folder in a subfolder titled ``<output>-RESTART``.  These restart files will be numbered sequentially starting from 1, so you'll have to specifiy which restart 
+file you want to use.  A typical restart file will have the form ``<output>.restart.<n>-<proc>.bin``, where ``<n>`` is the number of the restart, and ``<proc>`` 
+is the number of the mpi processor that file was produced by.
+
+To restart CMC from one of these, you'll need the original .ini file and the path to the restart folder. 
+
+.. code-block:: bash
+
+        mpirun -np <n_cores> ./cmc -R <n> <params.ini> <new_output> <output>
+
+where <new_output> is the new prefix for all the files that are restarted.  If for some reason you need to start from a restart file but with a `different` 
+random seed, you can specifiy that on the command line with ``-n <new_seed>``
+
+.. note::
+
+        CMC cannot restart on different numbers of cores than the original run was performed on 
