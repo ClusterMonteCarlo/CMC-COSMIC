@@ -303,6 +303,6 @@ We can check that it's worked by looking at the Lagrange Radii (the <x> Lagrange
         plt.plot(lag_rad['#1:t'],lag_rad[['7:r(0.001)','12:r(0.01)','17:r(0.1)','21:r(0.5)','25:r(0.9)']],color='C1');
         plt.yscale('log');
         plt.xlabel("Time (relaxation time)",fontsize=15);
-        @savefig plot_plummer.png width=6in
+        @savefig plot_lagrad.png width=6in
         plt.ylabel("Virial Radii",fontsize=15);
 
