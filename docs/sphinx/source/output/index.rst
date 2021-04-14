@@ -23,7 +23,7 @@ The HDF5 snapshots are designed to be importable as Pandas tables and are descri
 
 .. note::
 
-        Here we are using the output from the :ref:`realistic-initial-conditions` example, running it for 15 Myr (though note that the default ini file runs it for 13.8 Gyr).  On 28 cores of the Vera machine, this takes about 10 minutes.  
+        Here we are using the output from the :ref:`realistic-initial-conditions` example, running it for 15 Myr (though note that the default ini file runs it for 13.8 Gyr) and having it print a window snapshot every 10 Myr.  On 28 cores of the Vera machine, this takes about 10 minutes.  
 
 ==========
 Code Units
@@ -313,7 +313,44 @@ This files contains detailed information on all pulsars for each simulation. For
 ==========
 Snapshots
 ==========
-FOR CARL
+.. note::
+
+        See :ref:`here <snapshotting>` for how to set the various snapshot parameters in the ini file
+        
+There are three different kinds of snapshots that CMC saves:
+
+ * *<output>.snapshot.h5* -- every star and binary, saved every ``SNAPSHOT_DELTACOUNT`` number of code timesteps
+ * *<output>.window.snapshot.h5* -- every star and binary, saved in uniform physical timesteps (set in ``SNAPSHOT_WINDOWS``)
+ * *<output>.bhsnapshot.h5* -- same as <output>.shapshot.h5, but just for black holes 
+
+Each snapshot is saved as a table in the respective hdf5 file.  To see the names of the snapshots, use ``h5ls``:
+
+.. code-block:: bash
+
+        h5ls <output>.window.snapshot.h5
+
+On the window snapshots from our test example, this shows two snapshots
+
+.. code-block:: bash
+
+        0(t=0Gyr)                Dataset {100009/Inf}
+        1(t=0.010010965Gyr)      Dataset {99227/Inf}
+
+For the windows, this shows the number of the snapshot, and the time that the snapshot was made (in whatever units the window is using).  For the other snapshots, the time is the time in code units.
+
+The snapshots themselves are designed to be imported as pandas tables, which each table name referring to a key in the hdf5 file.  To read in the snapshot at 10Myr:
+
+.. ipython:: python
+
+        import pandas as pd 
+        snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010010965Gyr)')
+        print(snap)
+
+This contains all the necessary information about the state of every star and binary at this given time.  We can also see the column names
+
+.. ipython:: python
+
+        print(snap.columns)
 
 ====================
 Cluster Observables
