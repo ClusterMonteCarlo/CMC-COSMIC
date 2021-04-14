@@ -52,7 +52,7 @@ If you are using the intel compilers, you can instead use
     cd CMC-COSMIC
     mkdir build
     cd build
-    FC=mpiifort CC=mpiicc cmake .. -DCMAKE_INSTALL_PREFIX=./cmc 
+    FC=mpiifort CC=mpiicc cmake .. -DCMAKE_INSTALL_PREFIX=../cmc 
     make install
 
 =================
@@ -65,7 +65,7 @@ install`` with, then cmake can install the version of COSMIC that comes with CMC
 
 .. code-block:: bash
 
-    FC=mpiifort CC=mpiicc cmake .. -DBUILD_COSMIC=ON -DCMAKE_INSTALL_PREFIX=./cmc
+    FC=mpiifort CC=mpiicc cmake .. -DBUILD_COSMIC=ON -DCMAKE_INSTALL_PREFIX=../cmc
 
 This will install the version of COSMIC that is included with CMC (in the ./src folder) into your python path.
 

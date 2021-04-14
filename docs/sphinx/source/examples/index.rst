@@ -214,9 +214,13 @@ The analytic form of :math:`M(<r)` cannot be written down for a King profile, bu
         plt.legend(("King ($w_0=6$)","COSMIC Samples"),fontsize=14);
 
 
+
+.. _realistic-initial-conditions:
+
 ============================
 Realistic Initial Conditions
 ============================
+
 
 So far the above examples have only used the ``cmc_point_mass`` sampler.  To generate `realistic` initial conditions, with stellar masses and binaries, we want 
 to use the ``cmc`` sampler instead.  This enables all the additional options found in the ``independent`` population sampler that COSMIC uses `(see here for more details) <https://cosmic-popsynth.github.io/COSMIC/runpop/index.html#independent>`_.  
@@ -273,3 +277,32 @@ random seed, you can specifiy that on the command line with ``-n <new_seed>``
 .. note::
 
         CMC cannot restart on different numbers of cores than the original run was performed on 
+
+============================================
+Example: Run Plummer Sphere to Core Collapse
+============================================
+
+Now we have all the tools we need to run CMC!  Let's try running the above Plummer sphere with :math:`N=10^4` particles to core collapse.
+
+We've already generated the initial conditions above and saved them as ``plummer.hdf5``, so all we need is to move them into a folder with the ``cmc`` executable and an appropriate ini file.  We can use the ``PlummerSphere.ini`` file located in the `CMC-COSMIC/examples <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ folder.  
+
+With that in place, we can run CMC on four cores with
+
+.. code-block:: bash
+
+        mpirun -np 4 ./cmc PlummerSphere.ini plummer
+
+On the Vera cluster at CMU, this takes about 2 minutes to run to core collapse.
+
+We can check that it's worked by looking at the Lagrange Radii (the <x> Lagrange radius is the radius enclosing <x> percent of the cluter mass).  If we plot the 0.1% 1%, 10% 50%, and 90% Lagrange radii, the classic collapse of the core (and expansion of the halo) appears:
+
+.. ipython:: python
+        
+        import pandas as pd
+        lag_rad = pd.read_table('source/example_output/plummer.lagrad.dat',header=1,delimiter=' ',index_col=False)
+        plt.plot(lag_rad['#1:t'],lag_rad[['7:r(0.001)','12:r(0.01)','17:r(0.1)','21:r(0.5)','25:r(0.9)']],color='C1');
+        plt.yscale('log');
+        plt.xlabel("Time (relaxation time)",fontsize=15);
+        @savefig plot_plummer.png width=6in
+        plt.ylabel("Virial Radii",fontsize=15);
+

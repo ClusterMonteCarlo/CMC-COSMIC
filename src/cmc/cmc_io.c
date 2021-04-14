@@ -2231,14 +2231,14 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 				fprintf(mlagradfile[i], "# Lagrange radii for %g < m < %g range [code units]\n", mass_bins[i], mass_bins[i+1]);
 			}
 
-			fprintf(lagradfile, "# 1:t");
-			fprintf(ave_mass_file, "# 1:t");
-			fprintf(no_star_file, "# 1:t");
-			fprintf(densities_file, "# 1:t");
-			fprintf(ke_rad_file, "# 1:t");
-			fprintf(ke_tan_file, "# 1:t");
-			fprintf(v2_rad_file, "# 1:t");
-			fprintf(v2_tan_file, "# 1:t");
+			fprintf(lagradfile, "#1:t");
+			fprintf(ave_mass_file, "#1:t");
+			fprintf(no_star_file, "#1:t");
+			fprintf(densities_file, "#1:t");
+			fprintf(ke_rad_file, "#1:t");
+			fprintf(ke_tan_file, "#1:t");
+			fprintf(v2_rad_file, "#1:t");
+			fprintf(v2_tan_file, "#1:t");
 			for(i=0; i<NO_MASS_BINS-1; i++){
 				fprintf(mlagradfile[i], "# 1:t");
 			}
@@ -2280,7 +2280,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			}
 
 			fprintf(binaryfile, "# Binary information [code units]\n");
-			fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
+			fprintf(binaryfile, "#1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
 
 			// print header
 			fprintf(bhsummaryfile, "#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)\n");
