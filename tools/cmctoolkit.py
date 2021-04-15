@@ -139,7 +139,7 @@ def load_filtertable(fname):
     """
     # Read filter table
     f = open(fname, 'r')
-    text = f.read().split('\n')
+    text = f.readlines()
     f.close()
 
     # Convert to a pandas table
@@ -718,7 +718,7 @@ class Snapshot:
             colnames = [ colrow[ii][len(str(ii+1))+1:].replace(':','') for ii in range(len(colrow)) ]
 
             # Extract snapshot time
-            t_snapshot = float(text[0].split('#')[1].split('=')[1].split()[0])
+            t_snapshot = text[0].split('#')[1].split('=')[1].split()[0]
 
             # Make a list of lists each of which contains the contents of each object
             text = text[2:-1]
@@ -743,7 +743,7 @@ class Snapshot:
             self.data = pd.read_hdf(fname,key=snapshot_name)
 
             # Extract snapshot time
-            t_snapshot = float(snapshot_name.split('=')[1])
+            t_snapshot = snapshot_name.split('=')[1].rstrip(')')
 
         else:
             raise ValueError('unsupported snapshot file type')
@@ -765,7 +765,12 @@ class Snapshot:
             raise ValueError('convfile must be either str or pd.DataFrame')
 
         # Also read in the time of the snapshot (code units) and convert to gyr
-        self.age = self.convert_units(t_snapshot, 'code', 'gyr')
+        if 'Gyr' in t_snapshot:
+            self.age = float(t_snapshot.rstrip('Gyr'))
+        elif 'Trl' in t_snapshot or 'Tcr' in t_snapshot:
+            raise ValueError('Unsupported snapshot window units')
+        else:
+            self.age = self.convert_units(float(t_snapshot), 'code', 'gyr')
 
         self.filtertable = pd.DataFrame({'filtname': [],
                                              'path': [],
@@ -826,7 +831,7 @@ class Snapshot:
             If specified, only include stars inside this projected radius
 
         max_lum: float (default: None)
-            IF specified, only include stars below this luminosity [LSUN]
+            IF specified, only include stars below this luminosity _LSUN
 
         fluxdict: dict (default: None)
             If specified, makes upper and lower (observed) magnitude cuts in certain filters
@@ -848,11 +853,11 @@ class Snapshot:
 
         # Mass cuts
         if min_mass is not None: # Pretend binaries are a single star with double mass
-            good = good & ( ( (self.data['m[MSUN]'] > min_mass)                          & single ) |
-                            ( (self.data['m0[MSUN]'] + self.data['m1[MSUN]'] > min_mass) & binary ) )
+            good = good & ( ( (self.data['m_MSUN'] > min_mass)                          & single ) |
+                            ( (self.data['m0_MSUN'] + self.data['m1_MSUN'] > min_mass) & binary ) )
         if max_mass is not None:
-            good = good & ( ( (self.data['m[MSUN]'] < max_mass)                          & single ) |
-                            ( (self.data['m0[MSUN]'] + self.data['m1[MSUN]'] < max_mass) & binary ) )
+            good = good & ( ( (self.data['m_MSUN'] < max_mass)                          & single ) |
+                            ( (self.data['m0_MSUN'] + self.data['m1_MSUN'] < max_mass) & binary ) )
 
         # Cuts on projected radius (in d)
         if (dmin is not None) | (dmax is not None):
@@ -868,8 +873,8 @@ class Snapshot:
                 
         # Cut on luminosity
         if max_lum is not None:
-            good = good & ( ( single & (self.data['luminosity[LSUN]'] < max_lum) ) |
-                            ( binary & (self.data['bin_star_lum0[LSUN]'] + self.data['bin_star_lum1[LSUN]'] < max_lum) ) )
+            good = good & ( ( single & (self.data['luminosity_LSUN'] < max_lum) ) |
+                            ( binary & (self.data['bin_star_lum0_LSUN'] + self.data['bin_star_lum1_LSUN'] < max_lum) ) )
 
         # Make sure all of the filters are actually there
         if fluxdict is not None:
@@ -962,7 +967,7 @@ class Snapshot:
             planck_weighted = planck * transmission.reshape((1, transmission.size))
             integrated_planck_weighted = np.sum(0.5 * (planck_weighted[:,1:] + planck_weighted[:,:-1]) * (wavelength_cm[1:] - wavelength_cm[:-1]), axis=1)
 
-            rad_rsun = self.data.loc[(self.data['binflag'] != 1) & (self.data['startype'] != 14), 'radius[RSUN]']
+            rad_rsun = self.data.loc[(self.data['binflag'] != 1) & (self.data['startype'] != 14), 'radius_RSUN']
             rad_cm = self.convert_units(rad_rsun, 'rsun', 'cm')
             luminosity_cgs = 4 * np.pi ** 2 * rad_cm ** 2 * integrated_planck_weighted
 
@@ -982,7 +987,7 @@ class Snapshot:
             planck_weighted0 = planck0 * transmission.reshape((1, transmission.size))
             integrated_planck_weighted0 = np.sum(0.5 * (planck_weighted0[:,1:] + planck_weighted0[:,:-1]) * (wavelength_cm[1:] - wavelength_cm[:-1]), axis=1)
 
-            rad0_rsun = self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14), 'bin_star_radius0[RSUN]']
+            rad0_rsun = self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14), 'bin_star_radius0_RSUN']
             rad0_cm = self.convert_units(rad0_rsun, 'rsun', 'cm')
             luminosity0_cgs = 4 * np.pi ** 2 * rad0_cm ** 2 * integrated_planck_weighted0
 
@@ -1002,7 +1007,7 @@ class Snapshot:
             planck_weighted1 = planck1 * transmission.reshape((1, transmission.size))
             integrated_planck_weighted1 = np.sum(0.5 * (planck_weighted1[:,1:] + planck_weighted1[:,:-1]) * (wavelength_cm[1:] - wavelength_cm[:-1]), axis=1)
 
-            rad1_rsun = self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype1'] != 14), 'bin_star_radius1[RSUN]']
+            rad1_rsun = self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype1'] != 14), 'bin_star_radius1_RSUN']
             rad1_cm = self.convert_units(rad1_rsun, 'rsun', 'cm')
             luminosity1_cgs = 4 * np.pi ** 2 * rad1_cm ** 2 * integrated_planck_weighted1
 
@@ -1141,8 +1146,8 @@ class Snapshot:
 
         # First, calculate Teff for non-BH singles
         single = (self.data['binflag'] != 1) & (self.data['startype'] != 14)
-        lum_lsun = self.data.loc[single, 'luminosity[LSUN]']
-        rad_rsun = self.data.loc[single, 'radius[RSUN]']
+        lum_lsun = self.data.loc[single, 'luminosity_LSUN']
+        rad_rsun = self.data.loc[single, 'radius_RSUN']
 
         lum = self.convert_units(lum_lsun, 'lsun', 'erg/s')
         rad = self.convert_units(rad_rsun, 'rsun', 'cm')
@@ -1151,8 +1156,8 @@ class Snapshot:
 
         # Next, calculate Teff for non-BH doubles... start with the first of the pair
         binary0 = (self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14)
-        lum0_lsun = self.data.loc[binary0, 'bin_star_lum0[LSUN]']
-        rad0_rsun = self.data.loc[binary0, 'bin_star_radius0[RSUN]']
+        lum0_lsun = self.data.loc[binary0, 'bin_star_lum0_LSUN']
+        rad0_rsun = self.data.loc[binary0, 'bin_star_radius0_RSUN']
 
         lum0 = self.convert_units(lum0_lsun, 'lsun', 'erg/s')
         rad0 = self.convert_units(rad0_rsun, 'rsun', 'cm')
@@ -1161,8 +1166,8 @@ class Snapshot:
 
         # Same as above but for the second star in each binary pair
         binary1 = (self.data['binflag'] == 1) & (self.data['bin_startype1'] != 14)
-        lum1_lsun = self.data.loc[binary1, 'bin_star_lum1[LSUN]']
-        rad1_rsun = self.data.loc[binary1, 'bin_star_radius1[RSUN]']
+        lum1_lsun = self.data.loc[binary1, 'bin_star_lum1_LSUN']
+        rad1_rsun = self.data.loc[binary1, 'bin_star_radius1_RSUN']
 
         lum1 = self.convert_units(lum1_lsun, 'lsun', 'erg/s')
         rad1 = self.convert_units(rad1_rsun, 'rsun', 'cm')
@@ -1192,25 +1197,25 @@ class Snapshot:
         self.data['bin_g1[CM/S2]'] = np.nan * np.ones(len(self.data))
 
         # Add surface gravity for single
-        mass_msun = self.data.loc[self.data['binflag'] != 1, 'm[MSUN]']
+        mass_msun = self.data.loc[self.data['binflag'] != 1, 'm_MSUN']
         mass_g = self.convert_units(mass_msun, 'msun', 'g')
-        rad_rsun = self.data.loc[self.data['binflag'] != 1, 'radius[RSUN]']
+        rad_rsun = self.data.loc[self.data['binflag'] != 1, 'radius_RSUN']
         rad_cm = self.convert_units(rad_rsun, 'rsun', 'cm')
 
         self.data.loc[self.data['binflag'] != 1, 'g[CM/S2]'] = G * mass_g / rad_cm ** 2
 
         # Add surface gravity for first binary
-        mass0_msun = self.data.loc[self.data['binflag'] != 1, 'm0[MSUN]']
+        mass0_msun = self.data.loc[self.data['binflag'] != 1, 'm0_MSUN']
         mass0_g = self.convert_units(mass0_msun, 'msun', 'g')
-        rad0_rsun = self.data.loc[self.data['binflag'] != 1, 'bin_star_radius0[RSUN]']
+        rad0_rsun = self.data.loc[self.data['binflag'] != 1, 'bin_star_radius0_RSUN']
         rad0_cm = self.convert_units(rad0_rsun, 'rsun', 'cm')
 
         self.data.loc[self.data['binflag'] == 1, 'g0[CM/S2]'] = G * mass0_g / rad0_cm ** 2
 
         # Add surface gravity for second binary
-        mass1_msun = self.data.loc[self.data['binflag'] != 1, 'm1[MSUN]']
+        mass1_msun = self.data.loc[self.data['binflag'] != 1, 'm1_MSUN']
         mass1_g = self.convert_units(mass1_msun, 'msun', 'g')
-        rad1_rsun = self.data.loc[self.data['binflag'] != 1, 'bin_star_radius1[RSUN]']
+        rad1_rsun = self.data.loc[self.data['binflag'] != 1, 'bin_star_radius1_RSUN']
         rad1_cm = self.convert_units(rad1_rsun, 'rsun', 'cm')
 
         self.data.loc[self.data['binflag'] == 1, 'g1[CM/S2]'] = G * mass1_g / rad1_cm ** 2
@@ -1266,7 +1271,7 @@ class Snapshot:
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, fluxdict=fluxdict) # make cuts
         good = good & ( ((self.data['binflag'] != 1) & np.in1d(startype_arr, startypes))
                       | ((self.data['binflag'] == 1) & (np.in1d(bin_startype0_arr, startypes) | np.in1d(bin_startype1_arr, startypes)) ) )
-        mass_arr = np.array(self.data.loc[good, 'm[MSUN]'])
+        mass_arr = np.array(self.data.loc[good, 'm_MSUN'])
         d_pc_arr = np.array(self.data.loc[good, 'd[PC]'])
 
         count, _ = np.histogram(d_pc_arr, bin_edges)
@@ -1367,7 +1372,7 @@ class Snapshot:
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, fluxdict=fluxdict)
         good = good & ( ((self.data['binflag'] != 1) & np.in1d(startype_arr, startypes))
                       | ((self.data['binflag'] == 1) & (np.in1d(bin_startype0_arr, startypes) | np.in1d(bin_startype1_arr, startypes)) ) )
-        mass_arr = np.array(self.data.loc[good, 'm[MSUN]'])
+        mass_arr = np.array(self.data.loc[good, 'm_MSUN'])
         d_pc_arr = np.array(self.data.loc[good, 'd[PC]'])
         v_kms_arr = np.array(np.hypot(self.data.loc[good, 'vx[KM/S]'], np.hypot(self.data.loc[good, 'vy[KM/S]'], self.data.loc[good, 'vz[KM/S]'])))
 
@@ -1422,7 +1427,7 @@ class Snapshot:
         """
         # If bin_edges is not specified, use default
         if bin_edges is None:
-            bin_edges = np.logspace( np.log10(np.min(self.data['m[MSUN]'])), np.log10(np.max(self.data['m[MSUN]'])), 100 )
+            bin_edges = np.logspace( np.log10(np.min(self.data['m_MSUN'])), np.log10(np.max(self.data['m_MSUN'])), 100 )
 
         # Make relevant cuts
         startype_arr = self.data['startype']
@@ -1434,16 +1439,16 @@ class Snapshot:
         good = good & ( ((self.data['binflag'] != 1) & np.in1d(startype_arr, startypes))
                       | ((self.data['binflag'] == 1) & (np.in1d(bin_startype0_arr, startypes) | np.in1d(bin_startype1_arr, startypes)) ) )
 
-        mass_arr = np.array(self.data['m[MSUN]'])
+        mass_arr = np.array(self.data['m_MSUN'])
 
         binary = np.array(self.data['binflag'] == 1)
         good_both_bin = np.array(np.in1d(bin_startype0_arr, startypes) & np.in1d(bin_startype1_arr, startypes))
         good_bin0 = np.array(np.in1d(bin_startype0_arr, startypes) & ~np.in1d(bin_startype1_arr, startypes))
         good_bin1 = np.array(~np.in1d(bin_startype0_arr, startypes) & np.in1d(bin_startype1_arr, startypes))
         
-        mass_arr[good & binary & good_both_bin] = np.array(self.data.loc[good & binary & good_both_bin, 'm0[MSUN]']) + np.array(self.data.loc[good & binary & good_both_bin, 'm1[MSUN]'])
-        mass_arr[good & binary & good_bin0] = np.array(self.data.loc[good & binary & good_bin0, 'm0[MSUN]'])
-        mass_arr[good & binary & good_bin1] = np.array(self.data.loc[good & binary & good_bin1, 'm1[MSUN]'])
+        mass_arr[good & binary & good_both_bin] = np.array(self.data.loc[good & binary & good_both_bin, 'm0_MSUN']) + np.array(self.data.loc[good & binary & good_both_bin, 'm1_MSUN'])
+        mass_arr[good & binary & good_bin0] = np.array(self.data.loc[good & binary & good_bin0, 'm0_MSUN'])
+        mass_arr[good & binary & good_bin1] = np.array(self.data.loc[good & binary & good_bin1, 'm1_MSUN'])
         
         mass_arr = mass_arr[good]
 
@@ -1500,7 +1505,7 @@ class Snapshot:
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, dmin=dmin, dmax=dmax, fluxdict=fluxdict)
         good = good & ( ((self.data['binflag'] != 1) & np.in1d(startype_arr, startypes))
                       | ((self.data['binflag'] == 1) & (np.in1d(bin_startype0_arr, startypes) | np.in1d(bin_startype1_arr, startypes)) ) )
-        mass_arr = np.array(self.data.loc[good, 'm[MSUN]'])
+        mass_arr = np.array(self.data.loc[good, 'm_MSUN'])
 
         # Define -1 * loglikelihood function, we wish to minimize this likelihood function
         # (in other words, minimize -1 * loglikelihood)
@@ -1614,7 +1619,7 @@ class Snapshot:
             If specified, only include stars below this mass
             
         max_lum: float (default: None)
-            IF specified, only include stars below this luminosity [LSUN]
+            IF specified, only include stars below this luminosity _LSUN
 
         fluxdict: dict (default: None)
             If specified, makes upper and lower (observed) magnitude cuts in certain filters
@@ -1836,17 +1841,17 @@ class Snapshot:
         startype1_ok = (np.in1d(startype1, startypes))
         
         if qty == 'mass':
-            mass_arr = np.array(self.data.loc[good, 'm[MSUN]'])
-            mass0_arr = np.array(self.data.loc[good, 'm0[MSUN]'])
-            mass1_arr = np.array(self.data.loc[good, 'm1[MSUN]'])
+            mass_arr = np.array(self.data.loc[good, 'm_MSUN'])
+            mass0_arr = np.array(self.data.loc[good, 'm0_MSUN'])
+            mass1_arr = np.array(self.data.loc[good, 'm1_MSUN'])
             
             mass_arr[binary & startype0_ok & startype1_ok] = mass0_arr[binary & startype0_ok & startype1_ok] + mass1_arr[binary & startype0_ok & startype1_ok]
             mass_arr[binary & startype0_ok & ~startype1_ok] = mass0_arr[binary & startype0_ok & ~startype1_ok]
             mass_arr[binary & ~startype0_ok & startype1_ok] = mass1_arr[binary & ~startype0_ok & startype1_ok]
         elif qty == 'light':
-            lum_arr = np.array(self.data.loc[good,'luminosity[LSUN]'])
-            lum0_arr = np.array(self.data.loc[good,'bin_star_lum0[LSUN]'])
-            lum1_arr = np.array(self.data.loc[good,'bin_star_lum1[LSUN]'])
+            lum_arr = np.array(self.data.loc[good,'luminosity_LSUN'])
+            lum0_arr = np.array(self.data.loc[good,'bin_star_lum0_LSUN'])
+            lum1_arr = np.array(self.data.loc[good,'bin_star_lum1_LSUN'])
             
             lum_arr[binary & startype0_ok & startype1_ok] = lum0_arr[binary & startype0_ok & startype1_ok] + lum1_arr[binary & startype0_ok & startype1_ok]
             lum_arr[binary & startype0_ok & ~startype1_ok] = lum0_arr[binary & startype0_ok & ~startype1_ok]
@@ -1904,13 +1909,13 @@ class Snapshot:
         ospin0 = np.array(self.data['ospin0'])
         ospin1 = np.array(self.data['ospin1'])
 
-        mass = np.array(self.data['m[MSUN]'])
-        mass0 = np.array(self.data['m0[MSUN]'])
-        mass1 = np.array(self.data['m1[MSUN]'])
+        mass = np.array(self.data['m_MSUN'])
+        mass0 = np.array(self.data['m0_MSUN'])
+        mass1 = np.array(self.data['m1_MSUN'])
 
-        lum = np.array(self.data['luminosity[LSUN]'])
-        lum0 = np.array(self.data['bin_star_lum0[LSUN]'])
-        lum1 = np.array(self.data['bin_star_lum1[LSUN]'])
+        lum = np.array(self.data['luminosity_LSUN'])
+        lum0 = np.array(self.data['bin_star_lum0_LSUN'])
+        lum1 = np.array(self.data['bin_star_lum1_LSUN'])
 
         dmdt0 = np.array(self.data['dmdt0'])
         dmdt1 = np.array(self.data['dmdt1'])
@@ -2112,7 +2117,7 @@ class Snapshot:
         bintype_good = np.in1d(bin_startype0_arr[good], bin_startypes) & np.in1d(bin_startype1_arr[good], bin_startypes)
         
         if (min_q is not None) or (max_q is not None):
-            q_arr = np.array(self.data.loc[good, 'm1[MSUN]'] / self.data.loc[good, 'm0[MSUN]']) # mass ratio
+            q_arr = np.array(self.data.loc[good, 'm1_MSUN'] / self.data.loc[good, 'm0_MSUN']) # mass ratio
             q_arr[q_arr > 1] **= -1
             
             if (min_q is not None) and (max_q is not None):
@@ -2218,7 +2223,7 @@ class Snapshot:
             # cuts refer to; do this by interpolating mass wrt. magnitude.
             # Also calculate the corresponding blue/red mags
             single_bool = (self.data['binflag'] != 1)
-            M = np.geomspace(np.min(self.data.loc[single_bool, 'm[MSUN]']), find_MS_TO(self.age, self.z), 1000)
+            M = np.geomspace(np.min(self.data.loc[single_bool, 'm_MSUN']), find_MS_TO(self.age, self.z), 1000)
             fdict = SSE_MS_get_flux(M, self.z, self.age, filttable)
             
             mag_to_mass_interp = scipy.interpolate.interp1d(fdict[mag_filter], M)
@@ -2284,7 +2289,7 @@ class Snapshot:
         # Color pad, if specified
         if color_pad is not None:
             single_bool = np.in1d(self.data['startype'], [0, 1])
-            M = np.geomspace(np.min(self.data.loc[single_bool, 'm[MSUN]']), find_MS_TO(self.age, self.z), 1000)
+            M = np.geomspace(np.min(self.data.loc[single_bool, 'm_MSUN']), find_MS_TO(self.age, self.z), 1000)
             fdict = SSE_MS_get_flux(M, self.z, self.age, filttable)
             mag_arr = fdict[mag_filter]
             blue_arr = fdict[blue_filter]
@@ -2390,13 +2395,13 @@ class Snapshot:
         # Locate the MSTO
         ##mto = find_MS_TO(self.age, self.z)
 
-        ##good = np.where((self.data['m[MSUN]'] < mto) & (self.data['binflag'] != 1) & np.in1d(self.data['startype'], [0, 1]))
+        ##good = np.where((self.data['m_MSUN'] < mto) & (self.data['binflag'] != 1) & np.in1d(self.data['startype'], [0, 1]))
         ##ms_singles = self.data.loc[good]
         ##turnoff_mag = np.min(ms_singles[f'tot_obsMag_{mag_filter}'])
         ##turnoff_color = np.min(ms_singles[f'tot_obsMag_{blue_filter}']-ms_singles[f'tot_obsMag_{red_filter}'])
         
         single_bool = np.in1d(self.data['startype'], [0, 1])
-        m_lower = 0.08#np.min([np.min(self.data.loc[single_bool, 'm[MSUN]']), 0.08])
+        m_lower = 0.08#np.min([np.min(self.data.loc[single_bool, 'm_MSUN']), 0.08])
         
         M = np.geomspace(m_lower, find_MS_TO(self.age, self.z), 1000)
         fdict = SSE_MS_get_flux(M, self.z, self.age, filttable)
