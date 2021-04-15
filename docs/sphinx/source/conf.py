@@ -40,6 +40,8 @@ extensions = [
     'sphinxcontrib.katex',
     'sphinx.ext.autosummary',
     'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.viewcode',
+    'breathe',
     'sphinx.ext.linkcode',
     'sphinx.ext.ifconfig',
     'sphinx_automodapi.automodapi',
