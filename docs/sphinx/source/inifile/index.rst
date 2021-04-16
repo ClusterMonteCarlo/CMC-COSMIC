@@ -24,6 +24,9 @@ Here is a link to the unstable development version of the default inifile for CM
     code into types. Each group will start with a note to indicate
     the type of parameter or flag.
 
+
+.. _snapshotting:
+
 .. note::
 
     SNAPSHOT FLAGS

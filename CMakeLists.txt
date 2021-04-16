@@ -87,6 +87,8 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 	add_definitions(${GCC_SET_COMMON_FLAG})
 endif()
 
+option(BUILD_COSMIC "Use pip to build the subrepository version of COSMIC" OFF)
+
 # Internal products
 
 add_subdirectory(src)
