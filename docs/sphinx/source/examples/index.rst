@@ -232,8 +232,8 @@ To generate the above King profile, but with all the additional stellar physics 
         Singles, Binaries = InitialCMCTable.sampler('cmc', binfrac_model=0.1, primary_model='kroupa01',
                                                     ecc_model='thermal', porb_model='log_uniform', qmin=-1.0,
                                                     cluster_profile='king', met=0.00017, size=100000,w_0=6,
-                                                    params=os.path.abspath('../../examples/KingProfileTemp.ini'),
-                                                    seed=12345,sample_porb_first=True,set_radii_with_BSE=True)
+                                                    params=os.path.abspath('../../examples/KingProfile.ini'),
+                                                    seed=12345)
 
 This example is also found in the `examples <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ folder in the CMC repository.  Note that 
 unlike the above examples, here we require an ini file (or a BSEDict), to supply the necessary stellar physics options for generating stars and binaries with 

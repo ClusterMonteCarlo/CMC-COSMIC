@@ -349,7 +349,7 @@ The snapshots themselves are designed to be imported as pandas tables, which eac
 .. ipython:: python
 
         import pandas as pd 
-        snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010010965Gyr)')
+        snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010001767Gyr)')
         print(snap)
 
 This contains all the necessary information about the state of every star and binary at this given time.  We can also see the column names
