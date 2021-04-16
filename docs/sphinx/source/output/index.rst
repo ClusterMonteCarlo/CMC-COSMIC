@@ -4,6 +4,8 @@
 Analyzing CMC Output
 ####################
 
+
+
 .. ipython::
    :suppress:
 
@@ -13,7 +15,8 @@ Analyzing CMC Output
 
    In [145]: style.use(os.path.abspath('./source/matplotlib_style_file'))
 
-   In [146]: ion()
+   In [146]: ion() 
+
 
 Here we list all of the output files that are generated in a typical CMC run, and offer some suggestsions on how to analyze them.  Generally, the output comes in one of two types: `log files`, where individual events (e.g. stellar collisions, mergers, fewbody interactions) are logged whenenver they happen or when specific quantities are recorded every timestep (e.g. the number of black holes, the core radius, the lagrange radii), and `snapshots`, where the state of every star and binary in the cluster is recorded.  These are saved in plain text dat files and hdf5 files, respectively.
 
@@ -43,7 +46,7 @@ This file can be parsed using the ``cmc_parser.py`` file for easier use in pytho
 ==========
 Log Files
 ==========
-FOR FULYA
+
 
 
 initial.dyn.dat
@@ -56,17 +59,17 @@ The `initial.dyn.dat` files contains various theoretical quantities pertaining t
 ``tcount``
 ``N``
 ``M``
-``VR``
-``N_c``
+``VR``               ?
+``N_c``              core
 ``r_c``
-``r_max``
+``r_max``            max radius of star in cluster
 ``Etot``
 ``KE``
 ``PE``
-``Etot_int``
+``Etot_int`` 
 ``Etot_bin``
 ``E_cenma``
-``Eesc``
+``Eesc``      escape energy
 ``Ebesc``
 ``Eintesc``
 ``Eoops``
@@ -74,10 +77,10 @@ The `initial.dyn.dat` files contains various theoretical quantities pertaining t
 ``r_h``
 ``rho_0``
 ``rc_spitzer``
-``v0_rms``
-``rc_nb``
-``DMse``			[:math:`{M_{\odot}}`]
-``DMrejuv`` 		[:math:`{M_{\odot}}`]
+``v0_rms``          rms velo dispersion at center?
+``rc_nb``           rc defined in nbody code
+``DMse``			total change of mass of the cluster[:math:`{M_{\odot}}`]
+``DMrejuv`` 	    ?	[:math:`{M_{\odot}}`]
 ``N_c_nb``
 ================  =====================================================
 
@@ -110,7 +113,7 @@ Below is an exemplary output::
 ``v``							relative velocity
 ``m``							mass [:math:`{M_{\odot}}`]
 ``R``							radius
-``Eint``			
+``Eint``			            
 ``id``							ID number
 ``kytpe``						stellar type
 ``a``							semi-major axis
@@ -168,7 +171,7 @@ This file contains the number of BHs (as well as BH binaries, etc.) at each dyna
 ``Nbh-nonbh``			         # BH-non BH binaries
 ``Nbh-ns``					     # BH-NS binaries
 ``Nbh-wd``						 # BH-WD binaries
-``N_bh-star``				 	 
+``N_bh-star``				 	  including MS, giants not compact objs
 ``Nbh-ms``						 # BH-MS binaries	
 ``Nbh-postms``			         # BH-postMS binaries
 ``fb_bh``						 # binaries containing a black hole / total # systems containing a black hole
@@ -205,8 +208,8 @@ This file lists stellar types and properties for all stellar collisions occurrin
 ``vinf``                         [km/s]
 ``rad1``                         radius of body_1
 ``rad2``                         radius of body_2
-``rperi``
-``coll_mult``
+``rperi``                        pericenter distance at collision
+``coll_mult``                     colliison multipole if sticky sphere = 1 if bh ns TDE (>1)
 ==============================  =====================================================
 
 
@@ -254,10 +257,10 @@ As the result of dynamical encounters (and other mechanisms such as cluster tida
 ``r_peri``			            
 ``r_apo``					     
 ``Rtidal``	
-``phi_rtidal``
-``phi_zero``
-``E``
-``J``
+``phi_rtidal`` potential at tidal radius of the cluster 
+``phi_zero``   potential at center
+``E``          total energy
+``J``          total ang mom
 ``id``
 ``binflag``
 ``m0``                           [:math:`M_{\odot}`]
@@ -271,50 +274,114 @@ As the result of dynamical encounters (and other mechanisms such as cluster tida
 ``bin_startype1``
 ``rad0``
 ``rad1``
-``tb``
+``tb`                          binary period?`
 ``lum0``
 ``lum1``
-``massc0``
+``massc0``                      core mass
 ``massc1``
-``radc0``
+``radc0``                       core radius
 ``radc1``
-``menv0``
+``menv0`` 
 ``menv1``
 ``renv0``
 ``renv1``
-``tms0``
+``tms0`  `
 ``tms1``
-``dmdt0``
+``dmdt0`` mass acreting rate
 ``dmdt1``
 ``radrol0``
 ``radrol1``
-``ospin0``
+``ospin0``  spin angular momentum of the star
 ``ospin1``
-``B0``
+``B0`` mag field (Gauss)
 ``B1``
-``formation0``
+``formation0`` supernova (core collapsed pair instability, etc cosmic website)
 ``formation1``
-``bacc0``
+``bacc0`` 
 ``bacc1``
 ``tacc0``
 ``tacc1``
-``mass0_0``
+``mass0_0`` initial mass 
 ``mass0_1``
-``epoch0``
+``epoch0``  ??
 ``epoch1``
-``bhspin``
+``bhspin`` black hole spin for the isolated bh
 ``bhspin1``
 ``bhspin2``
 ``ospin``
-``B``
-``formation``				 
+``B``     isolated mag
+``formation``	isolated star			 
 ==============================  =====================================================
 
 
 initial.morepulsars.dat
 -----------------------
 
-This files contains detailed information on all pulsars for each simulation. For further information on treatment of pulsars, see Ye et al. 2019, ApJ.
+This files contains detailed information on all neutron stars for each simulation. For further information on treatment of neutron stars, see Ye et al. 2019, ApJ.
+id 1 -100 isolated
+
+
+if id 0 or id 1 binary
+==============================  =====================================================
+``tcount``						     time count			 
+`` ``
+``TotalTime ``
+``binflag``
+``id0 ``
+``id1``
+``m0``                                [:math:`M_{\odot}`]
+``m1``                                [:math:`M_{\odot}`]
+``B0``                                [G]
+``B1``                                [G]
+``P0``                                spin period[sec]
+``P1``                                [sec]
+``startype0``
+``startype1``
+``a``                                 [AU]
+``ecc``
+``radrol0``                           Roch ratio if >1 mass transfering
+``radrol1``
+``dmdt0``                            mass transfer per time
+``dmdt1``
+``r``                                position to cluster center
+``vr``
+``vt``
+``bacc0``                            mass accreated to star
+``bacc1``
+``tacc0``
+``tacc1``                            time spending acceting mass
+
+==============================  =====================================================
+
+
+
+initial.relaxation.dat
+----------------------
+
+
+==============================  =====================================================
+``time``
+``thetase>1.5708:f``
+``q``
+``<M>``
+``<r>``
+==============================  =====================================================
+
+ initial.lightcollision.log
+---------------------------
+
+==============================  =====================================================
+``time``
+``k``
+``id``
+``m``
+``type``
+``rad``
+``Eb``
+``ecc``
+``a``							   [AU]
+``rp``                             [AU]
+==============================  =====================================================
 
 ==========
 Snapshots
@@ -350,13 +417,13 @@ The snapshots themselves are designed to be imported as pandas tables, which eac
 
         import pandas as pd 
         snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010010965Gyr)')
-        print(snap)
+        print(snap) -->
 
 This contains all the necessary information about the state of every star and binary at this given time.  We can also see the column names
 
 .. ipython:: python
 
-        print(snap.columns)
+        print(snap.columns) 
 
 You may notice, however, that these columns are exactly the same as those in the :ref:`**<output>.esc.dat** <escfile>`  file!
 
@@ -377,7 +444,7 @@ By default, the cmctoolkit will import the last snapshot in an hdf5 snapshot fil
         last_snap = cmct.Snapshot(fname='source/example_output/output.window.snapshots.h5',
                                   conv='source/example_output/output.conv.sh',
                                   dist=15, # distance to cluster in kpc
-                                  z=0.0017) # metallicity
+                                  z=0.0017) # metallicity 
                                  
 
 But any snapshot in the file can be loaded by specifying the hdf5 key:
@@ -420,6 +487,6 @@ As an example of what the `cmctoolkit` can do, we can create U-band surface brig
         plt.xscale('log')
         plt.xlim(5e-1, 1e3);
         @savefig plot_sbp.png width=7in
-        plt.ylim(33, 5);
+        plt.ylim(33, 5); 
 
-See the documentation on the `cmctoolkit` for more details
+See the documentation on the `cmctoolkit` for more details 

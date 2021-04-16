@@ -33,7 +33,7 @@ The examples below are also found in the examples folder of the main GitHub repo
 
         from cosmic.sample.sampler import cmc
 
-        help(cmc.get_cmc_point_mass_sampler)
+        help(cmc.get_cmc_point_mass_sampler) 
 
 
 The more general ``cmc`` sampler (which we use in the King profile example below) has all the additional features for generating stellar binaries that COSMIC 
@@ -43,7 +43,7 @@ has.  You can see it's (significantly more diverse) options with
 
         from cosmic.sample.sampler import cmc
 
-        help(cmc.get_cmc_sampler)
+        help(cmc.get_cmc_sampler) 
 
 Plummer Sphere
 --------------
@@ -63,19 +63,19 @@ that the ``Singles`` table contains all the single stars and binary centers of m
 
         Singles, Binaries = InitialCMCTable.sampler('cmc_point_mass', cluster_profile='plummer', size=10000, r_max=100)
 
-        print(Singles)
+        print(Singles) 
 
 We then scale the cluster to `Henon units <https://ui.adsabs.harvard.edu/abs/2014arXiv1411.4936H/abstract>`_, where :math:`G = 1`, the cluster mass is :math:`M_{c}=1`, the cluster energy is :math:`E=-0.25`, and the virial radius is :math:`r_v \equiv G M_c^2 / 2|U| = 1`.  Note that is automatically done in ``InitialCMCTable.write`` if the cluster isn't already normalized, but we do it here explicitly.
 
 .. ipython:: python
 
-        InitialCMCTable.ScaleToNBodyUnits(Singles,Binaries)
+        InitialCMCTable.ScaleToNBodyUnits(Singles,Binaries) 
 
 Finally, we can save the initial conditions to an HDF5 file (for use in CMC) with:
 
 .. ipython:: python
 
-        InitialCMCTable.write(Singles, Binaries, filename="plummer.hdf5")
+        InitialCMCTable.write(Singles, Binaries, filename="plummer.hdf5") 
 
 
 We can check that the Plummer function reproduces what we would expect from analytic predictions.  The enclosed mass a plummer sphere is given by
@@ -142,7 +142,7 @@ To generate an Elson profile with :math:`\gamma=3`, we can use
 .. ipython:: python
     :okwarning:
 
-    Singles, Binaries = InitialCMCTable.sampler('cmc_point_mass', cluster_profile='elson', gamma=2.5, size=10000, r_max=100)
+    Singles, Binaries = InitialCMCTable.sampler('cmc_point_mass', cluster_profile='elson', gamma=2.5, size=10000, r_max=100) 
 
 
 Comparing with the theoretical calculation for the enclosed mass, we find similarly good agreement:
