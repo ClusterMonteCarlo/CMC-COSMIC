@@ -360,6 +360,71 @@ This contains all the necessary information about the state of every star and bi
 
 You may notice, however, that these columns are exactly the same as those in the :ref:`**<output>.esc.dat** <escfile>`  file!
 
+==============================  =====================================================
+``id``
+``m``
+``r``
+``vr``
+``vt``
+``E``
+``J``
+``binflag``
+``m0``
+``m1``
+``id0``
+``id1``
+``a_AU``
+``e``
+``startype``
+``luminosity``
+``radius``
+``bin_startype0``
+``bin_startype1``
+``bin_star_lum0``
+``bin_star_lum1``
+``bin_star_radius0``
+``bin_star_radius1``
+``bin_Eb``
+``eta``
+``star_phi``
+``rad0``
+``rad1``
+``tb``
+``lum0``
+``lum1``
+``massc0``
+``massc1``
+``radc0``
+``radc1``
+``menv0``
+``menv1``
+``renv0``
+``renv1``
+``tms0``
+``tms1``
+``dmdt0``
+``dmdt1``
+``radrol0``
+``radrol1``
+``ospin0``
+``ospin1``
+``B0``
+``B1``
+``formation0``
+``formation1``
+``bacc0``
+``bacc1``
+``tacc0``
+``tacc1``
+``mass0_0``
+``mass0_1``
+``epoch0``
+``epoch1``
+``ospin``
+``B``
+``formation``
+==============================  =====================================================
+
 ====================
 Cluster Observables
 ====================
