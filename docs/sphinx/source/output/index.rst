@@ -407,7 +407,7 @@ On the window snapshots from our test example, this shows two snapshots
 .. code-block:: bash
 
         0(t=0Gyr)                Dataset {100009/Inf}
-        1(t=0.010010965Gyr)      Dataset {99227/Inf}
+        1(t=0.010001767Gyr)      Dataset {99233/Inf}
 
 For the windows, this shows the number of the snapshot, and the time that the snapshot was made (in whatever units the window is using).  For the other snapshots, the time is the time in code units.
 
@@ -416,13 +416,8 @@ The snapshots themselves are designed to be imported as pandas tables, which eac
 .. ipython:: python
 
         import pandas as pd 
-<<<<<<< HEAD
-        snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010010965Gyr)')
-        print(snap) -->
-=======
         snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010001767Gyr)')
         print(snap)
->>>>>>> efe16f33a1420164b7b87d90e6fde5eab6f3c7a4
 
 This contains all the necessary information about the state of every star and binary at this given time.  We can also see the column names
 
