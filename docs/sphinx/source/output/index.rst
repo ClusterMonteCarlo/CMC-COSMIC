@@ -59,29 +59,29 @@ The `initial.dyn.dat` files contains various theoretical quantities pertaining t
 ``tcount``
 ``N``
 ``M``
-``VR``               ?
+``VR``               Measure how far away the cluster is from virial equilibrium (-2.0*Etotal.K/Etotal.P)
 ``N_c``              core
 ``r_c``
 ``r_max``            max radius of star in cluster
 ``Etot``
 ``KE``
 ``PE``
-``Etot_int`` 
+``Etot_int``        Total internal energy of stars
 ``Etot_bin``
-``E_cenma``
+``E_cenma``         Central BH mass (i.e., when there is a central IMBH)
 ``Eesc``      escape energy
 ``Ebesc``
-``Eintesc``
-``Eoops``
+``Eintesc``         Total internal energy in the escaped stars
+``Eoops``           Totoal excess energy from breaking up triples and soft binaries
 ``Etot+Eoops``
 ``r_h``
 ``rho_0``
-``rc_spitzer``
+``rc_spitzer``      Core radius as defined in Spitzer 1987(sqrt(3.0 * sqr(central.v_rms) / (4.0 * PI * central.rho)))
 ``v0_rms``          rms velo dispersion at center?
-``rc_nb``           rc defined in nbody code
-``DMse``			total change of mass of the cluster[:math:`{M_{\odot}}`]
-``DMrejuv`` 	    ?	[:math:`{M_{\odot}}`]
-``N_c_nb``
+``rc_nb``           Core radius calculated with density weighted averages as in Casertano & Hut (1985)
+``DMse``			     Total cmass loss from the cluster per time step[:math:`{M_{\odot}}`]
+``DMrejuv`` 	     Mass loss from rejuvenation per time step[:math:`{M_{\odot}}`]
+``N_c_nb``          Number of stars in the core (4.0 / 3.0 * PI * cub(rc_nb) * (central.n / 2.0))
 ================  =====================================================
 
 initial.binint.log
