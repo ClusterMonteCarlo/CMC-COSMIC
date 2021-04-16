@@ -149,6 +149,10 @@ This file contains the number of BHs (as well as BH binaries, etc.) at each dyna
 initial.BBHmerger.dat
 ---------------------
 
+#List of all BBH mergers
+  2 #0)model_num 1)rv 2)rg 3)Z 4)N 5)merger_time(Myr) 6)id1 7)id2 8)m1 9)m2 1    0)merger_channel
+  3 #Merger channels: 1)Ejected 2)In-cluster 2-body 3)In-cluster 3-body 4)In-    cluster 4-body 5)In-cluster single-single capture
+
 This file lists masses and merger times for all binary BH mergers occurring in the given simulation. Also listed are merger channels (ejected, in-cluster, etc.) as described in Section 9 of Kremer et al. 2019. 
 
 
@@ -181,7 +185,7 @@ The single-single, binary-single, etc tells whether the collision occurred durin
 >>> t=0.00266079 binary-single idm=717258(mm=1.0954) id1=286760(m1=0.669391):id2=415309 
 >>> (m2=0.426012) (r=0.370419) typem=1 type1=0 type2=0
 
-In this case the colliding stars are m1=0.66 and m2=0.42. The information about the third star in this binary--single encounter is not stored in the collision.log file. The only way to get information about the third star is to find this binary-single encounter in the initial.binint.log file (can be identified easily using the encounter time (here t=0.00266) and also cross-checking the id numbers for the two stars listed in the collision file.
+In this case the colliding stars are m1=0.66 and m2=0.42. The information about the third star in this binary--single encounter is not stored in the collision.log file. The only way to get information about the third star is to find this binary-single encounter in the initial.binint.log file (can be identified easily using the encounter time (here t=0.00266) and also cross-checking the id numbers for the two stars listed in the collision file).
 
 
 
