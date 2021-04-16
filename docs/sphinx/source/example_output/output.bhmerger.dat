@@ -1,0 +1,2 @@
+#1:time #2:type #3.r #4:id1 #5:id2 #6:m1[MSUN] #7:m2[MSUN] #8:spin1 #9:spin2 #10:m_final[MSUN] #11:spin_final #12:vkick[km/s] #13:v_esc[km/s] #14:a_final[AU] #15:e_final #16:a_50M[AU] #17:e_50 #18:a_100M[AU] #19:e_100M #20:a_500M[AU] #21:e_500M
+#NOTE: if repeated mergers occur in fewbody (binary-single or binary-binary), the initial masses will be wrong; check collision.log
