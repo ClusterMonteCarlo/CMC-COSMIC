@@ -16,21 +16,25 @@ CMC has been developed over many years starting with `Joshi et al. (2000 <https:
 The original implementation of stellar evolution in CMC used the original binary stellar evolution package of `Hurley et al. (2002) <https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract>`_, with updates from `Chatterjee et al. 2010 <https://ui.adsabs.harvard.edu/abs/2010ApJ...719..915C/abstract>`_ and `Rodriguez et al. 2018 <https://ui.adsabs.harvard.edu/abs/2018PhRvL.120o1101R/abstract>`_.  The public release of CMC presented here is pinned to the `COSMIC <https://cosmic-popsynth.github.io/>`_ package for binary population synthesis (`Breivik et al. 2019 <https://ui.adsabs.harvard.edu/abs/2020ApJ...898...71B/abstract>`_).  This symbiosis is performed at a repository level: any changes to COSMIC are automatically propogated to CMC.  
 
 
-.. toctree::
-   :maxdepth: 1
 
+
+For Users
+==================
+.. toctree::
+   :maxdepth: 2
+
+   intro/index
    install/index
    examples/index
    output/index
-   flowchart/index
    inifile/index
+
+
+For Developers 
+==================
+.. toctree::
+   :maxdepth: 2
+
    parallel/index
    src/index
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

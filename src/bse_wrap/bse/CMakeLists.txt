@@ -6,5 +6,7 @@ include_directories (./COSMIC/cosmic/src/)
 
 install(TARGETS bse DESTINATION lib)
 
-install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m pip install numpy)")
-install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m pip install . WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/COSMIC/)")
+IF(BUILD_COSMIC)
+	install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m pip install numpy)")
+	install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m pip install . WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/COSMIC/)")
+ENDIF(BUILD_COSMIC)

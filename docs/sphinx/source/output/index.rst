@@ -1,20 +1,50 @@
-.. _output:i
+.. _output:
 
 ####################
 Analyzing CMC Output
 ####################
+
+.. ipython::
+   :suppress:
+
+   In [143]: import os
+
+   In [144]: from matplotlib.pylab import *
+
+   In [145]: style.use(os.path.abspath('./source/matplotlib_style_file'))
+
+   In [146]: ion()
+
+Here we list all of the output files that are generated in a typical CMC run, and offer some suggestsions on how to analyze them.  Generally, the output comes in one of two types: `log files`, where individual events (e.g. stellar collisions, mergers, fewbody interactions) are logged whenenver they happen or when specific quantities are recorded every timestep (e.g. the number of black holes, the core radius, the lagrange radii), and `snapshots`, where the state of every star and binary in the cluster is recorded.  These are saved in plain text dat files and hdf5 files, respectively.
+
+Most of the log files are in plain text (.dat) with easily readable columns that can be loaded in python with either ``loadtxt`` or the appropriate pandas commands.  However, a handful of the event log files, such as the binary interaction (binint.log), collision (collision.log), and stellar evolution distruption (semergedistrupt.log), are somewhat more difficult to parse.  We have provided a python package to make parsing these easier; it is located in the ``CMC-COSMIC/tools`` directory of the main CMC folder `(the cmc_parser.py file) <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/tools>`_.
+
+The HDF5 snapshots are designed to be importable as Pandas tables and are described below.  These snapshots can also be converted into various observational quantities, such as surface brightness profiles, velocity dispersion profiles, and more, using the `cmctoolkit` package (`Rui et al., 2021 <https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_).  We include the python code from the main package in the ``CMC-COSMIC/tools`` folder, but please see `here <https://github.com/NicholasRui/cmctoolkit>`_ for complete instructions and useage.
+
+.. note::
+
+        Here we are using the output from the :ref:`realistic-initial-conditions` example, running it for 15 Myr (though note that the default ini file runs it for 13.8 Gyr) and having it print a window snapshot every 10 Myr.  On 28 cores of the Vera machine, this takes about 10 minutes.  
+
+==========
+Code Units
+==========
+
+CMC uses the standard N-body units `(Henon 1971a) <https://link.springer.com/article/10.1007/BF00649159>`_ in all numerical calculations: the gravitational constant :math:`{G=1}`, the initial total mass :math:`{M=1}`, and the initial total energy :math:`{E_0=-1/4}`. The conversion from code units to physical units for time is done by calculating the initial half-mass relaxation time in years. The file ``<output>.conv.sh`` contains all conversion factors used to convert from code to physical units. For example, to convert from code units of time to Myr, multiply by the factor timeunitsmyr, and so on. 
+
+This file can be parsed using the ``cmc_parser.py`` file for easier use in python:
+
+.. ipython:: python
+
+        import cmc_parser as cp
+        conv_file = cp.conversion_file('source/example_output/output.conv.sh')
+        print(conv_file.mass_msun)
+        print(conv_file.__dict__)
 
 ==========
 Log Files
 ==========
 FOR FULYA
 
-
-
-initial.conv.sh
----------------
-
-CMC uses the standard N-body units `(He ́non 1971a) <https://link.springer.com/article/10.1007/BF00649159>`_ in all numerical calculations: the gravitational constant :math:`{G=1}`, the initial total mas :math:`{M=1}`, and the initial total energy :math:`{E_0=-1/4}`. The conversion from code units to physical units for time is done by calculating the initial half-mass relaxation time in years. The ``file initial.conv.sh`` contains all conversion factors used to convert from code to physical units. For example, to convert from code units of time to Myr, multiply by the factor timeunitsmyr, and so on. 
 
 initial.dyn.dat
 ---------------
@@ -207,6 +237,8 @@ This file lists all stellar mergers that occur through binary evolution in each 
 ==============================  =====================================================
 
 
+.. _escfile:
+
 initial.esc.dat
 ---------------
 
@@ -287,7 +319,46 @@ This files contains detailed information on all pulsars for each simulation. For
 ==========
 Snapshots
 ==========
-FOR CARL
+.. note::
+
+        See :ref:`here <snapshotting>` for how to set the various snapshot parameters in the ini file
+        
+There are three different kinds of snapshots that CMC saves:
+
+ * **<output>.snapshot.h5** -- every star and binary, saved every ``SNAPSHOT_DELTACOUNT`` number of code timesteps
+ * **<output>.window.snapshot.h5** -- every star and binary, saved in uniform physical timesteps (set in ``SNAPSHOT_WINDOWS``)
+ * **<output>.bhsnapshot.h5** -- same as <output>.shapshot.h5, but just for black holes 
+
+Each snapshot is saved as a table in the respective hdf5 file.  To see the names of the snapshots, use ``h5ls``:
+
+.. code-block:: bash
+
+        h5ls <output>.window.snapshot.h5
+
+On the window snapshots from our test example, this shows two snapshots
+
+.. code-block:: bash
+
+        0(t=0Gyr)                Dataset {100009/Inf}
+        1(t=0.010010965Gyr)      Dataset {99227/Inf}
+
+For the windows, this shows the number of the snapshot, and the time that the snapshot was made (in whatever units the window is using).  For the other snapshots, the time is the time in code units.
+
+The snapshots themselves are designed to be imported as pandas tables, which each table name referring to a key in the hdf5 file.  To read in the snapshot at 10Myr:
+
+.. ipython:: python
+
+        import pandas as pd 
+        snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010010965Gyr)')
+        print(snap)
+
+This contains all the necessary information about the state of every star and binary at this given time.  We can also see the column names
+
+.. ipython:: python
+
+        print(snap.columns)
+
+You may notice, however, that these columns are exactly the same as those in the :ref:`**<output>.esc.dat** <escfile>`  file!
 
 ====================
 Cluster Observables
@@ -295,8 +366,60 @@ Cluster Observables
 
 cmctoolkit
 __________
-FOR NICHOLAS (MAYBE)
 
-fresca
-______
-FOR CARL (MAYBE)
+The `cmctoolkit <https://github.com/NicholasRui/cmctoolkit>`_ is a seperate python package specifically designed to analyze CMC snapshots.  It then computes many of the relevant astrophysical profiles of interest to observers (e.g. surface brightness profiles, number density profiles, velocity dispersions, mass-to-light ratios) allowing CMC to be directly compared to globular clusters and super star clusters in the local universe.  This is accomplished by a rigorous statistical averaging of the individual cluster orbits for each star; see `Rui et al., (2021) <https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_ for details.
+
+By default, the cmctoolkit will import the last snapshot in an hdf5 snapshot file:
+
+.. ipython:: python
+
+        import cmctoolkit as cmct
+        last_snap = cmct.Snapshot(fname='source/example_output/output.window.snapshots.h5',
+                                  conv='source/example_output/output.conv.sh',
+                                  dist=15, # distance to cluster in kpc
+                                  z=0.0017) # metallicity
+                                 
+
+But any snapshot in the file can be loaded by specifying the hdf5 key:
+
+.. ipython:: python
+
+        import cmctoolkit as cmct
+        first_snap = cmct.Snapshot(fname='source/example_output/output.window.snapshots.h5',
+                                  conv='source/example_output/output.conv.sh',
+                                  snapshot_name='0(t=0Gyr)',
+                                  dist=15, # distance to cluster in kpc
+                                  z=0.0017) # metallicity
+                                
+
+As an example of what the `cmctoolkit` can do, we can create U-band surface brightness profiles for both snapshots, seeing they change due to the combined effects of stellar evolution and the early expansion of the cluster due to mass loss:
+
+.. ipython:: python
+
+        first_snap.add_photometry('source/output/filt_index.txt');
+
+        u_bincenter_first, u_profile_first = first_snap.make_smoothed_brightness_profile('U', bins=80,
+                                                                       min_mass=None, max_mass=None,
+                                                                       max_lum=None, fluxdict=None,
+                                                                       startypes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+                                                                       min_logr=-1.5)
+
+        last_snap.add_photometry('source/output/filt_index.txt');
+
+        u_bincenter_last, u_profile_last = last_snap.make_smoothed_brightness_profile('U', bins=80,
+                                                                       min_mass=None, max_mass=None,
+                                                                       max_lum=None, fluxdict=None,
+                                                                       startypes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+                                                                       min_logr=-1.5)
+        plt.plot(u_bincenter_first, u_profile_first, lw=2, label='0 Myr');
+        plt.plot(u_bincenter_last, u_profile_last, lw=2, label='10 Myr');
+
+        plt.legend(loc='lower left',fontsize=14);
+        plt.xlabel('$r$ (arcsec)',fontsize=15);
+        plt.ylabel('$\Sigma$ (mag/pc)',fontsize=15);
+        plt.xscale('log')
+        plt.xlim(5e-1, 1e3);
+        @savefig plot_sbp.png width=7in
+        plt.ylim(33, 5);
+
+See the documentation on the `cmctoolkit` for more details

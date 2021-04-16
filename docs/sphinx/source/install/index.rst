@@ -33,10 +33,15 @@ Using the MPI-wrapped commands for your C and Fortran compilers, build the into 
 .. code-block:: bash
 
     cd CMC-COSMIC
-    mkdir build bin
+    mkdir build
     cd build
-    FC=mpifort CC=mpicc cmake .. -DCMAKE_INSTALL_PREFIX=../bin 
+    FC=mpifort CC=mpicc cmake .. -DCMAKE_INSTALL_PREFIX=../CMC 
     make install
+
+.. note::
+
+    By default, the above command will put all the CMC executables, libraries, and include files into a folder called `CMC` in the main repository folder.  You 
+    can customize where this is installed by changing the ``-DCMAKE_INSTALL_PREFIX`` option above
 
 Intel
 _____
@@ -45,15 +50,32 @@ If you are using the intel compilers, you can instead use
 .. code-block:: bash
 
     cd CMC-COSMIC
-    mkdir build bin
+    mkdir build
     cd build
-    FC=mpiifort CC=mpiicc cmake .. -DCMAKE_INSTALL_PREFIX=../bin 
+    FC=mpiifort CC=mpiicc cmake .. -DCMAKE_INSTALL_PREFIX=../cmc 
     make install
+
+=================
+Installing COSMIC
+=================
+
+There are several ways to install COSMIC along with CMC.  If you have a version of ipython installed (preferably though anaconda) that you can run ``pip 
+install`` with, then cmake can install the version of COSMIC that comes with CMC (and all the associated dependencies).  Simply add the 
+``-DBUILD_COSMIC=ON``` flag to the cmake step in the installation:
+
+.. code-block:: bash
+
+    FC=mpiifort CC=mpiicc cmake .. -DBUILD_COSMIC=ON -DCMAKE_INSTALL_PREFIX=../cmc
+
+This will install the version of COSMIC that is included with CMC (in the ./src folder) into your python path.
+
+You can also use the stand alone version of COSMIC that is available `here <https://cosmic-popsynth.github.io/COSMIC/install/index.html>`_
 
 ====================
 Specific HPC Systems 
 ====================
-If you're installing on a specific HPC system that we've used before, instructions are below
+Specific instructions for several of the HPC systems used by the CMC/COSMIC teams are below (as well as some XSEDE machines).  If you are interested in adding 
+more instructions, just let us know!
 
 Quest
 _____
