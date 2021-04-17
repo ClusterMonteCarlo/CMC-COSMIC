@@ -123,7 +123,7 @@ Below is an exemplary output::
 ``DL/L``
 ``DL``
 ``DE_GW``
-``v_esc_cluster``			         Escape speed of the cluster[km/s] ?
+``v_esc_cluster``			         Escape speed of the cluster [km/s] ?
 ``tcpu``
 ``nstar``					         Number of stars
 ``nobj``						         Number of objects (single/binary)
@@ -245,7 +245,7 @@ This file lists all stellar mergers that occur through binary evolution in each 
 initial.esc.dat
 ---------------
 
-As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected from the system. When this happens, the ejection is recorded in initial.esc.dat. Parameters with indicies 0 and 1 in the `initial.esc.dat` file (i.e., mass, radius, star type, etc) correspond to the primary and secondary stars in a binary, respectively. Parameters without indicies indicate single stars. 
+As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected from the system. When this happens, the ejection is recorded in initial.esc.dat. Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the primary star in a binary. There is also the same column for the secondary star with `_0` replaced by `_1` in the `initial.esc.dat` file. Parameters without indicies indicate single stars. 
 
 ==============================  =====================================================
 ``tcount``						     Time count
@@ -261,56 +261,36 @@ As the result of dynamical encounters (and other mechanisms such as cluster tida
 ``phi_zero``                    Potential at center
 ``E``                           Total energy
 ``J``                           Total angular momentum
-``id``                          ID of single star
+``id``                          Single ID number
 ``binflag``                     Binary flag. If ``binflag`` = 1, the object is binary; otherwise single
-``m0``                          Mass [:math:`M_{\odot}`]
-``m1``                          Mass [:math:`M_{\odot}`]
-``id0``                         ID number 
-``id1``                         ID number
+``m0``                          Primary mass [:math:`M_{\odot}`]
+``id0``                         Primary ID number
 ``a``                           Semi-major axis
 ``e``                           Eccentricity
-``startype``                    Star type 
-``bin_startype0``	              Star type 
-``bin_startype1``               Star type
-``rad0``                        Radius 
-``rad1``                        Radius 
+``startype``                    Single star type
+``bin_startype0``	              Primary star type 
+``rad0``                        Primary radius
 ``tb``                          Binary orbital period [days]
-``lum0``                        Luminosity 
-``lum1``                        Luminosity
-``massc0``                      Core mass
-``massc1``                      Core mass 
-``radc0``                       Core radius 
-``radc1``                       Core radius 
-``menv0``                       Envelope mass 
-``menv1``                       Envelope mass           
-``renv0``                       Radius of envelope 
-``renv1``                       Radius of envelope 
+``lum0``                        Primary luminosity
+``massc0``                      Primary core mass
+``radc0``                       Primary core radius
+``menv0``                       Primary envelope mass
+``renv0``                       Primary envelope radius
 ``tms0``                        
-``tms1``
-``dmdt0``                       Mass accreting rate 
-``dmdt1``                       Mass accreting rate 
+``dmdt0``                       Primary mass accreting rate 
 ``radrol0``
-``radrol1``
-``ospin0``                      Spin angular momentum
-``ospin1``                      Spin angular momentum 
-``B0``                          Magnetic field [G]
-``B1``                          Magnetic field [G]
-``formation0``                  Formation channel for supernova, e.g., core collapse, pair instability, etc.)
-``formation1``
-``bacc0``                        Mass accreted to star
-``bacc1``                        Mass accreted 
-``tacc0``                        Time spent accreting mass 
-``tacc1``                        Time spent accreting mass 
-``mass0_0``                     Initial mass ?
-``mass0_1``                     Initial mass 
+``ospin0``                      Primary spin angular momentum
+``B0``                          Primary magnetic field [G]
+``formation0``                  Primary formation channel for supernova, e.g., core collapse, pair instability, etc.)
+``bacc0``                       Mass accreted to the primary
+``tacc0``                       Time spent accreting mass to the primary ?
+``mass0_0``                     Primary initial mass ?
 ``epoch0``                      ??
-``epoch1``
-``bhspin``                      Spin of the single BH
-``bhspin1``                     Spin of the primary BH
-``bhspin2``                     Spin of the secondary BH       
-``ospin``                       Spin angular momentum of the single star
-``B``                           Magnetic field of the single star [G]
-``formation``	                 Formation channel for the single star			 
+``bhspin``                      Single BH spin
+``bhspin1``                     Primary BH spin     
+``ospin``                       Single star spin angular momentum
+``B``                           Single star magnetic field [G]
+``formation``	                 Single star formation channel for supernova			 
 ==============================  =====================================================
 
 
@@ -318,38 +298,27 @@ initial.morepulsars.dat
 -----------------------
 
 This files contains detailed information on all neutron stars for each simulation. For further information on treatment of neutron stars, see Ye et al. 2019, ApJ.
-id 1 -100 isolated
 
 
-if id 0 or id 1 binary
+
 ==============================  =====================================================
-``tcount``						      Time count			 
-``TotalTime ``
-``binflag``                      Binary flag. If ``binflag`` = 1, the object is binary; otherwise single
-``id0 ``                         ID number
-``id1``
-``m0``                                [:math:`M_{\odot}`]
-``m1``                                [:math:`M_{\odot}`]
-``B0``                                [G]
-``B1``                                [G]
-``P0``                                spin period[sec]
-``P1``                                [sec]
-``startype0``
-``startype1``
-``a``                                 [AU]
-``ecc``
+``tcount``						           Time count			 
+``TotalTime ``                        Total time
+``binflag``                           Binary flag ?? 
+``id0 ``                              ID number
+``m0``                                Mass [:math:`M_{\odot}`]
+``B0``                                Magnetic field [G]
+``P0``                                Spin period [sec]
+``startype0``                         Star type
+``a``                                 Semi-major axis[AU]
+``ecc``                               Eccentricity
 ``radrol0``                           Roche ratio (if > 1, mass transfering)
-``radrol1``
 ``dmdt0``                             Mass transfer rate 
-``dmdt1``
 ``r``                                 Distance from the cluster center
 ``vr``                                Radial velocity
 ``vt``                                Tangential velocity
-``bacc0``                             Mass accreted to the primary 
-``bacc1``
-``tacc0``                             Time spent accreting mass for the primary
-``tacc1``                             Time spent accreting mass for the secondary
-
+``bacc0``                             Mass accreted to star
+``tacc0``                             Time spent accreting mass 
 ==============================  =====================================================
 
 
@@ -359,7 +328,7 @@ initial.relaxation.dat
 
 
 ==============================  =====================================================
-``time``
+``time``                           
 ``thetase>1.5708:f``
 ``q``
 ``<M>``
@@ -370,15 +339,15 @@ initial.relaxation.dat
 ---------------------------
 
 ==============================  =====================================================
-``time``
+``time``                          Time
 ``k``
-``id``
-``m``
+``id``                            ID number
+``m``                             Mass
 ``type``
 ``rad``
 ``Eb``
-``ecc``
-``a``							   [AU]
+``ecc``                            Eccentricity
+``a``							           Semi-major axis [AU]
 ``rp``                             [AU]
 ==============================  =====================================================
 
