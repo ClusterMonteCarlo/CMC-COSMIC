@@ -51,7 +51,7 @@ Listed below are the output files of CMC with the variables printed out. Unless 
 
 initial.dyn.dat
 ---------------
-The `initial.dyn.dat` files contains various theoretical quantities pertaining to the dynamical evolution of your cluster, such as theoretical core radius, total mass, central density, central velocity dispersion, etc. This file may be used to create, for example, plots of core radii or half-light radii versus time for a given simulation. 
+The `initial.dyn.dat` files contains various theoretical quantities pertaining to the dynamical evolution of your cluster, such as theoretical core radius, total mass, central density, central velocity dispersion, etc. This file may be used to create, for example, plots of core radii or half-light radii versus time for a given simulation. Be warned that these theoretical quantities are not necessarily the same as the way observers would define these quantities. However, these quantities are all useful for establishing a general idea of how the cluster evolves.
 
 ================  =====================================================
 ``t``               Time
@@ -159,7 +159,7 @@ Possible outcomes for ``type=BB``:
 initial.bh.dat
 --------------
 
-This file contains the number of BHs (as well as BH binaries, etc.) at each dynamical time step. This is useful to plot, for example, the number of retained BHs versus time. 
+This file contains the number of BHs (as well as BH binaries, etc.) at each dynamical time step. This is useful to plot, for example, the number of retained BHs versus time. For BH mergers, you want to look in `initial.bhmerger.dat`, which records all BH-BH mergers that occur inside the cluster during the cluster evolution.
 
 ==============================  =====================================================
 ``tcount``						      Time count
@@ -245,7 +245,10 @@ This file lists all stellar mergers that occur through binary evolution in each 
 initial.esc.dat
 ---------------
 
-As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected from the system. When this happens, the ejection is recorded in initial.esc.dat. Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the primary star in a binary. There is also the same column for the secondary star with `_0` replaced by `_1` in the `initial.esc.dat` file. Parameters without indicies indicate single stars. 
+As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected from the system. When this happens, the ejection is recorded in initial.esc.dat. In particular, this ejection process plays an intimate role in the formation of merging BH binaries. If a BH-BH binary is ejected from the cluster with sufficiently small orbital separation it may merge within a Hubble time and be a possible LIGO source. To determine the number of such mergers, calculate the inspiral times for all BH-BH binaries that appear in the `initial.esc.dat file`.
+
+
+Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the primary star in a binary. There is also the same column for the secondary star with `_0` replaced by `_1` in the `initial.esc.dat` file. Parameters without indicies indicate single stars. 
 
 ==============================  =====================================================
 ``tcount``						     Time count
@@ -350,6 +353,32 @@ initial.relaxation.dat
 ``a``							           Semi-major axis [AU]
 ``rp``                             [AU]
 ==============================  =====================================================
+
+
+initial.lagrad.dat
+----------------------
+
+The lagrange radii are the radii enclosing a given percentage of the cluster's total mass. So for example, the 10% lagrange radii printed in the `initial.lagrad.dat` file is the radius at a given time that encloses 10% of the mass. The different columns in that file give 0.0001%, 5%, 99%, etc. lagrange radii.
+
+initial.log
+-----------
+
+Each time step, cluster information is printed between two lines of asterisks.
+Below is an exemplary output::
+
+.. code-block:: bash
+      ******************************************************************************
+      tcount=1 TotalTime=0.0000000000000000e+00 Dt=0.0000000000000000e+00
+      Etotal=-0.514537 max_r=0 N_bound=1221415 Rtidal=111.234
+      Mtotal=1 Etotal.P=-0.499519 Etotal.K=0.249522 VRatio=0.99905
+      TidalMassLoss=0
+      core_radius=0.361719 rho_core=7.18029 v_core=0.832785 Trc=994.138 conc_param=0         N_core=135329
+      trh=0.100838 rh=0.811266 rh_single=0.811936 rh_binary=0.801647
+      N_b=38407 M_b=0.0752504 E_b=0.26454
+      ******************************************************************************
+
+
+
 
 ==========
 Snapshots
