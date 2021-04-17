@@ -47,41 +47,41 @@ This file can be parsed using the ``cmc_parser.py`` file for easier use in pytho
 Log Files
 ==========
 
-
+Listed below are the output files of CMC with the variables printed out. Unless explicitly stated, variables are in `code units`. 
 
 initial.dyn.dat
 ---------------
 The `initial.dyn.dat` files contains various theoretical quantities pertaining to the dynamical evolution of your cluster, such as theoretical core radius, total mass, central density, central velocity dispersion, etc. This file may be used to create, for example, plots of core radii or half-light radii versus time for a given simulation. 
 
 ================  =====================================================
-``t``               time
-``dt``              timestep
-``tcount``
-``N``
-``M``
-``VR``               Measure how far away the cluster is from virial equilibrium (-2.0*Etotal.K/Etotal.P)
-``N_c``              core
-``r_c``
-``r_max``            max radius of star in cluster
-``Etot``
-``KE``
-``PE``
-``Etot_int``        Total internal energy of stars
-``Etot_bin``
+``t``               Time
+``dt``              Time step
+``tcount``          Time count
+``N``               Total number of objects (single+binary)
+``M``               Total mass (in units of initial mass)
+``VR``              Measure how far away the cluster is from virial equilibrium (-2.0*Etotal.K/Etotal.P)
+``N_c``             Total number of stars within core radius
+``r_c``.            Core radius
+``r_max``           Maximum radius of a star 
+``Etot``            Total energy 
+``KE``              Total kinetic energy 
+``PE``              Total potential energy 
+``Etot_int``        Total internal energy of single stars
+``Etot_bin``        Total internal energy of binary stars
 ``E_cenma``         Central BH mass (i.e., when there is a central IMBH)
-``Eesc``      escape energy
-``Ebesc``
+``Eesc``            Total energy of the escaped single stars
+``Ebesc``           Total energy of the escaped binary stars
 ``Eintesc``         Total internal energy in the escaped stars
-``Eoops``           Totoal excess energy from breaking up triples and soft binaries
-``Etot+Eoops``
-``r_h``
-``rho_0``
+``Eoops``           Total excess energy from breaking up triples and soft binaries
+``Etot+Eoops``      
+``r_h``.            Half-light radius
+``rho_0``           Core density
 ``rc_spitzer``      Core radius as defined in Spitzer 1987(sqrt(3.0 * sqr(central.v_rms) / (4.0 * PI * central.rho)))
-``v0_rms``          rms velo dispersion at center?
+``v0_rms``          Rms velocity dispersion at the cluster center ?
 ``rc_nb``           Core radius calculated with density weighted averages as in Casertano & Hut (1985)
 ``DMse``			     Total cmass loss from the cluster per time step[:math:`{M_{\odot}}`]
 ``DMrejuv`` 	     Mass loss from rejuvenation per time step[:math:`{M_{\odot}}`]
-``N_c_nb``          Number of stars in the core (4.0 / 3.0 * PI * cub(rc_nb) * (central.n / 2.0))
+``N_c_nb``          Number of stars within the core (4.0 / 3.0 * PI * cub(rc_nb) * (central.n / 2.0))
 ================  =====================================================
 
 initial.binint.log
@@ -107,27 +107,27 @@ Below is an exemplary output::
 >>> ********************************************************************************
 
 ==============================  =====================================================
-``type``						encounter type (BS or BB)
-``t``							encounter time
-``b``							impact parameter
-``v``							relative velocity
-``m``							mass [:math:`{M_{\odot}}`]
-``R``							radius
+``type``						         Encounter type (BS or BB)
+``t``							         Encounter time
+``b``							         Impact parameter
+``v``							         Relative velocity
+``m``							         Mass [:math:`{M_{\odot}}`]
+``R``							         Radius
 ``Eint``			            
-``id``							ID number
-``kytpe``						stellar type
-``a``							semi-major axis
-``e``							eccentricity
+``id``						         ID number
+``kytpe``					         Stellar type
+``a``							         Semi-major axis
+``e``							         Eccentricity
 ``dE/E``			
 ``DE``
 ``DL/L``
 ``DL``
 ``DE_GW``
-``v_esc_cluster``				escape velocity [km/s]
+``v_esc_cluster``			         Escape speed of the cluster[km/s] ?
 ``tcpu``
-``nstar``						number of stars
-``nobj``						number of objects (single/binary)
-``i [j k]``					    final configuration after encounter, e.g.,  0 [1 2] (single-binary)
+``nstar``					         Number of stars
+``nobj``						         Number of objects (single/binary)
+``i [j k]``					         Final configuration after encounter, e.g.,  0 [1 2] (single-binary)
 ==============================  =====================================================
 
 Objects are labelled starting from 0 to 3. The binary-single and binary-binary encounters are denoted as BS and BB, respectively. For type=binary, indices 0 and 1 in mass, radius,id,etc. denote the primary and secondary objects in a binary.
@@ -162,19 +162,19 @@ initial.bh.dat
 This file contains the number of BHs (as well as BH binaries, etc.) at each dynamical time step. This is useful to plot, for example, the number of retained BHs versus time. 
 
 ==============================  =====================================================
-``tcount``						 time count
-``Totaltime``					 total time
-``Nbh,tot``						 total # BH
-``Nbh,single``					 # single BH
-``Nbinarybh``					 # binary BH
-``Nbh-bh``						 # BH-BH binaries
-``Nbh-nonbh``			         # BH-non BH binaries
-``Nbh-ns``					     # BH-NS binaries
-``Nbh-wd``						 # BH-WD binaries
-``N_bh-star``				 	  including MS, giants not compact objs
-``Nbh-ms``						 # BH-MS binaries	
-``Nbh-postms``			         # BH-postMS binaries
-``fb_bh``						 # binaries containing a black hole / total # systems containing a black hole
+``tcount``						      Time count
+``Totaltime``					      Total time
+``Nbh,tot``						      Total number of BHs
+``Nbh,single``					      Number of single BHs
+``Nbinarybh``					      Number of binary BHs
+``Nbh-bh``						      Number of BH-BH binaries
+``Nbh-nonbh``			            Number of BH-non BH binaries
+``Nbh-ns``					         Number of BH-NS binaries
+``Nbh-wd``						      Number of BH-WD binaries
+``N_bh-star``				 	      Number of stars including MS stars and giants 
+``Nbh-ms``						      Number of BH-MS binaries	
+``Nbh-postms``			            Number of BH-giant binaries
+``fb_bh``						      Number of binaries containing a black hole / total number of systems containing a black hole ?
 ==============================  =====================================================
 
 
@@ -182,9 +182,9 @@ This file contains the number of BHs (as well as BH binaries, etc.) at each dyna
 initial.BBHmerger.dat
 ---------------------
 
-#List of all BBH mergers
-  2 #0)model_num 1)rv 2)rg 3)Z 4)N 5)merger_time(Myr) 6)id1 7)id2 8)m1 9)m2 1    0)merger_channel
-  3 #Merger channels: 1)Ejected 2)In-cluster 2-body 3)In-cluster 3-body 4)In-    cluster 4-body 5)In-cluster single-single capture
+List of all BBH mergers:
+ 0)model_num 1)rv 2)rg 3)Z 4)N 5)merger_time(Myr) 6)id1 7)id2 8)m1 9)m2 10)merger_channel
+Merger channels: 1)Ejected 2)In-cluster 2-body 3)In-cluster 3-body 4)In-cluster 4-body 5)In-cluster single-single capture
 
 This file lists masses and merger times for all binary BH mergers occurring in the given simulation. Also listed are merger channels (ejected, in-cluster, etc.) as described in Section 9 of Kremer et al. 2019. 
 
@@ -195,25 +195,25 @@ initial.collision.log
 This file lists stellar types and properties for all stellar collisions occurring in the given simulation. See Sections 6 and 7 of Kremer et al. 2019 for further detail. 
 
 ==============================  =====================================================
-``t``						     collision time
-``interaction type``		     e.g., single-binary, binary-binary, etc.
-``idm(mm)``						 ID_merger(mass of the merged body)
-``id1(m1)``					     ID_1 (mass of the collided body_1)
-``id2(m2)``					 	 ID_2 (mass of the collided body_2)
-``r``						 
-``typem``			             merger stellar type
-``type1``					     body_1 stellar type
-``type2``						 body_2 stellar type
-``b``                            [:math:`R_{\odot}`]
-``vinf``                         [km/s]
-``rad1``                         radius of body_1
-``rad2``                         radius of body_2
-``rperi``                        pericenter distance at collision
-``coll_mult``                     colliison multipole if sticky sphere = 1 if bh ns TDE (>1)
+``t``						           Collision time
+``interaction type``		        Interaction type e.g., single-binary, binary-binary, etc.
+``idm(mm)``						     ID_merger(mass of merged body)
+``id1(m1)``					        ID_1 (mass of collided body_1)
+``id2(m2)``					 	     ID_2 (mass of the collided body_2)
+``r``						           Distance from the center of cluster
+``typem``			              Merger stellar type
+``type1``					        Stellar type of body_1
+``type2``						     Stellar type of body_2 
+``b``                            ? [:math:`R_{\odot}`]
+``vinf``                         [km/s] ?
+``rad1``                         Radius of body_1
+``rad2``                         Radius of body_2
+``rperi``                        Pericenter distance at collision
+``coll_mult``                    Collison multipole e.g., sticky sphere (``coll_mul`` = 1), TDE (``coll_mul``> 1)
 ==============================  =====================================================
 
 
-The single-single, binary-single, etc tells whether the collision occurred during a binary encounter or not. When there are three stars listed for the collision it means that all three stars collided during the encounter. This is rare, but it does happen occasionally. Typically, one will see something like::
+The single-single, binary-single, etc indicate whether the collision occurred during a binary encounter or not. When there are three stars listed for the collision it means that all three stars collided during the encounter. This is rare, but it does happen occasionally. Typically, one will see something like::
 
 >>> t=0.00266079 binary-single idm=717258(mm=1.0954) id1=286760(m1=0.669391):id2=415309 
 >>> (m2=0.426012) (r=0.370419) typem=1 type1=0 type2=0
@@ -228,15 +228,15 @@ initial.semergedisrupt.log
 This file lists all stellar mergers that occur through binary evolution in each simulation. 
 
 ==============================  =====================================================
-``t``						     time
-``interaction type``		     e.g., disrupted1, disrupted2, disrupted both
-``idr(mr)``						 ID_remnant(mass of the remnant)
-``id1(r1)``					     ID_1 (mass of body_1)
-``id2(m2)``					 	 ID_2 (mass of body_2)
-``r``						 
-``typer``			             merger stellar type
-``type1``					     body_1 stellar type
-``type2``						 body_2 stellar type
+``t``						            Time
+``interaction type``		         Interaction type e.g., disrupted1, disrupted2, disrupted both
+``idr(mr)``						      ID_remnant(mass of the remnant)
+``id1(r1)``					         ID_1 (mass of body_1)
+``id2(m2)``					 	      ID_2 (mass of body_2)
+``r``						            Distance from the center of cluster
+``typer``			               Stellar type of merger
+``type1``					         Stellar type of body_1 
+``type2``						      Stellar type of body_2 
 ==============================  =====================================================
 
 
@@ -245,72 +245,72 @@ This file lists all stellar mergers that occur through binary evolution in each 
 initial.esc.dat
 ---------------
 
-As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected from the system. When this happens, the ejection is recorded in initial.esc.dat. 
+As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected from the system. When this happens, the ejection is recorded in initial.esc.dat. Parameters with indicies 0 and 1 in the `initial.esc.dat` file (i.e., mass, radius, star type, etc) correspond to the primary and secondary stars in a binary, respectively. Parameters without indicies indicate single stars. 
 
 ==============================  =====================================================
-``tcount``						     time count
-``t``		     					 time
-``m``						         mass
-``r``					             radius
-``vr``					 	         radial velocity
-``vt``						 		 tangential velocity
-``r_peri``			            
+``tcount``						     Time count
+``t``		     					     Time
+``m``						           Mass [:math:`M_{\odot}`]. If the object is binary,  ``M`` corresponds to total mass of the primary and secondary stars 
+``r``					              Radius
+``vr``					 	        Radial velocity
+``vt``						 		  Tangential velocity
+``r_peri``			              
 ``r_apo``					     
-``Rtidal``	
-``phi_rtidal`` potential at tidal radius of the cluster 
-``phi_zero``   potential at center
-``E``          total energy
-``J``          total ang mom
-``id``
-``binflag``
-``m0``                           [:math:`M_{\odot}`]
-``m1``                           [:math:`M_{\odot}`]
-``id0``
-``id1``
-``a``
-``e``
-``startype``
-``bin_startype0``	
-``bin_startype1``
-``rad0``
-``rad1``
+``Rtidal``	                    Tidal radius
+``phi_rtidal``                  Potential at the tidal radius
+``phi_zero``                    Potential at center
+``E``                           Total energy
+``J``                           Total angular momentum
+``id``                          ID of single star
+``binflag``                     Binary flag. If ``binflag`` = 1, the object is binary; otherwise single
+``m0``                          Mass [:math:`M_{\odot}`]
+``m1``                          Mass [:math:`M_{\odot}`]
+``id0``                         ID number 
+``id1``                         ID number
+``a``                           Semi-major axis
+``e``                           Eccentricity
+``startype``                    Star type 
+``bin_startype0``	              Star type 
+``bin_startype1``               Star type
+``rad0``                        Radius 
+``rad1``                        Radius 
 ``tb``                          Binary orbital period [days]
-``lum0``
-``lum1``
-``massc0``                      core mass
-``massc1``
-``radc0``                       core radius
-``radc1``
-``menv0`` 
-``menv1``
-``renv0``
-``renv1``
-``tms0``
+``lum0``                        Luminosity 
+``lum1``                        Luminosity
+``massc0``                      Core mass
+``massc1``                      Core mass 
+``radc0``                       Core radius 
+``radc1``                       Core radius 
+``menv0``                       Envelope mass 
+``menv1``                       Envelope mass           
+``renv0``                       Radius of envelope 
+``renv1``                       Radius of envelope 
+``tms0``                        
 ``tms1``
-``dmdt0`` mass acreting rate
-``dmdt1``
+``dmdt0``                       Mass accreting rate 
+``dmdt1``                       Mass accreting rate 
 ``radrol0``
 ``radrol1``
-``ospin0``  spin angular momentum of the star
-``ospin1``
-``B0`` mag field (Gauss)
-``B1``
-``formation0`` supernova (core collapsed pair instability, etc cosmic website)
+``ospin0``                      Spin angular momentum
+``ospin1``                      Spin angular momentum 
+``B0``                          Magnetic field [G]
+``B1``                          Magnetic field [G]
+``formation0``                  Formation channel for supernova, e.g., core collapse, pair instability, etc.)
 ``formation1``
-``bacc0`` 
-``bacc1``
-``tacc0``
-``tacc1``
-``mass0_0`` initial mass 
-``mass0_1``
-``epoch0``  ??
+``bacc0``                        Mass accreted to star
+``bacc1``                        Mass accreted 
+``tacc0``                        Time spent accreting mass 
+``tacc1``                        Time spent accreting mass 
+``mass0_0``                     Initial mass ?
+``mass0_1``                     Initial mass 
+``epoch0``                      ??
 ``epoch1``
-``bhspin`` black hole spin for the isolated bh
-``bhspin1``
-``bhspin2``
-``ospin``
-``B``     isolated mag
-``formation``	isolated star			 
+``bhspin``                      Spin of the single BH
+``bhspin1``                     Spin of the primary BH
+``bhspin2``                     Spin of the secondary BH       
+``ospin``                       Spin angular momentum of the single star
+``B``                           Magnetic field of the single star [G]
+``formation``	                 Formation channel for the single star			 
 ==============================  =====================================================
 
 
@@ -323,11 +323,10 @@ id 1 -100 isolated
 
 if id 0 or id 1 binary
 ==============================  =====================================================
-``tcount``						     time count			 
-`` ``
+``tcount``						      Time count			 
 ``TotalTime ``
-``binflag``
-``id0 ``
+``binflag``                      Binary flag. If ``binflag`` = 1, the object is binary; otherwise single
+``id0 ``                         ID number
 ``id1``
 ``m0``                                [:math:`M_{\odot}`]
 ``m1``                                [:math:`M_{\odot}`]
@@ -339,17 +338,17 @@ if id 0 or id 1 binary
 ``startype1``
 ``a``                                 [AU]
 ``ecc``
-``radrol0``                           Roch ratio if >1 mass transfering
+``radrol0``                           Roche ratio (if > 1, mass transfering)
 ``radrol1``
-``dmdt0``                            mass transfer per time
+``dmdt0``                             Mass transfer rate 
 ``dmdt1``
-``r``                                position to cluster center
-``vr``
-``vt``
-``bacc0``                            mass accreated to star
+``r``                                 Distance from the cluster center
+``vr``                                Radial velocity
+``vt``                                Tangential velocity
+``bacc0``                             Mass accreted to the primary 
 ``bacc1``
-``tacc0``
-``tacc1``                            time spending acceting mass
+``tacc0``                             Time spent accreting mass for the primary
+``tacc1``                             Time spent accreting mass for the secondary
 
 ==============================  =====================================================
 
