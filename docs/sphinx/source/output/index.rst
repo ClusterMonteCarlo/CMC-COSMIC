@@ -105,19 +105,17 @@ Over the course of the evolution of the cluster, single stars and binaries will 
 Every encounter information is printed between two lines of asterisks.
 Below is an exemplary output::
 
->>> ********************************************************************************
->>> type=BS t=5.85010072e-06
->>> params: b=1.46611 v=0.379587
->>> input: type=single m=0.0284732 R=0.215538 Eint=0 id=170307 ktype=0
->>> input: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 
->>> ... id0=33128 id1=1255329 a=0.0908923 e=0.0641548 ktype1=0 ktype2=0
->>> status: DE/E=-1.79889e-08 DE=1.71461e-10 DL/L=2.54957e-08 DL=8.18406e-10 DE_GW/E=-0
->>> ... DE_GW=0 v_esc_cluster[km/s]=77.9847 tcpu=0.01
->>> outcome: nstar=3 nobj=2:  0 [1 2] (single-binary)
->>> output: type=single m=0.0284732 R=0.215538 Eint=0 id=170307 ktype=0
->>> output: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0
->>> ... id0=33128 id1=1255329 a=0.09094 e=0.123848 ktype1=0 ktype2=0
->>> ********************************************************************************
+.. code-block:: bash
+
+      ********************************************************************************
+      type=BS t=5.85010072e-06
+      params: b=1.46611 v=0.379587
+      input: type=single m=0.0284732 R=0.215538 Eint=0 id=170307 ktype=0
+      input: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.0908923 e=0.0641548 ktype1=0 ktype2=0 status:      DE/E=-1.79889e-08 DE=1.71461e-10 DL/L=2.54957e-08 DL=8.18406e-10 DE_GW/E=-0 DE_GW=0 v_esc_cluster[km/s]=77.9847 tcpu=0.01
+      outcome: nstar=3 nobj=2:  0 [1 2] (single-binary)
+      output: type=single m=0.0284732 R=0.215538 Eint=0 id=170307 ktype=0
+      output: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.09094 e=0.123848 ktype1=0 ktype2=0
+********************************************************************************
 
 ==============================  =====================================================
 ``type``						         Encounter type (BS for binary-single or BB for binary-binary)
@@ -252,7 +250,7 @@ are four categories of mergers that occur inside the cluster:
         is decidedly non-Newtonian at that point.  If you want eccentricities, use ``a_100M`` and ``e_100M``, or preferably the outermost value above).
 
         For single-single GW captures, ``a_final`` and ``e_final`` are the semi-major axis and eccentricity that the GW capture formed at.  For isolat-binary 
-        mergers, it's the last semi-major axis and eccentricity that were recorded in the cluster
+        mergers, it's the last semi-major axis and eccentricity that were recorded in the cluster.
 
 
 output.collision.log
@@ -281,8 +279,9 @@ This file lists stellar types and properties for all stellar collisions occurrin
 
 The single-single, binary-single, etc indicate whether the collision occurred during a binary encounter or not. When there are three stars listed for the collision it means that all three stars collided during the encounter. This is rare, but it does happen occasionally. Typically, one will see something like::
 
->>> t=0.00266079 binary-single idm=717258(mm=1.0954) id1=286760(m1=0.669391):id2=415309 
->>> (m2=0.426012) (r=0.370419) typem=1 type1=0 type2=0
+.. code-block:: bash 
+
+      t=0.00266079 binary-single idm=717258(mm=1.0954) id1=286760(m1=0.669391):id2=415309 (m2=0.426012) (r=0.370419) typem=1 type1=0 type2=0
 
 In this case the colliding stars are m1=0.66 and m2=0.42. The information about the third star in this binary--single encounter is not stored in the collision.log file. The only way to get information about the third star is to find this binary-single encounter in the **output.binint.log** file (can be identified easily using the encounter time (here t=0.00266) and also cross-checking the id numbers for the two stars listed in the collision file).
 
@@ -330,12 +329,12 @@ Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the pr
 ==============================  =====================================================
 ``tcount``						     Time count
 ``t``		     					     Time
-``m``						           Mass [:math:`M_{\odot}`]. If the object is binary,  ``M`` corresponds to total mass of the primary and secondary stars 
+``m``						           Mass [:math:`M_{\odot}`]. If the object is binary,  ``m`` corresponds to total mass of the primary and secondary stars 
 ``r``					              Radius
 ``vr``					 	        Radial velocity
 ``vt``						 		  Tangential velocity
-``r_peri``			pericenter of star's orbit in the cluster when it was ejected    
-``r_apo``                       apocenter of star's orbit in the cluster 
+``r_peri``			              Pericenter of star's orbit in the cluster when it was ejected    
+``r_apo``                       Apocenter of star's orbit in the cluster 
 ``Rtidal``	                    Tidal radius
 ``phi_rtidal``                  Potential at the tidal radius
 ``phi_zero``                    Potential at center
@@ -349,14 +348,14 @@ Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the pr
 ``e``                           Eccentricity
 ``startype``                    Single star type
 ``bin_startype0``	              Primary star type 
-``rad0``                        Primary radius [:math:`R_{\odot}`
+``rad0``                        Primary radius [:math:`R_{\odot}`]
 ``tb``                          Binary orbital period [days]
-``lum0``                        Primary luminosity [:math:`L_{\odot}`
+``lum0``                        Primary luminosity [:math:`L_{\odot}`]
 ``massc0``                      Primary core mass [:math:`M_{\odot}`
-``radc0``                       Primary core radius [:math:`R_{\odot}`
+``radc0``                       Primary core radius [:math:`R_{\odot}`]
 ``menv0``                       Primary envelope mass [:math:`M_{\odot}`]
 ``renv0``                       Primary envelope radius [:math:`R_{\odot}`]
-``tms0``                        
+``tms0``                        ?
 ``dmdt0``                       Primary mass accreting rate 
 ``radrol0``                     Ratio of Roche Lobe to radius
 ``ospin0``                      Primary spin angular momentum
@@ -365,7 +364,7 @@ Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the pr
 ``bacc0``                       Mass accreted to the primary
 ``tacc0``                       Time spent accreting mass to the primary ?
 ``mass0_0``                     Primary initial mass ?
-``epoch0``                      
+``epoch0``                      ?
 ``bhspin``                      BH spin (if single)
 ``bhspin1``                     BH spin for primary (if binary)  
 ``ospin``                       Single star spin angular momentum
