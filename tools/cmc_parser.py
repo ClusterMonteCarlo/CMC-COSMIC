@@ -128,30 +128,30 @@ class se_merger:
 
 class star:
 	"""
-	A cheap-ass container for keeping track of stars
+	A container for keeping track of stars
 	"""	
 	def __init__(self,m,r,id,ktype=-1):
-		self.m = m
-		self.r = r
+		self.m_MSUN = m
+		self.r_RSUN = r
 		self.id = id
 		self.ktype = ktype
 		
 class binary:
 	"""
-	A cheap-ass container for keeping track of binaries
+	A container for keeping track of binaries
 	"""	
 	def __init__(self,m1,r1,id1,m2,r2,id2,a,e,k1=-1,k2=-1):
 		self.star1 = star(m1,r1,id1,k1)
 		self.star2 = star(m2,r2,id2,k2)
-		self.a = a
+		self.a_AU = a
 		self.e = e
 		
 	@property
-	def m1(self):
-		return self.star1.m
+	def m1_MSUN(self):
+		return self.star1.m_MSUN
 	@property
-	def r1(self):
-		return self.star1.r
+	def r1_RSUN(self):
+		return self.star1.r_RSUN
 	@property
 	def id1(self):
 		return self.star1.id
@@ -159,11 +159,11 @@ class binary:
 	def k1(self):
 		return self.star1.ktype
 	@property
-	def m2(self):
-		return self.star2.m
+	def m2_MSUN(self):
+		return self.star2.m_MSUN
 	@property
-	def r2(self):
-		return self.star2.r
+	def r2_RSUN(self):
+		return self.star2.r_RSUN
 	@property
 	def id2(self):
 		return self.star2.id
@@ -180,20 +180,20 @@ class binary:
 	
 class triple:
 	"""
-	A cheap-ass container for keeping track of triples
+	A container for keeping track of triples
 	"""	
 	def __init__(self,m1,r1,id1,m2,r2,id2,m3,r3,id3,a_in,e_in,a_out,e_out,k1=-1,k2=-1,k3=-1):
 		self.star = star(m3,r3,id3,k3)
 		self.binary = binary(m1,r1,id1,m2,r2,id2,a_in,e_in,k1,k2)
-		self.a_out = a_out
+		self.a_out_AU = a_out
 		self.e_out = e_out
 		
 	@property
-	def m1(self):
-		return self.binary.m1
+	def m1_MSUN(self):
+		return self.binary.m1_MSUN
 	@property
-	def r1(self):
-		return self.binary.r1
+	def r1_RSUN(self):
+		return self.binary.r1_RSUN
 	@property
 	def id1(self):
 		return self.binary.id1
@@ -201,11 +201,11 @@ class triple:
 	def k1(self):
 		return self.binary.k1
 	@property
-	def m2(self):
-		return self.binary.m2
+	def m2_MSUN(self):
+		return self.binary.m2_MSUN
 	@property
-	def r2(self):
-		return self.binary.r2
+	def r2_RSUN(self):
+		return self.binary.r2_RSUN
 	@property
 	def id2(self):
 		return self.binary.id2
@@ -213,17 +213,17 @@ class triple:
 	def k2(self):
 		return self.binary.k2
 	@property
-	def a_in(self):
-		return self.binary.a
+	def a_in_AU(self):
+		return self.binary.a_AU
 	@property
 	def e_in(self):
 		return self.binary.e
 	@property
-	def m3(self):
-		return self.star.id
+	def m3_MSUN(self):
+		return self.star.m_MSUN
 	@property
 	def r3(self):
-		return self.star.r
+		return self.star.r_RSUN
 	@property
 	def id3(self):
 		return self.star.id
@@ -331,7 +331,7 @@ class binint:
 		return triple(m1,R1,id1,m2,R2,id2,m3,R3,id3,a_in,e_in,a_out,e_out,k1,k2,k3)
 
 	def parse_status(self,args):
-		self.vesc = float(args[7].split('=')[1])
+		self.vesc_KMS = float(args[7].split('=')[1])
 		self.de_gw = float(args[5].split('=')[1].rstrip())
 		
 	def parse_params(self,args):

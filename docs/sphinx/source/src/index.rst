@@ -2,116 +2,117 @@
    sphinx-quickstart on Mon Aug  3 21:43:57 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
-##########
-Doxygen 
-##########
 
-=====
+#######
+Doxygen 
+#######
+
+===
 CMC
-=====
+===
 
 cmc.c
 _____
 .. doxygenfile:: cmc.c
 
 cmc_bhlosscone.c
-_____
+________________
 .. doxygenfile:: cmc_bhlosscone.c
 
 cmc_binbin.c
-_____
+____________
 .. doxygenfile:: cmc_binbin.c
 
 cmc_binsingle.c
-_____
+_______________
 .. doxygenfile:: cmc_binsingle.c
 
 cmc_bse_utils.c
-_____
+_______________
 .. doxygenfile:: cmc_bse_utils.c
 
 cmc_core.c
-_____
+__________
 .. doxygenfile:: cmc_core.c
 
 cmc_dynamics.c
-_____
+______________
 .. doxygenfile:: cmc_dynamics.c
 
 cmc_dynamics_helper.c
-_____
+_____________________
 .. doxygenfile:: cmc_dynamics_helper.c
 
 cmc_evolution_thr.c
-_____
+___________________
 .. doxygenfile:: cmc_evolution_thr.c
 
 cmc_fits.c
-_____
+__________
 .. doxygenfile:: cmc_fits.c
 
 cmc_funcs.c
-_____
+___________
 .. doxygenfile:: cmc_funcs.c
 
 cmc_init.c
-_____
+__________
 .. doxygenfile:: cmc_init.c
 
 cmc_io.c
-_____
+________
 .. doxygenfile:: cmc_io.c
 
 cmc_mpi.c
-_____
+_________
 .. doxygenfile:: cmc_mpi.c
 
 cmc_nr.c
-_____
+________
 .. doxygenfile:: cmc_nr.c
 
 cmc_orbit.c
-_____
+___________
 .. doxygenfile:: cmc_orbit.c
 
 cmc_relaxation.c
-_____
+________________
 .. doxygenfile:: cmc_relaxation.c
 
 cmc_remove_star.c
-_____
+_________________
 .. doxygenfile:: cmc_remove_star.c
 
 cmc_search_grid.c
-_____
+_________________
 .. doxygenfile:: cmc_search_grid.c
 
 cmc_sort.c
-_____
+__________
 .. doxygenfile:: cmc_sort.c
 
 cmc_sscollision.c
-_____
+_________________
 .. doxygenfile:: cmc_sscollision.c
 
 cmc_stellar_evolution.c
-_____
+_______________________
 .. doxygenfile:: cmc_stellar_evolution.c
 
 cmc_trace.c
-_____
+___________
 .. doxygenfile:: cmc_trace.c
 
 cmc_utils.c
 ___________
 .. doxygenfile:: cmc_utils.c
 
-===========
+==============
 FEWBODY C Code
-===========
+==============
 
 binbin.c
-___________
+________
 .. doxygenfile:: binbin.c
 
 binsingle.c
@@ -119,63 +120,63 @@ ___________
 .. doxygenfile:: binsingle.c
 
 cluster.c
-_____
+_________
 .. doxygenfile:: cluster.c
 
 fewbody.c
-_____
+_________
 .. doxygenfile:: fewbody.c
 
 fewbody_classify.c
-_____
+__________________
 .. doxygenfile:: fewbody_classify.c
 
 fewbody_coll.c
-_____
+______________
 .. doxygenfile:: fewbody_coll.c
 
 fewbody_hier.c
-_____
+______________
 .. doxygenfile:: fewbody_hier.c
 
 fewbody_int.c
-_____
+_____________
 .. doxygenfile:: fewbody_int.c
 
 fewbody_io.c
-_____
+____________
 .. doxygenfile:: fewbody_io.c
 
 fewbody_isolate.c
-_____
+_________________
 .. doxygenfile:: fewbody_isolate.c
 
 fewbody_ks.c
-_____
+____________
 .. doxygenfile:: fewbody_ks.c
 
 fewbody_nonks.c
-_____
+_______________
 .. doxygenfile:: fewbody_nonks.c
 
 fewbody_scat.c
-_____
+______________
 .. doxygenfile:: fewbody_scat.c
 
 fewbody_utils.c
-_____
+_______________
 .. doxygenfile:: fewbody_utils.c
 
 sigma_binsingle.c
-_____
+_________________
 .. doxygenfile:: sigma_binsingle.c
 
 triple.c
-_____
+________
 .. doxygenfile:: triple.c
 
 triplebin.c
-_____
+___________
 .. doxygenfile:: triplebin.c
 
 ==================
