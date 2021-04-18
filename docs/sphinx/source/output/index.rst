@@ -74,7 +74,7 @@ The **output.dyn.dat** files contains various theoretical quantities pertaining 
 ``M``               Total mass (in units of initial mass)
 ``VR``              Measure how far away the cluster is from virial equilibrium (-2.0*Etotal.K/Etotal.P)
 ``N_c``             Total number of stars within core radius
-``r_c``.            Core radius
+``r_c``             Core radius
 ``r_max``           Maximum radius of a star 
 ``Etot``            Total energy 
 ``KE``              Total kinetic energy 
@@ -103,7 +103,7 @@ output.binint.log
 Over the course of the evolution of the cluster, single stars and binaries will frequently undergo three- and four-body dynamical encounters, which are integrated directly in CMC using the Fewbody package (Fregeau et al. 2007). The file **output.binint.log** records all input and output parameters (e.g., component masses, IDS, stellar types, semi-major axes, etc.) each type fewbody is called. 
 
 Every encounter information is printed between two lines of asterisks.
-Below is an exemplary output::
+Below is an exemplary output:
 
 .. code-block:: bash
 
@@ -277,7 +277,7 @@ This file lists stellar types and properties for all stellar collisions occurrin
 ==============================  =====================================================
 
 
-The single-single, binary-single, etc indicate whether the collision occurred during a binary encounter or not. When there are three stars listed for the collision it means that all three stars collided during the encounter. This is rare, but it does happen occasionally. Typically, one will see something like::
+The single-single, binary-single, etc indicate whether the collision occurred during a binary encounter or not. When there are three stars listed for the collision it means that all three stars collided during the encounter. This is rare, but it does happen occasionally. Typically, one will see something like:
 
 .. code-block:: bash 
 
