@@ -206,7 +206,9 @@ This file contains the number of BHs (as well as BH binaries, etc.) at each dyna
 ``fb_bh``						      Number of binaries containing a black hole / total number of systems containing a black hole ?
 ==============================  =====================================================
 
-
+output.bh.esc.dat
+----------------
+This file contains the number of ejected BHs at each dynamical time step. It includes the same columns in the **initial.bh.dat** file.
 
 output.bhmerger.dat
 ---------------------
@@ -435,7 +437,7 @@ TBD
 output.lagrad.dat
 -------------------
 
-The lagrange radii are the radii enclosing a given percentage of the cluster's total mass. So for example, the 10% lagrange radii printed in the **output.lagrad.dat** file is the radius at a given time that encloses 10% of the mass. The different columns in that file give 0.0001%, 5%, 99%, etc. lagrange radii.
+The Lagrange radii are the radii enclosing a given percentage of the cluster's total mass. So for example, the 10% lagrange radii printed in the **output.lagrad.dat** file is the radius at a given time that encloses 10% of the mass. The different columns in that file give 0.1%, 5%, 99%, etc. lagrange radii.
 
 output.log
 ------------
@@ -523,6 +525,155 @@ This file lists all BBH mergers with channgels:
 ``m1``
 ``m2``
 ``merger_channel``
+==============================  =====================================================
+
+initial.v2_rad_lagrad.dat
+-------------------------
+
+This file contains the sum of radial velocity [:math:`v_{r}`] within Lagrange radii enclosing a given percentage of the cluster's total mass.
+
+initial.v2_tan_lagrad.dat
+-------------------------
+
+This file contains the sum of tangential velocity [:math:`v_{t}`] within Lagrange radii enclosing a given percentage of the cluster's total mass.
+
+
+initial.nostar_lagrad.dat
+------------------------
+
+This file contains the number of stars within Lagrange radii enclosing a given percentage of the cluster's total mass.
+
+initial.rho_lagrad.dat
+---------------------
+
+This file contains the density within Lagrange radii enclosing a given percentage of the cluster's total mass.
+
+initial.avemass_lagrad.dat
+--------------------------
+
+This file contains the average mass [:math:`<m>`] within Lagrange radii enclosing a given percentage of the cluster's total mass in units of solar mass [:math:`M_{\odot}`].
+
+initial.ke_rad_lagrad.dat
+------------------------
+
+This file contains the total radial kinetic energy [:math:`T_{r}`] within Lagrange radii enclosing a given percentage of the cluster's total mass in code units.
+
+initial.ke_tan_lagrad.dat
+------------------------
+
+This file contains the total tangenial kinetic energy [:math:`T_{t}`] within Lagrange radii enclosing a given percentage of the cluster's total mass in code units.
+
+initial.semergedisrupt.log
+--------------------------
+
+initial.centmass.dat
+--------------------
+
+This file provides information on central black hole
+
+==============================  =====================================================
+``t``
+``cenma.m``
+``Dt``
+``rho_core``
+``Etotal.tot``
+``Etotal.K``
+``Etotal.P``
+==============================  =====================================================
+
+
+
+initial.core.dat
+----------------
+
+==============================  =====================================================
+``time``
+``rho_norem``
+``v_rms_norem``
+``rc_norem``
+``r_spitzer_norem``
+``m_ave_norem``
+``n_norem``
+``N_norem``
+``T_rc_norem``
+==============================  =====================================================
+
+initial.bin.dat
+--------------
+
+==============================  =====================================================
+``t``
+``N_b``
+``M_b``
+``E_b``
+``r_h,s``
+``r_h,b``
+``rho_c``
+``N_bb``
+``N_bs``
+``f_b,c``
+``f_b``
+``E_bb``
+``E_bs``
+``DE_bb``
+``DE_bs``
+``N_bc,nb``
+``f_b,c,nb``
+``N_bc``
+==============================  =====================================================
+
+initial.bhformation.dat
+-----------------------
+
+==============================  =====================================================
+``time``
+``r``
+``binary?``
+``ID``
+``zams_m``
+``m_progenitor``
+``bh mass``
+``bh_spin``
+``birth-kick``                   [km/s]
+``vsarray``
+==============================  =====================================================
+
+
+initial.3bb.log
+--------------
+
+==============================  =====================================================
+``time``
+``k1``
+``k2``
+``k3``
+``id1``
+``id2``
+``id3``
+``m1``
+``m2``
+``m3``
+``ave_local_mass``
+``n_local``
+``sigma_local``
+``eta``
+``Eb``
+``ecc``
+``a``                         [AU]
+``r_peri``                    [AU]
+``r(bin)``
+``r(single)``
+``vr(bin)``
+``vt(bin)``
+``vr(single)``
+``vt(single)``
+``phi(bin)``
+``phi(single)``
+``delta_PE``
+``delta_KE``
+``delta_E(interaction)``
+``delta_E(cumulative)``
+``N_3bb``
 ==============================  =====================================================
 
 
