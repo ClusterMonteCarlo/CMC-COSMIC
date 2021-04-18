@@ -87,7 +87,7 @@ The **output.dyn.dat** files contains various theoretical quantities pertaining 
 ``Eintesc``         Total internal energy in the escaped stars
 ``Eoops``           Energy error loss due to Stodolkiwecz's potential correction 
 ``Etot+Eoops``      Total energy + Eoops
-``r_h``.            Half-mass radius
+``r_h``             Half-mass radius
 ``rho_0``           Core density
 ``rc_spitzer``      Core radius as defined in Spitzer 1987 :math:`\sqrt{3  \sigma_0^2}{4 \pi \rho_0}`.
 ``v0_rms``          Rms velocity dispersion at the cluster center
@@ -454,8 +454,76 @@ Below is an exemplary output:
       trh=0.100838 rh=0.811266 rh_single=0.811936 rh_binary=0.801647
       N_b=38407 M_b=0.0752504 E_b=0.26454
       ******************************************************************************
+      
+==============================  =====================================================
+``tcount``                       Time count
+``TotalTime``                    Total time
+``Dt``                           Time step
+``Etotal``                       Total energy
+``max_r``                        
+``N_bound``                      Number of objects bound to the cluster
+``Rtidal``                       Tidal radius of the cluster
+``Mtotal``                       Total mass of the cluster
+``Etotal.P``                     Total potential energy of the cluster
+``Etotal.K``                     Total kinetic energy of the cluster
+``VRatio``                       
+``TidalMassLoss``                
+``core_radius``                  Core radius 
+``rho_core`                      Core density
+``v_core``                       Velocity dispersion in the core radius ?
+``Trc``              
+``conc_param``
+``N_core``                       Number of objects within core radius
+``trh``                          Half-mass relaxation time
+``rh``
+``rh_single``
+``rh_binary``
+``N_b``                          Total number of binaries
+``M_b``                          Total mass of binaries
+``E_b``                          Total energy of binaries ?
+==============================  =====================================================
+      
+      
 
 Note that this is also printed to ``stdout`` every timestep.
+
+
+initial.tidalcapture.log
+------------------------
+
+ This files contains detailed information on tidal capture events for each simulation. 
+ 
+* **time**                                                    - tidal capture time
+* **interaction_type**                                        - (SS_COLL_GW)
+* **(id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]**  - (ID, mass and star type of interacting stars) -> [(ID, mass, stary type of the primary) - semi-major axis, eccentricity - (ID, mass, stary type of the secondary)]
+ 
+initial.triple.dat
+------------------
+
+initial.BBHmergers.dat
+----------------------
+
+This file lists all BBH mergers with channgels:
+
+* 1:Ejected
+* 2:In-cluster 2-body  
+* 3:In-cluster 3-body
+* 4:In cluster 4-body
+* 5:In cluster single-single capture
+
+==============================  =====================================================
+``model_num``                    Model number
+``rv``                           Virial radius
+``rg``                      
+``Z``                            Metallicity 
+``N``
+``merger_time``                  [Myr]
+``id1``
+``id2``
+``m1``
+``m2``
+``merger_channel``
+==============================  =====================================================
 
 
 ==========
