@@ -18,7 +18,7 @@ You'll need MPI, HDF5, GSL, and cmake (version 3.12 or higher) to compile the co
 
 ```
 cd CMC-COSMIC
-mkdir build bin
+mkdir build
 cd build
 FC=mpifort CC=mpicc cmake .. -DCMAKE_INSTALL_PREFIX=../bin
 make install
