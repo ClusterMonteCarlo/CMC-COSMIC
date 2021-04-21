@@ -82,7 +82,7 @@ _____
 FOR SCOTTY
 
 Bridges
-_____
+_______
 On Bridges 2 (the XSEDE machine) start by importing cmake and the intel compilers
 
 .. code-block:: bash
@@ -92,8 +92,8 @@ On Bridges 2 (the XSEDE machine) start by importing cmake and the intel compiler
 Then follow the **intel** instructions above 
 
 Vera/Henon
-_____
-On Vera (McWilliams center machine) or Henon (Rodriguez group machine), first load
+__________
+On Vera (McWilliams center machine) or Hénon (Rodriguez group machine), first load
 
 .. code-block:: bash
 
@@ -101,6 +101,16 @@ On Vera (McWilliams center machine) or Henon (Rodriguez group machine), first lo
     module load cmake/3.18.1
 
 Then follow the **intel** instructions above 
+
+Frontera 
+________
+On Frontera (the new fancy TACC machine from XSEDE) the commands:
+
+.. code-block:: bash
+
+    module load TACC intel impi hdf5 gsl
+    
+then following the **intel** instructions above should work (h/t to Mike Grudić for testing CMC there)
 
 ================
 Docker Container
