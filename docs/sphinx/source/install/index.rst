@@ -24,7 +24,7 @@ Once you have either installed or module loaded the above requirements, then dow
 
 .. code-block:: bash 
    
-    git clone git@github.com:ClusterMonteCarlo/CMC-COSMIC.git --recurse-submodules
+    git clone https://github.com/ClusterMonteCarlo/CMC-COSMIC.git --recurse-submodules
 
 GCC
 _____
