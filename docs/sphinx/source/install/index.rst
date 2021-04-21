@@ -7,7 +7,10 @@ Installation
 =======================
 Generic HPC Instuctions
 =======================
-To build CMC on a standard high-performance computing (HPC) system, you'll need a few things beforehand.  These should be standard on just about any cluster environment; if they're not, try using the Docker image that is linked to below!
+To build CMC on a standard high-performance computing (HPC) system, you'll need 
+a few things beforehand.  These should be standard on just about any cluster 
+environment; if they're not, try using the Docker image that is linked to 
+below!
 
 The specific requirements are
 
@@ -18,9 +21,12 @@ The specific requirements are
  * cmake (version 3.12 or higher)
  * cfitsio (optional; only needed for legacy initial condition generators)
 
-These should be available on any HPC system.  If they're available, we suggest using the Intel version of the compilers and MPI.  On the machines we've tested, this produces a significant speedup over GCC/OpenMPI. 
+These should be available on any HPC system.  If they're available, we suggest 
+using the Intel version of the compilers and MPI.  On the machines we've 
+tested, this produces a significant speedup over GCC/OpenMPI. 
 
-Once you have either installed or module loaded the above requirements, then download the CMC-COSMIC package with:
+Once you have either installed or module loaded the above requirements, then 
+download the CMC-COSMIC package with:
 
 .. code-block:: bash 
    
@@ -59,8 +65,10 @@ If you are using the intel compilers, you can instead use
 Installing COSMIC
 =================
 
-There are several ways to install COSMIC along with CMC.  If you have a version of ipython installed (preferably though anaconda) that you can run ``pip 
-install`` with, then cmake can install the version of COSMIC that comes with CMC (and all the associated dependencies).  Simply add the 
+There are several ways to install COSMIC along with CMC.  If you have a version 
+of ipython installed (preferably though anaconda) that you can run ``pip 
+install`` with, then cmake can install the version of COSMIC that comes with 
+CMC (and all the associated dependencies).  Simply add the 
 ``-DBUILD_COSMIC=ON`` flag to the cmake step in the installation:
 
 .. code-block:: bash
@@ -69,13 +77,15 @@ install`` with, then cmake can install the version of COSMIC that comes with CMC
 
 This will install the version of COSMIC that is included with CMC (in the ./src folder) into your python path.
 
-You can also use the stand alone version of COSMIC that is available `here <https://cosmic-popsynth.github.io/COSMIC/install/index.html>`_
+You can also use the stand alone version of COSMIC that is available `here 
+<https://cosmic-popsynth.github.io/COSMIC/install/index.html>`_
 
 ====================
 Specific HPC Systems 
 ====================
-Specific instructions for several of the HPC systems used by the CMC/COSMIC teams are below (as well as some XSEDE machines).  If you are interested in adding 
-more instructions, just let us know!
+Specific instructions for several of the HPC systems used by the CMC/COSMIC 
+teams are below (as well as some XSEDE machines).  If you are interested in 
+adding more instructions, just let us know!
 
 Quest
 _____
@@ -91,7 +101,7 @@ On Bridges 2 (the XSEDE machine) start by importing cmake and the intel compiler
 
 Then follow the **intel** instructions above 
 
-Vera/Henon
+Vera/Hénon
 __________
 On Vera (McWilliams center machine) or Hénon (Rodriguez group machine), first load
 

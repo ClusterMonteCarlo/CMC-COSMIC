@@ -18,9 +18,23 @@ Analyzing CMC Output
    In [146]: ion() 
 
 
-Here we list all of the output files that are generated in a typical CMC run, and offer some suggestsions on how to analyze them.  Generally, the output comes in one of two types: `log files`, where individual events (e.g. stellar collisions, mergers, fewbody interactions) are logged whenenver they happen or when specific quantities are recorded every timestep (e.g. the number of black holes, the core radius, the lagrange radii), and `snapshots`, where the state of every star and binary in the cluster is recorded.  These are saved in plain text dat files and hdf5 files, respectively.
+Here we list all of the output files that are generated in a typical CMC run, 
+and offer some suggestsions on how to analyze them.  Generally, the output 
+comes in one of two types: `log files`, where individual events (e.g. stellar 
+collisions, mergers, fewbody interactions) are logged whenenver they happen or 
+when specific quantities are recorded every timestep (e.g. the number of black 
+holes, the core radius, the lagrange radii), and `snapshots`, where the state 
+of every star and binary in the cluster is recorded.  These are saved in plain 
+text dat files and hdf5 files, respectively.
 
-Most of the log files are in plain text (.dat) with easily readable columns that can be loaded in python with either ``loadtxt`` or the appropriate pandas commands.  However, a handful of the event log files, such as the binary interaction (binint.log), collision (collision.log), and stellar evolution distruption (semergedistrupt.log), are somewhat more difficult to parse.  We have provided a python package to make parsing these easier; it is located in the ``CMC-COSMIC/tools`` directory of the main CMC folder (the `cmc_parser.py <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/tools>`_ file).
+Most of the log files are in plain text (.dat) with easily readable columns 
+that can be loaded in python with either ``loadtxt`` or the appropriate pandas 
+commands.  However, a handful of the event log files, such as the binary 
+interaction (binint.log), collision (collision.log), and stellar evolution 
+distruption (semergedistrupt.log), are somewhat more difficult to parse.  We 
+have provided a python package to make parsing these easier; it is located in 
+the ``CMC-COSMIC/tools`` directory of the main CMC folder (the `cmc_parser.py 
+<https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/tools>`_ file).
 
 .. _cmcparser:
 
@@ -34,7 +48,14 @@ The log files can be imported using (specifying only the prefix that you provide
 
 We will discuss each of these below.
 
-The HDF5 snapshots are designed to be importable as Pandas tables and are described below.  These snapshots can also be converted into various observational quantities, such as surface brightness profiles, velocity dispersion profiles, and more, using the `cmctoolkit` package (`Rui et al., 2021 <https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_).  We include the python code from the main package in the ``CMC-COSMIC/tools`` folder, but please see `here <https://github.com/NicholasRui/cmctoolkit>`_ for complete instructions and useage.
+The HDF5 snapshots are designed to be importable as Pandas tables and are 
+described below.  These snapshots can also be converted into various 
+observational quantities, such as surface brightness profiles, velocity 
+dispersion profiles, and more, using the `cmctoolkit` package (`Rui et al., 
+2021 <https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_).  We 
+include the python code from the main package in the ``CMC-COSMIC/tools`` 
+folder, but please see `here <https://github.com/NicholasRui/cmctoolkit>`_ for 
+complete instructions and useage.
 
 .. note::
 
@@ -44,7 +65,15 @@ The HDF5 snapshots are designed to be importable as Pandas tables and are descri
 Code Units
 ==========
 
-CMC uses the standard N-body units `(Henon 1971a) <https://link.springer.com/article/10.1007/BF00649159>`_ in all numerical calculations: the gravitational constant :math:`{G=1}`, the initial total mass :math:`{M=1}`, and the initial total energy :math:`{E_0=-1/4}`. The conversion from code units to physical units for time is done by calculating the initial half-mass relaxation time in years. The file ``<output>.conv.sh`` contains all conversion factors used to convert from code to physical units. For example, to convert from code units of time to Myr, multiply by the factor timeunitsmyr, and so on. **Unless otherwise noted, all values below are in code units.** 
+CMC uses the standard N-body units `(Hénon 1971a) 
+<https://link.springer.com/article/10.1007/BF00649159>`_ in all numerical 
+calculations: the gravitational constant :math:`{G=1}`, the initial total mass 
+:math:`{M=1}`, and the initial total energy :math:`{E_0=-1/4}`. The conversion 
+from code units to physical units for time is done by calculating the initial 
+half-mass relaxation time in years. The file ``<output>.conv.sh`` contains all 
+conversion factors used to convert from code to physical units. For example, to 
+convert from code units of time to Myr, multiply by the factor timeunitsmyr, 
+and so on. **Unless otherwise noted, all values below are in code units.** 
 
 This file can be parsed using the above command, or using a stand-alone command for only the conversion dictionary:
 
@@ -59,12 +88,20 @@ This file can be parsed using the above command, or using a stand-alone command 
 Log Files
 ==========
 
-Listed below are the output files of CMC with the variables printed out. Unless explicitly stated, variables are in `code units`. 
+Listed below are the output files of CMC with the variables printed out. Unless 
+explicitly stated, variables are in `code units`. 
 
 output.dyn.dat
 ---------------
 
-The **output.dyn.dat** files contains various theoretical quantities pertaining to the dynamical evolution of your cluster, such as theoretical core radius, total mass, central density, central velocity dispersion, etc. This file may be used to create, for example, plots of core radii or half-mass radii versus time for a given simulation. Be warned that these theoretical quantities are not necessarily the same as the way observers would define these quantities. However, these quantities are all useful for establishing a general idea of how the cluster evolves.
+The **output.dyn.dat** files contains various theoretical quantities pertaining 
+to the dynamical evolution of your cluster, such as theoretical core radius, 
+total mass, central density, central velocity dispersion, etc. This file may be 
+used to create, for example, plots of core radii or half-mass radii versus time 
+for a given simulation. Be warned that these theoretical quantities are not 
+necessarily the same as the way observers would define these quantities. 
+However, these quantities are all useful for establishing a general idea of how 
+the cluster evolves.
 
 ================  =====================================================
 ``t``               Time [code units]
@@ -100,7 +137,12 @@ The **output.dyn.dat** files contains various theoretical quantities pertaining 
 output.binint.log
 ------------------
 
-Over the course of the evolution of the cluster, single stars and binaries will frequently undergo three- and four-body dynamical encounters, which are integrated directly in CMC using the Fewbody package (Fregeau et al. 2007). The file **output.binint.log** records all input and output parameters (e.g., component masses, IDS, stellar types, semi-major axes, etc.) each type fewbody is called. 
+Over the course of the evolution of the cluster, single stars and binaries will 
+frequently undergo three- and four-body dynamical encounters, which are 
+integrated directly in CMC using the Fewbody package (Fregeau et al. 2007). The 
+file **output.binint.log** records all input and output parameters (e.g., 
+component masses, IDS, stellar types, semi-major axes, etc.) each type fewbody 
+is called. 
 
 Every encounter information is printed between two lines of asterisks.
 Below is an exemplary output:
@@ -141,7 +183,10 @@ Below is an exemplary output:
 ``i [j k]``					         Final configuration after encounter, e.g.,  0 [1 2] (single-binary)
 ==============================  =====================================================
 
-Objects are labelled starting from 0 to 3. The binary-single and binary-binary encounters are denoted as BS and BB, respectively. For type=binary, indices 0 and 1 in mass, radius,id,etc. denote the primary and secondary objects in a binary.
+Objects are labelled starting from 0 to 3. The binary-single and binary-binary 
+encounters are denoted as BS and BB, respectively. For type=binary, indices 0 
+and 1 in mass, radius,id,etc. denote the primary and secondary objects in a 
+binary.
 
 Possible outcomes for ``type=BS``:
 
@@ -164,10 +209,13 @@ Possible outcomes for ``type=BB``:
 * binary-single-single [0 1] 3 2
 * single-binary-single 0 [1 3] 2
 
-0:1 denotes the fact that objects 0 and 1 have merged, and [0 1] indicates that objects 0 and 1 have formed a binary. The same is true for any pairs from 0 to 3.
+0:1 denotes the fact that objects 0 and 1 have merged, and [0 1] indicates that 
+objects 0 and 1 have formed a binary. The same is true for any pairs from 0 to 
+3.
 
-While the `binint` file is easy to read, it can be difficult to parse.  Using the ``load_interaction_files`` command from :ref:`above <cmcparser>` provides the 
-``binints`` object, a python list of dictionaries of every encounter:
+While the `binint` file is easy to read, it can be difficult to parse.  Using 
+the ``load_interaction_files`` command from :ref:`above <cmcparser>` provides 
+the ``binints`` object, a python list of dictionaries of every encounter:
 
 .. ipython:: python
 
@@ -188,7 +236,11 @@ While the `binint` file is easy to read, it can be difficult to parse.  Using th
 output.bh.dat
 -------------
 
-This file contains the number of BHs (as well as BH binaries, etc.) at each dynamical time step. This is useful to plot, for example, the number of retained BHs versus time. For BH mergers, you want to look in **output.bhmerger.dat**, which records all BH-BH mergers that occur inside the cluster during the cluster evolution.
+This file contains the number of BHs (as well as BH binaries, etc.) at each 
+dynamical time step. This is useful to plot, for example, the number of 
+retained BHs versus time. For BH mergers, you want to look in 
+**output.bhmerger.dat**, which records all BH-BH mergers that occur inside the 
+cluster during the cluster evolution.
 
 ==============================  =====================================================
 ``tcount``						      Time count
@@ -208,12 +260,14 @@ This file contains the number of BHs (as well as BH binaries, etc.) at each dyna
 
 output.bh.esc.dat
 ----------------
-This file contains the number of ejected BHs at each dynamical time step. It includes the same columns in the **initial.bh.dat** file.
+This file contains the number of ejected BHs at each dynamical time step. It 
+includes the same columns in the **initial.bh.dat** file.
 
 output.bhmerger.dat
 ---------------------
 
-List of all binary black hole mergers that occur in the cluster (note this does not include BBHs that may be ejected from the cluster and merge later).  There 
+List of all binary black hole mergers that occur in the cluster (note this does 
+not include BBHs that may be ejected from the cluster and merge later).  There 
 are four categories of mergers that occur inside the cluster:
 
  * **isolat-binary** - merger that occurs in a binary, but not due to GW capture
@@ -258,7 +312,9 @@ are four categories of mergers that occur inside the cluster:
 output.collision.log
 ---------------------
 
-This file lists stellar types and properties for all stellar collisions occurring in the given simulation. See Sections 6 and 7 of Kremer et al. 2019 for further detail. 
+This file lists stellar types and properties for all stellar collisions 
+occurring in the given simulation. See Sections 6 and 7 of Kremer et al. 2019 
+for further detail. 
 
 ==============================  =====================================================
 ``t``						           Collision time
@@ -279,13 +335,21 @@ This file lists stellar types and properties for all stellar collisions occurrin
 ==============================  =====================================================
 
 
-The single-single, binary-single, etc indicate whether the collision occurred during a binary encounter or not. When there are three stars listed for the collision it means that all three stars collided during the encounter. This is rare, but it does happen occasionally. Typically, one will see something like:
+The single-single, binary-single, etc indicate whether the collision occurred 
+during a binary encounter or not. When there are three stars listed for the 
+collision it means that all three stars collided during the encounter. This is 
+rare, but it does happen occasionally. Typically, one will see something like:
 
 .. code-block:: bash 
 
       t=0.00266079 binary-single idm=717258(mm=1.0954) id1=286760(m1=0.669391):id2=415309 (m2=0.426012) (r=0.370419) typem=1 type1=0 type2=0
 
-In this case the colliding stars are m1=0.66 and m2=0.42. The information about the third star in this binary--single encounter is not stored in the collision.log file. The only way to get information about the third star is to find this binary-single encounter in the **output.binint.log** file (can be identified easily using the encounter time (here t=0.00266) and also cross-checking the id numbers for the two stars listed in the collision file).
+In this case the colliding stars are m1=0.66 and m2=0.42. The information about 
+the third star in this binary--single encounter is not stored in the 
+collision.log file. The only way to get information about the third star is to 
+find this binary-single encounter in the **output.binint.log** file (can be 
+identified easily using the encounter time (here t=0.00266) and also 
+cross-checking the id numbers for the two stars listed in the collision file).
 
 Similarly to the binint file, the collision file can be processed using the :ref:`load_interaction_file <cmcparser>` command
 
@@ -323,10 +387,21 @@ The semergedisrupt file can also be processed using the :ref:`load_interaction_f
 output.esc.dat
 ---------------
 
-As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected from the system. When this happens, the ejection is recorded in **output.esc.dat**. In particular, this ejection process plays an intimate role in the formation of merging BH binaries. If a BH-BH binary is ejected from the cluster with sufficiently small orbital separation it may merge within a Hubble time and be a possible LIGO source. To determine the number of such mergers, calculate the inspiral times for all BH-BH binaries that appear in the **output.esc.dat** file.
+As the result of dynamical encounters (and other mechanisms such as cluster 
+tidal truncation) single stars and binaries often become unbound from the 
+cluster potential and are ejected from the system. When this happens, the 
+ejection is recorded in **output.esc.dat**. In particular, this ejection 
+process plays an intimate role in the formation of merging BH binaries. If a 
+BH-BH binary is ejected from the cluster with sufficiently small orbital 
+separation it may merge within a Hubble time and be a possible LIGO source. To 
+determine the number of such mergers, calculate the inspiral times for all 
+BH-BH binaries that appear in the **output.esc.dat** file.
 
 
-Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the primary star in a binary. There is also the same column for the secondary star with `_0` replaced by `_1` in the **output.esc.dat** file. Parameters without indicies indicate single stars.  the orbital parameters  
+Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the 
+primary star in a binary. There is also the same column for the secondary star 
+with `_0` replaced by `_1` in the **output.esc.dat** file. Parameters without 
+indicies indicate single stars.  the orbital parameters  
 
 ==============================  =====================================================
 ``tcount``						     Time count
@@ -378,7 +453,9 @@ Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the pr
 output.morepulsars.dat
 -----------------------
 
-This files contains detailed information on all neutron stars for each simulation. For further information on treatment of neutron stars, see Ye et al. 2019, ApJ.
+This files contains detailed information on all neutron stars for each 
+simulation. For further information on treatment of neutron stars, see Ye et 
+al. 2019, ApJ.
 
 ==============================  =====================================================
 ``tcount``						           Time count			 
@@ -437,7 +514,11 @@ TBD
 output.lagrad.dat
 -------------------
 
-The Lagrange radii are the radii enclosing a given percentage of the cluster's total mass. So for example, the 10% lagrange radii printed in the **output.lagrad.dat** file is the radius at a given time that encloses 10% of the mass. The different columns in that file give 0.1%, 5%, 99%, etc. lagrange radii.
+The Lagrange radii are the radii enclosing a given percentage of the cluster's 
+total mass. So for example, the 10% lagrange radii printed in the 
+**output.lagrad.dat** file is the radius at a given time that encloses 10% of 
+the mass. The different columns in that file give 0.1%, 5%, 99%, etc. lagrange 
+radii.
 
 output.log
 ------------
@@ -530,38 +611,48 @@ This file lists all BBH mergers with channgels:
 initial.v2_rad_lagrad.dat
 -------------------------
 
-This file contains the sum of radial velocity [:math:`v_{r}`] within Lagrange radii enclosing a given percentage of the cluster's total mass.
+This file contains the sum of radial velocity [:math:`v_{r}`] within Lagrange 
+radii enclosing a given percentage of the cluster's total mass.
 
 initial.v2_tan_lagrad.dat
 -------------------------
 
-This file contains the sum of tangential velocity [:math:`v_{t}`] within Lagrange radii enclosing a given percentage of the cluster's total mass.
+This file contains the sum of tangential velocity [:math:`v_{t}`] within 
+Lagrange radii enclosing a given percentage of the cluster's total mass.
 
 
 initial.nostar_lagrad.dat
 ------------------------
 
-This file contains the number of stars within Lagrange radii enclosing a given percentage of the cluster's total mass.
+This file contains the number of stars within Lagrange radii enclosing a given 
+percentage of the cluster's total mass.
 
 initial.rho_lagrad.dat
 ---------------------
 
-This file contains the density within Lagrange radii enclosing a given percentage of the cluster's total mass.
+This file contains the density within Lagrange radii enclosing a given 
+percentage of the cluster's total mass.
 
 initial.avemass_lagrad.dat
 --------------------------
 
-This file contains the average mass [:math:`<m>`] within Lagrange radii enclosing a given percentage of the cluster's total mass in units of solar mass [:math:`M_{\odot}`].
+This file contains the average mass [:math:`<m>`] within Lagrange radii 
+enclosing a given percentage of the cluster's total mass in units of solar mass 
+[:math:`M_{\odot}`].
 
 initial.ke_rad_lagrad.dat
 ------------------------
 
-This file contains the total radial kinetic energy [:math:`T_{r}`] within Lagrange radii enclosing a given percentage of the cluster's total mass in code units.
+This file contains the total radial kinetic energy [:math:`T_{r}`] within 
+Lagrange radii enclosing a given percentage of the cluster's total mass in code 
+units.
 
 initial.ke_tan_lagrad.dat
 ------------------------
 
-This file contains the total tangenial kinetic energy [:math:`T_{t}`] within Lagrange radii enclosing a given percentage of the cluster's total mass in code units.
+This file contains the total tangenial kinetic energy [:math:`T_{t}`] within 
+Lagrange radii enclosing a given percentage of the cluster's total mass in code 
+units.
 
 initial.semergedisrupt.log
 --------------------------
@@ -690,7 +781,8 @@ There are three different kinds of snapshots that CMC saves:
  * **output.window.snapshot.h5** -- every star and binary, saved in uniform physical timesteps (set in ``SNAPSHOT_WINDOWS``)
  * **output.bhsnapshot.h5** -- same as output.shapshot.h5, but just for black holes 
 
-Each snapshot is saved as a table in the respective hdf5 file.  To see the names of the snapshots, use ``h5ls``:
+Each snapshot is saved as a table in the respective hdf5 file.  To see the 
+names of the snapshots, use ``h5ls``:
 
 .. code-block:: bash
 
@@ -703,9 +795,13 @@ On the window snapshots from our test example, this shows two snapshots
         0(t=0Gyr)                Dataset {100009/Inf}
         1(t=0.010001767Gyr)      Dataset {99233/Inf}
 
-For the windows, this shows the number of the snapshot, and the time that the snapshot was made (in whatever units the window is using).  For the other snapshots, the time is the time in code units.
+For the windows, this shows the number of the snapshot, and the time that the 
+snapshot was made (in whatever units the window is using).  For the other 
+snapshots, the time is the time in code units.
 
-The snapshots themselves are designed to be imported as pandas tables, which each table name referring to a key in the hdf5 file.  To read in the snapshot at 10Myr:
+The snapshots themselves are designed to be imported as pandas tables, which 
+each table name referring to a key in the hdf5 file.  To read in the snapshot 
+at 10Myr:
 
 .. ipython:: python
 
@@ -713,13 +809,15 @@ The snapshots themselves are designed to be imported as pandas tables, which eac
         snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010001767Gyr)')
         print(snap)
 
-This contains all the necessary information about the state of every star and binary at this given time.  We can also see the column names
+This contains all the necessary information about the state of every star and 
+binary at this given time.  We can also see the column names
 
 .. ipython:: python
 
         print(snap.columns) 
 
-You may notice, however, that these columns are exactly the same as those in the :ref:`output.esc.dat <escfile>`  file!
+You may notice, however, that these columns are exactly the same as those in 
+the :ref:`output.esc.dat <escfile>`  file!
 
 The following are the columns in the snapshots but not in the escape file.
 
@@ -739,7 +837,15 @@ The following are the columns in the snapshots but not in the escape file.
 Cluster Observables
 ====================
 
-The `cmctoolkit <https://github.com/NicholasRui/cmctoolkit>`_ is a seperate python package specifically designed to analyze CMC snapshots.  It then computes many of the relevant astrophysical profiles of interest to observers (e.g. surface brightness profiles, number density profiles, velocity dispersions, mass-to-light ratios) allowing CMC to be directly compared to globular clusters and super star clusters in the local universe.  This is accomplished by a rigorous statistical averaging of the individual cluster orbits for each star; see `Rui et al., (2021) <https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_ for details.
+The `cmctoolkit <https://github.com/NicholasRui/cmctoolkit>`_ is a seperate 
+python package specifically designed to analyze CMC snapshots.  It then 
+computes many of the relevant astrophysical profiles of interest to observers 
+(e.g. surface brightness profiles, number density profiles, velocity 
+dispersions, mass-to-light ratios) allowing CMC to be directly compared to 
+globular clusters and super star clusters in the local universe.  This is 
+accomplished by a rigorous statistical averaging of the individual cluster 
+orbits for each star; see `Rui et al., (2021) 
+<https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_ for details.
 
 By default, the cmctoolkit will import the last snapshot in an hdf5 snapshot file:
 
@@ -764,7 +870,10 @@ But any snapshot in the file can be loaded by specifying the hdf5 key:
                                   z=0.0017) # metallicity
                                 
 
-As an example of what the `cmctoolkit` can do, we can create U-band surface brightness profiles for both snapshots, seeing they change due to the combined effects of stellar evolution and the early expansion of the cluster due to mass loss:
+As an example of what the `cmctoolkit` can do, we can create U-band surface 
+brightness profiles for both snapshots, seeing they change due to the combined 
+effects of stellar evolution and the early expansion of the cluster due to mass 
+loss:
 
 .. ipython:: python
 

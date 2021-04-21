@@ -4,7 +4,8 @@
 Getting Started
 ################
 
-Running CMC comes in two distinct stages: generating the initial conditions, and then running CMC on those initial conditions.  We briefly cover here how to 
+Running CMC comes in two distinct stages: generating the initial conditions, 
+and then running CMC on those initial conditions.  We briefly cover here how to 
 create initial conditions and how to run and restart CMC. 
 
 =============================
@@ -22,12 +23,17 @@ Point-mass Initial Conditions
 
    In [146]: ion()
 
-Generating initial conditions is the first step in running CMC.  Since Version 3.4, COSMIC has been able to create CMC initial conditions, using a combination 
-of the native binary samplers and dynamical samplers for drawing positions and velocities of clusters in virial and hydrostatic equilibrium.  COSMIC can 
+Generating initial conditions is the first step in running CMC.  Since Version 
+3.4, COSMIC has been able to create CMC initial conditions, using a combination 
+of the native binary samplers and dynamical samplers for drawing positions and 
+velocities of clusters in virial and hydrostatic equilibrium.  COSMIC can 
 currently generate clusters from Plummer, Elson, or King profiles, as detailed below.  
 
-The examples below are also found in the examples folder of the main GitHub repository.  Note that there are two distinct options for CMC clusters: 
-``cmc_point_mass`` (which we use in the Plummer and Elson examples below) will produce a cluster of point-mass particles: no stellar radii, mass functions, or binaries, typical for purely dynamics problems.  You can see it's options with:
+The examples below are also found in the examples folder of the main GitHub 
+repository.  Note that there are two distinct options for CMC clusters: 
+``cmc_point_mass`` (which we use in the Plummer and Elson examples below) will 
+produce a cluster of point-mass particles: no stellar radii, mass functions, or 
+binaries, typical for purely dynamics problems.  You can see it's options with:
 
 .. ipython:: python
 
@@ -36,8 +42,9 @@ The examples below are also found in the examples folder of the main GitHub repo
         help(cmc.get_cmc_point_mass_sampler) 
 
 
-The more general ``cmc`` sampler (which we use in the King profile example below) has all the additional features for generating stellar binaries that COSMIC 
-has.  You can see it's (significantly more diverse) options with
+The more general ``cmc`` sampler (which we use in the King profile example 
+below) has all the additional features for generating stellar binaries that 
+COSMIC has.  You can see it's (significantly more diverse) options with
 
 .. ipython:: python
 
@@ -48,12 +55,18 @@ has.  You can see it's (significantly more diverse) options with
 Plummer Sphere
 --------------
 
-One of the most common initial conditions for a star cluster are those of `Plummer (1911) <https://ui.adsabs.harvard.edu/abs/1911MNRAS..71..460P/abstract>`_.  
-They are not the most representitive of star clusters in the local universe (see the King profile below), their popularity endures because their main quantities 
+One of the most common initial conditions for a star cluster are those of 
+`Plummer (1911) 
+<https://ui.adsabs.harvard.edu/abs/1911MNRAS..71..460P/abstract>`_.  They are 
+not the most representitive of star clusters in the local universe (see the 
+King profile below), their popularity endures because their main quantities 
 (such as enclosed mass, density, velocity dispersion, etc.) can be expressed analytically.
 
-To generate a Plummer profile with 10,000 particles (here we only consider point-mass particles, as opposed to real stars), we can use the following COSMIC 
-functions.  Note that this returns two HDF5 tables, containing all the relevant parameters for the single stars and binaries.  The two tables are linked, such 
+To generate a Plummer profile with 10,000 particles (here we only consider 
+point-mass particles, as opposed to real stars), we can use the following 
+COSMIC functions.  Note that this returns two HDF5 tables, containing all the 
+relevant parameters for the single stars and binaries.  The two tables are 
+linked, such 
 that the ``Singles`` table contains all the single stars and binary centers of mass, as well as indicies pointing to the relevant binaries in ``Binaries``.  
 
 .. ipython:: python
@@ -65,7 +78,12 @@ that the ``Singles`` table contains all the single stars and binary centers of m
 
         print(Singles) 
 
-We then scale the cluster to `Henon units <https://ui.adsabs.harvard.edu/abs/2014arXiv1411.4936H/abstract>`_, where :math:`G = 1`, the cluster mass is :math:`M_{c}=1`, the cluster energy is :math:`E=-0.25`, and the virial radius is :math:`r_v \equiv G M_c^2 / 2|U| = 1`.  Note that is automatically done in ``InitialCMCTable.write`` if the cluster isn't already normalized, but we do it here explicitly.
+We then scale the cluster to `Hénon units 
+<https://ui.adsabs.harvard.edu/abs/2014arXiv1411.4936H/abstract>`_, where 
+:math:`G = 1`, the cluster mass is :math:`M_{c}=1`, the cluster energy is 
+:math:`E=-0.25`, and the virial radius is :math:`r_v \equiv G M_c^2 / 2|U| = 
+1`.  Note that is automatically done in ``InitialCMCTable.write`` if the 
+cluster isn't already normalized, but we do it here explicitly.
 
 .. ipython:: python
 
@@ -78,14 +96,17 @@ Finally, we can save the initial conditions to an HDF5 file (for use in CMC) wit
         InitialCMCTable.write(Singles, Binaries, filename="plummer.hdf5") 
 
 
-We can check that the Plummer function reproduces what we would expect from analytic predictions.  The enclosed mass a plummer sphere is given by
+We can check that the Plummer function reproduces what we would expect from 
+analytic predictions.  The enclosed mass a plummer sphere is given by
 
 .. math::
 
    M(r) = M_{\rm total}\left(1 + \frac{a^2}{r^2}\right)^{-3/2}
 
-where :math:`a` is an arbitrary scale factor (which is :math:`3\pi / 16` when the virial radius is normalized to 1).  If we compare the mass-weighted 
-cumulative radii of our ``Singles`` Pandas table to the analytic results, we can see:
+where :math:`a` is an arbitrary scale factor (which is :math:`3\pi / 16` when 
+the virial radius is normalized to 1).  If we compare the mass-weighted 
+cumulative radii of our ``Singles`` Pandas table to the analytic results, we 
+can see:
 
 .. ipython:: python
 
@@ -116,16 +137,20 @@ cumulative radii of our ``Singles`` Pandas table to the analytic results, we can
 
 Elson Profile
 --------------
-The `Elson (1987) <https://ui.adsabs.harvard.edu/abs/1987ApJ...323...54E/abstract>`_ profile is a generalization of the Plummer profile that has been shown to 
-better represent young massive clusters in the local universe.  The density at a 
+The `Elson (1987) 
+<https://ui.adsabs.harvard.edu/abs/1987ApJ...323...54E/abstract>`_ profile is a 
+generalization of the Plummer profile that has been shown to better represent 
+young massive clusters in the local universe.  The density at a 
 radius :math:`r` is given by 
 
 .. math::
 
    \rho(r) = \rho_{0}\left(1 + \frac{a^2}{r^2}\right)^{-\frac{\gamma + 1}{2}}
 
-Note that :math:`\gamma = 4` gives a Plummer profile (the above code actually just calls the Elson profile generator with :math:`\gamma=4`), though most young 
-clusters are better fit with :math:`\gamma\sim2-3`.  The enclosed mass is correspondingly more complicated:
+Note that :math:`\gamma = 4` gives a Plummer profile (the above code actually 
+just calls the Elson profile generator with :math:`\gamma=4`), though most 
+young clusters are better fit with :math:`\gamma\sim2-3`.  The enclosed mass is 
+correspondingly more complicated:
 
 .. math::
 
@@ -133,8 +158,13 @@ clusters are better fit with :math:`\gamma\sim2-3`.  The enclosed mass is corres
 
 Where :math:`\,_2F_1` is the ordinary hypergeometric function.  
 
-Unlike both the Plummer and King profiles, the distribution function for the Elson profile cannot be written analytically.  To genereate the initial conditions, 
-we directly integrate the density and potential functions to numerically compute :math:`f(E)`, and draw our velocity samples from that (see appendix B of `Grudic et al., 2018 <https://ui.adsabs.harvard.edu/abs/2018MNRAS.481..688G/abstract>`_).  This produces a handful 
+Unlike both the Plummer and King profiles, the distribution function for the 
+Elson profile cannot be written analytically.  To genereate the initial 
+conditions, we directly integrate the density and potential functions to 
+numerically compute :math:`f(E)`, and draw our velocity samples from that (see 
+appendix B of `Grudic et al., 2018 
+<https://ui.adsabs.harvard.edu/abs/2018MNRAS.481..688G/abstract>`_).  This 
+produces a handful 
 of warnings in the SciPy integrators, but the profiles that it generates are correct.
 
 To generate an Elson profile with :math:`\gamma=3`, we can use
@@ -175,8 +205,12 @@ Comparing with the theoretical calculation for the enclosed mass, we find simila
 
 King Profile
 ------------
-An idealized cluster in thermodynamic equilibrium could be described as an isothermal sphere, where the velocities of stars resembled a Maxwell-Boltzmann 
-distribution.  But the isothermal sphere has infinite mass, and in any realistic star cluster, the distribution of stars should go to zero near the tidal boundary.  The `King (1966) <https://ui.adsabs.harvard.edu/abs/1966AJ.....71...64K/abstract>`_ profile acomplishes this by sampling from a lowered isothermal distribution
+An idealized cluster in thermodynamic equilibrium could be described as an 
+isothermal sphere, where the velocities of stars resembled a Maxwell-Boltzmann 
+distribution.  But the isothermal sphere has infinite mass, and in any 
+realistic star cluster, the distribution of stars should go to zero near the 
+tidal boundary.  The `King (1966) <https://ui.adsabs.harvard.edu/abs/1966AJ.....71...64K/abstract>`_ profile 
+acomplishes this by sampling from a lowered isothermal distribution
 
 .. math::
 
@@ -192,7 +226,8 @@ The King initial conditions can be created with COSMIC using:
 
     Singles, Binaries = InitialCMCTable.sampler('cmc_point_mass', cluster_profile='king', w_0=6, size=10000, r_max=100)
 
-The analytic form of :math:`M(<r)` cannot be written down for a King profile, but we can solve the ODE directly (this is done when generating the samples)
+The analytic form of :math:`M(<r)` cannot be written down for a King profile, 
+but we can solve the ODE directly (this is done when generating the samples)
 
 .. ipython:: python
 
@@ -222,8 +257,12 @@ Realistic Initial Conditions
 ============================
 
 
-So far the above examples have only used the ``cmc_point_mass`` sampler.  To generate `realistic` initial conditions, with stellar masses and binaries, we want 
-to use the ``cmc`` sampler instead.  This enables all the additional options found in the ``independent`` population sampler that COSMIC uses `(see here for more details) <https://cosmic-popsynth.github.io/COSMIC/runpop/index.html#independent>`_.  
+So far the above examples have only used the ``cmc_point_mass`` sampler.  To 
+generate `realistic` initial conditions, with stellar masses and binaries, we 
+want to use the ``cmc`` sampler instead.  This enables all the additional 
+options found in the ``independent`` population sampler that COSMIC uses `(see 
+here for more details) 
+<https://cosmic-popsynth.github.io/COSMIC/runpop/index.html#independent>`_.  
 
 To generate the above King profile, but with all the additional stellar physics (initial mass function, binaries, etc.) we would use
 
@@ -235,15 +274,19 @@ To generate the above King profile, but with all the additional stellar physics 
                                                     params=os.path.abspath('../../examples/KingProfile.ini'),
                                                     seed=12345)
 
-This example is also found in the `examples <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ folder in the CMC repository.  Note that 
-unlike the above examples, here we require an ini file (or a BSEDict), to supply the necessary stellar physics options for generating stars and binaries with 
+This example is also found in the `examples 
+<https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ folder 
+in the CMC repository.  Note that unlike the above examples, here we require an 
+ini file (or a BSEDict), to supply the necessary stellar physics options for 
+generating stars and binaries with 
 BSE.
 
 ===========
 Running CMC
 ===========
 
-With our initial conditions in place, the hard part is actually over!  Assuming the ``cmc`` executable is the directory you want to run from, we need only to 
+With our initial conditions in place, the hard part is actually over!  Assuming 
+the ``cmc`` executable is the directory you want to run from, we need only to 
 call it with ``mpirun`` (or ``mpiexec``, depending on your mpi version):
 
 .. code-block:: bash 
@@ -260,18 +303,25 @@ Where
 Restarting CMC
 ==============
 
-CMC allows for bit-for-bit restarting, by saving the state of each parallel process every few hours (2 by default).  These restart files will be saved in your run 
-folder in a subfolder titled ``<output>-RESTART``.  These restart files will be numbered sequentially starting from 1, so you'll have to specifiy which restart 
-file you want to use.  A typical restart file will have the form ``<output>.restart.<n>-<proc>.bin``, where ``<n>`` is the number of the restart, and ``<proc>`` 
-is the number of the mpi processor that file was produced by.
+CMC allows for bit-for-bit restarting, by saving the state of each parallel 
+process every few hours (2 by default).  These restart files will be saved in 
+your run folder in a subfolder titled ``<output>-RESTART``.  These restart 
+files will be numbered sequentially starting from 1, so you'll have to specifiy 
+which restart 
+file you want to use.  A typical restart file will have the form 
+``<output>.restart.<n>-<proc>.bin``, where ``<n>`` is the number of the 
+restart, and ``<proc>`` is the number of the mpi processor that file was 
+produced by.
 
-To restart CMC from one of these, you'll need the original .ini file and the path to the restart folder. 
+To restart CMC from one of these, you'll need the original .ini file and the 
+path to the restart folder. 
 
 .. code-block:: bash
 
         mpirun -np <n_cores> ./cmc -R <n> <params.ini> <new_output> <output>
 
-where <new_output> is the new prefix for all the files that are restarted.  If for some reason you need to start from a restart file but with a `different` 
+where <new_output> is the new prefix for all the files that are restarted.  If 
+for some reason you need to start from a restart file but with a `different` 
 random seed, you can specifiy that on the command line with ``-n <new_seed>``
 
 .. note::
@@ -284,7 +334,12 @@ Example: Run Plummer Sphere to Core Collapse
 
 Now we have all the tools we need to run CMC!  Let's try running the above Plummer sphere with :math:`N=10^4` particles to core collapse.
 
-We've already generated the initial conditions above and saved them as ``plummer.hdf5``, so all we need is to move them into a folder with the ``cmc`` executable and an appropriate ini file.  We can use the ``PlummerSphere.ini`` file located in the `CMC-COSMIC/examples <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ folder.  
+We've already generated the initial conditions above and saved them as 
+``plummer.hdf5``, so all we need is to move them into a folder with the ``cmc`` 
+executable and an appropriate ini file.  We can use the ``PlummerSphere.ini`` 
+file located in the `CMC-COSMIC/examples 
+<https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ 
+folder.  
 
 With that in place, we can run CMC on four cores with
 
@@ -294,7 +349,10 @@ With that in place, we can run CMC on four cores with
 
 On the Vera cluster at CMU, this takes about 2 minutes to run to core collapse.
 
-We can check that it's worked by looking at the Lagrange Radii (the <x> Lagrange radius is the radius enclosing <x> percent of the cluter mass).  If we plot the 0.1% 1%, 10% 50%, and 90% Lagrange radii, the classic collapse of the core (and expansion of the halo) appears:
+We can check that it's worked by looking at the Lagrange Radii (the <x> 
+Lagrange radius is the radius enclosing <x> percent of the cluter mass).  If we 
+plot the 0.1% 1%, 10% 50%, and 90% Lagrange radii, the classic collapse of the 
+core (and expansion of the halo) appears:
 
 .. ipython:: python
         
