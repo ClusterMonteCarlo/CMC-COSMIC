@@ -50,18 +50,33 @@ cluster simulations or binary populations are integrated with the same physics.
 For Users
 ==================
 .. toctree::
+   :caption: User Guide
+   :name: user-guide
    :maxdepth: 2
 
    intro/index
    install/index
-   examples/index
+   initialconditions/index
+   running/index
    output/index
+
+Extending CMC
+=============
+.. toctree::
+   :caption: Extending CMC 
+   :name: more-guide
+   :maxdepth: 2
+
    inifile/index
+   FAQTroubleshooting/index
+   contact/index
 
 
 For Developers 
 ==================
 .. toctree::
+   :caption: Developer Guide
+   :name: dev-guide
    :maxdepth: 2
 
    parallel/index

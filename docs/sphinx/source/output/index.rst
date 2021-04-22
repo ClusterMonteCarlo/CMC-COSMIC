@@ -583,30 +583,6 @@ initial.tidalcapture.log
 initial.triple.dat
 ------------------
 
-initial.BBHmergers.dat
-----------------------
-
-This file lists all BBH mergers with channgels:
-
-* 1:Ejected
-* 2:In-cluster 2-body  
-* 3:In-cluster 3-body
-* 4:In cluster 4-body
-* 5:In cluster single-single capture
-
-==============================  =====================================================
-``model_num``                    Model number
-``rv``                           Virial radius
-``rg``                      
-``Z``                            Metallicity 
-``N``
-``merger_time``                  [Myr]
-``id1``
-``id2``
-``m1``
-``m2``
-``merger_channel``
-==============================  =====================================================
 
 initial.v2_rad_lagrad.dat
 -------------------------
