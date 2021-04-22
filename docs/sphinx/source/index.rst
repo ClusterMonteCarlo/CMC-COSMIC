@@ -47,8 +47,6 @@ repository level: COSMIC is currently a submodule within CMC, ensuring that any
 cluster simulations or binary populations are integrated with the same physics.
 
 
-For Users
-==================
 .. toctree::
    :caption: User Guide
    :name: user-guide
@@ -60,8 +58,6 @@ For Users
    running/index
    output/index
 
-Extending CMC
-=============
 .. toctree::
    :caption: Extending CMC 
    :name: more-guide
@@ -72,8 +68,6 @@ Extending CMC
    contact/index
 
 
-For Developers 
-==================
 .. toctree::
    :caption: Developer Guide
    :name: dev-guide
