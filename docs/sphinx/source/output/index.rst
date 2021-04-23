@@ -873,7 +873,7 @@ loss:
 
         plt.legend(loc='lower left',fontsize=14);
         plt.xlabel('$r$ (arcsec)',fontsize=15);
-        plt.ylabel('$\Sigma$ (mag/pc)',fontsize=15);
+        plt.ylabel('$\Sigma_V$ (mag/arcsec$^2$)',fontsize=15);
         plt.xscale('log')
         plt.xlim(5e-1, 1e3);
         @savefig plot_sbp.png width=7in
