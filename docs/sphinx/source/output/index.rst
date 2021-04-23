@@ -887,8 +887,4 @@ Examples of other properties which can be easily computed by `cmctoolkit`:
  * Binary fractions
  * Blue stragglers
 
-See the documentation on the `cmctoolkit` for more details 
-
-
-
-
+See the documentation on the `cmctoolkit` for more details.
