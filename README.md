@@ -31,7 +31,7 @@ If you use CMC-COSMIC in your research, please cite [Joshi et al., 2000](https:/
 
 # Badges
 [![Unit Test CMC](https://github.com/ClusterMonteCarlo/CMC-COSMIC/actions/workflows/python-package.yml/badge.svg)](https://github.com/ClusterMonteCarlo/CMC-COSMIC/actions/workflows/python-package.yml)
-[![Docker](https://img.shields.io/docker/v/clustermontecarlo/cmc.svg)](https://img.shields.io/docker/v/clustermontecarlo/cmc.svg)
+[![Docker](https://img.shields.io/docker/v/clustermontecarlo/cmc.svg)](https://hub.docker.com/repository/docker/clustermontecarlo/cmc)
 
 # Use CMC in a container
 
