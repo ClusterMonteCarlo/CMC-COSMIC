@@ -3,6 +3,7 @@ matplotlib >= 3.0.0
 numpydoc >= 0.8.0
 sphinx-bootstrap-theme >= 0.6
 sphinxcontrib-programoutput
+sphinxcontrib-katex
 sphinx-automodapi
 ipython
 sphinx_rtd_theme

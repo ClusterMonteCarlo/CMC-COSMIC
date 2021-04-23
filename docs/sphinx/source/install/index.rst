@@ -89,7 +89,13 @@ adding more instructions, just let us know!
 
 Quest
 _____
-FOR SCOTTY
+To build Quest with Intel
+
+.. code-block:: bash
+
+    module load cmake/3.15.4 hdf5/1.10.7-openmpi-4.0.5-intel-19.0.5.281 mpi/openmpi-4.0.5-intel-19.0.5.281 gsl/2.5-intel-19.0.5.281
+
+Then follow the **intel** instructions above
 
 Bridges
 _______
@@ -122,7 +128,39 @@ On Frontera (the new fancy TACC machine from XSEDE) the commands:
     
 then following the **intel** instructions above should work (h/t to Mike Grudić for testing CMC there)
 
-================
-Docker Container
-================
-FOR SCOTTY (+ Carl)
+==========
+Containers
+==========
+
+Singularity
+-----------
+To use a container to run CMC on Quest, you must use singularity. First you must pull the container from docker locally
+
+.. code-block:: bash
+    singularity pull docker://clustermontecarlo/cmc
+
+In order to run a container which has a MPI-enabled program on an HPC system, you must use an OpenMPI program on the host system whose major version (think 4.X.X) matches that used inside the container. In this case, we compile CMC against OpenMPI 4.X.X. For those running on a system using SLURM, a submission script might look at follows
+
+.. code-block:: bash
+    #!/bin/bash 
+    #SBATCH -J container_test
+    #SBATCH --error=error.out
+    #SBATCH --output=output.out
+    #SBATCH --nodes=2
+    #SBATCH --ntasks-per-node=4
+    #SBATCH --mem=0
+    #SBATCH --time=00:15:00
+    #SBATCH --account=XXXXX
+    #SBATCH --partition=XXXX 
+
+    module purge all
+    module load mpi/openmpi-4.0.5-gcc-10.2.0
+    module load singularity
+
+    mpirun -np ${SLURM_NTASKS} singularity exec -B /projects:/projects openmpi.sing /opt/local/bin/cmc CMC_Params.ini initial
+
+Docker
+------
+.. code-block:: bash
+
+    docker pull clustermontecarlo/cmc
