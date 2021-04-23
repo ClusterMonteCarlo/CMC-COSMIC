@@ -846,7 +846,7 @@ But any snapshot in the file can be loaded by specifying the hdf5 key:
                                   z=0.0017) # metallicity
                                 
 
-As an example of what the `cmctoolkit` can do, we can create U-band surface 
+As an example of what the `cmctoolkit` can do, we can create V-band surface 
 brightness profiles for both snapshots, seeing they change due to the combined 
 effects of stellar evolution and the early expansion of the cluster due to mass 
 loss:
@@ -855,7 +855,7 @@ loss:
 
         first_snap.add_photometry('source/output/filt_index.txt');
 
-        u_bincenter_first, u_profile_first = first_snap.make_smoothed_brightness_profile('U', bins=80,
+        v_bincenter_first, v_profile_first = first_snap.make_smoothed_brightness_profile('V', bins=80,
                                                                        min_mass=None, max_mass=None,
                                                                        max_lum=None, fluxdict=None,
                                                                        startypes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
@@ -863,20 +863,28 @@ loss:
 
         last_snap.add_photometry('source/output/filt_index.txt');
 
-        u_bincenter_last, u_profile_last = last_snap.make_smoothed_brightness_profile('U', bins=80,
+        v_bincenter_last, v_profile_last = last_snap.make_smoothed_brightness_profile('V', bins=80,
                                                                        min_mass=None, max_mass=None,
                                                                        max_lum=None, fluxdict=None,
                                                                        startypes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
                                                                        min_logr=-1.5)
-        plt.plot(u_bincenter_first, u_profile_first, lw=2, label='0 Myr');
-        plt.plot(u_bincenter_last, u_profile_last, lw=2, label='10 Myr');
+        plt.plot(v_bincenter_first, v_profile_first, lw=2, label='0 Myr');
+        plt.plot(v_bincenter_last, v_profile_last, lw=2, label='10 Myr');
 
         plt.legend(loc='lower left',fontsize=14);
         plt.xlabel('$r$ (arcsec)',fontsize=15);
-        plt.ylabel('$\Sigma$ (mag/pc)',fontsize=15);
+        plt.ylabel('$\Sigma_V$ (mag/arcsec$^2$)',fontsize=15);
         plt.xscale('log')
         plt.xlim(5e-1, 1e3);
         @savefig plot_sbp.png width=7in
         plt.ylim(33, 5); 
 
-See the documentation on the `cmctoolkit` for more details 
+Examples of other properties which can be easily computed by `cmctoolkit`:
+
+ * Stellar magnitudes and colors (in blackbody limit)
+ * Velocity dispersion profiles
+ * Mass functions and mass function slopes
+ * Binary fractions
+ * Blue stragglers
+
+See the documentation on the `cmctoolkit` for more details.
