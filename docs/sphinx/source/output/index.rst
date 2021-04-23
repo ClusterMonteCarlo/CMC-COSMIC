@@ -880,6 +880,7 @@ loss:
         plt.ylim(33, 5); 
 
 Examples of other properties which can be easily computed by `cmctoolkit`:
+
  * Stellar magnitudes and colors (in blackbody limit)
  * Velocity dispersion profiles
  * Mass functions and mass function slopes
