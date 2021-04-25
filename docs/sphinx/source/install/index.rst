@@ -134,7 +134,7 @@ Containers
 
 Singularity
 -----------
-To use a container to run CMC on Quest, you must use `Singularity<https://sylabs.io/singularity/>`_. First you must pull the container from docker locally
+To use a container to run CMC on Quest, you must use `Singularity <https://sylabs.io/singularity/>`_. First you must pull the container from docker locally
 
 .. code-block:: bash
 
@@ -163,7 +163,7 @@ In order to run a container which has a MPI-enabled program on an HPC system, yo
 
 Docker
 ------
-`Docker<https://hub.docker.com/r/clustermontecarlo/cmc>`_ is a very popular platform for hosting, building and distributing containers.
+`Docker <https://hub.docker.com/r/clustermontecarlo/cmc>`_ is a very popular platform for hosting, building and distributing containers.
 
 .. code-block:: bash
 
