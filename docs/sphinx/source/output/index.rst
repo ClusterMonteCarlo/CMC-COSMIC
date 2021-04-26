@@ -157,7 +157,7 @@ Below is an exemplary output:
       outcome: nstar=3 nobj=2:  0 [1 2] (single-binary)
       output: type=single m=0.0284732 R=0.215538 Eint=0 id=170307 ktype=0
       output: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.09094 e=0.123848 ktype1=0 ktype2=0
-********************************************************************************
+      ********************************************************************************
 
 ==============================  =====================================================
 ``type``						         Encounter type (BS for binary-single or BB for binary-binary)
@@ -166,18 +166,18 @@ Below is an exemplary output:
 ``v``							         Relative velocity at infinity [:math:`v_c`]
 ``m``							         Mass [:math:`{M_{\odot}}`]
 ``R``							         Radius [:math:`R_{\odot}`]
-``Eint``			                internal energy
+``Eint``			                  Internal energy
 ``id``						         ID number 
 ``kytpe``					         Stellar type
 ``a``							         Semi-major axis [AU]
 ``e``							         Eccentricity
-``dE/E``			                fractional change in energy
-``DE``                                          Total change in energy
-``DL/L``                                        Fractional change in angular momentum
-``DL``                                          Change in angular momentum
-``DE_GW``                                       Energy loss due gravitational wave emission
+``dE/E``			                  Fractional change in energy
+``DE``                           Total change in energy
+``DL/L``                         Fractional change in angular momentum
+``DL``                           Change in angular momentum
+``DE_GW``                        Energy loss due gravitational wave emission
 ``v_esc_cluster``			         Escape speed of the cluster where the encounter occured [km/s]
-``tcpu``                                         CPU time for integration (usually ~milliseconds, unless it's a GW capture)
+``tcpu``                         CPU time for integration (usually ~milliseconds, unless it's a GW capture)
 ``nstar``					         Number of stars
 ``nobj``						         Number of objects (single/binary)
 ``i [j k]``					         Final configuration after encounter, e.g.,  0 [1 2] (single-binary)
@@ -401,7 +401,7 @@ BH-BH binaries that appear in the **output.esc.dat** file.
 Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the 
 primary star in a binary. There is also the same column for the secondary star 
 with `_0` replaced by `_1` in the **output.esc.dat** file. Parameters without 
-indicies indicate single stars.  the orbital parameters  
+indicies indicate single stars.  
 
 ==============================  =====================================================
 ``tcount``						     Time count
@@ -459,9 +459,9 @@ al. 2019, ApJ.
 
 ==============================  =====================================================
 ``tcount``						           Time count			 
-``TotalTime``                        Total time
+``TotalTime``                         Total time
 ``binflag``                           Binary flag ?? 
-``id0``                              ID number
+``id0``                               ID number
 ``m0``                                Mass [:math:`M_{\odot}`]
 ``B0``                                Magnetic field [G]
 ``P0``                                Spin period [sec]
@@ -478,47 +478,6 @@ al. 2019, ApJ.
 ==============================  =====================================================
 
 
-
-output.relaxation.dat
-----------------------
-
-TBD
-
-==============================  =====================================================
-``time``                           
-``thetase>1.5708:f``
-``q``
-``<M>``
-``<r>``
-==============================  =====================================================
-
-output.lightcollision.log
----------------------------
-
-TBD
-
-==============================  =====================================================
-``time``                          Time
-``k``
-``id``                            ID number
-``m``                             Mass
-``type``
-``rad``
-``Eb``
-``ecc``                            Eccentricity
-``a``			          Semi-major axis [AU]
-``rp``                             [AU]
-==============================  =====================================================
-
-
-output.lagrad.dat
--------------------
-
-The Lagrange radii are the radii enclosing a given percentage of the cluster's 
-total mass. So for example, the 10% lagrange radii printed in the 
-**output.lagrad.dat** file is the radius at a given time that encloses 10% of 
-the mass. The different columns in that file give 0.1%, 5%, 99%, etc. lagrange 
-radii.
 
 output.log
 ------------
@@ -552,7 +511,7 @@ Below is an exemplary output:
 ``VRatio``                       
 ``TidalMassLoss``                
 ``core_radius``                  Core radius 
-``rho_core`                      Core density
+``rho_core``                     Core density
 ``v_core``                       Velocity dispersion in the core radius ?
 ``Trc``              
 ``conc_param``
@@ -583,17 +542,47 @@ initial.tidalcapture.log
 initial.triple.dat
 ------------------
 
+==============================  =====================================================
+``time``
+``min0``
+``min1``
+``mout``
+``Rin0``
+``Rin1``
+``Rout``
+``ain``
+``aout``
+``ein``
+``eout``
+``ktypein0``
+``ktypein1``
+``kytpeout``
+``Tlk_quad``
+``Tlk_oct``
+``eps_oct``
+``T_GR``
+``eps_GR``
+==============================  =====================================================
+
+output.lagrad.dat
+-------------------
+
+The lagrange radii are the radii enclosing a given percentage of the cluster's 
+total mass. So for example, the 10% lagrange radii printed in the 
+**output.lagrad.dat** file is the radius at a given time that encloses 10% of 
+the mass. The different columns in that file give 0.1%, 5%, 99%, etc. lagrange 
+radii.
 
 initial.v2_rad_lagrad.dat
 -------------------------
 
-This file contains the sum of radial velocity [:math:`v_{r}`] within Lagrange 
+This file contains the sum of radial velocity :math:`v_{r}` within Lagrange 
 radii enclosing a given percentage of the cluster's total mass.
 
 initial.v2_tan_lagrad.dat
 -------------------------
 
-This file contains the sum of tangential velocity [:math:`v_{t}`] within 
+This file contains the sum of tangential velocity :math:`v_{t}` within 
 Lagrange radii enclosing a given percentage of the cluster's total mass.
 
 
@@ -612,23 +601,48 @@ percentage of the cluster's total mass.
 initial.avemass_lagrad.dat
 --------------------------
 
-This file contains the average mass [:math:`<m>`] within Lagrange radii 
+This file contains the average mass :math:`<m>` within Lagrange radii 
 enclosing a given percentage of the cluster's total mass in units of solar mass 
 [:math:`M_{\odot}`].
 
 initial.ke_rad_lagrad.dat
 ------------------------
 
-This file contains the total radial kinetic energy [:math:`T_{r}`] within 
+This file contains the total radial kinetic energy :math:`T_{r}` within 
 Lagrange radii enclosing a given percentage of the cluster's total mass in code 
 units.
 
 initial.ke_tan_lagrad.dat
 ------------------------
 
-This file contains the total tangenial kinetic energy [:math:`T_{t}`] within 
+This file contains the total tangenial kinetic energy :math:`T_{t}` within 
 Lagrange radii enclosing a given percentage of the cluster's total mass in code 
 units.
+
+initial.lagrad0-0.1-1.dat
+-------------------------
+
+This file contains the lagrange radii for the masses in range 0.1 :math:`M_{\odot}` < m < 1 :math:`M_{\odot}`.
+
+initial.lagrad1-1-10.dat
+------------------------
+
+This file contains the lagrange radii for the masses in range 1 :math:`M_{\odot}` < m < 10 :math:`M_{\odot}`.
+
+-------------------------
+
+initial.lagrad2-10-100.dat
+--------------------------
+
+
+initial.lagrad3-100-1000.dat
+----------------------------
+
+initial.lagrad_10_info.dat
+--------------------------
+
+Empty
+
 
 initial.semergedisrupt.log
 --------------------------
@@ -636,7 +650,7 @@ initial.semergedisrupt.log
 initial.centmass.dat
 --------------------
 
-This file provides information on central black hole
+This file provides information on central black hole.
 
 ==============================  =====================================================
 ``t``
@@ -647,7 +661,6 @@ This file provides information on central black hole
 ``Etotal.K``
 ``Etotal.P``
 ==============================  =====================================================
-
 
 
 initial.core.dat
@@ -692,6 +705,7 @@ initial.bin.dat
 initial.bhformation.dat
 -----------------------
 
+This file contains information about newly formed BHs.
 ==============================  =====================================================
 ``time``
 ``r``
@@ -707,8 +721,9 @@ initial.bhformation.dat
 
 
 initial.3bb.log
---------------
+---------------
 
+This file contains information about three body binaries.
 ==============================  =====================================================
 ``time``
 ``k1``
@@ -741,6 +756,54 @@ initial.3bb.log
 ``delta_E(interaction)``
 ``delta_E(cumulative)``
 ``N_3bb``
+==============================  =====================================================
+
+initial.3bbprobability.log
+--------------------------
+Average rate and probability of three-body binary formation in the timestep calculated from the innermost 300 triplets of single stars considered for three-body binary formation.
+
+==============================  =====================================================
+``time``
+``dt``
+``dt*N/log(gamma*N)``
+``Rate_3bb``
+``P_3bb``                       Probability of binary formation/li
+``r``
+==============================  =====================================================
+
+initial.removestar.log
+----------------------
+Empty
+
+output.relaxation.dat
+----------------------
+
+TBD
+
+==============================  =====================================================
+``time``                           
+``thetase>1.5708:f``
+``q``
+``<M>``
+``<r>``
+==============================  =====================================================
+
+output.lightcollision.log
+---------------------------
+
+TBD
+
+==============================  =====================================================
+``time``                          Time
+``k``
+``id``                            ID number
+``m``                             Mass
+``type``
+``rad``
+``Eb``
+``ecc``                            Eccentricity
+``a``			                       Semi-major axis [AU]
+``rp``                             [AU]
 ==============================  =====================================================
 
 
