@@ -640,12 +640,9 @@ initial.lagrad3-100-1000.dat
 
 initial.lagrad_10_info.dat
 --------------------------
-
 Empty
 
 
-initial.semergedisrupt.log
---------------------------
 
 initial.centmass.dat
 --------------------
@@ -706,6 +703,7 @@ initial.bhformation.dat
 -----------------------
 
 This file contains information about newly formed BHs.
+
 ==============================  =====================================================
 ``time``
 ``r``
@@ -724,6 +722,7 @@ initial.3bb.log
 ---------------
 
 This file contains information about three body binaries.
+
 ==============================  =====================================================
 ``time``
 ``k1``
@@ -767,7 +766,7 @@ Average rate and probability of three-body binary formation in the timestep calc
 ``dt``
 ``dt*N/log(gamma*N)``
 ``Rate_3bb``
-``P_3bb``                       Probability of binary formation/li
+``P_3bb``                        Probability of binary formation
 ``r``
 ==============================  =====================================================
 
