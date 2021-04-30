@@ -99,11 +99,21 @@ Then follow the **intel** instructions above
 
 Bridges
 _______
-On Bridges 2 (the XSEDE machine) start by importing cmake and the intel compilers
+On Bridges 2 (the XSEDE machine) start by importing anaconda3 the intel compilers
 
 .. code-block:: bash
 
+   module load anaconda3
    module load intelmpi/20.4-intel20.4
+
+Cmake needs to be installed by hand for now, but this is pretty straight forward:
+
+.. code-block:: bash
+
+   wget https://github.com/Kitware/CMake/releases/download/v3.20.1/cmake-3.20.1-linux-x86_64.sh
+   bash ./cmake-3.20.1-linux-x86_64.sh   ## hit Y both times
+   echo 'export PATH=$HOME/cmake-3.20.1-linux-x86_64/bin:$PATH' >> ~/.bashrc  ## to add the new cmake to your load-on-login files
+   source ~/.bashrc  ## or log out and log back in
 
 Then follow the **intel** instructions above 
 
