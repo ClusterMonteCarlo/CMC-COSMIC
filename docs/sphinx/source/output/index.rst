@@ -460,7 +460,7 @@ al. 2019, ApJ.
 ==============================  =====================================================
 ``tcount``						           Time count			 
 ``TotalTime``                         Total time
-``binflag``                           Binary flag ?? 
+``binflag``                           Binary flag 
 ``id0``                               ID number
 ``m0``                                Mass [:math:`M_{\odot}`]
 ``B0``                                Magnetic field [G]
@@ -522,7 +522,7 @@ Below is an exemplary output:
 ``rh_binary``
 ``N_b``                          Total number of binaries
 ``M_b``                          Total mass of binaries
-``E_b``                          Total energy of binaries ?
+``E_b``                          Total energy of binaries
 ==============================  =====================================================
       
       
@@ -567,7 +567,7 @@ initial.triple.dat
 output.lagrad.dat
 -------------------
 
-The lagrange radii are the radii enclosing a given percentage of the cluster's 
+This file contains the lagrange radii enclosing a given percentage of the cluster's 
 total mass. So for example, the 10% lagrange radii printed in the 
 **output.lagrad.dat** file is the radius at a given time that encloses 10% of 
 the mass. The different columns in that file give 0.1%, 5%, 99%, etc. lagrange 
@@ -634,30 +634,17 @@ This file contains the lagrange radii for the masses in range 1 :math:`M_{\odot}
 initial.lagrad2-10-100.dat
 --------------------------
 
+This file contains the lagrange radii for the masses in range 10 :math:`M_{\odot}` < m < 100 :math:`M_{\odot}`.
+
 
 initial.lagrad3-100-1000.dat
 ----------------------------
 
+This file contains the lagrange radii for the masses in range 100 :math:`M_{\odot}` < m < 10000 :math:`M_{\odot}`.
+
+
 initial.lagrad_10_info.dat
 --------------------------
-Empty
-
-
-
-initial.centmass.dat
---------------------
-
-This file provides information on central black hole.
-
-==============================  =====================================================
-``t``
-``cenma.m``
-``Dt``
-``rho_core``
-``Etotal.tot``
-``Etotal.K``
-``Etotal.P``
-==============================  =====================================================
 
 
 initial.core.dat
@@ -770,9 +757,6 @@ Average rate and probability of three-body binary formation in the timestep calc
 ``r``
 ==============================  =====================================================
 
-initial.removestar.log
-----------------------
-Empty
 
 output.relaxation.dat
 ----------------------
