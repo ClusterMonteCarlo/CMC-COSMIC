@@ -88,8 +88,7 @@ This file can be parsed using the above command, or using a stand-alone command 
 Log Files
 ==========
 
-Listed below are the output files of CMC with the variables printed out. Unless 
-explicitly stated, variables are in `code units`. 
+Listed below are the output files of CMC with the variables printed out. 
 
 output.dyn.dat
 ---------------
@@ -542,26 +541,28 @@ initial.tidalcapture.log
 initial.triple.dat
 ------------------
 
+List of triples formed dynamically in the cluster as a result of three- and four-body dynamical encounters./
+
 ==============================  =====================================================
-``time``
-``min0``
-``min1``
-``mout``
-``Rin0``
-``Rin1``
-``Rout``
-``ain``
-``aout``
-``ein``
-``eout``
-``ktypein0``
-``ktypein1``
-``kytpeout``
-``Tlk_quad``
-``Tlk_oct``
-``eps_oct``
-``T_GR``
-``eps_GR``
+``time``                         Time
+``min0``                         Mass of inner object `_0` [:math:`M_{\odot}`]
+``min1``                         Mass of inner object `_1` [:math:`M_{\odot}`]
+``mout``                         Mass of outer object [:math:`M_{\odot}`]
+``Rin0``                         Radius of inner object `_0`
+``Rin1``                         Radius of inner object `_0`
+``Rout``                         Radius of outer object 
+``ain``                          Semi-major axis of inner binary [AU]
+``aout``                         Semi-major axis of outer binary [AU]
+``ein``                          Eccentricity of inner binary
+``eout``                         Eccentricity of outer binary
+``ktypein0``                     Inner object `_0` stellar type
+``ktypein1``                     Inner object `_1` stellar type
+``kytpeout``                     Outer object stellar type
+``Tlk_quad``                     Quadrupole Kozai-Lidov timescale
+``Tlk_oct``                      Octupole Kozai-Lidov timescale: tlkquad/epsoct
+``eps_oct``                      Octupole parameter
+``T_GR``                         1PN precession timescale
+``eps_GR``                       GR parameter: Tlk_quad/T_GR
 ==============================  =====================================================
 
 output.lagrad.dat
@@ -666,7 +667,7 @@ initial.bin.dat
 --------------
 
 ==============================  =====================================================
-``t``
+``t``                           
 ``N_b``
 ``M_b``
 ``E_b``
@@ -711,29 +712,29 @@ initial.3bb.log
 This file contains information about three body binaries.
 
 ==============================  =====================================================
-``time``
-``k1``
-``k2``
-``k3``
-``id1``
-``id2``
-``id3``
-``m1``
-``m2``
-``m3``
+``time``                         Time
+``k1``                           Stellar type of object `_1`
+``k2``                           Stellar type of object `_2`
+``k3``                           Stellar type of object `_3`
+``id1``                          ID of object `_1`
+``id2``                          ID of object `_2`
+``id3``                          ID of object `_3`
+``m1``                           Mass of object `_1`
+``m2``                           Mass of object `_2`
+``m3``                           Mass of object `_3`
 ``ave_local_mass``
 ``n_local``
 ``sigma_local``
 ``eta``
 ``Eb``
-``ecc``
-``a``                         [AU]
-``r_peri``                    [AU]
+``ecc``                        Eccentricty
+``a``                          Semi-major axis [AU]
+``r_peri``                     Pericenter distance [AU]
 ``r(bin)``
 ``r(single)``
-``vr(bin)``
-``vt(bin)``
-``vr(single)``
+``vr(bin)``                     Radial velocity of binary
+``vt(bin)``                     Tangential velocity of binary
+``vr(single)``                  Radial velocity of single object
 ``vt(single)``
 ``phi(bin)``
 ``phi(single)``
