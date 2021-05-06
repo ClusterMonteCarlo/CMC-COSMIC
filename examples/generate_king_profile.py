@@ -6,7 +6,7 @@ from cosmic.sample import InitialCMCTable
 # Generate the Singles and Binaries Pandas tables.  Here we sample stellar masses from a Kroupa 2001
 # IMF, and assign 10% of the stars binary companions.  Radii are set in COSMIC.
 # See (https://cosmic-popsynth.github.io/COSMIC/runpop/index.html) for more details on the options here
-Singles, Binaries = InitialCMCTable.sampler('cmc', binfrac_model=1., primary_model='kroupa01',
+Singles, Binaries = InitialCMCTable.sampler('cmc', binfrac_model=0.1, primary_model='kroupa01',
                                             ecc_model='thermal', porb_model='log_uniform', qmin=-1.0,
                                             cluster_profile='king', met=0.00017, size=100000,w_0=6,
                                             params='KingProfile.ini',
