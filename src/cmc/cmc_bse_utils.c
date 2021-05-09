@@ -399,6 +399,6 @@ void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, 
   tempbinary->bse_bcm_B[0] = binary.bse_bcm_B[0];
   tempbinary->bse_bcm_formation[0] = binary.bse_bcm_formation[0];
   tempbinary->bse_bcm_formation[1] = binary.bse_bcm_formation[1];
-  printf("after bse_comenv in cmc_bse_comenv: \n");
-  printf("after hrdiag: kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g epoch1=%g epoch2=%g \n", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
+  dprintf("after bse_comenv in cmc_bse_comenv: \n");
+  dprintf("after hrdiag: kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g epoch1=%g epoch2=%g \n", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1], (*tempbinary).bse_epoch[0], (*tempbinary).bse_epoch[1]);
 }
