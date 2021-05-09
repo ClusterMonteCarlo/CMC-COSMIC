@@ -1537,6 +1537,24 @@ typedef struct{
 	double kT;
 } core_t;*/
 
+/**
+* @brief  to store the velocity dispersion profile
+*/
+typedef struct{
+/**
+* @brief ?
+*/
+	long n;
+/**
+* @brief ?
+*/
+	double *r;
+/**
+* @brief ?
+*/
+	double *sigma;
+} sigma_t;
+
 
 /**
 * @brief parameters for orbit
