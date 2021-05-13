@@ -125,12 +125,12 @@ the cluster evolves.
 ``Etot+Eoops``      Total energy + Eoops
 ``r_h``             Half-mass radius
 ``rho_0``           Core density
-``rc_spitzer``      Core radius as defined in Spitzer 1987 :math:`\sqrt{3  \sigma_0^2}{4 \pi \rho_0}`.
+``rc_spitzer``      Core radius as defined in Spitzer 1987: :math:`\sqrt{3  \sigma_0^2}{4 \pi \rho_0}`.
 ``v0_rms``          Rms velocity dispersion at the cluster center
 ``rc_nb``           Core radius calculated with density weighted averages as in Casertano & Hut (1985)
 ``DMse``            Total mass loss from the cluster per time step due to stellar evolution [:math:`{M_{\odot}}`]
-``DMrejuv`` 	    Mass loss from rejuvenation per time step[:math:`{M_{\odot}}`]
-``N_c_nb``          Number of stars within the core (4.0 / 3.0 * PI * cub(rc_nb) * (central.n / 2.0))
+``DMrejuv`` 	    Mass loss from rejuvenation per time step [:math:`{M_{\odot}}`]
+``N_c_nb``          Number of stars within the core: (4.0 / 3.0 * PI * cub(rc_nb) * (central.n / 2.0))
 ================  =====================================================
 
 output.binint.log
@@ -254,7 +254,7 @@ cluster during the cluster evolution.
 ``N_bh-star``				 	      Number of stars including MS stars and giants 
 ``Nbh-ms``						      Number of BH-MS binaries	
 ``Nbh-postms``			            Number of BH-giant binaries
-``fb_bh``						      Number of binaries containing a black hole / total number of systems containing a black hole ?
+``fb_bh``						      Number of binaries containing a black hole / total number of systems containing a black hole 
 ==============================  =====================================================
 
 output.bh.esc.dat
@@ -326,7 +326,7 @@ for further detail.
 ``type1``					        Stellar type of body_1
 ``type2``						     Stellar type of body_2 
 ``b``                            impact parameter at infinity [:math:`R_{\odot}`]
-``vinf``                         [km/s] ?
+``vinf``                         Relative velocity of two objects at infinity [km/s] 
 ``rad1``                         Radius of body_1
 ``rad2``                         Radius of body_2
 ``rperi``                        Pericenter distance at collision
@@ -507,7 +507,7 @@ Below is an exemplary output:
 ``Mtotal``                       Total mass of the cluster
 ``Etotal.P``                     Total potential energy of the cluster
 ``Etotal.K``                     Total kinetic energy of the cluster
-``VRatio``                       
+``VRatio``                       Virial ratio
 ``TidalMassLoss``                
 ``core_radius``                  Core radius 
 ``rho_core``                     Core density
@@ -516,9 +516,9 @@ Below is an exemplary output:
 ``conc_param``
 ``N_core``                       Number of objects within core radius
 ``trh``                          Half-mass relaxation time
-``rh``
-``rh_single``
-``rh_binary``
+``rh``                           Half-mass radius
+``rh_single``                    Half-mass radius of single objects
+``rh_binary``                    Half-mass radius of binaries
 ``N_b``                          Total number of binaries
 ``M_b``                          Total mass of binaries
 ``E_b``                          Total energy of binaries
@@ -647,6 +647,22 @@ This file contains the lagrange radii for the masses in range 100 :math:`M_{\odo
 initial.lagrad_10_info.dat
 --------------------------
 
+This file containts dynamical information at 10 lagrange radius.
+
+==============================  =====================================================
+``t``
+``Dt``
+``tcount``
+``N_10``
+``M_10``
+``N_s,10``
+``M_s,10``
+``N_b,10``
+``M_b_10``
+``r_10``
+``rho_10``
+==============================  =====================================================
+
 
 initial.core.dat
 ----------------
@@ -666,14 +682,15 @@ initial.core.dat
 initial.bin.dat
 --------------
 
+This file contains information on binaries.
 ==============================  =====================================================
-``t``                           
-``N_b``
-``M_b``
-``E_b``
-``r_h,s``
-``r_h,b``
-``rho_c``
+``t``                           Total time
+``N_b``                         Number of binaries
+``M_b``                         Mass of binaries
+``E_b``                         Total energy of binaries
+``r_h,s``                       Half-mass radius of single objects
+``r_h,b``                       Half-mass radius of binaries
+``rho_c``                        
 ``N_bb``
 ``N_bs``
 ``f_b,c``
@@ -693,15 +710,15 @@ initial.bhformation.dat
 This file contains information about newly formed BHs.
 
 ==============================  =====================================================
-``time``
-``r``
-``binary?``
-``ID``
-``zams_m``
-``m_progenitor``
-``bh mass``
-``bh_spin``
-``birth-kick``                   [km/s]
+``time``                        Time of BH formation
+``r``                           Position in cluster
+``binary?``                     Whether binary or not at the time of stellar collapse
+``ID``                          ID of BH
+``zams_m``                      Mass of progenitor at t=0
+``m_progenitor``                Mass of progenitor before explosion
+``bh mass``                     Mass of BH
+``bh_spin``                     Spin of BH
+``birth-kick``                  Birth kick magnitude of the natal kick [km/s]
 ``vsarray``
 ==============================  =====================================================
 
