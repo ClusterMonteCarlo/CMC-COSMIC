@@ -431,7 +431,7 @@ indicies indicate single stars.
 ``radc0``                       Primary core radius [:math:`R_{\odot}`]
 ``menv0``                       Primary envelope mass [:math:`M_{\odot}`]
 ``renv0``                       Primary envelope radius [:math:`R_{\odot}`]
-``tms0``                        ?
+``tms0``                        Primary timescale of the main sequence
 ``dmdt0``                       Primary mass accreting rate 
 ``radrol0``                     Ratio of Roche Lobe to radius
 ``ospin0``                      Primary spin angular momentum
@@ -439,7 +439,7 @@ indicies indicate single stars.
 ``formation0``                  Primary formation channel for supernova, e.g., core collapse, pair instability, etc.)
 ``bacc0``                       Mass accreted to the primary
 ``tacc0``                       Time spent accreting mass to the primary ?
-``mass0_0``                     Primary initial mass ?
+``mass0_0``                     Primary initial mass 
 ``epoch0``                      ?
 ``bhspin``                      BH spin (if single)
 ``bhspin1``                     BH spin for primary (if binary)  
@@ -511,9 +511,9 @@ Below is an exemplary output:
 ``TidalMassLoss``                
 ``core_radius``                  Core radius 
 ``rho_core``                     Core density
-``v_core``                       Velocity dispersion in the core radius ?
-``Trc``              
-``conc_param``
+``v_core``                       Velocity dispersion in the core 
+``Trc``                          Core relaxation timescale
+``conc_param``                   King concentration parameter
 ``N_core``                       Number of objects within core radius
 ``trh``                          Half-mass relaxation time
 ``rh``                           Half-mass radius
@@ -541,7 +541,7 @@ initial.tidalcapture.log
 initial.triple.dat
 ------------------
 
-List of triples formed dynamically in the cluster as a result of three- and four-body dynamical encounters./
+List of triples formed dynamically in the cluster as a result of three- and four-body dynamical encounters. 
 
 ==============================  =====================================================
 ``time``                         Time
@@ -558,10 +558,10 @@ List of triples formed dynamically in the cluster as a result of three- and four
 ``ktypein0``                     Inner object `_0` stellar type
 ``ktypein1``                     Inner object `_1` stellar type
 ``kytpeout``                     Outer object stellar type
-``Tlk_quad``                     Quadrupole Kozai-Lidov timescale
-``Tlk_oct``                      Octupole Kozai-Lidov timescale: tlkquad/epsoct
+``Tlk_quad``                     Quadrupole Kozai-Lidov timescale [yr]
+``Tlk_oct``                      Octupole Kozai-Lidov timescale: tlkquad/epsoct [yr]
 ``eps_oct``                      Octupole parameter
-``T_GR``                         1PN precession timescale
+``T_GR``                         1PN precession timescale [yr]
 ``eps_GR``                       GR parameter: Tlk_quad/T_GR
 ==============================  =====================================================
 
@@ -683,6 +683,7 @@ initial.bin.dat
 --------------
 
 This file contains information on binaries.
+
 ==============================  =====================================================
 ``t``                           Total time
 ``N_b``                         Number of binaries
@@ -718,8 +719,8 @@ This file contains information about newly formed BHs.
 ``m_progenitor``                Mass of progenitor before explosion
 ``bh mass``                     Mass of BH
 ``bh_spin``                     Spin of BH
-``birth-kick``                  Birth kick magnitude of the natal kick [km/s]
-``vsarray``
+``birth-kick``                  Birth kick magnitude of natal kick [km/s]
+``vsarray``                     Array of natal kicks 
 ==============================  =====================================================
 
 
