@@ -88,7 +88,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		collisions_multiple = COLL_FACTOR;
 	}
 
-	if (TIDAL_CAPTURE && (star[k].se_k <= 1 || star[k].se_k >= 10 || star[k].se_k == 7) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7) && rperi <= 1.3 * (star[k].rad + star[kp].rad)) {
+	if (TIDAL_CAPTURE && (star[k].se_k <= 1 || star[k].se_k >= 10 || star[k].se_k == 7) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7) && (rperi <= 1.3*star[kp].rad && star[kp].rad > 2*star[k].rad)) {
                 collisions_multiple_hold = rperi/star[kp].rad;
 		/* log stuff */
                 //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_kp*madhoc, mass_k*madhoc, star[kp].se_mc*MSUN/units.m, star[kp].se_radius*RSUN/units.l, W);
@@ -336,7 +336,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         destroy_obj(kp);
                 }   
 
-	} else if (TIDAL_CAPTURE && (star[kp].se_k <= 1 || star[kp].se_k >= 10 || star[kp].se_k == 7) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7) && rperi <= 1.3 * (star[k].rad + star[kp].rad)) {
+	} else if (TIDAL_CAPTURE && (star[kp].se_k <= 1 || star[kp].se_k >= 10 || star[kp].se_k == 7) && (star[k].se_k >= 2 && star[k].se_k <= 9 && star[k].se_k != 7) && (rperi <= 1.3 * star[k].rad && star[k].rad > 2*star[kp].rad)) {
                 collisions_multiple_hold = rperi/star[k].rad;
 		/* log stuff */
                 //parafprintf(tidalcapturefile, "coll_CE_debug %.3g %.3g %.3g %.3g %.3g\n", mass_k*madhoc, mass_kp*madhoc, star[k].se_mc*MSUN/units.m, star[k].se_radius*RSUN/units.l, W);
