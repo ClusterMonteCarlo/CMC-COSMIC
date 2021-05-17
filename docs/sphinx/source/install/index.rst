@@ -138,6 +138,16 @@ On Frontera (the new fancy TACC machine from XSEDE) the commands:
     
 then following the **intel** instructions above should work (h/t to Mike Grudić for testing CMC there)
 
+Memex (Carnegie Observatories) 
+________
+On Memex (Carnegie Science's HPC computing cluster) follow the commands:
+
+.. code-block:: bash
+
+    module load intel/2021 python/intel21 cuda/11.1
+    
+then follow the **intel** instructions above (ask Kyle Kremer with questions).
+
 ==========
 Containers
 ==========
