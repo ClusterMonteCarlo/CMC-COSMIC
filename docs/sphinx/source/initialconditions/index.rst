@@ -272,7 +272,7 @@ To generate the above King profile, but with all the additional stellar physics 
                                                     ecc_model='thermal', porb_model='log_uniform', qmin=-1.0,
                                                     cluster_profile='king', met=0.00017, size=100000,w_0=6,
                                                     params=os.path.abspath('../../examples/KingProfile.ini'),
-                                                    seed=12345)
+                                                    seed=12345,virial_radius=1,tidal_radius=1e6)
 
 This example is also found in the `examples 
 <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ folder 
