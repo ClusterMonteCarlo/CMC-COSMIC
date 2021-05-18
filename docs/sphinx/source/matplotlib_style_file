@@ -359,7 +359,7 @@ mathtext.default: rm # The default font to use for math.
 ## Following are default face and edge colors, default tick sizes,
 ## default font sizes for tick labels, and so on.  See
 ## https://matplotlib.org/api/axes_api.html#module-matplotlib.axes
-axes.facecolor:     f0f0f5# axes background color
+axes.facecolor:     white# axes background color
 axes.edgecolor:     black# axes edge color
 axes.linewidth:     0.75    # edge line width
 axes.grid:           False# display grid or not
@@ -532,7 +532,7 @@ grid.alpha:     1.0     # transparency, between 0.0 and 1.0
 #legend.loc:           best
 legend.frameon:       True# if True, draw the legend on a background patch
 legend.framealpha:    1      # legend patch transparency
-legend.facecolor:     f0f0f5# inherit from axes.facecolor; or color spec
+legend.facecolor:     fcfcfc# inherit from axes.facecolor; or color spec
 legend.edgecolor:     black# background patch boundary color
 legend.fancybox:      False # if True, use a rounded box for the
                                 # legend background, else a rectangle
@@ -561,7 +561,7 @@ figure.titlesize:    18# size of the figure title (``Figure.suptitle()``)
 #figure.titleweight: normal    # weight of the figure title
 figure.figsize:     3.3,3  # figure size in inches
 figure.dpi:         100       # figure dots per inch
-#figure.facecolor:   black     # figure face color
+figure.facecolor:   fcfcfc     # figure face color
 #figure.edgecolor:   black     # figure edge color
 #figure.frameon:     True      # enable figure frame
 #figure.max_open_warning: 20   # The maximum number of figures to open through
