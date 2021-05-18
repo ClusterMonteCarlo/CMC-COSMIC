@@ -532,7 +532,7 @@ Note that this is also printed to ``stdout`` every timestep.
 initial.tidalcapture.log
 ------------------------
 
- This files contains detailed information on tidal capture events for each simulation. 
+ This files contains information on tidal capture events for each simulation. 
  
 * **time**                                                    - tidal capture time
 * **interaction_type**                                        - (SS_COLL_GW)
@@ -667,6 +667,8 @@ This file containts dynamical information at 10 lagrange radius.
 initial.core.dat
 ----------------
 
+TBD
+
 ==============================  =====================================================
 ``time``
 ``rho_norem``
@@ -682,7 +684,7 @@ initial.core.dat
 initial.bin.dat
 --------------
 
-This file contains information on binaries.
+TBD
 
 ==============================  =====================================================
 ``t``                           Total time
@@ -727,7 +729,7 @@ This file contains information about newly formed BHs.
 initial.3bb.log
 ---------------
 
-This file contains information about three body binaries.
+TBD
 
 ==============================  =====================================================
 ``time``                         Time
@@ -745,9 +747,9 @@ This file contains information about three body binaries.
 ``sigma_local``
 ``eta``
 ``Eb``
-``ecc``                        Eccentricty
-``a``                          Semi-major axis [AU]
-``r_peri``                     Pericenter distance [AU]
+``ecc``                         Eccentricty
+``a``                           Semi-major axis [AU]
+``r_peri``                      Pericenter distance [AU]
 ``r(bin)``
 ``r(single)``
 ``vr(bin)``                     Radial velocity of binary
@@ -763,7 +765,8 @@ This file contains information about three body binaries.
 ``N_3bb``
 ==============================  =====================================================
 
-initial.3bbprobability.log
+
+initial.3bbprobability.log  
 --------------------------
 Average rate and probability of three-body binary formation in the timestep calculated from the innermost 300 triplets of single stars considered for three-body binary formation.
 
