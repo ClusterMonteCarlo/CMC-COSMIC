@@ -144,9 +144,9 @@ DYNAMICS FLAGS
 
                                     **BH_CAPTURE = 1**
 
-``BH_RADIUS_MULTIPLYER``           Factor to multiply the radii of BHs by for collisions in fewbody (default is 5, since PN breaks down at ~10M)
+``BH_RADIUS_MULTIPLYER``            Factor to multiply the radii of BHs by for collisions in fewbody (default is 5, since PN breaks down at ~10M)
 
-                                   **BH_RADIUS_MULTIPLYER = 5**
+                                    **BH_RADIUS_MULTIPLYER = 5**
 
 
 ``THREEBODYBINARIES``               Turn on three-body binary formation semi-analytic treatment from Morscher et al., 2013
@@ -207,7 +207,6 @@ DYNAMICS FLAGS
                                      ``1`` : TDE
 
                                     **BHNS_TDE = 0**
- 
 ==================================  =====================================================
 
 

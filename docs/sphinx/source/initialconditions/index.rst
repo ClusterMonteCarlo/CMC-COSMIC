@@ -269,7 +269,7 @@ To generate the above King profile, but with all the additional stellar physics 
 .. ipython:: python
 
         Singles, Binaries = InitialCMCTable.sampler('cmc', binfrac_model=0.1, primary_model='kroupa01',
-                                                    ecc_model='thermal', porb_model='log_uniform', qmin=-1.0,
+                                                    ecc_model='thermal', porb_model='log_uniform', qmin=0.1,
                                                     cluster_profile='king', met=0.00017, size=100000,w_0=6,
                                                     params=os.path.abspath('../../examples/KingProfile.ini'),
                                                     seed=12345,virial_radius=1,tidal_radius=1e6)
