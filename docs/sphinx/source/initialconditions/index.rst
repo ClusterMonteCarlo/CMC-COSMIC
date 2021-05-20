@@ -58,7 +58,7 @@ Plummer Sphere
 One of the most common initial conditions for a star cluster are those of 
 `Plummer (1911) 
 <https://ui.adsabs.harvard.edu/abs/1911MNRAS..71..460P/abstract>`_.  They are 
-not the most representitive of star clusters in the local universe (see the 
+not the most representative of star clusters in the local universe (see the 
 King profile below), their popularity endures because their main quantities 
 (such as enclosed mass, density, velocity dispersion, etc.) can be expressed analytically.
 
@@ -67,7 +67,7 @@ point-mass particles, as opposed to real stars), we can use the following
 COSMIC functions.  Note that this returns two HDF5 tables, containing all the 
 relevant parameters for the single stars and binaries.  The two tables are 
 linked, such 
-that the ``Singles`` table contains all the single stars and binary centers of mass, as well as indicies pointing to the relevant binaries in ``Binaries``.  
+that the ``Singles`` table contains all the single stars and binary centers of mass, as well as indices pointing to the relevant binaries in ``Binaries``.  
 
 .. ipython:: python
     :okwarning:
@@ -78,26 +78,29 @@ that the ``Singles`` table contains all the single stars and binary centers of m
 
         print(Singles) 
 
-We then scale the cluster to `Hénon units 
-<https://ui.adsabs.harvard.edu/abs/2014arXiv1411.4936H/abstract>`_, where 
-:math:`G = 1`, the cluster mass is :math:`M_{c}=1`, the cluster energy is 
-:math:`E=-0.25`, and the virial radius is :math:`r_v \equiv G M_c^2 / 2|U| = 
-1`.  Note that is automatically done in ``InitialCMCTable.write`` if the 
-cluster isn't already normalized, but we do it here explicitly.
 
-.. ipython:: python
-
-        InitialCMCTable.ScaleToNBodyUnits(Singles,Binaries) 
-
-Finally, we can save the initial conditions to an HDF5 file (for use in CMC) with:
+Then we can save the initial conditions to an HDF5 file (for use in CMC) with:
 
 .. ipython:: python
 
         InitialCMCTable.write(Singles, Binaries, filename="plummer.hdf5") 
 
 
+
+``InitialCMCTable.write`` automatically scales the cluster to `Hénon units 
+<https://ui.adsabs.harvard.edu/abs/2014arXiv1411.4936H/abstract>`_, where 
+:math:`G = 1`, the cluster mass is :math:`M_{c}=1`, the cluster energy is 
+:math:`E=-0.25`, and the virial radius is :math:`r_v \equiv G M_c^2 / 2|U| = 
+1`.  These are the internal code units used by CMC.  
+
+.. warning::
+
+	InitialCMCTable.write scales the Singles and Binaries tables in place, so if you want to make any changes to the initial conditions after writing them, you'll have to either create copies of the tables or generate new ones. 
+
+
+
 We can check that the Plummer function reproduces what we would expect from 
-analytic predictions.  The enclosed mass a plummer sphere is given by
+analytic predictions.  The enclosed mass a Plummer sphere is given by
 
 .. math::
 
@@ -159,7 +162,7 @@ correspondingly more complicated:
 Where :math:`\,_2F_1` is the ordinary hypergeometric function.  
 
 Unlike both the Plummer and King profiles, the distribution function for the 
-Elson profile cannot be written analytically.  To genereate the initial 
+Elson profile cannot be written analytically.  To generate the initial 
 conditions, we directly integrate the density and potential functions to 
 numerically compute :math:`f(E)`, and draw our velocity samples from that (see 
 appendix B of `Grudic et al., 2018 
@@ -210,7 +213,7 @@ isothermal sphere, where the velocities of stars resembled a Maxwell-Boltzmann
 distribution.  But the isothermal sphere has infinite mass, and in any 
 realistic star cluster, the distribution of stars should go to zero near the 
 tidal boundary.  The `King (1966) <https://ui.adsabs.harvard.edu/abs/1966AJ.....71...64K/abstract>`_ profile 
-acomplishes this by sampling from a lowered isothermal distribution
+accomplices this by sampling from a lowered isothermal distribution
 
 .. math::
 

@@ -6,10 +6,5 @@ from cosmic.sample import InitialCMCTable
 # (e.g. stellar masses, radii); these are just equal-mass point particles
 Singles, Binaries = InitialCMCTable.sampler('cmc_point_mass', cluster_profile='plummer', size=10000, r_max=100)
 
-# Scale the Cluster to Henon units (G = 1, M_cluster = 1, E_cluster = -0.25)
-# Note that this option is automatically done in InitialCMCTable.write if the cluster
-# isn't already normalized, but we do it here explicitly.
-InitialCMCTable.ScaleToNBodyUnits(Singles,Binaries)
-
 # Save them to an hdf5 file for CMC
 InitialCMCTable.write(Singles, Binaries, filename="plummer.hdf5")

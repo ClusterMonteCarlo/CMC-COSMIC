@@ -13,11 +13,6 @@ Singles, Binaries = InitialCMCTable.sampler('cmc', binfrac_model=0.1, primary_mo
                                             params='KingProfile.ini',seed=12345, virial_radius=1,
                                             tidal_radius = 1e6)
 
-# Scale the Cluster to Henon units (G = 1, M_cluster = 1, E_cluster = -0.25)
-# Note that this option is automatically done in InitialCMCTable.write if the cluster
-# isn't already normalized, but we do it here explicitly.
-InitialCMCTable.ScaleToNBodyUnits(Singles,Binaries)
-
 # Save them to an hdf5 file for CMC with a virial radius of 1pc 
 # and an initial tidal radius of 10^6 virial radii
 InitialCMCTable.write(Singles, Binaries, filename="king.hdf5")
