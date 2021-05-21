@@ -86,7 +86,7 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	if(binary[jbin].bse_kw[0] == 14)  num_bh++; 
 	if(binary[jbin].bse_kw[1] == 14)  num_bh++;
 
-    if(num_bh > 1){
+    if((num_bh) > 1 & BH_CAPTURE){
         input.tcpustop *= 10.;
         input.PN1 = 0;
         input.PN2 = 0;

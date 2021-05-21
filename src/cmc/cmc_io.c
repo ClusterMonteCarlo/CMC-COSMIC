@@ -1800,17 +1800,17 @@ if(myid==0) {
         CHECK_PARSED(BSE_CEHESTARFLAG, 0, PARAMDOC_BSE_CEHESTARFLAG);
 
         // don_lim is a flag which determines how much mass is lost during thermal timescale MT
-        // don_lim = 0: assumes standard BSE choice as outlined in Hurley+2002
-        // don_lim = -1: Follows Claeys+2014
-        CHECK_PARSED(BSE_DON_LIM, 0, PARAMDOC_BSE_DON_LIM);
+        // don_lim = -1: assumes standard BSE choice as outlined in Hurley+2002
+        // don_lim = -2: Follows Claeys+2014
+        CHECK_PARSED(BSE_DON_LIM, -1, PARAMDOC_BSE_DON_LIM);
 
         // acc_lim is a flag which determines how much mass is accreted from the donor
-        // if acc_lim > 0: this provides the fraction of mass accreted
-        // acc_lim = 0: assumes standard BSE choice as outlined in Hurley+2002 which limits to 10*tkh_acc for MS/CHeB
-        // acc_lim = -1: assumes the accretion is limited to tkh_acc for MS/CHeB
-        // acc_lim = -2: assumes the accretion is limited by 10*tkh_acc for all fusing stars
-        // acc_lim = -3: assumes the accretion is limited by tkh_for all fusing stars
-        CHECK_PARSED(BSE_ACC_LIM, 0, PARAMDOC_BSE_ACC_LIM);
+        // if acc_lim >= 0: this provides the fraction of mass accreted
+        // acc_lim = -1: assumes standard BSE choice as outlined in Hurley+2002 which limits to 10*tkh_acc for MS/CHeB
+        // acc_lim = -2: assumes the accretion is limited to tkh_acc for MS/CHeB
+        // acc_lim = -3: assumes the accretion is limited by 10*tkh_acc for all fusing stars
+        // acc_lim = -4: assumes the accretion is limited by tkh_for all fusing stars
+        CHECK_PARSED(BSE_ACC_LIM, -1, PARAMDOC_BSE_ACC_LIM);
 
         // qcflag is an integer flag that sets the model to determine which critical mass ratios to use for the onset of unstable mass transfer and/or a common envelope. NOTE: this is overridden by qcrit_array if any of the values are non-zero.
         // 0: standard BSE
@@ -2246,14 +2246,14 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 				fprintf(mlagradfile[i], "# Lagrange radii for %g < m < %g range [code units]\n", mass_bins[i], mass_bins[i+1]);
 			}
 
-			fprintf(lagradfile, "# 1:t");
-			fprintf(ave_mass_file, "# 1:t");
-			fprintf(no_star_file, "# 1:t");
-			fprintf(densities_file, "# 1:t");
-			fprintf(ke_rad_file, "# 1:t");
-			fprintf(ke_tan_file, "# 1:t");
-			fprintf(v2_rad_file, "# 1:t");
-			fprintf(v2_tan_file, "# 1:t");
+			fprintf(lagradfile, "#1:t");
+			fprintf(ave_mass_file, "#1:t");
+			fprintf(no_star_file, "#1:t");
+			fprintf(densities_file, "#1:t");
+			fprintf(ke_rad_file, "#1:t");
+			fprintf(ke_tan_file, "#1:t");
+			fprintf(v2_rad_file, "#1:t");
+			fprintf(v2_tan_file, "#1:t");
 			for(i=0; i<NO_MASS_BINS-1; i++){
 				fprintf(mlagradfile[i], "# 1:t");
 			}
@@ -2295,7 +2295,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			}
 
 			fprintf(binaryfile, "# Binary information [code units]\n");
-			fprintf(binaryfile, "# 1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
+			fprintf(binaryfile, "#1:t 2:N_b 3:M_b 4:E_b 5:r_h,s 6:r_h,b 7:rho_c,s 8:rho_c,b 9:N_bb 10:N_bs 11:f_b,c 12:f_b 13:E_bb 14:E_bs 15:DE_bb 16:DE_bs 17:N_bc,nb 18:f_b,c,nb 19:N_bc \n");
 
 			// print header
 			fprintf(bhsummaryfile, "#1:tcount  #2:TotalTime  #3:Nbh,tot  #4:Nbh,single  #5:Nbinarybh  #6:Nbh-bh  #7:Nbh-nonbh  #8:Nbh-ns  #9:N_bh-wd  #10:N_bh-star  #11:Nbh-ms  #12:Nbh-postms #13:fb_bh [(# binaries containing a bh)/(total # systems containing a bh)\n");
@@ -2416,7 +2416,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 	//MPI: Headers are written out only by the root node.
    // print header
     if(RESTART_TCOUNT <= 0){
-		pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 #58:bhspin #59:bhspin1 #60:bhspin2 #61:ospin #62:B #63:formation\n");
+		pararootfprintf(escfile, "#1:tcount #2:t #3:m[MSUN] #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 #58:bhspin #59:bhspin1 #60:bhspin2 #61:ospin #62:B #63:formation\n");
 	   // print header
 		pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
 	   // print header
@@ -2593,6 +2593,44 @@ void trap_sigs(void)
 	
 	/* override GSL error handler */
 	//gsl_set_error_handler(&sf_gsl_errhandler);
+}
+
+/**
+* @brief print out initial binary paramaeters to data file
+*/
+void print_initial_binaries(void)
+{
+	long i, j;
+	char outfile[1024];
+
+    sprintf(outfile, "%s.initbin.dat", outprefix);
+
+	 //MPI: Open corresponding MPI files, and declare buffers reqd for parallel write.
+    MPI_File mpi_initbinfile;
+    char mpi_initbinfile_buf[10000], mpi_initbinfile_wrbuf[10000000];
+    long long mpi_initbinfile_len=0, mpi_initbinfile_ofst_total=0;
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_initbinfile);
+    MPI_File_set_size(mpi_initbinfile, 0);
+
+	/* and write data */
+	//MPI: Header printed only by the root node.
+	pararootfprintf(initbinfile, "# m0 [MSUN]  m1 [MSUN]  R0 [RSUN]  R1 [RSUN]  id0  id1  a [AU]  e\n");
+
+	for (i=1; i<=clus.N_MAX_NEW; i++) {
+		j = star[i].binind;
+		if (j != 0) {
+			parafprintf(initbinfile, "%g %g %g %g %ld %ld %g %g\n",
+				binary[j].m1 * units.mstar / MSUN, binary[j].m2 * units.mstar / MSUN, 
+				binary[j].rad1 * units.l / RSUN, binary[j].rad2 * units.l / RSUN, 
+				binary[j].id1, binary[j].id2,
+				binary[j].a * units.l / AU, 
+				binary[j].e);
+		}
+	}
+
+	 //MPI: Write in parallel
+    mpi_para_file_write(mpi_initbinfile_wrbuf, &mpi_initbinfile_len, &mpi_initbinfile_ofst_total, &mpi_initbinfile);
+    MPI_File_close(&mpi_initbinfile);
 }
 
 /**
@@ -3843,3 +3881,36 @@ void load_restart_file(){
 	rootprintf("******************************************************************************\n");
 
 }
+
+#ifdef DEBUGGING
+
+/**
+* @brief ?
+*
+* @param ids ?
+* @param filename file name
+*/
+void load_id_table(GHashTable* ids, char *filename) {
+  FILE * id_file;
+  long id, i;
+  gpointer id_pointer;
+  int read_ok;
+  
+  id_file= fopen(filename, "r");
+  if (id_file== NULL) {
+    printf("%s does not exist!\n", filename);
+    exit(1);
+  }
+  read_ok=fscanf(id_file, "%ld\n", &id);
+  id_array= g_array_new(FALSE, FALSE, sizeof(long));
+  while (read_ok>0) {
+    g_array_append_val(id_array, id);
+    read_ok= fscanf(id_file, "%ld\n", &id);
+  };
+  for (i=0; i< id_array->len; i++) {
+    id_pointer= &g_array_index(id_array, long, i);
+    g_hash_table_insert(ids, id_pointer, id_pointer);
+  }
+}
+
+#endif

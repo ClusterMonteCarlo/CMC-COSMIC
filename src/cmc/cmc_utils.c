@@ -2020,10 +2020,68 @@ void compute_energy_new()
 }
 
 /**
+* @brief set some of the BH counters to zero 
+*/
+void set_bh_counters()
+{
+	/* Meagan - 3bb */
+	N3bbformed = 0;
+	delta_E_3bb = 0.0;
+
+	/* Meagan - bh counters */
+	bhsingle = 0;
+	bhbinary = 0;
+	bhbh = 0;
+	bhnonbh = 0;
+	bh13 = 0;
+	bh10 = 0;
+	bh11 = 0;
+	bh12 = 0;
+	bhwd = 0;
+	bhstar = 0;
+	bh01=0;
+	bh26=0;
+	bh7=0;
+	bh89=0;
+	esc_bhsingle = 0;
+	esc_bhbinary = 0;
+	esc_bhbh = 0;
+	esc_bhnonbh = 0;
+	esc_bh13 = 0;
+	esc_bh10 = 0;
+	esc_bh11 = 0;
+	esc_bh12 = 0;
+	esc_bhwd = 0;
+	esc_bhstar = 0;
+	esc_bh01 = 0;
+	esc_bh26 = 0;
+	esc_bh7 = 0;
+	esc_bh89 = 0;
+	esc_bhsingle_tot = 0;
+	esc_bhbinary_tot = 0;
+	esc_bhbh_tot = 0;
+	esc_bhnonbh_tot = 0;
+	esc_bh13_tot = 0;
+	esc_bh10_tot = 0;
+	esc_bh11_tot = 0;
+	esc_bh12_tot = 0;
+	esc_bhwd_tot = 0;
+	esc_bhstar_tot = 0;
+	esc_bh01_tot = 0;
+	esc_bh26_tot = 0;
+	esc_bh7_tot = 0;
+	esc_bh89_tot = 0;
+}
+
+/**
 * @brief initializing some energy variables
 */
 void set_energy_vars()
 {
+
+	/* compute energy initially */
+	star[0].E = star[0].J = 0.0;
+
 	/* Noting the total initial energy, in order to set termination energy. */
 	Etotal.ini = Etotal.tot;
 

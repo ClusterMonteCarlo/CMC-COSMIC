@@ -1590,3 +1590,31 @@ double coll_CE_twogiant(double M1, double M2, double Mc1, double Mc2, double R1,
 
         return(Mc1*Mc2*alpha/(2*(M1*(M1-Mc1)/R1+M2*(M2-Mc2)/R2)/lambda-(M1+M2)*vinf*vinf));
 }
+
+/**
+* @brief
+* the mass--radius relationship, from Freitag, et al. (2004)
+* M is expected to be input in the same units as star[].m
+* radius is output in code (N-body) units
+*
+* This is ONLY used if stellar evolution is off (for a toy rejuvination problem)
+*
+* @param M ?
+*
+* @return radius in code (N-body) units
+*/
+double r_of_m(double M)
+{
+	if (M == 0.0) {
+		/* special case of massless particles */
+		return(0.0);
+	} else if (M / clus.N_STAR * units.m / MSUN < 0.1) {
+		return(0.1 * RSUN / units.l);
+	} else if (M / clus.N_STAR * units.m / MSUN < 1.0) {
+		return(RSUN / units.l * (M / clus.N_STAR * units.m / MSUN));
+	} else if (M / clus.N_STAR * units.m / MSUN < 120.0) {
+		return(RSUN / units.l * pow(M / clus.N_STAR * units.m / MSUN, 0.57));
+	} else {
+		return(1.6 * RSUN / units.l * pow(M / clus.N_STAR * units.m / MSUN, 0.47));
+	}
+}

@@ -148,67 +148,18 @@ int main(int argc, char *argv[])
 	/* compute the potential */
 	calc_potential_new();
 
+	/* compute the velocity dispersion */
 	calc_sigma_new();
 
 	/* calculate central quantities */
 	central_calculate();
 
-	/* Meagan - 3bb */
-	N3bbformed = 0;
-	delta_E_3bb = 0.0;
-
-	/* Meagan - bh counters */
-	bhsingle = 0;
-	bhbinary = 0;
-	bhbh = 0;
-	bhnonbh = 0;
-	bh13 = 0;
-	bh10 = 0;
-	bh11 = 0;
-	bh12 = 0;
-	bhwd = 0;
-	bhstar = 0;
-	bh01=0;
-	bh26=0;
-	bh7=0;
-	bh89=0;
-	esc_bhsingle = 0;
-	esc_bhbinary = 0;
-	esc_bhbh = 0;
-	esc_bhnonbh = 0;
-	esc_bh13 = 0;
-	esc_bh10 = 0;
-	esc_bh11 = 0;
-	esc_bh12 = 0;
-	esc_bhwd = 0;
-	esc_bhstar = 0;
-	esc_bh01 = 0;
-	esc_bh26 = 0;
-	esc_bh7 = 0;
-	esc_bh89 = 0;
-	esc_bhsingle_tot = 0;
-	esc_bhbinary_tot = 0;
-	esc_bhbh_tot = 0;
-	esc_bhnonbh_tot = 0;
-	esc_bh13_tot = 0;
-	esc_bh10_tot = 0;
-	esc_bh11_tot = 0;
-	esc_bh12_tot = 0;
-	esc_bhwd_tot = 0;
-	esc_bhstar_tot = 0;
-	esc_bh01_tot = 0;
-	esc_bh26_tot = 0;
-	esc_bh7_tot = 0;
-	esc_bh89_tot = 0;
-
 	/* Calculates some global binary variables - total binary mass,and E. */
 	bin_vars_calculate();
 
-
-	/* compute energy initially */
-	star[0].E = star[0].J = 0.0;
-
-	set_energy_vars();
+	/* Only set the energies to zero if it's the first timestep */
+	if(RESTART_TCOUNT == 0)
+		set_energy_vars();
 
 	compute_energy_new();
 

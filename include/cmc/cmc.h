@@ -1573,6 +1573,7 @@ typedef struct{
 	double *sigma;
 } sigma_t;
 
+
 /**
 * @brief parameters for orbit
 */
@@ -1749,6 +1750,7 @@ void bin_vars_calculate();
 void calc_potential_new();
 void calc_potential_new2();
 void compute_energy_new();
+void set_bh_counters();
 void set_energy_vars();
 void reset_interaction_flags();
 void calc_clusdyn_new();
