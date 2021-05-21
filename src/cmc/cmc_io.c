@@ -1174,6 +1174,18 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BH_CAPTURE);
 				sscanf(values, "%ld", &BH_CAPTURE);
 				parsed.BH_CAPTURE = 1;
+                        } else if (strcmp(parameter_name, "TC_POLYTROPE") == 0) {
+                                PRINT_PARSED(PARAMDOC_TC_POLYTROPE);
+                                sscanf(values, "%ld", &TC_POLYTROPE);
+                                parsed.TC_POLYTROPE = 1;
+                        } else if (strcmp(parameter_name, "TC_FACTOR") == 0) {
+                                PRINT_PARSED(PARAMDOC_TC_FACTOR);
+                                sscanf(values, "%lf", &TC_FACTOR);
+                                parsed.TC_FACTOR = 1;
+                        } else if (strcmp(parameter_name, "COLL_FACTOR") == 0) {
+                                PRINT_PARSED(PARAMDOC_COLL_FACTOR);
+                                sscanf(values, "%lf", &COLL_FACTOR);
+                                parsed.COLL_FACTOR = 1;
 			} /*Sourav:new parameter*/
 			else if (strcmp(parameter_name, "STAR_AGING_SCHEME") == 0) {
 			 	PRINT_PARSED(PARAMDOC_STAR_AGING_SCHEME);
@@ -1633,6 +1645,9 @@ if(myid==0) {
 	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
 	CHECK_PARSED(BHNS_TDE, 0, PARAMDOC_BHNS_TDE);
 	CHECK_PARSED(BH_CAPTURE, 0, PARAMDOC_BH_CAPTURE);
+        CHECK_PARSED(TC_POLYTROPE, 0, PARAMDOC_TC_POLYTROPE);
+        CHECK_PARSED(TC_FACTOR, 1.0, PARAMDOC_TC_FACTOR);
+        CHECK_PARSED(COLL_FACTOR, 1.0, PARAMDOC_COLL_FACTOR);
 	/*Sourav: new parameter*/
 	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
 	CHECK_PARSED(SAMPLESIZE, 1024, PARAMDOC_SAMPLESIZE);
@@ -2405,7 +2420,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 	   // print header
 		pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
 	   // print header
-		pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)->[(id1,m1,k1)-a,e-(id2,m2,k2)]\n");
+		pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)+(r1,r2,r_peri)+vinf[km/s]+rcm[pc]+(mc0,mc1,rc0,rc1)->[(id1,m1,k1)-a[AU],e-(id2,m2,k2)]+(r1,r2)\n");
 	   // print header
 		pararootfprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
 	   //Sourav:  print header
@@ -2440,7 +2455,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			pararootfprintf(pulsarfile, "tcount    TotalTime    Star_id      Rperi    Rapo    R     VR    VT    PHI    PHIr0    PHIrt    kick    Binary_id1    Binary_id2    kw2     P     B    formation     bacc    tacc    B0   TB     M2    M1     e     R2/RL2     dm1/dt   \n");
                 /* print header */ //Shi
                 if (WRITE_MOREPULSAR_INFO)
-               		pararootfprintf(morepulsarfile,"#1:tcount #2:TotalTime #3:binflag #4:id0 #5:id1 #6:m0[MSUN] #7:m1[MSUN] #8:B0[G] #9:B1[G] #10:P0[sec] #11:P1[sec] #12:startype0 #13:startype1 #14:a[AU] #15:ecc #16:radrol0 #17:radrol1 #18:dmdt0 #19:dmdt1 #20:r #21:vr #22:vt #23:bacc0 #24:bacc1 #25:tacc0 #26:tacc1\n");
+               		pararootfprintf(morepulsarfile,"#1:tcount #2:TotalTime #3:binflag #4:id0 #5:id1 #6:m0[MSUN] #7:m1[MSUN] #8:B0[G] #9:B1[G] #10:P0[sec] #11:P1[sec] #12:startype0 #13:startype1 #14:a[AU] #15:ecc #16:radrol0 #17:radrol1 #18:dmdt0 #19:dmdt1 #20:r #21:vr #22:vt #23:bacc0 #24:bacc1 #25:tacc0 #26:tacc1 #27:formation0 #28:formation1\n");
 
 	} /*if(RESTART_TCOUNT == 0)*/
 
