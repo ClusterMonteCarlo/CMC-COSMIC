@@ -17,7 +17,7 @@ call it with ``mpirun`` (or ``mpiexec``, depending on your mpi version):
 
 .. code-block:: bash 
 
-        mpirun ./cmc -np <n_cores> <params.ini> <output>
+        mpirun -np <n_cores> ./cmc <params.ini> <output>
 
 Where
 
