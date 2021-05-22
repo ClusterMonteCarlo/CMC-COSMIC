@@ -191,13 +191,29 @@ DYNAMICS FLAGS
 
                                     **SS_COLLISION = 1**
  
-``TIDAL_CAPTURE``                   Enable tidal captures bewteen individual stars.  Uses cross sections from Kim & Lee 1999 and Lombardi et al., 2006.  Only activated if SS_COLLISION = 1
+ 
+``TIDAL_CAPTURE``                   Enable collisions bewteen giants and other individual stars.  Can lead to binary formation. Uses cross sections from Lombardi et al., 2006.  Only activated if SS_COLLISION = 1
 
                                      ``0`` : Off
 
                                      ``1`` : On
 
                                     **TIDAL_CAPTURE = 0**
+       
+       
+``TC_POLYTROPE``                    Enable tidal captures during single-single interactions. Uses polytropic stellar models for stars. Uses cross sections from Kim & Lee 1999. Only activated if SS_COLLISION = 1
+           
+                                    ``0`` : Off
+                                    
+                                    ``1`` : On
+                                    
+                                    **TC_POLYTROPE = 0**
+                                    
+                                    
+``COLL_FACTOR``                     Set the multiplying factor for direct collisions. Default = 1.0 (sticky sphere)
+                                    
+                                    **COLL_FACTOR = 1.0**
+ 
  
 ``BHNS_TDE``                        Treat BH(NS)--MS TDEs in TDE vs direct collision limit.  Follows prescription in Kremer et al., 2020
 
