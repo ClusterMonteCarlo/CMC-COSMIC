@@ -170,7 +170,7 @@ appendix B of `Grudic et al., 2018
 produces a handful 
 of warnings in the SciPy integrators, but the profiles that it generates are correct.
 
-To generate an Elson profile with :math:`\gamma=3`, we can use
+To generate an Elson profile with :math:`\gamma=2.5`, we can use
 
 .. ipython:: python
     :okwarning:
@@ -213,7 +213,7 @@ isothermal sphere, where the velocities of stars resembled a Maxwell-Boltzmann
 distribution.  But the isothermal sphere has infinite mass, and in any 
 realistic star cluster, the distribution of stars should go to zero near the 
 tidal boundary.  The `King (1966) <https://ui.adsabs.harvard.edu/abs/1966AJ.....71...64K/abstract>`_ profile 
-accomplices this by sampling from a lowered isothermal distribution
+accomplishes this by sampling from a lowered isothermal distribution
 
 .. math::
 
@@ -273,13 +273,13 @@ To generate the above King profile, but with all the additional stellar physics 
 
         Singles, Binaries = InitialCMCTable.sampler('cmc', binfrac_model=0.1, primary_model='kroupa01',
                                                     ecc_model='thermal', porb_model='log_uniform', qmin=0.1,
-                                                    cluster_profile='king', met=0.00017, size=100000,w_0=6,
-                                                    params=os.path.abspath('../../examples/KingProfile.ini'),
+                                                    cluster_profile='king', met=0.00017, zsun=0.017, size=100000,w_0=6,
                                                     seed=12345,virial_radius=1,tidal_radius=1e6)
 
 This example is also found in the `examples 
 <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples>`_ folder 
-in the CMC repository.  Note that unlike the above examples, here we require an 
-ini file (or a BSEDict), to supply the necessary stellar physics options for 
-generating stars and binaries with 
-BSE.
+in the CMC repository.  
+
+.. warning::
+
+	At this step the metallicity (``met``) and value of the solar metallicity (``zsun``) must be specified to generate the correct initial radii for stars.  If you have a very compact cluster and the value of zsun differs between here and your ini file, you may produce binaries which merge during cluster initialization, which breaks the code. 
