@@ -1260,6 +1260,38 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			obj->obj[bid]->a*units.l/AU, obj->a*units.l/AU,
 			obj->obj[bid]->e, obj->e,
 			obj->obj[bid]->obj[0]->k_type, obj->obj[bid]->obj[1]->k_type, obj->obj[sid]->k_type);
+
+		double mtriplein, mtriple, pouttriple2, pintriple, tlkquad, epsoct, tlkoct, tgr, epsgr;
+		double l0[3], l1[3], LL1[3], LL2[3], i12;
+		fb_cross(obj->obj[bid]->obj[0]->x, obj->obj[bid]->obj[0]->v, l0);
+                fb_cross(obj->obj[bid]->obj[1]->x, obj->obj[bid]->obj[1]->v, l1);
+                for (i=0; i<3; i++) {
+                	LL1[i] = obj->obj[bid]->obj[0]->m * l0[i] + obj->obj[bid]->obj[1]->m * l1[i];
+                }
+                fb_cross(obj->obj[0]->x, obj->obj[0]->v, l0);
+                fb_cross(obj->obj[1]->x, obj->obj[1]->v, l1);
+                for (i=0; i<3; i++) {
+                	LL2[i] = obj->obj[0]->m * l0[i] + obj->obj[1]->m * l1[i];
+                }
+                i12 = 180.0/3.14159*acos(fb_dot(LL1, LL2)/(fb_mod(LL1)*fb_mod(LL2)));
+
+		mtriplein=obj->obj[bid]->obj[0]->m*units.m/MSUN+obj->obj[bid]->obj[1]->m*units.m/MSUN;
+		mtriple=mtriplein+obj->obj[sid]->m*units.m/MSUN;
+		pouttriple2=pow(obj->a*units.l/AU,3)/mtriple;
+		pintriple=pow(obj->obj[bid]->a*units.l/AU,3)/mtriplein;
+                tlkquad=(8.0/3.1415/15.0)*mtriple/(obj->obj[sid]->m*units.m/MSUN)*pouttriple2/pintriple*pow(1.0-pow(obj->e,2),1.5);
+		epsoct=abs(obj->obj[bid]->obj[0]->m*units.m/MSUN-obj->obj[bid]->obj[1]->m*units.m/MSUN)/mtriplein*(obj->obj[bid]->a*units.l/AU)/(obj->a*units.l/AU)*obj->e/(1.0-pow(obj->e,2));
+		tlkoct=tlkquad/epsoct;
+		tgr=pow(10.0,8)*pow(obj->obj[bid]->a*units.l/AU,2.5)/(3.0*pow(mtriplein,1.5))*(1.0-pow(obj->obj[bid]->e,2));
+		epsgr=tlkquad/tgr;
+
+                parafprintf(triplefile, "%.18g %g %g %g %g %g %g %g %g %g %g %g %d %d %d %g %g %g %g %g\n",
+                        TotalTime, obj->obj[bid]->obj[0]->m*units.m/MSUN, obj->obj[bid]->obj[1]->m*units.m/MSUN, obj->obj[sid]->m*units.m/MSUN,
+                        obj->obj[bid]->obj[0]->R*units.l/RSUN, obj->obj[bid]->obj[1]->R*units.l/RSUN, obj->obj[sid]->R*units.l/RSUN,
+                        obj->obj[bid]->a*units.l/AU, obj->a*units.l/AU,
+                        obj->obj[bid]->e, obj->e, i12,
+                        obj->obj[bid]->obj[0]->k_type, obj->obj[bid]->obj[1]->k_type, obj->obj[sid]->k_type,
+			tlkquad,tlkoct,epsoct,tgr,epsgr);
 	} else {
 		/* thankfully won't need to print out quads */
 		eprintf("Don't know how to print out object with >3 stars!\n");

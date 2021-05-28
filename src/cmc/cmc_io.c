@@ -699,6 +699,7 @@ void PrintParaFileOutput(void)
     mpi_para_file_write(mpi_semergedisruptfile_wrbuf, &mpi_semergedisruptfile_len, &mpi_semergedisruptfile_ofst_total, &mpi_semergedisruptfile);
     mpi_para_file_write(mpi_removestarfile_wrbuf, &mpi_removestarfile_len, &mpi_removestarfile_ofst_total, &mpi_removestarfile);
     mpi_para_file_write(mpi_relaxationfile_wrbuf, &mpi_relaxationfile_len, &mpi_relaxationfile_ofst_total, &mpi_relaxationfile);
+    mpi_para_file_write(mpi_triplefile_wrbuf, &mpi_triplefile_len, &mpi_triplefile_ofst_total, &mpi_triplefile);
 
 	 if(WRITE_PULSAR_INFO)
 		 mpi_para_file_write(mpi_pulsarfile_wrbuf, &mpi_pulsarfile_len, &mpi_pulsarfile_ofst_total, &mpi_pulsarfile);
@@ -2329,6 +2330,11 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 	if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_binintfile, 0);
 
+    sprintf(outfile, "%s.triple.dat", outprefix);
+    MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_triplefile);
+        if(RESTART_TCOUNT <= 0)
+                MPI_File_set_size(mpi_triplefile, 0);
+
     sprintf(outfile, "%s.esc.dat", outprefix);
     MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_escfile);
 	if(RESTART_TCOUNT <= 0)
@@ -2417,6 +2423,8 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
    // print header
     if(RESTART_TCOUNT <= 0){
 		pararootfprintf(escfile, "#1:tcount #2:t #3:m[MSUN] #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 #58:bhspin #59:bhspin1 #60:bhspin2 #61:ospin #62:B #63:formation\n");
+	   // print header
+		pararootfprintf(triplefile, "#1:time #2:min0 #3:min1 #4:mout #5:Rin0 #6:Rin1 #7:Rout #8:ain #9:aout #10:ein #11:eout #12:ktypein0 #13:ktypein1 #14:ktypeout #15:Tlk_quad #16:Tlk_oct#17:eps_oct #18:T_GR #19:eps_GR\n");
 	   // print header
 		pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
 	   // print header
@@ -2512,6 +2520,7 @@ void close_node_buffers(void)
 {
 	fclose(logfile);
 	fclose(binintfile);
+	fclose(triplefile);
 	fclose(escfile);
 	fclose(collisionfile);
 	fclose(tidalcapturefile);
@@ -2549,6 +2558,7 @@ void mpi_close_node_buffers(void)
 {
 	MPI_File_close(&mpi_logfile);
 	MPI_File_close(&mpi_binintfile);
+	MPI_File_close(&mpi_triplefile);
 	MPI_File_close(&mpi_escfile);
 	MPI_File_close(&mpi_collisionfile);
 	MPI_File_close(&mpi_tidalcapturefile);
@@ -3557,6 +3567,7 @@ typedef struct{
     long long s_mpi_relaxationfile_len;
     long long s_mpi_pulsarfile_len;
     long long s_mpi_morepulsarfile_len;
+    long long s_mpi_triplefile_len;
     long long s_mpi_bhmergerfile_len;
     long long s_mpi_logfile_ofst_total;
     long long s_mpi_escfile_ofst_total;
@@ -3569,6 +3580,7 @@ typedef struct{
     long long s_mpi_relaxationfile_ofst_total;
     long long s_mpi_pulsarfile_ofst_total;
     long long s_mpi_morepulsarfile_ofst_total;
+    long long s_mpi_triplefile_ofst_total;
     long long s_mpi_bhmergerfile_ofst_total;
 
 	double s_OldTidalMassLoss;
@@ -3609,6 +3621,7 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_mpi_relaxationfile_len             =mpi_relaxationfile_len;
 	rest->s_mpi_pulsarfile_len                 =mpi_pulsarfile_len;
         rest->s_mpi_morepulsarfile_len             =mpi_morepulsarfile_len;
+        rest->s_mpi_triplefile_len                 =mpi_triplefile_len;
 	rest->s_mpi_bhmergerfile_len               =mpi_bhmergerfile_len;
 	rest->s_mpi_logfile_ofst_total             =mpi_logfile_ofst_total;
 	rest->s_mpi_escfile_ofst_total             =mpi_escfile_ofst_total;
@@ -3621,6 +3634,7 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_mpi_relaxationfile_ofst_total      =mpi_relaxationfile_ofst_total;
 	rest->s_mpi_pulsarfile_ofst_total          =mpi_pulsarfile_ofst_total;
         rest->s_mpi_morepulsarfile_ofst_total      =mpi_morepulsarfile_ofst_total;
+        rest->s_mpi_triplefile_ofst_total          =mpi_triplefile_ofst_total;
 	rest->s_mpi_bhmergerfile_ofst_total        =mpi_bhmergerfile_ofst_total;
 
     rest->s_OldTidalMassLoss                   =OldTidalMassLoss;
@@ -3661,6 +3675,7 @@ void load_global_vars(restart_struct_t *rest){
 	mpi_relaxationfile_len             =rest->s_mpi_relaxationfile_len;
 	mpi_pulsarfile_len                 =rest->s_mpi_pulsarfile_len;
         mpi_morepulsarfile_len             =rest->s_mpi_morepulsarfile_len;
+        mpi_triplefile_len                 =rest->s_mpi_triplefile_len;
 	mpi_bhmergerfile_len               =rest->s_mpi_bhmergerfile_len;
 	mpi_logfile_ofst_total             =rest->s_mpi_logfile_ofst_total;
 	mpi_escfile_ofst_total             =rest->s_mpi_escfile_ofst_total;
@@ -3673,6 +3688,7 @@ void load_global_vars(restart_struct_t *rest){
 	mpi_relaxationfile_ofst_total      =rest->s_mpi_relaxationfile_ofst_total;
 	mpi_pulsarfile_ofst_total          =rest->s_mpi_pulsarfile_ofst_total;
         mpi_morepulsarfile_ofst_total      =rest->s_mpi_morepulsarfile_ofst_total;
+        mpi_triplefile_ofst_total          =rest->s_mpi_triplefile_ofst_total;
 	mpi_bhmergerfile_ofst_total        =rest->s_mpi_bhmergerfile_ofst_total;
 
     OldTidalMassLoss                   =rest->s_OldTidalMassLoss;
@@ -3816,6 +3832,7 @@ void load_restart_file(){
     if(RESTART_TCOUNT > 0){
         MPI_File_seek(mpi_logfile,mpi_logfile_ofst_total,MPI_SEEK_SET);
         MPI_File_seek(mpi_binintfile,mpi_binintfile_ofst_total,MPI_SEEK_SET);
+        MPI_File_seek(mpi_triplefile,mpi_triplefile_ofst_total,MPI_SEEK_SET);
         MPI_File_seek(mpi_escfile,mpi_escfile_ofst_total,MPI_SEEK_SET);
         MPI_File_seek(mpi_collisionfile,mpi_collisionfile_ofst_total,MPI_SEEK_SET);
         MPI_File_seek(mpi_tidalcapturefile,mpi_tidalcapturefile_ofst_total,MPI_SEEK_SET);
@@ -3849,6 +3866,7 @@ void load_restart_file(){
         mpi_relaxationfile_len=0;
         mpi_pulsarfile_len=0;
 	mpi_morepulsarfile_len=0;
+	mpi_triplefile_len=0;
 	mpi_newbhfile_len=0;
 	mpi_bhmergerfile_len=0;
 
@@ -3863,6 +3881,7 @@ void load_restart_file(){
         mpi_relaxationfile_ofst_total=0;
         mpi_pulsarfile_ofst_total=0;
 	mpi_morepulsarfile_ofst_total=0;
+	mpi_triplefile_ofst_total=0;
 	mpi_newbhfile_ofst_total=0;
 	mpi_bhmergerfile_ofst_total=0;
     }
