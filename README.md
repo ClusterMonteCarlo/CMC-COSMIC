@@ -14,7 +14,7 @@ Checkout the code with (be sure to add the `--recurse-submodules` flag to downlo
 git clone https://github.com/ClusterMonteCarlo/CMC-COSMIC.git --recurse-submodules
 ```
 
-You'll need MPI, HDF5, GSL, and cmake (version 3.12 or higher) to compile the code.  These should be available on any HPC system (or easily installed with your favorite package manager on Linux).  Once downloaded, complile the code with
+You'll need MPI, HDF5, GSL, and cmake (version 3.12 or higher) to compile the code.  These should be available on any HPC system (or easily installed with your favorite package manager on Linux).  Once downloaded, compile the code with
 
 ```
 cd CMC-COSMIC

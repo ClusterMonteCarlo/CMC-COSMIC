@@ -33,9 +33,9 @@ These two assumptions are often referred to as the Fokker-Planck approximation,
 and are appropriate for large clusters like the globular clusters observed in 
 our own galaxy (and the younger super star clusters observed in nearby 
 galaxies).  It is this limit that the Henon approach (and its descendants, such 
-as CMC) operates.  Our implementation further assumeps spherical symmetry and 
+as CMC) operates.  Our implementation further assumes spherical symmetry and 
 orbit averaging (like Henon's original implementation), which allows us to 
-model old spherical star clsuters significantly faster than direct `N`-body 
+model old spherical star clusters significantly faster than direct `N`-body 
 integrators. Unlike Henon's original implementation, modern computer hardware 
 and distributed memory parallelization allows CMC to create star-by-star 
 realizations of the cluster, where each dynamical particle is an individual 

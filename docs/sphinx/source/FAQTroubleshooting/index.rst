@@ -1,7 +1,7 @@
 .. _faq:
 
 ###################
-FAQ/Trobuleshooting
+FAQ/Troubleshooting
 ###################
 
 ==========================
