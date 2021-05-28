@@ -1630,7 +1630,7 @@ if(myid==0) {
 	CHECK_PARSED(TT_FILE, NULL, PARAMDOC_TT_FILE);
 	CHECK_PARSED(RELAXATION, 1, PARAMDOC_RELAXATION);
 	CHECK_PARSED(TIDALLY_STRIP_STARS, 1, PARAMDOC_TIDALLY_STRIP_STARS);
-	CHECK_PARSED(THETASEMAX, 1.0, PARAMDOC_THETASEMAX);
+	CHECK_PARSED(THETASEMAX, 1.412, PARAMDOC_THETASEMAX);
 	CHECK_PARSED(STELLAR_EVOLUTION, 0, PARAMDOC_STELLAR_EVOLUTION);
     CHECK_PARSED(WRITE_STELLAR_INFO, 0, PARAMDOC_WRITE_STELLAR_INFO);
     CHECK_PARSED(WRITE_BH_INFO, 0, PARAMDOC_WRITE_BH_INFO);
@@ -1772,12 +1772,12 @@ if(myid==0) {
         // lambdaf=1.0 uses variable lambda prescription in appendix of Claeys+2014
         // lambdaf<0 uses fixes lambda to a value of -1.0*lambdaf
         // default=1.0
-        CHECK_PARSED(BSE_LAMBDAF, 0.5, PARAMDOC_BSE_LAMBDAF);
+        CHECK_PARSED(BSE_LAMBDAF, 0.0, PARAMDOC_BSE_LAMBDAF);
 
         // ceflag=1 used the method from de Kool 1990 for setting the initial orbital energy
         // ceflag=0 does not use this method (uses the core mass to calculate initial orbital energy)
         // default=0
-        CHECK_PARSED(BSE_CEFLAG, 0, PARAMDOC_BSE_CEFLAG);
+        CHECK_PARSED(BSE_CEFLAG, 1, PARAMDOC_BSE_CEFLAG);
 
         // cekickflag determined the prescription for calling kick.f in comenv.f
         // 0: default BSE
@@ -1818,7 +1818,7 @@ if(myid==0) {
         // 2: following binary_c from Claeys+2014 Table 2
         // 3: following binary_c from Claeys+2014 Table 2 but with Hjellming & Webbink, 1987, ApJ, 318, 794 GB/AGB stars
         // default=2
-        CHECK_PARSED(BSE_QCFLAG, 2, PARAMDOC_BSE_QCFLAG);
+        CHECK_PARSED(BSE_QCFLAG, 1, PARAMDOC_BSE_QCFLAG);
 
         // sigma sets is the dispersion in the Maxwellian for the SN kick velocity in km/s
         // default=265.0
@@ -1858,7 +1858,7 @@ if(myid==0) {
         // aic=1 turns on low kicks for accretion induced collapse
         // works even if ecsn=0
         // default=1
-        CHECK_PARSED(BSE_REJUVFLAG, 0, PARAMDOC_BSE_REJUVFLAG);
+        CHECK_PARSED(BSE_REJUVFLAG, 1.0, PARAMDOC_BSE_REJUVFLAG);
 
 
         // ussn=1 uses reduced kicks (drawn from the sigmadiv distritbuion) for ultra-stripped supernovae
@@ -1873,7 +1873,7 @@ if(myid==0) {
         // pisn=-3 uses a polynomial fit to Table 5 in Woosley 2019
         // pisn=0 turns off (pulsational) pair instability supernovae
         // default=45
-        CHECK_PARSED(BSE_PISN, 45.00, PARAMDOC_BSE_PISN);
+        CHECK_PARSED(BSE_PISN, -2, PARAMDOC_BSE_PISN);
 
         // bhsigmafrac sets the fractional modification used for scaling down the sigma for BHs
         // this works in addition to whatever is chosen for bhflag, and is applied to the sigma beforehand these prescriptions are implemented
@@ -1884,7 +1884,7 @@ if(myid==0) {
 
         CHECK_PARSED(BSE_KICKFLAG, 0, PARAMDOC_BSE_KICKFLAG);
 
-        CHECK_PARSED(BSE_ZSUN, 0.017, PARAMDOC_BSE_ZSUN);
+        CHECK_PARSED(BSE_ZSUN, 0.014, PARAMDOC_BSE_ZSUN);
 
         // polar_kick_angle sets the opening angle of the kick relative to the pole of the exploding star
         // this can range from 0 (strictly polar kicks) to 90 (fully isotropic kicks)
@@ -1951,12 +1951,12 @@ if(myid==0) {
         CHECK_PARSED(BSE_EPSNOV, 0.001, PARAMDOC_BSE_EPSNOV);
 
         // bconst is related to magnetic field evolution of pulsars, see Kiel+2008
-        // default=-3000
-        CHECK_PARSED(BSE_BCONST, -3000.00, PARAMDOC_BSE_BCONST);
+        // default=3000
+        CHECK_PARSED(BSE_BCONST, 3000.00, PARAMDOC_BSE_BCONST);
 
         // ck is related to magnetic field evolution of pulsars, see Kiel+2008
-        // default=-1000
-        CHECK_PARSED(BSE_CK, -1000.00, PARAMDOC_BSE_CK);
+        // default=1000
+        CHECK_PARSED(BSE_CK, 1000.00, PARAMDOC_BSE_CK);
         CHECK_PARSED(BSE_REJUV_FAC, 0.1, PARAMDOC_BSE_REJUV_FAC);
 
 
@@ -3049,7 +3049,7 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
                         //Initial file created only by root node.
                         if(myid==0){
                                 H5E_BEGIN_TRY {
-                                    snapfile_hdf5 = H5Fcreate(filename, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+                                    snapfile_hdf5 = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
                                     H5Fclose( snapfile_hdf5 );
                                 } H5E_END_TRY
                         }
