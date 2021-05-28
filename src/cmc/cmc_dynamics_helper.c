@@ -1196,6 +1196,8 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 {
 	int bid, sid, i;
 	char dumstring[FB_MAX_STRING_LENGTH], idstring1[FB_MAX_STRING_LENGTH], idstring2[FB_MAX_STRING_LENGTH], idstring3[FB_MAX_STRING_LENGTH];
+	double mtriplein, mtriple, pouttriple2, pintriple, tlkquad, epsoct, tlkoct, tgr, epsgr;
+	double l0[3], l1[3], LL1[3], LL2[3], i12;
 	
 	if (fb_n_hier(obj) == 1) {
 		/* first write id string */
@@ -1261,8 +1263,9 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			obj->obj[bid]->e, obj->e,
 			obj->obj[bid]->obj[0]->k_type, obj->obj[bid]->obj[1]->k_type, obj->obj[sid]->k_type);
 
-		double mtriplein, mtriple, pouttriple2, pintriple, tlkquad, epsoct, tlkoct, tgr, epsgr;
-		double l0[3], l1[3], LL1[3], LL2[3], i12;
+		/* In addition, for triples we may want the full configuration of the system*/
+
+		/* Fist compute the inclincation of the two binaries*/
 		fb_cross(obj->obj[bid]->obj[0]->x, obj->obj[bid]->obj[0]->v, l0);
                 fb_cross(obj->obj[bid]->obj[1]->x, obj->obj[bid]->obj[1]->v, l1);
                 for (i=0; i<3; i++) {
@@ -1275,6 +1278,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
                 }
                 i12 = 180.0/3.14159*acos(fb_dot(LL1, LL2)/(fb_mod(LL1)*fb_mod(LL2)));
 
+		/* And some of the relevant timescales */
 		mtriplein=obj->obj[bid]->obj[0]->m*units.m/MSUN+obj->obj[bid]->obj[1]->m*units.m/MSUN;
 		mtriple=mtriplein+obj->obj[sid]->m*units.m/MSUN;
 		pouttriple2=pow(obj->a*units.l/AU,3)/mtriple;
