@@ -3059,7 +3059,7 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
                         //Initial file created only by root node.
                         if(myid==0){
                                 H5E_BEGIN_TRY {
-                                    snapfile_hdf5 = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+                                    snapfile_hdf5 = H5Fcreate(filename, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
                                     H5Fclose( snapfile_hdf5 );
                                 } H5E_END_TRY
                         }
