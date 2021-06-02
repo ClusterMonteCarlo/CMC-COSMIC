@@ -130,7 +130,7 @@ the cluster evolves.
 ``rc_nb``           Core radius calculated with density weighted averages as in Casertano & Hut (1985)
 ``DMse``            Total mass loss from the cluster per time step due to stellar evolution [:math:`{M_{\odot}}`]
 ``DMrejuv`` 	     Mass loss from rejuvenation per time step [:math:`{M_{\odot}}`]
-``N_c_nb``          Number of stars within the core: :math:`\frac{4 \pi}{3} rc_{\rm nb}^3  \frac{n_{\rm central}}{2}`
+``N_c_nb``          Number of stars within the core: :math:`\frac{4 \pi}{3} rc_{\rm nb}^3  \frac{n_{\rm c}{2}`
 ================  =====================================================
 
 initial.binint.log
