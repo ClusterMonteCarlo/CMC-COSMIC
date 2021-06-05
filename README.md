@@ -3,9 +3,6 @@ A Henon style orbit-averaging code for collisional stellar dynamics, with all th
 
 See the documentation [here](https://clustermontecarlo.github.io/)
 
-## NOTE!!!
-This is currently in Beta release, and still has some testing we need to do.  If you've come across this repository, feel free to download and try running the code
-
 # Installation Instructions (See [here](https://clustermontecarlo.github.io/CMC-COSMIC/install/index.html) for more details)
 
 Checkout the code with (be sure to add the `--recurse-submodules` flag to download COSMIC as well!)
