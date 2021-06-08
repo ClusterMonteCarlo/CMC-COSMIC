@@ -130,7 +130,7 @@ the cluster evolves.
 ``rc_nb``           Core radius calculated with density weighted averages as in Casertano & Hut (1985)
 ``DMse``            Total mass loss from the cluster per time step due to stellar evolution [:math:`{M_{\odot}}`]
 ``DMrejuv`` 	     Mass loss from rejuvenation per time step [:math:`{M_{\odot}}`]
-``N_c_nb``          Number of stars within the core: :math:`\frac{4 \pi}{3} rc_{\rm nb}^3  \frac{n_{\rm c}{2}`
+``N_c_nb``          Number of stars within the core: :math:`\frac{4 \pi}{3} rc_{\rm nb}^3  \frac{n_{\rm c}}{2}`
 ================  =====================================================
 
 initial.binint.log
@@ -440,7 +440,7 @@ indicies indicate single stars.
 ``bacc0``                       Mass accreted to the primary
 ``tacc0``                       Time spent accreting mass to the primary ?
 ``mass0_0``                     Primary initial mass 
-``epoch0``                      ?
+``epoch0``                      
 ``bhspin``                      BH spin (if single)
 ``bhspin1``                     BH spin for primary (if binary)  
 ``ospin``                       Single star spin angular momentum
@@ -501,14 +501,14 @@ Below is an exemplary output:
 ``TotalTime``                    Total time
 ``Dt``                           Time step
 ``Etotal``                       Total energy
-``max_r``                        
+``max_r``                        Maximum radius of a star 
 ``N_bound``                      Number of objects bound to the cluster
 ``Rtidal``                       Tidal radius of the cluster
 ``Mtotal``                       Total mass of the cluster
 ``Etotal.P``                     Total potential energy of the cluster
 ``Etotal.K``                     Total kinetic energy of the cluster
 ``VRatio``                       Virial ratio
-``TidalMassLoss``                
+``TidalMassLoss``                Mass lost through the tidal radius
 ``core_radius``                  Core radius 
 ``rho_core``                     Core density
 ``v_core``                       Velocity dispersion in the core 
@@ -647,21 +647,21 @@ List of the lagrange radii for the masses in range 100 :math:`M_{\odot}` < m < 1
 initial.lagrad_10_info.dat
 --------------------------
 
-This file containts dynamical information at 10 lagrange radius.
+This file containts dynamical information of the cluster at 10 lagrange radius.
 
 initial.core.dat
 ----------------
 
-TBD
+Information for the core that contains no remnants.
 
 ==============================  =====================================================
-``time``
-``rho_norem``
-``v_rms_norem``
-``rc_norem``
-``r_spitzer_norem``
-``m_ave_norem``
-``n_norem``
+``time``                         Time
+``rho_norem``                    Density of the core
+``v_rms_norem``                  Velocity dispersion of the core
+``rc_norem``                     Core radius
+``r_spitzer_norem``              Spitzer radius 
+``m_ave_norem``                  Average mass within this core radius
+``n_norem``                      
 ``N_norem``
 ``T_rc_norem``
 ==============================  =====================================================
@@ -669,7 +669,7 @@ TBD
 initial.bin.dat
 --------------
 
-TBD
+This file contains information on binaries.
 
 ==============================  =====================================================
 ``t``                           Total time
@@ -678,18 +678,19 @@ TBD
 ``E_b``                         Total energy of binaries
 ``r_h,s``                       Half-mass radius of single objects
 ``r_h,b``                       Half-mass radius of binaries
-``rho_c``                        
-``N_bb``
-``N_bs``
-``f_b,c``
-``f_b``
-``E_bb``
+``rho_c,s``                     Core density for single objects
+``rho_c,b``                     Core density for binaries
+``N_bb``                        Number of binary-binary interactions
+``N_bs``                        Number of binary-single interactions
+``f_b,c``                       Binary fraction in the core
+``f_b``                         Binary fraction
+``E_bb``                         
 ``E_bs``
 ``DE_bb``
 ``DE_bs``
-``N_bc,nb``
-``f_b,c,nb``
-``N_bc``
+``N_bc,nb``                      Number of existing bound binaries in the core
+``f_b,c,nb``                     Fraction of existing bound binaries in the core
+``N_bc``                         Number of all binaries including the escaped and destroyed ones in the core
 ==============================  =====================================================
 
 initial.bhformation.dat
@@ -714,7 +715,7 @@ This file contains information about newly formed BHs.
 initial.3bb.log
 ---------------
 
-TBD
+This file contains information of three body binaries (triples).
 
 ==============================  =====================================================
 ``time``                         Time
@@ -727,27 +728,27 @@ TBD
 ``m1``                           Mass of object `_1`
 ``m2``                           Mass of object `_2`
 ``m3``                           Mass of object `_3`
-``ave_local_mass``
-``n_local``
-``sigma_local``
-``eta``
-``Eb``
-``ecc``                         Eccentricty
-``a``                           Semi-major axis [AU]
-``r_peri``                      Pericenter distance [AU]
-``r(bin)``
-``r(single)``
-``vr(bin)``                     Radial velocity of binary
-``vt(bin)``                     Tangential velocity of binary
-``vr(single)``                  Radial velocity of single object
-``vt(single)``
-``phi(bin)``
-``phi(single)``
-``delta_PE``
-``delta_KE``
-``delta_E(interaction)``
-``delta_E(cumulative)``
-``N_3bb``
+``ave_local_mass``               Average local mass
+``n_local``                      Local number density
+``sigma_local``                  The local 3D velocity dispersion
+``eta``                          Hardness of the inner binary
+``Eb``                           Binding energy of the inner binary
+``ecc``                          Eccentricty
+``a``                            Semi-major axis [AU]
+``r_peri``                       Pericenter distance [AU]
+``r(bin)``                       Radial distance of the binary
+``r(single)``                    Radial distance of the single object
+``vr(bin)``                      Radial velocity of binary
+``vt(bin)``                      Tangential velocity of binary
+``vr(single)``                   Radial velocity of single object
+``vt(single)``                   Tangential velocity of single object
+``phi(bin)``                     Potential energy of the binary
+``phi(single)``                  Potential energy of the single object
+``delta_PE``                     Change of the potential energy 
+``delta_KE``                     Change of the kinetic energy 
+``delta_E(interaction)``         Change of the total energy per interaction
+``delta_E(cumulative)``          Change of the total energy for all 3-body interactions         
+``N_3bb``                        The number of triples formed
 ==============================  =====================================================
 
 
@@ -756,12 +757,12 @@ initial.3bbprobability.log
 Average rate and probability of three-body binary formation in the timestep calculated from the innermost 300 triplets of single stars considered for three-body binary formation.
 
 ==============================  =====================================================
-``time``
-``dt``
-``dt*N/log(gamma*N)``
+``time``                         Time
+``dt``                           Time step
+``dt*N/log(gamma*N)``            
 ``Rate_3bb``
 ``P_3bb``                        Probability of binary formation
-``r``
+``r``                             
 ==============================  =====================================================
 
 
@@ -771,8 +772,8 @@ initial.relaxation.dat
 TBD
 
 ==============================  =====================================================
-``time``                           
-``thetase>1.5708:f``
+``time``                          Time
+``thetase>1.5708:f`` 
 ``q``
 ``<M>``
 ``<r>``
@@ -781,19 +782,21 @@ TBD
 initial.lightcollision.log
 ---------------------------
 
-TBD
+List of stars that fail to form triples.
 
 ==============================  =====================================================
-``time``                          Time
-``k``
-``id``                            ID number
-``m``                             Mass
-``type``
-``rad``
-``Eb``
-``ecc``                            Eccentricity
-``a``			                       Semi-major axis [AU]
-``rp``                             [AU]
+``time``                            Time
+``k1``                              Variable to store most massive star index
+``k2``                              Second most massive star index
+``k3``                              Least massive star index
+``id``                              ID number
+``m``                               Mass
+``type``                            Stellar type
+``rad``                             Stellar radius
+``Eb``                              Binding energy
+``ecc``                             Eccentricity
+``a``			                        Semi-major axis [AU]
+``rp``                              m1 * m2 * madhoc / (eta * sqr(sigma_local)) [AU]
 ==============================  =====================================================
 
 
