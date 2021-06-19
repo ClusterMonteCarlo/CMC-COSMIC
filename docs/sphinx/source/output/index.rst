@@ -438,7 +438,7 @@ indicies indicate single stars.
 ``B0``                          Primary magnetic field [G]
 ``formation0``                  Primary formation channel for supernova, e.g., core collapse, pair instability, etc.)
 ``bacc0``                       Mass accreted to the primary
-``tacc0``                       Time spent accreting mass to the primary ?
+``tacc0``                       Time spent accreting mass to the primary 
 ``mass0_0``                     Primary initial mass 
 ``epoch0``                      
 ``bhspin``                      BH spin (if single)
@@ -549,7 +549,7 @@ List of triples formed dynamically in the cluster as a result of three- and four
 ``min1``                         Mass of inner object `_1` [:math:`M_{\odot}`]
 ``mout``                         Mass of outer object [:math:`M_{\odot}`]
 ``Rin0``                         Radius of inner object `_0` [:math:`R_{\odot}`]
-``Rin1``                         Radius of inner object `_1`[:math:`R_{\odot}`]
+``Rin1``                         Radius of inner object `_1` [:math:`R_{\odot}`]
 ``Rout``                         Radius of outer object [:math:`R_{\odot}`]
 ``ain``                          Semi-major axis of inner binary [AU]
 ``aout``                         Semi-major axis of outer binary [AU]
@@ -765,19 +765,6 @@ Average rate and probability of three-body binary formation in the timestep calc
 ``r``                             
 ==============================  =====================================================
 
-
-initial.relaxation.dat
-----------------------
-
-TBD
-
-==============================  =====================================================
-``time``                          Time
-``thetase>1.5708:f`` 
-``q``
-``<M>``
-``<r>``
-==============================  =====================================================
 
 initial.lightcollision.log
 ---------------------------
