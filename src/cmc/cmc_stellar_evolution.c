@@ -1864,15 +1864,21 @@ void integrate_a_e_peters_eqn(long kb){
 	my_system.dimension = 2;
 	my_system.params = &mG3c5;
 
+    /* Need to be careful if we're near merger */
+    if(y[0] < 5e-7){
+        h = 1.e-12;
+        eps_abs = 1.e-14;
+        eps_rel = 1.e-14;
+    }
 
 	/* Finally, integrate for this timestep; remember that Dt is in relaxation times,
      * NOT N-body times */
     double t_final = Dt * ((double) clus.N_STAR)/ log(GAMMA * ((double) clus.N_STAR));
 	while (t < t_final){
+
 		status = gsl_odeiv2_evolve_apply (evolve_ptr, control_ptr, step_ptr,
 								&my_system, &t, t_final, &h, y); 
 
-		//fprintf(stderr,"lol = %g %g %g %g %g \n",y[0]*units.l/AU,y[1],m1*units.mstar/MSUN,m2*units.mstar/MSUN,t);
 		/* Check for collisions at periapse */
 		if(y[0]*(1-y[1]) < BH_RADIUS_MULTIPLYER*(binary[kb].rad1 + binary[kb].rad2)){
 			collision = 1;
@@ -1880,7 +1886,7 @@ void integrate_a_e_peters_eqn(long kb){
 		}
 
 		/* Make sure the integrator does what it says it does...*/
-		if(status != GSL_SUCCESS){
+		if(status != GSL_SUCCESS | y[0] != y[0]){
 		    eprintf("GSL Integrator for the Peters equations failed; yell at Carl\n");
 		    exit_cleanly(-1, __FUNCTION__);
 			break;

@@ -108,6 +108,7 @@ void addbin_calc_sigma_r(cmc_fits_data_t *cfd, double *r, double *sigma, double 
 		
 		/* Sigma is the 3D velocity dispersion */
 		Sigma = sqrt(Mv2ave/Mave);
+        fprintf(stderr,"%g %g\n",Sigma,Sigma*(PARSEC*cfd->Rvir/1e5)/(pow(cfd->Rvir * PARSEC, 1.5) / sqrt(G * cfd->Mclus * MSUN)));
 		
 		/* store sigma */
 		r[si] = cfd->obj_r[si];
@@ -860,6 +861,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	vcore = 0.0;
 	for (i=1; i<=AVEKERNEL; i++) {
 		vcore += sigma[i];
+        fprintf(stderr,"sigma[%d]=%g\n",i,sigma[i]*(PARSEC*cfd->Rvir/1e5)/(pow(cfd->Rvir * PARSEC, 1.5) / sqrt(G * cfd->Mclus * MSUN)));
 		kTcore += (1.0/3.0) * mave[i] * sigma[i] * sigma[i];
 	}
 	vcore /= AVEKERNEL;
@@ -878,10 +880,10 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 				W = 4.0 * vcore / sqrt(3.0 * PI);
 				vorb = XHS * W;
-				amax = max_a_hs * cfd->obj_m[i] / (vorb * vorb);
+				amax = max_a_hs * (cfd->bs_m1[i]+cfd->bs_m2[i]) / (vorb * vorb);
+                timeunitcgs = pow(cfd->Rvir * PARSEC, 1.5) / sqrt(G * cfd->Mclus * MSUN);
 				if (amax <= amin && ignoreradii == 0) {
-				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g M=%g\n", amax, amin, cfd->obj_m[i]*cfd->Mclus);
-				  fprintf(stderr, "WARNING: setting amax = amin\n");
+				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g vorb = %g M=%g m1=%g m2=%g\n", amax*(PARSEC*cfd->Rvir)/AU, amin*(PARSEC*cfd->Rvir)/AU, vorb*(PARSEC*cfd->Rvir/1e5)/timeunitcgs, cfd->obj_m[i]*cfd->Mclus, cfd->bs_m1[i]*cfd->Mclus,cfd->bs_m2[i]*cfd->Mclus);
 				  amax = amin;
 				}
 				cfd->bs_a[i] = pow(10.0, rng_t113_dbl()*(log10(amax)-log10(amin))+log10(amin));
@@ -1058,7 +1060,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 				W = 4.0 * vcore / sqrt(3.0 * PI);
 				vorb = XHS * W;
-				amax = max_a_hs * cfd->obj_m[i] / (vorb * vorb);
+				amax = max_a_hs * (cfd->bs_m1[i]+cfd->bs_m2[i]) / (vorb * vorb);
 				if (amax <= amin && ignoreradii == 0) {
 				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g M=%g\n", amax, amin, cfd->obj_m[i]*cfd->Mclus);
 				  fprintf(stderr, "WARNING: setting amax = amin\n");
@@ -1111,7 +1113,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 				amin = 5.0 * (cfd->bs_Reff1[i] + cfd->bs_Reff2[i]);
 				W = 4.0 * vcore / sqrt(3.0 * PI);
 				vorb = XHS * W;
-				amax = max_a_hs * cfd->obj_m[i] / (vorb * vorb);
+				amax = max_a_hs * (cfd->bs_m1[i]+cfd->bs_m2[i]) / (vorb * vorb);
 				if (amax <= amin && ignoreradii == 0) {
 				  fprintf(stderr, "WARNING: amax <= amin! amax=%g amin=%g\n", amax, amin);
 				  fprintf(stderr, "WARNING: setting amax = amin\n");
