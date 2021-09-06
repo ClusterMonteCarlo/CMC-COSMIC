@@ -730,9 +730,9 @@ typedef struct{
 * @brief output extra snapshotting information during core bounce (0=off, 1=on)
 */
         int SNAPSHOT_CORE_BOUNCE;
-#define PARAMDOC_SNAPSHOT_WINDOWS "Output extra snapshots within time windows. \n#The format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc." 
+#define PARAMDOC_SNAPSHOT_WINDOWS "Output extra snapshots within time windows. \n#The format is start_w0,step_w0,end_w0:start_w1,step_w1,stop_w1 ... etc." 
 /**
-* @brief Output extra snapshots within time windows. The format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc.
+* @brief Output extra snapshots within time windows. The format is start_w0,step_w0,end_w0:start_w1,step_w1,stop_w1 ... etc.
 */
         int SNAPSHOT_WINDOWS;
 #define PARAMDOC_SNAPSHOT_WINDOW_UNITS "Units used for time window parameters. Possible choices: Gyr, Trel, and Tcr"

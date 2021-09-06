@@ -11,7 +11,7 @@ BH_SNAPSHOT_DELTACOUNT   500
 # output extra snapshotting information during core collapse (0=off, 1=on)
 SNAPSHOT_CORE_COLLAPSE   0
 # Output extra snapshots within time windows. 
-#The format is start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc.
+#The format is start_w0,step_w0,end_w0:start_w1,step_w1,stop_w1 ... etc.
 SNAPSHOT_WINDOWS   0,0.01,0.05
 # Units used for time window parameters. Possible choices: Gyr, Trel, and Tcr
 SNAPSHOT_WINDOW_UNITS   Gyr

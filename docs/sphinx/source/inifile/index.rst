@@ -64,7 +64,7 @@ SNAPSHOT FLAGS
 
 ``SNAPSHOT_WINDOWS``             write snapshots every X units of time into the <output>.window.snapshots.h5 file.  Format is:
 
-                                     start_w0,step_w0,end_w0;start_w1,step_w1,stop_w1 ... etc
+                                     start_w0,step_w0,end_w0:start_w1,step_w1,stop_w1 ... etc
 
                                  **SNAPSHOT_WINDOWS = "0,0.1,13.8"** (will write one snapshot to snapshot.h5 every 100 Myr)
  

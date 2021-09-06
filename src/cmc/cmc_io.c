@@ -2767,7 +2767,7 @@ void parse_snapshot_windows(char *param_string) {
   snapshot_window_count= 0;
   snapshot_windows= NULL;
   cur_wstring= param_string;
-  while ((cur_window = strtok_r(cur_wstring,";", &intern_window))!= NULL) {
+  while ((cur_window = strtok_r(cur_wstring,":", &intern_window))!= NULL) {
     snapshot_window_count++;
     snapshot_windows = (double *) realloc(snapshot_windows, 3*snapshot_window_count*sizeof(double));
     cur_wstring= NULL;
