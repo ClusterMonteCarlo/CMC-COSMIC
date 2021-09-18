@@ -12,6 +12,7 @@
 #include <gsl/gsl_roots.h>
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_sort_vector.h>
+#include <gsl/gsl_integration.h>
 #include <string.h>
 #include "../common/fitslib.h"
 #include "../common/taus113-v2.h"

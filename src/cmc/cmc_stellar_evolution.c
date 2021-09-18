@@ -1827,6 +1827,28 @@ void cp_starmass_to_binmember(star_t instar, long binindex, int bid)
  }
 }
 
+/* The integrand for peters_t_insp */
+double peters_t_insp_integral(double e, void *params){
+        return pow(e,1.526315789) * pow(1+(0.3980263157894)*(e*e),0.513701609395) / pow(1-(e*e),1.5);
+}
+
+/* Compute the inspiral time for a binary (Eqn. 5.14, Peters 1964) */
+double peters_t_insp(double mG3c5, double a, double e){
+        double beta = (12.8) * mG3c5;
+        double c0 = a * (1-e*e) * pow(e,-0.631578947368) * pow(1+(0.3980263157894)*(e*e),-0.3784254023488);
+
+        gsl_function F;
+        F.function = &peters_t_insp_integral;
+        gsl_integration_workspace *w = gsl_integration_workspace_alloc(1000);;
+        double integral, error;
+
+        gsl_integration_qags(&F,0,e,1e-7,1e-8,1000, w,&integral, &error);
+
+        gsl_integration_workspace_free (w);
+
+        return integral * 0.631578947368* c0*c0*c0*c0 / beta;
+}
+
 int rhs_peters(double t, const double y[], double f[], void *params){
 	/* dadt and dedt from Peters 1964; note that this is entirely in code units! */
 	double *mG3c5 = (double *) params;
@@ -1859,6 +1881,17 @@ void integrate_a_e_peters_eqn(long kb){
 	// main prefactor for Peters equations, in code units
 	double mG3c5 = m1*m2*(m1+m2)*madhoc*madhoc*madhoc / (clight*clight*clight*clight*clight);
 	double y[2] = {binary[kb].a, binary[kb].e};
+
+    /* remember that Dt is in relaxation times, NOT N-body times.  Convert it here*/
+    double t_final = Dt * ((double) clus.N_STAR)/ log(GAMMA * ((double) clus.N_STAR));
+    double t_to_merger = peters_t_insp(mG3c5, y[0], y[1]); 
+
+    /* integrator sometimes doesn't like going to merger; first check if it merges in this
+      timestep, and if so skip the ODE integrator */
+    if(t_to_merger < t_final){
+        collision = 1;
+        t = t_final;
+    }
 	
 	my_system.function = rhs_peters;
 	my_system.dimension = 2;
@@ -1871,9 +1904,7 @@ void integrate_a_e_peters_eqn(long kb){
         eps_rel = 1.e-14;
     }
 
-	/* Finally, integrate for this timestep; remember that Dt is in relaxation times,
-     * NOT N-body times */
-    double t_final = Dt * ((double) clus.N_STAR)/ log(GAMMA * ((double) clus.N_STAR));
+	/* Finally, integrate for this timestep*/
 	while (t < t_final){
 
 		status = gsl_odeiv2_evolve_apply (evolve_ptr, control_ptr, step_ptr,
