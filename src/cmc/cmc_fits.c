@@ -132,7 +132,7 @@ void load_fits_file_data(void)
 	// central mass business, read in from file
 	// I believe the normalization should be correct, from above
 	cenma.m = star_m[0];
-	cenma.m_new= star_m[0];
+	cenma.m_new = 0.0;
 	star_m[0] = 0.0;
 	//MPI: The way newstarid is assigned above works in the serial version, but it wont be the same on all procs in the parallel version. Assuming it will be the sum of N_STAR and N_BINARY.
 	newstarid = clus.N_STAR+clus.N_BINARY;

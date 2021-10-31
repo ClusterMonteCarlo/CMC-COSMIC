@@ -647,6 +647,10 @@ void ComputeEnergy(void)
 	Etotal.Eint = buf_reduce[3];
 	Etotal.Eb = buf_reduce[4];
 
+	//Central BH energy was already communicated in post_sort_comm; add it in here
+	cenma.E += cenma.E_new;
+	cenma.E_new = 0.0
+
 	Etotal.tot += cenma.E + Eescaped + Ebescaped + Eintescaped;
 
 }
@@ -692,7 +696,8 @@ long potential_calculate(void) {
 	clus.N_MAX = k - 1;
 
 	/* update central BH mass */
-	cenma.m= cenma.m_new;
+	cenma.m += cenma.m_new;
+	cenma.m_new = 0.0;
 
 	/* New total Mass; This IS correct for multiple components */
 	Mtotal = mprev * madhoc + cenma.m * madhoc;	
@@ -2272,6 +2277,9 @@ void post_sort_comm()
     //MPI_Allgatherv(MPI_IN_PLACE, mpiLen[myid], MPI_DOUBLE, star_m, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
     MPI_Allgatherv(temp_r+1, mpiLen[myid], MPI_DOUBLE, star_r, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
     MPI_Allgatherv(temp_m+1, mpiLen[myid], MPI_DOUBLE, star_m, mpiLen, mpiDisp, MPI_DOUBLE, MPI_COMM_WORLD);
+
+	MPI_Allreduce(MPI_IN_PLACE, &cenma.m_new, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+	MPI_Allreduce(MPI_IN_PLACE, &cenma.E_new, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 
 	free(temp_r);
 	free(temp_m);
