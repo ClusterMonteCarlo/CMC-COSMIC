@@ -606,10 +606,12 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		/* Compute the total energy at infinity, then subtract the total 
 		 * amount that is lost to GW during pericenter passage (from 
 		 * Quinlan and Shapiro 1987) */
+		/* Cabrera 220419: updated to use m1 != m2 expression from Quinlan and Shapiro 1989 */
+                /* (85 * pi) / (12 * sqrt(2)) \approx 15.735210 */
 		clight5 = pow(2.9979e10 / (units.l/units.t) ,5);
 
 		Eorbnew = 0.5*madhoc*(mass_k*mass_kp)/(mass_k+mass_kp)*sqr(W);
-		Eorbnew -= 22.252948*pow((mass_k+mass_kp)*madhoc,4.5) / clight5 / pow(rperi,3.5);
+                Eorbnew -= 15.735210 * pow(madhoc, 4.5) * sqr(mass_k * mass_kp) * sqrt(mass_k + mass_kp) / clight5 / pow(rperi,3.5);
         /* 85*pi/12 = 22.252948 */
 
 		afinal = mass_k*mass_kp*madhoc*madhoc / 2. / fabs(Eorbnew); 
