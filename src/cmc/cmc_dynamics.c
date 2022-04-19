@@ -370,12 +370,14 @@ are skipped if they already interacted in 3bb loop!  */
 				S_brem = 0.0;
 
 				if (BH_CAPTURE) {
-					/* cross section for single-single GW capture, from Quinlan and Shapiro 1987 */
+                                        /* cross section for single-single GW capture, from Quinlan and Shapiro 1987 */
+                                        /* Cabrera 220419: updated to use m1 != m2 expression from Quinlan and Shapiro 1989 */
+                                        /* (85 * pi * sqrt(2) / 12)^(2/7) \approx 2.6789966 */
                                         if (star[k].se_k == 14 && star[kp].se_k == 14){
                                                 clight10o7 = pow(2.9979e10 / (units.l/units.t) ,1.428571);
-						rperi = 2.957852 * madhoc * (mass_k + mass_kp) / pow(W,0.57142857) / clight10o7;
-						S_brem = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
-						S_tmp = MAX(S_tmp, S_brem);
+                                                rperi = 2.6789966 * madhoc * pow(mass_k * mass_kp, 0.28571428) * pow(mass_k + mass_kp, 0.42857143) / pow(W,0.57142857) / clight10o7;
+                                                S_brem = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
+                                                S_tmp = MAX(S_tmp, S_brem);
 					}
 				}
 
