@@ -616,6 +616,10 @@ struct CenMa{
 * @brief ?
 */
 	double E;
+/**
+* @brief ?
+*/
+	double E_new;
 };
 
 /**
