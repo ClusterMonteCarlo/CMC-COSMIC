@@ -620,14 +620,14 @@ void ComputeEnergy(void)
 	//MPI: Calculating these variables on each processor
 	for (i=1; i<=mpiEnd-mpiBegin+1; i++) {
 		j = get_global_idx(i);
-		buf_reduce[1] += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star_m[j] / clus.N_STAR;
-		buf_reduce[2] += star_phi[j] * star_m[j] / clus.N_STAR;
-		buf_reduce[2] += phi0 * cenma.m*madhoc/ clus.N_STAR;
+		buf_reduce[1] += 0.5 * (sqr(star[i].vr) + sqr(star[i].vt)) * star_m[j]*madhoc;
+		buf_reduce[2] += star_phi[j] * star_m[j]*madhoc;
+		buf_reduce[2] += phi0 * cenma.m*madhoc / clus.N_MAX;
 
 		if (star[i].binind == 0) {
 			buf_reduce[3] += star[i].Eint;
 		} else if (binary[star[i].binind].inuse) {
-			buf_reduce[4] += -(binary[star[i].binind].m1/clus.N_STAR) * (binary[star[i].binind].m2/clus.N_STAR) / 
+			buf_reduce[4] += -(binary[star[i].binind].m1*madhoc) * (binary[star[i].binind].m2*madhoc) / 
 				(2.0 * binary[star[i].binind].a);
 			buf_reduce[3] += binary[star[i].binind].Eint1 + binary[star[i].binind].Eint2;
 		}
