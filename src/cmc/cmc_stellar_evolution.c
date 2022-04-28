@@ -1832,7 +1832,14 @@ double peters_t_insp_integral(double e, void *params){
         return pow(e,1.526315789) * pow(1+(0.3980263157894)*(e*e),0.513701609395) / pow(1-(e*e),1.5);
 }
 
+/* Cabrera 220428: The analytic expression for peters_t_insp as e->1 (Peters 1964, eq. 5.14+2) */
+double peters_t_insp_eccentric(double a, double e, double beta){
+        double Tc = 0.25 * a*a*a*a / beta;
+        return 1.807058823529 * Tc * pow(1-(e*e),3.5);
+}
+
 /* Compute the inspiral time for a binary (Eqn. 5.14, Peters 1964) */
+/* Cabrera 220428: Updated to calculate analytically if appropriate (e->1) */
 double peters_t_insp(double mG3c5, double a, double e){
         double beta = (12.8) * mG3c5;
         double c0 = a * (1-e*e) * pow(e,-0.631578947368) * pow(1+(0.3980263157894)*(e*e),-0.3784254023488);
@@ -1841,12 +1848,43 @@ double peters_t_insp(double mG3c5, double a, double e){
         F.function = &peters_t_insp_integral;
         gsl_integration_workspace *w = gsl_integration_workspace_alloc(1000);;
         double integral, error;
-
-        gsl_integration_qags(&F,0,e,1e-7,1e-8,1000, w,&integral, &error);
+        gsl_error_handler_t *old_handler;
+	
+	/* Save previous gsl error handler, so it can be turned back on */
+        old_handler = gsl_set_error_handler_off();
+	
+	/* Accept gsl_errno and use to diagnose */
+        int status = gsl_integration_qags(&F,0,e,1e-7,1e-8,1000, w,&integral, &error);
+        if (status == GSL_EDIVERGE) {
+		/* If the integral is diverging... */
+                dprintf("gsl_integration_qags diverging!\n");
+                dprintf("\tmG3c5=%e, a=%e, e=%e\n", mG3c5, a, e);
+                if (0.99<=e && e<=1.0) {
+			/* If the eccentricity is high... */
+                        dprintf("\t0.99 <= e <= 1.0; using analytic form...\n");
+                        integral = peters_t_insp_eccentric(a, e, beta);
+                } else {
+			/* Don't know what to do if it's not the eccentricity. */
+                        eprintf("gsl_integration_qags diverged, but e<0.99 (or e>1.0, I suppose) (gsl_errno=%d)\n", status);
+                        eprintf("\tmG3c5=%e, a=%e, e=%e\n", mG3c5, a, e);
+                        exit_cleanly(-1, __FUNCTION__);
+                }
+        } else if (status) {
+		/* If there's some other error... */
+                eprintf("gsl_integration_qags failed (gsl_errno=%d)\n", status);
+                eprintf("\tmG3c5=%e, a=%e, e=%e\n", mG3c5, a, e);
+                exit_cleanly(-1, __FUNCTION__);
+        } else {
+		/* If there's no error... */
+                integral *= 0.631578947368 * c0*c0*c0*c0 / beta;
+        }
+	
+	/* Reset to previous handler */
+        gsl_set_error_handler(old_handler);
 
         gsl_integration_workspace_free (w);
 
-        return integral * 0.631578947368* c0*c0*c0*c0 / beta;
+        return integral;
 }
 
 int rhs_peters(double t, const double y[], double f[], void *params){
