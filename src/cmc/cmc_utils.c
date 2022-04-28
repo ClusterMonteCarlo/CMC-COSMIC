@@ -649,7 +649,7 @@ void ComputeEnergy(void)
 
 	//Central BH energy was already communicated in post_sort_comm; add it in here
 	cenma.E += cenma.E_new;
-	cenma.E_new = 0.0
+	cenma.E_new = 0.0;
 
 	Etotal.tot += cenma.E + Eescaped + Ebescaped + Eintescaped;
 
