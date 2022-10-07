@@ -142,6 +142,10 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
 			dprintf("index=%d, id=%ld: star eaten by BH\n", g_index, star[index].id);
 			cenma.m_new += star_m[g_index]; 
+			//TODO: SMBH: this is just for bookkeeping (to track the energy deleted by destroying stars).  HOWEVER, the energy of the cluster also 
+			//changes by virtue of the fact that you're increasing the SMBH mass.  It's possible we're double counting here.  
+			cenma.E_new +=  (2.0*star_phi[g_index] + star[index].vr * star[index].vr + star[index].vt * star[index].vt) / 
+				2.0 * star_m[g_index] * madhoc;
 			destroy_obj(index);
 			L2 = 0.0; 
 		} else { 

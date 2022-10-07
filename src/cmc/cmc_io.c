@@ -3600,6 +3600,7 @@ typedef struct{
     double s_cenma_m;
     double s_cenma_m_new;
     double s_cenma_e;
+    double s_cenma_e_new;
 } restart_struct_t;
 
 void save_global_vars(restart_struct_t *rest){
@@ -3654,6 +3655,7 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_cenma_m                            =cenma.m;                 
 	rest->s_cenma_m_new                        =cenma.m_new;                
 	rest->s_cenma_e                            =cenma.E;                       
+	rest->s_cenma_e_new                            =cenma.E_new;                       
 }
 
 void load_global_vars(restart_struct_t *rest){
@@ -3708,6 +3710,7 @@ void load_global_vars(restart_struct_t *rest){
 	cenma.m                            =rest->s_cenma_m;
 	cenma.m_new                        =rest->s_cenma_m_new;
 	cenma.E                            =rest->s_cenma_e;
+	cenma.E_new                            =rest->s_cenma_e_new;
 }
 
 void save_restart_file(){
