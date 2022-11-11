@@ -109,8 +109,8 @@ the cluster evolves.
 ``N``               Total number of objects (single+binary)
 ``M``               Total mass (in units of initial mass)
 ``VR``              Measure how far away the cluster is from virial equilibrium (-2.0*Etotal.K/Etotal.P)
-``N_c``             Total number of stars within core radius
-``r_c``             Core radius
+``N_c``             Total number of stars within the core: :math:`\frac{4 \pi}{3} r_c^3  \frac{n_{\rm c}}{2}`
+``r_c``             Theoretical, mass-density-weighted core radius from Eq. II.4 of Casertano & Hut (1985)
 ``r_max``           Maximum radius of a star 
 ``Etot``            Total energy 
 ``KE``              Total kinetic energy 
@@ -124,10 +124,10 @@ the cluster evolves.
 ``Eoops``           Energy error loss due to Stodolkiwecz's potential correction 
 ``Etot+Eoops``      Total energy + Eoops
 ``r_h``             Half-mass radius
-``rho_0``           Core density
-``rc_spitzer``      Core radius as defined in Spitzer 1987: :math:`\sqrt{3  \sigma_0^2}{4 \pi \rho_0}`
-``v0_rms``          Rms velocity dispersion at the cluster center
-``rc_nb``           Core radius calculated with density weighted averages as in Casertano & Hut (1985)
+``rho_0``           Central density (mass-density-weighted density) from Eq. II.5 of Casertano & Hut (1985)
+``rc_spitzer``      Core radius from Spitzer (1987): :math:`\sqrt{3  \sigma_0^2}{4 \pi \rho_0}`
+``v0_rms``          RMS density-weighted velocity dispersion at the cluster center
+``rc_nb``           Theoretical (mass-density-squared)-weighted core radius used in NBODY6, originating in Eq. 5 of McMillan, Hut & Makino (1990)
 ``DMse``            Total mass loss from the cluster per time step due to stellar evolution [:math:`{M_{\odot}}`]
 ``DMrejuv`` 	     Mass loss from rejuvenation per time step [:math:`{M_{\odot}}`]
 ``N_c_nb``          Number of stars within the core: :math:`\frac{4 \pi}{3} rc_{\rm nb}^3  \frac{n_{\rm c}}{2}`
@@ -406,7 +406,7 @@ indicies indicate single stars.
 ``tcount``						     Time count
 ``t``		     					     Time
 ``m``						           Mass [:math:`M_{\odot}`]. If the object is binary,  ``m`` corresponds to total mass of the primary and secondary stars 
-``r``					              Radius
+``r``					              Clustercentric radial position
 ``vr``					 	        Radial velocity
 ``vt``						 		  Tangential velocity
 ``r_peri``			              Pericenter of star's orbit in the cluster when it was ejected    
@@ -568,23 +568,23 @@ List of triples formed dynamically in the cluster as a result of three- and four
 initial.lagrad.dat
 -------------------
 
-This file contains the lagrange radii enclosing a given percentage of the cluster's 
-total mass. So for example, the 10% lagrange radii printed in the 
+This file contains the Lagrange radii enclosing given percentages of the cluster's 
+total mass. So for example, the 10% Lagrange radius printed in the 
 **initial.lagrad.dat** file is the radius at a given time that encloses 10% of 
-the mass. The different columns in that file give 0.1%, 5%, 99%, etc. lagrange 
+the mass. The different columns in that file give 0.1%, 5%, 99%, etc. Lagrange 
 radii.
 
 initial.v2_rad_lagrad.dat
 -------------------------
 
 List of the sum of radial velocity :math:`v_{r}` within Lagrange 
-radii enclosing a given percentage of the cluster's total mass.
+radii enclosing given percentages of the cluster's total mass.
 
 initial.v2_tan_lagrad.dat
 -------------------------
 
 List of the sum of tangential velocity :math:`v_{t}` within 
-Lagrange radii enclosing a given percentage of the cluster's total mass.
+Lagrange radii enclosing given percentages of the cluster's total mass.
 
 
 initial.nostar_lagrad.dat
@@ -596,58 +596,58 @@ percentage of the cluster's total mass.
 initial.rho_lagrad.dat
 ---------------------
 
-List of the density within Lagrange radii enclosing a given 
-percentage of the cluster's total mass.
+List of the mean density within Lagrange radii enclosing given 
+percentages of the cluster's total mass.
 
 initial.avemass_lagrad.dat
 --------------------------
 
 List of the average mass :math:`\langle m \rangle` within Lagrange radii 
-enclosing a given percentage of the cluster's total mass in units of solar mass 
+enclosing given percentages of the cluster's total mass in units of solar mass 
 [:math:`M_{\odot}`].
 
 initial.ke_rad_lagrad.dat
 ------------------------
 
 List of the total radial kinetic energy :math:`T_{r}` within 
-Lagrange radii enclosing a given percentage of the cluster's total mass in code 
+Lagrange radii enclosing given percentages of the cluster's total mass in code 
 units.
 
 initial.ke_tan_lagrad.dat
 ------------------------
 
 List of the total tangenial kinetic energy :math:`T_{t}` within 
-Lagrange radii enclosing a given percentage of the cluster's total mass in code 
+Lagrange radii enclosing given percentages of the cluster's total mass in code 
 units.
 
 initial.lagrad0-0.1-1.dat
 -------------------------
 
-List of the lagrange radii for the masses in range 0.1 :math:`M_{\odot}` < m < 1 :math:`M_{\odot}`.
+List of the Lagrange radii for object masses in the range 0.1 :math:`M_{\odot}` < m < 1 :math:`M_{\odot}`.
 
 initial.lagrad1-1-10.dat
 ------------------------
 
-List of the lagrange radii for the masses in range 1 :math:`M_{\odot}` < m < 10 :math:`M_{\odot}`.
+List of the Lagrange radii for object masses in the range 1 :math:`M_{\odot}` < m < 10 :math:`M_{\odot}`.
 
 -------------------------
 
 initial.lagrad2-10-100.dat
 --------------------------
 
-List of the lagrange radii for the masses in range 10 :math:`M_{\odot}` < m < 100 :math:`M_{\odot}`.
+List of the Lagrange radii for object masses in the range 10 :math:`M_{\odot}` < m < 100 :math:`M_{\odot}`.
 
 
 initial.lagrad3-100-1000.dat
 ----------------------------
 
-List of the lagrange radii for the masses in range 100 :math:`M_{\odot}` < m < 10000 :math:`M_{\odot}`.
+List of the Lagrange radii for object masses in the range 100 :math:`M_{\odot}` < m < 10000 :math:`M_{\odot}`.
 
 
 initial.lagrad_10_info.dat
 --------------------------
 
-This file containts dynamical information of the cluster at 10 lagrange radius.
+This file containts dynamical information of the cluster at the 10% Lagrange radius.
 
 initial.core.dat
 ----------------
