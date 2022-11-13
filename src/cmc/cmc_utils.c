@@ -931,13 +931,11 @@ void comp_mass_percent(){
 	for (k = 1; k <= clus.N_MAX; k++) {
 		mprev += star_m[k] / clus.N_STAR;
 
-		if (mprev / Mtotal > mass_pc[mcount]) {
-
+		if (mprev > mass_pc[mcount] * Mtotal) {
 			mass_r[mcount] = star_r[k];
 			ave_mass_r[mcount] = mprev/Mtotal/k*initial_total_mass;
 			no_star_r[mcount] = k;
-			densities_r[mcount] = mprev*clus.N_STAR/
-				(4/3*3.1416*pow(star_r[k],3));
+			densities_r[mcount] = mprev / (4.0 / 3.0 * PI * pow(star_r[k],3));
 
 			//MPI: When the condition in the if statement is satisfied, we find which processor k belongs to, and that processor sends its cumulated values to the root since these values are printed out to file only by the root
             int proc_k = findProcForIndex(k);
@@ -1236,7 +1234,7 @@ double compute_tidal_boundary(void){
 }
 
 /**
-* @brief calculate central quantities
+* @brief calculate central quantities: see description in Fregeau & Rasio (2007) based upon Casertano & Hut (1985)
 */
 void central_calculate(void)
 {
@@ -1246,7 +1244,7 @@ void central_calculate(void)
 
 	//MPI: The first part is done on all nodes, since they mostly need only the duplicated arrays. The second part is done on the root node, and broadcasted to all other nodes. Parallelization is mostly trivial and easily understandable from reading the code.
 	/* average over all stars out to half-mass radius */
-	nave = 1;
+	nave = 1; /* compute the index of the object with just beyond the half-mass radius */
 	while (m < 0.5 * Mtotal) {
 		m += star_m[nave] / clus.N_STAR;
 		nave++;
@@ -1261,7 +1259,7 @@ void central_calculate(void)
 	/* allocate array for local density calculations */
 	rhoj = (double *) malloc((nave+1) * sizeof(double));
 
-	/* calculate rhoj's (Casertano & Hut 1985) */
+	/* calculate rhoj's as in Eq. II.2 of Casertano & Hut (1985) */
 	for (i=1; i<=nave; i++) {
 		jmin = MAX(i-J/2, 1);
 		jmax = jmin + J;
@@ -1275,15 +1273,15 @@ void central_calculate(void)
 		rhoj[i] = mrho / Vrj;
 	}
 
-	/* calculate core quantities using density weighted averages (note that in 
-	   Casertano & Hut (1985) only rho and rc are analyzed and tested) */
+	/* calculate core quantities using mass-density-weighted averages; note that in 
+	   Casertano & Hut (1985) only rho and rc are analyzed and tested */
 	rhojsum = 0.0;
 	rhoj2sum = 0.0;
-	rc_nb = 0.0;
-	central.rho = 0.0;
-	central.v_rms = 0.0;
-	central.rc = 0.0;
-	central.m_ave = 0.0;
+	central.rho = 0.0;   /* density-weighted density from Eq. II.5 of Casertano & Hut (1985), with estimator bias correction (see below) */
+	central.v_rms = 0.0; /* root-mean-squared density-weighted velocity */
+	central.rc = 0.0;    /* density-weighted core radius from Eq. II.4 of Casertano & Hut (1985) */
+	rc_nb = 0.0;         /* (density squared)-weighted core radius used in NBODY6, originating from Eq. 5 of McMillan, Hut & Makino (1990) */
+	central.m_ave = 0.0; /* density-weighted average central mass */
 	for (i=1; i<=nave; i++) {
 		rhojsum += rhoj[i];
 		rhoj2sum += sqr(rhoj[i]);
@@ -1323,8 +1321,7 @@ void central_calculate(void)
     timeEndSimple(tmpTimeStart, &t_comm);
 
 	central.rho /= rhojsum;
-	/* correction for inherent bias in estimator */
-	central.rho *= 4.0/5.0;
+	central.rho *= 4.0/5.0; /* correction for inherent bias in estimator, from Eqs. III.3 and V.2 of Casertano & Hut (1985)  */
 	/* and now correct for the fact this estimate of density is systematically smaller than the
 	   theoretical by a factor of about 2 (for a range of King models and for the Plummer model) */
 	central.rho *= 2.0;

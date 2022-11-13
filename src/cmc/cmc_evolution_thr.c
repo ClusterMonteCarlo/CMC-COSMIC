@@ -571,7 +571,7 @@ void tidally_strip_stars(void) {
 					/* logging */
 					parafprintf(escfile,
 							"%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
-							tcount, TotalTime, m,
+							tcount, TotalTime, m * (units.m / clus.N_STAR) / MSUN,
 							r, star[i].vr, star[i].vt, star[i].r_peri,
 							star[i].r_apo, Rtidal, phi_rtidal, phi_zero, star[i].E, star[i].J, star[i].id);
 
@@ -683,7 +683,7 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 
 	/* logging */
 	parafprintf(escfile, "%ld %.8g %.8g ",
-		tcount, TotalTime, m);
+		tcount, TotalTime, m * (units.m / clus.N_STAR) / MSUN);
 	parafprintf(escfile, "%.8g %.8g %.8g ",
 		r, star[j].vr, star[j].vt);
 	parafprintf(escfile, "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
