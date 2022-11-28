@@ -513,7 +513,7 @@ typedef struct{
 /**
 * @brief original ZAMS mass (at t=0) 
 */
-	double zams_mass;
+	double se_zams_mass;
 /**
 * @brief stellar types (see bse_wrap/bse/bse.f for the list)
 */
@@ -1128,6 +1128,12 @@ typedef struct{
  * * @brief neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
  * */
         int BSE_PTS3;
+#define PARAMDOC_BSE_PTS1_HIGHMASS_CUTOFF "Reduces PTS1 by a factor of 10 for any stars with ZAMS mass below this"
+/**
+ * * @brief Reduces PTS1 by a factor of 10 for any stars with ZAMS mass
+ below this 
+ * */
+        int BSE_PTS1_HIGHMASS_CUTOFF;
 #define PARAMDOC_BSE_EDDLIMFLAG "neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally)."
 /**
  * * @brief neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
