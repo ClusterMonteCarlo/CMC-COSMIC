@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Code Structure and Parallelization &mdash; cmc 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/katex-math.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/cosmic-docs.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/icon.001.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/katex.min.js"></script>
+        <script src="../_static/auto-render.min.js"></script>
+        <script src="../_static/katex_autorenderer.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Doxygen" href="../src/index.html" />
+    <link rel="prev" title="Contact Team CMC" href="../contact/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.001.jpeg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../initialconditions/index.html">Initial Conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running/index.html">Running CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output/index.html">Analyzing CMC Output</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Extending CMC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../inifile/index.html">Configuration files for CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQTroubleshooting/index.html">FAQ/Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact/index.html">Contact Team CMC</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Code Structure and Parallelization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#programming-guidelines-for-developers">Programming Guidelines for Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#i-o">I/O</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../src/index.html">Doxygen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cmc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Code Structure and Parallelization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/parallel/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+             
+  <section id="code-structure-and-parallelization">
+<span id="parallel"></span><h1>Code Structure and Parallelization<a class="headerlink" href="#code-structure-and-parallelization" title="Permalink to this heading"></a></h1>
+<p>There are various routines which have varying dependencies and accesses between
+elements of the data structures. To minmize inter-process communication
+required by these routines as much as possible, we partition the data such that
+the number of stars held by each processor is a multiple of <code class="docutils literal notranslate"><span class="pre">MIN_CHUNK_SIZE</span></code>
+(input parameter, defaults to 20, refer to <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013ApJS..204...15P/abstract">Pattabiraman et al. (2013)</a>  for a
+justification for the choice of this value, and detailed explanation). The
+remainder of stars (which is less than <code class="docutils literal notranslate"><span class="pre">MIN_CHUNK_SIZE</span></code>) after division goes
+to the last processor.</p>
+<p>Most routines do computations on a star by star basis, and access only the
+properties of the star being processed. However, the values of gravitational
+potential, masses of the stars and radial positions of the stars are accessed
+in a complex, data-dependent manner throughout the code. Hence, we store these
+values in separate arrays and duplicate/copy these across all processors. Since
+these properties change during a timestep, we synchronize these arrays at the
+end of each time step.</p>
+<p>Like mentioned above, most routines perform computations on a star by star
+basis. The only routine that differs from this pattern is the sorting routine
+that sorts all the stars by their radial positions. We use a parallel sorting
+algorithm called Sample Sort.</p>
+<p>The parallel sorting routine does the sorting and automatically redistributes
+the data to the processors, however, there is no control over the number of
+stars that will end up on each processor. So, after the sorting takes place, we
+exchange data between processors to adhere to the data partitioning scheme
+mentioned above.</p>
+<section id="programming-guidelines-for-developers">
+<h2>Programming Guidelines for Developers<a class="headerlink" href="#programming-guidelines-for-developers" title="Permalink to this heading"></a></h2>
+<p>It is very necessary to read <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013ApJS..204...15P/abstract">Pattabiraman et al. (2013)</a> before
+proceeding. The paper covers most of the code and parallelization aspects which
+in itself serves as a guide for development. Here, we cover some more low level
+coding details to aid a developer who wants to modify the code. An introduction
+to MPI might also be very useful, and in fact necessary for any non-trivial
+code development.</p>
+<p>The parallelization follows a SIMD model. Any line of code is executed by all
+processors. Unlike a sequential code, variables might have different values on
+different processors. A simple example is the variable <code class="docutils literal notranslate"><span class="pre">myid</span></code> which stores
+the ID of the processor. If p processors are used, the IDs go from <code class="docutils literal notranslate"><span class="pre">0</span></code> to
+<code class="docutils literal notranslate"><span class="pre">p-1</span></code>, and each processor will contain the value of its ID in this variable.
+On the other hand the variable <code class="docutils literal notranslate"><span class="pre">procs</span></code> stores the total number of processors
+used. One can see that the variable <code class="docutils literal notranslate"><span class="pre">procs</span></code> will have the same value on all
+processors whereas <code class="docutils literal notranslate"><span class="pre">myid</span></code> will have different value depending on the
+processor.</p>
+<p>The data/stars are initially partitioned, after reading from the input file,
+into the user specified number of processors. The partitioning scheme is
+described in detail in the paper, and is chosen in such a way as to minimize
+communication required during the program execution. Binaries are partitioned
+among processors as well, and are indexed similar to the serial code i.e. the
+variable <code class="docutils literal notranslate"><span class="pre">binind</span></code> of a star, if greater than 0, refers to the index of the
+corresponding binary in the binary array.</p>
+<p>The variables <code class="docutils literal notranslate"><span class="pre">mpiBegin</span></code>, <code class="docutils literal notranslate"><span class="pre">mpiEnd</span></code>, and the arrays <code class="docutils literal notranslate"><span class="pre">Start</span></code> and <code class="docutils literal notranslate"><span class="pre">End</span></code>
+are used to implement and store the data partitioning scheme. These are used in
+almost every routine of the code. Let us try to understand these with an
+example. Say, we start with an initial of 10000 stars, and 4 processors. The
+data is partitioned, and each processor has 2500 stars. These are stored in the
+star array. Please note that in each timestep all the stars are sorted by their
+radial position. So, positions of all stars in processor 0 are lesser than
+those in processor 1 which in turn are lesser than the ones in processor 2 and
+so on. Now, each local array is indexed from 1 to 2500. However, if you imagine
+an array containing the entire set of 10000 stars, the indices of the stars
+local to a processor will have a different index, which will depend on the
+processor ID, in this imaginary global array. For instance the local stars 1 to
+2500 in processor 1 will have a “global” index 2501 to 5000. This “global”
+index is require at various points in the code since some routines need some
+quantities of the entire set of stars. These quantities (mass, positions and
+potential) are duplicated across all processors, please see <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013ApJS..204...15P/abstract">Pattabiraman et
+al. (2013)</a>
+for a detailed description. The variables <code class="docutils literal notranslate"><span class="pre">mpiBegin</span></code> and <code class="docutils literal notranslate"><span class="pre">mpiEnd</span></code> store the
+global index of the first and the last star in a given processor. For our
+example, in processor 0, these will be 1 and 2500 (the 0th star is always left
+out as it is marked as a sentinel); for processor 1 these will be 2501 and 5000
+and so on. The <code class="docutils literal notranslate"><span class="pre">Start</span></code> and <code class="docutils literal notranslate"><span class="pre">End</span></code> arrays store these values of all the
+processors. <code class="docutils literal notranslate"><span class="pre">Start[myid]</span></code> essentially is the same as <code class="docutils literal notranslate"><span class="pre">mpiBegin</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">End[myid]</span></code> has the same value as <code class="docutils literal notranslate"><span class="pre">mpiEnd</span></code>. In addition there are the
+<code class="docutils literal notranslate"><span class="pre">mpiDisp</span></code> and <code class="docutils literal notranslate"><span class="pre">mpiLen</span></code> arrays which also store essentially the same
+information but as displacement offsets and lengths, but these are used only at
+very few places.</p>
+<p>The total number of stars in a given processor can be obtained by
+<code class="docutils literal notranslate"><span class="pre">mpiEnd-mpiBegin+1</span></code>. <code class="docutils literal notranslate"><span class="pre">clus.N_MAX</span></code> represents the current total number of
+stars in the simulation, whereas <code class="docutils literal notranslate"><span class="pre">clus.N_MAX_NEW</span></code> is the total number of
+local stars in the processor i.e. <code class="docutils literal notranslate"><span class="pre">mpiEnd-mpiBegin+1</span></code>. The function
+<code class="docutils literal notranslate"><span class="pre">mpiFindIndicesCustom()</span></code> sets <code class="docutils literal notranslate"><span class="pre">mpiBegin</span></code> and <code class="docutils literal notranslate"><span class="pre">mpiEnd</span></code>, whereas
+<code class="docutils literal notranslate"><span class="pre">findLimits()</span></code> populates the <code class="docutils literal notranslate"><span class="pre">Start</span></code> and <code class="docutils literal notranslate"><span class="pre">End</span></code> arrays. When one iterates
+over the local number of stars, and given a star <code class="docutils literal notranslate"><span class="pre">i</span></code>, one can get its global
+index using the function <code class="docutils literal notranslate"><span class="pre">get_global_idx(i)</span></code>.</p>
+<p>The random number generation is parallelized, and all details are hidden, so a
+developer does not have to mess with the details as long as one follows a
+similar rng calls as an already existing one.</p>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h2>
+<p>While introducing any new code, think in parallel. For instance say you are
+calculating some cumulative quantity like:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">double</span><span class="w"> </span><span class="n">Q</span><span class="w"></span>
+<span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">clus</span><span class="p">.</span><span class="n">N_MAX_NEW</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">Q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">star</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">star</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">b</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This might appear as if it’s correct, although when this runs in parallel it is
+far from it. <code class="docutils literal notranslate"><span class="pre">Q</span></code> will only contain the local sum <code class="docutils literal notranslate"><span class="pre">Q</span></code> for each processor.
+After this one needs to aggregate <code class="docutils literal notranslate"><span class="pre">Q</span></code> across all processors. For this you’ll
+have to use either <code class="docutils literal notranslate"><span class="pre">MPI_Reduce</span></code> or <code class="docutils literal notranslate"><span class="pre">MPI_Allreduce</span></code> depending on whether you
+want the aggregated quantity <code class="docutils literal notranslate"><span class="pre">Q</span></code> on one or all of the processors. The above
+piece of code can be fixed by:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">double</span><span class="w"> </span><span class="n">Q</span><span class="p">,</span><span class="w"> </span><span class="n">local_Q</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="n">clus</span><span class="p">.</span><span class="n">N_MAX_NEW</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">local_Q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">star</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">star</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">b</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="n">MPI_Allreduce</span><span class="p">(</span><span class="o">&amp;</span><span class="n">local_Q</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Q</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MPI_DOUBLE</span><span class="p">,</span><span class="w"> </span><span class="n">MPI_SUM</span><span class="p">,</span><span class="w"> </span><span class="n">MPI_COMM_WORLD</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Here we store the local value of <code class="docutils literal notranslate"><span class="pre">Q</span></code> into a temporary variable <code class="docutils literal notranslate"><span class="pre">local_Q</span></code>,
+after which we aggregate the partial sums across all processors using the
+<code class="docutils literal notranslate"><span class="pre">MPI_Allreduce</span></code> call which makes sure all processors receive the aggregated
+value in <code class="docutils literal notranslate"><span class="pre">Q</span></code>. Here, we use <code class="docutils literal notranslate"><span class="pre">MPI_COMM_WORLD</span></code>, which is the default
+communicator that includes all processors.</p>
+<p>This is probably the simplest use of parallel programming and use of MPI. For
+more complex operations which involve complex data dependencies such as
+communicating neighbors/ghost particles, gathering, scattering data etc., one
+might need to have more expertise in parallel programming using MPI. So, a
+tutorial on MPI is strongly advised before adding any non-trivial piece of
+code. The most common MPI calls used in the code are
+<code class="docutils literal notranslate"><span class="pre">MPI_Reduce/MPI_Allreduce</span></code>, <code class="docutils literal notranslate"><span class="pre">MPI_Gather/MPI_Allgather</span></code>, <code class="docutils literal notranslate"><span class="pre">MPI_Alltoall,</span>
+<span class="pre">MPI_Bcast</span></code>, <code class="docutils literal notranslate"><span class="pre">MPI_Scan/MPI_Exscan</span></code>. The signatures of all MPI calls can be
+found here: url{<a class="reference external" href="http://www.mpich.org/static/docs/v3.1/www3/">http://www.mpich.org/static/docs/v3.1/www3/</a>}</p>
+</section>
+<section id="i-o">
+<h2>I/O<a class="headerlink" href="#i-o" title="Permalink to this heading"></a></h2>
+<p>Output is another part which one might need to add, and is non-trivial to do in
+parallel. However, we have introduced a decently good framework to do parallel
+output so the programmer doesn’t have to delve into the MPI IO details. If a
+file needs to be written by only one node, it’s simple. Just do:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="p">(</span><span class="n">myid</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="o">&lt;</span><span class="n">NODE_ID</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">   </span><span class="kt">FILE</span><span class="w"> </span><span class="o">*</span><span class="n">fp</span><span class="p">;</span><span class="w"></span>
+<span class="w">   </span><span class="n">fopen</span><span class="p">(...);</span><span class="w"></span>
+<span class="w">   </span><span class="n">fprintf</span><span class="p">(...);</span><span class="w"></span>
+<span class="w">   </span><span class="n">fclose</span><span class="p">(...);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Sometimes, the data that needs to be written out might be distributed across
+nodes. Provided these are ASCII data files with file sizes of a few KBs to MBs
+(such as log files, and not snapshots which write out nearly entire data) one
+can use MPI IO to write them out in parallel. An example is as follows:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">MPI_File</span><span class="w"> </span><span class="n">mpi_binfp</span><span class="p">;</span><span class="w"></span>
+<span class="kt">char</span><span class="w"> </span><span class="n">mpi_binfp_buf</span><span class="p">[</span><span class="mi">10000</span><span class="p">],</span><span class="w"> </span><span class="n">mpi_binfp_wrbuf</span><span class="p">[</span><span class="mi">10000000</span><span class="p">];</span><span class="w"></span>
+<span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">mpi_binfp_len</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">mpi_binfp_ofst_total</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="n">sprintf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_e2.%04ld.dat&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">tcount</span><span class="p">);</span><span class="w"></span>
+<span class="n">MPI_File_open</span><span class="p">(</span><span class="n">MPI_COMM_MC</span><span class="p">,</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="n">MPI_MODE_CREATE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">MPI_MODE_WRONLY</span><span class="p">,</span><span class="w"> </span><span class="n">MPI_INFO_NULL</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mpi_binfp</span><span class="p">);</span><span class="w"></span>
+<span class="n">MPI_File_set_size</span><span class="p">(</span><span class="n">mpi_binfp</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">clus</span><span class="p">.</span><span class="n">N_MAX</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">star_array</span><span class="p">[</span><span class="n">j</span><span class="p">].</span><span class="n">binind</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="n">parafprintf</span><span class="p">(</span><span class="n">binfp</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%g %g</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">binary_array</span><span class="p">[</span><span class="n">star_array</span><span class="p">[</span><span class="n">j</span><span class="p">].</span><span class="n">binind</span><span class="p">].</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">sqr</span><span class="p">(</span><span class="n">binary_array</span><span class="p">[</span><span class="n">star_array</span><span class="p">[</span><span class="n">j</span><span class="p">].</span><span class="n">binind</span><span class="p">].</span><span class="n">e</span><span class="p">));</span><span class="w"></span>
+<span class="w">   </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="n">mpi_para_file_write</span><span class="p">(</span><span class="n">mpi_binfp_wrbuf</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mpi_binfp_len</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mpi_binfp_ofst_total</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mpi_binfp</span><span class="p">);</span><span class="w"></span>
+<span class="n">MPI_File_close</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mpi_binfp</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The files are opened by all processors using MPI-IO. Each processor writes the
+data into a string/char buffer. At the end of the timestep, all processors
+flush the data from the buffers into the corresponding files in parallel using
+MPI-IO. The code uses 5 variables for this process - the MPI-IO file pointer,
+which follows the format <code class="docutils literal notranslate"><span class="pre">mpi_&lt;fptr_name&gt;</span></code>, 2 char buffers, which have the
+format <code class="docutils literal notranslate"><span class="pre">mpi_&lt;fptr_name&gt;_buf</span></code> and <code class="docutils literal notranslate"><span class="pre">mpi_&lt;fptr_name&gt;_wrbuf</span></code>, and an
+int/longlong variables to maintain the length of the buffer (format
+<code class="docutils literal notranslate"><span class="pre">mpi_&lt;fptr_name&gt;_len</span></code>) and the offset in the file (format
+<code class="docutils literal notranslate"><span class="pre">mpi_&lt;fptr_name&gt;_ofst_total</span></code>) where data has to be written. Given all these
+variables, a call to the function <code class="docutils literal notranslate"><span class="pre">parafprintf(&lt;fptr_name&gt;,</span> <span class="pre">&lt;args&gt;)</span></code> which
+follows a pattern similar to <code class="docutils literal notranslate"><span class="pre">fprintf</span></code>, but underneath writes the given args
+to the respective buffers and updates the offsets etc. Once all writing has
+been done, each processor has different data in their respective buffers which
+needs to be flushed out into the file. A call to <code class="docutils literal notranslate"><span class="pre">mpi_para_file_write()</span></code>
+takes care of this.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+    <a href="https://github.com/ClusterMonteCarlo/CMC-COSMIC">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../contact/index.html" class="btn btn-neutral float-left" title="Contact Team CMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../src/index.html" class="btn btn-neutral float-right" title="Doxygen" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Carl Rodriguez &amp; Scott Coughlin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration files for CMC &mdash; cmc 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/katex-math.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/cosmic-docs.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/icon.001.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/katex.min.js"></script>
+        <script src="../_static/auto-render.min.js"></script>
+        <script src="../_static/katex_autorenderer.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FAQ/Troubleshooting" href="../FAQTroubleshooting/index.html" />
+    <link rel="prev" title="Analyzing CMC Output" href="../output/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.001.jpeg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../initialconditions/index.html">Initial Conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running/index.html">Running CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output/index.html">Analyzing CMC Output</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Extending CMC</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration files for CMC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#cmc">[cmc]</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#snapshot-flags">SNAPSHOT FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#relaxation-flags">RELAXATION FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamics-flags">DYNAMICS FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#input-options">INPUT OPTIONS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tidal-field-options">TIDAL FIELD OPTIONS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#termination-options">TERMINATION OPTIONS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output-options">OUTPUT OPTIONS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cmc-parameters">CMC Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#bse">[bse]</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sampling-flags">SAMPLING FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#metallicity-flags">METALLICITY FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wind-flags">WIND FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#common-envelope-flags">COMMON ENVELOPE FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kick-flags">KICK FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#remnant-mass-flags">REMNANT MASS FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#remnant-spin-flags">REMNANT SPIN FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gr-orbital-decay-flag">GR ORBITAL DECAY FLAG</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mass-transfer-flags">MASS TRANSFER FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tides-flags">TIDES FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#white-dwarf-flags">WHITE DWARF FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pulsar-flags">PULSAR FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mixing-variables">MIXING VARIABLES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#magnetic-braking-flags">MAGNETIC BRAKING FLAGS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#misc-flags">MISC FLAGS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQTroubleshooting/index.html">FAQ/Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact/index.html">Contact Team CMC</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../parallel/index.html">Code Structure and Parallelization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/index.html">Doxygen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cmc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Configuration files for CMC</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/inifile/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+             
+  <section id="configuration-files-for-cmc">
+<span id="inifile"></span><h1>Configuration files for CMC<a class="headerlink" href="#configuration-files-for-cmc" title="Permalink to this heading"></a></h1>
+<p>The <cite>cmc</cite> command-line executable cannot run without a configuration file.  These ini files are designed to contain all the stellar evolution physics to generate a COSMIC population (i.e. the initial conditions for CMC) and all the dynamical options.  Note that there are two distinct modes you might want to run CMC in: either as a purely dynamics code, with no real stars or stellar evolution, or with all the bells and whistles, to produce realistic models of clusters.  These are sufficiently different that we have included two ini files in the examples directory:</p>
+<blockquote>
+<div><p><strong>KingProfile.ini</strong> is designed to run a cluster with most of the available physics.  Use this for realistic star cluster simulations (it is what is described as “default” below).  The ini file can be found  <a class="reference external" href="https://github.com/ClusterMonteCarlo/CMC-COSMIC/blob/master/examples/KingProfile.ini">Here</a></p>
+<p><strong>PlummerSphere.ini</strong> is designed to run a cluster with pure dynamics; no stars or stellar evolution, and will halt once the cluster reaches core collapse.  Use this for classical dynamics studies and learning the code.  The ini file can be found  <a class="reference external" href="https://github.com/ClusterMonteCarlo/CMC-COSMIC/blob/master/examples/PlummerSphere.ini">Here</a></p>
+</div></blockquote>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The parameter names are case insensitive, and we’ve tried to include everything currently used in the code here.  If you forget one, CMC will substitute a default value.  However, note that there are several default values still in the code that are NOT described here.  These are largely from either deprecated features, or parts of the code that are not working yet in the parallel version.  If they work at all, we would strongly advise against using them for any type of production run.</p>
+</div>
+<section id="cmc">
+<h2>[cmc]<a class="headerlink" href="#cmc" title="Permalink to this heading"></a></h2>
+<p>Although this is all one section, we have grouped the flags/parameters which get passed to the dynamics and binary stellar evolution codes into (rough) categories. Each group will start with a note to indicate. the type of parameter or flag.</p>
+<section id="snapshot-flags">
+<span id="snapshotting"></span><h3>SNAPSHOT FLAGS<a class="headerlink" href="#snapshot-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SNAPSHOTTING</span></code></p></td>
+<td><p>Turn snapshotting on or of (doesn’t control black hole snapshots below)</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>SNAPSHOTTING = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SNAPSHOT_DELTACOUNT</span></code></p></td>
+<td><p>How many timesteps to write a snapshot</p>
+<p><strong>SNAPSHOT_DELTACOUNT = 1000</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BH_SNAPSHOTTING</span></code></p></td>
+<td><p>Turn on snapshots for just the black holes (in the output.blackhole.snapshots.h5 file)</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>BH_SNAPSHOTTING = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BH_SNAPSHOT_DELTACOUNT</span></code></p></td>
+<td><p>write the black hole snapshots every X timesteps</p>
+<p><strong>BH_SNAPSHOT_DELTACOUNT = 500</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SNAPSHOT_CORE_COLLAPSE</span></code></p></td>
+<td><p>write additional snapshots around core collapse (in the output.snapshots.h5 file)</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>SNAPSHOT_CORE_COLLAPSE = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SNAPSHOT_WINDOWS</span></code></p></td>
+<td><p>write snapshots every X units of time into the &lt;output&gt;.window.snapshots.h5 file.  Format is:</p>
+<blockquote>
+<div><p>start_w0,step_w0,end_w0:start_w1,step_w1,stop_w1 … etc</p>
+</div></blockquote>
+<p><strong>SNAPSHOT_WINDOWS = “0,0.1,13.8”</strong> (will write one snapshot to snapshot.h5 every 100 Myr)</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SNAPSHOT_WINDOW_UNITS</span></code></p></td>
+<td><p>What units should the snapshot windows be in.  Options are:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Gyr</span></code> : gigayears</p>
+<p><code class="docutils literal notranslate"><span class="pre">Trel</span></code> : relaxation times</p>
+<p><code class="docutils literal notranslate"><span class="pre">Tcr</span></code> : crossing times</p>
+</div></blockquote>
+<p><strong>SNAPSHOT_WINDOW_UNITS = Gyr</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="relaxation-flags">
+<h3>RELAXATION FLAGS<a class="headerlink" href="#relaxation-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 82%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RELAXATION</span></code></p></td>
+<td><p>perform two-body relaxation (0=off, 1=on)</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>RELAXATION = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CMC_GAMMA</span></code></p></td>
+<td><p>Value of the Coulomb Logarithm (lambda = log(gamma*N)).  Suggested values are:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0.11</span></code> : equal-mass clusters <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1994MNRAS.268..257G/abstract">Giersz &amp; Heggie (1994)</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">0.01</span></code> : realistic initial mass functions <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2018ComAC...5....5R/abstract">Rodriguez et al., (2018)</a></p>
+</div></blockquote>
+<p><strong>CMC_GAMMA = 0.01</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">THETASEMAX</span></code></p></td>
+<td><p>Maximum value of theta during two-body encounters.  Suggested values are:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">1.412</span></code> : sqrt(2), for equal mass clusters</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : for point-mass clusters</p>
+</div></blockquote>
+<p><strong>THETASEMAX = 1.412</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="dynamics-flags">
+<h3>DYNAMICS FLAGS<a class="headerlink" href="#dynamics-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 87%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BINBIN</span></code></p></td>
+<td><p>Turn on Fewbody encounters between two binaries</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>BINBIN = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BINSINGLE</span></code></p></td>
+<td><p>Turn on Fewbody encounters between binaries and single objects</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>BINSINGLE = 1</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BH_CAPTURE</span></code></p></td>
+<td><p>Turn on post-Newtonian corrections for black holes. NOTE: this activates GW captures for both single BHs and during fewbody encounters.  Note if SS_COLLISION=0 and BH_CAPTURE=1, GW captures will happen only in fewbody.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>BH_CAPTURE = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BH_RADIUS_MULTIPLYER</span></code></p></td>
+<td><p>Factor to multiply the radii of BHs by for collisions in fewbody (default is 5, since PN breaks down at ~10M)</p>
+<p><strong>BH_RADIUS_MULTIPLYER = 5</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">THREEBODYBINARIES</span></code></p></td>
+<td><p>Turn on three-body binary formation semi-analytic treatment from Morscher et al., 2013</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>THREEBODYBINARIES = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ONLY_FORM_BH_THREEBODYBINARIES</span></code></p></td>
+<td><p>Only form three-body binaries if the three objects are black holes</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>ONLY_FORM_BH_THREEBODYBINARIES = 1</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MIN_BINARY_HARDNESS</span></code></p></td>
+<td><p>Minimum hardness ratio for forming three-body binaries (or breaking wide binaries if BINARY_BREAKING_MIN = 1)</p>
+<p><strong>MIN_BINARY_HARDNESS = 5</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BINARY_BREAKING_MIN</span></code></p></td>
+<td><p>whether to use 10% of the interparticle seperation (0, default) or MIN_BINARY_HARDNESS (1) as the criterion for breaking wide binaries</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : interparticle seperation</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : MIN_BINARY_HARDNESS</p>
+</div></blockquote>
+<p><strong>BINARY_BREAKING_MIN = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SS_COLLISION</span></code></p></td>
+<td><p>enable collisions between stars. NOTE: this activates collisions between single stars AND during fewbody encounters</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>SS_COLLISION = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TIDAL_CAPTURE</span></code></p></td>
+<td><p>Enable collisions bewteen giants and other individual stars.  Can lead to binary formation. Uses cross sections from Lombardi et al., 2006.  Only activated if SS_COLLISION = 1</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>TIDAL_CAPTURE = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TC_POLYTROPE</span></code></p></td>
+<td><p>Enable tidal captures during single-single interactions. Uses polytropic stellar models for stars. Uses cross sections from Kim &amp; Lee 1999. Only activated if SS_COLLISION = 1</p>
+<p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+<p><strong>TC_POLYTROPE = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">COLL_FACTOR</span></code></p></td>
+<td><p>Set the multiplying factor for direct collisions. Default = 1.0 (sticky sphere)</p>
+<p><strong>COLL_FACTOR = 1.0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BHNS_TDE</span></code></p></td>
+<td><p>Treat BH(NS)–MS TDEs in TDE vs direct collision limit.  Follows prescription in Kremer et al., 2020</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : collision</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : TDE</p>
+</div></blockquote>
+<p><strong>BHNS_TDE = 0</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="input-options">
+<h3>INPUT OPTIONS<a class="headerlink" href="#input-options" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 69%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INPUT_FILE</span></code></p></td>
+<td><p>the input hdf5 file for our intial conditions generated using COSMIC</p>
+<p><strong>INPUT_FILE = input.hdf5</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tidal-field-options">
+<h3>TIDAL FIELD OPTIONS<a class="headerlink" href="#tidal-field-options" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 84%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TIDALLY_STRIP_STARS</span></code></p></td>
+<td><p>Tidally strip stars that pass the tidal boundary</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>TIDALLY_STRIP_STARS = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TIDAL_TREATMENT</span></code></p></td>
+<td><p>choose the tidal cut-off criteria for removing stars</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : radial criterion, <span class="math">\({r_{\rm apo} &gt; r_{t}}\)</span></p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : Energy criterion, <span class="math">\({\alpha E &gt; \Phi(r_t)}\)</span>, following <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008MNRAS.388..429G/abstract">Giersz et al. (2008)</a></p>
+</div></blockquote>
+<p><strong>TIDAL_TREATMENT = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">USE_TT_FILE</span></code></p></td>
+<td><p>whether to take the tidal boundary from a file (i.e. a tidal tensor)</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>USE_TT_FILE = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TT_FILE</span></code></p></td>
+<td><p>name of tidal tensor file to take tidal boundary from.  Should be formatted as <code class="docutils literal notranslate"><span class="pre">Time</span> <span class="pre">[Myr]</span> <span class="pre">T_xx</span> <span class="pre">T_yy</span> <span class="pre">T_zz</span> <span class="pre">T_xy</span> <span class="pre">T_xz</span> <span class="pre">T_yz</span> <span class="pre">[1/Myr^2]</span></code></p>
+<p><strong>TT_FILE=NULL</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="termination-options">
+<h3>TERMINATION OPTIONS<a class="headerlink" href="#termination-options" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 86%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">T_MAX_PHYS</span></code></p></td>
+<td><p>maximum integration time (Gyr)</p>
+<p><strong>T_MAX_PHYS = 13.8</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">T_MAX</span></code></p></td>
+<td><p>maximum integration time (relaxation time)</p>
+<p><strong>T_MAX = 100</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">T_MAX_COUNT</span></code></p></td>
+<td><p>maximum number of timesteps</p>
+<p><strong>T_MAX_COUNT = 10000000</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MAX_WCLOCK_TIME</span></code></p></td>
+<td><p>maximum amount of wallclock time to integrate for (seconds)</p>
+<p><strong>MAX_WCLOCK_TIME = 604800</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CHECKPOINT_INTERVAL</span></code></p></td>
+<td><p>how often to save checkpoint files (seconds)</p>
+<p><strong>CHECKPOINT_INTERVAL = 7200</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CHECKPOINTS_TO_KEEP</span></code></p></td>
+<td><p>how many previous checkpoints to keep at once</p>
+<p><strong>CHECKPOINTS_TO_KEEP = 2</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TERMINAL_ENERGY_DISPLACEMENT</span></code></p></td>
+<td><p>energy change calculation stopping criterion (i.e. if <span class="math">\(e/e_0\)</span> changes by this much, stop calculation)</p>
+<p><strong>TERMINAL_ENERGY_DISPLACEMENT = 10</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STOPATCORECOLLAPSE</span></code></p></td>
+<td><p>stop once the cluster reaches core collapse (&lt; 100 stars in core)</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>STOPATCORECOLLAPSE = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">USE_DF_CUTOFF</span></code></p></td>
+<td><p>whether to compute a lifetime according to dynamical friction criterion. This controls whether an external file (<code class="docutils literal notranslate"><span class="pre">DF_FILE</span></code>) is used</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>USE_DF_CUTOFF = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_FILE</span></code></p></td>
+<td><p>name of dynamical friction file to use as potential termination criterion.  Should be formatted as <code class="docutils literal notranslate"><span class="pre">Time[Myr]</span></code> <code class="docutils literal notranslate"><span class="pre">Radius[Kpc]</span></code> <code class="docutils literal notranslate"><span class="pre">V_circ[km/s]</span></code> <code class="docutils literal notranslate"><span class="pre">M_enc[solMass]</span></code> <code class="docutils literal notranslate"><span class="pre">sigma[km/s]</span></code> <code class="docutils literal notranslate"><span class="pre">J[Kpc*km/s]</span></code></p>
+<p><strong>DF_FILE = NULL</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_INTEGRATED_CRITERION</span></code></p></td>
+<td><p>dynamical friction criterion to use for terminating the simulation</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : <span class="math">\({t_{\rm df} &gt; \rm{TotalTime}}\)</span></p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : <span class="math">\({\int\frac{dt}{t_{\rm df}} &gt; 1}\)</span></p>
+</div></blockquote>
+<p><strong>DF_INTEGRATED_CRITERION = 1</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="output-options">
+<h3>OUTPUT OPTIONS<a class="headerlink" href="#output-options" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MASS_PC</span></code></p></td>
+<td><p>mass fractions for Lagrange radii, i.e. what fractions to actually print in the laggard files</p>
+<p><strong>MASS_PC = 0.0001,0.0003,0.0005,0.0007,0.0009,</strong>
+<strong>0.001,0.003,0.005,0.007,0.009,0.01,</strong>
+<strong>0.03,0.05,0.07,0.09,0.1,0.2,0.3,0.4,</strong>
+<strong>0.5,0.6,0.7,0.8,0.9,0.99</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MASS_BINS</span></code></p></td>
+<td><p>mass ranges for calculating derived quantities, i.e. what bins to use in mass for the different mass files</p>
+<p><strong>MASS_BINS = 0.1,1.0,10.0,100.0,1000.0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WRITE_EXTRA_CORE_INFO</span></code></p></td>
+<td><p>Write out information about cores that are defined differently from the standard</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>WRITE_EXTRA_CORE_INFO = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WRITE_BH_INFO</span></code></p></td>
+<td><p>Write out information about BHs each timestep</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>WRITE_BH_INFO = 1</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WRITE_PULSAR_INFO</span></code></p></td>
+<td><p>Write out information about pulsars</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>WRITE_PULSAR_INFO = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WRITE_MOREPULSAR_INFO</span></code></p></td>
+<td><p>Write a ton more information about neutron stars every PULSAR_DELTACOUNT timesteps</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>WRITE_MOREPULSAR_INFO = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PULSAR_DELTACOUNT</span></code></p></td>
+<td><p>Pulsar output interval in time steps</p>
+<p><strong>PULSAR_DELTACOUNT = 1000</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WRITE_STELLAR_INFO</span></code></p></td>
+<td><p>Write out information about stellar evolution for each single and binary star.  Warning, this creates a TON of output</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>WRITE_STELLAR_INFO = 0</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="cmc-parameters">
+<h3>CMC Parameters<a class="headerlink" href="#cmc-parameters" title="Permalink to this heading"></a></h3>
+<p>Parameters for controlling the CMC run.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Don’t touch these unless you know what you’re doing.  And even then I probably wouldn’t.</p>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AVEKERNEL</span></code></p></td>
+<td><p>one half the number of stars over which to average certain quantities</p>
+<p><strong>AVEKERNEL = 20</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BH_AVEKERNEL</span></code></p></td>
+<td><p>Same, but for three-body binary formation (which is fundamentally more local)</p>
+<p><strong>BH_AVEKERNEL = 3</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MIN_CHUNK_SIZE</span></code></p></td>
+<td><p>minimum size of chunks that get partitioned across processors in the parallel code</p>
+<p><strong>MIN_CHUNK_SIZE = 40</strong> (this is just twice the AVEKERNEL)</p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IDUM</span></code></p></td>
+<td><p>Random number generator seed.  Note this is different from the BSE RNG seed</p>
+<p><strong>IDUM = 1234</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BSE_IDUM</span></code></p></td>
+<td><p>The random number seed used by kick.f and setting initial pulsar spin period and magnetic field</p>
+<p><strong>BSE_IDUM = 1234</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TIMER</span></code></p></td>
+<td><p>Do profiling of the code, and print it out to the timers file.  Note that this introduces many MPI barriers</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>TIMER = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FORCE_RLX_STEP</span></code></p></td>
+<td><p>Force a relaxation timestep (useful when RELAXATION=0)</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>FORCE_RLX_STEP = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DT_HARD_BINARIES</span></code></p></td>
+<td><p>calculate the binary interaction time steps by only considering hard binaries</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Off</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : On</p>
+</div></blockquote>
+<p><strong>DT_HARD_BINARIES = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><a href="#id2"><span class="problematic" id="id3">``</span></a>HARD_BINARY_KT ``</p></td>
+<td><p>The minimum binary binding energy (in units of kT) for a binary to be considered ‘hard’ for the time step calculation.</p>
+<p><strong>HARD_BINARY_KT = 0.7</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SAMPLESIZE</span></code></p></td>
+<td><p>Number of samples keys to use for the parallel sample-sort algorithm</p>
+<p><strong>SAMPLESIZE = 1024</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_CENTRAL_STARS</span></code></p></td>
+<td><p>The number of central stars to use for calculating different qualities related to the timestep</p>
+<p><strong>NUM_CENTRAL_STARS = 300</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="bse">
+<h2>[bse]<a class="headerlink" href="#bse" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although this is all one section, we have grouped the
+flags/parameters which get passed to the binary stellar evolution
+code into types. Each group will start with a note to indicate
+the type of parameter or flag.</p>
+</div>
+<section id="sampling-flags">
+<h3>SAMPLING FLAGS<a class="headerlink" href="#sampling-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pts1</span></code></p></td>
+<td><p>determines the timesteps chosen in each evolution phase as
+decimal fractions of the time taken in that phase for
+Main Sequence (MS) stars</p>
+<p><strong>pts1 = 0.001</strong> following <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2019arXiv190207718B/abstract">Bannerjee+2019</a></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pts2</span></code></p></td>
+<td><p>determines the timesteps chosen in each evolution phase as
+decimal fractions of the time taken in that phase for
+Giant Branch (GB, CHeB, AGB, HeGB) stars</p>
+<p><strong>pts2 = 0.01</strong> following <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract">Hurley+2000</a></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pts3</span></code></p></td>
+<td><p>determines the timesteps chosen in each evolution phase as
+decimal fractions of the time taken in that phase for
+HG, HeMS stars</p>
+<p><strong>pts3 = 0.02</strong> following <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract">Hurley+2000</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="metallicity-flags">
+<h3>METALLICITY FLAGS<a class="headerlink" href="#metallicity-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zsun</span></code></p></td>
+<td><p>Sets the metallicity of the Sun which primarily affects
+stellar winds.</p>
+<p><strong>zsun = 0.014</strong> following <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2009ARA%26A..47..481A/abstract">Asplund 2009</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="wind-flags">
+<h3>WIND FLAGS<a class="headerlink" href="#wind-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 93%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">windflag</span></code></p></td>
+<td><p>Selects the model for wind mass loss for each star</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Standard SSE/BSE (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract">Hurley+2000</a>)</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : StarTrack (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract">Belczynski+2008</a>)</p>
+<p><code class="docutils literal notranslate"><span class="pre">2</span></code> : Metallicity dependence for O/B stars and Wolf Rayet stars (<a class="reference external" href="http://adsabs.harvard.edu/abs/2001A&amp;amp;A...369..574V">Vink+2001</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2005A%26A...442..587V/abstract">Vink+2005</a>)</p>
+<p><code class="docutils literal notranslate"><span class="pre">3</span></code> : Same as 2, but LBV-like mass loss for giants
+and non-degenerate stars beyond the
+Humphreys-Davidson limit</p>
+</div></blockquote>
+<p><strong>windflag = 3</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">eddlimflag</span></code></p></td>
+<td><p>Limits the mass-loss rate of low-metallicity stars near
+the Eddington limit
+(see <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2011A%26A...535A..56G/abstract">Grafener+2011</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2018MNRAS.474.2959G/abstract">Giacobbo+2018</a>).</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : does not apply Eddington limit</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : applies Eddington limit</p>
+</div></blockquote>
+<p><strong>eddlimflag = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">neta</span></code></p></td>
+<td><p>Reimers mass-loss coefficent (<a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2000MNRAS.315..543H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=19">Equation 106 SSE</a>).
+Note: this equation has a typo. There is an extra
+<span class="math">\({\eta}\)</span> out front; the correct rate is directly proportional
+to <span class="math">\({\eta}\)</span>.
+See also <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=1978A%26A....70..227K&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=12">Kurdritzki+1978, Section Vb</a> for discussion.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">value</span></code> : supplies <span class="math">\({\eta}\)</span> to <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2000MNRAS.315..543H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=19">Equation 106 SSE</a></p>
+</div></blockquote>
+<p><strong>neta = 0.5</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bwind</span></code></p></td>
+<td><p>Binary enhanced mass loss parameter.
+See <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=3">Equation 12 BSE</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">value</span></code> : supplies B<sub>w</sub> to <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=3">Equation 12 BSE</a></p>
+</div></blockquote>
+<p><strong>bwind = 0, inactive for single</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hewind</span></code></p></td>
+<td><p>Helium star mass loss parameter: 10<sup>-13</sup> <em>hewind</em> L<sup>2/3</sup> gives He star mass-loss. Equivalent to 1 - <span class="math">\({\mu}\)</span> in the last equation on <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2000MNRAS.315..543H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=19">page 19 of SSE</a>.</p>
+<p><strong>hewind = 0.5</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">beta</span></code></p></td>
+<td><p>Wind velocity factor: v<sub>wind</sub> <sup>2</sup> goes like <em>beta</em>. See <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=3">Equation 9 of Hurley+2002</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">negative</span> <span class="pre">value</span></code> : StarTrack (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract">Belczynski+2008</a>)</p>
+<p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">value</span></code> : supplies <span class="math">\({\beta}\)</span><sub>w</sub> to <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=3">Equation 9 of Hurley+2002</a></p>
+</div></blockquote>
+<p><strong>beta = -1.0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">xi</span></code></p></td>
+<td><p>Wind accretion efficiency factor, which gives the fraction
+of angular momentum lost via winds from the primary that
+transfers to the spin angular momentum of the companion.
+Corresponds to <span class="math">\({\mu}\)</span><sub>w</sub> in <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=3">Equation 11 of Hurley+2002</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">value</span></code> : supplies <span class="math">\({\mu}\)</span><sub>w</sub> in <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=3">Equation 11 of Hurley+2002</a></p>
+</div></blockquote>
+<p><strong>xi = 0.5</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">acc2</span></code></p></td>
+<td><p>Bondi-Hoyle wind accretion factor where the mean wind accretion rate onto the secondary is proportional to <em>acc2</em>. See <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=2">Equation 6 in Hurley+2002</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">value</span></code> : supplies <span class="math">\({\alpha}\)</span><sub>w</sub> in <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=2">Equation 6 in Hurley+2002</a></p>
+</div></blockquote>
+<p><strong>acc2 = 1.5</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="common-envelope-flags">
+<h3>COMMON ENVELOPE FLAGS<a class="headerlink" href="#common-envelope-flags" title="Permalink to this heading"></a></h3>
+<p><strong>Note:</strong> there are cases where a common envelope is forced regardless of the
+critical mass ratio for unstable mass transfer. In the following cases, a
+common envelope occurs regardless of the choices below:</p>
+<p><strong>contact</strong> : the stellar radii go into contact (common for similar ZAMS systems)</p>
+<p><strong>periapse contact</strong> : the periapse distance is smaller than either of the stellar radii (common for highly eccentric systems)</p>
+<p><strong>core Roche overflow</strong> : either of the stellar radii overflow their component’s Roche radius (in this case, mass transfer from the convective core is always dynamically unstable)</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">alpha1</span></code></p></td>
+<td><p>Common-envelope efficiency parameter which scales the
+efficiency of transferring orbital energy to the
+envelope. See <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=11">Equation 71 in Hurley+2002</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : supplies <span class="math">\({\alpha}\)</span> to <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=11">Equation 71 in Hurley+2002</a></p>
+</div></blockquote>
+<p><strong>alpha1 = 1.0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lambdaf</span></code></p></td>
+<td><p>Binding energy factor for common envelope evolution.
+The initial binding energy of the stellar envelope
+goes like 1 / <span class="math">\({\lambda}\)</span>. See <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2002MNRAS.329..897H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=11">Equation 69 in Hurley+2002</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : uses variable lambda prescription detailed
+in appendix of <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2014A%26A...563A..83C/abstract">Claeys+2014</a>
+where lambdaf is the fraction of the ionization energy that can go into ejecting
+the envelope; to use this prescription without extra ionization energy, set lambdaf=0</p>
+<p><code class="docutils literal notranslate"><span class="pre">negative</span> <span class="pre">values</span></code> : fixes <span class="math">\({\lambda}\)</span> to a value of -1.0* <em>lambdaf</em></p>
+</div></blockquote>
+<p><strong>lambdaf = 0.0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ceflag</span></code></p></td>
+<td><p>Selects the <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1990ApJ...358..189D/abstract">de Kool 1990</a>
+model to set the initial orbital energy using the
+total mass of the stars instead of the core masses as
+in <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Equation 70 of Hurley+2002</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : Uses the core mass to calculate initial
+orbital energy as
+in <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Equation 70 of Hurley+2002</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : Uses the <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1990ApJ...358..189D/abstract">de Kool 1990</a>
+model</p>
+</div></blockquote>
+<p><strong>ceflag = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cekickflag</span></code></p></td>
+<td><p>Selects which mass and separation values to use when
+a supernova occurs during the CE and a kick
+needs to be applied.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : uses pre-CE mass and post-CE sep (BSE default)</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : uses pre-CE mass and sep values</p>
+<p><code class="docutils literal notranslate"><span class="pre">2</span></code> : uses post-CE mass and sep</p>
+</div></blockquote>
+<p><strong>cekickflag = 2</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cemergeflag</span></code></p></td>
+<td><p>Determines whether stars that begin a CE
+without a core-envelope boundary automatically lead to
+merger in CE. These systems include:
+kstars = [0,1,2,7,8,10,11,12].</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : allows the CE to proceed</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : causes these systems to merge in the CE</p>
+</div></blockquote>
+<p><strong>cemergeflag = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cehestarflag</span></code></p></td>
+<td><p>Uses fitting formulae from <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2015MNRAS.451.2123T/abstract">Tauris+2015</a>
+for evolving RLO systems with a helium star donor
+and compact object accretor.
+NOTE: this flag will override choice made by
+cekickflag if set</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : does NOT use Tauris+2015 at all</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : uses Tauris+2015 fits for final period only</p>
+<p><code class="docutils literal notranslate"><span class="pre">2</span></code> : uses Tauris+2015 fits for both final mass and final period</p>
+</div></blockquote>
+<p><strong>cehestarflag = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qcflag</span></code></p></td>
+<td><p>Selects model to determine critical mass ratios for the
+onset of unstable mass transfer and/or a common envelope
+during RLO.
+NOTE: this is overridden by qcrit_array if any of the
+values are non-zero.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Section 2.6 of Hurley+2002</a>
+(Default BSE)</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : same as 0 but with <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1987ApJ...318..794H/abstract">Hjellming &amp; Webbink 1987</a>
+for GB/AGB stars</p>
+<p><code class="docutils literal notranslate"><span class="pre">2</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2014A%26A...563A..83C/abstract">Table 2 of Claeys+2014</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">3</span></code> : same as 2 but with <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1987ApJ...318..794H/abstract">Hjellming &amp; Webbink 1987</a>
+for GB/AGB stars</p>
+<p><code class="docutils literal notranslate"><span class="pre">4</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract">Section 5.1 of Belcyznski+2008</a> except for WD donors which follow BSE</p>
+<p><code class="docutils literal notranslate"><span class="pre">5</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2019MNRAS.490.3740N/abstract">Section 2.3 of Neijssel+2020</a> Mass transfer from stripped stars is always assumed to be dynamically stable</p>
+</div></blockquote>
+<p><strong>qcflag = 1</strong></p>
+<table class="docutils align-default" id="id35">
+<caption><span class="caption-text">Comparison of Q Crit Values (Donor Mass/Accretor Mass) For Each Donor Kstar Type Across Flag Options</span><a class="headerlink" href="#id35" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>kstar</p></th>
+<th class="head"><p>qc=0</p></th>
+<th class="head"><p>qc=1</p></th>
+<th class="head"><p>qc=2</p></th>
+<th class="head"><p>qc=3</p></th>
+<th class="head"><p>qc=4</p></th>
+<th class="head"><p>qc=5</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>0.695</p></td>
+<td><p>0.695</p></td>
+<td><p>0.695 / 1.0</p></td>
+<td><p>0.695 / 1.0</p></td>
+<td><p>3.0</p></td>
+<td><p>1.717</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>3</p></td>
+<td><p>3</p></td>
+<td><p>1.6 / 1.0</p></td>
+<td><p>1.6 / 1.0</p></td>
+<td><p>3.0</p></td>
+<td><p>1.717</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>4</p></td>
+<td><p>4</p></td>
+<td><p>4.0 / 4.7619</p></td>
+<td><p>4.0 / 4.7619</p></td>
+<td><p>3.0</p></td>
+<td><p>3.825</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>Eq.2</p></td>
+<td><p>Eq.1</p></td>
+<td><p>Eq.2 / 1.15</p></td>
+<td><p>Eq.1 / 1.15</p></td>
+<td><p>3.0</p></td>
+<td><p>Eq.1</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p>3</p></td>
+<td><p>3</p></td>
+<td><p>3.0 / 3.0</p></td>
+<td><p>3.0 / 3.0</p></td>
+<td><p>3.0</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-odd"><td><p>5</p></td>
+<td><p>Eq.2</p></td>
+<td><p>Eq.1</p></td>
+<td><p>Eq.2 / 1.15</p></td>
+<td><p>Eq.1 / 1.15</p></td>
+<td><p>3.0</p></td>
+<td><p>Eq.1</p></td>
+</tr>
+<tr class="row-even"><td><p>6</p></td>
+<td><p>Eq.2</p></td>
+<td><p>Eq.1</p></td>
+<td><p>Eq.2 / 1.15</p></td>
+<td><p>Eq.1 / 1.15</p></td>
+<td><p>3.0</p></td>
+<td><p>Eq.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>7</p></td>
+<td><p>3</p></td>
+<td><p>3</p></td>
+<td><p>3.0 / 3.0</p></td>
+<td><p>3.0 / 3.0</p></td>
+<td><p>1.7</p></td>
+<td><p>inf</p></td>
+</tr>
+<tr class="row-even"><td><p>8</p></td>
+<td><p>0.784</p></td>
+<td><p>0.784</p></td>
+<td><p>4.0 / 4.7619</p></td>
+<td><p>4.0 / 4.7619</p></td>
+<td><p>3.5</p></td>
+<td><p>inf</p></td>
+</tr>
+<tr class="row-odd"><td><p>9</p></td>
+<td><p>0.784</p></td>
+<td><p>0.784</p></td>
+<td><p>0.784 / 1.15</p></td>
+<td><p>0.784 / 1.15</p></td>
+<td><p>3.5</p></td>
+<td><p>inf</p></td>
+</tr>
+<tr class="row-even"><td><p>10-14</p></td>
+<td><p>0.628</p></td>
+<td><p>0.628</p></td>
+<td><p>3.0 / 0.625</p></td>
+<td><p>3.0 / 0.625</p></td>
+<td><p>0.628</p></td>
+<td><p>0.628</p></td>
+</tr>
+</tbody>
+</table>
+<p>Eq.1: <code class="docutils literal notranslate"><span class="pre">qc</span> <span class="pre">=</span> <span class="pre">0.362</span> <span class="pre">+</span> <span class="pre">1.0/(3.0*(1.0</span> <span class="pre">-</span> <span class="pre">massc(j1)/mass(j1)))</span></code>, which is from Hjellming &amp; Webbink 1983</p>
+<p>Eq.2: <code class="docutils literal notranslate"><span class="pre">qc</span> <span class="pre">=</span> <span class="pre">(1.67d0-zpars(7)+2.d0*(massc(j1)/mass(j1))**5)/2.13d0</span></code>, which is from Claeys+ 2014</p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">qcrit_array</span></code></p></td>
+<td><p>Array with length: 16 for user-input values for the
+critical mass ratios that govern the onset of unstable
+mass transfer and a common envelope. Each item is set
+individually for its associated kstar, and a value of
+0.0 will apply prescription of the qcflag for that kstar.</p>
+<p><strong>Note:</strong> there are cases where a common envelope is forced
+regardless of the critical mass ratio for unstable mass
+transfer; in the following cases, a common envelope occurs
+regardless of the qcrit or qcflag</p>
+<p><strong>qcrit_array = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="kick-flags">
+<h3>KICK FLAGS<a class="headerlink" href="#kick-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 85%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kickflag</span></code></p></td>
+<td><p>Sets the particular natal kick prescription to use
+Note that <code class="docutils literal notranslate"><span class="pre">sigmadiv</span></code>, <code class="docutils literal notranslate"><span class="pre">bhflag</span></code>, <code class="docutils literal notranslate"><span class="pre">bhsigmafrac</span></code>,
+<code class="docutils literal notranslate"><span class="pre">aic</span></code>, and <code class="docutils literal notranslate"><span class="pre">ussn</span></code>, which are described below, are
+only used when <code class="docutils literal notranslate"><span class="pre">kickflag=0</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : The standard COSMIC kick prescription, where
+kicks are drawn from a bimodal distribution with
+standard FeCCSN getting a kick drawn from a Maxwellian
+distribution with dispersion parameter <code class="docutils literal notranslate"><span class="pre">sigma</span></code> and ECSN
+are drawn according to <code class="docutils literal notranslate"><span class="pre">sigmadiv</span></code>. This setting has
+additional possible options for <code class="docutils literal notranslate"><span class="pre">bhflag</span></code>, <code class="docutils literal notranslate"><span class="pre">bhsigmafrac</span></code>,
+<code class="docutils literal notranslate"><span class="pre">aic</span></code> and <code class="docutils literal notranslate"><span class="pre">ussn</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-1</span></code> : Natal kicks are drawn according to <code class="docutils literal notranslate"><span class="pre">sigma</span></code> and
+scaled by the ejecta mass and remnant mass following Eq. 1 of
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2020ApJ...891..141G/abstract">Giacobbo &amp; Mapelli 2020</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">-2</span></code> : Natal kicks are drawn according to <code class="docutils literal notranslate"><span class="pre">sigma</span></code> and
+scaled by just the ejecta mass following Eq. 2 of
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2020ApJ...891..141G/abstract">Giacobbo &amp; Mapelli 2020</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">-3</span></code> : Natal kicks are drawn according to Eq. 1 of
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2016MNRAS.461.3747B/abstract">Bray &amp; Eldridge 2016</a></p>
+</div></blockquote>
+<p><strong>default=0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code></p></td>
+<td><p>Sets the dispersion in the Maxwellian for the
+SN kick velocity in km/s</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">value</span></code> : sets Maxwellian dispersion</p>
+</div></blockquote>
+<p><strong>default=265.0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bhflag</span></code></p></td>
+<td><p>Sets the model for how SN kicks are applied to BHs
+where bhflag != 0 allows velocity kick at BH formation</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : no BH kicks</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : fallback-modulated kicks following
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2012ApJ...749...91F/abstract">Fryer+2012</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">2</span></code> : kicks decreased by ratio of BH mass to NS mass
+(1.44 Msun); conserves linear momentum</p>
+<p><code class="docutils literal notranslate"><span class="pre">3</span></code> : full strength kick drawn from Maxwellian
+with dispersion = <em>sigma</em> selected above</p>
+</div></blockquote>
+<p><strong>bhflag = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ecsn</span></code></p></td>
+<td><p>Allows for electron capture SN and sets the
+maximum ECSN mass range at the time of SN</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : turns off ECSN</p>
+<p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">BSE (Hurley+2002)</a>
+and <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract">StarTrack (Belczynski+2008)</a>
+use ecsn = 2.25, while <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2004ApJ...612.1044P/abstract">Podsiadlowksi+2004</a>
+use ecsn = 2.5</p>
+</div></blockquote>
+<p><strong>ecsn = 2.5</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ecsn_mlow</span></code></p></td>
+<td><p>Sets the low end of the ECSN mass range</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">BSE (Hurley+2002)</a>
+use ecsn_mlow = 1.6, while <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract">StarTrack (Belczynski+2008)</a>
+use ecsn_mlow = 1.85, while <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2004ApJ...612.1044P/abstract">Podsiadlowksi+2004</a>
+use ecsn_mlow = 1.4</p>
+</div></blockquote>
+<p><strong>ecsn_mlow = 1.4</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sigmadiv</span></code></p></td>
+<td><p>Sets the modified ECSN kick strength</p>
+<p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : divide <em>sigma</em> above by <em>sigmadiv</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">negative</span> <span class="pre">values</span></code> : sets the ECSN <em>sigma</em> value</p>
+<p><strong>sigmadiv = -20.0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">aic</span></code></p></td>
+<td><p>reduces kick strengths for accretion induced collapse SN
+according to <em>sigmadiv</em></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : AIC SN receive kicks drawn from Maxwellian
+with dispersion = <em>sigma</em> above</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : sets kick strength according to <em>sigmadiv</em>
+NOTE: this will applies even if ecsn = 0.0</p>
+</div></blockquote>
+<p><strong>aic = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ussn</span></code></p></td>
+<td><p>Reduces kicks according to the <em>sigmadiv</em> selection
+for ultra-stripped supernovae which happen whenever
+a He-star undergoes a CE with a compact companion</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : USSN receive kicks drawn from Maxwellian
+with dispersion = <em>sigma</em> above</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : sets kick strength according to <em>sigmadiv</em></p>
+</div></blockquote>
+<p><strong>ussn = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pisn</span></code></p></td>
+<td><p>Allows for (pulsational) pair instability supernovae
+and sets either the model to use or the maximum mass
+of the remnant.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : no pulsational pair instability SN</p>
+<p><code class="docutils literal notranslate"><span class="pre">-1</span></code> : uses the formulae from <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2017MNRAS.470.4739S/abstract">Spera &amp; Mapelli 2017</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">-2</span></code> : uses a polynomial fit to <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2018arXiv181013412M/abstract">Table 1 in Marchant+2018</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">-3</span></code> : uses a polynomial fit to <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2019ApJ...878...49W/abstract">Table 5 in Woosley 2019</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : turns on pulsational pair
+instability SN and sets the maximum mass of the allowed
+remnant</p>
+</div></blockquote>
+<p><strong>pisn = 45.0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bhsigmafrac</span></code></p></td>
+<td><p>Sets a fractional modification which scales down <em>sigma</em>
+for BHs. This works in addition to whatever is chosen for
+<em>bhflag</em>, and is applied to <em>sigma</em> <strong>before</strong> the <em>bhflag</em>
+prescriptions are applied</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">values</span> <span class="pre">between</span> <span class="pre">[0,</span> <span class="pre">1]</span></code> : reduces <em>sigma</em> by <em>bhsigmafrac</em></p>
+</div></blockquote>
+<p><strong>bhsigmafrac = 1.0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">polar_kick_angle</span></code></p></td>
+<td><p>Sets the opening angle of the SN kick relative to the
+pole of the exploding star, where 0 gives strictly polar
+kicks and 90 gives fully isotropic kicks</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">values</span> <span class="pre">between</span> <span class="pre">[0,</span> <span class="pre">90]</span></code> : sets opening angle for SN kick</p>
+</div></blockquote>
+<p><strong>polar_kick_angle = 90.0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">natal_kick_array</span></code></p></td>
+<td><p>Array of dimensions: (2,5) which takes user input values
+for the SN natal kick, where the first row corresponds to the
+first star and the second row corresponds to the second star and
+columns are: [vk, phi, theta, mean_anomaly, rand_seed].
+NOTE: any numbers outside these ranges will be sampled
+in the standard ways detailed above.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">vk</span></code> : valid on the range [0, inf]</p>
+<p><code class="docutils literal notranslate"><span class="pre">phi</span></code> : co-lateral polar angle in degrees, valid from
+[-90, 90]</p>
+<p><code class="docutils literal notranslate"><span class="pre">theta</span></code> : azimuthal angle in degrees, valid from
+[0, 360]</p>
+<p><code class="docutils literal notranslate"><span class="pre">mean_anomaly</span></code> : mean anomaly in degrees,
+valid from [0, 360]</p>
+<p><code class="docutils literal notranslate"><span class="pre">rand_seed</span></code> : supplied if restarting evolution after
+a supernova has already occurred</p>
+</div></blockquote>
+<p><strong>natal_kick_array = [[-100.0,-100.0,-100.0,-100.0,0.0][-100.0,-100.0,-100.0,-100.0,0.0]]</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="remnant-mass-flags">
+<h3>REMNANT MASS FLAGS<a class="headerlink" href="#remnant-mass-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 94%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">remnantflag</span></code></p></td>
+<td><p>Determines the remnant mass prescription used for NSs and BHs.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract">Section 6 of Hurley+2000</a>
+(default BSE)</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002ApJ...572..407B/abstract">Belczynski+2002</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">2</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract">Belczynski+2008</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">3</span></code> : follows the rapid prescription from <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2012ApJ...749...91F/abstract">Fryer+2012</a>, with updated proto-core mass from <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2020ApJ...891..141G/abstract">Giacobbo &amp; Mapelli 2020</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">4</span></code> : delayed prescription from <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2012ApJ...749...91F/abstract">Fryer+2012</a></p>
+</div></blockquote>
+<p><strong>remnantflag = 3</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mxns</span></code></p></td>
+<td><p>Sets the boundary between the maximum NS mass
+and the minimum BH mass</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : sets the NS/BH mass bounary</p>
+</div></blockquote>
+<p><strong>mxns = 3.0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rembar_massloss</span></code></p></td>
+<td><p>Determines the prescriptions for mass conversion from
+baryonic to gravitational mass during the collapse of
+the proto-compact object</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : sets the maximum amount of mass loss, which should be about 10% of the maximum mass of an iron core (<span class="math">\({\sim 5 \mathrm{M}_\odot}\)</span> Fryer, private communication)</p>
+<p><code class="docutils literal notranslate"><span class="pre">-1</span> <span class="pre">&lt;</span> <span class="pre">*rembar_massloss*</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> : assumes that proto-compact objects lose a constant fraction of their baryonic mass when collapsing to a black hole (e.g., <em>rembar_massloss</em> = -0.1 gives the black hole a gravitational mass that is 90% of the proto-compact object’s baryonic mass)</p>
+</div></blockquote>
+<p><strong>rembar_massloss = 0.5</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="remnant-spin-flags">
+<h3>REMNANT SPIN FLAGS<a class="headerlink" href="#remnant-spin-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 82%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bhspinflag</span></code></p></td>
+<td><p>Uses different prescriptions for BH spin after formation</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : sets all BH spins to <em>bhspinmag</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : draws a random BH spin between 0 and bhspinmag for every BH</p>
+<p><code class="docutils literal notranslate"><span class="pre">2</span></code> : core-mass dependent BH spin (based on <a class="reference external" href="https://arxiv.org/abs/1706.07053v1">Belczynski+2017 v1</a>)</p>
+</div></blockquote>
+<p><strong>bhspinflag = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bhspinmag</span></code></p></td>
+<td><p>Sets either the spin of all BHs or the upper limit of the uniform distribution for BH spins</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">values</span> <span class="pre">&gt;=</span> <span class="pre">0.0</span></code> : spin or upper limit value</p>
+</div></blockquote>
+<p><strong>bhspinmag = 0.0</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="gr-orbital-decay-flag">
+<h3>GR ORBITAL DECAY FLAG<a class="headerlink" href="#gr-orbital-decay-flag" title="Permalink to this heading"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In CMC, GR orbital decay is handled separately from BSE for binary black holes, and is unaffected by the below flag</p>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 74%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">grflag</span></code></p></td>
+<td><p>Turns on or off orbital decay due to gravitational wave radiation</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : No orbital decay due to GR</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : Orbital decay due to GR is included</p>
+</div></blockquote>
+<p><strong>grflag = 1</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="mass-transfer-flags">
+<h3>MASS TRANSFER FLAGS<a class="headerlink" href="#mass-transfer-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">eddfac</span></code></p></td>
+<td><p>Eddington limit factor for mass transfer.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">1</span></code> : mass transfer rate is limited by the
+Eddington rate following Equation 67 in
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Hurley+2002</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">values</span> <span class="pre">&gt;1</span></code> : permit super-Eddington accretion
+up to value of <em>eddfac</em></p>
+</div></blockquote>
+<p><strong>eddfac = 1.0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code></p></td>
+<td><p>Angular momentum prescriptions for mass lost during RLO
+at super-Eddington mass transfer rates</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">-1</span></code> : assumes the lost material carries away the
+specific angular momentum of the primary</p>
+<p><code class="docutils literal notranslate"><span class="pre">-2</span></code> : assumes material is lost from the system as
+if it is a wind from the secondary</p>
+<p><code class="docutils literal notranslate"><span class="pre">&gt;0</span></code> : assumes that the lost material takes away a
+fraction <em>gamma</em> of the orbital angular momentum</p>
+</div></blockquote>
+<p><strong>gamma = -2.0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">don_lim</span></code></p></td>
+<td><p>Calculates the rate of thermal mass loss through Roche
+overflow mass transfer from the donor star</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">-1</span></code> : donor mass loss rate is calculated following
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Hurley+2002</a></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">-2</span></code><span class="classifier">donor mass loss rate is calculated following</span></dt><dd><p><a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2014A%26A...563A..83C/abstract">Claeys+2014</a></p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">acc_lim</span></code></p></td>
+<td><p>Limits the amount of mass accreted during Roche overflow</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">-1</span></code> : limited to 10x’s the thermal rate of the accretor
+for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars</p>
+<p><code class="docutils literal notranslate"><span class="pre">-2</span></code> : limited to 1x’s the thermal rate of the accretor
+for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars</p>
+<p><code class="docutils literal notranslate"><span class="pre">-3</span></code> : limited to 10x’s the thermal rate of the accretor
+for all stars</p>
+<p><code class="docutils literal notranslate"><span class="pre">-4</span></code> : limited to 1x’s the thermal rate of the accretor
+for all stars</p>
+<p><code class="docutils literal notranslate"><span class="pre">&gt;=0</span></code> : sets overall accretion fraction of donor mass
+as in Belcyznski+2008 w/ acc_lim = 0.5</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tides-flags">
+<h3>TIDES FLAGS<a class="headerlink" href="#tides-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 98%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tflag</span></code></p></td>
+<td><p>Activates tidal circularisation following
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Hurley+2002</a></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : no tidal circularization</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : activates tidal circularization</p>
+</div></blockquote>
+<p><strong>tflag = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ST_tide</span></code></p></td>
+<td><p>Activates StarTrack setup for tides following
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract">Belczynski+2008</a></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">BSE</a></p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract">StarTrack</a></p>
+</div></blockquote>
+<p><strong>ST_tide = 1</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fprimc_array</span></code></p></td>
+<td><p>controls the scaling factor for convective tides
+each item is set individually for its associated kstar
+The releveant equation is <a class="reference external" href="https://watermark.silverchair.com/329-4-897.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAnAwggJsBgkqhkiG9w0BBwagggJdMIICWQIBADCCAlIGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMYUoYtydpxVKmZePqAgEQgIICI1b5IZldHg9_rX6JacIe-IR042LnNi-4F9DMp-2lm3djjQ8xehKOv5I0VBjSNJfa6n-FErAH7ed1llADY7tMDTvqo1GHKBMDslNku5XDGfmae0sF-Zp5ndeGoZsyqISABLHEbdY4VFl8Uz_6jzAuBjGztnuxVmUh9bKIOaxuDpfB3Mn2xOfP9lcCVkjzQ0JWzr98nQNmVwDkI9bPv98Ab46BjBdGdcBKajCC-sqASjtmAQS2h6SGTTBqyRAyigqXcPtWf3Ye1SbxtL3zag6_Lf01rgCoUCK9eT_pavb5F8vVkUTMWbZQ79DWxn5pfZYi72C7_BtlPoUnS8Gs3wvw18BTIaHTKblwh225DcXuTEh_ngMmRvPEVctvG8tjlr9md-eFK0cEsq0734eGYtnwxeqvFxcWsW6mRbXrFHFsInQK16j6n36XuCimY665l_-HPAuu-lTTlwpMTUR7K1eYMBsco_tp_TdxEipRNvBpaWZX3J0FxPMzi84Y01UvWiW69pxb-LLTpf8aG4YCm9asRFyfDZ9nbSdgrIlCiuzy7QSmkvsHOaTEecmwRimFRycDuIuWLvA_tILmYCIM2KzvqYJSVCQPJH39xEHZG8LbMqImwAVYO3H90qh-90gNrtZn4ofSskcgqxeqfZly9CPfmEevX5s-SlLHMh1N6gdZwenvMC0kTWg_rskbvGiANtuGngD-kKDbunGpYJU_nI7uDnhGtdY#page=5">Equation 21 of Hurley+2002</a></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : sets scaling factor of
+Equation 21 referenced above</p>
+</div></blockquote>
+<p><strong>fprimc_array = [2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,
+2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,
+2.0/21.0,2.0/21.0]</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="white-dwarf-flags">
+<h3>WHITE DWARF FLAGS<a class="headerlink" href="#white-dwarf-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 87%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ifflag</span></code></p></td>
+<td><p>Activates the initial-final white dwarf mass relation
+from Han+1995 <a class="reference external" href="http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=1995MNRAS.272..800H&amp;link_type=ARTICLE&amp;db_key=AST&amp;high=#page=4">Equations 3, 4, and 5</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : no modifications to BSE</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : activates initial-final WD mass relation</p>
+</div></blockquote>
+<p><strong>ifflag = 0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wdflag</span></code></p></td>
+<td><p>Activates an alternate cooling law found in the description
+immediately following <a class="reference external" href="http://iopscience.iop.org/article/10.1086/374637/pdf#page=3">Equation 1</a>
+in Hurley &amp; Shara 2003.
+Equation 1 gives the BSE default Mestel cooling law.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : no modifications to BSE</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : activates modified cooling law</p>
+</div></blockquote>
+<p><strong>wdflag = 1</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">epsnov</span></code></p></td>
+<td><p>Fraction of accreted matter retained in a nova eruption.
+This is relevant for accretion onto degenerate objects;
+see Section 2.6.6.2 in <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Hurley+2002</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span> <span class="pre">between</span> <span class="pre">[0,</span> <span class="pre">1]</span></code> : retains <em>epsnov</em>
+fraction of accreted matter</p>
+</div></blockquote>
+<p><strong>epsnov = 0.001</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="pulsar-flags">
+<h3>PULSAR FLAGS<a class="headerlink" href="#pulsar-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bdecayfac</span></code></p></td>
+<td><p>Activates different models for accretion induced field decay; see
+<a class="reference external" href="https://academic.oup.com/mnras/article/388/1/393/1013977">Kiel+2008</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : uses an exponential decay</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : uses an inverse decay</p>
+</div></blockquote>
+<p><strong>bdecayfac = 1</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bconst</span></code></p></td>
+<td><p>Sets the magnetic field decay time-scale for pulsars following
+Section 3 of <a class="reference external" href="https://academic.oup.com/mnras/article/388/1/393/1013977">Kiel+2008</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">negative</span> <span class="pre">values</span></code> : sets k in Myr from Equation 8 to
+-1 * <em>bconst</em></p>
+</div></blockquote>
+<p><strong>bconst = -3000</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ck</span></code></p></td>
+<td><p>Sets the magnetic field decay time-scale for pulsars following
+Section 3 of <a class="reference external" href="https://academic.oup.com/mnras/article/388/1/393/1013977">Kiel+2008</a>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">negative</span> <span class="pre">values</span></code> : sets <span class="math">\({\tau}\)</span><sub>b</sub> in Myr
+from Equation 2 to  -1 * <em>ck</em></p>
+</div></blockquote>
+<p><strong>ck = -1000</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="mixing-variables">
+<h3>MIXING VARIABLES<a class="headerlink" href="#mixing-variables" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 85%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rejuv_fac</span></code></p></td>
+<td><p>Sets the mixing factor in main sequence star collisions.
+This is hard coded to 0.1 in the original BSE release
+and in Equation 80 of <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Hurley+2002</a>
+but can lead to extended main sequence lifetimes in some cases.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">positive</span> <span class="pre">values</span></code> : sets the mixing factor</p>
+</div></blockquote>
+<p><strong>rejuv_fac = 1.0</strong></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rejuvflag</span></code></p></td>
+<td><p>Sets whether to use the orginal prescription for mixing
+of main-sequence stars (based on equation 80 of <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Hurley+2002</a>)
+or whether to use the ratio of the pre-merger He core
+mass at the base of the giant branch to the merger product’s
+He core mass at the base of the giant branch</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : no modifications to BSE</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : modified mixing times</p>
+</div></blockquote>
+<p><strong>rejuvflag = 0</strong></p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bhms_coll_flag</span></code></p></td>
+<td><p>If set to 1 then if BH+star collision and if Mstar &gt; Mbh, do not destroy the star</p>
+<p><strong>default = 0</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="magnetic-braking-flags">
+<h3>MAGNETIC BRAKING FLAGS<a class="headerlink" href="#magnetic-braking-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 82%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">htpmb</span></code></p></td>
+<td><p>Activates different models for magnetic braking</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : no modifications to BSE</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2003ApJ...599..516I/abstract">Ivanona and Taam 2003</a></p>
+</div></blockquote>
+<p><strong>htpmb = 1</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="misc-flags">
+<h3>MISC FLAGS<a class="headerlink" href="#misc-flags" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ST_cr</span></code></p></td>
+<td><p>Activates different convective vs radiative boundaries</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">0</span></code> : no modifications to BSE</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span></code> : follows <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract">StarTrack</a></p>
+</div></blockquote>
+<p><strong>ST_cr = 1</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+    <a href="https://github.com/ClusterMonteCarlo/CMC-COSMIC">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../output/index.html" class="btn btn-neutral float-left" title="Analyzing CMC Output" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../FAQTroubleshooting/index.html" class="btn btn-neutral float-right" title="FAQ/Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Carl Rodriguez &amp; Scott Coughlin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

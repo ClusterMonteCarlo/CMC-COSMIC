@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyzing CMC Output &mdash; cmc 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/katex-math.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/cosmic-docs.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/icon.001.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/katex.min.js"></script>
+        <script src="../_static/auto-render.min.js"></script>
+        <script src="../_static/katex_autorenderer.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuration files for CMC" href="../inifile/index.html" />
+    <link rel="prev" title="Running CMC" href="../running/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.001.jpeg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../initialconditions/index.html">Initial Conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running/index.html">Running CMC</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Analyzing CMC Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#code-units">Code Units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#log-files">Log Files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#initial-dyn-dat">initial.dyn.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-binint-log">initial.binint.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-bh-dat">initial.bh.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-bh-esc-dat">initial.bh.esc.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-bhmerger-dat">initial.bhmerger.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-collision-log">initial.collision.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-semergedisrupt-log">initial.semergedisrupt.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-esc-dat">initial.esc.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-morepulsars-dat">initial.morepulsars.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-log">initial.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-tidalcapture-log">initial.tidalcapture.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-triple-dat">initial.triple.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-lagrad-dat">initial.lagrad.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-v2-rad-lagrad-dat">initial.v2_rad_lagrad.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-v2-tan-lagrad-dat">initial.v2_tan_lagrad.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-nostar-lagrad-dat">initial.nostar_lagrad.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-rho-lagrad-dat">initial.rho_lagrad.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-avemass-lagrad-dat">initial.avemass_lagrad.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-ke-rad-lagrad-dat">initial.ke_rad_lagrad.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-ke-tan-lagrad-dat">initial.ke_tan_lagrad.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-lagrad0-0-1-1-dat">initial.lagrad0-0.1-1.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-lagrad1-1-10-dat">initial.lagrad1-1-10.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-lagrad2-10-100-dat">initial.lagrad2-10-100.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-lagrad3-100-1000-dat">initial.lagrad3-100-1000.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-lagrad-10-info-dat">initial.lagrad_10_info.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-core-dat">initial.core.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-bin-dat">initial.bin.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-bhformation-dat">initial.bhformation.dat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-3bb-log">initial.3bb.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-3bbprobability-log">initial.3bbprobability.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initial-lightcollision-log">initial.lightcollision.log</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#snapshots">Snapshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cluster-observables">Cluster Observables</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Extending CMC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../inifile/index.html">Configuration files for CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQTroubleshooting/index.html">FAQ/Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact/index.html">Contact Team CMC</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../parallel/index.html">Code Structure and Parallelization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/index.html">Doxygen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cmc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Analyzing CMC Output</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/output/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+             
+  <section id="analyzing-cmc-output">
+<span id="output"></span><h1>Analyzing CMC Output<a class="headerlink" href="#analyzing-cmc-output" title="Permalink to this heading"></a></h1>
+<p>Here we list all of the output files that are generated in a typical CMC run,
+and offer some suggestsions on how to analyze them.  Generally, the output
+comes in one of two types: <cite>log files</cite>, where individual events (e.g. stellar
+collisions, mergers, fewbody interactions) are logged whenenver they happen or
+when specific quantities are recorded every timestep (e.g. the number of black
+holes, the core radius, the lagrange radii), and <cite>snapshots</cite>, where the state
+of every star and binary in the cluster is recorded.  These are saved in plain
+text dat files and hdf5 files, respectively.</p>
+<p>Most of the log files are in plain text (.dat) with easily readable columns
+that can be loaded in python with either <code class="docutils literal notranslate"><span class="pre">loadtxt</span></code> or the appropriate pandas
+commands.  However, a handful of the event log files, such as the binary
+interaction (binint.log), collision (collision.log), and stellar evolution
+distruption (semergedistrupt.log), are somewhat more difficult to parse.  We
+have provided a python package to make parsing these easier; it is located in
+the <code class="docutils literal notranslate"><span class="pre">CMC-COSMIC/tools</span></code> directory of the main CMC folder (the <a class="reference external" href="https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/tools">cmc_parser.py</a> file).</p>
+<p id="cmcparser">The log files can be imported using (specifying only the prefix that you provided for the output when running CMC):</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">cmc_parser</span> <span class="k">as</span> <span class="nn">cp</span>
+
+<span class="gp">In [2]: </span><span class="n">units</span><span class="p">,</span><span class="n">binints</span><span class="p">,</span><span class="n">semergers</span><span class="p">,</span><span class="n">collisions</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">load_ineraction_files</span><span class="p">(</span><span class="s1">&#39;source/example_output/output&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We will discuss each of these below.</p>
+<p>The HDF5 snapshots are designed to be importable as Pandas tables and are
+described below.  These snapshots can also be converted into various
+observational quantities, such as surface brightness profiles, velocity
+dispersion profiles, and more, using the <cite>cmctoolkit</cite> package (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract">Rui et al.,
+2021</a>).  We
+include the python code from the main package in the <code class="docutils literal notranslate"><span class="pre">CMC-COSMIC/tools</span></code>
+folder, but please see <a class="reference external" href="https://github.com/NicholasRui/cmctoolkit">here</a> for
+complete instructions and useage.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Here we are using the output from the <a class="reference internal" href="../initialconditions/index.html#realistic-initial-conditions"><span class="std std-ref">Realistic Initial Conditions</span></a> example, running it for 15 Myr (though note that the default ini file runs it for 13.8 Gyr) and having it print a window snapshot every 10 Myr.  On 28 cores of the Vera machine, this takes about 10 minutes.</p>
+</div>
+<section id="code-units">
+<h2>Code Units<a class="headerlink" href="#code-units" title="Permalink to this heading"></a></h2>
+<p>CMC uses the standard N-body units <a class="reference external" href="https://link.springer.com/article/10.1007/BF00649159">(Hénon 1971a)</a> in all numerical
+calculations: the gravitational constant <span class="math">\({G=1}\)</span>, the initial total mass
+<span class="math">\({M=1}\)</span>, and the initial total energy <span class="math">\({E_0=-1/4}\)</span>. The conversion
+from code units to physical units for time is done by calculating the initial
+half-mass relaxation time in years. The file <code class="docutils literal notranslate"><span class="pre">&lt;output&gt;.conv.sh</span></code> contains all
+conversion factors used to convert from code to physical units. For example, to
+convert from code units of time to Myr, multiply by the factor timeunitsmyr,
+and so on. <strong>Unless otherwise noted, all values below are in code units.</strong></p>
+<p>This file can be parsed using the above command, or using a stand-alone command for only the conversion dictionary:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [3]: </span><span class="kn">import</span> <span class="nn">cmc_parser</span> <span class="k">as</span> <span class="nn">cp</span>
+
+<span class="gp">In [4]: </span><span class="n">conv_file</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">conversion_file</span><span class="p">(</span><span class="s1">&#39;source/example_output/output.conv.sh&#39;</span><span class="p">)</span>
+
+<span class="gp">In [5]: </span><span class="nb">print</span><span class="p">(</span><span class="n">conv_file</span><span class="o">.</span><span class="n">mass_msun</span><span class="p">)</span>
+<span class="go">63270.5</span>
+
+<span class="gp">In [6]: </span><span class="nb">print</span><span class="p">(</span><span class="n">conv_file</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+<span class="go">{&#39;mass_cgs&#39;: 1.25845e+38, &#39;mass_msun&#39;: 63270.5, &#39;mass_cgs_mstar&#39;: 1.25845e+33, &#39;mass_msun_mstar&#39;: 0.632705, &#39;length_cgs&#39;: 3.0857e+18, &#39;length_parsec&#39;: 1.0, &#39;time_cgs&#39;: 2.70787e+16, &#39;time_myr&#39;: 858.091, &#39;time_cgs_nb&#39;: 1870530000000.0, &#39;time_myr_nb&#39;: 0.0592749}</span>
+</pre></div>
+</div>
+</section>
+<section id="log-files">
+<h2>Log Files<a class="headerlink" href="#log-files" title="Permalink to this heading"></a></h2>
+<p>Listed below are the output files of CMC with the variables printed out.</p>
+<section id="initial-dyn-dat">
+<h3>initial.dyn.dat<a class="headerlink" href="#initial-dyn-dat" title="Permalink to this heading"></a></h3>
+<p>The <strong>initial.dyn.dat</strong> files contains various theoretical quantities pertaining
+to the dynamical evolution of your cluster, such as theoretical core radius,
+total mass, central density, central velocity dispersion, etc. This file may be
+used to create, for example, plots of core radii or half-mass radii versus time
+for a given simulation. Be warned that these theoretical quantities are not
+necessarily the same as the way observers would define these quantities.
+However, these quantities are all useful for establishing a general idea of how
+the cluster evolves.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 89%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">t</span></code></p></td>
+<td><p>Time [code units]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dt</span></code></p></td>
+<td><p>Time step</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tcount</span></code></p></td>
+<td><p>Time count</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">N</span></code></p></td>
+<td><p>Total number of objects (single+binary)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">M</span></code></p></td>
+<td><p>Total mass (in units of initial mass)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VR</span></code></p></td>
+<td><p>Measure how far away the cluster is from virial equilibrium (-2.0*Etotal.K/Etotal.P)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N_c</span></code></p></td>
+<td><p>Total number of stars within the core: <span class="math">\(\frac{4 \pi}{3} r_c^3  \frac{n_{\rm c}}{2}\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r_c</span></code></p></td>
+<td><p>Theoretical, mass-density-weighted core radius from Eq. II.4 of Casertano &amp; Hut (1985)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r_max</span></code></p></td>
+<td><p>Maximum radius of a star</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Etot</span></code></p></td>
+<td><p>Total energy</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KE</span></code></p></td>
+<td><p>Total kinetic energy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PE</span></code></p></td>
+<td><p>Total potential energy</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Etot_int</span></code></p></td>
+<td><p>Total internal energy of single stars</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Etot_bin</span></code></p></td>
+<td><p>Total internal energy of binary stars</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">E_cenma</span></code></p></td>
+<td><p>Central BH mass (i.e., when there is a central IMBH)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Eesc</span></code></p></td>
+<td><p>Total energy of the escaped single stars</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Ebesc</span></code></p></td>
+<td><p>Total energy of the escaped binary stars</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Eintesc</span></code></p></td>
+<td><p>Total internal energy in the escaped stars</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Eoops</span></code></p></td>
+<td><p>Energy error loss due to Stodolkiwecz’s potential correction</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Etot+Eoops</span></code></p></td>
+<td><p>Total energy + Eoops</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r_h</span></code></p></td>
+<td><p>Half-mass radius</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rho_0</span></code></p></td>
+<td><p>Central density (mass-density-weighted density) from Eq. II.5 of Casertano &amp; Hut (1985)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rc_spitzer</span></code></p></td>
+<td><p>Core radius from Spitzer (1987): <span class="math">\(\sqrt{3  \sigma_0^2}{4 \pi \rho_0}\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">v0_rms</span></code></p></td>
+<td><p>RMS density-weighted velocity dispersion at the cluster center</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rc_nb</span></code></p></td>
+<td><p>Theoretical (mass-density-squared)-weighted core radius used in NBODY6, originating in Eq. 5 of McMillan, Hut &amp; Makino (1990)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DMse</span></code></p></td>
+<td><p>Total mass loss from the cluster per time step due to stellar evolution [<span class="math">\({M_{\odot}}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DMrejuv</span></code></p></td>
+<td><p>Mass loss from rejuvenation per time step [<span class="math">\({M_{\odot}}\)</span>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">N_c_nb</span></code></p></td>
+<td><p>Number of stars within the core: <span class="math">\(\frac{4 \pi}{3} rc_{\rm nb}^3  \frac{n_{\rm c}}{2}\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-binint-log">
+<h3>initial.binint.log<a class="headerlink" href="#initial-binint-log" title="Permalink to this heading"></a></h3>
+<p>Over the course of the evolution of the cluster, single stars and binaries will
+frequently undergo three- and four-body dynamical encounters, which are
+integrated directly in CMC using the Fewbody package (Fregeau et al. 2007). The
+file <strong>initial.binint.log</strong> records all input and output parameters (e.g.,
+component masses, IDS, stellar types, semi-major axes, etc.) each time fewbody
+is called.</p>
+<p>Every encounter information is printed between two lines of asterisks.
+Below is an exemplary output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>********************************************************************************
+<span class="nv">type</span><span class="o">=</span>BS <span class="nv">t</span><span class="o">=</span><span class="m">5</span>.85010072e-06
+params: <span class="nv">b</span><span class="o">=</span><span class="m">1</span>.46611 <span class="nv">v</span><span class="o">=</span><span class="m">0</span>.379587
+input: <span class="nv">type</span><span class="o">=</span>single <span class="nv">m</span><span class="o">=</span><span class="m">0</span>.0284732 <span class="nv">R</span><span class="o">=</span><span class="m">0</span>.215538 <span class="nv">Eint</span><span class="o">=</span><span class="m">0</span> <span class="nv">id</span><span class="o">=</span><span class="m">170307</span> <span class="nv">ktype</span><span class="o">=</span><span class="m">0</span>
+input: <span class="nv">type</span><span class="o">=</span>binary <span class="nv">m0</span><span class="o">=</span><span class="m">0</span>.211113 <span class="nv">m1</span><span class="o">=</span><span class="m">0</span>.148022 <span class="nv">R0</span><span class="o">=</span><span class="m">0</span>.22897 <span class="nv">R1</span><span class="o">=</span><span class="m">0</span>.170412 <span class="nv">Eint1</span><span class="o">=</span><span class="m">0</span> <span class="nv">Eint2</span><span class="o">=</span><span class="m">0</span> <span class="nv">id0</span><span class="o">=</span><span class="m">33128</span> <span class="nv">id1</span><span class="o">=</span><span class="m">1255329</span> <span class="nv">a</span><span class="o">=</span><span class="m">0</span>.0908923 <span class="nv">e</span><span class="o">=</span><span class="m">0</span>.0641548 <span class="nv">ktype1</span><span class="o">=</span><span class="m">0</span> <span class="nv">ktype2</span><span class="o">=</span><span class="m">0</span> status:      DE/E<span class="o">=</span>-1.79889e-08 <span class="nv">DE</span><span class="o">=</span><span class="m">1</span>.71461e-10 DL/L<span class="o">=</span><span class="m">2</span>.54957e-08 <span class="nv">DL</span><span class="o">=</span><span class="m">8</span>.18406e-10 DE_GW/E<span class="o">=</span>-0 <span class="nv">DE_GW</span><span class="o">=</span><span class="m">0</span> v_esc_cluster<span class="o">[</span>km/s<span class="o">]=</span><span class="m">77</span>.9847 <span class="nv">tcpu</span><span class="o">=</span><span class="m">0</span>.01
+outcome: <span class="nv">nstar</span><span class="o">=</span><span class="m">3</span> <span class="nv">nobj</span><span class="o">=</span><span class="m">2</span>:  <span class="m">0</span> <span class="o">[</span><span class="m">1</span> <span class="m">2</span><span class="o">]</span> <span class="o">(</span>single-binary<span class="o">)</span>
+output: <span class="nv">type</span><span class="o">=</span>single <span class="nv">m</span><span class="o">=</span><span class="m">0</span>.0284732 <span class="nv">R</span><span class="o">=</span><span class="m">0</span>.215538 <span class="nv">Eint</span><span class="o">=</span><span class="m">0</span> <span class="nv">id</span><span class="o">=</span><span class="m">170307</span> <span class="nv">ktype</span><span class="o">=</span><span class="m">0</span>
+output: <span class="nv">type</span><span class="o">=</span>binary <span class="nv">m0</span><span class="o">=</span><span class="m">0</span>.211113 <span class="nv">m1</span><span class="o">=</span><span class="m">0</span>.148022 <span class="nv">R0</span><span class="o">=</span><span class="m">0</span>.22897 <span class="nv">R1</span><span class="o">=</span><span class="m">0</span>.170412 <span class="nv">Eint1</span><span class="o">=</span><span class="m">0</span> <span class="nv">Eint2</span><span class="o">=</span><span class="m">0</span> <span class="nv">id0</span><span class="o">=</span><span class="m">33128</span> <span class="nv">id1</span><span class="o">=</span><span class="m">1255329</span> <span class="nv">a</span><span class="o">=</span><span class="m">0</span>.09094 <span class="nv">e</span><span class="o">=</span><span class="m">0</span>.123848 <span class="nv">ktype1</span><span class="o">=</span><span class="m">0</span> <span class="nv">ktype2</span><span class="o">=</span><span class="m">0</span>
+********************************************************************************
+</pre></div>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td><p>Encounter type (BS for binary-single or BB for binary-binary)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">t</span></code></p></td>
+<td><p>Encounter time</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">b</span></code></p></td>
+<td><p>Impact parameter [units of <span class="math">\(a\)</span> for binary-single or <span class="math">\(a_1+a_2\)</span> for binary-binary]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">v</span></code></p></td>
+<td><p>Relative velocity at infinity [<span class="math">\(v_c\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">m</span></code></p></td>
+<td><p>Mass [<span class="math">\({M_{\odot}}\)</span>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">R</span></code></p></td>
+<td><p>Radius [<span class="math">\(R_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Eint</span></code></p></td>
+<td><p>Internal energy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id</span></code></p></td>
+<td><p>ID number</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kytpe</span></code></p></td>
+<td><p>Stellar type</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></td>
+<td><p>Semi-major axis [AU]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">e</span></code></p></td>
+<td><p>Eccentricity</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dE/E</span></code></p></td>
+<td><p>Fractional change in energy</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DE</span></code></p></td>
+<td><p>Total change in energy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DL/L</span></code></p></td>
+<td><p>Fractional change in angular momentum</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DL</span></code></p></td>
+<td><p>Change in angular momentum</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DE_GW</span></code></p></td>
+<td><p>Energy loss due gravitational wave emission</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">v_esc_cluster</span></code></p></td>
+<td><p>Escape speed of the cluster where the encounter occured [km/s]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tcpu</span></code></p></td>
+<td><p>CPU time for integration (usually ~milliseconds, unless it’s a GW capture)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nstar</span></code></p></td>
+<td><p>Number of stars</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nobj</span></code></p></td>
+<td><p>Number of objects (single/binary)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">[j</span> <span class="pre">k]</span></code></p></td>
+<td><p>Final configuration after encounter, e.g.,  0 [1 2] (single-binary)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Objects are labelled starting from 0 to 3. The binary-single and binary-binary
+encounters are denoted as BS and BB, respectively. For type=binary, indices 0
+and 1 in mass, radius,id,etc. denote the primary and secondary objects in a
+binary.</p>
+<p>Possible outcomes for <code class="docutils literal notranslate"><span class="pre">type=BS</span></code>:</p>
+<ul class="simple">
+<li><p>single-binary 0 [1 2]</p></li>
+<li><p>binary-single [2 0] 1</p></li>
+<li><p>single-single-single 0 1 2</p></li>
+<li><p>single-single 0:1 2</p></li>
+<li><p>binary [0:1 2]</p></li>
+<li><p>single 0:1:2</p></li>
+</ul>
+<p>Possible outcomes for <code class="docutils literal notranslate"><span class="pre">type=BB</span></code>:</p>
+<ul class="simple">
+<li><p>binary [0 1:2:3]</p></li>
+<li><p>single-binary 0:1 [2 3]</p></li>
+<li><p>binary-single [0:1 3] 2</p></li>
+<li><p>binary-binary [0 1] [2 3]</p></li>
+<li><p>single-triple 0 [[1 3] 2]</p></li>
+<li><p>triple-single [[0 1] 3] 2</p></li>
+<li><p>single-single-binary 3 1 [2 0]</p></li>
+<li><p>binary-single-single [0 1] 3 2</p></li>
+<li><p>single-binary-single 0 [1 3] 2</p></li>
+</ul>
+<p>0:1 denotes the fact that objects 0 and 1 have merged, and [0 1] indicates that
+objects 0 and 1 have formed a binary. The same is true for any pairs from 0 to
+3.</p>
+<p>While the <cite>binint</cite> file is easy to read, it can be difficult to parse.  Using
+the <code class="docutils literal notranslate"><span class="pre">load_interaction_files</span></code> command from <a class="reference internal" href="#cmcparser"><span class="std std-ref">above</span></a> provides
+the <code class="docutils literal notranslate"><span class="pre">binints</span></code> object, a python list of dictionaries of every encounter:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [7]: </span><span class="nb">print</span><span class="p">(</span><span class="n">binints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+<span class="go">{&#39;in_singles&#39;: [&lt;cmc_parser.star object at 0x7ff7bf8bebd0&gt;], &#39;in_binaries&#39;: [&lt;cmc_parser.binary object at 0x7ff7bf8befd0&gt;], &#39;out_singles&#39;: [&lt;cmc_parser.star object at 0x7ff7bf8be3d0&gt;], &#39;out_binaries&#39;: [&lt;cmc_parser.binary object at 0x7ff7bf8bef90&gt;], &#39;out_triple&#39;: [], &#39;collision&#39;: -1, &#39;type&#39;: &#39;binary-single&#39;, &#39;time&#39;: 1.01117453e-05, &#39;b&#39;: 1.44396, &#39;v&#39;: 0.350789, &#39;vesc_KMS&#39;: 31.1678, &#39;de_gw&#39;: nan}</span>
+
+<span class="go"># input binaries is a list that can be printed with:</span>
+<span class="gp">In [8]: </span><span class="nb">print</span><span class="p">(</span><span class="n">binints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">in_binaries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+<span class="go">{&#39;star1&#39;: &lt;cmc_parser.star object at 0x7ff7bf8bef10&gt;, &#39;star2&#39;: &lt;cmc_parser.star object at 0x7ff7bf8bea90&gt;, &#39;a_AU&#39;: 566.922, &#39;e&#39;: 0.248012}</span>
+
+<span class="go"># and the individual stars of that binary can be accessed with:</span>
+<span class="gp">In [9]: </span><span class="nb">print</span><span class="p">(</span><span class="n">binints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">in_binaries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">star1</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+<span class="go">{&#39;m_MSUN&#39;: 34.4023, &#39;r_RSUN&#39;: 5.5858, &#39;id&#39;: 856, &#39;ktype&#39;: 1}</span>
+
+<span class="go"># so if I wanted, for instance, the radius of star two of the input binary in the first encounter:</span>
+<span class="gp">In [10]: </span><span class="nb">print</span><span class="p">(</span><span class="n">binints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">in_binaries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">star2</span><span class="o">.</span><span class="n">r_RSUN</span><span class="p">)</span>
+<span class="go">3.48828</span>
+
+<span class="go"># If I wanted to know the escape speed of the cluster where this encouner occured, I can access that with</span>
+<span class="gp">In [11]: </span><span class="nb">print</span><span class="p">(</span><span class="n">binints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">vesc_KMS</span><span class="p">)</span>
+<span class="go">31.1678</span>
+</pre></div>
+</div>
+</section>
+<section id="initial-bh-dat">
+<h3>initial.bh.dat<a class="headerlink" href="#initial-bh-dat" title="Permalink to this heading"></a></h3>
+<p>This file contains the number of BHs (as well as BH binaries, etc.) at each
+dynamical time step. This is useful to plot, for example, the number of
+retained BHs versus time. For BH mergers, you want to look in
+<strong>initial.bhmerger.dat</strong>, which records all BH-BH mergers that occur inside the
+cluster during the cluster evolution.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tcount</span></code></p></td>
+<td><p>Time count</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Totaltime</span></code></p></td>
+<td><p>Total time</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Nbh,tot</span></code></p></td>
+<td><p>Total number of BHs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Nbh,single</span></code></p></td>
+<td><p>Number of single BHs</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Nbinarybh</span></code></p></td>
+<td><p>Number of binary BHs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Nbh-bh</span></code></p></td>
+<td><p>Number of BH-BH binaries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Nbh-nonbh</span></code></p></td>
+<td><p>Number of BH-non BH binaries</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Nbh-ns</span></code></p></td>
+<td><p>Number of BH-NS binaries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Nbh-wd</span></code></p></td>
+<td><p>Number of BH-WD binaries</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">N_bh-star</span></code></p></td>
+<td><p>Number of stars including MS stars and giants</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Nbh-ms</span></code></p></td>
+<td><p>Number of BH-MS binaries</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Nbh-postms</span></code></p></td>
+<td><p>Number of BH-giant binaries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fb_bh</span></code></p></td>
+<td><p>Number of binaries containing a black hole / total number of systems containing a black hole</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-bh-esc-dat">
+<h3>initial.bh.esc.dat<a class="headerlink" href="#initial-bh-esc-dat" title="Permalink to this heading"></a></h3>
+<p>This file contains the number of ejected BHs at each dynamical time step. It
+includes the same columns in the <strong>initial.bh.dat</strong> file.</p>
+</section>
+<section id="initial-bhmerger-dat">
+<h3>initial.bhmerger.dat<a class="headerlink" href="#initial-bhmerger-dat" title="Permalink to this heading"></a></h3>
+<p>List of all binary black hole mergers that occur in the cluster (note this does
+not include BBHs that may be ejected from the cluster and merge later).  There
+are four categories of mergers that occur inside the cluster:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>isolat-binary</strong> - merger that occurs in a binary, but not due to GW capture</p></li>
+<li><p><strong>binary-single</strong> - merger that occurs due to GW capture during a binary-single encounter</p></li>
+<li><p><strong>binary-binary</strong> - merger that occurs due to GW capture during a binary-binary encounter</p></li>
+<li><p><strong>single-single</strong> - merger that occurs due to GW capture between two isoalted black holes</p></li>
+</ul>
+</div></blockquote>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 77%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Time merger occurs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td><p>What kind of merger was this</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r</span></code></p></td>
+<td><p>Radius in cluster where merger occured</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id1</span></code></p></td>
+<td><p>ID of primary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">id2</span></code></p></td>
+<td><p>ID of secondary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">m1</span></code></p></td>
+<td><p>Mass of primary <span class="math">\([M_{\odot}]\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">m2</span></code></p></td>
+<td><p>Mass of secondary <span class="math">\([M_{\odot}]\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">spin1</span></code></p></td>
+<td><p>Spin of primary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">spin2</span></code></p></td>
+<td><p>Spin of secondary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">m_final</span></code></p></td>
+<td><p>Mass of merger remnant <span class="math">\([M_{\odot}]\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">spin_final</span></code></p></td>
+<td><p>Spin of merger remnant</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vkick</span></code></p></td>
+<td><p>Kick merger remnant recieves [km/s]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">v_esc</span></code></p></td>
+<td><p>Escape speed of cluster where merger occurs [km/s]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a_final</span></code></p></td>
+<td><p>Last semi-major axis recorded for binary (see note) [AU]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">e_final</span></code></p></td>
+<td><p>Last eccentricity recorded for binary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a_50M</span></code></p></td>
+<td><p>(Newtonian) semi-major axis when the BHs were 50M apart; only for binary-single or binary-binary [AU]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">e_50M</span></code></p></td>
+<td><p>(Newtonian) eccentricity when BHs were 50M apart</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a_100M</span></code></p></td>
+<td><p>Same, but 100M apart [AU]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">e_100M</span></code></p></td>
+<td><p>“</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a_500M</span></code></p></td>
+<td><p>“</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">e_500M</span></code></p></td>
+<td><p>“</p></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<div><div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">a_final</span></code> and <code class="docutils literal notranslate"><span class="pre">e_final</span></code> parameters change depending on the type of encounter.  For binary-single and binary-binary GW captures, these record the
+(Newtonian) semi-major axis and eccentricity at 10M (when we consider the BHs to have mergred.  However, this is an unreliable quantity, since the orbit
+is decidedly non-Newtonian at that point.  If you want eccentricities, use <code class="docutils literal notranslate"><span class="pre">a_100M</span></code> and <code class="docutils literal notranslate"><span class="pre">e_100M</span></code>, or preferably the outermost value above).</p>
+<p>For single-single GW captures, <code class="docutils literal notranslate"><span class="pre">a_final</span></code> and <code class="docutils literal notranslate"><span class="pre">e_final</span></code> are the semi-major axis and eccentricity that the GW capture formed at.  For isolat-binary
+mergers, it’s the last semi-major axis and eccentricity that were recorded in the cluster.</p>
+</div>
+</div></blockquote>
+</section>
+<section id="initial-collision-log">
+<h3>initial.collision.log<a class="headerlink" href="#initial-collision-log" title="Permalink to this heading"></a></h3>
+<p>This file lists stellar types and properties for all stellar collisions
+occurring in the given simulation. See Sections 6 and 7 of Kremer et al. 2019
+for further detail.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 73%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">t</span></code></p></td>
+<td><p>Collision time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interaction</span> <span class="pre">type</span></code></p></td>
+<td><p>Interaction type e.g., single-binary, binary-binary, etc.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">idm(mm)</span></code></p></td>
+<td><p>ID_merger(mass of merged body)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id1(m1)</span></code></p></td>
+<td><p>ID_1 (mass of collided body_1)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">id2(m2)</span></code></p></td>
+<td><p>ID_2 (mass of the collided body_2)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r</span></code></p></td>
+<td><p>Distance from the center of cluster</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">typem</span></code></p></td>
+<td><p>Merger stellar type</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">type1</span></code></p></td>
+<td><p>Stellar type of body_1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">type2</span></code></p></td>
+<td><p>Stellar type of body_2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">b</span></code></p></td>
+<td><p>Impact parameter at infinity [<span class="math">\(R_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vinf</span></code></p></td>
+<td><p>Relative velocity of two objects at infinity [km/s]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rad1</span></code></p></td>
+<td><p>Radius of body_1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rad2</span></code></p></td>
+<td><p>Radius of body_2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rperi</span></code></p></td>
+<td><p>Pericenter distance at collision</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">coll_mult</span></code></p></td>
+<td><p>Collison multiplyer e.g., sticky sphere (<code class="docutils literal notranslate"><span class="pre">coll_mul</span></code> = 1), TDE (<code class="docutils literal notranslate"><span class="pre">coll_mul</span></code>&gt; 1)</p></td>
+</tr>
+</tbody>
+</table>
+<p>The single-single, binary-single, etc indicate whether the collision occurred
+during a binary encounter or not. When there are three stars listed for the
+collision it means that all three stars collided during the encounter. This is
+rare, but it does happen occasionally. Typically, one will see something like:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">t</span><span class="o">=</span><span class="m">0</span>.00266079 binary-single <span class="nv">idm</span><span class="o">=</span><span class="m">717258</span><span class="o">(</span><span class="nv">mm</span><span class="o">=</span><span class="m">1</span>.0954<span class="o">)</span> <span class="nv">id1</span><span class="o">=</span><span class="m">286760</span><span class="o">(</span><span class="nv">m1</span><span class="o">=</span><span class="m">0</span>.669391<span class="o">)</span>:id2<span class="o">=</span><span class="m">415309</span> <span class="o">(</span><span class="nv">m2</span><span class="o">=</span><span class="m">0</span>.426012<span class="o">)</span> <span class="o">(</span><span class="nv">r</span><span class="o">=</span><span class="m">0</span>.370419<span class="o">)</span> <span class="nv">typem</span><span class="o">=</span><span class="m">1</span> <span class="nv">type1</span><span class="o">=</span><span class="m">0</span> <span class="nv">type2</span><span class="o">=</span><span class="m">0</span>
+</pre></div>
+</div>
+<p>In this case the colliding stars are m1=0.66 and m2=0.42. The information about
+the third star in this binary–single encounter is not stored in the
+collision.log file. The only way to get information about the third star is to
+find this binary-single encounter in the <strong>initial.binint.log</strong> file (can be
+identified easily using the encounter time (here t=0.00266) and also
+cross-checking the id numbers for the two stars listed in the collision file).</p>
+<p>Similarly to the binint file, the collision file can be processed using the <a class="reference internal" href="#cmcparser"><span class="std std-ref">load_interaction_file</span></a> command</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [12]: </span><span class="nb">print</span><span class="p">(</span><span class="n">collisions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+<span class="go">{&#39;time&#39;: 0.00142283, &#39;radius&#39;: 0.272147, &#39;type&#39;: &#39;single-single&#39;, &#39;out_id&#39;: 129460, &#39;out_mass&#39;: 1.03821, &#39;in_ids&#39;: (29588, 19321), &#39;in_masses&#39;: (0.0961249, 0.942087), &#39;out_type&#39;: 1, &#39;in_types&#39;: (0, 1)}</span>
+</pre></div>
+</div>
+</section>
+<section id="initial-semergedisrupt-log">
+<h3>initial.semergedisrupt.log<a class="headerlink" href="#initial-semergedisrupt-log" title="Permalink to this heading"></a></h3>
+<p>This file lists all stellar mergers that occur through binary evolution in each simulation.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">t</span></code></p></td>
+<td><p>Time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interaction</span> <span class="pre">type</span></code></p></td>
+<td><p>Interaction type e.g., disrupted1, disrupted2, disrupted both</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">idr(mr)</span></code></p></td>
+<td><p>ID_remnant(mass of the remnant)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id1(r1)</span></code></p></td>
+<td><p>ID_1 (mass of body_1)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">id2(m2)</span></code></p></td>
+<td><p>ID_2 (mass of body_2)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r</span></code></p></td>
+<td><p>Distance from the center of cluster</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">typer</span></code></p></td>
+<td><p>Stellar type of merger</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">type1</span></code></p></td>
+<td><p>Stellar type of body_1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">type2</span></code></p></td>
+<td><p>Stellar type of body_2</p></td>
+</tr>
+</tbody>
+</table>
+<p>The semergedisrupt file can also be processed using the <a class="reference internal" href="#cmcparser"><span class="std std-ref">load_interaction_file</span></a> command</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="nb">print</span><span class="p">(</span><span class="n">semergers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+<span class="go">{&#39;time&#39;: 0.00420101, &#39;radius&#39;: 0.0432397, &#39;type&#39;: &#39;disruptboth&#39;, &#39;out_id&#39;: -1, &#39;out_mass&#39;: -1, &#39;in_ids&#39;: (56738, 105831), &#39;in_masses&#39;: (-0.5, 54.704), &#39;out_type&#39;: -1, &#39;in_types&#39;: (5, 1)}</span>
+</pre></div>
+</div>
+</section>
+<section id="initial-esc-dat">
+<span id="escfile"></span><h3>initial.esc.dat<a class="headerlink" href="#initial-esc-dat" title="Permalink to this heading"></a></h3>
+<p>As the result of dynamical encounters (and other mechanisms such as cluster
+tidal truncation) single stars and binaries often become unbound from the
+cluster potential and are ejected from the system. When this happens, the
+ejection is recorded in <strong>initial.esc.dat</strong>. In particular, this ejection
+process plays an intimate role in the formation of merging BH binaries. If a
+BH-BH binary is ejected from the cluster with sufficiently small orbital
+separation it may merge within a Hubble time and be a possible LIGO source. To
+determine the number of such mergers, calculate the inspiral times for all
+BH-BH binaries that appear in the <strong>initial.esc.dat</strong> file.</p>
+<p>Parameters with a <cite>_0</cite> (i.e., mass, radius, star type, etc) correspond to the
+primary star in a binary. There is also the same column for the secondary star
+with <cite>_0</cite> replaced by <cite>_1</cite> in the <strong>initial.esc.dat</strong> file. Parameters without
+indicies indicate single stars.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tcount</span></code></p></td>
+<td><p>Time count</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">t</span></code></p></td>
+<td><p>Time</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">m</span></code></p></td>
+<td><p>Mass [<span class="math">\(M_{\odot}\)</span>]. If the object is binary,  <code class="docutils literal notranslate"><span class="pre">m</span></code> corresponds to total mass of the primary and secondary stars</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r</span></code></p></td>
+<td><p>Clustercentric radial position</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vr</span></code></p></td>
+<td><p>Radial velocity</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vt</span></code></p></td>
+<td><p>Tangential velocity</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r_peri</span></code></p></td>
+<td><p>Pericenter of star’s orbit in the cluster when it was ejected</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r_apo</span></code></p></td>
+<td><p>Apocenter of star’s orbit in the cluster</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Rtidal</span></code></p></td>
+<td><p>Tidal radius</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phi_rtidal</span></code></p></td>
+<td><p>Potential at the tidal radius</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phi_zero</span></code></p></td>
+<td><p>Potential at center</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">E</span></code></p></td>
+<td><p>Total energy</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">J</span></code></p></td>
+<td><p>Total angular momentum</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id</span></code></p></td>
+<td><p>Single ID number</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">binflag</span></code></p></td>
+<td><p>Binary flag. If <code class="docutils literal notranslate"><span class="pre">binflag</span></code> = 1, the object is binary; otherwise single</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">m0</span></code></p></td>
+<td><p>Primary mass [<span class="math">\(M_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">id0</span></code></p></td>
+<td><p>Primary ID number</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></td>
+<td><p>Semi-major axis [AU]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">e</span></code></p></td>
+<td><p>Eccentricity</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">startype</span></code></p></td>
+<td><p>Single star type</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bin_startype0</span></code></p></td>
+<td><p>Primary star type</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rad0</span></code></p></td>
+<td><p>Primary radius [<span class="math">\(R_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tb</span></code></p></td>
+<td><p>Binary orbital period [days]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lum0</span></code></p></td>
+<td><p>Primary luminosity [<span class="math">\(L_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">massc0</span></code></p></td>
+<td><p>Primary core mass [<span class="math">\(M_{\odot}\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">radc0</span></code></p></td>
+<td><p>Primary core radius [<span class="math">\(R_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">menv0</span></code></p></td>
+<td><p>Primary envelope mass [<span class="math">\(M_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">renv0</span></code></p></td>
+<td><p>Primary envelope radius [<span class="math">\(R_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tms0</span></code></p></td>
+<td><p>Primary timescale of the main sequence</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dmdt0</span></code></p></td>
+<td><p>Primary mass accreting rate</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">radrol0</span></code></p></td>
+<td><p>Ratio of Roche Lobe to radius</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ospin0</span></code></p></td>
+<td><p>Primary spin angular momentum</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">B0</span></code></p></td>
+<td><p>Primary magnetic field [G]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">formation0</span></code></p></td>
+<td><p>Primary formation channel for supernova, e.g., core collapse, pair instability, etc.)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bacc0</span></code></p></td>
+<td><p>Mass accreted to the primary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tacc0</span></code></p></td>
+<td><p>Time spent accreting mass to the primary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mass0_0</span></code></p></td>
+<td><p>Primary initial mass</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">epoch0</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bhspin</span></code></p></td>
+<td><p>BH spin (if single)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bhspin1</span></code></p></td>
+<td><p>BH spin for primary (if binary)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ospin</span></code></p></td>
+<td><p>Single star spin angular momentum</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">B</span></code></p></td>
+<td><p>Single star magnetic field [G]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">formation</span></code></p></td>
+<td><p>Single star formation channel for supernova</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-morepulsars-dat">
+<h3>initial.morepulsars.dat<a class="headerlink" href="#initial-morepulsars-dat" title="Permalink to this heading"></a></h3>
+<p>This files contains detailed information on all neutron stars for each
+simulation. For further information on treatment of neutron stars, see Ye et
+al. 2019, ApJ.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tcount</span></code></p></td>
+<td><p>Time count</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TotalTime</span></code></p></td>
+<td><p>Total time</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">binflag</span></code></p></td>
+<td><p>Binary flag</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id0</span></code></p></td>
+<td><p>ID number</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">m0</span></code></p></td>
+<td><p>Mass [<span class="math">\(M_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">B0</span></code></p></td>
+<td><p>Magnetic field [G]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">P0</span></code></p></td>
+<td><p>Spin period [sec]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">startype0</span></code></p></td>
+<td><p>Star type</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></td>
+<td><p>Semi-major axis[AU]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ecc</span></code></p></td>
+<td><p>Eccentricity</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">radrol0</span></code></p></td>
+<td><p>Roche ratio (if &gt; 1, mass transfering)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dmdt0</span></code></p></td>
+<td><p>Mass transfer rate</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r</span></code></p></td>
+<td><p>Distance from the cluster center</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vr</span></code></p></td>
+<td><p>Radial velocity</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vt</span></code></p></td>
+<td><p>Tangential velocity</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bacc0</span></code></p></td>
+<td><p>Mass accreted to star</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tacc0</span></code></p></td>
+<td><p>Time spent accreting mass</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-log">
+<h3>initial.log<a class="headerlink" href="#initial-log" title="Permalink to this heading"></a></h3>
+<p>Each time step, cluster information is printed between two lines of asterisks.
+Below is an exemplary output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>******************************************************************************
+<span class="nv">tcount</span><span class="o">=</span><span class="m">1</span> <span class="nv">TotalTime</span><span class="o">=</span><span class="m">0</span>.0000000000000000e+00 <span class="nv">Dt</span><span class="o">=</span><span class="m">0</span>.0000000000000000e+00
+<span class="nv">Etotal</span><span class="o">=</span>-0.514537 <span class="nv">max_r</span><span class="o">=</span><span class="m">0</span> <span class="nv">N_bound</span><span class="o">=</span><span class="m">1221415</span> <span class="nv">Rtidal</span><span class="o">=</span><span class="m">111</span>.234
+<span class="nv">Mtotal</span><span class="o">=</span><span class="m">1</span> Etotal.P<span class="o">=</span>-0.499519 Etotal.K<span class="o">=</span><span class="m">0</span>.249522 <span class="nv">VRatio</span><span class="o">=</span><span class="m">0</span>.99905
+<span class="nv">TidalMassLoss</span><span class="o">=</span><span class="m">0</span>
+<span class="nv">core_radius</span><span class="o">=</span><span class="m">0</span>.361719 <span class="nv">rho_core</span><span class="o">=</span><span class="m">7</span>.18029 <span class="nv">v_core</span><span class="o">=</span><span class="m">0</span>.832785 <span class="nv">Trc</span><span class="o">=</span><span class="m">994</span>.138 <span class="nv">conc_param</span><span class="o">=</span><span class="m">0</span> <span class="nv">N_core</span><span class="o">=</span><span class="m">135329</span>
+<span class="nv">trh</span><span class="o">=</span><span class="m">0</span>.100838 <span class="nv">rh</span><span class="o">=</span><span class="m">0</span>.811266 <span class="nv">rh_single</span><span class="o">=</span><span class="m">0</span>.811936 <span class="nv">rh_binary</span><span class="o">=</span><span class="m">0</span>.801647
+<span class="nv">N_b</span><span class="o">=</span><span class="m">38407</span> <span class="nv">M_b</span><span class="o">=</span><span class="m">0</span>.0752504 <span class="nv">E_b</span><span class="o">=</span><span class="m">0</span>.26454
+******************************************************************************
+</pre></div>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tcount</span></code></p></td>
+<td><p>Time count</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TotalTime</span></code></p></td>
+<td><p>Total time</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Dt</span></code></p></td>
+<td><p>Time step</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Etotal</span></code></p></td>
+<td><p>Total energy</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_r</span></code></p></td>
+<td><p>Maximum radius of a star</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">N_bound</span></code></p></td>
+<td><p>Number of objects bound to the cluster</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Rtidal</span></code></p></td>
+<td><p>Tidal radius of the cluster</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Mtotal</span></code></p></td>
+<td><p>Total mass of the cluster</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Etotal.P</span></code></p></td>
+<td><p>Total potential energy of the cluster</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Etotal.K</span></code></p></td>
+<td><p>Total kinetic energy of the cluster</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VRatio</span></code></p></td>
+<td><p>Virial ratio</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TidalMassLoss</span></code></p></td>
+<td><p>Mass lost through the tidal radius</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">core_radius</span></code></p></td>
+<td><p>Core radius</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rho_core</span></code></p></td>
+<td><p>Core density</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">v_core</span></code></p></td>
+<td><p>Velocity dispersion in the core</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Trc</span></code></p></td>
+<td><p>Core relaxation timescale</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">conc_param</span></code></p></td>
+<td><p>King concentration parameter</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">N_core</span></code></p></td>
+<td><p>Number of objects within core radius</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">trh</span></code></p></td>
+<td><p>Half-mass relaxation time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rh</span></code></p></td>
+<td><p>Half-mass radius</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rh_single</span></code></p></td>
+<td><p>Half-mass radius of single objects</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rh_binary</span></code></p></td>
+<td><p>Half-mass radius of binaries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N_b</span></code></p></td>
+<td><p>Total number of binaries</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">M_b</span></code></p></td>
+<td><p>Total mass of binaries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">E_b</span></code></p></td>
+<td><p>Total energy of binaries</p></td>
+</tr>
+</tbody>
+</table>
+<p>Note that this is also printed to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> every timestep.</p>
+</section>
+<section id="initial-tidalcapture-log">
+<h3>initial.tidalcapture.log<a class="headerlink" href="#initial-tidalcapture-log" title="Permalink to this heading"></a></h3>
+<blockquote>
+<div><p>This files contains information on tidal capture events for each simulation.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><strong>time</strong>                                                    - tidal capture time</p></li>
+<li><p><strong>interaction_type</strong>                                        - (SS_COLL_GW)</p></li>
+<li><p><strong>(id1,m1,k1)+(id2,m2,k2)-&gt;[(id1,m1,k1)-a,e-(id2,m2,k2)]</strong>  - (ID, mass and star type of interacting stars) -&gt; [(ID, mass, stary type of the primary) - semi-major axis, eccentricity - (ID, mass, stary type of the secondary)]</p></li>
+</ul>
+</section>
+<section id="initial-triple-dat">
+<h3>initial.triple.dat<a class="headerlink" href="#initial-triple-dat" title="Permalink to this heading"></a></h3>
+<p>List of triples formed dynamically in the cluster as a result of three- and four-body dynamical encounters.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min0</span></code></p></td>
+<td><p>Mass of inner object <cite>_0</cite> [<span class="math">\(M_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">min1</span></code></p></td>
+<td><p>Mass of inner object <cite>_1</cite> [<span class="math">\(M_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mout</span></code></p></td>
+<td><p>Mass of outer object [<span class="math">\(M_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Rin0</span></code></p></td>
+<td><p>Radius of inner object <cite>_0</cite> [<span class="math">\(R_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Rin1</span></code></p></td>
+<td><p>Radius of inner object <cite>_1</cite> [<span class="math">\(R_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Rout</span></code></p></td>
+<td><p>Radius of outer object [<span class="math">\(R_{\odot}\)</span>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ain</span></code></p></td>
+<td><p>Semi-major axis of inner binary [AU]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">aout</span></code></p></td>
+<td><p>Semi-major axis of outer binary [AU]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ein</span></code></p></td>
+<td><p>Eccentricity of inner binary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">eout</span></code></p></td>
+<td><p>Eccentricity of outer binary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ktypein0</span></code></p></td>
+<td><p>Inner object <cite>_0</cite> stellar type</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ktypein1</span></code></p></td>
+<td><p>Inner object <cite>_1</cite> stellar type</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kytpeout</span></code></p></td>
+<td><p>Outer object stellar type</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Tlk_quad</span></code></p></td>
+<td><p>Quadrupole Kozai-Lidov timescale [yr]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Tlk_oct</span></code></p></td>
+<td><p>Octupole Kozai-Lidov timescale: tlkquad/epsoct [yr]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">eps_oct</span></code></p></td>
+<td><p>Octupole parameter</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">T_GR</span></code></p></td>
+<td><p>1PN precession timescale [yr]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">eps_GR</span></code></p></td>
+<td><p>GR parameter: Tlk_quad/T_GR</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-lagrad-dat">
+<h3>initial.lagrad.dat<a class="headerlink" href="#initial-lagrad-dat" title="Permalink to this heading"></a></h3>
+<p>This file contains the Lagrange radii enclosing given percentages of the cluster’s
+total mass. So for example, the 10% Lagrange radius printed in the
+<strong>initial.lagrad.dat</strong> file is the radius at a given time that encloses 10% of
+the mass. The different columns in that file give 0.1%, 5%, 99%, etc. Lagrange
+radii.</p>
+</section>
+<section id="initial-v2-rad-lagrad-dat">
+<h3>initial.v2_rad_lagrad.dat<a class="headerlink" href="#initial-v2-rad-lagrad-dat" title="Permalink to this heading"></a></h3>
+<p>List of the sum of radial velocity <span class="math">\(v_{r}\)</span> within Lagrange
+radii enclosing given percentages of the cluster’s total mass.</p>
+</section>
+<section id="initial-v2-tan-lagrad-dat">
+<h3>initial.v2_tan_lagrad.dat<a class="headerlink" href="#initial-v2-tan-lagrad-dat" title="Permalink to this heading"></a></h3>
+<p>List of the sum of tangential velocity <span class="math">\(v_{t}\)</span> within
+Lagrange radii enclosing given percentages of the cluster’s total mass.</p>
+</section>
+<section id="initial-nostar-lagrad-dat">
+<h3>initial.nostar_lagrad.dat<a class="headerlink" href="#initial-nostar-lagrad-dat" title="Permalink to this heading"></a></h3>
+<p>List of the number of stars within Lagrange radii enclosing a given
+percentage of the cluster’s total mass.</p>
+</section>
+<section id="initial-rho-lagrad-dat">
+<h3>initial.rho_lagrad.dat<a class="headerlink" href="#initial-rho-lagrad-dat" title="Permalink to this heading"></a></h3>
+<p>List of the mean density within Lagrange radii enclosing given
+percentages of the cluster’s total mass.</p>
+</section>
+<section id="initial-avemass-lagrad-dat">
+<h3>initial.avemass_lagrad.dat<a class="headerlink" href="#initial-avemass-lagrad-dat" title="Permalink to this heading"></a></h3>
+<p>List of the average mass <span class="math">\(\langle m \rangle\)</span> within Lagrange radii
+enclosing given percentages of the cluster’s total mass in units of solar mass
+[<span class="math">\(M_{\odot}\)</span>].</p>
+</section>
+<section id="initial-ke-rad-lagrad-dat">
+<h3>initial.ke_rad_lagrad.dat<a class="headerlink" href="#initial-ke-rad-lagrad-dat" title="Permalink to this heading"></a></h3>
+<p>List of the total radial kinetic energy <span class="math">\(T_{r}\)</span> within
+Lagrange radii enclosing given percentages of the cluster’s total mass in code
+units.</p>
+</section>
+<section id="initial-ke-tan-lagrad-dat">
+<h3>initial.ke_tan_lagrad.dat<a class="headerlink" href="#initial-ke-tan-lagrad-dat" title="Permalink to this heading"></a></h3>
+<p>List of the total tangenial kinetic energy <span class="math">\(T_{t}\)</span> within
+Lagrange radii enclosing given percentages of the cluster’s total mass in code
+units.</p>
+</section>
+<section id="initial-lagrad0-0-1-1-dat">
+<h3>initial.lagrad0-0.1-1.dat<a class="headerlink" href="#initial-lagrad0-0-1-1-dat" title="Permalink to this heading"></a></h3>
+<p>List of the Lagrange radii for object masses in the range 0.1 <span class="math">\(M_{\odot}\)</span> &lt; m &lt; 1 <span class="math">\(M_{\odot}\)</span>.</p>
+</section>
+<section id="initial-lagrad1-1-10-dat">
+<h3>initial.lagrad1-1-10.dat<a class="headerlink" href="#initial-lagrad1-1-10-dat" title="Permalink to this heading"></a></h3>
+<p>List of the Lagrange radii for object masses in the range 1 <span class="math">\(M_{\odot}\)</span> &lt; m &lt; 10 <span class="math">\(M_{\odot}\)</span>.</p>
+</section>
+<hr class="docutils" />
+<section id="initial-lagrad2-10-100-dat">
+<h3>initial.lagrad2-10-100.dat<a class="headerlink" href="#initial-lagrad2-10-100-dat" title="Permalink to this heading"></a></h3>
+<p>List of the Lagrange radii for object masses in the range 10 <span class="math">\(M_{\odot}\)</span> &lt; m &lt; 100 <span class="math">\(M_{\odot}\)</span>.</p>
+</section>
+<section id="initial-lagrad3-100-1000-dat">
+<h3>initial.lagrad3-100-1000.dat<a class="headerlink" href="#initial-lagrad3-100-1000-dat" title="Permalink to this heading"></a></h3>
+<p>List of the Lagrange radii for object masses in the range 100 <span class="math">\(M_{\odot}\)</span> &lt; m &lt; 10000 <span class="math">\(M_{\odot}\)</span>.</p>
+</section>
+<section id="initial-lagrad-10-info-dat">
+<h3>initial.lagrad_10_info.dat<a class="headerlink" href="#initial-lagrad-10-info-dat" title="Permalink to this heading"></a></h3>
+<p>This file containts dynamical information of the cluster at the 10% Lagrange radius.</p>
+</section>
+<section id="initial-core-dat">
+<h3>initial.core.dat<a class="headerlink" href="#initial-core-dat" title="Permalink to this heading"></a></h3>
+<p>Information for the core that contains no remnants.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rho_norem</span></code></p></td>
+<td><p>Density of the core</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">v_rms_norem</span></code></p></td>
+<td><p>Velocity dispersion of the core</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rc_norem</span></code></p></td>
+<td><p>Core radius</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r_spitzer_norem</span></code></p></td>
+<td><p>Spitzer radius</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">m_ave_norem</span></code></p></td>
+<td><p>Average mass within this core radius</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_norem</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">N_norem</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">T_rc_norem</span></code></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-bin-dat">
+<h3>initial.bin.dat<a class="headerlink" href="#initial-bin-dat" title="Permalink to this heading"></a></h3>
+<p>This file contains information on binaries.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 72%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">t</span></code></p></td>
+<td><p>Total time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">N_b</span></code></p></td>
+<td><p>Number of binaries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">M_b</span></code></p></td>
+<td><p>Mass of binaries</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">E_b</span></code></p></td>
+<td><p>Total energy of binaries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r_h,s</span></code></p></td>
+<td><p>Half-mass radius of single objects</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r_h,b</span></code></p></td>
+<td><p>Half-mass radius of binaries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rho_c,s</span></code></p></td>
+<td><p>Core density for single objects</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rho_c,b</span></code></p></td>
+<td><p>Core density for binaries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N_bb</span></code></p></td>
+<td><p>Number of binary-binary interactions</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">N_bs</span></code></p></td>
+<td><p>Number of binary-single interactions</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">f_b,c</span></code></p></td>
+<td><p>Binary fraction in the core</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">f_b</span></code></p></td>
+<td><p>Binary fraction</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">E_bb</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">E_bs</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DE_bb</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DE_bs</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N_bc,nb</span></code></p></td>
+<td><p>Number of existing bound binaries in the core</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">f_b,c,nb</span></code></p></td>
+<td><p>Fraction of existing bound binaries in the core</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N_bc</span></code></p></td>
+<td><p>Number of all binaries including the escaped and destroyed ones in the core</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-bhformation-dat">
+<h3>initial.bhformation.dat<a class="headerlink" href="#initial-bhformation-dat" title="Permalink to this heading"></a></h3>
+<p>This file contains information about newly formed BHs.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Time of BH formation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r</span></code></p></td>
+<td><p>Position in cluster</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">binary?</span></code></p></td>
+<td><p>Whether binary or not at the time of stellar collapse</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ID</span></code></p></td>
+<td><p>ID of BH</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zams_m</span></code></p></td>
+<td><p>Mass of progenitor at t=0</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">m_progenitor</span></code></p></td>
+<td><p>Mass of progenitor before explosion</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bh</span> <span class="pre">mass</span></code></p></td>
+<td><p>Mass of BH</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bh_spin</span></code></p></td>
+<td><p>Spin of BH</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">birth-kick</span></code></p></td>
+<td><p>Birth kick magnitude of natal kick [km/s]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vsarray</span></code></p></td>
+<td><p>Array of natal kicks</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-3bb-log">
+<h3>initial.3bb.log<a class="headerlink" href="#initial-3bb-log" title="Permalink to this heading"></a></h3>
+<p>This file contains information of three body binaries (triples).</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">k1</span></code></p></td>
+<td><p>Stellar type of object <cite>_1</cite></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">k2</span></code></p></td>
+<td><p>Stellar type of object <cite>_2</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">k3</span></code></p></td>
+<td><p>Stellar type of object <cite>_3</cite></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">id1</span></code></p></td>
+<td><p>ID of object <cite>_1</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id2</span></code></p></td>
+<td><p>ID of object <cite>_2</cite></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">id3</span></code></p></td>
+<td><p>ID of object <cite>_3</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">m1</span></code></p></td>
+<td><p>Mass of object <cite>_1</cite></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">m2</span></code></p></td>
+<td><p>Mass of object <cite>_2</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">m3</span></code></p></td>
+<td><p>Mass of object <cite>_3</cite></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ave_local_mass</span></code></p></td>
+<td><p>Average local mass</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_local</span></code></p></td>
+<td><p>Local number density</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sigma_local</span></code></p></td>
+<td><p>The local 3D velocity dispersion</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">eta</span></code></p></td>
+<td><p>Hardness of the inner binary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Eb</span></code></p></td>
+<td><p>Binding energy of the inner binary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ecc</span></code></p></td>
+<td><p>Eccentricty</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></td>
+<td><p>Semi-major axis [AU]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r_peri</span></code></p></td>
+<td><p>Pericenter distance [AU]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r(bin)</span></code></p></td>
+<td><p>Radial distance of the binary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r(single)</span></code></p></td>
+<td><p>Radial distance of the single object</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vr(bin)</span></code></p></td>
+<td><p>Radial velocity of binary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vt(bin)</span></code></p></td>
+<td><p>Tangential velocity of binary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vr(single)</span></code></p></td>
+<td><p>Radial velocity of single object</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vt(single)</span></code></p></td>
+<td><p>Tangential velocity of single object</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phi(bin)</span></code></p></td>
+<td><p>Potential energy of the binary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phi(single)</span></code></p></td>
+<td><p>Potential energy of the single object</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">delta_PE</span></code></p></td>
+<td><p>Change of the potential energy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">delta_KE</span></code></p></td>
+<td><p>Change of the kinetic energy</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">delta_E(interaction)</span></code></p></td>
+<td><p>Change of the total energy per interaction</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">delta_E(cumulative)</span></code></p></td>
+<td><p>Change of the total energy for all 3-body interactions</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">N_3bb</span></code></p></td>
+<td><p>The number of triples formed</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-3bbprobability-log">
+<h3>initial.3bbprobability.log<a class="headerlink" href="#initial-3bbprobability-log" title="Permalink to this heading"></a></h3>
+<p>Average rate and probability of three-body binary formation in the timestep calculated from the innermost 300 triplets of single stars considered for three-body binary formation.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dt</span></code></p></td>
+<td><p>Time step</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dt*N/log(gamma*N)</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Rate_3bb</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">P_3bb</span></code></p></td>
+<td><p>Probability of binary formation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r</span></code></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="initial-lightcollision-log">
+<h3>initial.lightcollision.log<a class="headerlink" href="#initial-lightcollision-log" title="Permalink to this heading"></a></h3>
+<p>List of stars that fail to form triples.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">k1</span></code></p></td>
+<td><p>Variable to store most massive star index</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">k2</span></code></p></td>
+<td><p>Second most massive star index</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">k3</span></code></p></td>
+<td><p>Least massive star index</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">id</span></code></p></td>
+<td><p>ID number</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">m</span></code></p></td>
+<td><p>Mass</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td><p>Stellar type</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rad</span></code></p></td>
+<td><p>Stellar radius</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Eb</span></code></p></td>
+<td><p>Binding energy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ecc</span></code></p></td>
+<td><p>Eccentricity</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></td>
+<td><p>Semi-major axis [AU]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rp</span></code></p></td>
+<td><p>m1 * m2 * madhoc / (eta * sqr(sigma_local)) [AU]</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="snapshots">
+<h2>Snapshots<a class="headerlink" href="#snapshots" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See <a class="reference internal" href="../inifile/index.html#snapshotting"><span class="std std-ref">here</span></a> for how to set the various snapshot parameters in the ini file</p>
+</div>
+<p>There are three different kinds of snapshots that CMC saves:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>output.snapshot.h5</strong> – every star and binary, saved every <code class="docutils literal notranslate"><span class="pre">SNAPSHOT_DELTACOUNT</span></code> number of code timesteps</p></li>
+<li><p><strong>output.window.snapshot.h5</strong> – every star and binary, saved in uniform physical timesteps (set in <code class="docutils literal notranslate"><span class="pre">SNAPSHOT_WINDOWS</span></code>)</p></li>
+<li><p><strong>output.bhsnapshot.h5</strong> – same as output.shapshot.h5, but just for black holes</p></li>
+</ul>
+</div></blockquote>
+<p>Each snapshot is saved as a table in the respective hdf5 file.  To see the
+names of the snapshots, use <code class="docutils literal notranslate"><span class="pre">h5ls</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>h5ls output.window.snapshot.h5
+</pre></div>
+</div>
+<p>On the window snapshots from our test example, this shows two snapshots</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">0</span><span class="o">(</span><span class="nv">t</span><span class="o">=</span>0Gyr<span class="o">)</span>                Dataset <span class="o">{</span><span class="m">100009</span>/Inf<span class="o">}</span>
+<span class="m">1</span><span class="o">(</span><span class="nv">t</span><span class="o">=</span><span class="m">0</span>.010001767Gyr<span class="o">)</span>      Dataset <span class="o">{</span><span class="m">99233</span>/Inf<span class="o">}</span>
+</pre></div>
+</div>
+<p>For the windows, this shows the number of the snapshot, and the time that the
+snapshot was made (in whatever units the window is using).  For the other
+snapshots, the time is the time in code units.</p>
+<p>The snapshots themselves are designed to be imported as pandas tables, which
+each table name referring to a key in the hdf5 file.  To read in the snapshot
+at 10Myr:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="gp">In [15]: </span><span class="n">snap</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_hdf</span><span class="p">(</span><span class="s1">&#39;source/example_output/output.window.snapshots.h5&#39;</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;1(t=0.010001767Gyr)&#39;</span><span class="p">)</span>
+
+<span class="gp">In [16]: </span><span class="nb">print</span><span class="p">(</span><span class="n">snap</span><span class="p">)</span>
+<span class="go">          id     m_MSUN            r  ...        ospin      B  formation</span>
+<span class="go">0      11366   0.248750     0.009263  ...     0.045133    0.0        0.0</span>
+<span class="go">1          0  54.140355     0.012883  ...  -100.000000 -100.0     -100.0</span>
+<span class="go">2      10925   0.240342     0.013966  ...     0.035313    0.0        0.0</span>
+<span class="go">3      32947   0.176973     0.017202  ...     0.004016    0.0        0.0</span>
+<span class="go">4      34745   0.783968     0.018470  ...   129.320709    0.0        0.0</span>
+<span class="go">...      ...        ...          ...  ...          ...    ...        ...</span>
+<span class="go">99228  60280   0.463914   400.290177  ...     3.672928    0.0        0.0</span>
+<span class="go">99229  96921   0.306003   698.705844  ...     0.197838    0.0        0.0</span>
+<span class="go">99230  73503   1.162925   711.137233  ...  1859.657840    0.0        0.0</span>
+<span class="go">99231   9707   0.277032   941.849497  ...     0.097345    0.0        0.0</span>
+<span class="go">99232  26677   0.248995  1539.007970  ...     0.045451    0.0        0.0</span>
+
+<span class="go">[99233 rows x 62 columns]</span>
+</pre></div>
+</div>
+<p>This contains all the necessary information about the state of every star and
+binary at this given time.  We can also see the column names</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="nb">print</span><span class="p">(</span><span class="n">snap</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+<span class="go">Index([&#39;id&#39;, &#39;m_MSUN&#39;, &#39;r&#39;, &#39;vr&#39;, &#39;vt&#39;, &#39;E&#39;, &#39;J&#39;, &#39;binflag&#39;, &#39;m0_MSUN&#39;,</span>
+<span class="go">       &#39;m1_MSUN&#39;, &#39;id0&#39;, &#39;id1&#39;, &#39;a_AU&#39;, &#39;e&#39;, &#39;startype&#39;, &#39;luminosity_LSUN&#39;,</span>
+<span class="go">       &#39;radius_RSUN&#39;, &#39;bin_startype0&#39;, &#39;bin_startype1&#39;, &#39;bin_star_lum0_LSUN&#39;,</span>
+<span class="go">       &#39;bin_star_lum1_LSUN&#39;, &#39;bin_star_radius0_RSUN&#39;, &#39;bin_star_radius1_RSUN&#39;,</span>
+<span class="go">       &#39;bin_Eb&#39;, &#39;eta&#39;, &#39;star_phi&#39;, &#39;rad0&#39;, &#39;rad1&#39;, &#39;tb&#39;, &#39;lum0&#39;, &#39;lum1&#39;,</span>
+<span class="go">       &#39;massc0&#39;, &#39;massc1&#39;, &#39;radc0&#39;, &#39;radc1&#39;, &#39;menv0&#39;, &#39;menv1&#39;, &#39;renv0&#39;,</span>
+<span class="go">       &#39;renv1&#39;, &#39;tms0&#39;, &#39;tms1&#39;, &#39;dmdt0&#39;, &#39;dmdt1&#39;, &#39;radrol0&#39;, &#39;radrol1&#39;,</span>
+<span class="go">       &#39;ospin0&#39;, &#39;ospin1&#39;, &#39;B0&#39;, &#39;B1&#39;, &#39;formation0&#39;, &#39;formation1&#39;, &#39;bacc0&#39;,</span>
+<span class="go">       &#39;bacc1&#39;, &#39;tacc0&#39;, &#39;tacc1&#39;, &#39;mass0_0&#39;, &#39;mass0_1&#39;, &#39;epoch0&#39;, &#39;epoch1&#39;,</span>
+<span class="go">       &#39;ospin&#39;, &#39;B&#39;, &#39;formation&#39;],</span>
+<span class="go">      dtype=&#39;object&#39;)</span>
+</pre></div>
+</div>
+<p>You may notice, however, that these columns are exactly the same as those in
+the <a class="reference internal" href="#escfile"><span class="std std-ref">output.esc.dat</span></a>  file!</p>
+<p>The following are the columns in the snapshots but not in the escape file.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">luminosity</span></code></p></td>
+<td><p>Luminosity of isolated stars [LSUN]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">radius</span></code></p></td>
+<td><p>Radius of isolated stars [RSUN]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bin_star_lum0</span></code></p></td>
+<td><p>Same as lum0</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bin_star_lum1</span></code></p></td>
+<td><p>Same as lum1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bin_star_radius0</span></code></p></td>
+<td><p>[RSUN]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bin_star_radius1</span></code></p></td>
+<td><p>[RSUN]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bin_Eb</span></code></p></td>
+<td><p>Binary binding energy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">eta</span></code></p></td>
+<td><p>Binary hardness</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">star.phi</span></code></p></td>
+<td><p>Potential at the star’s position r</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="cluster-observables">
+<h2>Cluster Observables<a class="headerlink" href="#cluster-observables" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference external" href="https://github.com/NicholasRui/cmctoolkit">cmctoolkit</a> is a seperate
+python package specifically designed to analyze CMC snapshots.  It then
+computes many of the relevant astrophysical profiles of interest to observers
+(e.g. surface brightness profiles, number density profiles, velocity
+dispersions, mass-to-light ratios) allowing CMC to be directly compared to
+globular clusters and super star clusters in the local universe.  This is
+accomplished by a rigorous statistical averaging of the individual cluster
+orbits for each star; see <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract">Rui et al., (2021)</a> for details.</p>
+<p>By default, the cmctoolkit will import the last snapshot in an hdf5 snapshot file:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [18]: </span><span class="kn">import</span> <span class="nn">cmctoolkit</span> <span class="k">as</span> <span class="nn">cmct</span>
+
+<span class="gp">In [19]: </span><span class="n">last_snap</span> <span class="o">=</span> <span class="n">cmct</span><span class="o">.</span><span class="n">Snapshot</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="s1">&#39;source/example_output/output.window.snapshots.h5&#39;</span><span class="p">,</span>
+<span class="gp">   ....: </span>                          <span class="n">conv</span><span class="o">=</span><span class="s1">&#39;source/example_output/output.conv.sh&#39;</span><span class="p">,</span>
+<span class="gp">   ....: </span>                          <span class="n">dist</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="c1"># distance to cluster in kpc</span>
+<span class="gp">   ....: </span>                          <span class="n">z</span><span class="o">=</span><span class="mf">0.0017</span><span class="p">)</span> <span class="c1"># metallicity</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<p>But any snapshot in the file can be loaded by specifying the hdf5 key:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="kn">import</span> <span class="nn">cmctoolkit</span> <span class="k">as</span> <span class="nn">cmct</span>
+
+<span class="gp">In [21]: </span><span class="n">first_snap</span> <span class="o">=</span> <span class="n">cmct</span><span class="o">.</span><span class="n">Snapshot</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="s1">&#39;source/example_output/output.window.snapshots.h5&#39;</span><span class="p">,</span>
+<span class="gp">   ....: </span>                          <span class="n">conv</span><span class="o">=</span><span class="s1">&#39;source/example_output/output.conv.sh&#39;</span><span class="p">,</span>
+<span class="gp">   ....: </span>                          <span class="n">snapshot_name</span><span class="o">=</span><span class="s1">&#39;0(t=0Gyr)&#39;</span><span class="p">,</span>
+<span class="gp">   ....: </span>                          <span class="n">dist</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="c1"># distance to cluster in kpc</span>
+<span class="gp">   ....: </span>                          <span class="n">z</span><span class="o">=</span><span class="mf">0.0017</span><span class="p">)</span> <span class="c1"># metallicity</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<p>As an example of what the <cite>cmctoolkit</cite> can do, we can create V-band surface
+brightness profiles for both snapshots, seeing they change due to the combined
+effects of stellar evolution and the early expansion of the cluster due to mass
+loss:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [22]: </span><span class="n">first_snap</span><span class="o">.</span><span class="n">add_photometry</span><span class="p">(</span><span class="s1">&#39;source/output/filt_index.txt&#39;</span><span class="p">);</span>
+
+<span class="gp">In [23]: </span><span class="n">v_bincenter_first</span><span class="p">,</span> <span class="n">v_profile_first</span> <span class="o">=</span> <span class="n">first_snap</span><span class="o">.</span><span class="n">make_smoothed_brightness_profile</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+<span class="gp">   ....: </span>                                                               <span class="n">min_mass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_mass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="gp">   ....: </span>                                                               <span class="n">max_lum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fluxdict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="gp">   ....: </span>                                                               <span class="n">startypes</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]),</span>
+<span class="gp">   ....: </span>                                                               <span class="n">min_logr</span><span class="o">=-</span><span class="mf">1.5</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [24]: </span><span class="n">last_snap</span><span class="o">.</span><span class="n">add_photometry</span><span class="p">(</span><span class="s1">&#39;source/output/filt_index.txt&#39;</span><span class="p">);</span>
+
+<span class="gp">In [25]: </span><span class="n">v_bincenter_last</span><span class="p">,</span> <span class="n">v_profile_last</span> <span class="o">=</span> <span class="n">last_snap</span><span class="o">.</span><span class="n">make_smoothed_brightness_profile</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+<span class="gp">   ....: </span>                                                               <span class="n">min_mass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_mass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="gp">   ....: </span>                                                               <span class="n">max_lum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fluxdict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="gp">   ....: </span>                                                               <span class="n">startypes</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]),</span>
+<span class="gp">   ....: </span>                                                               <span class="n">min_logr</span><span class="o">=-</span><span class="mf">1.5</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [26]: </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">v_bincenter_first</span><span class="p">,</span> <span class="n">v_profile_first</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;0 Myr&#39;</span><span class="p">);</span>
+
+<span class="gp">In [27]: </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">v_bincenter_last</span><span class="p">,</span> <span class="n">v_profile_last</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;10 Myr&#39;</span><span class="p">);</span>
+
+<span class="gp">In [28]: </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower left&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">);</span>
+
+<span class="gp">In [29]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;$r$ (arcsec)&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+
+<span class="gp">In [30]: </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$\Sigma_V$ (mag/arcsec$^2$)&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+
+<span class="gp">In [31]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+<span class="gp">In [32]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mf">5e-1</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">);</span>
+
+<span class="gp">In [33]: </span><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">33</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/plot_sbp.png"><img alt="../_images/plot_sbp.png" src="../_images/plot_sbp.png" style="width: 7in;" /></a>
+<p>Examples of other properties which can be easily computed by <cite>cmctoolkit</cite>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Stellar magnitudes and colors (in blackbody limit)</p></li>
+<li><p>Velocity dispersion profiles</p></li>
+<li><p>Mass functions and mass function slopes</p></li>
+<li><p>Binary fractions</p></li>
+<li><p>Blue stragglers</p></li>
+</ul>
+</div></blockquote>
+<p>See the documentation on the <cite>cmctoolkit</cite> for more details.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+    <a href="https://github.com/ClusterMonteCarlo/CMC-COSMIC">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../running/index.html" class="btn btn-neutral float-left" title="Running CMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../inifile/index.html" class="btn btn-neutral float-right" title="Configuration files for CMC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Carl Rodriguez &amp; Scott Coughlin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

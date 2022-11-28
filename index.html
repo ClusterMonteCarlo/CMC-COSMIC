@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Cluster Monte Carlo Code, CMC &mdash; cmc 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/katex-math.css" type="text/css" />
+      <link rel="stylesheet" href="_static/cosmic-docs.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/icon.001.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/katex.min.js"></script>
+        <script src="_static/auto-render.min.js"></script>
+        <script src="_static/katex_autorenderer.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Introduction" href="intro/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#">
+            <img src="_static/logo.001.jpeg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="initialconditions/index.html">Initial Conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running/index.html">Running CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output/index.html">Analyzing CMC Output</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Extending CMC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="inifile/index.html">Configuration files for CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQTroubleshooting/index.html">FAQ/Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact/index.html">Contact Team CMC</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="parallel/index.html">Code Structure and Parallelization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/index.html">Doxygen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">cmc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">The Cluster Monte Carlo Code, CMC</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+             
+  <section id="the-cluster-monte-carlo-code-cmc">
+<h1>The Cluster Monte Carlo Code, CMC<a class="headerlink" href="#the-cluster-monte-carlo-code-cmc" title="Permalink to this heading"></a></h1>
+<p>Welcome to the documentation for CMC, an <cite>N</cite>-body code for collisional stellar
+dynamics based on the original method of <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1971Ap%26SS..14..151H/abstract">Hénon (1971)</a>.  CMC has
+been under development for more than 20 years, starting with <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2000ApJ...540..969J/abstract">Joshi et al. (2000</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2001ApJ...550..691J/abstract">2001)</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2003ApJ...593..772F/abstract">Fregeau et
+al. (2003)</a>.
+It has been upgraded to include all the relevant physics for modeling dense
+spherical star clusters, such as strong dynamical encounters (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2007ApJ...658.1047F/abstract">Fregeau &amp; Rasio
+2007</a>), single
+and binary stellar evoltuion (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2010ApJ...719..915C/abstract">Chatterjee et al. 2010</a>), central
+massive black holes (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2012ApJ...750...31U/abstract">Umbreit et al. 2012</a>), three-body
+binary formation (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013ApJ...763L..15M/abstract">Morscher et al., 2014</a>),
+relativistic dynamics (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2018PhRvL.120o1101R/abstract">Rodriguez et al. 2018</a>) and more.
+CMC is parallelized using the Message Passing Interface (MPI), allowing it to
+run on workstations and distributed-memory high-performance computing clusters
+(<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013ApJS..204...15P/abstract">Pattabiraman et al. 2013</a>). It has been
+shown to produce similar results to state-of-the-art direct <cite>N</cite>-body simulations
+(<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2016MNRAS.463.2109R/abstract">Rodriguez et al. 2016</a>).</p>
+<p>The public version of CMC is pinned to the <a class="reference external" href="https://cosmic-popsynth.github.io/">COSMIC</a> package for binary population synthesis
+(<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2020ApJ...898...71B/abstract">Breivik et al. 2019</a>), which
+itself was originally based on the version of BSE (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract">Hurley et al. 2002</a>) that was
+developed in CMC over many years (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2010ApJ...719..915C/abstract">Chatterjee et al. 2010</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2016PhRvD..93h4029R/abstract">Rodriguez
+et al. 2016</a>,
+and <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2018PhRvL.120o1101R/abstract">2018</a>).
+Both projects have advanced significantly since then, but are pinned at the
+repository level: COSMIC is currently a submodule within CMC, ensuring that any
+cluster simulations or binary populations are integrated with the same physics.</p>
+<div class="toctree-wrapper compound" id="user-guide">
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro/index.html">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro/index.html#code-philosophy">Code Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro/index.html#flowchart">Flowchart</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="install/index.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install/index.html#generic-hpc-instuctions">Generic HPC Instuctions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install/index.html#installing-cosmic">Installing COSMIC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install/index.html#specific-hpc-systems">Specific HPC Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install/index.html#containers">Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="initialconditions/index.html">Initial Conditions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="initialconditions/index.html#point-mass-initial-conditions">Point-mass Initial Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initialconditions/index.html#realistic-initial-conditions">Realistic Initial Conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="running/index.html">Running CMC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="running/index.html#id1">Running CMC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running/index.html#restarting-cmc">Restarting CMC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running/index.html#example-run-plummer-sphere-to-core-collapse">Example: Run Plummer Sphere to Core Collapse</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="output/index.html">Analyzing CMC Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="output/index.html#code-units">Code Units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="output/index.html#log-files">Log Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="output/index.html#snapshots">Snapshots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="output/index.html#cluster-observables">Cluster Observables</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="more-guide">
+<p class="caption" role="heading"><span class="caption-text">Extending CMC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="inifile/index.html">Configuration files for CMC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="inifile/index.html#cmc">[cmc]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inifile/index.html#bse">[bse]</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FAQTroubleshooting/index.html">FAQ/Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="FAQTroubleshooting/index.html#frequently-asked-questions">Frequently Asked Questions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FAQTroubleshooting/index.html#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact/index.html">Contact Team CMC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contact/index.html#open-a-github-issue">Open a GitHub Issue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contact/index.html#contact-us-directly">Contact us Directly</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound" id="dev-guide">
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="parallel/index.html">Code Structure and Parallelization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="parallel/index.html#programming-guidelines-for-developers">Programming Guidelines for Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallel/index.html#example">Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallel/index.html#i-o">I/O</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src/index.html">Doxygen</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src/index.html#cmc">CMC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src/index.html#fewbody-c-code">FEWBODY C Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src/index.html#bse-c-code">BSE C CODE</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+    <a href="https://github.com/ClusterMonteCarlo/CMC-COSMIC">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="intro/index.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Carl Rodriguez &amp; Scott Coughlin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

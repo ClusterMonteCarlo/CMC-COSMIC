@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; cmc 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/katex-math.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/cosmic-docs.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/icon.001.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/katex.min.js"></script>
+        <script src="../_static/auto-render.min.js"></script>
+        <script src="../_static/katex_autorenderer.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Initial Conditions" href="../initialconditions/index.html" />
+    <link rel="prev" title="Introduction" href="../intro/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.001.jpeg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#generic-hpc-instuctions">Generic HPC Instuctions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gcc">GCC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#intel">Intel</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-cosmic">Installing COSMIC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#specific-hpc-systems">Specific HPC Systems</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#quest">Quest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bridges">Bridges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vera-henon">Vera/Hénon</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#frontera">Frontera</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#memex-carnegie-observatories">Memex (Carnegie Observatories)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#containers">Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../initialconditions/index.html">Initial Conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running/index.html">Running CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output/index.html">Analyzing CMC Output</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Extending CMC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../inifile/index.html">Configuration files for CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQTroubleshooting/index.html">FAQ/Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact/index.html">Contact Team CMC</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../parallel/index.html">Code Structure and Parallelization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/index.html">Doxygen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cmc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/install/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
+<section id="generic-hpc-instuctions">
+<h2>Generic HPC Instuctions<a class="headerlink" href="#generic-hpc-instuctions" title="Permalink to this heading"></a></h2>
+<p>To build CMC on a standard high-performance computing (HPC) system, you’ll need
+a few things beforehand.  These should be standard on just about any cluster
+environment; if they’re not, try using the Docker image that is linked to
+below!</p>
+<p>The specific requirements are</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Fortran and C compilers</p></li>
+<li><p>Message Passing Interface (MPI)</p></li>
+<li><p>Gnu Scientific Library (GSL)</p></li>
+<li><p>HDF5 Libraries</p></li>
+<li><p>cmake (version 3.12 or higher)</p></li>
+<li><p>cfitsio (optional; only needed for legacy initial condition generators)</p></li>
+</ul>
+</div></blockquote>
+<p>These should be available on any HPC system.  If they’re available, we suggest
+using the Intel version of the compilers and MPI.  On the machines we’ve
+tested, this produces a significant speedup over GCC/OpenMPI.</p>
+<p>Once you have either installed or module loaded the above requirements, then
+download the CMC-COSMIC package with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/ClusterMonteCarlo/CMC-COSMIC.git --recurse-submodules
+</pre></div>
+</div>
+<section id="gcc">
+<h3>GCC<a class="headerlink" href="#gcc" title="Permalink to this heading"></a></h3>
+<p>Using the MPI-wrapped commands for your C and Fortran compilers, build the into the bin folder with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> CMC-COSMIC
+mkdir build
+<span class="nb">cd</span> build
+<span class="nv">FC</span><span class="o">=</span>mpifort <span class="nv">CC</span><span class="o">=</span>mpicc cmake .. -DCMAKE_INSTALL_PREFIX<span class="o">=</span>../CMC
+make install
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default, the above command will put all the CMC executables, libraries, and include files into a folder called <cite>CMC</cite> in the main repository folder.  You
+can customize where this is installed by changing the <code class="docutils literal notranslate"><span class="pre">-DCMAKE_INSTALL_PREFIX</span></code> option above</p>
+</div>
+</section>
+<section id="intel">
+<h3>Intel<a class="headerlink" href="#intel" title="Permalink to this heading"></a></h3>
+<p>If you are using the intel compilers, you can instead use</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> CMC-COSMIC
+mkdir build
+<span class="nb">cd</span> build
+<span class="nv">FC</span><span class="o">=</span>mpiifort <span class="nv">CC</span><span class="o">=</span>mpiicc cmake .. -DCMAKE_INSTALL_PREFIX<span class="o">=</span>../CMC
+make install
+</pre></div>
+</div>
+</section>
+</section>
+<section id="installing-cosmic">
+<h2>Installing COSMIC<a class="headerlink" href="#installing-cosmic" title="Permalink to this heading"></a></h2>
+<p>There are several ways to install COSMIC along with CMC.  If you have a version
+of ipython installed (preferably though anaconda) that you can run <code class="docutils literal notranslate"><span class="pre">pip</span>
+<span class="pre">install</span></code> with, then cmake can install the version of COSMIC that comes with
+CMC (and all the associated dependencies).  Simply add the
+<code class="docutils literal notranslate"><span class="pre">-DBUILD_COSMIC=ON</span></code> flag to the cmake step in the installation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">FC</span><span class="o">=</span>mpiifort <span class="nv">CC</span><span class="o">=</span>mpiicc cmake .. -DBUILD_COSMIC<span class="o">=</span>ON -DCMAKE_INSTALL_PREFIX<span class="o">=</span>../CMC
+</pre></div>
+</div>
+<p>This will install the version of COSMIC that is included with CMC (in the ./src folder) into your python path.</p>
+<p>You can also use the stand alone version of COSMIC that is available <a class="reference external" href="https://cosmic-popsynth.github.io/COSMIC/install/index.html">here</a></p>
+</section>
+<section id="specific-hpc-systems">
+<h2>Specific HPC Systems<a class="headerlink" href="#specific-hpc-systems" title="Permalink to this heading"></a></h2>
+<p>Specific instructions for several of the HPC systems used by the CMC/COSMIC
+teams are below (as well as some XSEDE machines).  If you are interested in
+adding more instructions, just let us know!</p>
+<section id="quest">
+<h3>Quest<a class="headerlink" href="#quest" title="Permalink to this heading"></a></h3>
+<p>To build Quest with Intel</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>module load cmake/3.15.4 hdf5/1.10.7-openmpi-4.0.5-intel-19.0.5.281 mpi/openmpi-4.0.5-intel-19.0.5.281 gsl/2.5-intel-19.0.5.281
+</pre></div>
+</div>
+<p>Then follow the <strong>intel</strong> instructions above</p>
+</section>
+<section id="bridges">
+<h3>Bridges<a class="headerlink" href="#bridges" title="Permalink to this heading"></a></h3>
+<p>On Bridges 2 (the XSEDE machine) start by importing anaconda3 the intel compilers</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>module load anaconda3
+module load intelmpi/20.4-intel20.4
+</pre></div>
+</div>
+<p>Cmake needs to be installed by hand for now, but this is pretty straight forward:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget https://github.com/Kitware/CMake/releases/download/v3.20.1/cmake-3.20.1-linux-x86_64.sh
+bash ./cmake-3.20.1-linux-x86_64.sh   <span class="c1">## hit Y both times</span>
+<span class="nb">echo</span> <span class="s1">&#39;export PATH=$HOME/cmake-3.20.1-linux-x86_64/bin:$PATH&#39;</span> &gt;&gt; ~/.bashrc  <span class="c1">## to add the new cmake to your load-on-login files</span>
+<span class="nb">source</span> ~/.bashrc  <span class="c1">## or log out and log back in</span>
+</pre></div>
+</div>
+<p>Then follow the <strong>intel</strong> instructions above</p>
+</section>
+<section id="vera-henon">
+<h3>Vera/Hénon<a class="headerlink" href="#vera-henon" title="Permalink to this heading"></a></h3>
+<p>On Vera (McWilliams center machine) or Hénon (Rodriguez group machine), first load</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>module load intel/20.2
+module load cmake/3.18.1
+</pre></div>
+</div>
+<p>Then follow the <strong>intel</strong> instructions above</p>
+</section>
+<section id="frontera">
+<h3>Frontera<a class="headerlink" href="#frontera" title="Permalink to this heading"></a></h3>
+<p>On Frontera (the new fancy TACC machine from XSEDE) the commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>module load TACC intel impi hdf5 gsl
+</pre></div>
+</div>
+<p>then following the <strong>intel</strong> instructions above should work (h/t to Mike Grudić for testing CMC there)</p>
+</section>
+<section id="memex-carnegie-observatories">
+<h3>Memex (Carnegie Observatories)<a class="headerlink" href="#memex-carnegie-observatories" title="Permalink to this heading"></a></h3>
+<p>On Memex (Carnegie Science’s HPC computing cluster) follow the commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>module load intel/2021 python/intel21 cuda/11.1
+</pre></div>
+</div>
+<p>then follow the <strong>intel</strong> instructions above (ask Kyle Kremer with questions).</p>
+</section>
+</section>
+<section id="containers">
+<h2>Containers<a class="headerlink" href="#containers" title="Permalink to this heading"></a></h2>
+<p>To use a container to run CMC on Quest, you must use <a class="reference external" href="https://sylabs.io/singularity/">Singularity</a>. First you must pull the container from docker locally</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>singularity pull docker://clustermontecarlo/cmc
+</pre></div>
+</div>
+<p>In order to run a container which has a MPI-enabled program on an HPC system, you must use an OpenMPI program on the host system whose major version (think 4.X.X) matches that used inside the container. In this case, we compile CMC against OpenMPI 4.X.X. For those running on a system using SLURM, a submission script might look at follows</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH -J container_test</span>
+<span class="c1">#SBATCH --error=error.out</span>
+<span class="c1">#SBATCH --output=output.out</span>
+<span class="c1">#SBATCH --nodes=2</span>
+<span class="c1">#SBATCH --ntasks-per-node=4</span>
+<span class="c1">#SBATCH --mem=0</span>
+<span class="c1">#SBATCH --time=00:15:00</span>
+<span class="c1">#SBATCH --account=XXXXX</span>
+<span class="c1">#SBATCH --partition=XXXX</span>
+
+module purge all
+module load mpi/openmpi-4.0.5-gcc-10.2.0
+module load singularity
+
+mpirun -np <span class="si">${</span><span class="nv">SLURM_NTASKS</span><span class="si">}</span> singularity <span class="nb">exec</span> -B /projects:/projects openmpi.sing /opt/local/bin/cmc CMC_Params.ini initial
+</pre></div>
+</div>
+<p><a class="reference external" href="https://hub.docker.com/r/clustermontecarlo/cmc">Docker</a> is a very popular platform for hosting, building and distributing containers.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker pull clustermontecarlo/cmc
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+    <a href="https://github.com/ClusterMonteCarlo/CMC-COSMIC">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../intro/index.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../initialconditions/index.html" class="btn btn-neutral float-right" title="Initial Conditions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Carl Rodriguez &amp; Scott Coughlin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

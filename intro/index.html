@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction &mdash; cmc 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/katex-math.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/cosmic-docs.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/icon.001.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/katex.min.js"></script>
+        <script src="../_static/auto-render.min.js"></script>
+        <script src="../_static/katex_autorenderer.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Installation" href="../install/index.html" />
+    <link rel="prev" title="The Cluster Monte Carlo Code, CMC" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.001.jpeg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#code-philosophy">Code Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flowchart">Flowchart</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../initialconditions/index.html">Initial Conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running/index.html">Running CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output/index.html">Analyzing CMC Output</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Extending CMC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../inifile/index.html">Configuration files for CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQTroubleshooting/index.html">FAQ/Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact/index.html">Contact Team CMC</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../parallel/index.html">Code Structure and Parallelization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/index.html">Doxygen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cmc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Introduction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/intro/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+             
+  <section id="introduction">
+<span id="intro"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h1>
+<section id="code-philosophy">
+<h2>Code Philosophy<a class="headerlink" href="#code-philosophy" title="Permalink to this heading"></a></h2>
+<p>This code offers one approach for solving the gravitational <cite>N</cite>-body problem.
+The basic problem is as follows: you have a system of <cite>N</cite> particles (stars, in
+our case) they are all interacting with one another via the gravitational
+force. How does the system evolve over time? There are several ways to solve
+the <cite>N</cite>-body problem, each method having its pros and cons. The two most common
+methods in use today are the directy <cite>N</cite>-body method and the Monte Carlo
+method. CMC uses the Monte Carlo method of <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1971Ap%26SS..14..151H/abstract">Henon (1971)</a>. We will
+discuss them both briefly before moving into a more detailed discussion of our
+MC technique.</p>
+<p>In the direct <cite>N</cite>-body method, the equations of motion for each star are solved
+directly by summing the gravitational force of every star on every star. Each
+star feels a gravitational pull from all N-1 other stars, and in each timestep,
+their positions and velocities are updated according to the total acceleration
+force it feels over that timestep. This is the most exact method of solving the
+<cite>N</cite>-body problem, but it has its costs: the computation time scales as
+<cite>N</cite><sup>2</sup>. The Monte Carlo method represents an approximate way to solve the
+<cite>N</cite>-body problem that makes use of three assumptions: first, that the dynamical
+evolution is dominated by two-body relaxation, and second, that the cluster has
+a sufficient number of particles that relaxation time of most stars is
+significantly longer than their orbital timescales.</p>
+<p>These two assumptions are often referred to as the Fokker-Planck approximation,
+and are appropriate for large clusters like the globular clusters observed in
+our own galaxy (and the younger super star clusters observed in nearby
+galaxies).  It is this limit that the Henon approach (and its descendants, such
+as CMC) operates.  Our implementation further assumes spherical symmetry and
+orbit averaging (like Henon’s original implementation), which allows us to
+model old spherical star clusters significantly faster than direct <cite>N</cite>-body
+integrators. Unlike Henon’s original implementation, modern computer hardware
+and distributed memory parallelization allows CMC to create star-by-star
+realizations of the cluster, where each dynamical particle is an individual
+star, with as much additional physics (e.g. stellar evolution, strong dynamical
+encounters, binary formation, etc.) as the user desires. Integration is done on
+a relaxation timescale, with the code scaling as <span class="math">\(O(N \log N)\)</span> in the
+number of particles.</p>
+</section>
+<section id="flowchart">
+<h2>Flowchart<a class="headerlink" href="#flowchart" title="Permalink to this heading"></a></h2>
+<p>Here we show the basic flow of decisions made during every CMC timestep.  Each
+of these steps are described in one (or several of the CMC papers below).  As
+an initial first guess, most of the relevant physics is described and properly
+cited in <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013ApJS..204...15P/abstract">Pattabiraman et al. 2013</a>. Otherwise,
+the refences below are</p>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2000ApJ...540..969J/abstract">Joshi et al. (2000</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2001ApJ...550..691J/abstract">2001)</a></p></li>
+<li><p><a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2007ApJ...658.1047F/abstract">Fregeau &amp; Rasio 2007</a></p></li>
+<li><p><a class="reference external" href="https:/ui.adsabs.harvard.edu/abs/2010ApJ...719..915C/abstract">Chatterjee et al. 2010</a></p></li>
+<li><p><a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2012ApJ...752...43G/abstract">Goswami et al. 2012</a></p></li>
+<li><p><a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013ApJS..204...15P/abstract">Pattabiraman et al. 2013</a></p></li>
+<li><p><a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2020ApJ...898...71B/abstract">Breivik et al. 2020</a></p></li>
+<li><p><a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013ApJ...763L..15M/abstract">Morscher et al., 2014</a></p></li>
+</ol>
+<figure class="align-default" id="id3">
+<img alt="../_images/even_bigger_flowchart.jpg" src="../_images/even_bigger_flowchart.jpg" />
+<figcaption>
+<p><span class="caption-text">Flowchart of the main dynamics loop in CMC</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+
+
+           </div>
+          </div>
+    <a href="https://github.com/ClusterMonteCarlo/CMC-COSMIC">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="The Cluster Monte Carlo Code, CMC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../install/index.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Carl Rodriguez &amp; Scott Coughlin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

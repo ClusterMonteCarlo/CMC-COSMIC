@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Initial Conditions &mdash; cmc 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/katex-math.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/cosmic-docs.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/icon.001.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/katex.min.js"></script>
+        <script src="../_static/auto-render.min.js"></script>
+        <script src="../_static/katex_autorenderer.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Running CMC" href="../running/index.html" />
+    <link rel="prev" title="Installation" href="../install/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.001.jpeg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Initial Conditions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#point-mass-initial-conditions">Point-mass Initial Conditions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#plummer-sphere">Plummer Sphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#elson-profile">Elson Profile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#king-profile">King Profile</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#realistic-initial-conditions">Realistic Initial Conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../running/index.html">Running CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output/index.html">Analyzing CMC Output</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Extending CMC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../inifile/index.html">Configuration files for CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQTroubleshooting/index.html">FAQ/Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact/index.html">Contact Team CMC</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../parallel/index.html">Code Structure and Parallelization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/index.html">Doxygen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cmc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Initial Conditions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/initialconditions/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+             
+  <section id="initial-conditions">
+<span id="examples"></span><h1>Initial Conditions<a class="headerlink" href="#initial-conditions" title="Permalink to this heading"></a></h1>
+<p>Running CMC comes in two distinct stages: generating the initial conditions,
+and then running CMC on those initial conditions.  We briefly cover here how to
+create initial conditions and how to run and restart CMC.</p>
+<section id="point-mass-initial-conditions">
+<h2>Point-mass Initial Conditions<a class="headerlink" href="#point-mass-initial-conditions" title="Permalink to this heading"></a></h2>
+<p>Generating initial conditions is the first step in running CMC.  Since Version
+3.4, COSMIC has been able to create CMC initial conditions, using a combination
+of the native binary samplers and dynamical samplers for drawing positions and
+velocities of clusters in virial and hydrostatic equilibrium.  COSMIC can
+currently generate clusters from Plummer, Elson, or King profiles, as detailed below.</p>
+<p>The examples below are also found in the examples folder of the main GitHub
+repository.  Note that there are two distinct options for CMC clusters:
+<code class="docutils literal notranslate"><span class="pre">cmc_point_mass</span></code> (which we use in the Plummer and Elson examples below) will
+produce a cluster of point-mass particles: no stellar radii, mass functions, or
+binaries, typical for purely dynamics problems.  You can see it’s options with:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">cosmic.sample.sampler</span> <span class="kn">import</span> <span class="n">cmc</span>
+
+<span class="gp">In [2]: </span><span class="n">help</span><span class="p">(</span><span class="n">cmc</span><span class="o">.</span><span class="n">get_cmc_point_mass_sampler</span><span class="p">)</span>
+<span class="go">Help on function get_cmc_point_mass_sampler in module cosmic.sample.sampler.cmc:</span>
+
+<span class="go">get_cmc_point_mass_sampler(cluster_profile, size, **kwargs)</span>
+<span class="go">    Generates an CMC cluster model according  </span>
+<span class="go">    </span>
+<span class="go">    Parameters</span>
+<span class="go">    ----------</span>
+<span class="go">    cluster_profile : `str`</span>
+<span class="go">        Model to use for the cluster profile (i.e. sampling of the placement of objects in the cluster and their velocity within the cluster)</span>
+<span class="go">        Options include:</span>
+<span class="go">        &#39;plummer&#39; : Standard Plummer sphere.</span>
+<span class="go">            Additional parameters:</span>
+<span class="go">            &#39;r_max&#39; : `float`</span>
+<span class="go">                the maximum radius (in virial radii) to sample the clsuter</span>
+<span class="go">        &#39;elson&#39; : EFF 1987 profile.  Generalization of Plummer that better fits young massive clusters</span>
+<span class="go">            Additional parameters:</span>
+<span class="go">            &#39;gamma&#39; : `float`</span>
+<span class="go">                steepness paramter for Elson profile; note that gamma=4 is same is Plummer</span>
+<span class="go">            &#39;r_max&#39; : `float`</span>
+<span class="go">                the maximum radius (in virial radii) to sample the clsuter</span>
+<span class="go">        &#39;king&#39; : King profile </span>
+<span class="go">            &#39;w_0&#39; : `float`</span>
+<span class="go">                King concentration parameter</span>
+<span class="go">            &#39;r_max&#39; : `float`</span>
+<span class="go">                the maximum radius (in virial radii) to sample the clsuter</span>
+<span class="go">    </span>
+<span class="go">    size : `int`</span>
+<span class="go">        Size of the population to sample</span>
+<span class="go">    </span>
+<span class="go">    Returns</span>
+<span class="go">    -------</span>
+<span class="go">    Singles: `pandas.DataFrame`</span>
+<span class="go">        DataFrame of Single objects in the format of the InitialCMCTable</span>
+<span class="go">    Binaries: `pandas.DataFrame`</span>
+<span class="go">        DataFrame of Single objects in the format of the InitialCMCTable</span>
+</pre></div>
+</div>
+<p>The more general <code class="docutils literal notranslate"><span class="pre">cmc</span></code> sampler (which we use in the King profile example
+below) has all the additional features for generating stellar binaries that
+COSMIC has.  You can see it’s (significantly more diverse) options with</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [3]: </span><span class="kn">from</span> <span class="nn">cosmic.sample.sampler</span> <span class="kn">import</span> <span class="n">cmc</span>
+
+<span class="gp">In [4]: </span><span class="n">help</span><span class="p">(</span><span class="n">cmc</span><span class="o">.</span><span class="n">get_cmc_sampler</span><span class="p">)</span>
+<span class="go">Help on function get_cmc_sampler in module cosmic.sample.sampler.cmc:</span>
+
+<span class="go">get_cmc_sampler(cluster_profile, primary_model, ecc_model, porb_model, binfrac_model, met, size, **kwargs)</span>
+<span class="go">    Generates an initial binary sample according to user specified models</span>
+<span class="go">    </span>
+<span class="go">    Parameters</span>
+<span class="go">    ----------</span>
+<span class="go">    cluster_profile : `str`</span>
+<span class="go">        Model to use for the cluster profile (i.e. sampling of the placement of objects in the cluster and their velocity within the cluster)</span>
+<span class="go">        Options include:</span>
+<span class="go">        &#39;plummer&#39; : Standard Plummer sphere.</span>
+<span class="go">            Additional parameters:</span>
+<span class="go">            &#39;r_max&#39; : `float`</span>
+<span class="go">                the maximum radius (in virial radii) to sample the clsuter</span>
+<span class="go">        &#39;elson&#39; : EFF 1987 profile.  Generalization of Plummer that better fits young massive clusters</span>
+<span class="go">            Additional parameters:</span>
+<span class="go">            &#39;gamma&#39; : `float`</span>
+<span class="go">                steepness paramter for Elson profile; note that gamma=4 is same is Plummer</span>
+<span class="go">            &#39;r_max&#39; : `float`</span>
+<span class="go">                the maximum radius (in virial radii) to sample the clsuter</span>
+<span class="go">        &#39;king&#39; : King profile </span>
+<span class="go">            &#39;w_0&#39; : `float`</span>
+<span class="go">                King concentration parameter</span>
+<span class="go">            &#39;r_max&#39; : `float`</span>
+<span class="go">                the maximum radius (in virial radii) to sample the clsuter</span>
+<span class="go">    </span>
+<span class="go">    primary_model : `str`</span>
+<span class="go">        Model to sample primary mass; choices include: kroupa93, kroupa01, salpeter55, custom</span>
+<span class="go">        if &#39;custom&#39; is selected, must also pass arguemts:</span>
+<span class="go">        alphas : `array`</span>
+<span class="go">            list of power law indicies</span>
+<span class="go">        mcuts : `array`</span>
+<span class="go">            breaks in the power laws.</span>
+<span class="go">        e.g. alphas=[-1.3,-2.3,-2.3],mcuts=[0.08,0.5,1.0,150.] reproduces standard Kroupa2001 IMF</span>
+<span class="go">    </span>
+<span class="go">    ecc_model : `str`</span>
+<span class="go">        Model to sample eccentricity; choices include: thermal, uniform, sana12</span>
+<span class="go">    </span>
+<span class="go">    porb_model : `str`</span>
+<span class="go">        Model to sample orbital period; choices include: log_uniform, sana12</span>
+<span class="go">    </span>
+<span class="go">    msort : `float`</span>
+<span class="go">        Stars with M&gt;msort can have different pairing and sampling of companions</span>
+<span class="go">    </span>
+<span class="go">    pair : `float`</span>
+<span class="go">        Sets the pairing of stars M&gt;msort only with stars with M&gt;msort</span>
+<span class="go">    </span>
+<span class="go">    binfrac_model : `str or float`</span>
+<span class="go">        Model for binary fraction; choices include: vanHaaften or a fraction where 1.0 is 100% binaries</span>
+<span class="go">    </span>
+<span class="go">    binfrac_model_msort : `str or float`</span>
+<span class="go">        Same as binfrac_model for M&gt;msort</span>
+<span class="go">    </span>
+<span class="go">    qmin : `float`</span>
+<span class="go">        kwarg which sets the minimum mass ratio for sampling the secondary</span>
+<span class="go">        where the mass ratio distribution is flat in q</span>
+<span class="go">        if q &gt; 0, qmin sets the minimum mass ratio</span>
+<span class="go">        q = -1, this limits the minimum mass ratio to be set such that</span>
+<span class="go">        the pre-MS lifetime of the secondary is not longer than the full</span>
+<span class="go">        lifetime of the primary if it were to evolve as a single star</span>
+<span class="go">    </span>
+<span class="go">    m2_min : `float`</span>
+<span class="go">        kwarg which sets the minimum secondary mass for sampling</span>
+<span class="go">        the secondary as uniform in mass_2 between m2_min and mass_1</span>
+<span class="go">    </span>
+<span class="go">    qmin_msort : `float`</span>
+<span class="go">        Same as qmin for M&gt;msort; only applies if qmin is supplied</span>
+<span class="go">    </span>
+<span class="go">    met : `float`</span>
+<span class="go">        Sets the metallicity of the binary population where solar metallicity is zsun </span>
+<span class="go">    </span>
+<span class="go">    size : `int`</span>
+<span class="go">        Size of the population to sample</span>
+<span class="go">    </span>
+<span class="go">    zsun : `float`</span>
+<span class="go">        optional kwarg for setting effective radii, default is 0.02</span>
+<span class="go">    </span>
+<span class="go">    Optional Parameters</span>
+<span class="go">    -------------------</span>
+<span class="go">    virial_radius : `float`</span>
+<span class="go">        the initial virial radius of the cluster, in parsecs</span>
+<span class="go">        Default -- 1 pc</span>
+<span class="go">    </span>
+<span class="go">    tidal_radius : `float`</span>
+<span class="go">        the initial tidal radius of the cluster, in units of the virial_radius</span>
+<span class="go">        Default -- 1e6 rvir</span>
+<span class="go">    </span>
+<span class="go">    seed : `float`</span>
+<span class="go">        seed to the random number generator, for reproducability</span>
+<span class="go">    </span>
+<span class="go">    Returns</span>
+<span class="go">    -------</span>
+<span class="go">    Singles: `pandas.DataFrame`</span>
+<span class="go">        DataFrame of Single objects in the format of the InitialCMCTable</span>
+<span class="go">    </span>
+<span class="go">    Binaries: `pandas.DataFrame`</span>
+<span class="go">        DataFrame of Single objects in the format of the InitialCMCTable</span>
+</pre></div>
+</div>
+<section id="plummer-sphere">
+<h3>Plummer Sphere<a class="headerlink" href="#plummer-sphere" title="Permalink to this heading"></a></h3>
+<p>One of the most common initial conditions for a star cluster are those of
+<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1911MNRAS..71..460P/abstract">Plummer (1911)</a>.  They are
+not the most representative of star clusters in the local universe (see the
+King profile below), their popularity endures because their main quantities
+(such as enclosed mass, density, velocity dispersion, etc.) can be expressed analytically.</p>
+<p>To generate a Plummer profile with 10,000 particles (here we only consider
+point-mass particles, as opposed to real stars), we can use the following
+COSMIC functions.  Note that this returns two HDF5 tables, containing all the
+relevant parameters for the single stars and binaries.  The two tables are
+linked, such
+that the <code class="docutils literal notranslate"><span class="pre">Singles</span></code> table contains all the single stars and binary centers of mass, as well as indices pointing to the relevant binaries in <code class="docutils literal notranslate"><span class="pre">Binaries</span></code>.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [5]: </span><span class="kn">from</span> <span class="nn">cosmic.sample</span> <span class="kn">import</span> <span class="n">InitialCMCTable</span>
+
+<span class="gp">In [6]: </span><span class="n">Singles</span><span class="p">,</span> <span class="n">Binaries</span> <span class="o">=</span> <span class="n">InitialCMCTable</span><span class="o">.</span><span class="n">sampler</span><span class="p">(</span><span class="s1">&#39;cmc_point_mass&#39;</span><span class="p">,</span> <span class="n">cluster_profile</span><span class="o">=</span><span class="s1">&#39;plummer&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">r_max</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="gp">In [7]: </span><span class="nb">print</span><span class="p">(</span><span class="n">Singles</span><span class="p">)</span>
+<span class="go">           id    k       m  Reff          r        vr        vt  binind</span>
+<span class="go">0         1.0  0.0  0.0001   0.0   0.029964  0.483857  0.856766     0.0</span>
+<span class="go">1         2.0  0.0  0.0001   0.0   0.033492 -0.461177  0.664207     0.0</span>
+<span class="go">2         3.0  0.0  0.0001   0.0   0.034694 -0.638679  0.997434     0.0</span>
+<span class="go">3         4.0  0.0  0.0001   0.0   0.047434 -0.468556  0.808870     0.0</span>
+<span class="go">4         5.0  0.0  0.0001   0.0   0.049135 -0.601994  0.748868     0.0</span>
+<span class="go">...       ...  ...     ...   ...        ...       ...       ...     ...</span>
+<span class="go">9995   9996.0  0.0  0.0001   0.0  29.373008  0.071705  0.206904     0.0</span>
+<span class="go">9996   9997.0  0.0  0.0001   0.0  37.808575  0.000110  0.067377     0.0</span>
+<span class="go">9997   9998.0  0.0  0.0001   0.0  45.144674  0.121053  0.032027     0.0</span>
+<span class="go">9998   9999.0  0.0  0.0001   0.0  52.101847 -0.011594  0.122011     0.0</span>
+<span class="go">9999  10000.0  0.0  0.0001   0.0  61.287149  0.051053  0.064878     0.0</span>
+
+<span class="go">[10000 rows x 8 columns]</span>
+</pre></div>
+</div>
+<p>Then we can save the initial conditions to an HDF5 file (for use in CMC) with:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [8]: </span><span class="n">InitialCMCTable</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">Singles</span><span class="p">,</span> <span class="n">Binaries</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;plummer.hdf5&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">InitialCMCTable.write</span></code> automatically scales the cluster to <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2014arXiv1411.4936H/abstract">Hénon units</a>, where
+<span class="math">\(G = 1\)</span>, the cluster mass is <span class="math">\(M_{c}=1\)</span>, the cluster energy is
+<span class="math">\(E=-0.25\)</span>, and the virial radius is <span class="math">\(r_v \equiv G M_c^2 / 2|U| =
+1\)</span>.  These are the internal code units used by CMC.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>InitialCMCTable.write scales the Singles and Binaries tables in place, so if you want to make any changes to the initial conditions after writing them, you’ll have to either create copies of the tables or generate new ones.</p>
+</div>
+<p>We can check that the Plummer function reproduces what we would expect from
+analytic predictions.  The enclosed mass a Plummer sphere is given by</p>
+<div class="math">
+\[M(r) = M_{\rm total}\left(1 + \frac{a^2}{r^2}\right)^{-3/2}\]</div>
+<p>where <span class="math">\(a\)</span> is an arbitrary scale factor (which is <span class="math">\(3\pi / 16\)</span> when
+the virial radius is normalized to 1).  If we compare the mass-weighted
+cumulative radii of our <code class="docutils literal notranslate"><span class="pre">Singles</span></code> Pandas table to the analytic results, we
+can see:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="gp">In [10]: </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="gp">In [11]: </span><span class="n">r_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="gp">In [12]: </span><span class="n">m_enc</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">r_grid</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**-</span><span class="mf">1.5</span>
+
+<span class="gp">In [13]: </span><span class="n">rv</span> <span class="o">=</span> <span class="mi">16</span><span class="o">/</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="c1"># virial radius for a Plummer sphere</span>
+
+<span class="gp">In [14]: </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r_grid</span><span class="o">/</span><span class="n">rv</span><span class="p">,</span><span class="n">m_enc</span><span class="p">,</span><span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">);</span>
+
+<span class="gp">In [15]: </span><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">Singles</span><span class="o">.</span><span class="n">r</span><span class="p">,</span><span class="n">weights</span><span class="o">=</span><span class="n">Singles</span><span class="o">.</span><span class="n">m</span><span class="p">,</span><span class="n">cumulative</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">bins</span><span class="o">=</span><span class="n">r_grid</span><span class="p">);</span>
+
+<span class="gp">In [16]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+<span class="gp">In [17]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Radii&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+
+<span class="gp">In [18]: </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$M (&lt; r) / M_{\rm total}$&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+
+<span class="gp">In [19]: </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">((</span><span class="s2">&quot;Plummer&quot;</span><span class="p">,</span><span class="s2">&quot;COSMIC Samples&quot;</span><span class="p">),</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/plot_plummer.png"><img alt="../_images/plot_plummer.png" src="../_images/plot_plummer.png" style="width: 6in;" /></a>
+</section>
+<section id="elson-profile">
+<h3>Elson Profile<a class="headerlink" href="#elson-profile" title="Permalink to this heading"></a></h3>
+<p>The <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1987ApJ...323...54E/abstract">Elson (1987)</a> profile is a
+generalization of the Plummer profile that has been shown to better represent
+young massive clusters in the local universe.  The density at a
+radius <span class="math">\(r\)</span> is given by</p>
+<div class="math">
+\[\rho(r) = \rho_{0}\left(1 + \frac{a^2}{r^2}\right)^{-\frac{\gamma + 1}{2}}\]</div>
+<p>Note that <span class="math">\(\gamma = 4\)</span> gives a Plummer profile (the above code actually
+just calls the Elson profile generator with <span class="math">\(\gamma=4\)</span>), though most
+young clusters are better fit with <span class="math">\(\gamma\sim2-3\)</span>.  The enclosed mass is
+correspondingly more complicated:</p>
+<div class="math">
+\[M(r) = \frac{4 \pi \rho_0}{3} r^3 \,_2F_1\left(\frac{3}{2},\frac{\gamma + 1}{2} ; \frac{5}{2} ; -\frac{r^2}{a^2}\right)\]</div>
+<p>Where <span class="math">\(\,_2F_1\)</span> is the ordinary hypergeometric function.</p>
+<p>Unlike both the Plummer and King profiles, the distribution function for the
+Elson profile cannot be written analytically.  To generate the initial
+conditions, we directly integrate the density and potential functions to
+numerically compute <span class="math">\(f(E)\)</span>, and draw our velocity samples from that (see
+appendix B of <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2018MNRAS.481..688G/abstract">Grudic et al., 2018</a>).  This
+produces a handful
+of warnings in the SciPy integrators, but the profiles that it generates are correct.</p>
+<p>To generate an Elson profile with <span class="math">\(\gamma=2.5\)</span>, we can use</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="n">Singles</span><span class="p">,</span> <span class="n">Binaries</span> <span class="o">=</span> <span class="n">InitialCMCTable</span><span class="o">.</span><span class="n">sampler</span><span class="p">(</span><span class="s1">&#39;cmc_point_mass&#39;</span><span class="p">,</span> <span class="n">cluster_profile</span><span class="o">=</span><span class="s1">&#39;elson&#39;</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">r_max</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Comparing with the theoretical calculation for the enclosed mass, we find similarly good agreement:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [21]: </span><span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">hyp2f1</span>
+
+<span class="gp">In [22]: </span><span class="n">gamma</span> <span class="o">=</span> <span class="mf">2.5</span>
+
+<span class="gp">In [23]: </span><span class="k">def</span> <span class="nf">m_enc</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">rho_0</span><span class="p">):</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">rho_0</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="n">r</span><span class="o">**</span><span class="mi">3</span> <span class="o">*</span> <span class="n">hyp2f1</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,(</span><span class="n">gamma</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="mf">2.5</span><span class="p">,</span><span class="o">-</span><span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [24]: </span><span class="n">rv</span> <span class="o">=</span> <span class="mf">6.</span> <span class="c1">## virial radius for a gamma=2.5 Elson profile</span>
+
+<span class="gp">In [25]: </span><span class="n">rho_0</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">m_enc</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span><span class="mi">100</span><span class="o">*</span><span class="n">rv</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">In [26]: </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r_grid</span><span class="o">/</span><span class="n">rv</span><span class="p">,</span><span class="n">m_enc</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span><span class="n">r_grid</span><span class="p">,</span><span class="n">rho_0</span><span class="p">),</span><span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">);</span> <span class="c1"># note we scale by rv, rather than set scale factor</span>
+
+<span class="gp">In [27]: </span><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">Singles</span><span class="o">.</span><span class="n">r</span><span class="p">,</span><span class="n">weights</span><span class="o">=</span><span class="n">Singles</span><span class="o">.</span><span class="n">m</span><span class="p">,</span><span class="n">cumulative</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">bins</span><span class="o">=</span><span class="n">r_grid</span><span class="p">);</span>
+
+<span class="gp">In [28]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+<span class="gp">In [29]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Radii&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+
+<span class="gp">In [30]: </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$M (&lt; r) / M_{\rm total}$&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+
+<span class="gp">In [31]: </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">((</span><span class="s2">&quot;Elson ($\gamma=2.5$)&quot;</span><span class="p">,</span><span class="s2">&quot;COSMIC Samples&quot;</span><span class="p">),</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/plot_elson.png"><img alt="../_images/plot_elson.png" src="../_images/plot_elson.png" style="width: 6in;" /></a>
+</section>
+<section id="king-profile">
+<h3>King Profile<a class="headerlink" href="#king-profile" title="Permalink to this heading"></a></h3>
+<p>An idealized cluster in thermodynamic equilibrium could be described as an
+isothermal sphere, where the velocities of stars resembled a Maxwell-Boltzmann
+distribution.  But the isothermal sphere has infinite mass, and in any
+realistic star cluster, the distribution of stars should go to zero near the
+tidal boundary.  The <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/1966AJ.....71...64K/abstract">King (1966)</a> profile
+accomplishes this by sampling from a lowered isothermal distribution</p>
+<div class="math">
+\[f(E) = \begin{cases}
+    \rho_0 (2\pi\sigma^2)^{-3/2}(e^{E/\sigma^2})&    E > 0;\\
+    0& E \leq 0
+\end{cases}\]</div>
+<p>The King initial conditions can be created with COSMIC using:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [32]: </span><span class="n">Singles</span><span class="p">,</span> <span class="n">Binaries</span> <span class="o">=</span> <span class="n">InitialCMCTable</span><span class="o">.</span><span class="n">sampler</span><span class="p">(</span><span class="s1">&#39;cmc_point_mass&#39;</span><span class="p">,</span> <span class="n">cluster_profile</span><span class="o">=</span><span class="s1">&#39;king&#39;</span><span class="p">,</span> <span class="n">w_0</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">r_max</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The analytic form of <span class="math">\(M(&lt;r)\)</span> cannot be written down for a King profile,
+but we can solve the ODE directly (this is done when generating the samples)</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="kn">from</span> <span class="nn">cosmic.sample.cmc</span> <span class="kn">import</span> <span class="n">king</span>
+
+<span class="gp">In [34]: </span><span class="n">radii</span><span class="p">,</span><span class="n">rho</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">m_enc</span> <span class="o">=</span> <span class="n">king</span><span class="o">.</span><span class="n">integrate_king_profile</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="gp">In [35]: </span><span class="n">rho</span> <span class="o">/=</span> <span class="n">m_enc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="gp">In [36]: </span><span class="n">m_enc</span> <span class="o">/=</span> <span class="n">m_enc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="gp">In [37]: </span><span class="n">rv</span> <span class="o">=</span> <span class="n">king</span><span class="o">.</span><span class="n">virial_radius_numerical</span><span class="p">(</span><span class="n">radii</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">m_enc</span><span class="p">)</span> <span class="c1"># just compute R_v numerically</span>
+
+<span class="gp">In [38]: </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">radii</span><span class="o">/</span><span class="n">rv</span><span class="p">,</span><span class="n">m_enc</span><span class="p">,</span><span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">);</span>
+
+<span class="gp">In [39]: </span><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">Singles</span><span class="o">.</span><span class="n">r</span><span class="p">,</span><span class="n">weights</span><span class="o">=</span><span class="n">Singles</span><span class="o">.</span><span class="n">m</span><span class="p">,</span><span class="n">cumulative</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">bins</span><span class="o">=</span><span class="n">r_grid</span><span class="p">);</span>
+
+<span class="gp">In [40]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+<span class="gp">In [41]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span><span class="mi">10</span><span class="p">);</span>
+
+<span class="gp">In [42]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Radii&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+
+<span class="gp">In [43]: </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$M (&lt; r) / M_{\rm total}$&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+
+<span class="gp">In [44]: </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">((</span><span class="s2">&quot;King ($w_0=6$)&quot;</span><span class="p">,</span><span class="s2">&quot;COSMIC Samples&quot;</span><span class="p">),</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/plot_king.png"><img alt="../_images/plot_king.png" src="../_images/plot_king.png" style="width: 6in;" /></a>
+</section>
+</section>
+<section id="realistic-initial-conditions">
+<span id="id1"></span><h2>Realistic Initial Conditions<a class="headerlink" href="#realistic-initial-conditions" title="Permalink to this heading"></a></h2>
+<p>So far the above examples have only used the <code class="docutils literal notranslate"><span class="pre">cmc_point_mass</span></code> sampler.  To
+generate <cite>realistic</cite> initial conditions, with stellar masses and binaries, we
+want to use the <code class="docutils literal notranslate"><span class="pre">cmc</span></code> sampler instead.  This enables all the additional
+options found in the <code class="docutils literal notranslate"><span class="pre">independent</span></code> population sampler that COSMIC uses <a class="reference external" href="https://cosmic-popsynth.github.io/COSMIC/runpop/index.html#independent">(see
+here for more details)</a>.</p>
+<p>To generate the above King profile, but with all the additional stellar physics (initial mass function, binaries, etc.) we would use</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [45]: </span><span class="n">Singles</span><span class="p">,</span> <span class="n">Binaries</span> <span class="o">=</span> <span class="n">InitialCMCTable</span><span class="o">.</span><span class="n">sampler</span><span class="p">(</span><span class="s1">&#39;cmc&#39;</span><span class="p">,</span> <span class="n">binfrac_model</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">primary_model</span><span class="o">=</span><span class="s1">&#39;kroupa01&#39;</span><span class="p">,</span>
+<span class="gp">   ....: </span>                                            <span class="n">ecc_model</span><span class="o">=</span><span class="s1">&#39;thermal&#39;</span><span class="p">,</span> <span class="n">porb_model</span><span class="o">=</span><span class="s1">&#39;log_uniform&#39;</span><span class="p">,</span> <span class="n">qmin</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">m2_min</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span>
+<span class="gp">   ....: </span>                                            <span class="n">cluster_profile</span><span class="o">=</span><span class="s1">&#39;king&#39;</span><span class="p">,</span> <span class="n">met</span><span class="o">=</span><span class="mf">0.00017</span><span class="p">,</span> <span class="n">zsun</span><span class="o">=</span><span class="mf">0.017</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span><span class="n">w_0</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+<span class="gp">   ....: </span>                                            <span class="n">seed</span><span class="o">=</span><span class="mi">12345</span><span class="p">,</span><span class="n">virial_radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">tidal_radius</span><span class="o">=</span><span class="mf">1e6</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<p>This example is also found in the <a class="reference external" href="https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples">examples</a> folder
+in the CMC repository.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>At this step the metallicity (<code class="docutils literal notranslate"><span class="pre">met</span></code>) and value of the solar metallicity (<code class="docutils literal notranslate"><span class="pre">zsun</span></code>) must be specified to generate the correct initial radii for stars.  If you have a very compact cluster and the value of zsun differs between here and your ini file, you may produce binaries which merge during cluster initialization, which breaks the code.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+    <a href="https://github.com/ClusterMonteCarlo/CMC-COSMIC">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../install/index.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../running/index.html" class="btn btn-neutral float-right" title="Running CMC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Carl Rodriguez &amp; Scott Coughlin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

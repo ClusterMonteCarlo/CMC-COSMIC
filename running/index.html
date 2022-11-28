@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running CMC &mdash; cmc 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/katex-math.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/cosmic-docs.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/icon.001.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/katex.min.js"></script>
+        <script src="../_static/auto-render.min.js"></script>
+        <script src="../_static/katex_autorenderer.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Analyzing CMC Output" href="../output/index.html" />
+    <link rel="prev" title="Initial Conditions" href="../initialconditions/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.001.jpeg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../initialconditions/index.html">Initial Conditions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running CMC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Running CMC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#restarting-cmc">Restarting CMC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-run-plummer-sphere-to-core-collapse">Example: Run Plummer Sphere to Core Collapse</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../output/index.html">Analyzing CMC Output</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Extending CMC</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../inifile/index.html">Configuration files for CMC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQTroubleshooting/index.html">FAQ/Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact/index.html">Contact Team CMC</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../parallel/index.html">Code Structure and Parallelization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/index.html">Doxygen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cmc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Running CMC</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/running/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+             
+  <section id="running-cmc">
+<span id="running"></span><h1>Running CMC<a class="headerlink" href="#running-cmc" title="Permalink to this heading"></a></h1>
+<p>Here we describe how to actually run CMC, assuming you’ve generated the initial conditions using COSMIC</p>
+<section id="id1">
+<h2>Running CMC<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<p>With our initial conditions in place, the hard part is actually over!  Assuming
+the <code class="docutils literal notranslate"><span class="pre">cmc</span></code> executable is the directory you want to run from, we need only to
+call it with <code class="docutils literal notranslate"><span class="pre">mpirun</span></code> (or <code class="docutils literal notranslate"><span class="pre">mpiexec</span></code>, depending on your mpi version):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpirun -np &lt;n_cores&gt; ./cmc &lt;params.ini&gt; &lt;output&gt;
+</pre></div>
+</div>
+<p>Where</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>&lt;n_cores&gt; is the number of cores you want to run on</p></li>
+<li><p>&lt;params.ini&gt; is the path to your .ini file (examples <a class="reference external" href="https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples">here</a> or in the <a class="reference internal" href="../inifile/index.html#inifile"><span class="std std-ref">Configuration files for CMC</span></a> page)</p></li>
+<li><p>&lt;output&gt; is the prefix for all the output files that will be produced by CMC</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="restarting-cmc">
+<h2>Restarting CMC<a class="headerlink" href="#restarting-cmc" title="Permalink to this heading"></a></h2>
+<p>CMC allows for bit-for-bit restarting, by saving the state of each parallel
+process every few hours (2 by default).  These restart files will be saved in
+your run folder in a subfolder titled <code class="docutils literal notranslate"><span class="pre">&lt;output&gt;-RESTART</span></code>.  These restart
+files will be numbered sequentially starting from 1, so you’ll have to specifiy
+which restart
+file you want to use.  A typical restart file will have the form
+<code class="docutils literal notranslate"><span class="pre">&lt;output&gt;.restart.&lt;n&gt;-&lt;proc&gt;.bin</span></code>, where <code class="docutils literal notranslate"><span class="pre">&lt;n&gt;</span></code> is the number of the
+restart, and <code class="docutils literal notranslate"><span class="pre">&lt;proc&gt;</span></code> is the number of the mpi processor that file was
+produced by.</p>
+<p>To restart CMC from one of these, you’ll need the original .ini file and the
+path to the restart folder.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpirun -np &lt;n_cores&gt; ./cmc -R &lt;n&gt; &lt;params.ini&gt; &lt;new_output&gt; &lt;output&gt;
+</pre></div>
+</div>
+<p>where &lt;new_output&gt; is the new prefix for all the files that are restarted.  If
+for some reason you need to start from a restart file but with a <cite>different</cite>
+random seed, you can specifiy that on the command line with <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">&lt;new_seed&gt;</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>CMC cannot restart on different numbers of cores than the original run was performed on</p>
+</div>
+</section>
+<section id="example-run-plummer-sphere-to-core-collapse">
+<h2>Example: Run Plummer Sphere to Core Collapse<a class="headerlink" href="#example-run-plummer-sphere-to-core-collapse" title="Permalink to this heading"></a></h2>
+<p>Now we have all the tools we need to run CMC!  Let’s try running the above Plummer sphere with <span class="math">\(N=10^4\)</span> particles to core collapse.</p>
+<p>We’ve already generated the initial conditions above and saved them as
+<code class="docutils literal notranslate"><span class="pre">plummer.hdf5</span></code>, so all we need is to move them into a folder with the <code class="docutils literal notranslate"><span class="pre">cmc</span></code>
+executable and an appropriate ini file.  We can use the <code class="docutils literal notranslate"><span class="pre">PlummerSphere.ini</span></code>
+file located in the <a class="reference external" href="https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/examples">CMC-COSMIC/examples</a>
+folder.</p>
+<p>With that in place, we can run CMC on four cores with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpirun -np <span class="m">4</span> ./cmc PlummerSphere.ini plummer
+</pre></div>
+</div>
+<p>On the Vera cluster at CMU, this takes about 2 minutes to run to core collapse.</p>
+<p>We can check that it’s worked by looking at the Lagrange Radii (the &lt;x&gt;
+Lagrange radius is the radius enclosing &lt;x&gt; percent of the cluter mass).  If we
+plot the 0.1% 1%, 10% 50%, and 90% Lagrange radii, the classic collapse of the
+core (and expansion of the halo) appears:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="gp">In [2]: </span><span class="n">lag_rad</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s1">&#39;source/example_output/plummer.lagrad.dat&#39;</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="gp">In [3]: </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lag_rad</span><span class="p">[</span><span class="s1">&#39;#1:t&#39;</span><span class="p">],</span><span class="n">lag_rad</span><span class="p">[[</span><span class="s1">&#39;7:r(0.001)&#39;</span><span class="p">,</span><span class="s1">&#39;12:r(0.01)&#39;</span><span class="p">,</span><span class="s1">&#39;17:r(0.1)&#39;</span><span class="p">,</span><span class="s1">&#39;21:r(0.5)&#39;</span><span class="p">,</span><span class="s1">&#39;25:r(0.9)&#39;</span><span class="p">]],</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;C1&#39;</span><span class="p">);</span>
+
+<span class="gp">In [4]: </span><span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">);</span>
+
+<span class="gp">In [5]: </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Time (relaxation time)&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+
+<span class="gp">In [6]: </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Virial Radii&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">);</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/plot_lagrad.png"><img alt="../_images/plot_lagrad.png" src="../_images/plot_lagrad.png" style="width: 6in;" /></a>
+</section>
+</section>
+
+
+           </div>
+          </div>
+    <a href="https://github.com/ClusterMonteCarlo/CMC-COSMIC">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../initialconditions/index.html" class="btn btn-neutral float-left" title="Initial Conditions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../output/index.html" class="btn btn-neutral float-right" title="Analyzing CMC Output" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Carl Rodriguez &amp; Scott Coughlin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
