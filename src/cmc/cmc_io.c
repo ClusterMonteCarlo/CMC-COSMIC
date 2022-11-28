@@ -1369,6 +1369,10 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_PTS3);
                                 sscanf(values, "%lf", &BSE_PTS3);
                                 parsed.BSE_PTS3 = 1;
+                        } else if (strcmp(parameter_name, "PTS1_HIGHMASS_CUTOFF")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_PTS1_HIGHMASS_CUTOFF);
+                                sscanf(values, "%lf", &BSE_PTS1_HIGHMASS_CUTOFF);
+                                parsed.BSE_PTS1_HIGHMASS_CUTOFF = 1;
 			} else if (strcmp(parameter_name, "WINDFLAG")==0) {
 				PRINT_PARSED(PARAMDOC_BSE_WINDFLAG);
 				sscanf(values, "%d", &BSE_WINDFLAG);
@@ -1724,6 +1728,9 @@ if(myid==0) {
         CHECK_PARSED(BSE_PTS2, 0.01, PARAMDOC_BSE_PTS2);
         //                 pts3 - HG, HeMS            (default=0.02)
         CHECK_PARSED(BSE_PTS3, 0.02, PARAMDOC_BSE_PTS3);
+
+        // For any stars with ZAMS masses above PTS1_HIGHMASS_CUTOFF, decrease PTS1 by 10x
+        CHECK_PARSED(BSE_PTS1_HIGHMASS_CUTOFF, 5, PARAMDOC_BSE_PTS1_HIGHMASS_CUTOFF);
 
         // windflag sets the wind prescription
         // windflag=0: stock BSE// windflag=1: StarTrack 2008
