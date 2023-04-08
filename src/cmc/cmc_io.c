@@ -3742,7 +3742,8 @@ void save_restart_file(){
 	my_restart_file = fopen(restart_file,"wb");
 	if (!my_restart_file){
 		eprintf("can't open restart file %s for writing!\n",restart_file);
-		exit_cleanly(-1, __FUNCTION__);
+		// exit_cleanly(-1, __FUNCTION__);
+		return;
 	}
 
 	
