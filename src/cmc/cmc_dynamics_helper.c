@@ -1366,8 +1366,9 @@ void binint_log_collision(const char interaction_type[], long id,
 * @param rcm ?
 * @param vcm[4] ?
 * @param rng gsl rng
+* @param exception did an exception occur for logging
 */
-void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng)
+void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng, int exception)
 {
 	int i, j, isbinsingle=0, isbinbin=0, sid=-1, bid=-1, istriple, bi, nmerged;
 	long ksin=-1, kbin=-1, jbin, jbinp, knew, knewp=-1, oldk;
@@ -1447,6 +1448,8 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	} else {
 		retval = binsingle(&t, ksin, kbin, W, bmax, &hier, rng);
 	}
+
+	parafprintf(binintfile, "IS EXCEPTION: %d\n", exception);
 
 	/* set up axes */
 	wp = sqrt(sqr(w[1]) + sqr(w[2]));
