@@ -285,8 +285,9 @@ are skipped if they already interacted in 3bb loop!  */
 
 			/* binary--single cross section */
 			// rperi = XBS * binary[star[kbin].binind].a;
-			rperi = 2.1 * pow(((binary[star[kbin].binind].bse_mass[0] + binary[star[kbin].binind].bse_mass[1]) + star_m[get_global_idx(ksin)]) / ((binary[star[kbin].binind].bse_mass[0] + binary[star[kbin].binind].bse_mass[1])), (1/3)) * binary[star[kbin].binind].a;
+			rperi = 2.1 * pow(((binary[star[kbin].binind].bse_mass[0] + binary[star[kbin].binind].bse_mass[1]) + star_m[get_global_idx(ksin)]) / ((binary[star[kbin].binind].bse_mass[0] + binary[star[kbin].binind].bse_mass[1])), (1.0/3)) * binary[star[kbin].binind].a;
 			rperi_original = XBS * binary[star[kbin].binind].a;
+                                                
 
 			// printf("xbs: %f\n", XBS);
 			// printf("ping: rperi: %f, rperi_orig: %f\n", rperi, rperi_original);
