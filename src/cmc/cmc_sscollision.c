@@ -1230,7 +1230,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    ktry = 1;
 		    while (tempbinary.bse_mass[0] != 0.0 && tempbinary.bse_mass[1] != 0.0 && ktry < 10) {
 		      dprintf("Attempting to force merger in CE possibly by repeating evolution with a change of sep and lambda.\n");
-		      if(ktry>0){
+		      if(ktry>2){
 			lamb_val = -0.0001/((float)ktry);
 			bse_set_lambdaf(lamb_val); //perhaps should do this in the second attempt? 
 		      }

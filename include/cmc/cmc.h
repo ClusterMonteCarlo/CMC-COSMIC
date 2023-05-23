@@ -1081,7 +1081,7 @@ typedef struct{
  * @brief Write out information about neutron stars (0=off, 1=on)
  * */
         int WRITE_MOREPULSAR_INFO;
-         #define PARAMDOC_WRITE_MORECOLL_INFO "Write out information about stellar collisions (0=off, 1=on)"
+#define PARAMDOC_WRITE_MORECOLL_INFO "Write out information about stellar collisions (0=off, 1=on)"
 /**
  * @brief Write out information about stellar collisions(0=off, 1=on)
  * */
