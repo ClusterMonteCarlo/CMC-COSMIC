@@ -183,7 +183,7 @@ void stellar_evolution_init(void){
 
     if (star[k].binind == 0) { /* single star */
       star[k].se_mass = star_m[g_k] * units.mstar / MSUN;
-	  star[k].zams_mass = star[k].se_mass;
+	  star[k].se_zams_mass = star[k].se_mass;
       /* setting the type */
       if(star[k].se_mass <= 0.7){
         star[k].se_k = 0;
@@ -427,7 +427,7 @@ void do_stellar_evolution(gsl_rng *rng)
 		  /*If we've got a large MS star, we need to reduce the timestep, otherwise
 		   * we miss the transition from MS to HG to giant, and won't start applying
 		   * winds for massive stars at the right time*/
-		  if(star[k].zams_mass > 18){
+		  if((star[k].se_k <= 1 || star[k].se_k == 7) & star[k].se_zams_mass > BSE_PTS1_HIGHMASS_CUTOFF){
 			  bse_set_pts1(BSE_PTS1/10.);
 			  reduced_timestep = 1;
 		  }
@@ -560,7 +560,7 @@ void do_stellar_evolution(gsl_rng *rng)
 
 		if (WRITE_BH_INFO) {
 			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
-				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g %g %g", TotalTime, star_r[g_k], star[k].id,star[k].zams_mass,star[k].se_mass, star[k].se_mt, star[k].se_bhspin, VKO);
+				parafprintf(newbhfile, "%.18g %g 0 %ld %g %g %g %g %g", TotalTime, star_r[g_k], star[k].id,star[k].se_zams_mass,star[k].se_mass, star[k].se_mt, star[k].se_bhspin, VKO);
 				for (ii=0; ii<16; ii++){
 					parafprintf (newbhfile, " %g", vs[ii]);
 				}
@@ -595,7 +595,7 @@ void do_stellar_evolution(gsl_rng *rng)
 		/*If we've got a large MS star, we need to reduce the timestep, otherwise
 		 * we miss the transition from MS to HG to giant, and won't start applying
 		 * winds for massive stars at the right time*/
-		if(binary[kb].bse_zams_mass[0] > 18 || binary[kb].bse_zams_mass[1] > 18){
+		if(((binary[kb].bse_kw[0] <= 1 || binary[kb].bse_kw[0] == 7) & (binary[kb].bse_zams_mass[0] > BSE_PTS1_HIGHMASS_CUTOFF)) || ((binary[kb].bse_kw[1] <= 1 || binary[kb].bse_kw[1] == 7) & (binary[kb].bse_zams_mass[1] > BSE_PTS1_HIGHMASS_CUTOFF))){
 		    bse_set_pts1(BSE_PTS1/10.);
 		    reduced_timestep = 1;
 		}
@@ -1469,6 +1469,7 @@ void cp_binmemb_to_star(long k, int kbi, long knew)
   }
   star[knew].rad = binary[kb].bse_radius[kbi] * RSUN / units.l;
   star[knew].se_mass = binary[kb].bse_mass0[kbi]; /* initial mass (at curent epoch?) */
+  star[knew].se_zams_mass = binary[kb].bse_zams_mass[kbi]; /* initial mass (at curent epoch?) */
   star[knew].se_k = binary[kb].bse_kw[kbi];
   star[knew].se_mt = binary[kb].bse_mass[kbi]; /* current mass */
   star[knew].se_ospin = binary[kb].bse_ospin[kbi];
@@ -1512,6 +1513,7 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
   
   if (kbi == -1) { /* star comes from input single star */
     star[knew].se_mass = star[oldk].se_mass;
+    star[knew].se_zams_mass = star[oldk].se_zams_mass;
     star[knew].se_k = star[oldk].se_k;
     star[knew].se_mt = star[oldk].se_mt;
     star[knew].se_ospin = star[oldk].se_ospin;
@@ -1536,6 +1538,7 @@ void cp_SEvars_to_newstar(long oldk, int kbi, long knew)
     star[knew].rad = star[oldk].rad;
   } else { /* star comes from input binary */
     star[knew].se_mass = binary[kb].bse_mass0[kbi];
+    star[knew].se_zams_mass = binary[kb].bse_zams_mass[kbi];
     star[knew].se_k = binary[kb].bse_kw[kbi];
     star[knew].se_mt = binary[kb].bse_mass[kbi];
     star[knew].se_ospin = binary[kb].bse_ospin[kbi];
@@ -1607,6 +1610,7 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
   if (kbi == -1) { /* star comes from input single star */
     target_star->rad = star[oldk].rad; //PDK addition
     target_star->se_mass = star[oldk].se_mass;
+    target_star->se_zams_mass = star[oldk].se_zams_mass;
     target_star->se_k = star[oldk].se_k;
     target_star->se_mt = star[oldk].se_mt;
     target_star->se_ospin = star[oldk].se_ospin;
@@ -1631,6 +1635,7 @@ void cp_SEvars_to_star(long oldk, int kbi, star_t *target_star)
     target_star->lifetime = star[oldk].lifetime;
   } else { /* star comes from input binary */
     target_star->se_mass = binary[kb].bse_mass0[kbi];
+    target_star->se_zams_mass = binary[kb].bse_zams_mass[kbi];
     target_star->se_k = binary[kb].bse_kw[kbi];
     target_star->se_mt = binary[kb].bse_mass[kbi];
     target_star->se_ospin = binary[kb].bse_ospin[kbi];
@@ -1706,6 +1711,7 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
 
   if (oldkbi == -1) { /* star comes from input single star */
     binary[kbnew].bse_mass0[kbinew] = star[oldk].se_mass;
+    binary[kbnew].bse_zams_mass[kbinew] = star[oldk].se_zams_mass;
     binary[kbnew].bse_kw[kbinew] = star[oldk].se_k;
     binary[kbnew].bse_mass[kbinew] = star[oldk].se_mt;
     binary[kbnew].bse_ospin[kbinew] = star[oldk].se_ospin;
@@ -1736,6 +1742,7 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
     }
   } else { /* star comes from input binary */
     binary[kbnew].bse_mass0[kbinew] = binary[kbold].bse_mass0[oldkbi];
+    binary[kbnew].bse_zams_mass[kbinew] = binary[kbold].bse_zams_mass[oldkbi];
     binary[kbnew].bse_kw[kbinew] = binary[kbold].bse_kw[oldkbi];
     binary[kbnew].bse_mass[kbinew] = binary[kbold].bse_mass[oldkbi];
     binary[kbnew].bse_ospin[kbinew] = binary[kbold].bse_ospin[oldkbi];
@@ -1793,6 +1800,7 @@ void cp_SEvars_to_newbinary(long oldk, int oldkbi, long knew, int kbinew)
 void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid)
 {
   binary[binindex].bse_mass0[bid] = instar.se_mass;
+  binary[binindex].bse_zams_mass[bid] = instar.se_zams_mass;
   binary[binindex].bse_kw[bid] = instar.se_k;
   binary[binindex].bse_mass[bid] = instar.se_mt;
   binary[binindex].bse_ospin[bid] = instar.se_ospin;
