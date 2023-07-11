@@ -1928,6 +1928,7 @@ void set_global_vars1()
     mpi_relaxationfile_len=0;
     mpi_pulsarfile_len=0;
     mpi_morepulsarfile_len=0;
+    mpi_morecollfile_len=0;
     mpi_triplefile_len=0;
 
     mpi_logfile_ofst_total=0;
@@ -1941,6 +1942,7 @@ void set_global_vars1()
     mpi_relaxationfile_ofst_total=0;
     mpi_pulsarfile_ofst_total=0;
     mpi_morepulsarfile_ofst_total=0;
+    mpi_morecollfile_ofst_total=0;
     mpi_triplefile_ofst_total=0;
 }
 

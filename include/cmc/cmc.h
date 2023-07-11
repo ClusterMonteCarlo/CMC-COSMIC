@@ -1081,6 +1081,11 @@ typedef struct{
  * @brief Write out information about neutron stars (0=off, 1=on)
  * */
         int WRITE_MOREPULSAR_INFO;
+#define PARAMDOC_WRITE_MORECOLL_INFO "Write out information about stellar collisions (0=off, 1=on)"
+/**
+ * @brief Write out information about stellar collisions(0=off, 1=on)
+ * */
+ 	int WRITE_MORECOLL_INFO;
 #define PARAMDOC_BHNS_TDE "Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)"
 /**
  * @brief Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)
@@ -1769,6 +1774,7 @@ void calc_timestep(gsl_rng *rng);
 void energy_conservation1();
 void energy_conservation2();
 void new_orbits_calculate();
+void write_morecoll(long i);
 void toy_rejuvenation();
 void pre_sort_comm();
 void post_sort_comm();
