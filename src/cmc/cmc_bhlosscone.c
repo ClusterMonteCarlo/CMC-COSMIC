@@ -338,26 +338,39 @@ double calc_P_orb(long index)
                             orbit_rs.kmin, params.kmin, index, star[index].id);
 		};
 
+		// Cabrera 230731: Added error handling to default to Porbapprox
+		gsl_error_handler_t *old_handler;
+		old_handler = gsl_set_error_handler_off();
+
         //MPI: These seem to be never used, so they are not parallelized as of now. Also unclear how these functions will be used, so dont understand if index transformation is reqd or not. Might later have to double check if the parallelization is correct.
 		if (0) { /* use standard potential function with Stefan's speedup trick here */
 			F.function = &calc_p_orb_f;
-			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
+			status = gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
 			//dprintf("Porb=%g Porb/Porbapprox=%g intervals=%d\n", Porb, Porb/Porbapprox, w->size);
 		}
 
 		if (0) { /* use fast potential function here (not much of a speedup over Stefan's technique in practice) */
 			F.function = &calc_p_orb_f2;
-			gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
+			status = gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
 			//dprintf("\tFast: Porb=%g Porb/Porbapprox=%g intervals=%d\n", Porb, Porb/Porbapprox, w->size);
 		}
 
 		if (1) { /* use Gauss-Chebyshev for factor of ~few speedup over standard method */
 			//Porbtmp = Porb;
 			F.function = &calc_p_orb_gc;
-			gsl_integration_qaws(&F, orbit_rs.rp, orbit_rs.ra, tab, 1.0e-3, 1.0e-3, 1000, w, &Porb, &error);
+			status = gsl_integration_qaws(&F, orbit_rs.rp, orbit_rs.ra, tab, 1.0e-3, 1.0e-3, 1000, w, &Porb, &error);
 			//dprintf("Porb=%g Porb/Porbtmp=%g Porb/Porbapprox=%g intervals=%d\n", 
 			//	Porb, Porb/Porbtmp, Porb/Porbapprox, w->size);
 		}
+
+		// Print error if there's a problem with the integration, and return Porbapprox
+		if (status) {
+			eprintf("gsl_integration_qa[g,w]s failed (gsl_errno=%d, index=%d, g_index=%d, orbit_rs.rp=%e, orbit_rs.ra=%e); check cmc_bhlosscone.c for [g,w] routine; returning Porbapprox=%e\n", status, index, g_index, orbit_rs.rp, orbit_rs.ra, Porbapprox);
+			return(Porbapprox);
+		}
+
+		// Reset to previous error handler
+		gsl_set_error_handler(old_handler);
 		
 		gsl_integration_qaws_table_free(tab);
 		gsl_integration_workspace_free(w);
