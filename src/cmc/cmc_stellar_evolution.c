@@ -364,6 +364,7 @@ void do_stellar_evolution(gsl_rng *rng)
   double M_afterSE, M10_afterSE, M100_afterSE, M1000_afterSE, Mcore_afterSE;
   double r10_beforeSE, r100_beforeSE, r1000_beforeSE, rcore_beforeSE;
   double dM_dt_SE10, dM_dt_SE100, dM_dt_SE1000, dM_dt_SEcore; 
+  double mprev0, mprev1, rprev0, rprev1, zamsprev0, zamsprev1, epochprev0, epochprev1, tbprev;
   struct rng_t113_state temp_state;
   int reduced_timestep=0;
   binary_t tempbinary;
@@ -581,7 +582,16 @@ void do_stellar_evolution(gsl_rng *rng)
 		/* store previous star types for binary components, before evolving binary */
 		kprev0=binary[kb].bse_kw[0];
 		kprev1=binary[kb].bse_kw[1];
-
+		rprev0=binary[kb].bse_radius[0];
+		rprev1=binary[kb].bse_radius[1];
+		mprev0=binary[kb].bse_mass[0];
+		mprev1=binary[kb].bse_mass[1];
+		zamsprev0=binary[kb].bse_zams_mass[0];
+		zamsprev1=binary[kb].bse_zams_mass[1];
+		epochprev0=binary[kb].bse_epoch[0];
+		epochprev1=binary[kb].bse_epoch[1];
+		tbprev= binary[kb].bse_tb;
+		
 		/*If we've got a large MS star, we need to reduce the timestep, otherwise
 		 * we miss the transition from MS to HG to giant, and won't start applying
 		 * winds for massive stars at the right time*/
@@ -618,10 +628,11 @@ void do_stellar_evolution(gsl_rng *rng)
 		    bse_set_pts1(BSE_PTS1);
 
         if(isnan(binary[kb].bse_radius[0])){
-		printf("id1=%ld id2=%ld\n",binary[kb].id1,binary[kb].id2);
+              printf("id1=%ld id2=%ld\n",binary[kb].id1,binary[kb].id2);
           fprintf(stderr, "An isnan occured for r1 cmc_stellar_evolution.c\n");
           fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1], binary[kb].bse_tb);
           fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
+          fprintf(stderr, "Before BSE: kprev0 =%d kprev1=%d, m1=%g, m2=%g, zams1=%g, zams2=%g, rad1=%g, rad2=%g, epoch1=%g, epoch2=%g tbprev=%g \n", kprev0, kprev1, mprev0, mprev1, zamsprev0, zamsprev1, rprev0, rprev1, epochprev0, epochprev1, tbprev);
           exit(1);
         } 
         if(isnan(binary[kb].bse_radius[1])){
@@ -916,12 +927,12 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
     cp_binmemb_to_star(k, 0, knew);
     cp_binmemb_to_star(k, 1, knewp);
     DMse -= (star_m[get_global_idx(knew)] + star_m[get_global_idx(knewp)]) * madhoc;
-
-    parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g) type1=%d type2=%d\n",
+    /*Elena: Modifying output */
+    parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g) type1=%d type2=%d rad1[RSUN]=%g rad2[RSUN]=%g\n",
       TotalTime,
       star[knew].id, star[knew].se_mt, 
       star[knewp].id, star_m[get_global_idx(knewp)] * units.mstar / FB_CONST_MSUN,
-      star_r[get_global_idx(k)], kprev0, kprev1);
+		star_r[get_global_idx(k)], kprev0, kprev1, binary[kb].rad1 * units.l / RSUN, binary[kb].rad2 * units.l / RSUN);
 
     destroy_obj(k);
     /* in this case vs is relative speed between stars at infinity */
@@ -1037,12 +1048,14 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
 	if(kprev0 == 14 && kprev1 == 14)
 		binary_bh_merger(k, kb, knew, kprev0, kprev1, curr_st);
 
-    parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d\n",
+    /*Elena: Modifying output */
+    parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d radr[RSUN]=%g rad1[RSUN]=%g rad2[RSUN]=%g\n",
       TotalTime,
       star[knew].id, star[knew].se_mt,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
-      star_r[get_global_idx(k)], star[knew].se_k, kprev0, kprev1);
+		star_r[get_global_idx(k)], star[knew].se_k, kprev0, kprev1,
+		star[knew].rad * units.l/ RSUN, binary[kb].rad1 * units.l / RSUN,binary[kb].rad2 * units.l / RSUN);
     destroy_obj(k);
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
@@ -1129,12 +1142,13 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
 	if(kprev0 == 14 && kprev1 == 14)
 		binary_bh_merger(k, kb, knew, kprev0, kprev1, curr_st);
 
-    parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d\n",
+    parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d radr[RSUN]=%g rad1[RSUN]=%g rad2[RSUN]=%g\n",
       TotalTime,
       star[knew].id, star[knew].se_mt,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
-      star_r[get_global_idx(k)], star[knew].se_k, kprev0, kprev1);
+		star_r[get_global_idx(k)], star[knew].se_k, kprev0, kprev1,
+		star[knew].rad * units.l / RSUN, binary[kb].rad1 * units.l / RSUN, binary[kb].rad2 * units.l / RSUN);
 
     destroy_obj(k);
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
