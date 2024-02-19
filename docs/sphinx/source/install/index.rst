@@ -148,6 +148,16 @@ On Memex (Carnegie Science's HPC computing cluster) follow the commands:
     
 then follow the **intel** instructions above (ask Kyle Kremer with questions).
 
+Sunnyvale (CITA Cluster)
+________
+On Sunnyvale (CITA HPC cluster) follow the commands:
+
+.. code-block:: bash
+
+    module load openmpi/4.1.2-ucx gsl/2.7.1 hdf5/1.12.1-ucx cmake/3.24.0 cfitsio/4.0.0
+
+then follow the **GCC** instructions above (email Claire Ye with questions).
+
 ==========
 Containers
 ==========
