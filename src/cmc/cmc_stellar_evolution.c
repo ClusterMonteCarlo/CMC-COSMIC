@@ -560,7 +560,7 @@ void do_stellar_evolution(gsl_rng *rng)
 
                 if (WRITE_MOREPULSAR_INFO) {
                         if (kprev!=13 && star[k].se_k==13) { // newly formed NS
-                                parafprintf(newnsfile, "%.18g %g 0 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], star[k].id,star[k].zams_mass,star[k].se_mass, star[k].se_mt, star[k].se_scm_formation, VKO, kprev);
+                                parafprintf(newnsfile, "%.18g %g 0 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], star[k].id,star[k].se_zams_mass,star[k].se_mass, star[k].se_mt, star[k].se_scm_formation, VKO, kprev);
                                 parafprintf (newnsfile, "\n");
                         }
                 }
