@@ -1201,4 +1201,11 @@ MISC FLAGS
                             ``1`` : follows `StarTrack <https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract>`_
 
                          **ST_cr = 1**
+
+``rtmsflag``             Activates different prescriptions for stellar radius at main sequence turnoff
+                            ``0`` : uses the SSE rtms for M < 200 Msun and extrapolation for z < 0.0008 and M > 200 Msun.
+                            ``1`` : interpolates the rtms from Boost tracks (Szécsi et al. (2022)). Extrapolation is used after M > 575 Msun
+                            ``2`` : uses the best-fit power law for rtms vs stellar mass from BPASSv2.2 tracks (Stanway & Eldridge (2018)).
+                                    Rtms data for BPASS tracks is available only till 300 Msun and beyond that we follow the fitted power law profile.
+                         **rtmsflag = 0**                         
 =======================  =====================================================
