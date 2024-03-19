@@ -46,6 +46,7 @@ void restart_stellar_evolution(void){
   bse_set_acc_lim(BSE_ACC_LIM);
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
+  bse_set_rtmsflag(BSE_RTMSFLAG);
   bse_set_bhflag(BSE_BHFLAG);
   bse_set_grflag(BSE_GRFLAG);
   bse_set_kickflag(BSE_KICKFLAG);
@@ -138,6 +139,7 @@ void stellar_evolution_init(void){
   bse_set_acc_lim(BSE_ACC_LIM);
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
+  bse_set_rtmsflag(BSE_RTMSFLAG);
   bse_set_bhflag(BSE_BHFLAG);
   bse_set_grflag(BSE_GRFLAG);
   bse_set_kickflag(BSE_KICKFLAG);
@@ -176,7 +178,7 @@ void stellar_evolution_init(void){
 
   /* set collisions matrix */
   bse_instar();
-  dprintf("se_init: %g %g %g %d %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PISN, BSE_ALPHA1, BSE_LAMBDAF, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_BHFLAG, BSE_REMNANTFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_POLAR_KICK_ANGLE);
+  dprintf("se_init: %g %g %g %d %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PISN, BSE_ALPHA1, BSE_LAMBDAF, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_RTMSFLAG, BSE_BHFLAG, BSE_REMNANTFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_POLAR_KICK_ANGLE);
 
   for (k=1; k<=mpiEnd-mpiBegin+1; k++) {
     long g_k = get_global_idx(k);
