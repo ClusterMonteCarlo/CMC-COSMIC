@@ -880,13 +880,13 @@ typedef struct{
 * @brief Allow for the formation of binary black holes from gravitational-wave emission during single-single encounters; SS_COLLISION must be 1
 */
 	int BH_CAPTURE;
-//Shi: simple tidal capture prescription in Kim & Lee 1999 based on polytropic star models.
+//CSY: simple tidal capture prescription in Kim & Lee 1999 based on polytropic star models.
 #define PARAMDOC_TC_POLYTROPE "allow for tidal capture in single-single interactions for non-giant stars (0=off, 1=on)"
 /**
 * @brief allow for tidal capture in single-single interactions for non-giant stars (0=off, 1=on)
 */
         int TC_POLYTROPE;
-//Shi: simple tidal capture prescription for all stars with a radius except Giants.
+//CSY: simple tidal capture prescription for all stars with a radius except Giants.
 #define PARAMDOC_TC_FACTOR "allow for tidal capture (a multiple of the set factor of the pericenter) during single-single collision (1=off, greater than 1 sets different multiplyers)"
 /**
 * @brief allow for tidal capture (a multiple of the set factor of the pericenter) during single-single collision (1=off, greater than 1 sets different multiplyers)
@@ -1086,11 +1086,26 @@ typedef struct{
  * @brief Write out information about stellar collisions(0=off, 1=on)
  * */
  	int WRITE_MORECOLL_INFO;
-#define PARAMDOC_BHNS_TDE "Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)"
+#define PARAMDOC_CO_TDE "Treat BH(NS,WD)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)"
 /**
- * @brief Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)
+ * @brief Treat BH(NS,WD)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)
  * */
-        int BHNS_TDE;
+        int CO_TDE;
+#define PARAMDOC_WD_TC "turn on wd-wd tidal capture in single-single and fewbody (0=off, >0=set the capture factor)"
+/**
+* @brief turn on wd-wd tidal capture in single-single and fewbody (0=off,>0=set the capture factor)
+*/
+        int WD_TC;
+#define PARAMDOC_TDE_SPINUP "Turn on NS-MS star TDE mass accretion onto NS (1=on, 0=off)"
+/**
+* @brief Turn on NS-MS star TDE mass accretion onto NS (1=on, 0=off)
+*/
+        int TDE_SPINUP;
+#define PARAMDOC_S_TDE "Mass transport rate for TDE_SPINUP; 0 is the highest. 1 the lowest. (default=0.2)"
+/**
+* @brief Mass transport rate for TDE_SPINUP; 0 is the highest. 1 the lowest. (default=0.2)
+*/
+        int S_TDE;
 #define PARAMDOC_PULSAR_DELTACOUNT "Pulsar output interval in time steps"
 /**
  * @brief Pulsar output interval in time steps
@@ -1361,6 +1376,11 @@ typedef struct{
 * @brief mxns is the maximum NS mass (1.8, remnantflag=0; 3.0, remnantflag=1).
 */
 	int BSE_MXNS;
+#define PARAMDOC_BSE_WD_MASS_LIM "wd_mass_lim limits the maximum WD mass to the Chandrasekhar mass during mic. (0-without limit for mic; 1-with limits for mic)"
+/**
+* @brief wd_mass_lim limits the maximum WD mass to the Chandrasekhar mass during mic. (0-without limit for mic; 1-with limits for mic)
+*/
+        int BSE_WD_MASS_LIM;
 #define PARAMDOC_BSE_BCONST "bconst is the magnetic field decay timescale (-3000, although value and decay rate not really established...)."
 /**
 * @brief bconst is the magnetic field decay timescale (-3000, although value and decay rate not really established...).
@@ -1941,6 +1961,7 @@ void sscollision_do(long k, long kp, double rperi, double w[4], double W, double
 void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s);
 double coll_CE(double Mrg, double Mint, double Mwd, double Rrg, double vinf);
 double coll_CE_twogiant(double M1, double M2, double Mc1, double Mc2, double R1, double R2, double vinf);
+void NS_TDE_spinup(double Mns, double Mstar, double Rstar, double Kstar, double B_old, double ospin_old, double TDE_arr[]);
 
 void print_initial_binaries(void);
 

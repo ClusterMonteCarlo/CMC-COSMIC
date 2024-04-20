@@ -184,7 +184,7 @@ int fb_is_stable_binary(fb_obj_t *obj, double speedtol, fb_units_t units, fb_inp
 
 	/* test for collision at pericenter */
 	// PAU if (fb_is_collision(obj->a * (1.0 - obj->e), obj->obj[0]->R, obj->obj[1]->R)) {
-	if (fb_is_collision(obj->a * (1.0 - obj->e), obj->obj[0]->R, obj->obj[1]->R, obj->obj[0]->m, obj->obj[1]->m, obj->obj[0]->k_type, obj->obj[1]->k_type, units.m, units.l, input.BHNS_TDE_FLAG) || 
+	if (fb_is_collision(obj->a * (1.0 - obj->e), obj->obj[0]->R, obj->obj[1]->R, obj->obj[0]->m, obj->obj[1]->m, obj->obj[0]->k_type, obj->obj[1]->k_type, units.m, units.l, input.CO_TDE_FLAG, input.WD_TC_FLAG) || 
 		vrelperi / clight >= speedtol) {
 		return(0);
 	} else {
