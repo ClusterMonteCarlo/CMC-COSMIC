@@ -704,9 +704,10 @@ void PrintParaFileOutput(void)
 	 if(WRITE_PULSAR_INFO)
 		 mpi_para_file_write(mpi_pulsarfile_wrbuf, &mpi_pulsarfile_len, &mpi_pulsarfile_ofst_total, &mpi_pulsarfile);
 
-/* Shi */
+/* CSY */
     if (WRITE_MOREPULSAR_INFO)
         mpi_para_file_write(mpi_morepulsarfile_wrbuf, &mpi_morepulsarfile_len, &mpi_morepulsarfile_ofst_total, &mpi_morepulsarfile);
+        mpi_para_file_write(mpi_newnsfile_wrbuf, &mpi_newnsfile_len, &mpi_newnsfile_ofst_total, &mpi_newnsfile);
 
     if (TDE_SPINUP){
         mpi_para_file_write(mpi_tdefile_wrbuf, &mpi_tdefile_len, &mpi_tdefile_ofst_total, &mpi_tdefile);
@@ -2454,12 +2455,17 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			MPI_File_set_size(mpi_pulsarfile, 0);
 	}
 
-    /* Shi */
+    /* CSY */
     if (WRITE_MOREPULSAR_INFO){
         sprintf(outfile, "%s.morepulsars.dat", outprefix);
         MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_morepulsarfile);
         if(RESTART_TCOUNT <= 0)
 		MPI_File_set_size(mpi_morepulsarfile, 0);
+
+        sprintf(outfile, "%s.nsformation.dat", outprefix);
+        MPI_File_open(MPI_COMM_WORLD, outfile, MPI_MODE_RESTART, MPI_INFO_NULL, &mpi_newnsfile);
+        if(RESTART_TCOUNT <= 0)
+                MPI_File_set_size(mpi_newnsfile, 0);
     }
 
     if (TDE_SPINUP){
@@ -2518,9 +2524,11 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 		/* print header */
 		if(WRITE_PULSAR_INFO)
 			pararootfprintf(pulsarfile, "tcount    TotalTime    Star_id      Rperi    Rapo    R     VR    VT    PHI    PHIr0    PHIrt    kick    Binary_id1    Binary_id2    kw2     P     B    formation     bacc    tacc    B0   TB     M2    M1     e     R2/RL2     dm1/dt   \n");
-                /* print header */ //Shi
-                if (WRITE_MOREPULSAR_INFO)
+                /* print header */ //CSY
+                if (WRITE_MOREPULSAR_INFO) {
                		pararootfprintf(morepulsarfile,"#1:tcount #2:TotalTime #3:binflag #4:id0 #5:id1 #6:m0[MSUN] #7:m1[MSUN] #8:B0[G] #9:B1[G] #10:P0[sec] #11:P1[sec] #12:startype0 #13:startype1 #14:a[AU] #15:ecc #16:radrol0 #17:radrol1 #18:dmdt0 #19:dmdt1 #20:r #21:vr #22:vt #23:bacc0 #24:bacc1 #25:tacc0 #26:tacc1 #27:formation0 #28:formation1\n");
+                        pararootfprintf(newnsfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:ns_mass #8:ns_formation #9:birth-kick(km/s) #10:kprev\n");
+                }
                 /* print header */ //Elena
                 if (WRITE_MORECOLL_INFO)
                         pararootfprintf(morecollfile,"#1:TotalTime #2:collision-type #3:id0 #4:id1 #5:m0[MSUN] #6:m1[MSUN] #7:rad1[RSUN] #8:rad2[RSUN] #9:rho0_c[MSUN/RSUN^3] #10:rho1_c[MSUN/RSUN^3] #11:rho0_env[MSUN/RSUN^3] #12:rho1_env[MSUN/RSUN^3] #13:kstar0 #14:kstar1 #15:idr #16:mr[MSUN] #17:radr[RSUN] #18:rhor_c[MSUN/RSUN^3] #19:rhor_env[MSUN/RSUN^3] #20:kstar, #21:vinf[km/s], #22:rperi\n");
@@ -2604,9 +2612,10 @@ void close_node_buffers(void)
 		 fclose(pulsarfile);
 	 }
 
-    //Shi
+    //CSY
     if (WRITE_MOREPULSAR_INFO){
     	fclose(morepulsarfile);
+        fclose(newnsfile);
     }
     if (TDE_SPINUP){
         fclose(tdefile);
@@ -2650,9 +2659,10 @@ void mpi_close_node_buffers(void)
 		 MPI_File_close(&mpi_pulsarfile);
 	 }
 
-    //Shi
+    //CSY
     if (WRITE_MOREPULSAR_INFO){
     	MPI_File_close(&mpi_morepulsarfile);
+        MPI_File_close(&mpi_newnsfile);
     }
     if (TDE_SPINUP){
         MPI_File_close(&mpi_tdefile);
@@ -3943,6 +3953,7 @@ void load_restart_file(){
         }
 	if(WRITE_MOREPULSAR_INFO){
              MPI_File_seek(mpi_morepulsarfile,mpi_morepulsarfile_ofst_total,MPI_SEEK_SET);
+             MPI_File_seek(mpi_newnsfile,mpi_newnsfile_ofst_total,MPI_SEEK_SET);
         }
         if (TDE_SPINUP){
             MPI_File_seek(mpi_tdefile,mpi_tdefile_ofst_total,MPI_SEEK_SET);
@@ -3962,6 +3973,7 @@ void load_restart_file(){
         mpi_relaxationfile_len=0;
         mpi_pulsarfile_len=0;
 	mpi_morepulsarfile_len=0;
+        mpi_newnsfile_len=0;
 	mpi_morecollfile_len=0;
 	mpi_triplefile_len=0;
 	mpi_newbhfile_len=0;
@@ -3979,6 +3991,7 @@ void load_restart_file(){
         mpi_relaxationfile_ofst_total=0;
         mpi_pulsarfile_ofst_total=0;
 	mpi_morepulsarfile_ofst_total=0;
+        mpi_newnsfile_ofst_total=0;
 	mpi_morecollfile_ofst_total=0;
 	mpi_triplefile_ofst_total=0;
 	mpi_newbhfile_ofst_total=0;
