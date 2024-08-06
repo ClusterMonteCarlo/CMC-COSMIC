@@ -25,7 +25,7 @@
 #include "fewbody.h"
 
 /* the main collision criterion */
-int fb_is_collision(double r, double R1, double R2, double M1, double M2, double k1, double k2, double mass_units, double length_units, double bhns_tde_flag)
+int fb_is_collision(double r, double R1, double R2, double M1, double M2, double k1, double k2, double mass_units, double length_units, double co_tde_flag, double wd_tc_flag)
 {
         double collisions_multiple;
         k1 = abs(k1);
@@ -36,14 +36,14 @@ int fb_is_collision(double r, double R1, double R2, double M1, double M2, double
         R2 = R2*length_units/FB_CONST_RSUN;
         r = r*length_units/FB_CONST_RSUN;
 
-	if (bhns_tde_flag == 1) {
-		if (k1 >= 13 && k2 <= 1 && M1 >= M2) {    // for BH/NS-star collisions, use beta=(M1/M2)**(1/3)
+	if (co_tde_flag == 1) {
+		if (k1 >= 10 && k2 <= 1 && M1 >= M2) {    // for BH/NS-star collisions, use beta=(M1/M2)**(1/3)
 			if (M2 < 0.001) {
 				collisions_multiple = pow(M1/0.001,1./3.);
 			} else {
 				collisions_multiple = pow(M1/M2,1./3.);
 			}
-		} else if (k2 >= 13 && k1 <= 1 && M2 >= M1) {
+		} else if (k2 >= 10 && k1 <= 1 && M2 >= M1) {
 			if (M1 < 0.001) {
 				collisions_multiple = pow(M2/0.001,1./3.);
 			} else {
@@ -52,6 +52,16 @@ int fb_is_collision(double r, double R1, double R2, double M1, double M2, double
 		} else {
                 collisions_multiple = 1.0;    // for star-star collisions, just use beta = 1 (physical collision limit)
 		}
+        } else {
+                collisions_multiple = 1.0;
+        }
+
+        if (wd_tc_flag > 0) {
+                if ((k1 >=10 && k1 <= 12) && (k2 >=10 && k2 <= 12)) {
+                        collisions_multiple = wd_tc_flag;
+                 } else {
+                        collisions_multiple = 1.0;
+                 }
         } else {
                 collisions_multiple = 1.0;
         }
@@ -82,7 +92,7 @@ int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, st
 				}
 
 				/* test collision criterion */
-				if (fb_is_collision(fb_mod(R), hier->hier[hier->hi[1]+i].R, hier->hier[hier->hi[1]+j].R, hier->hier[hier->hi[1]+i].m, hier->hier[hier->hi[1]+j].m, hier->hier[hier->hi[1]+i].k_type, hier->hier[hier->hi[1]+j].k_type, units.m, units.l, input.BHNS_TDE_FLAG)) {
+				if (fb_is_collision(fb_mod(R), hier->hier[hier->hi[1]+i].R, hier->hier[hier->hi[1]+j].R, hier->hier[hier->hi[1]+i].m, hier->hier[hier->hi[1]+j].m, hier->hier[hier->hi[1]+i].k_type, hier->hier[hier->hi[1]+j].k_type, units.m, units.l, input.CO_TDE_FLAG, input.WD_TC_FLAG)) {
 					cont = 1;
 					/* break out of the double loop if there is a collision, so we can merge
 					   the stars immediately */

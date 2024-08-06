@@ -287,14 +287,14 @@ are skipped if they already interacted in 3bb loop!  */
 			if (SS_COLLISION) {
                                 S_tmp = 0.0;
 
-				if (BHNS_TDE) {
-					if (star[kp].se_k >= 13 && star[k].se_k <= 1 && mass_kp >= mass_k) {
+				if (CO_TDE) {
+					if (star[kp].se_k >= 10 && star[k].se_k <= 1 && mass_kp >= mass_k) {
 						if (mass_k * units.mstar / FB_CONST_MSUN < 0.001) {
 							collisions_multiple = pow(mass_kp/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
 						} else {
 							collisions_multiple = pow(mass_kp/mass_k,1./3.);
 						}
-					} else if (star[k].se_k >= 13 && star[kp].se_k <= 1 && mass_k >= mass_kp) {
+					} else if (star[k].se_k >= 10 && star[kp].se_k <= 1 && mass_k >= mass_kp) {
 						if (mass_kp * units.mstar / FB_CONST_MSUN < 0.001) {
 							collisions_multiple = pow(mass_k/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
 						} else {
@@ -306,14 +306,23 @@ are skipped if they already interacted in 3bb loop!  */
                                 } else {
                                         collisions_multiple = COLL_FACTOR;
 				}
-
+                               
+                                if (WD_TC > 0) {
+                                        if ((star[kp].se_k >= 10 && star[kp].se_k <= 12) && (star[k].se_k >= 10 && star[k].se_k <= 12)) {
+                                                collisions_multiple = WD_TC;
+                                        } else {
+                                                collisions_multiple = COLL_FACTOR;
+                                        }
+                                } else {
+                                        collisions_multiple = COLL_FACTOR;
+                                }
                                 
                                 S_tc = 0.0;
 				if (TC_POLYTROPE) {
 					/* single--single tidal capture cross section (Kim & Lee 1999);
 					   here we treat a compact object (k>=10) as a point mass, a massive MS star (k=1) as an 
 					   n=3 polytrope, and everything else (k=0,2-9) as an n=1.5 polytrope. */
-                                        /*Shi: Update-this flag does not treat giants (2-6, 8-9). n=3 polytrope is for k=1, n=1.5 
+                                        /*CSY: Update-this flag does not treat giants (2-6, 8-9). n=3 polytrope is for k=1, n=1.5 
                                           is for k=0 and 7 naked helium MS star. k>=10 compact object is still treated as point mass. */
 					if (star[k].se_k >= 10 && star[kp].se_k >= 10) {
 						/* two compact objects, so simply use sticky sphere approximation */
@@ -382,7 +391,7 @@ are skipped if they already interacted in 3bb loop!  */
 				}
 
 				
-				/*Shi: If one of the star in sscollision is not a black hole or a giant, do tidal capture */
+				/*CSY: If one of the star in sscollision is not a black hole or a giant, do tidal capture */
                                 S_tc_simple = 0.0;
                                 if (TC_FACTOR > 1) {
                                         if ((star[k].se_k <= 1 || star[k].se_k == 7 || star[k].se_k >= 10) && (star[kp].se_k <= 1 || star[kp].se_k == 7 || star[kp].se_k >= 10)){

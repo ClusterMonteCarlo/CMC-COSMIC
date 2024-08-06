@@ -1928,6 +1928,7 @@ void set_global_vars1()
     mpi_binintfile_len=0;
     mpi_collisionfile_len=0;
     mpi_tidalcapturefile_len=0;
+    mpi_tdefile_len=0;
     mpi_semergedisruptfile_len=0;
     mpi_removestarfile_len=0;
     mpi_relaxationfile_len=0;
@@ -1943,6 +1944,7 @@ void set_global_vars1()
     mpi_binintfile_ofst_total=0;
     mpi_collisionfile_ofst_total=0;
     mpi_tidalcapturefile_ofst_total=0;
+    mpi_tdefile_ofst_total=0;
     mpi_semergedisruptfile_ofst_total=0;
     mpi_removestarfile_ofst_total=0;
     mpi_relaxationfile_ofst_total=0;

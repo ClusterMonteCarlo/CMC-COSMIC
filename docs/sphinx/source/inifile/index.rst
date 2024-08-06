@@ -215,14 +215,31 @@ DYNAMICS FLAGS
                                     **COLL_FACTOR = 1.0**
  
  
-``BHNS_TDE``                        Treat BH(NS)--MS TDEs in TDE vs direct collision limit.  Follows prescription in Kremer et al., 2020
+``CO_TDE``                          Treat BH(NS,WD)--MS TDEs in TDE vs direct collision limit.  Follows prescription in Kremer et al., 2020
 
 
                                      ``0`` : collision
 
                                      ``1`` : TDE
 
-                                    **BHNS_TDE = 0**
+                                    **CO_TDE = 0**
+
+``WD_TC``                           Turn on wd-wd tidal capture in single-single and fewbody (0=off,>0=on). Follows prescription in Ye et al. 2024
+
+                                    ``0`` : Off
+
+                                    ``>0`` : Set the capture factor
+
+                                    **WD_TC = 0**
+
+``TDE_SPINUP``                      Turn on NS-MS star TDE mass accretion onto the NS (1=on, 0=off). Follows prescription i
+n Ye et al. 2024
+
+                                    **TDE_SPINUP = 0**
+
+``S_TDE``                           Mass transport rate for TDE_SPINUP; 0 is the highest. 1 the lowest. (default=0.2)
+
+                                    **S_TDE = 0.2**
 ==================================  =====================================================
 
 
@@ -940,6 +957,11 @@ REMNANT MASS FLAGS
                             ``-1 < *rembar_massloss* < 0`` : assumes that proto-compact objects lose a constant fraction of their baryonic mass when collapsing to a black hole (e.g., *rembar_massloss* = -0.1 gives the black hole a gravitational mass that is 90% of the proto-compact object's baryonic mass)
 
                      **rembar_massloss = 0.5**
+
+``wd_mass_lim``      Determines if the maximum white dwarf mass is limited to
+                     the chandraekhar mass during mic. 1 implements the limit.
+                     
+                     **wd_mass_lim = 1**
 ===================  =====================================================
 
 
@@ -1201,4 +1223,11 @@ MISC FLAGS
                             ``1`` : follows `StarTrack <https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract>`_
 
                          **ST_cr = 1**
+
+``rtmsflag``             Activates different prescriptions for stellar radius at main sequence turnoff
+                            ``0`` : uses the SSE rtms for M < 200 Msun and extrapolation for z < 0.0008 and M > 200 Msun.
+                            ``1`` : interpolates the rtms from Boost tracks (Szécsi et al. (2022)). Extrapolation is used after M > 575 Msun
+                            ``2`` : uses the best-fit power law for rtms vs stellar mass from BPASSv2.2 tracks (Stanway & Eldridge (2018)).
+                                    Rtms data for BPASS tracks is available only till 300 Msun and beyond that we follow the fitted power law profile.
+                         **rtmsflag = 0**                         
 =======================  =====================================================

@@ -1928,7 +1928,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             star[knew].se_radius = hier.obj[i]->R * cmc_units.l / BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             star[knew].Eint = 0;
                             if(WRITE_BH_INFO && tempstar.se_k == 14 && star[knew].se_k == 14)
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %ld %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->id[0],hier.obj[i]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->id[0]) * units.mstar / FB_CONST_MSUN, 
@@ -2026,7 +2026,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_radius = hier.obj[i]->obj[0]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %ld %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[0]->id[0],hier.obj[i]->obj[0]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[0]->id[0]) * units.mstar / FB_CONST_MSUN, 
@@ -2115,7 +2115,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_radius = hier.obj[i]->obj[1]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %ld %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[1]->id[0],hier.obj[i]->obj[1]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[1]->id[0]) * units.mstar / FB_CONST_MSUN, 
@@ -2257,7 +2257,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             star[knewp].se_radius = hier.obj[i]->obj[sid]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             star[knewp].Eint = 0;
                             if(WRITE_BH_INFO && star[knewp].se_k == 14 && tempstar.se_k == 14 )
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %ld %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[sid]->id[0],hier.obj[i]->obj[sid]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[sid]->id[0]) * units.mstar / FB_CONST_MSUN, 
@@ -2349,7 +2349,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_radius = hier.obj[i]->obj[bid]->obj[0]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %ld %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[bid]->obj[0]->id[0],hier.obj[i]->obj[bid]->obj[0]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[0]) * units.mstar / FB_CONST_MSUN, 
@@ -2433,7 +2433,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
                             tempstar.se_radius = hier.obj[i]->obj[bid]->obj[1]->R * cmc_units.l/ BH_RADIUS_MULTIPLYER * units.l / RSUN;
                             tempstar.Eint = 0;
                             if(WRITE_BH_INFO && tempstar2.se_k == 14 && tempstar.se_k == 14)
-                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
+                                parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %ld %g %g %g %g %g %g %g %g %g %g %g %g\n",
                                                           TotalTime, (isbinbin?"binary-binary":"binary-single"),
                                                           star_r[get_global_idx(knew)], hier.obj[i]->obj[bid]->obj[1]->id[0],hier.obj[i]->obj[bid]->obj[1]->id[nmerged], 
                                                           binint_get_mass(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[0]) * units.mstar / FB_CONST_MSUN, 
@@ -3249,7 +3249,7 @@ void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct
 	star[knew].se_bhspin = afinal;
 
     if(WRITE_BH_INFO)
-        parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %g %g %g %g %g %g %g -100 -100 -100 -100 -100 -100\n", TotalTime, "isolat-binary",
+        parafprintf(bhmergerfile, "%.18g %s %g %ld %ld %g %g %g %g %ld %g %g %g %g %g %g -100 -100 -100 -100 -100 -100\n", TotalTime, "isolat-binary",
 		    star_r[get_global_idx(knew)], binary[kb].id1,binary[kb].id2, m1,m2,chi1,chi2,star[knew].id,
                                         (m1+m2)*mass_frac, afinal,vk, 
                                         sqrt(-2*star_phi[get_global_idx(knew)])*(units.l/units.t) / 1.0e5, 

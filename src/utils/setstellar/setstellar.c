@@ -71,6 +71,7 @@ void stellar_evolve(cmc_fits_data_t *cfd)
         double BSE_DON_LIM= 0;
         double BSE_ACC_LIM= 0;
         double BSE_SIGMA= 265.0;
+		int BSE_RTMSFLAG= 0;
         int BSE_BHFLAG= 1;
         int BSE_BHMS_COLL_FLAG= 0;
         double BSE_ECSN= 2.5;
@@ -91,6 +92,7 @@ void stellar_evolve(cmc_fits_data_t *cfd)
         double BSE_POLAR_KICK_ANGLE= 90.00;
         int BSE_REMNANTFLAG= 4;
         double BSE_MXNS= 3.00;
+        int BSE_WD_MASS_LIM= 1;
         int BSE_BHSPINFLAG= 0;
         double BSE_WINDFLAG= 3;
         double BSE_EDDLIMFLAG= 0;
@@ -139,6 +141,7 @@ void stellar_evolve(cmc_fits_data_t *cfd)
         bse_set_acc_lim(BSE_ACC_LIM);
 	bse_set_ifflag(BSE_IFFLAG);
 	bse_set_wdflag(BSE_WDFLAG);
+	bse_set_rtmsflag(BSE_RTMSFLAG);
 	bse_set_bhflag(BSE_BHFLAG);
         bse_set_bhms_coll_flag(BSE_BHMS_COLL_FLAG);
         bse_set_grflag(BSE_GRFLAG);
@@ -149,6 +152,7 @@ void stellar_evolve(cmc_fits_data_t *cfd)
 	bse_set_bhspinflag(BSE_BHSPINFLAG);
 	bse_set_bhspinmag(BSE_BHSPINMAG);
 	bse_set_mxns(BSE_MXNS);
+        bse_set_wd_mass_lim(BSE_WD_MASS_LIM);
 	bse_set_bconst(BSE_BCONST);
 	bse_set_CK(BSE_CK);
 	bse_set_rejuv_fac(BSE_REJUV_FAC);
