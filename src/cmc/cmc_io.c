@@ -1454,6 +1454,10 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_SIGMA);
                                 sscanf(values, "%lf", &BSE_SIGMA);
                                 parsed.BSE_SIGMA = 1;
+                        } else if (strcmp(parameter_name, "RTMSFLAG")== 0) {
+                                  PRINT_PARSED(PARAMDOC_BSE_RTMSFLAG);
+                                  sscanf(values, "%i", &BSE_RTMSFLAG);
+                                  parsed.BSE_RTMSFLAG = 1;
                         } else if (strcmp(parameter_name, "BHFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_BHFLAG);
                                 sscanf(values, "%i", &BSE_BHFLAG);
@@ -1841,6 +1845,13 @@ if(myid==0) {
         // sigma sets is the dispersion in the Maxwellian for the SN kick velocity in km/s
         // default=265.0
         CHECK_PARSED(BSE_SIGMA, 265.0, PARAMDOC_BSE_SIGMA);
+
+        // rtmsflag = 0 -> uses the sse rtms for M < 200 Msun and extrapolation for z < 0.0008 and M > 200 Msun.
+        // rtmsflag = 1 -> interpolates the rtms from Boost tracks (Szécsi et al. (2022)). Extrapolation is used after M > 575 Msun.
+        // rtmsflag = 2 -> uses the best-fit power law for rtms vs stellar mass from BPASSv2.2 tracks (Stanway & Eldridge (2018)).
+        //                 rtms data for BPASS tracks is available only till 300 Msun and beyond that we follow the fitted power law profile.
+        // default=0
+        CHECK_PARSED(BSE_RTMSFLAG, 0, PARAMDOC_BSE_RTMSFLAG);
 
         // bhflag != 0 allows velocity kick at BH formation
         // bhflag=0: no BH kicks// bhflag=1: fallback-modulated kicks
