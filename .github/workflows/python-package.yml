@@ -25,6 +25,7 @@ jobs:
       run: git submodule update --init --recursive 
     - name: Install dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install gcc gfortran openmpi-bin libopenmpi-dev cmake libhdf5-serial-dev libgsl-dev libcfitsio-dev
     - name: Build CMC
       run: |
