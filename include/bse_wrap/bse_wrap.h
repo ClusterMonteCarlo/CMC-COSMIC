@@ -180,7 +180,9 @@ extern struct { int idum1; } rand1_;
 extern struct { int idum2, iy, ir[32]; } rand2_;
 extern struct { long long int state[4]; int first;} taus113state_;
 extern struct { int ktype[15][15]; } types_;
-extern struct { int  tflag, ifflag, remnantflag, wdflag, bhflag, windflag,  qcflag, eddlimflag, bhspinflag, aic, rejuvflag,  htpmb, st_cr, st_tide, bdecayfac, grflag, bhms_coll_flag, wd_mass_lim; } flags_;
+
+extern struct { int  tflag, ifflag, remnantflag, wdflag, bhflag, windflag,  qcflag, eddlimflag, bhspinflag, aic, rejuvflag,  htpmb, st_cr, st_tide, bdecayfac, grflag, bhms_coll_flag, wd_mass_lim, rtmsflag; } flags_;
+
 extern struct { int ceflag,cekickflag,cemergeflag,cehestarflag,ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 extern struct { double zsun; } metvars_;
@@ -238,6 +240,7 @@ void bse_set_bhsigmafrac(double bhsigmafrac); /* Ad hoc factor to change BH SN k
 void bse_set_polar_kick_angle(int polar_kick_angle); /* Switch to set the allowed opening angle of SN kicks.  Defaults to 180 degrees*/
 void bse_set_ifflag(int ifflag); /* ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0) */
 void bse_set_wdflag(int wdflag); /* wdflag > 0 uses modified-Mestel cooling for WDs (0) */
+void bse_set_rtmsflag(int rtmsflag); /* rtmsflag > 0 uses data for radius at main sequence turnoff from 1-D stellar evolution codes (0) */
 void bse_set_bhflag(int bhflag); /* bhflag > 0 allows velocity kick at BH formation (0) */
 void bse_set_remnantflag(int remnantflag); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
 void bse_set_qcflag(int qcflag); /* remnantflag > 0 takes NS/BH mass from Belczynski et al. 2002, ApJ, 572, 407 (1) */
