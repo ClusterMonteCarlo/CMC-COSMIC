@@ -1,3 +1,3 @@
-[submodule "src/bse_wrap/bse/COSMIC"]
+[submodule "bse_wrap/bse/COSMIC"]
 	path = src/bse_wrap/bse/COSMIC
-	url = git@github.com:COSMIC-PopSynth/COSMIC.git
+	url = https://github.com/COSMIC-PopSynth/COSMIC.git
