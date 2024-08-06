@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
 
     steps:
     - name: Checkout repository
@@ -25,7 +25,8 @@ jobs:
       run: git submodule update --init --recursive 
     - name: Install dependencies
       run: |
-        sudo apt-get install gcc gfortran openmpi-bin libopenmpi-dev cmake libhdf5-serial-dev libgsl-dev libcfitsio-dev doxygen
+        sudo apt-get install gcc gfortran openmpi-bin libopenmpi-dev cmake libhdf5-serial-dev libgsl-dev libcfitsio-dev doxygen python3-dev
+        pip install numpy pytest
         pip install -r requirements.txt
         pip install sphinxcontrib-katex
         pip install src/bse_wrap/bse/COSMIC
