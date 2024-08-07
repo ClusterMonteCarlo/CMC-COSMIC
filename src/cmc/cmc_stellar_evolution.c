@@ -57,7 +57,6 @@ void restart_stellar_evolution(void){
   bse_set_bhms_coll_flag(BSE_BHMS_COLL_FLAG);
   bse_set_bhspinmag(BSE_BHSPINMAG);
   bse_set_mxns(BSE_MXNS); //3 if remnantflag=1 or 2, 1.8 if remnantflag=0 (see evolv2.f)
-  bse_set_wd_mass_lim(BSE_WD_MASS_LIM);
   bse_set_bconst(BSE_BCONST);
   bse_set_CK(BSE_CK);
   bse_set_rejuv_fac(BSE_REJUV_FAC);
@@ -151,7 +150,6 @@ void stellar_evolution_init(void){
   bse_set_bhms_coll_flag(BSE_BHMS_COLL_FLAG);
   bse_set_bhspinmag(BSE_BHSPINMAG);
   bse_set_mxns(BSE_MXNS); //3 if remnantflag=1 or 2, 1.8 if remnantflag=0 (see evolv2.f)
-  bse_set_wd_mass_lim(BSE_WD_MASS_LIM);
   bse_set_bconst(BSE_BCONST);
   bse_set_CK(BSE_CK);
   bse_set_rejuv_fac(BSE_REJUV_FAC);
@@ -1352,7 +1350,7 @@ void write_morepulsar(long i){      //Shi
         if (j==0){ //Single
                 if (star[i].se_k==13){
                         spin = (twopi*yearsc)/star[i].se_ospin;
-                        parafprintf(morepulsarfile, "%ld %.8g 0 %ld -100 %.8g -100 %g -100 %g -100 %d -100 -100 -100 -100 -100 -100 -100 %.8g %.8g %.8g -100 -100 -100 -100 %g -100\n", tcount, TotalTime, star[i].id, star[i].se_mt, star[i].se_scm_B, spin, star[i].se_k, r, star[i].vr, star[i].vt, star[i].se_scm_formation);
+                        parafprintf(morepulsarfile, "%ld %.8g 0 %ld -100 %.8g -100 %g -100 %g -100 %d -100 -100 -100 -100 -100 -100 -100 %.8g %.8g %.8g -100 -100 -100 -100 %d -100\n", tcount, TotalTime, star[i].id, star[i].se_mt, star[i].se_scm_B, spin, star[i].se_k, r, star[i].vr, star[i].vt, star[i].se_scm_formation);
 
 
                 }
@@ -1360,7 +1358,7 @@ void write_morepulsar(long i){      //Shi
                 if (binary[j].bse_kw[0]==13 || binary[j].bse_kw[1]==13){
                         spin0 = (twopi*yearsc)/binary[j].bse_ospin[0];
                         spin1 = (twopi*yearsc)/binary[j].bse_ospin[1];
-                        parafprintf(morepulsarfile, "%ld %.8g 1 %ld %ld %.8g %.8g %g %g %g %g %d %d %.8g %.8g %g %g %g %g %.8g %.8g %.8g %g %g %g %g %g %g\n", tcount, TotalTime, binary[j].id1, binary[j].id2, binary[j].bse_mass[0], binary[j].bse_mass[1], binary[j].bse_bcm_B[0], binary[j].bse_bcm_B[1], spin0, spin1, binary[j].bse_kw[0], binary[j].bse_kw[1], binary[j].a* units.l/AU, binary[j].e, binary[j].bse_bcm_radrol[0], binary[j].bse_bcm_radrol[1], binary[j].bse_bcm_dmdt[0], binary[j].bse_bcm_dmdt[1], r, star[i].vr, star[i].vt, binary[j].bse_bacc[0], binary[j].bse_bacc[1], binary[j].bse_tacc[0], binary[j].bse_tacc[1], binary[j].bse_bcm_formation[0], binary[j].bse_bcm_formation[1]);
+                        parafprintf(morepulsarfile, "%ld %.8g 1 %ld %ld %.8g %.8g %g %g %g %g %d %d %.8g %.8g %g %g %g %g %.8g %.8g %.8g %g %g %g %g %d %d\n", tcount, TotalTime, binary[j].id1, binary[j].id2, binary[j].bse_mass[0], binary[j].bse_mass[1], binary[j].bse_bcm_B[0], binary[j].bse_bcm_B[1], spin0, spin1, binary[j].bse_kw[0], binary[j].bse_kw[1], binary[j].a* units.l/AU, binary[j].e, binary[j].bse_bcm_radrol[0], binary[j].bse_bcm_radrol[1], binary[j].bse_bcm_dmdt[0], binary[j].bse_bcm_dmdt[1], r, star[i].vr, star[i].vt, binary[j].bse_bacc[0], binary[j].bse_bacc[1], binary[j].bse_tacc[0], binary[j].bse_tacc[1], binary[j].bse_bcm_formation[0], binary[j].bse_bcm_formation[1]);
 
                 }
         }

@@ -154,8 +154,7 @@ typedef struct{
 	int PN3;
 	int PN35;
 	double BH_REFF;
-        double CO_TDE_FLAG;
-        double WD_TC_FLAG;
+	double BHNS_TDE_FLAG;
 } fb_input_t;
 
 /* return parameters */
@@ -189,7 +188,7 @@ int fb_is_stable_quad(fb_obj_t *obj);
 int fb_mardling(fb_obj_t *obj, int ib, int is);
 
 /* fewbody_coll.c */
-int fb_is_collision(double r, double R1, double R2, double M1, double M2, double k1, double k2, double mass_units, double length_units, double co_tde_flag, double wd_tc_flag);
+int fb_is_collision(double r, double R1, double R2, double M1, double M2, double k1, double k2, double mass_units, double length_units, double bhns_tde_flag);
 int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff, fb_input_t input);
 void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff);
 void fb_bh_merger(double m1, double m2, double a1, double a2, double *mass_frac, double *afinal, double *v_para, double *v_perp, struct rng_t113_state *curr_st);
