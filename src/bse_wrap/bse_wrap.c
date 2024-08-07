@@ -682,7 +682,6 @@ void bse_set_bhms_coll_flag(int bhms_coll_flag) { flags_.bhms_coll_flag = bhms_c
 void bse_set_bhspinmag(double bhspinmag) { snvars_.bhspinmag = bhspinmag; }
 void bse_set_remnantflag(int remnantflag) { flags_.remnantflag = remnantflag; }
 void bse_set_mxns(double mxns) { snvars_.mxns = mxns;}
-void bse_set_wd_mass_lim(int wd_mass_lim) { flags_.wd_mass_lim =wd_mass_lim; }
 void bse_set_bconst(double bconst) { magvars_.bconst = bconst; }
 void bse_set_CK(double CK) {magvars_.ck = CK;}
 void bse_set_rejuv_fac(double rejuv_fac) {mixvars_.rejuv_fac = rejuv_fac;}
