@@ -25,7 +25,9 @@ jobs:
       run: git submodule update --init --recursive 
     - name: Install dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install gcc gfortran openmpi-bin libopenmpi-dev cmake libhdf5-serial-dev libgsl-dev libcfitsio-dev doxygen
+        pip install numpy
         pip install -r requirements.txt
         pip install sphinxcontrib-katex
         pip install src/bse_wrap/bse/COSMIC
