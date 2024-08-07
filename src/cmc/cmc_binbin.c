@@ -78,8 +78,7 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hi
 	input.PN3 = 0;
 	input.PN35 = 0;
     input.BH_REFF = BH_RADIUS_MULTIPLYER;
-    input.CO_TDE_FLAG = CO_TDE;
-    input.WD_TC_FLAG = WD_TC;
+    input.BHNS_TDE_FLAG = BHNS_TDE;
 	input.firstlogentry[0] = '\0';
 	input.fexp = 1.0;
 	fb_debug = 0;
