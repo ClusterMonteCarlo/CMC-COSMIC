@@ -485,17 +485,6 @@ are skipped if they already interacted in 3bb loop!  */
 				vp_new[j] = vp[j] + mass_k / (mass_k + mass_kp) * (w_new[j] - w[j]);
 			}
 			
-			/* check to see whether stars should be eaten by central BH */
-            //MPI: This function has been parallelized, but may contain bugs. I was not clear as to what some functions were doing, so wasn't sure if index transformation was reqd or not. Might need some checking by the author.
-			if (cenma.m > 0.0 && BH_LOSS_CONE) {
-				if (star[k].E < 0.0) {
-					bh_rand_walk(k, v_new, vcm, beta, dt);
-				}
-				if (star[kp].E < 0.0) {
-					bh_rand_walk(kp, vp_new, vcm, beta, dt);
-				}
-			}
-			
 			/* set new velocities for both stars */
 			star[k].vr = v_new[3];
 			star[k].vt = sqrt(sqr(v_new[1]) + sqr(v_new[2]));
@@ -504,8 +493,19 @@ are skipped if they already interacted in 3bb loop!  */
 
 			/* Calculate new energies by recomputing E = PE + KE using new velocity*/ 
 			set_star_EJ(k);
-			set_star_EJ(kp);
+			set_star_EJ(kp);	
 
+			/* check to see whether stars should be eaten by central BH */
+            //MPI: This function has been parallelized, but may contain bugs. I was not clear as to what some functions were doing, so wasn't sure if index transformation was reqd or not. Might need some checking by the author.
+
+			if (cenma.m > 0.0 && BH_LOSS_CONE) {
+				if (star[k].E < 0.0) {
+					bh_rand_walk(k, v_new, vcm, beta, dt);
+				}
+				if (star[kp].E < 0.0) {
+					bh_rand_walk(kp, vp_new, vcm, beta, dt);
+				}
+			}
 
 		}
 	}

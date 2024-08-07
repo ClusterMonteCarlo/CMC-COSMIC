@@ -92,7 +92,7 @@ _EXTERN_ long esc_bhsingle_tot, esc_bhbinary_tot, esc_bhnonbh_tot, esc_bhbh_tot;
 _EXTERN_ long esc_bh13_tot, esc_bh10_tot, esc_bh11_tot, esc_bh12_tot, esc_bhwd_tot;
 _EXTERN_ long esc_bhstar_tot, esc_bh01_tot, esc_bh26_tot, esc_bh7_tot, esc_bh89_tot;
 _EXTERN_ double fb_bh, esc_fb_bh, esc_fb_bh_tot;
-_EXTERN_ FILE *bhsummaryfile, *escbhsummaryfile, *newbhfile, *bhmergerfile;
+_EXTERN_ FILE *bhsummaryfile, *escbhsummaryfile, *newbhfile, *newnsfile, *bhmergerfile;
 /* BSE input file parameters */
 _EXTERN_ int BSE_CEMERGEFLAG, BSE_CEKICKFLAG, BSE_CEHESTARFLAG, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_RTMSFLAG, BSE_BHFLAG, BSE_BHSPINFLAG, BSE_REMNANTFLAG, BSE_IDUM, BSE_WINDFLAG, BSE_QCFLAG, BSE_EDDLIMFLAG, BSE_AIC, BSE_BDECAYFAC, BSE_HTPMB, BSE_ST_TIDE, BSE_ST_CR, BSE_REJUVFLAG, BSE_USSN, BSE_KICKFLAG, BSE_GRFLAG, BSE_BHMS_COLL_FLAG;
 _EXTERN_ double BSE_POLAR_KICK_ANGLE, BH_RADIUS_MULTIPLYER, BSE_BHSPINMAG;
@@ -115,7 +115,8 @@ _EXTERN_ int TIMER;
 /* file pointers */
 _EXTERN_ FILE *lagradfile, *dynfile, *lagrad10file, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
-_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *pulsarfile, *morepulsarfile, *newnsfile, *morecollfile, *triplefile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
+
+_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *pulsarfile, *morepulsarfile, *morecollfile, *bhlossconefile, *triplefile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
 _EXTERN_ FILE *fp_lagrad, *fp_log, *fp_denprof;
 _EXTERN_ FILE *timerfile;
@@ -124,53 +125,54 @@ _EXTERN_ FILE *timerfile;
 /**
 * @brief MPI: MPI-IO file pointers corresponding to the C File(pointer)s used in the serial code for files that are needed to be written out using MPI-IO
 */
-_EXTERN_ MPI_File mpi_logfile, mpi_binintfile, mpi_escfile, mpi_collisionfile, mpi_pulsarfile, mpi_morepulsarfile, mpi_newnsfile, mpi_morecollfile, mpi_triplefile, mpi_tidalcapturefile, mpi_semergedisruptfile, mpi_removestarfile, mpi_relaxationfile;
+
+_EXTERN_ MPI_File mpi_logfile, mpi_binintfile, mpi_escfile, mpi_collisionfile, mpi_pulsarfile, mpi_morepulsarfile, mpi_morecollfile, mpi_bhlossconefile, mpi_triplefile, mpi_tidalcapturefile, mpi_semergedisruptfile, mpi_removestarfile, mpi_relaxationfile;
 
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-_EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_binintfile_buf[STR_BUF_LEN], mpi_collisionfile_buf[STR_BUF_LEN], mpi_pulsarfile_buf[STR_BUF_LEN], mpi_morepulsarfile_buf[STR_BUF_LEN], mpi_newnsfile_buf[STR_BUF_LEN], mpi_morecollfile_buf[STR_BUF_LEN], mpi_triplefile_buf[STR_BUF_LEN],mpi_tidalcapturefile_buf[STR_BUF_LEN], mpi_semergedisruptfile_buf[STR_BUF_LEN], mpi_removestarfile_buf[STR_BUF_LEN], mpi_relaxationfile_buf[STR_BUF_LEN];
+_EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_binintfile_buf[STR_BUF_LEN], mpi_collisionfile_buf[STR_BUF_LEN], mpi_pulsarfile_buf[STR_BUF_LEN], mpi_morepulsarfile_buf[STR_BUF_LEN], mpi_morecollfile_buf[STR_BUF_LEN], mpi_bhlossconefile_buf[STR_BUF_LEN], mpi_triplefile_buf[STR_BUF_LEN],mpi_tidalcapturefile_buf[STR_BUF_LEN], mpi_semergedisruptfile_buf[STR_BUF_LEN], mpi_removestarfile_buf[STR_BUF_LEN], mpi_relaxationfile_buf[STR_BUF_LEN];
 
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_morepulsarfile_wrbuf[STR_WRBUF_LEN], mpi_newnsfile_wrbuf[STR_WRBUF_LEN], mpi_morecollfile_wrbuf[STR_WRBUF_LEN], mpi_triplefile_wrbuf[STR_BUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
+_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_morepulsarfile_wrbuf[STR_WRBUF_LEN],  mpi_morecollfile_wrbuf[STR_WRBUF_LEN], mpi_bhlossconefile_wrbuf[STR_WRBUF_LEN], mpi_triplefile_wrbuf[STR_WRBUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
 
 /**
 * @brief MPI: Variables to maintail the length of the buffers until the next flush
 */
-_EXTERN_ long long mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_pulsarfile_len, mpi_morepulsarfile_len, mpi_newnsfile_len, mpi_morecollfile_len, mpi_triplefile_len, mpi_tidalcapturefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
+_EXTERN_ long long mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_pulsarfile_len, mpi_morepulsarfile_len, mpi_morecollfile_len, mpi_bhlossconefile_len, mpi_triplefile_len, mpi_tidalcapturefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
 
 /**
 * @brief MPI: Variables to maintain the total offset of the file
 */
-_EXTERN_ long long mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_pulsarfile_ofst_total, mpi_morepulsarfile_ofst_total, mpi_newnsfile_ofst_total, mpi_morecollfile_ofst_total, mpi_triplefile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
+_EXTERN_ long long mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_pulsarfile_ofst_total, mpi_morepulsarfile_ofst_total, mpi_morecollfile_ofst_total, mpi_bhlossconefile_ofst_total, mpi_triplefile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
 
 /* Meagan's 3bb files */
 /**
 * @brief MPI: MPI-IO file pointers corresponding to the C File(pointer)s used in the serial code for files that are needed to be written out using MPI-IO
 */
-_EXTERN_ MPI_File mpi_bhsummaryfile, mpi_escbhsummaryfile, mpi_newbhfile, mpi_bhmergerfile, mpi_threebbfile, mpi_threebbprobabilityfile, mpi_lightcollisionfile, mpi_threebbdebugfile;
+_EXTERN_ MPI_File mpi_bhsummaryfile, mpi_escbhsummaryfile, mpi_newbhfile, mpi_newnsfile, mpi_bhmergerfile, mpi_threebbfile, mpi_threebbprobabilityfile, mpi_lightcollisionfile, mpi_threebbdebugfile;
 
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-_EXTERN_ char mpi_bhsummaryfile_buf[STR_BUF_LEN], mpi_escbhsummaryfile_buf[STR_BUF_LEN], mpi_newbhfile_buf[STR_BUF_LEN], mpi_bhmergerfile_buf[STR_BUF_LEN], mpi_threebbfile_buf[STR_BUF_LEN], mpi_threebbprobabilityfile_buf[STR_BUF_LEN], mpi_lightcollisionfile_buf[STR_BUF_LEN], mpi_threebbdebugfile_buf[STR_BUF_LEN];
+_EXTERN_ char mpi_bhsummaryfile_buf[STR_BUF_LEN], mpi_escbhsummaryfile_buf[STR_BUF_LEN], mpi_newbhfile_buf[STR_BUF_LEN], mpi_newnsfile_buf[STR_BUF_LEN], mpi_bhmergerfile_buf[STR_BUF_LEN], mpi_threebbfile_buf[STR_BUF_LEN], mpi_threebbprobabilityfile_buf[STR_BUF_LEN], mpi_lightcollisionfile_buf[STR_BUF_LEN], mpi_threebbdebugfile_buf[STR_BUF_LEN];
 
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-_EXTERN_ char mpi_bhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_escbhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_newbhfile_wrbuf[STR_WRBUF_LEN], mpi_bhmergerfile_wrbuf[STR_WRBUF_LEN], mpi_threebbfile_wrbuf[STR_WRBUF_LEN], mpi_threebbprobabilityfile_wrbuf[STR_WRBUF_LEN], mpi_lightcollisionfile_wrbuf[STR_WRBUF_LEN], mpi_threebbdebugfile_wrbuf[STR_WRBUF_LEN];
+_EXTERN_ char mpi_bhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_escbhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_newbhfile_wrbuf[STR_WRBUF_LEN],mpi_newnsfile_wrbuf[STR_WRBUF_LEN],  mpi_bhmergerfile_wrbuf[STR_WRBUF_LEN], mpi_threebbfile_wrbuf[STR_WRBUF_LEN], mpi_threebbprobabilityfile_wrbuf[STR_WRBUF_LEN], mpi_lightcollisionfile_wrbuf[STR_WRBUF_LEN], mpi_threebbdebugfile_wrbuf[STR_WRBUF_LEN];
 
 /**
 * @brief MPI: Variables to maintail the length of the buffers until the next flush
 */
-_EXTERN_ long long mpi_bhsummaryfile_len, mpi_escbhsummaryfile_len, mpi_newbhfile_len, mpi_bhmergerfile_len, mpi_threebbfile_len, mpi_threebbprobabilityfile_len, mpi_lightcollisionfile_len, mpi_threebbdebugfile_len;
+_EXTERN_ long long mpi_bhsummaryfile_len, mpi_escbhsummaryfile_len, mpi_newbhfile_len, mpi_newnsfile_len, mpi_bhmergerfile_len, mpi_threebbfile_len, mpi_threebbprobabilityfile_len, mpi_lightcollisionfile_len, mpi_threebbdebugfile_len;
 
 /**
 * @brief MPI: Variables to maintain the total offset of the file
 */
-_EXTERN_ long long mpi_bhsummaryfile_ofst_total, mpi_escbhsummaryfile_ofst_total, mpi_newbhfile_ofst_total, mpi_bhmergerfile_ofst_total, mpi_threebbfile_ofst_total, mpi_threebbprobabilityfile_ofst_total, mpi_lightcollisionfile_ofst_total, mpi_threebbdebugfile_ofst_total;
+_EXTERN_ long long mpi_bhsummaryfile_ofst_total, mpi_escbhsummaryfile_ofst_total, mpi_newbhfile_ofst_total, mpi_newnsfile_ofst_total, mpi_bhmergerfile_ofst_total, mpi_threebbfile_ofst_total, mpi_threebbprobabilityfile_ofst_total, mpi_lightcollisionfile_ofst_total, mpi_threebbdebugfile_ofst_total;
 
 
 /* everything else except arrays */
@@ -338,7 +340,11 @@ _EXTERN_ int WRITE_EXTRA_CORE_INFO;
 _EXTERN_ int WRITE_PULSAR_INFO;
 _EXTERN_ int WRITE_MOREPULSAR_INFO;
 _EXTERN_ int WRITE_MORECOLL_INFO;
+
+
+_EXTERN_ int WRITE_BH_LOSSCONE_INFO;
 _EXTERN_ int BHNS_TDE;
+
 _EXTERN_ int CALCULATE10;
 
 /**
@@ -347,6 +353,12 @@ _EXTERN_ int CALCULATE10;
 * cone by Trel*BH_LC_FDT/dt
 */
 _EXTERN_ double BH_LC_FDT;
+/**
+* @brief
+* gsl workspace for integrating porb to calculate loss cone entry 
+*/
+_EXTERN_ gsl_integration_workspace *workspace_lc_porb_integral;
+_EXTERN_ gsl_integration_qaws_table *table_lc_porb_integral;
 _EXTERN_ long AVEKERNEL;
 _EXTERN_ long MIN_CHUNK_SIZE;
 _EXTERN_ long BH_AVEKERNEL;

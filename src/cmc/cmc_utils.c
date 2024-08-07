@@ -228,6 +228,11 @@ void free_arrays(void){
 	free(ave_mass_r); free(mass_r);
 	free(star); free(binary);
 
+	if(BH_LOSS_CONE){
+		gsl_integration_qaws_table_free(table_lc_porb_integral);
+		gsl_integration_workspace_free(workspace_lc_porb_integral);
+	}
+
 	/* MPI Stuff */
 	free(star_r); free(star_m); free(star_phi);
 //Probably not needed anymore
@@ -1245,7 +1250,7 @@ void central_calculate(void)
 	//MPI: The first part is done on all nodes, since they mostly need only the duplicated arrays. The second part is done on the root node, and broadcasted to all other nodes. Parallelization is mostly trivial and easily understandable from reading the code.
 	/* average over all stars out to half-mass radius */
 	nave = 1; /* compute the index of the object with just beyond the half-mass radius */
-	while (m < 0.5 * Mtotal) {
+	while (m < 0.5 * (Mtotal - cenma.m * madhoc)) {
 		m += star_m[nave] / clus.N_STAR;
 		nave++;
 	}
@@ -1616,7 +1621,7 @@ void clusdyn_calculate(void)
 	long k=1;
 
 	//MPI: Potential parallelization possibility for large N.
-	while (m < 0.5 * Mtotal) {
+	while (m < 0.5 * (Mtotal - cenma.m * madhoc)) {
 		m += star_m[k] / clus.N_STAR;
 		k++;
 	}
@@ -1929,6 +1934,7 @@ void set_global_vars1()
     mpi_pulsarfile_len=0;
     mpi_morepulsarfile_len=0;
     mpi_morecollfile_len=0;
+	mpi_bhlossconefile_len=0;
     mpi_triplefile_len=0;
 
     mpi_logfile_ofst_total=0;
@@ -1943,6 +1949,7 @@ void set_global_vars1()
     mpi_pulsarfile_ofst_total=0;
     mpi_morepulsarfile_ofst_total=0;
     mpi_morecollfile_ofst_total=0;
+	mpi_bhlossconefile_ofst_total=0;
     mpi_triplefile_ofst_total=0;
 }
 

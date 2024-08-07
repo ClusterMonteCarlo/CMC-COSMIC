@@ -61,11 +61,11 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
 	 if(tcount==1)
 		 MPI_File_set_size(mpi_rwalk_file, 0);
 
-  parafprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
+  	parafprintf(rwalk_file, "%li %g %g %g %g %g %g %g %g %g %g %g\n", 
       index, TotalTime, r, Trel, dt, sqrt(l2_scale), n_steps, beta, n_local, W, P_orb, n_orb);
 
-  mpi_para_file_write(mpi_rwalk_file_wrbuf, &mpi_rwalk_file_len, &mpi_rwalk_file_ofst_total, &mpi_rwalk_file);
-  MPI_File_close(&mpi_rwalk_file);
+  	mpi_para_file_write(mpi_rwalk_file_wrbuf, &mpi_rwalk_file_len, &mpi_rwalk_file_ofst_total, &mpi_rwalk_file);
+  	MPI_File_close(&mpi_rwalk_file);
 }
 
 /**
@@ -74,8 +74,8 @@ void write_rwalk_data(char *fname, long index, double Trel, double dt,
 * @param index star index
 * @param v[4] ?
 * @param vcm[4] ?
-* @param beta ?
-* @param dt ?
+* @param beta Deflection angle due to two-body relaxation in a given timestep.
+* @param dt MC timestep
 */
 void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt)
 { 
@@ -90,23 +90,28 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 	long is_in_ids;
 	double Trel, n_local, M2ave; 
 	double W, n_steps= 1.;
-
+	
 	is_in_ids= 0;
 	sprintf(fname, "%s.rwalk_steps.dat", outprefix);
 	n_local= calc_n_local(g_index, AVEKERNEL, clus.N_MAX);
 	W = 4.0 * sigma_array.sigma[index] / sqrt(3.0*PI);
 	M2ave= calc_average_mass_sqr(g_index, clus.N_MAX);
 	Trel= (PI/32.)*cub(W)/ ( ((double) clus.N_STAR) * n_local * (4.0* M2ave) );
-	//if (g_hash_table_lookup(star_ids, &star[index].id)!=NULL) {
 	if (index==1 && tcount%SNAPSHOT_DELTACOUNT==0 && SNAPSHOTTING && WRITE_RWALK_INFO) {
 		is_in_ids=1;
 		create_rwalk_file(fname);
 	};
 	/* simulate loss cone physics for central mass */
 	//MPI: Parallelized, but might have mistakes since I am not clear as to what some functions are doing.
-	P_orb = calc_P_orb(index);
+	
+	/*First, calculate the orbital period */
+	P_orb = calc_P_orb(index);	
+
+	/*Then, calculate deltabeta_orb using eq. 30 in Freitag & Benz (2002). */
 	n_orb = dt * ((double) clus.N_STAR)/log(GAMMA * ((double) clus.N_STAR)) / P_orb; 
+	
 	l2_scale= 1.;
+
 	/* scale down L2 if the time step is larger than BH_LC_FDT*Trel */
 	/* This is inconsistent, as for stars with dt< BH_LC_FDT*Trel the probability
 	 * of hitting the loss cone becomes smaller, compared to the case with 
@@ -117,85 +122,95 @@ void bh_rand_walk(long index, double v[4], double vcm[4], double beta, double dt
 		n_steps= dt/BH_LC_FDT/Trel;
 		l2_scale= 1./n_steps;
 	};
+	
+	/*As a reminder, deltebeta_orb is deltatheta_orb in Freitag & Benz (2002).*/
 	deltabeta_orb = 1.0/sqrt(n_orb) * sqrt(l2_scale)*beta;
+	
+	/*Define L2 as the total quadratic deflection angle during a timestep*/
 	L2 = l2_scale*fb_sqr(beta);
-	if (BH_R_DISRUPT_NB>0.) {
+	
+	if (BH_R_DISRUPT_NB>0.) {/*The default value of BH_R_DISRUPT_NB is 0*/
 		Rdisr= BH_R_DISRUPT_NB;
 	} else if (STELLAR_EVOLUTION){
 		double Rss;
 		//dprintf("cenma.m= %g, star[%li].m= %g\n", cenma.m, index, star[index].m);
-		Rdisr= pow(2.*cenma.m/star_m[g_index], 1./3.)*star[index].rad*RSUN/units.l;
-		Rss= 4.24e-06*cenma.m/SOLAR_MASS_DYN*RSUN/units.l;
+		if (star[index].binind > 0){
+			double a = binary[star[index].binind].a;
+			double e = binary[star[index].binind].e;
+			Rdisr= pow(2.*cenma.m/star_m[g_index], 1./3.)*a*(1+e);
+			//TODO: quick and cheap check for apoMBH of binary
+		} else {
+			Rdisr= pow(2.*cenma.m/star_m[g_index], 1./3.)*star[index].rad;
+		}
+		Rss=0;//TODO: no idea wtf this is... 4.24e-06*cenma.m/SOLAR_MASS_DYN*RSUN/units.l;
 		Rdisr= MAX(Rdisr, Rss);
 	} else {
 		Rdisr= pow(2.*cenma.m/star_m[g_index], 1./3.)*star[index].rad;
 	};
+
+	/*Calculate the angular momentum at the LC using eq. 27 from Freitag & Benz (2002)*/
 	Jlc= sqrt(2.*cenma.m*madhoc*Rdisr);
 	vlc= Jlc/star_r[g_index];
+
+	/*Calculate the particle's velocity in the encounter CM frame */
 	for (i=0; i<3; i++) {
 		w[i]= v[i+1]- vcm[i+1];
 	}
 	w_mag= sqrt(w[0]*w[0]+w[1]*w[1]+w[2]*w[2]);
 	delta= 0.0;
-	while (L2 > 0.0) { 
-		L2 -= fb_sqr(delta); 
+	while (L2 > 0.0) { /* If L2 <= 0, the random walk is over*/
+		L2 -= fb_sqr(delta); /*L2 is updated after the random walk*/
 		if (sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(w[1]+vcm[2])) <= vlc) { 
+			/*If the tangential speed of the particle is less than vlc,the star has entered the loss cone and is disrupted */
 			dprintf("index=%d, id=%ld: star eaten by BH\n", g_index, star[index].id);
 			cenma.m_new += star_m[g_index]; 
 			//TODO: SMBH: this is just for bookkeeping (to track the energy deleted by destroying stars).  HOWEVER, the energy of the cluster also 
 			//changes by virtue of the fact that you're increasing the SMBH mass.  It's possible we're double counting here.  
 			cenma.E_new +=  (2.0*star_phi[g_index] + star[index].vr * star[index].vr + star[index].vt * star[index].vt) / 
 				2.0 * star_m[g_index] * madhoc;
+
+			
+			if(star[index].binind > 0 && WRITE_BH_LOSSCONE_INFO){ //Binary
+				parafprintf(bhlossconefile, "%g 1 %g %ld %ld %g %g %g %g %g %g %ld %ld %g %g %g %g %g %g %g %g \n", TotalTime, star[index].r, binary[star[index].binind].id1, binary[star[index].binind].id2, binary[star[index].binind].m1 * units.mstar / MSUN, binary[star[index].binind].m2 * units.mstar / MSUN,  binary[star[index].binind].rad1 * units.l / RSUN, binary[star[index].binind].rad2 * units.l / RSUN, binary[star[index].binind].bse_radc[0] * units.l / RSUN , binary[star[index].binind].bse_radc[1] * units.l / RSUN, binary[star[index].binind].bse_kw[0], binary[star[index].binind].bse_kw[1], binary[star[index].binind].a * units.l / AU, binary[star[index].binind].e, star[index].r_peri * units.l / AU, v[1], v[2], v[3], star[index].E, star[index].J);
+				// dprintf(" binary!: %g 1 %g %ld %ld %g %g %g %g %g %g %ld %ld %g %g %g %g %g %g %g %g \n ", TotalTime, star[index].r, binary[star[index].binind].id1, binary[star[index].binind].id2, binary[star[index].binind].m1 * units.mstar / MSUN, binary[star[index].binind].m2 * units.mstar / MSUN,  binary[star[index].binind].rad1 * units.l / RSUN,binary[star[index].binind].rad2 * units.l / RSUN, binary[star[index].binind].bse_radc[0] * units.l / RSUN ,binary[star[index].binind].bse_radc[1] * units.l / RSUN, binary[star[index].binind].bse_kw[0], binary[star[index].binind].bse_kw[1], binary[star[index].binind].a * units.l / AU, binary[star[index].binind].e, star[index].r_peri * units.l / AU, v[1], v[2], v[3], star[index].E, star[index].J);
+			}
+	
+			else if (WRITE_BH_LOSSCONE_INFO){ //Single
+				parafprintf(bhlossconefile, "%g 0 %g %ld -100 %g -100 %g -100 %g -100 %ld -100 -100 -100 %g %g %g %g %g %g\n", TotalTime, star[index].r, star[index].id, star[index].m * units.mstar / MSUN, star[index].rad  * units.l / RSUN, star[index].se_rc * units.l / RSUN, star[index].se_k, star[index].r_peri * units.l / AU, v[1], v[2], v[3], star[index].E, star[index].J );
+				// dprintf("single!: %g 0 %g %ld -100 %g -100 %g -100 %g -100 %ld -100 -100 -100 %g %g %g %g %g %g\n", TotalTime, star[index].r, star[index].id, star[index].m * units.mstar / MSUN, star[index].rad  * units.l / RSUN, star[index].se_rc * units.l / RSUN, star[index].se_k, star[index].r_peri * units.l / AU, v[1], v[2], v[3], star[index].E, star[index].J );
+			}
 			destroy_obj(index);
 			L2 = 0.0; 
 		} else { 
 			deltamax= 0.1*FB_CONST_PI;
 			deltasafe= CSAFE*(sqrt(fb_sqr(w[0]+vcm[1])+fb_sqr(vcm[2]+w[1]))-vlc)/w_mag;
+			/*The amplitude of the random walk step is calculated using eq. 31 of Freitag & Benz (2002).*/
 			delta = MAX(deltabeta_orb, MIN(deltamax, MIN(deltasafe, sqrt(L2)))); 
-			//if (delta>sqrt(L2)) delta=sqrt(L2);
-			//delta = MAX(deltabeta_orb, MIN(deltamax, sqrt(L2)));
 
+			/*Set the direction of the random walk step by drawing a random angle dbeta*/
 			dbeta = 2.0 * PI * rng_t113_dbl_new(curr_st); 
-			//dbeta = 2.0 * PI * rng_t113_dbl(); 
 
 			do_random_step(w, dbeta, delta); 
-			if (is_in_ids) {
-				//fprintf(rwalk_file, "%f %g %g %g %g %g %g %g %g %g\n",
-				//TotalTime, deltabeta_orb, deltasafe, sqrt(L2), delta, n_orb, beta, star[index].r, dt/Trel, l2_scale);
-			};
 		} 
 	}; 
 	if (tcount%SNAPSHOT_DELTACOUNT==0 && SNAPSHOTTING && WRITE_RWALK_INFO) {
 		write_rwalk_data(fname, g_index, Trel, dt, l2_scale, n_steps, beta,
 				n_local, W, P_orb, n_orb);
 	}
-};
 
+	/*Free up the star structure since we have already r_peri and r_apo in the bhlosscone file */
+	star[index].r_peri = 0.0;
+	star[index].r_apo = 0.0;
 
-/**
-* @brief ?
-*
-* @param w ?
-* @param vr ?
-* @param vt ?
-*/
-void get_3d_velocities(double *w, double vr, double vt) {
-   double phi;
-
-	//MPI: Dont know how what to do with this rng call, but this function itself is not used anywhere! So, we can safely ignore this as of now.
-   phi= rng_t113_dbl()*2.*FB_CONST_PI;
-   w[0]= vt* cos(phi);
-   w[1]= vt* sin(phi);
-   w[2]= vr;
 };
 
 /* here the notation of Freitag & Benz (2002) is used */
 /**
 * @brief ?
 *
-* @param w ?
-* @param beta ?
-* @param delta ?
+* @param w Star's velocity vector 
+* @param beta Random angle 
+* @param delta Amplitude of the random walk step
 */
 void do_random_step(double *w, double beta, double delta) {
    double theta, phi, w_mag, new_w_dir[3];
@@ -218,23 +233,6 @@ void do_random_step(double *w, double beta, double delta) {
 };
 
 /**
-* @brief calculate the angle between w and w_new and compare to deltat
-*
-* @param w ?
-* @param w_new ?
-* @param delta ?
-*
-* @return ?
-*/
-double check_angle_w_w_new(double *w, double *w_new, double delta) {
-   double angle;
-
-   angle=acos(w[0]*w_new[0]+w[1]*w_new[1]+w[2]*w_new[2]);
-
-   return(angle-delta);
-};
-
-/**
 * @brief calculate star's radial orbital period
 *
 * @param index star index
@@ -244,44 +242,44 @@ double check_angle_w_w_new(double *w, double *w_new, double delta) {
 double calc_P_orb(long index)
 {
 	double E, J, Porb, error, Porbapproxmin, Porbapproxmax, Porbapprox;
-	//double Porbtmp;
 	orbit_rs_t orbit_rs;
 	calc_p_orb_params_t params;
-	gsl_integration_workspace *w;
-	gsl_integration_qaws_table *tab;
 	gsl_function F;
-    struct Interval star_interval;
-    int g_index;
-    g_index = get_global_idx(index);
+	struct Interval star_interval;
+	int g_index;
+	g_index = get_global_idx(index);
 
-        /* default values for star_interval */
+
+    /* default values for star_interval */
 	star_interval.min= 1;
-    star_interval.max= clus.N_MAX+1;
+	star_interval.max= clus.N_MAX+1;
 
 	E = star[index].E + MPI_PHI_S(star_r[g_index], g_index);
 	J = star[index].J;
-	
-	//dprintf("index=%ld ", index);
 
-        //if (index>80000) dprintf("Aaaaahhh index= %li\n", index);
+	/*TODO: we're doing this twice?!  Put in a flag to only compute
+	 * new orbital parameters here if we're using the loss cone*/
+	/*Find out new orbit of star, primarily peri and apo- center distances*/
 	orbit_rs = calc_orbit_new(index, E, J);
-	
-	//dprintf("rp=%g ra=%g ", orbit_rs.rp, orbit_rs.ra);
 
+	/*Assigning the values of r_peri and r_apo to the star structure so they can be accessed for the bhlosscone file later*/
+	star[index].r_peri = orbit_rs.rp;
+	star[index].r_apo = orbit_rs.ra;
+
+	/*A cheap way to compute the radial orbital period: just 
+	 * geometrically average the equivalent orbital period of a
+	 * circular orbit at pericenter and apocenter.  This works exactly
+	 * in the Keplarian case, but not for a general spherical potential*/
 	Porbapproxmin = 2.0 * PI * orbit_rs.rp / (J / orbit_rs.rp);
 	Porbapproxmax = 2.0 * PI * orbit_rs.ra / (J / orbit_rs.ra);
 	Porbapprox = sqrt(Porbapproxmin * Porbapproxmax);
 
-	/* Return the approximate value of the radial period.  If this is commented out
-	   the radial period will be calculated properly. */
-	//return(Porbapprox);
-
-        if (orbit_rs.ra-orbit_rs.rp< CIRC_PERIOD_THRESHOLD) {
-          dprintf("Orbit is considered circular for period calculation.\n");
-          dprintf("ra-rp= %g and is less than the threshold %g\n", 
-              orbit_rs.ra-orbit_rs.rp, CIRC_PERIOD_THRESHOLD);
-          orbit_rs.circular_flag = 1;
-        }
+	if (orbit_rs.ra-orbit_rs.rp< CIRC_PERIOD_THRESHOLD) {
+		dprintf("Orbit is considered circular for period calculation.\n");
+		dprintf("ra-rp= %g and is less than the threshold %g\n", 
+			orbit_rs.ra-orbit_rs.rp, CIRC_PERIOD_THRESHOLD);
+		orbit_rs.circular_flag = 1;
+	}
 
 	if (orbit_rs.circular_flag == 1) {
 		/* We're returning the azimuthal period here, which is not the same as the
@@ -289,25 +287,17 @@ double calc_P_orb(long index)
 		   any difference for the BH loss cone stuff, since the orbit is circular. */
 		return(2.0 * PI * star_r[g_index] / star[index].vt);
 	} else {
-		w = gsl_integration_workspace_alloc(1000);
-		tab = gsl_integration_qaws_table_alloc(-0.5, -0.5, 0.0, 0.0);
 
 		params.E = E;
 		params.J = J;
 		params.index = g_index;
-		//if (SEARCH_GRID)
-		//  star_interval= search_grid_get_interval(r_grid, orbit_rs.rp);
-		//params.kmin = FindZero_r(star_interval.min, star_interval.max, orbit_rs.rp);
-		//if (SEARCH_GRID)
-		//  star_interval= search_grid_get_interval(r_grid, orbit_rs.ra);
-		//params.kmax = FindZero_r(star_interval.min, star_interval.max, orbit_rs.ra) + 1;
-		params.kmax= orbit_rs.kmax+1;
+		params.kmax= orbit_rs.kmax+1; 
 		params.kmin= orbit_rs.kmin;
 		params.rp = orbit_rs.rp;
 		params.ra = orbit_rs.ra;
 		F.params = &params;
-
-                /* test if the interval of rmax is the same as [kmax,kmax+1] */
+	 
+        /* test if the interval of rmax is the same as [kmax,kmax+1] */
 		if (!orbit_rs.circular_flag) {
 			if (function_Q(g_index, params.kmax, E, J)>0 || function_Q(g_index, params.kmax-1,E, J)<0) {
 			  dprintf("r and phi interval do not match: id= %li, r_kmax= %li\n",
@@ -345,35 +335,30 @@ double calc_P_orb(long index)
         //MPI: These seem to be never used, so they are not parallelized as of now. Also unclear how these functions will be used, so dont understand if index transformation is reqd or not. Might later have to double check if the parallelization is correct.
 		if (0) { /* use standard potential function with Stefan's speedup trick here */
 			F.function = &calc_p_orb_f;
-			status = gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
-			//dprintf("Porb=%g Porb/Porbapprox=%g intervals=%d\n", Porb, Porb/Porbapprox, w->size);
+			status = gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, workspace_lc_porb_integral, &Porb, &error);
 		}
 
 		if (0) { /* use fast potential function here (not much of a speedup over Stefan's technique in practice) */
 			F.function = &calc_p_orb_f2;
-			status = gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, w, &Porb, &error);
-			//dprintf("\tFast: Porb=%g Porb/Porbapprox=%g intervals=%d\n", Porb, Porb/Porbapprox, w->size);
+			status = gsl_integration_qags(&F, orbit_rs.rp, orbit_rs.ra, 0, 1.0e-3, 1000, workspace_lc_porb_integral, &Porb, &error);
 		}
 
 		if (1) { /* use Gauss-Chebyshev for factor of ~few speedup over standard method */
-			//Porbtmp = Porb;
 			F.function = &calc_p_orb_gc;
-			status = gsl_integration_qaws(&F, orbit_rs.rp, orbit_rs.ra, tab, 1.0e-3, 1.0e-3, 1000, w, &Porb, &error);
-			//dprintf("Porb=%g Porb/Porbtmp=%g Porb/Porbapprox=%g intervals=%d\n", 
-			//	Porb, Porb/Porbtmp, Porb/Porbapprox, w->size);
+			status = gsl_integration_qaws(&F, orbit_rs.rp, orbit_rs.ra, table_lc_porb_integral,
+				       	1.0e-3, 1.0e-3, 1000, workspace_lc_porb_integral, &Porb, &error);
+
 		}
 
 		// Print error if there's a problem with the integration, and return Porbapprox
 		if (status) {
 			eprintf("gsl_integration_qa[g,w]s failed (gsl_errno=%d, index=%d, g_index=%d, orbit_rs.rp=%e, orbit_rs.ra=%e); check cmc_bhlosscone.c for [g,w] routine; returning Porbapprox=%e\n", status, index, g_index, orbit_rs.rp, orbit_rs.ra, Porbapprox);
-			return(Porbapprox);
+			Porb = Porbapprox;
 		}
 
 		// Reset to previous error handler
 		gsl_set_error_handler(old_handler);
 		
-		gsl_integration_qaws_table_free(tab);
-		gsl_integration_workspace_free(w);
 		return(Porb);
 	}
 }
@@ -381,8 +366,8 @@ double calc_P_orb(long index)
 /**
 * @brief integrand for calc_P_orb
 *
-* @param x ?
-* @param params ?
+* @param x Variable of integration
+* @param params Parameters of the orbit
 *
 * @return ?
 */
@@ -403,8 +388,8 @@ double calc_p_orb_f(double x, void *params) {
 /**
 * @brief integrand for calc_P_orb
 *
-* @param x ?
-* @param params ?
+* @param x Variable of integration
+* @param params Parameters of the orbit
 *
 * @return ?
 */
@@ -425,8 +410,8 @@ double calc_p_orb_f2(double x, void *params) {
 /**
 * @brief integrand for calc_P_orb, using Gauss-Chebyshev for regularizing the integrand near the endpoints
 *
-* @param x ?
-* @param params ?
+* @param x Variable of integration
+* @param params Parameters of the orbit
 *
 * @return ?
 */
@@ -445,23 +430,29 @@ double calc_p_orb_gc(double x, void *params) {
 	kmax = myparams.kmax;
 	rp = myparams.rp;
 	ra = myparams.ra;
-        
-	if (x <= star_r[kmin+1]) { /* return integrand regularized at r=rp */
-		//dprintf("regularizing near rp...\n");
+
+	/*kmin and kmax are the global indeces that enclose the position of a particle. 
+	Our star is located between star_r[kmin] and star_r[kmax]*/
+
+	if (x <= star_r[kmin+1]) { 
+		/* return integrand regularized at r=rp */
 		phik = star_phi[kmin] + MPI_PHI_S(star_r[kmin], index);
 		phik1 = star_phi[kmin+1] + MPI_PHI_S(star_r[kmin+1], index);
 		rk = star_r[kmin];
 		rk1 = star_r[kmin+1];
-		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1);
-		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1);
-		/* rplus = rperi, rminus = rapo-primed */
+		
+		/* The expression for the potential at any point r along the orbit is analogous to eq. 33 in Rodriguez et al. (2021) */
+		/* Note:  phi(r) = phi0 + phi1/r */
+		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1); /*Interpolated potential between r[kmin] and r[kmin+1]*/
+		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1); 
+
 		if (E-phi0==0.) {
 		  dprintf("E is phi0 near rp! Damn it!");
 		};
+
+		/*The roots for the energy equation (eq. 26 in Rodriguez et al. (2021)) using the definition for the potential at a point r:  phi(r) = phi0 + phi1/r */
 		rminus = (phi1 - sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
-		//rplus = (phi1 + sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
-		//dprintf("rplus/rp=%g rminus/ra=%g\n", rplus/rp, rminus/ra);
-		if (kmax == kmin + 1) {
+		if (kmax == kmin + 1) {			
 			/* then rminus = ra, so must cancel (ra-x)/(rminus-x) term analytically */
 			result= 2.0*x*sqrt(1.0/((2.0*phi0-2.0*E)));
 			if (gsl_isinf(result)) {
@@ -493,18 +484,16 @@ double calc_p_orb_gc(double x, void *params) {
 			};
 			return(2.0*x*sqrt((ra-x)/((2.0*phi0-2.0*E)*(rminus-x))));
 		}
-	} else if (x >= star_r[kmax-1]) { /* return integrand regularized at r=ra*/
-		//dprintf("regularizing near ra...\n");
+	} else if (x >= star_r[kmax-1]) { 
+		/* return integrand regularized at r=ra*/
 		phik = star_phi[kmax-1] + MPI_PHI_S(star_r[kmax-1], index);
 		phik1 = star_phi[kmax] + MPI_PHI_S(star_r[kmax], index);
 		rk = star_r[kmax-1];
 		rk1 = star_r[kmax];
 		phi0 = phik + (phik1 - phik)/(1.0-rk/rk1);
 		phi1 = (phik - phik1)/(1.0/rk - 1.0/rk1);
-		/* rplus = rperi-primed, rminus = rapo */
-		//rminus = (phi1 - sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
+
 		rplus = (phi1 + sqrt(fb_sqr(phi1)+2.0*fb_sqr(J)*(E-phi0))) / (2.0*(E-phi0));
-		//dprintf("rplus/rp=%g rminus/ra=%g\n", rplus/rp, rminus/ra);
 		if (kmax == kmin + 1) {
 			result=2.0*x*sqrt(1.0/((2.0*phi0-2.0*E)));
 			/* then rplus = rp, so must cancel (x-rp)/(x-rplus) term analytically */
