@@ -134,7 +134,7 @@ _EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_bi
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_morepulsarfile_wrbuf[STR_WRBUF_LEN], mpi_newnsfile_wrbuf[STR_WRBUF_LEN], mpi_morecollfile_wrbuf[STR_WRBUF_LEN], mpi_triplefile_wrbuf[STR_BUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
+_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_morepulsarfile_wrbuf[STR_WRBUF_LEN], mpi_newnsfile_wrbuf[STR_WRBUF_LEN], mpi_morecollfile_wrbuf[STR_WRBUF_LEN], mpi_triplefile_wrbuf[STR_WRBUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
 
 /**
 * @brief MPI: Variables to maintail the length of the buffers until the next flush
