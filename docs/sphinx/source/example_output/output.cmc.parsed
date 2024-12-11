@@ -205,6 +205,8 @@ ST_TIDE   1
 FPRIMC_ARRAY   [2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0]
 # ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0).
 IFFLAG   0
+# rtmsflag > 0 uses rtms data from 1-D stellar evolution codes (0).
+RTMSFLAG   0
 # wdflag > 0 uses modified-Mestel cooling for WDs (1).
 WDFLAG   1
 # gamma is the angular momentum factor for mass lost during Roche (-1.0, see evolv2.f for more details).

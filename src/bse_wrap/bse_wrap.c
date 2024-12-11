@@ -675,6 +675,7 @@ void bse_set_bhsigmafrac(double bhsigmafrac) {snvars_.bhsigmafrac = bhsigmafrac;
 void bse_set_polar_kick_angle(int polar_kick_angle) {snvars_.polar_kick_angle = polar_kick_angle; }
 void bse_set_ifflag(int ifflag) { flags_.ifflag = ifflag; }
 void bse_set_wdflag(int wdflag) { flags_.wdflag = wdflag; }
+void bse_set_rtmsflag(int rtmsflag) { flags_.rtmsflag = rtmsflag; }
 void bse_set_bhflag(int bhflag) { flags_.bhflag = bhflag; }
 void bse_set_bhspinflag(int bhspinflag) { flags_.bhspinflag = bhspinflag; }
 void bse_set_bhms_coll_flag(int bhms_coll_flag) { flags_.bhms_coll_flag = bhms_coll_flag; }

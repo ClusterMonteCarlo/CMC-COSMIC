@@ -1321,6 +1321,11 @@ typedef struct{
 * @brief wdflag > 0 uses modified-Mestel cooling for WDs (1).
 */
 	int BSE_WDFLAG;
+#define PARAMDOC_BSE_RTMSFLAG "rtmsflag > 0 uses data for radius at main sequence turnoff from 1-D stellar evolution codes"
+/**
+* @brief rtmsflag > 0 uses data for radius at main sequence turnoff from 1-D stellar evolution codes".
+*/
+    int BSE_RTMSFLAG;
 #define PARAMDOC_BSE_BHFLAG "bhflag > 0 allows velocity kick at BH formation (1)."
 /**
 * @brief bhflag > 0 allows velocity kick at BH formation (1).
