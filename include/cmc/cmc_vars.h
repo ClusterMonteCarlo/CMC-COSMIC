@@ -115,11 +115,7 @@ _EXTERN_ int TIMER;
 /* file pointers */
 _EXTERN_ FILE *lagradfile, *dynfile, *lagrad10file, *logfile, *escfile, *snapfile, *ave_mass_file, *densities_file, *no_star_file, *centmass_file, **mlagradfile;
 _EXTERN_ FILE *ke_rad_file, *ke_tan_file, *v2_rad_file, *v2_tan_file;
-<<<<<<< HEAD
-_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *pulsarfile, *morepulsarfile, *morecollfile, *triplefile, *tidalcapturefile, *tdefile, *semergedisruptfile, *removestarfile, *relaxationfile;
-=======
-_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *pulsarfile, *morepulsarfile, *newnsfile, *morecollfile, *triplefile, *tidalcapturefile, *semergedisruptfile, *removestarfile, *relaxationfile;
->>>>>>> 2240c71448ac0e22489ac766e9d81c36f3c69890
+_EXTERN_ FILE *binaryfile, *threebbfile, *threebbprobabilityfile, *lightcollisionfile, *threebbdebugfile, *binintfile, *collisionfile, *pulsarfile, *morepulsarfile, *newnsfile, *morecollfile, *triplefile, *tidalcapturefile, *tdefile, *semergedisruptfile, *removestarfile, *relaxationfile;
 _EXTERN_ FILE *corefile;
 _EXTERN_ FILE *fp_lagrad, *fp_log, *fp_denprof;
 _EXTERN_ FILE *timerfile;
@@ -128,47 +124,27 @@ _EXTERN_ FILE *timerfile;
 /**
 * @brief MPI: MPI-IO file pointers corresponding to the C File(pointer)s used in the serial code for files that are needed to be written out using MPI-IO
 */
-<<<<<<< HEAD
-_EXTERN_ MPI_File mpi_logfile, mpi_binintfile, mpi_escfile, mpi_collisionfile, mpi_pulsarfile, mpi_morepulsarfile, mpi_morecollfile, mpi_triplefile, mpi_tidalcapturefile, mpi_tdefile, mpi_semergedisruptfile, mpi_removestarfile, mpi_relaxationfile;
-=======
-_EXTERN_ MPI_File mpi_logfile, mpi_binintfile, mpi_escfile, mpi_collisionfile, mpi_pulsarfile, mpi_morepulsarfile, mpi_newnsfile, mpi_morecollfile, mpi_triplefile, mpi_tidalcapturefile, mpi_semergedisruptfile, mpi_removestarfile, mpi_relaxationfile;
->>>>>>> 2240c71448ac0e22489ac766e9d81c36f3c69890
+_EXTERN_ MPI_File mpi_logfile, mpi_binintfile, mpi_escfile, mpi_collisionfile, mpi_pulsarfile, mpi_morepulsarfile, mpi_newnsfile, mpi_morecollfile, mpi_triplefile, mpi_tidalcapturefile, mpi_tdefile, mpi_semergedisruptfile, mpi_removestarfile, mpi_relaxationfile;
 
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-<<<<<<< HEAD
-_EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_binintfile_buf[STR_BUF_LEN], mpi_collisionfile_buf[STR_BUF_LEN], mpi_pulsarfile_buf[STR_BUF_LEN], mpi_morepulsarfile_buf[STR_BUF_LEN], mpi_morecollfile_buf[STR_BUF_LEN], mpi_triplefile_buf[STR_BUF_LEN],mpi_tidalcapturefile_buf[STR_BUF_LEN], mpi_tdefile_buf[STR_BUF_LEN], mpi_semergedisruptfile_buf[STR_BUF_LEN], mpi_removestarfile_buf[STR_BUF_LEN], mpi_relaxationfile_buf[STR_BUF_LEN];
-=======
-_EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_binintfile_buf[STR_BUF_LEN], mpi_collisionfile_buf[STR_BUF_LEN], mpi_pulsarfile_buf[STR_BUF_LEN], mpi_morepulsarfile_buf[STR_BUF_LEN], mpi_newnsfile_buf[STR_BUF_LEN], mpi_morecollfile_buf[STR_BUF_LEN], mpi_triplefile_buf[STR_BUF_LEN],mpi_tidalcapturefile_buf[STR_BUF_LEN], mpi_semergedisruptfile_buf[STR_BUF_LEN], mpi_removestarfile_buf[STR_BUF_LEN], mpi_relaxationfile_buf[STR_BUF_LEN];
->>>>>>> 2240c71448ac0e22489ac766e9d81c36f3c69890
+_EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_binintfile_buf[STR_BUF_LEN], mpi_collisionfile_buf[STR_BUF_LEN], mpi_pulsarfile_buf[STR_BUF_LEN], mpi_morepulsarfile_buf[STR_BUF_LEN], mpi_newnsfile_buf[STR_BUF_LEN], mpi_morecollfile_buf[STR_BUF_LEN], mpi_triplefile_buf[STR_BUF_LEN],mpi_tidalcapturefile_buf[STR_BUF_LEN], mpi_tdefile_buf[STR_BUF_LEN], mpi_semergedisruptfile_buf[STR_BUF_LEN], mpi_removestarfile_buf[STR_BUF_LEN], mpi_relaxationfile_buf[STR_BUF_LEN];
 
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-<<<<<<< HEAD
-_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_morepulsarfile_wrbuf[STR_WRBUF_LEN],  mpi_morecollfile_wrbuf[STR_WRBUF_LEN], mpi_triplefile_wrbuf[STR_BUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_tdefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
-=======
-_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_morepulsarfile_wrbuf[STR_WRBUF_LEN], mpi_newnsfile_wrbuf[STR_WRBUF_LEN], mpi_morecollfile_wrbuf[STR_WRBUF_LEN], mpi_triplefile_wrbuf[STR_WRBUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
->>>>>>> 2240c71448ac0e22489ac766e9d81c36f3c69890
+_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_morepulsarfile_wrbuf[STR_WRBUF_LEN], mpi_newnsfile_wrbuf[STR_WRBUF_LEN], mpi_morecollfile_wrbuf[STR_WRBUF_LEN], mpi_triplefile_wrbuf[STR_BUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_tdefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
 
 /**
 * @brief MPI: Variables to maintail the length of the buffers until the next flush
 */
-<<<<<<< HEAD
-_EXTERN_ long long mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_pulsarfile_len, mpi_morepulsarfile_len, mpi_morecollfile_len, mpi_triplefile_len, mpi_tidalcapturefile_len, mpi_tdefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
-=======
-_EXTERN_ long long mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_pulsarfile_len, mpi_morepulsarfile_len, mpi_newnsfile_len, mpi_morecollfile_len, mpi_triplefile_len, mpi_tidalcapturefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
->>>>>>> 2240c71448ac0e22489ac766e9d81c36f3c69890
+_EXTERN_ long long mpi_logfile_len, mpi_escfile_len, mpi_binintfile_len, mpi_collisionfile_len, mpi_pulsarfile_len, mpi_morepulsarfile_len, mpi_newnsfile_len, mpi_morecollfile_len, mpi_triplefile_len, mpi_tidalcapturefile_len, mpi_tdefile_len, mpi_semergedisruptfile_len, mpi_removestarfile_len, mpi_relaxationfile_len;
 
 /**
 * @brief MPI: Variables to maintain the total offset of the file
 */
-<<<<<<< HEAD
-_EXTERN_ long long mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_pulsarfile_ofst_total, mpi_morepulsarfile_ofst_total, mpi_morecollfile_ofst_total, mpi_triplefile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_tdefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
-=======
-_EXTERN_ long long mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_pulsarfile_ofst_total, mpi_morepulsarfile_ofst_total, mpi_newnsfile_ofst_total, mpi_morecollfile_ofst_total, mpi_triplefile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
->>>>>>> 2240c71448ac0e22489ac766e9d81c36f3c69890
+_EXTERN_ long long mpi_logfile_ofst_total, mpi_escfile_ofst_total, mpi_binaryfile_ofst_total, mpi_binintfile_ofst_total, mpi_collisionfile_ofst_total, mpi_pulsarfile_ofst_total, mpi_morepulsarfile_ofst_total, mpi_newnsfile_ofst_total, mpi_morecollfile_ofst_total, mpi_triplefile_ofst_total, mpi_tidalcapturefile_ofst_total, mpi_tdefile_ofst_total, mpi_semergedisruptfile_ofst_total, mpi_removestarfile_ofst_total, mpi_relaxationfile_ofst_total;
 
 /* Meagan's 3bb files */
 /**
