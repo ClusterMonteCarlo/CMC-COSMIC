@@ -37,8 +37,18 @@ BINARY_BREAKING_MIN   0
 SS_COLLISION   1
 # allow for tidal capture in single-single interactions, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)
 TIDAL_CAPTURE   0
-# Treat BH(NS)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)
-BHNS_TDE   0
+# Allow for tidal capture in single-single interactions for non-giant stars (0=off, 1=on)
+TC_POLYTROPE   0
+# Allow for tidal capture (a multiple of the set factor of the pericenter) during single-single collision (1=off, greater than 1 sets different multiplyers); Do not turn this on the same time as TC_POLYTROPE
+TC_FACTOR   1
+# Treat BH(NS,WD)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)
+CO_TDE   0
+# Turn on wd-wd tidal capture in single-single and fewbody (0=off, >0=set the capture factor)
+WD_TC   0
+# Turn on NS-MS star TDE mass accretion (1=on, 0=off)
+TDE_SPINUP   0
+# Mass transport rate for TDE_SPINUP; 0 is the highest. 1 the lowest. (default=0.2)
+S_TDE   0.2
 # input FITS file
 INPUT_FILE   king.hdf5
 # remove stars that pass beyond the tidal boundary
@@ -177,6 +187,8 @@ REMNANTFLAG   4
 MXNS   3.0
 # 0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN
 REMBAR_MASSLOSS   0.5
+# wd_mass_lim determines if the maximum white dwarf mass is limited to the chandraekhar mass during merger induced collapse. (1=on; 0=off)
+WD_MASS_LIM   1
 # different functions for setting the BH spin from single stars
 BHSPINFLAG   0
 # spin magnitudes for BHs from BSE

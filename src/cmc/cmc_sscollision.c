@@ -29,9 +29,9 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	double aj, aj_k, aj_kp, tm, tn, tscls[20], lums[10], GB[10], k2;
 	double Einit;
 	double mass_k, mass_kp, phi_k, phi_kp, r_k, r_kp;
-	double collisions_multiple; //used with BHNS_TDE parameter
+	double collisions_multiple; //used with CO_TDE parameter
         double collisions_multiple_hold;
-        int MS_vanish_flag = 0; //Shi: use with giant collision
+        int MS_vanish_flag = 0; //CSY: use with giant collision
 
 	int g_knew;
 	int g_k = get_global_idx(k);
@@ -56,14 +56,14 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	/* fprintf(stderr, "\n *** sscollision: rperimax=%g (%g RSUN) bmax=%g (%g RSUN) b=%g (%g RSUN) rperi=%g (%g RSUN)\n", 
 	   rperimax, rperimax * units.l / RSUN, bmax, bmax * units.l / RSUN, b, b*units.l/RSUN, rperi, rperi*units.l/RSUN); */
 
-	if (BHNS_TDE) {
-		if (star[kp].se_k >= 13 && (star[k].se_k <= 1 || star[k].se_k == 7) && mass_kp >= mass_k) {
+	if (CO_TDE) {
+		if (star[kp].se_k >= 10 && (star[k].se_k <= 1 || star[k].se_k == 7) && mass_kp >= mass_k) {
 			if (mass_k * units.mstar / FB_CONST_MSUN < 0.001) {
 				collisions_multiple = pow(mass_kp/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
 			} else {
 				collisions_multiple = pow(mass_kp/mass_k,1./3.);
 			}
-		} else if (star[k].se_k >= 13 && (star[kp].se_k <= 1 || star[kp].se_k == 7) && mass_k >= mass_kp) {
+		} else if (star[k].se_k >= 10 && (star[kp].se_k <= 1 || star[kp].se_k == 7) && mass_k >= mass_kp) {
 			if (mass_kp * units.mstar / FB_CONST_MSUN < 0.001) {
 				collisions_multiple = pow(mass_k/(0.001*FB_CONST_MSUN/units.mstar),1./3.);
 			} else {
@@ -75,6 +75,16 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 	} else {
 		collisions_multiple = COLL_FACTOR;
 	}
+
+        if (WD_TC > 0) {
+                if ((star[kp].se_k >= 10 && star[kp].se_k <=12) && (star[k].se_k >= 10 && star[k].se_k <= 12)) {
+                        collisions_multiple = WD_TC;
+                } else {
+                        collisions_multiple = COLL_FACTOR;
+                }
+        } else {
+                collisions_multiple = COLL_FACTOR;
+        }
 
 	if (TIDAL_CAPTURE && (star[k].se_k <= 1 || star[k].se_k >= 10 || star[k].se_k == 7) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7) && (rperi <= 1.3*star[kp].rad && star[kp].rad > 2*star[k].rad)) {
                 collisions_multiple_hold = rperi/star[kp].rad;
@@ -899,8 +909,8 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
 	} else if (TC_POLYTROPE && (star[k].se_k != 14 || star[kp].se_k != 14) && (star[k].se_k <= 1 || star[k].se_k == 7 || star[k].se_k >= 10) && (star[kp].se_k <= 1 || star[kp].se_k == 7 || star[kp].se_k >= 10))  {
 		/* apply tidal capture / common envelope test */
-                /* Shi: The prescription is referring to the fitting fomulae in Kim & Lee 1999 */
-                /* Shi: Don't turn this on at the same time as the TC_FACTOR! */
+                /* CSY: The prescription is referring to the fitting fomulae in Kim & Lee 1999 */
+                /* CSY: Don't turn this on at the same time as the TC_FACTOR! */
 		Eorbnew = 0.5*madhoc*mass_k*mass_kp/(mass_k+mass_kp)*sqr(W);
 
 		if (star[k].se_k == 1) {
@@ -1110,6 +1120,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
 	binary_t tempbinary, tbcopy;
 	int tbi=-1, j, ktry, i, fb, icase, convert;
+        double TDE_arr[2];
 	fb = 1;
 
 	for(i=0;i<20;i++) {
@@ -1532,6 +1543,41 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    fprintf(stderr, "RftR: tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g bhspin1=%g bhspin2=%g\n", tempbinary.bse_tphys, tphysf, tempbinary.bse_kw[0], tempbinary.bse_kw[1], tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_radius[0], tempbinary.bse_radius[1], tempbinary.bse_lum[0], tempbinary.bse_lum[1], tempbinary.bse_tb,tempbinary.bse_bhspin[0],tempbinary.bse_bhspin[1]);
 		    fprintf(stderr, "BH vk_y=%g should be>0...\n", vs[2]);
 		  }
+                  
+                  // CSY: Add NS-MS TDE compact object mass change and spin up of NS
+                  if (CO_TDE && TDE_SPINUP && (tbcopy.bse_kw[0]==13 || tbcopy.bse_kw[1]==13)){
+                        if (tbcopy.bse_kw[1]<=1) {
+                                parafprintf(tdefile, "NS-MS TDE starts: tphysf=%g\n", tphysf);
+                                parafprintf(tdefile, "Before NS-MS TDE: mstar=%g rstar=%g kstar=%d mns=%g Bns=%g Ospinns=%g\n", tbcopy.bse_mass[1],tbcopy.bse_radius[1],tbcopy.bse_kw[1],tbcopy.bse_mass[0],tbcopy.bse_B_0[0],tbcopy.bse_ospin[0]);
+                                NS_TDE_spinup(tbcopy.bse_mass[0], tbcopy.bse_mass[1], tbcopy.bse_radius[1], tbcopy.bse_kw[1], tbcopy.bse_B_0[0], tbcopy.bse_ospin[0],TDE_arr);
+                                tempbinary.bse_mass[0] = tbcopy.bse_mass[0] + TDE_arr[0];
+                                tempbinary.bse_ospin[0] = TDE_arr[1];
+                                tempbinary.bse_B_0[0] = tbcopy.bse_B_0[0]/(1.+TDE_arr[0]/1e-6)+5e7;
+                                tempbinary.bse_bacc[0] = TDE_arr[0];
+                                tempbinary.bse_massc[0] = tbcopy.bse_massc[0] + TDE_arr[0];
+                                parafprintf(tdefile, "After NS-MS TDE: mns=%g Bns=%g Ospinns=%g Macc=%g Osnew=%g\n", tempbinary.bse_mass[0],tempbinary.bse_B_0[0],tempbinary.bse_ospin[0],TDE_arr[0],TDE_arr[1]);
+                        } else if (tbcopy.bse_kw[0]<=1) {
+                                parafprintf(tdefile, "NS-MS TDE starts: tphysf=%g\n", tphysf);
+                                parafprintf(tdefile, "Before NS-MS TDE: mstar=%g rstar=%g kstar=%d mns=%g Bns=%g Ospinns=%g\n", tbcopy.bse_mass[0],tbcopy.bse_radius[0],tbcopy.bse_kw[0],tbcopy.bse_mass[1],tbcopy.bse_B_0[1],tbcopy.bse_ospin[1]);
+                                NS_TDE_spinup(tbcopy.bse_mass[1], tbcopy.bse_mass[0], tbcopy.bse_radius[0], tbcopy.bse_kw[0], tbcopy.bse_B_0[1], tbcopy.bse_ospin[1],TDE_arr);
+                                tempbinary.bse_mass[0] = tbcopy.bse_mass[1] + TDE_arr[0];
+                                tempbinary.bse_ospin[0] = TDE_arr[1];
+                                tempbinary.bse_B_0[0] = tbcopy.bse_B_0[1]/(1.+TDE_arr[0]/1e-6)+5e7;
+                                tempbinary.bse_bacc[0] = TDE_arr[0];
+                                tempbinary.bse_massc[0] = tbcopy.bse_massc[1] + TDE_arr[0];
+                                parafprintf(tdefile, "After NS-MS TDE: mns=%g Bns=%g Ospinns=%g Macc=%g Osnew=%g\n", tempbinary.bse_mass[0],tempbinary.bse_B_0[0],tempbinary.bse_ospin[0],TDE_arr[0],TDE_arr[1]);
+                        }
+                        bse_set_merger(-2.0);
+                        dtp=0.0; //not sure if I need this
+                        bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]),
+                                    &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]),
+                                    &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]),
+                                    &(tempbinary.bse_ospin[0]), &(tempbinary.bse_B_0[0]), &(tempbinary.bse_bacc[0]), &(tempbinary.bse_tacc[0]),
+                                    &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]),
+                                    &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars,
+                                    &(tempbinary.bse_tb), &(tempbinary.e), vs, &(tempbinary.bse_bhspin[0]));
+                  }
+
 		  bse_set_merger(-1.0);
                   j = 1;
                   while (bse_get_bcm(j,1) >= 0.0 && j<50000) {
@@ -1762,3 +1808,68 @@ double r_of_m(double M)
 		return(1.6 * RSUN / units.l * pow(M / clus.N_STAR * units.m / MSUN, 0.47));
 	}
 }
+
+/**
+* @brief calculate the accretion radius, the mass accretion rate and the angular momentum accretion rate of a NS during NS-MS TDEs
+*
+* @param Mns mass of NS
+* @param Mstar mass of MS star
+* @param Rstar radius of the MS star
+* @param Kstar star type of the MS star
+* @param B_old initial magnetic field of NS
+* @param ospin_old initial spin angular frequency of NS
+*
+* @return new spin angular frequency of NS and accreted mass onto the NS.
+*/
+void NS_TDE_spinup(double Mns, double Mstar, double Rstar, double Kstar, double B_old, double ospin_old, double TDE_arr[])
+{
+        //CSY:S_TDE parameterizes the (highly uncertain) amount of material transported from the
+        //edge of the disk (near the tidal disruption radius) to the accretion radius. s=0 means high mass transfer rate
+        //The prescription works best for the high mass transfer rate case s < 0.2 where the accretion radius is at the surface of the NS
+        double Cparam;
+        double t_vi,R_di;
+        double M_di,Mmtr; //Mmtr is the mass transfer rate
+        double tmt,tmt_old;//Ralfven; //Mass transfer time scale in sec
+        double Rns_mks=1e4,Racc,Mns_mks;
+        double Rns=1.4e-5;
+        double Macc=0,Jacc=0,Jns_new;
+        double ospin_new;
+        double coll_multiple;
+
+        if (Mns >= Mstar) {
+            if (Mstar < 0.001) {
+                coll_multiple = pow(Mns/0.001,1./3.);
+            } else {
+                coll_multiple = pow(Mns/Mstar,1./3.);
+            }
+        } else {
+            coll_multiple = COLL_FACTOR;  /* this is just the direct collision limit*/
+        }
+
+        Cparam=(2.*S_TDE)/(2.*S_TDE+1.);
+        Racc=Rns_mks;
+        R_di=2*coll_multiple*Rstar*6.957e8; //in meter
+        t_vi=1.*24.*3600.;  //in sec
+        Mns_mks=Mns*1.988e30;
+
+        M_di=0.9*Mstar*1.988e30;
+
+        tmt=2.;
+        while (tmt<=6) { //400 time steps
+            tmt_old=tmt;
+            tmt=tmt_old+0.01;
+            Mmtr=(M_di/t_vi)*pow(Racc/R_di,S_TDE)*pow(1.+ 3.*(1.-Cparam)*(pow(10,tmt)/t_vi),-(1.+3.*(1.+2.*S_TDE/3.)*(1.-Cparam))/(3.*(1.-Cparam)));
+
+            Macc=Macc+Mmtr*(pow(10,tmt)-pow(10, tmt_old));
+            Jacc=Jacc+Mmtr*(pow(10,tmt)-pow(10, tmt_old))*(sqrt(6.674e-11*(Mns_mks+Macc)*Racc)+0.5*(Macc*sqrt(6.674e-11*Racc/(Mns_mks+Macc))));
+        }
+
+        //Convert values back to COSMIC unit
+        Jacc=Jacc/1.988e30/pow(6.957e8,2)*3.154e7;
+        Jns_new=(2./5.)*Mns*Rns*Rns*ospin_old+Jacc; //Msun*Rsun^2/year
+        ospin_new=Jns_new/((Mns+Macc/1.988e30)*Rns*Rns*(2./5));
+        
+        TDE_arr[0]=Macc/1.988e30;
+        TDE_arr[1]=ospin_new;
+}
+
