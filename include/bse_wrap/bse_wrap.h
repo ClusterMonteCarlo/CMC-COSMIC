@@ -23,6 +23,11 @@
 #include <math.h>
 #include "../common/taus113-v2.h"
 
+#define BCM_NUM_COLUMNS 49 
+#define BPP_NUM_COLUMNS 49 
+#define BCM_NUM_ROWS 50000 
+#define BPP_NUM_ROWS 1000 
+
 /**
 * @brief A structure used to pass binary information along to bse_wrap.c
 */
@@ -127,6 +132,7 @@ typedef struct{
 
 /* prototypes for fortran BSE functions */
 void zcnsts_(double *z, double *zpars);
+void bse_set_bcm_bpp_cols(void);
 void evolv2_(int *kstar, double *mass, double *tb, double *ecc, double *z, 
 	     double *tphysf, double *dtp, double *mass0, double *rad, double *lum,
              double *massc, double *radc, double *menv, double *renv,
@@ -195,7 +201,8 @@ extern struct { double fprimc_array[16]; } tidalvars_;
 extern struct { double pts1, pts2, pts3; } points_;
 extern struct { double dmmax, drmax; } tstepc_;
 extern struct { double scm[14][50000], spp[3][20]; } single_;
-extern struct { double bcm[38][50000], bpp[43][1000]; } binary_;
+extern struct { double bcm[BCM_NUM_COLUMNS][BCM_NUM_ROWS], bpp[BPP_NUM_COLUMNS][BPP_NUM_ROWS]; } binary_;
+extern struct { int n_col_bpp,col_inds_bpp[BCM_NUM_COLUMNS], n_col_bcm,col_inds_bcm[BCM_NUM_COLUMNS]; } col_;
 extern struct { double merger; long int id1_pass, id2_pass; long int using_cmc; } cmcpass_;
 
 /* setters */
