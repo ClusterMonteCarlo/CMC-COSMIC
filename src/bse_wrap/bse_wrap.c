@@ -739,6 +739,25 @@ double bse_get_bcm(int i, int j) { return(binary_.bcm[j-1][i-1]); }
 *
 * @return state with variables copied from the Fortran rng
 */
+void bse_set_bcm_bpp_cols(void){
+    int i;
+
+    col_.n_col_bpp = BPP_NUM_COLUMNS;
+    col_.n_col_bcm = BCM_NUM_COLUMNS;
+
+    for(i=0 ; i < BCM_NUM_COLUMNS ; i++)
+        col_.col_inds_bcm[i] = i+1;
+
+    for(i=0 ; i < BPP_NUM_COLUMNS ; i++)
+        col_.col_inds_bpp[i] = i+1;
+
+}
+
+/**
+* @brief copies back the Fortran tausworthe rng state variables to the C state
+*
+* @return state with variables copied from the Fortran rng
+*/
 struct rng_t113_state bse_get_taus113state(void) {
   struct rng_t113_state state;
 

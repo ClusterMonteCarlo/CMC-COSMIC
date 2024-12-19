@@ -129,12 +129,12 @@ _EXTERN_ MPI_File mpi_logfile, mpi_binintfile, mpi_escfile, mpi_collisionfile, m
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-_EXTERN_ char mpi_logfile_buf[STR_BUF_LEN], mpi_escfile_buf[STR_BUF_LEN], mpi_binintfile_buf[STR_BUF_LEN], mpi_collisionfile_buf[STR_BUF_LEN], mpi_pulsarfile_buf[STR_BUF_LEN], mpi_morepulsarfile_buf[STR_BUF_LEN], mpi_newnsfile_buf[STR_BUF_LEN], mpi_morecollfile_buf[STR_BUF_LEN], mpi_triplefile_buf[STR_BUF_LEN],mpi_tidalcapturefile_buf[STR_BUF_LEN], mpi_tdefile_buf[STR_BUF_LEN], mpi_semergedisruptfile_buf[STR_BUF_LEN], mpi_removestarfile_buf[STR_BUF_LEN], mpi_relaxationfile_buf[STR_BUF_LEN];
+_EXTERN_ char *mpi_logfile_buf, *mpi_escfile_buf, *mpi_binintfile_buf, *mpi_collisionfile_buf, *mpi_pulsarfile_buf, *mpi_morepulsarfile_buf, *mpi_newnsfile_buf, *mpi_morecollfile_buf, *mpi_triplefile_buf, *mpi_tidalcapturefile_buf, *mpi_tdefile_buf, *mpi_semergedisruptfile_buf, *mpi_removestarfile_buf, *mpi_relaxationfile_buf;
 
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-_EXTERN_ char mpi_logfile_wrbuf[STR_WRBUF_LEN], mpi_escfile_wrbuf[STR_WRBUF_LEN], mpi_binintfile_wrbuf[STR_WRBUF_LEN], mpi_collisionfile_wrbuf[STR_WRBUF_LEN], mpi_pulsarfile_wrbuf[STR_WRBUF_LEN], mpi_morepulsarfile_wrbuf[STR_WRBUF_LEN], mpi_newnsfile_wrbuf[STR_WRBUF_LEN], mpi_morecollfile_wrbuf[STR_WRBUF_LEN], mpi_triplefile_wrbuf[STR_BUF_LEN], mpi_tidalcapturefile_wrbuf[STR_WRBUF_LEN], mpi_tdefile_wrbuf[STR_WRBUF_LEN], mpi_semergedisruptfile_wrbuf[STR_WRBUF_LEN], mpi_removestarfile_wrbuf[STR_WRBUF_LEN], mpi_relaxationfile_wrbuf[STR_WRBUF_LEN];
+_EXTERN_ char *mpi_logfile_wrbuf, *mpi_escfile_wrbuf, *mpi_binintfile_wrbuf, *mpi_collisionfile_wrbuf, *mpi_pulsarfile_wrbuf, *mpi_morepulsarfile_wrbuf, *mpi_newnsfile_wrbuf, *mpi_morecollfile_wrbuf, *mpi_triplefile_wrbuf, *mpi_tidalcapturefile_wrbuf, *mpi_tdefile_wrbuf, *mpi_semergedisruptfile_wrbuf, *mpi_removestarfile_wrbuf, *mpi_relaxationfile_wrbuf;
 
 /**
 * @brief MPI: Variables to maintail the length of the buffers until the next flush
@@ -155,12 +155,12 @@ _EXTERN_ MPI_File mpi_bhsummaryfile, mpi_escbhsummaryfile, mpi_newbhfile, mpi_bh
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-_EXTERN_ char mpi_bhsummaryfile_buf[STR_BUF_LEN], mpi_escbhsummaryfile_buf[STR_BUF_LEN], mpi_newbhfile_buf[STR_BUF_LEN], mpi_bhmergerfile_buf[STR_BUF_LEN], mpi_threebbfile_buf[STR_BUF_LEN], mpi_threebbprobabilityfile_buf[STR_BUF_LEN], mpi_lightcollisionfile_buf[STR_BUF_LEN], mpi_threebbdebugfile_buf[STR_BUF_LEN];
+_EXTERN_ char *mpi_bhsummaryfile_buf, *mpi_escbhsummaryfile_buf, *mpi_newbhfile_buf, *mpi_bhmergerfile_buf, *mpi_threebbfile_buf, *mpi_threebbprobabilityfile_buf, *mpi_lightcollisionfile_buf, *mpi_threebbdebugfile_buf;
 
 /**
 * @brief MPI: String buffers to store intermediate data that is finally flush out to files using MPI-IO
 */
-_EXTERN_ char mpi_bhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_escbhsummaryfile_wrbuf[STR_WRBUF_LEN], mpi_newbhfile_wrbuf[STR_WRBUF_LEN], mpi_bhmergerfile_wrbuf[STR_WRBUF_LEN], mpi_threebbfile_wrbuf[STR_WRBUF_LEN], mpi_threebbprobabilityfile_wrbuf[STR_WRBUF_LEN], mpi_lightcollisionfile_wrbuf[STR_WRBUF_LEN], mpi_threebbdebugfile_wrbuf[STR_WRBUF_LEN];
+_EXTERN_ char *mpi_bhsummaryfile_wrbuf, *mpi_escbhsummaryfile_wrbuf, *mpi_newbhfile_wrbuf, *mpi_bhmergerfile_wrbuf, *mpi_threebbfile_wrbuf, *mpi_threebbprobabilityfile_wrbuf, *mpi_lightcollisionfile_wrbuf, *mpi_threebbdebugfile_wrbuf;
 
 /**
 * @brief MPI: Variables to maintail the length of the buffers until the next flush

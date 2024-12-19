@@ -3178,7 +3178,12 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
 						NRECORDS++;
 				}
 
-                        Snapshot all_objects[NRECORDS];
+                        //Snapshot all_objects[NRECORDS];
+                        Snapshot* all_objects = malloc(NRECORDS * sizeof(Snapshot));
+                        if (all_objects == NULL) {
+                            eprintf("Failed to allocate memory for %ld snapshot objects\n", NRECORDS);
+                            exit_cleanly(-1,__FUNCTION__);
+                        }
                         for (i=1; i<=clus.N_MAX_NEW; i++) {
                                 long g_i = get_global_idx(i);
                                 m = star_m[g_i];
@@ -3331,9 +3336,10 @@ void write_snapshot(char *filename, int bh_only, char *tablename) {
                         }
                         else{
                             snapfile_hdf5 = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
-                            H5TBappend_records(snapfile_hdf5, tablename, NRECORDS, dst_size, dst_offset, dst_sizes, &all_objects);
+                            H5TBappend_records(snapfile_hdf5, tablename, NRECORDS, dst_size, dst_offset, dst_sizes, all_objects);
                             H5Fclose( snapfile_hdf5 );
                         }
+            free(all_objects);
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
 	}

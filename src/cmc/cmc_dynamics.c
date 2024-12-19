@@ -25,7 +25,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	long Nrel=0, Nrelbeta[4]={0,0,0,0};
 	double relbeta[4]={PI/2.0,PI/4.0,PI/8.0,PI/16.0}, maverelbeta[4]={0.0,0.0,0.0,0.0}, raverelbeta[4]={0.0,0.0,0.0,0.0};
 	double qaverelbeta[4]={0.0,0.0,0.0,0.0};
-	char filename[1024];
 	double mass_k, mass_kp; //Bharath: MPI
 /* Meagan: added these variables for three-body binary formation */
 	long sq, k1, k2, k3, form_binary;
@@ -45,26 +44,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
         }
         pararootfprintf(relaxationfile, "\n");
     }
-
-    // MPI: This does not execute, but parallelizing anyway.
-    /* DEBUG: print out binary information every N steps */
-    if (0) {
-        /* if (tcount%50==0 || tcount==1) { */
-        MPI_File mpi_binfp;
-        char mpi_binfp_buf[10000], mpi_binfp_wrbuf[10000000];
-        long long mpi_binfp_len=0, mpi_binfp_ofst_total=0;
-        sprintf(filename, "a_e2.%04ld.dat", tcount);
-        MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_binfp);
-        MPI_File_set_size(mpi_binfp, 0);
-        for (j=1; j<=clus.N_MAX; j++) {
-            if (star[j].binind) {
-                parafprintf(binfp, "%g %g\n", binary[star[j].binind].a, sqr(binary[star[j].binind].e));
-            }
-        }
-        mpi_para_file_write(mpi_binfp_wrbuf, &mpi_binfp_len, &mpi_binfp_ofst_total, &mpi_binfp);
-        MPI_File_close(&mpi_binfp);
-    }
-    /* DEBUG */
 
 	/* Original dt provided, saved for repeated encounters, where dt is changed */
 	SaveDt = dt;

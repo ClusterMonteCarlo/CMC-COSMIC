@@ -1580,7 +1580,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 
 		  bse_set_merger(-1.0);
                   j = 1;
-                  while (bse_get_bcm(j,1) >= 0.0 && j<50000) {
+                  while (bse_get_bcm(j,1) >= 0.0 && j<BCM_NUM_ROWS) {
                     j++;
                   }
                         //if(j>1){

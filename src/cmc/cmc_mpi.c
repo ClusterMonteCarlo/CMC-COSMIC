@@ -205,3 +205,127 @@ void mpiReduceAndBcast( void *sendbuf, void *recvbuf, int count, MPI_Datatype da
 {
 }
 */
+
+void mpiAllocFileBuffers(void){
+    int error = 0;
+    
+    // Initialize all pointers to NULL
+    mpi_logfile_buf = mpi_escfile_buf = mpi_binintfile_buf = mpi_collisionfile_buf = 
+    mpi_pulsarfile_buf = mpi_morepulsarfile_buf = mpi_newnsfile_buf = mpi_morecollfile_buf = 
+    mpi_triplefile_buf = mpi_tidalcapturefile_buf = mpi_tdefile_buf = mpi_semergedisruptfile_buf = 
+    mpi_removestarfile_buf = mpi_relaxationfile_buf = mpi_bhsummaryfile_buf = 
+    mpi_escbhsummaryfile_buf = mpi_newbhfile_buf = mpi_bhmergerfile_buf = mpi_threebbfile_buf = 
+    mpi_threebbprobabilityfile_buf = mpi_lightcollisionfile_buf = mpi_threebbdebugfile_buf = NULL;
+
+    mpi_logfile_wrbuf = mpi_escfile_wrbuf = mpi_binintfile_wrbuf = mpi_collisionfile_wrbuf = 
+    mpi_pulsarfile_wrbuf = mpi_morepulsarfile_wrbuf = mpi_newnsfile_wrbuf = mpi_morecollfile_wrbuf = 
+    mpi_triplefile_wrbuf = mpi_tidalcapturefile_wrbuf = mpi_tdefile_wrbuf = mpi_semergedisruptfile_wrbuf = 
+    mpi_removestarfile_wrbuf = mpi_relaxationfile_wrbuf = mpi_bhsummaryfile_wrbuf = 
+    mpi_escbhsummaryfile_wrbuf = mpi_newbhfile_wrbuf = mpi_bhmergerfile_wrbuf = mpi_threebbfile_wrbuf = 
+    mpi_threebbprobabilityfile_wrbuf = mpi_lightcollisionfile_wrbuf = mpi_threebbdebugfile_wrbuf = NULL;
+
+    // Regular buffers
+    if ((mpi_logfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_escfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_binintfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_collisionfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_pulsarfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_morepulsarfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_newnsfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_morecollfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_triplefile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_tidalcapturefile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_tdefile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_semergedisruptfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_removestarfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_relaxationfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_bhsummaryfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_escbhsummaryfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_newbhfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_bhmergerfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_threebbfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_threebbprobabilityfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_lightcollisionfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+    if ((mpi_threebbdebugfile_buf = (char *)malloc(STR_BUF_LEN)) == NULL) error = 1;
+
+    // Write buffers
+    if ((mpi_logfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_escfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_binintfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_collisionfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_pulsarfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_morepulsarfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_newnsfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_morecollfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_triplefile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_tidalcapturefile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_tdefile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_semergedisruptfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_removestarfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_relaxationfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_bhsummaryfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_escbhsummaryfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_newbhfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_bhmergerfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_threebbfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_threebbprobabilityfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_lightcollisionfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+    if ((mpi_threebbdebugfile_wrbuf = (char *)malloc(STR_WRBUF_LEN)) == NULL) error = 1;
+
+    if (error) {
+        eprintf("Can't allocate buffer for mpi files\n");
+        exit_cleanly(-1,__FUNCTION__);
+    }
+}
+/**
+ * @brief Frees all MPI buffer memory
+ */
+void mpiFreeFileBuffers(void) {
+    // Regular buffers
+    free(mpi_logfile_buf);
+    free(mpi_escfile_buf);
+    free(mpi_binintfile_buf);
+    free(mpi_collisionfile_buf);
+    free(mpi_pulsarfile_buf);
+    free(mpi_morepulsarfile_buf);
+    free(mpi_newnsfile_buf);
+    free(mpi_morecollfile_buf);
+    free(mpi_triplefile_buf);
+    free(mpi_tidalcapturefile_buf);
+    free(mpi_tdefile_buf);
+    free(mpi_semergedisruptfile_buf);
+    free(mpi_removestarfile_buf);
+    free(mpi_relaxationfile_buf);
+    free(mpi_bhsummaryfile_buf);
+    free(mpi_escbhsummaryfile_buf);
+    free(mpi_newbhfile_buf);
+    free(mpi_bhmergerfile_buf);
+    free(mpi_threebbfile_buf);
+    free(mpi_threebbprobabilityfile_buf);
+    free(mpi_lightcollisionfile_buf);
+    free(mpi_threebbdebugfile_buf);
+
+    // Write buffers
+    free(mpi_logfile_wrbuf);
+    free(mpi_escfile_wrbuf);
+    free(mpi_binintfile_wrbuf);
+    free(mpi_collisionfile_wrbuf);
+    free(mpi_pulsarfile_wrbuf);
+    free(mpi_morepulsarfile_wrbuf);
+    free(mpi_newnsfile_wrbuf);
+    free(mpi_morecollfile_wrbuf);
+    free(mpi_triplefile_wrbuf);
+    free(mpi_tidalcapturefile_wrbuf);
+    free(mpi_tdefile_wrbuf);
+    free(mpi_semergedisruptfile_wrbuf);
+    free(mpi_removestarfile_wrbuf);
+    free(mpi_relaxationfile_wrbuf);
+    free(mpi_bhsummaryfile_wrbuf);
+    free(mpi_escbhsummaryfile_wrbuf);
+    free(mpi_newbhfile_wrbuf);
+    free(mpi_bhmergerfile_wrbuf);
+    free(mpi_threebbfile_wrbuf);
+    free(mpi_threebbprobabilityfile_wrbuf);
+    free(mpi_lightcollisionfile_wrbuf);
+    free(mpi_threebbdebugfile_wrbuf);
+}

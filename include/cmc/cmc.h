@@ -1845,6 +1845,8 @@ void mpi_close_node_buffers(void);
 void para_file_write(char* wrbuf, long long *len, long long *prev_cum_offset, MPI_File* fh);
 void PrintParaFileOutput(void);
 void close_node_buffers(void);
+void mpiAllocFileBuffers(void);
+void mpiFreeFileBuffers(void);
 
 void PrintLogOutput(void);
 double GetTimeStep(gsl_rng *rng);

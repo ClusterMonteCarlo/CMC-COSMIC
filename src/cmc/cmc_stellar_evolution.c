@@ -84,6 +84,9 @@ void restart_stellar_evolution(void){
   zpars = (double *) malloc(20 * sizeof(double));
   bse_zcnsts(&METALLICITY, zpars);
 
+  /* set the variables for the BCM/BPP arrays */
+  bse_set_bcm_bpp_cols();
+
   /* set collisions matrix */
   bse_instar();
 
@@ -177,6 +180,9 @@ void stellar_evolution_init(void){
   /* set parameters relating to metallicity */
   zpars = (double *) malloc(20 * sizeof(double));
   bse_zcnsts(&METALLICITY, zpars);
+
+  /* set the variables for the BCM/BPP arrays */
+  bse_set_bcm_bpp_cols();
 
   /* set collisions matrix */
   bse_instar();
@@ -479,7 +485,7 @@ void do_stellar_evolution(gsl_rng *rng)
         /* extract info from scm array */ /* PK looping over a large number anticipating further changes */
 	        i = 1;
 	        j = 1;
-        	while (bse_get_bcm(i,1)>=0.0 && i < 50000) {
+        	while (bse_get_bcm(i,1)>=0.0 && i < BCM_NUM_ROWS) {
           		if(i > 1) {
             			if(bse_get_bcm(i,2) == 13 && bse_get_bcm(i-1,2) < 13){
               				if(bse_get_bcm(i+1,1) >= 0.0){
@@ -494,7 +500,7 @@ void do_stellar_evolution(gsl_rng *rng)
           		i++;
         	}
         	i--;
-        	if(i+1 > 50000){
+        	if(i+1 > BCM_NUM_ROWS){
           		i = 0;
         	}
         	if(i>=1) {
@@ -812,11 +818,11 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
   /* 5100000 will eventually be a possible max array length... */
   j = 1;
   jj = 1;
-  while (bse_get_bcm(j, 1) >= 0 && j<50000) {
+  while (bse_get_bcm(j, 1) >= 0 && j<BCM_NUM_ROWS) {
     j++;
   }
   j--;
-  if(j+1 > 50000) {
+  if(j+1 > BCM_NUM_ROWS) {
      j = 0;
   }
   if (j >= 1) {
