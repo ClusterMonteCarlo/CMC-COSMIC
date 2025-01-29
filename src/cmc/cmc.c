@@ -90,6 +90,9 @@ int main(int argc, char *argv[])
 	/* Starting timer to measure the overall time taken */
 	tmpTimeStart_init = MPI_Wtime();
 
+    /* Allocate the MPI file buffers */
+    mpiAllocFileBuffers();
+
 	/* sets some important global variables */
 	set_global_vars1();
 
@@ -442,6 +445,8 @@ int main(int argc, char *argv[])
 
 	free(Start);
 	free(End);
+
+    mpiFreeFileBuffers();
 
 	if (SEARCH_GRID)
 		search_grid_free(r_grid);
