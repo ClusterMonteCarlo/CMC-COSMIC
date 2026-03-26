@@ -106,6 +106,7 @@ void stellar_evolution_init(void){
   int kprev0=-100;
   int kprev1=-100;
   binary_t tempbinary;
+  double VKO;
 
   /* SSE */
   /* bse_set_hewind(0.5); */
@@ -343,7 +344,7 @@ void stellar_evolution_init(void){
               &(binary[kb].bse_tb), &(binary[kb].e), vs,&(binary[kb].bse_bhspin[0]));
       *curr_st=bse_get_taus113state();
 
-      handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
+      handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1, &VKO);
     } else {
       eprintf("totally confused!\n");
       exit_cleanly(-1, __FUNCTION__);
@@ -568,12 +569,12 @@ void do_stellar_evolution(gsl_rng *rng)
 			}
 		}
 
-                if (WRITE_MOREPULSAR_INFO) {
-                        if (kprev!=13 && star[k].se_k==13) { // newly formed NS
-                                parafprintf(newnsfile, "%.18g %g 0 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], star[k].id,star[k].se_zams_mass,star[k].se_mass, star[k].se_mt, star[k].se_scm_formation, VKO, kprev);
-                                parafprintf (newnsfile, "\n");
-                        }
-                }
+    if (WRITE_MOREPULSAR_INFO) {
+            if (kprev!=13 && star[k].se_k==13) { // newly formed NS
+                    parafprintf(newnsfile, "%.18g %g 0 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], star[k].id,star[k].se_zams_mass,star[k].se_mass, star[k].se_mt, star[k].se_scm_formation, VKO, kprev);
+                    parafprintf (newnsfile, "\n");
+            }
+    }
 
 		if (WRITE_BH_INFO) {
 			if (kprev!=14 && star[k].se_k==14) { // newly formed BH
@@ -657,20 +658,25 @@ void do_stellar_evolution(gsl_rng *rng)
           fprintf(stderr, "tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g \n", binary[kb].bse_tphys, tphysf, binary[kb].bse_kw[0], binary[kb].bse_kw[1], binary[kb].bse_mass[0], binary[kb].bse_mass[1], binary[kb].bse_radius[0], binary[kb].bse_radius[1], binary[kb].bse_lum[0], binary[kb].bse_lum[1]);
           fprintf(stderr, "k= %ld kb=%ld star_id=%ld bin_id1=%ld bin_id2=%ld \n", k, kb, star[k].id, binary[kb].id1, binary[kb].id2);
           exit(1);
-        }
+        } 
 
-	handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1);
+  /*EGP: Adding these two new variables such that IDs can be used to write out to the files below even if the objects are deleted inside handle_bse_outcome. */
+  /*EGP: Note that when we delete objects, we zero out some quantities like the IDs, but a lot of bse params are not, hence why only the IDs were affected. */
+  long prev_id1 = binary[kb].id1;
+  long prev_id2 = binary[kb].id2;
+
+	handle_bse_outcome(k, kb, vs, tphysf, kprev0, kprev1, &VKO);
 
 	if (WRITE_BH_INFO) {
 		if (kprev0!=14 && binary[kb].bse_kw[0]==14) { // newly formed BH
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], binary[kb].id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bhspin[0], VKO);
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], prev_id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bhspin[0], VKO);
 			for (ii=0; ii<16; ii++){
 				parafprintf (newbhfile, " %g", vs[ii]);
 			}
 			parafprintf (newbhfile, "\n");
 		}
 		if (kprev1!=14 && binary[kb].bse_kw[1]==14 && binary[kb].id2 != 0) { // newly formed BH
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], binary[kb].id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bhspin[1],VKO);
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], prev_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bhspin[1],VKO);
 			for (ii=0; ii<16; ii++){
 				parafprintf (newbhfile, " %g", vs[ii]);
 			}
@@ -680,11 +686,11 @@ void do_stellar_evolution(gsl_rng *rng)
 
         if (WRITE_MOREPULSAR_INFO) {
                 if (kprev0!=13 && binary[kb].bse_kw[0]==13) { // newly formed NS
-                        parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], binary[kb].id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bcm_formation[0], VKO, kprev0);
+                        parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], prev_id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bcm_formation[0], VKO, kprev0);
                         parafprintf(newnsfile, "\n");
                 }
                 if (kprev1!=13 && binary[kb].bse_kw[1]==13 && binary[kb].id2 != 0) { // newly formed NS
-                        parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], binary[kb].id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bcm_formation[1],VKO,kprev1);
+                        parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], prev_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bcm_formation[1],VKO,kprev1);
                         parafprintf(newnsfile, "\n");
                 }
         }
@@ -804,14 +810,14 @@ void write_stellar_data(void){
 * @param vs ?
 * @param tphysf ?
 */
-void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, int kprev1)
+void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, int kprev1, double *VKO)
 {
   int j, jj;
   long knew=0, knewp=0, convert;
-  double dtp, VKO;
+  double dtp;
   
   knew = 0;
-  VKO = 0.0;
+  *VKO = 0.0;
 
   /* PK: extract some stellar/binary info from BSE's bcm array */
   /* but don't loop forever, just until maximum array length.  */
@@ -908,14 +914,14 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
         star[k].vr += 0.0;
         star[k].vt += 0.0;
         set_star_EJ(k);
-  VKO = 0.0;
+        *VKO = 0.0;
     } else if (vs[4] <= 0.0) {
     /* If one kick */
        star[k].vr += vs[3] * 1.0e5 / (units.l/units.t);
        vt_add_kick(&(star[k].vt),vs[1],vs[2], curr_st);
        //star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(k);
-       VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+       *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
     } else {
     /* Two kicks */
        star[k].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[7] * 1.0e5 / (units.l/units.t);
@@ -923,7 +929,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
        vt_add_kick(&(star[k].vt),vs[5],vs[6], curr_st);//will mean a different angle for each kick, should be ok as this is a randomised process...
        //star[k].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(k);
-       VKO = sqrt(vs[1]*vs[1] + vs[2]*vs[2] + vs[3]*vs[3]) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]+vs[7]*vs[7]);
+       *VKO = sqrt(vs[1]*vs[1] + vs[2]*vs[2] + vs[3]*vs[3]) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]+vs[7]*vs[7]);
     }
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
@@ -982,7 +988,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
 
             vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
             set_star_EJ(knew);
-        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+            *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
             star[knewp].vr += vs[7] * 1.0e5 / (units.l/units.t);
             vt_add_kick(&(star[knewp].vt),vs[5],vs[6], curr_st);
             //star[knewp].vt += sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t); 
@@ -993,7 +999,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
             vt_add_kick(&(star[knewp].vt),vs[1],vs[2], curr_st);
             //star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knewp);
-        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+            *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
             star[knew].vr += vs[7] * 1.0e5 / (units.l/units.t);
             vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
             //star[knew].vt += sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t); //minus at front?
@@ -1009,7 +1015,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
             vt_add_kick(&(star[knew].vt),vs[9],vs[10], curr_st);
             //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[9]*vs[9]+vs[10]*vs[10]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knew);
-        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[9]*vs[9]+vs[10]*vs[10]+vs[11]*vs[11]);
+            *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[9]*vs[9]+vs[10]*vs[10]+vs[11]*vs[11]);
             star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[7] * 1.0e5 / (units.l/units.t);
             vt_add_kick(&(star[knewp].vt),vs[5],vs[6], curr_st);//finalise companion vt...
 
@@ -1022,7 +1028,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
             vt_add_kick(&(star[knewp].vt),vs[9],vs[10], curr_st);
             //star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[9]*vs[9]+vs[10]*vs[10]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knewp);
-        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[9]*vs[9]+vs[10]*vs[10]+vs[11]*vs[11]);
+            *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[9]*vs[9]+vs[10]*vs[10]+vs[11]*vs[11]);
             star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t) + vs[7] * 1.0e5 / (units.l/units.t);
             vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
             //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t);
@@ -1036,7 +1042,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
             //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
             vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
             set_star_EJ(knew);
-        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+            *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
             star[knewp].vr += vs[7] * 1.0e5 / (units.l/units.t) + vs[11] * 1.0e5 / (units.l/units.t);
             vt_add_kick(&(star[knewp].vt),vs[5],vs[6], curr_st);
             vt_add_kick(&(star[knewp].vt),vs[9],vs[10], curr_st);
@@ -1047,7 +1053,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
             vt_add_kick(&(star[knewp].vt),vs[1],vs[2], curr_st);
             //star[knewp].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
             set_star_EJ(knewp);
-        VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+            *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
             star[knew].vr += vs[7] * 1.0e5 / (units.l/units.t) + vs[11] * 1.0e5 / (units.l/units.t);
             vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
             vt_add_kick(&(star[knew].vt),vs[9],vs[10], curr_st);
@@ -1059,7 +1065,7 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
         star[knew].vr += 0.0;
         star[knew].vt += 0.0;
         set_star_EJ(knew);
-        VKO = 0.0;
+        *VKO = 0.0;
         star[knewp].vr += 0.0;
         star[knewp].vt += 0.0;
         set_star_EJ(knewp);
@@ -1100,14 +1106,14 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
-       VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+       *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
     } else if (vs[0]>0.0 && vs[4]>0.0 && vs[8]<=0.0 && (vs[0]==vs[4])) {
        /* 1 SN occured disrupted system then one star killed itself */
        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
        set_star_EJ(knew);
-       VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+       *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
     } else if (vs[0]>0.0 && vs[4]>0.0 && vs[8]<=0.0 && (vs[0]!=vs[4])) {
        /* 2 SNe then system mergers, star feels both kicks (i.e. it is COM) */
        /* NOTE: merger remnants of double compact (NS or BH) binaries do not receive kicks in BSE as of yet!
@@ -1117,13 +1123,13 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
        vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
-       VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[5]*vs[5]+vs[6]*vs[6]+vs[7]*vs[7]);
+       *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[5]*vs[5]+vs[6]*vs[6]+vs[7]*vs[7]);
     } else {
       /* No kick - going to set_star_EJ seems overkill (here and elsewhere). */
        star[knew].vr += 0.0;
        star[knew].vt += 0.0;
        set_star_EJ(knew);
-       VKO = 0.0;
+       *VKO = 0.0;
     }
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
@@ -1193,14 +1199,14 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
-       VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+       *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
     } else if (vs[0]>0.0 && vs[4]>0.0 && vs[8]<=0.0 && (vs[0]==vs[4])) {
        /* 1 SN occured disrupted system then one star killed itself */
        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
-       VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
+       *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]);
     } else if (vs[0]>0.0 && vs[4]>0.0 && vs[8]<=0.0 && (vs[0]!=vs[4])) {
        /* 2 SNe then system mergers, star feels both kicks (i.e. it is COM) */
        /* NOTE: merger remnants of double compact (NS or BH) binaries do not receive kicks in BSE as of yet!
@@ -1210,13 +1216,13 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
        vt_add_kick(&(star[knew].vt),vs[5],vs[6], curr_st);
        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t) + sqrt(vs[5]*vs[5]+vs[6]*vs[6]) * 1.0e5 / (units.l/units.t);
        set_star_EJ(knew);
-       VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[5]*vs[5]+vs[6]*vs[6]+vs[7]*vs[7]);
+       *VKO = sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]+vs[5]*vs[5]+vs[6]*vs[6]+vs[7]*vs[7]);
     } else {
       /* No kick - going to set_star_EJ seems overkill (here and elsewhere). */
        star[knew].vr += 0.0;
        star[knew].vt += 0.0;
        set_star_EJ(knew);
-       VKO = 0.0;
+       *VKO = 0.0;
     }
     if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
       //dprintf("birth kick of %f km/s\n", sqrt(vs[0]*vs[0]+vs[1]*vs[1]+vs[2]*vs[2]));
@@ -1267,10 +1273,10 @@ void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, 
 	 {
 		 if (knew) {
 			 //bcm_boom_search(knew, vs, getCMCvalues);
-			 pulsar_write(knew, VKO);
+			 pulsar_write(knew,  *VKO);
 		 } else {
 			 //bcm_boom_search(k, vs, getCMCvalues);
-			 pulsar_write(k, VKO);
+			 pulsar_write(k,  *VKO);
 		 }
 	 }
 
