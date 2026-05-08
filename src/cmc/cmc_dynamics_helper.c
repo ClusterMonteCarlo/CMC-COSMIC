@@ -3001,7 +3001,7 @@ double calc_average_mass_sqr(long index, long N_LIMIT) {
   si= index;
 
   /* calculate sliding average timesteps */
-  p = AVEKERNEL
+  p = AVEKERNEL;
   simin = si - p;
   simax = simin + (2 * p - 1);
   if (simin < 1) {
