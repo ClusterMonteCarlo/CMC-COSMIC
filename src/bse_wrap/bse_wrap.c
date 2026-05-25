@@ -745,12 +745,42 @@ void bse_set_bcm_bpp_cols(void){
     col_.n_col_bpp = BPP_NUM_COLUMNS;
     col_.n_col_bcm = BCM_NUM_COLUMNS;
 
+    // BPP_COLUMNS → ALL_COLUMNS (43 elements)
+    // BPP is a direct prefix of ALL_COLUMNS
+    int bpp_to_all[43] = {
+        0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+        30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+        40, 41, 42
+    };
+
+    // BCM_COLUMNS → ALL_COLUMNS (38 elements)
+    int bcm_to_all[38] = {
+        0,  3, 19,  1, 21, 17, 23, 15, 25, 27,  /* tphys..menv_1 */
+        29, 39, 31, 43,  8,  4, 20,  2, 22, 18,  /* renv_1..rad_2 */
+        24, 16, 26, 28, 30, 40, 32, 44,  9,  6,  /* teff_2..porb */
+        5,  7, 33, 34, 45, 46, 47, 48           /* sep..merger_type */
+    };
+
+    int bcm_to_all_extra[11] = {
+       10, 11, 12, 13, 14, 35, 36, 37, 38, 41,
+       42
+    };
+
     for(i=0 ; i < BCM_NUM_COLUMNS ; i++)
-        col_.col_inds_bcm[i] = i+1;
+        if (i<38) {
+            col_.col_inds_bcm[i] = bcm_to_all[i]+1;
+        } else {
+            col_.col_inds_bcm[i] = bcm_to_all_extra[i-38]+1;
+        }  
 
     for(i=0 ; i < BPP_NUM_COLUMNS ; i++)
-        col_.col_inds_bpp[i] = i+1;
-
+        if (i<43) {
+            col_.col_inds_bpp[i] = bpp_to_all[i]+1;
+        } else {
+            col_.col_inds_bpp[i] = i+1;
+        }
 }
 
 /**
