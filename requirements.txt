@@ -5,6 +5,7 @@ sphinx-bootstrap-theme >= 0.6
 sphinxcontrib-programoutput
 sphinxcontrib-katex
 sphinx-automodapi
+sphinx-copybutton
 ipython
 sphinx_rtd_theme
 breathe

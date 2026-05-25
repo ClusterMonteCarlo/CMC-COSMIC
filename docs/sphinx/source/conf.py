@@ -50,7 +50,22 @@ extensions = [
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
     'numpydoc',
+    'sphinx_copybutton',
 ]
+
+# -- sphinx-copybutton --------------------------
+# Strip IPython "In [1]:" / "Out[1]:" prompts and shell prompts from copied
+# code blocks so users can paste snippets directly into a Python shell.
+copybutton_prompt_text = r"In \[\d*\]: |\s*\.{3,}: |Out\[\d*\]: |\$ |> "
+copybutton_prompt_is_regexp = True
+copybutton_only_copy_prompt_lines = False
+copybutton_remove_prompts = True
+
+# -- IPython directive --------------------------
+# Don't fail the build when an executed example emits a stray warning. Newer
+# pandas raises chained-assignment warnings from inside COSMIC's
+# InitialCMCTable.write, which would otherwise abort the whole docs build.
+ipython_warning_is_error = False
 
 # -- Extensions ---------------------------------------------------------------
 
