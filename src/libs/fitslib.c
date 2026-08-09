@@ -15,6 +15,11 @@
 
 #define LARGE_DISTANCE 1.0e40
 
+/* Rows read per HDF5 hyperslab when loading the initial object table. Bounds the
+   temporary read buffer at ~4 MB (65536 rows x 8 doubles) regardless of N, in
+   place of the full-N x 8 matrix the reader used to allocate. */
+#define CMC_READ_BLOCK_ROWS 65536
+
 
 #ifdef USE_FITS
 void cmc_fits_printerror(int status)
@@ -211,7 +216,6 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     hsize_t     dims[2] = {1, 1};
 
     herr_t      status;
-    double      **read_stellar_objects;                       /* Read buffer */
     double      **read_binary_objects;                       /* Read buffer */
     int         ndims,
                 i, j, k;
@@ -370,23 +374,63 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
      */
     space = H5Dget_space (dset);
     ndims = H5Sget_simple_extent_dims (space, dims, NULL);
-    read_stellar_objects = (double **) malloc (dims[0] * sizeof (double *));
-    read_stellar_objects[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
-    for (i=1; i<dims[0]; i++)
-        read_stellar_objects[i] = read_stellar_objects[0] + i * dims[1];
 
-    status = H5Dread (dset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                read_stellar_objects[0]);
+    /* Read the object table in row blocks straight into cfd, instead of into a
+       full-N x ncols temporary matrix. At N=1.1e7 that temporary was ~671 MiB per
+       rank -- larger than cfd itself -- and existed only to be transposed and
+       freed. Row order, field mapping and the double->long/int conversions below
+       are unchanged; only the buffering differs. */
+    {
+        hsize_t nrows  = dims[0];
+        hsize_t ncols  = dims[1];
+        hsize_t nblock = (nrows < (hsize_t) CMC_READ_BLOCK_ROWS) ? nrows : (hsize_t) CMC_READ_BLOCK_ROWS;
+        hsize_t offset[2], count[2], start, r;
+        hid_t   memspace;
+        double  *blk;
 
-    for (i=0; i<dims[0]; i++) {
-        cfd->obj_id[i] = read_stellar_objects[i][0];
-        cfd->obj_k[i] = read_stellar_objects[i][1];
-        cfd->obj_m[i] = read_stellar_objects[i][2];
-        cfd->obj_Reff[i] = read_stellar_objects[i][3];
-        cfd->obj_r[i] = read_stellar_objects[i][4];
-        cfd->obj_vr[i] = read_stellar_objects[i][5];
-        cfd->obj_vt[i] = read_stellar_objects[i][6];
-        cfd->obj_binind[i] = read_stellar_objects[i][7];
+        if (nblock == 0)        /* empty table: still make one valid block */
+            nblock = 1;
+
+        blk = (double *) malloc ((size_t) nblock * (size_t) ncols * sizeof (double));
+        if (blk == NULL) {
+            fprintf (stderr, "ERROR: cannot allocate %llu x %llu object read block\n",
+                     (unsigned long long) nblock, (unsigned long long) ncols);
+            exit (1);
+        }
+
+        count[0] = nblock;
+        count[1] = ncols;
+        memspace = H5Screate_simple (2, count, NULL);
+
+        for (start = 0; start < nrows; start += nblock) {
+            hsize_t nthis = (nrows - start < nblock) ? nrows - start : nblock;
+
+            offset[0] = start;
+            offset[1] = 0;
+            count[0]  = nthis;
+            count[1]  = ncols;
+
+            status = H5Sselect_hyperslab (space, H5S_SELECT_SET, offset, NULL, count, NULL);
+            status = H5Sset_extent_simple (memspace, 2, count, NULL);
+            status = H5Dread (dset, H5T_NATIVE_DOUBLE, memspace, space, H5P_DEFAULT, blk);
+
+            for (r = 0; r < nthis; r++) {
+                double  *row = blk + r * ncols;
+                hsize_t  gi  = start + r;
+
+                cfd->obj_id[gi]     = row[0];
+                cfd->obj_k[gi]      = row[1];
+                cfd->obj_m[gi]      = row[2];
+                cfd->obj_Reff[gi]   = row[3];
+                cfd->obj_r[gi]      = row[4];
+                cfd->obj_vr[gi]     = row[5];
+                cfd->obj_vt[gi]     = row[6];
+                cfd->obj_binind[gi] = row[7];
+            }
+        }
+
+        status = H5Sclose (memspace);
+        free (blk);
     }
 
     space = H5Dget_space (dset1);
@@ -419,8 +463,6 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     /*
      * Close and release resources.
      */
-    free (read_stellar_objects[0]);
-    free(read_stellar_objects);
     free (read_binary_objects[0]);
     free(read_binary_objects);
     free (read_z[0]);
