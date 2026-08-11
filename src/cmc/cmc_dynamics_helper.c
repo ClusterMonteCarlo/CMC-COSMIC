@@ -2248,11 +2248,11 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					oldk = binint_get_indices(k, kp, hier.obj[i]->obj[sid]->id[0], &bi);
 					cp_SEvars_to_newstar(oldk, bi, knewp);
 					cp_m_to_newstar(oldk, bi, knewp);
-					star[knew].id = hier.obj[i]->obj[sid]->id[0];
+					star[knewp].id = hier.obj[i]->obj[sid]->id[0];
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[sid]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[sid]->id[nmerged], &bi);
-						star[knew].id = star_get_merger_id_new();
+						star[knewp].id = star_get_merger_id_new();
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
