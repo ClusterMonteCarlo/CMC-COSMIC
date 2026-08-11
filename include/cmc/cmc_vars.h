@@ -184,6 +184,8 @@ _EXTERN_ long next_restart_t;
 _EXTERN_ long Echeck;
 _EXTERN_ long snap_num, StepCount, bh_snap_num;
 _EXTERN_ long newstarid;
+_EXTERN_ long idblocksize; // Maia: for new stellar merger IDs
+_EXTERN_ long newid_counter, newidblock_counter; // Maia: for new stellar merger IDs
 _EXTERN_ double rho_core_single, rho_core_bin, rh_single, rh_binary;
 _EXTERN_ double TotalTime, Dt;
 _EXTERN_ double Sin2Beta;

@@ -1903,6 +1903,9 @@ void set_global_vars1()
 	debug = 0;
 	initial_total_mass = 1.0;
 	newstarid = 0;
+    idblocksize = 0;
+    newid_counter = 0;
+    newidblock_counter = 0;
 	cenma.E = 0.0;
 	
 	//this will be set later if -R flag is used

@@ -743,17 +743,29 @@ long star_get_id_new(void)
 	return(newstarid);
 }
 
+*/
 /**
-* @brief generate unique star id's. The serial version of this function star_get_id_new generated new ids incrementally starting with N. But, we cant do this in the parallel version since this would need additional communication to keep the latest assigned id synchronized across processors, and also will result in a race condition. So, we use the following formula new_id = N + min(id1%N, id2%N) + id1/N + id2/N. Here / implies integer division, and % is the modulo.
+* @brief generate unique star id's. Maia: The previous parallel version (above) could have ID collisions. This new version is guaranteed to be collisionless and reduces to the old serial version for procs=1.
 *
-* @param id1 id of first star
-* @param id2 id of second star
 *
 * @return new id
 */
-long star_get_merger_id_new(long id1, long id2)
+long star_get_merger_id_new(void)
 {
-	return (MIN(id1%newstarid, id2%newstarid) + id1/newstarid + id2/newstarid + newstarid);
+    long newid;
+    
+    /* First generate the new id */
+    //Maia: Adding 1 since the ID counting starts at 1, so newstarid corresponds to the max ID value of the input stars.
+    newid = newstarid*(1 + newidblock_counter) + idblocksize*myid + newid_counter + 1;
+
+    /* Increment the counters */
+    newid_counter++;
+    if (newid_counter == idblocksize) {
+        newid_counter = 0;
+        newidblock_counter++;
+    }
+
+	return newid;
 }
 
 /**
@@ -1914,7 +1926,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 					while (nmerged < hier.obj[i]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->id[nmerged], &bi);
-						star[knew].id = star_get_merger_id_new(star[knew].id, hier.obj[i]->id[nmerged]);
+						star[knew].id = star_get_merger_id_new();
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
@@ -2012,7 +2024,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[0]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[0]->id[nmerged], &bi);
-						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[0]->id[nmerged]);
+						tempstar.id = star_get_merger_id_new();
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
@@ -2101,7 +2113,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[1]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[1]->id[nmerged], &bi);
-						tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[1]->id[nmerged]);
+						tempstar.id = star_get_merger_id_new();
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
@@ -2243,7 +2255,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[sid]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[sid]->id[nmerged], &bi);
-						star[knew].id = star_get_merger_id_new(star[knew].id, hier.obj[i]->obj[sid]->id[nmerged]);
+						star[knew].id = star_get_merger_id_new();
 						cp_SEvars_to_star(oldk, bi, &tempstar);
 						cp_m_to_star(oldk, bi, &tempstar);
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
@@ -2335,7 +2347,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[bid]->obj[0]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[0]->id[nmerged], &bi);
-                        tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[0]->id[nmerged]);
+                        tempstar.id = star_get_merger_id_new();
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 
@@ -2419,7 +2431,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					nmerged = 1;
 					while (nmerged < hier.obj[i]->obj[bid]->obj[1]->ncoll) {
 						oldk = binint_get_indices(k, kp, hier.obj[i]->obj[bid]->obj[1]->id[nmerged], &bi);
-                        tempstar.id = star_get_merger_id_new(tempstar.id, hier.obj[i]->obj[bid]->obj[1]->id[nmerged]);
+                        tempstar.id = star_get_merger_id_new();
 						cp_SEvars_to_star(oldk, bi, &tempstar2);
 						cp_m_to_star(oldk, bi, &tempstar2);
                         /* NOTE: if I have a BH/star or BBH merger, this will overwrite the 

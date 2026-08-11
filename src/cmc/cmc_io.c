@@ -3702,6 +3702,9 @@ typedef struct{
 	long   s_tcount;
 	double s_TotalTime;                           
 	long   s_newstarid;
+    long   s_idblocksize;
+    long   s_newid_counter;
+    long   s_newidblock_counter;
     double s_cenma_m;
     double s_cenma_m_new;
     double s_cenma_e;
@@ -3761,6 +3764,9 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_tcount                             =tcount;
 	rest->s_TotalTime                          =TotalTime;
 	rest->s_newstarid                          =newstarid;
+    rest->s_idblocksize                        =idblocksize;
+    rest->s_newid_counter                      =newid_counter;
+    rest->s_newidblock_counter                 =newidblock_counter;
 	rest->s_cenma_m                            =cenma.m;                 
 	rest->s_cenma_m_new                        =cenma.m_new;                
 	rest->s_cenma_e                            =cenma.E;                       
@@ -3820,6 +3826,9 @@ void load_global_vars(restart_struct_t *rest){
 	tcount                             =rest->s_tcount;
 	TotalTime                          =rest->s_TotalTime;
 	newstarid                          =rest->s_newstarid;
+    idblocksize                        =rest->s_idblocksize;
+    newid_counter                      =rest->s_newid_counter;
+    newidblock_counter                 =rest->s_newidblock_counter;
 	cenma.m                            =rest->s_cenma_m;
 	cenma.m_new                        =rest->s_cenma_m_new;
 	cenma.E                            =rest->s_cenma_e;

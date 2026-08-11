@@ -61,7 +61,7 @@ int remove_old_star(double time, long k)
 			//debug stuff
 			//star[knew].id = binary[star[k].binind].id2;
 			//star[knew].id = star_get_id_new();
-			star[knew].id = star_get_merger_id_new(binary[star[k].binind].id1, binary[star[k].binind].id2);
+			star[knew].id = star_get_merger_id_new();
 			star[knew].binind = 0;
 	
 			/*star[knewp].id = binary[star[k].binind].id2;*/
@@ -138,7 +138,7 @@ int remove_old_star(double time, long k)
 			//debug Stuff
 			//star[knew].id = binary[star[k].binind].id1;
 			//star[knew].id = star_get_id_new();
-			star[knew].id = star_get_merger_id_new(binary[star[k].binind].id1, binary[star[k].binind].id2);
+			star[knew].id = star_get_merger_id_new();
 			star[knew].binind = 0;
 
 			/*star[knewp].id = binary[star[k].binind].id2;*/

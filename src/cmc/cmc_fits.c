@@ -136,6 +136,8 @@ void load_fits_file_data(void)
 	star_m[0] = 0.0;
 	//MPI: The way newstarid is assigned above works in the serial version, but it wont be the same on all procs in the parallel version. Assuming it will be the sum of N_STAR and N_BINARY.
 	newstarid = clus.N_STAR+clus.N_BINARY;
+    //Maia: Initialize new star ID variables
+    idblocksize = newstarid/procs; // This way, idblocksize*procs is guaranteed to be strictly equal to or less than newstarid
 
 	if (BH_R_DISRUPT_NB> 0) {
 		diaprintf("R_disrupt in NB-units for all stars, Rdisr=%lg\n", BH_R_DISRUPT_NB);

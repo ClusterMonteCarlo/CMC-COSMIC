@@ -1954,7 +1954,7 @@ void copy_globals_to_locals(long k);
 void print_interaction_status(char status_text[]);
 void print_interaction_error(void);
 long star_get_id_new(void);
-long star_get_merger_id_new(long id1, long id2);
+long star_get_merger_id_new(void);
 double calc_n_local(long k, long p, long N_LIMIT);
 double calc_Ai_local(long k, long kp, long p, double W, long N_LIMIT);
 void calc_encounter_dyns(long k, long kp, double v[4], double vp[4], double w[4], double *W, double *rcm, double vcm[4], gsl_rng *rng, int setY);
