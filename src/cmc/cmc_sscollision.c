@@ -24,7 +24,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 {
 	//int ST_tide; //PDK addition for hrdiag, will eventually make it an input from cmc_stelar_evolution.c
 	long knew;
-	double vs[20], bmax, b, rperi, Eorbnew, acoll, ecoll, ace, ece, anew, enew, efinal, afinal;
+	double kick_info[19][2], bmax, b, rperi, Eorbnew, acoll, ecoll, ace, ece, anew, enew, efinal, afinal;
 	double clight5;
 	double aj, aj_k, aj_kp, tm, tn, tscls[20], lums[10], GB[10], k2;
 	double Einit;
@@ -225,16 +225,22 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
                         copy_globals_to_locals(k);
                         copy_globals_to_locals(kp);
-                        merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+                        merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), kick_info, curr_st);
                                 
                         g_knew = get_global_idx(knew);
                         star_r[g_knew] = rcm;
                         star_m[g_knew] = star[knew].m;
                         star[knew].vr = vcm[3];
                         star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-                        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-                        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-                        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        
+                        for (int sn = 0; sn < 2; sn++) {
+                            if (kick_info[0][sn] > 0.0) {
+                                star[knew].vr += kick_info[8][sn] * 1.0e5 / (units.l/units.t);
+                                vt_add_kick(&(star[knew].vt), kick_info[6][sn], kick_info[7][sn], curr_st);
+                            }
+                        }
+                        //star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);
+                        //vt_add_kick(&(star[knew].vt), kick_info[6][0], kick_info[7][0], curr_st);
                                 
                         star_phi[g_knew] = potential(star_r[g_knew]);
                         set_star_EJ(knew);
@@ -431,16 +437,21 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
                         copy_globals_to_locals(k);
                         copy_globals_to_locals(kp);
-                        merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+                        merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), kick_info, curr_st);
 
                         g_knew = get_global_idx(knew);
                         star_r[g_knew] = rcm;
                         star_m[g_knew] = star[knew].m;
                         star[knew].vr = vcm[3];
                         star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-                        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-                        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-                        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        for (int sn = 0; sn < 2; sn++) {
+                            if (kick_info[0][sn] > 0.0) {
+                                star[knew].vr += kick_info[8][sn] * 1.0e5 / (units.l/units.t);
+                                vt_add_kick(&(star[knew].vt), kick_info[6][sn], kick_info[7][sn], curr_st);
+                            }
+                        }
+                        //star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);
+                        //vt_add_kick(&(star[knew].vt), kick_info[6][0], kick_info[7][0], curr_st);
 
                         star_phi[g_knew] = potential(star_r[g_knew]);
                         set_star_EJ(knew);
@@ -612,16 +623,21 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 
                         copy_globals_to_locals(k);
                         copy_globals_to_locals(kp);
-                        merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+                        merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), kick_info, curr_st);
 
                         g_knew = get_global_idx(knew);
                         star_r[g_knew] = rcm;
                         star_m[g_knew] = star[knew].m;
                         star[knew].vr = vcm[3];
                         star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-                        star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-                        vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-                        //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                        for (int sn = 0; sn < 2; sn++) {
+                            if (kick_info[0][sn] > 0.0) {
+                                star[knew].vr += kick_info[8][sn] * 1.0e5 / (units.l/units.t);
+                                vt_add_kick(&(star[knew].vt), kick_info[6][sn], kick_info[7][sn], curr_st);
+                            }
+                        }
+                        //star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);
+                        //vt_add_kick(&(star[knew].vt), kick_info[6][0], kick_info[7][0], curr_st);
 
                         star_phi[g_knew] = potential(star_r[g_knew]);
                         set_star_EJ(knew);
@@ -836,16 +852,21 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
         //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
         copy_globals_to_locals(k);
         copy_globals_to_locals(kp);
-                merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+                merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), kick_info, curr_st);
 
                 g_knew = get_global_idx(knew);
                 star_r[g_knew] = rcm;
                 star_m[g_knew] = star[knew].m;
                 star[knew].vr = vcm[3];
                 star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-                star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-                vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-                //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                for (int sn = 0; sn < 2; sn++) {
+                    if (kick_info[0][sn] > 0.0) {
+                        star[knew].vr += kick_info[8][sn] * 1.0e5 / (units.l/units.t);
+                        vt_add_kick(&(star[knew].vt), kick_info[6][sn], kick_info[7][sn], curr_st);
+                    }
+                } 
+                //star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);
+                //vt_add_kick(&(star[knew].vt), kick_info[6][0], kick_info[7][0], curr_st);
                 
                 star_phi[g_knew] = potential(star_r[g_knew]);
                 set_star_EJ(knew);
@@ -964,16 +985,21 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                         //MPI: Since we pass the star pointer itself into the merging routine, we need to copy the duplicated array values back into the star element before passing it in.
                          copy_globals_to_locals(k);
                          copy_globals_to_locals(kp);
-                                merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), vs, curr_st);
+                                merge_two_stars(&(star[k]), &(star[kp]), &(star[knew]), kick_info, curr_st);
   
                                 g_knew = get_global_idx(knew);
                                 star_r[g_knew] = rcm;
                                 star_m[g_knew] = star[knew].m;
                                 star[knew].vr = vcm[3];
                                 star[knew].vt = sqrt(sqr(vcm[1])+sqr(vcm[2]));
-                                star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-                                vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-                                //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);         
+                                for (int sn = 0; sn < 2; sn++) {
+                                    if (kick_info[0][sn] > 0.0) {
+                                        star[knew].vr += kick_info[8][sn] * 1.0e5 / (units.l/units.t);
+                                        vt_add_kick(&(star[knew].vt), kick_info[6][sn], kick_info[7][sn], curr_st);
+                                    }
+                                }
+                                //star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);
+                                //vt_add_kick(&(star[knew].vt), kick_info[6][0], kick_info[7][0], curr_st);         
         
                                 star_phi[g_knew] = potential(star_r[g_knew]);
                                 set_star_EJ(knew);
@@ -1111,10 +1137,10 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 * @param star1 pointer to star 1
 * @param star2 pointer to star 2
 * @param merged_star pointer to merged star
-* @param vs ?
+* @param kick_info ?
 * @param s rng state
 */
-void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s) {
+void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double kick_info[19][2], struct rng_t113_state* s) {
 	double tphysf, dtp, age, temp_rad, bseaj[2];
 	//double vsaddl[12], 
 	double tm, tn, tscls[20], lums[10], GB[10], k2, lamb_val;
@@ -1123,9 +1149,11 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
         double TDE_arr[2];
 	fb = 1;
 
-	for(i=0;i<20;i++) {
-	  vs[i] = 0.0;
-	}
+        for(i=0;i<19;i++) {
+            for(j=0;j<2;j++){
+                kick_info[i][j] = 0.0;
+            }
+        }
 
   bse_set_taus113state(*curr_st, 0);
 
@@ -1294,7 +1322,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		      }
 		      //CALL comenv routine...
 		      cmc_bse_comenv(&(tempbinary), units.l, RSUN, zpars, 
-				     vs, &fb);
+				     kick_info, &fb);
 		      dprintf("after ce merge1: tb=%g a=%g m1=%g m2=%g e=%g kw1=%d kw2=%d r1=%g r2=%g\n",tempbinary.bse_tb,tempbinary.a,tempbinary.bse_mass[0],tempbinary.bse_mass[1],tempbinary.e,tempbinary.bse_kw[0],tempbinary.bse_kw[1],tempbinary.bse_radius[0],tempbinary.bse_radius[1]);
 		      ktry++;
 		    }
@@ -1513,16 +1541,19 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 // if msp set merger value to something other than -1.0 then it will trigger possibly a setting of NS particulars, a reset of NS particulars to msp-like values (-2.0), else reset to 'standard' birth properties or magnatar(see Maxim V. Barkov &Serguei S. Komissarov 2011?). Plus, of course we give the NSs kicks etc.
 		    fprintf(stderr, "a ns is born? cmc_sscollision.c\n"); 
 		    fprintf(stderr, "B4: tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", tempbinary.bse_tphys, tphysf, tempbinary.bse_kw[0], tempbinary.bse_kw[1], tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_radius[0], tempbinary.bse_radius[1], tempbinary.bse_lum[0], tempbinary.bse_lum[1], tempbinary.bse_tb);
+
 		    bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 				      &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 				      &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
 				      &(tempbinary.bse_ospin[0]), &(tempbinary.bse_B_0[0]), &(tempbinary.bse_bacc[0]), &(tempbinary.bse_tacc[0]),
 				      &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
 				      &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-				      &(tempbinary.bse_tb), &(tempbinary.e), vs, &(tempbinary.bse_bhspin[0]));
+				      &(tempbinary.bse_tb), &(tempbinary.e), kick_info, &(tempbinary.bse_bhspin[0]));
+
+
 		    fprintf(stderr, "a ns is born? cmc_sscollision.c\n"); 
 		    fprintf(stderr, "RftR: tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g\n", tempbinary.bse_tphys, tphysf, tempbinary.bse_kw[0], tempbinary.bse_kw[1], tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_radius[0], tempbinary.bse_radius[1], tempbinary.bse_lum[0], tempbinary.bse_lum[1], tempbinary.bse_tb);
-		    fprintf(stderr, "vk_y=%g should be>0...\n", vs[2]);
+		    fprintf(stderr, "vk_y=%g should be>0...\n", kick_info[7][0]);
 		  } else if (icase <= 100 && (tempbinary.bse_kw[0]==14 || tempbinary.bse_kw[1]==14)){
 		    bse_set_merger(BSE_SIGMA);
 		    fprintf(stderr, "BH merge=265.0\n");
@@ -1533,15 +1564,19 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 		    tempbinary.bse_tb = 0.0;
 		    dtp = 0.0;
 		    fprintf(stderr, "B4: tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g bhspin1=%g bhspin2=%g\n", tempbinary.bse_tphys, tphysf, tempbinary.bse_kw[0], tempbinary.bse_kw[1], tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_radius[0], tempbinary.bse_radius[1], tempbinary.bse_lum[0], tempbinary.bse_lum[1], tempbinary.bse_tb, tempbinary.bse_bhspin[0],tempbinary.bse_bhspin[1]);
+
+
 		    bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]), 
 				      &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]), 
 				      &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]), 
 				      &(tempbinary.bse_ospin[0]), &(tempbinary.bse_B_0[0]), &(tempbinary.bse_bacc[0]), &(tempbinary.bse_tacc[0]), 
 				      &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]), 
 				      &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars, 
-				      &(tempbinary.bse_tb), &(tempbinary.e), vs, &(tempbinary.bse_bhspin[0]));
+				      &(tempbinary.bse_tb), &(tempbinary.e), kick_info, &(tempbinary.bse_bhspin[0]));
+
+
 		    fprintf(stderr, "RftR: tphys=%g tphysf=%g kstar1=%d kstar2=%d m1=%g m2=%g r1=%g r2=%g l1=%g l2=%g tb=%g bhspin1=%g bhspin2=%g\n", tempbinary.bse_tphys, tphysf, tempbinary.bse_kw[0], tempbinary.bse_kw[1], tempbinary.bse_mass[0], tempbinary.bse_mass[1], tempbinary.bse_radius[0], tempbinary.bse_radius[1], tempbinary.bse_lum[0], tempbinary.bse_lum[1], tempbinary.bse_tb,tempbinary.bse_bhspin[0],tempbinary.bse_bhspin[1]);
-		    fprintf(stderr, "BH vk_y=%g should be>0...\n", vs[2]);
+		    fprintf(stderr, "BH vk_y=%g should be>0...\n", kick_info[7][0]);
 		  }
                   
                   // CSY: Add NS-MS TDE compact object mass change and spin up of NS
@@ -1569,13 +1604,17 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
                         }
                         bse_set_merger(-2.0);
                         dtp=0.0; //not sure if I need this
+
+                    
                         bse_evolv2_safely(&(tempbinary.bse_kw[0]), &(tempbinary.bse_mass0[0]), &(tempbinary.bse_mass[0]),
                                     &(tempbinary.bse_radius[0]), &(tempbinary.bse_lum[0]), &(tempbinary.bse_massc[0]),
                                     &(tempbinary.bse_radc[0]), &(tempbinary.bse_menv[0]), &(tempbinary.bse_renv[0]),
                                     &(tempbinary.bse_ospin[0]), &(tempbinary.bse_B_0[0]), &(tempbinary.bse_bacc[0]), &(tempbinary.bse_tacc[0]),
                                     &(tempbinary.bse_epoch[0]), &(tempbinary.bse_tms[0]),
                                     &(tempbinary.bse_tphys), &tphysf, &dtp, &METALLICITY, zpars,
-                                    &(tempbinary.bse_tb), &(tempbinary.e), vs, &(tempbinary.bse_bhspin[0]));
+                                    &(tempbinary.bse_tb), &(tempbinary.e), kick_info, &(tempbinary.bse_bhspin[0]));
+
+
                   }
 
 		  bse_set_merger(-1.0);
@@ -1699,9 +1738,11 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 	    vs[1] = 0.0;
 	    vs[2] = 0.0; */
 	  /* */
-	        for (i=0; i<=11; i++) {
-	                vs[i] = 0.0;
-                }		
+                for(i=0;i<19;i++) {
+                    for(j=0;j<2;j++){
+                        kick_info[i][j] = 0.0;
+                    }
+                } 
 		if (STAR_AGING_SCHEME==1){
 			merged_star->lifetime = pow(10.0,9.921)*pow(merged_star->m*units.mstar/MSUN,-3.6648)*YEAR*log(GAMMA*clus.N_STAR)/units.t/clus.N_STAR;
 			age = (merged_star->lifetime/merged_star->m)*
@@ -1729,8 +1770,10 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *
 /*		vs[0] = 0.0;
 		vs[1] = 0.0;
 		vs[2] = 0.0; */
-                for (i=0; i<=11; i++) {
-                   vs[i] = 0.0;
+                for(i=0;i<19;i++) {
+                    for(j=0;j<2;j++){
+                        kick_info[i][j] = 0.0;
+                    } 
                 }
 	}
   *curr_st= bse_get_taus113state();

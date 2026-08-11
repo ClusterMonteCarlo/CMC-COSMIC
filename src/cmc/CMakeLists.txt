@@ -18,6 +18,11 @@ include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
 include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
 
 # MPI compile options
+# -Wl,--no-relax is GNU ld only; Apple ld rejects it. Needed on some HPC Linux builds
+# to avoid long-range branch errors when linking large Fortran objects.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    SET( CMAKE_C_FLAGS "-Wl,--no-relax" )
+endif()
 target_compile_options(cmc PRIVATE ${MPI_COMPILE_FLAGS})
 
 # link library to executable

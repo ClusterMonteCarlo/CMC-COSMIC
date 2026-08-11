@@ -1675,7 +1675,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	fb_obj_t threeobjs[3];
 	char string1[1024], string2[1024];
 	star_t tempstar, tempstar2;
-	double vs[20], VK0;
+	double kick_info[19][2], VK0;
 	double energy_from_outer=0.;
 
 	/* perform actions that are specific to the type of binary interaction */
@@ -1954,12 +1954,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 														  hier.obj[i]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->e_500M[nmerged]);
                             star[knew].se_k = 14;
                         } else{
-                            merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), vs, curr_st);
-                                                    /* Owing to merger only useful vs's are v[1-3] */
-                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);
-
-                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
-                            //star[knew].vt += sqrt(vs[1]*vs[1]+vs[2]*vs[2]) * 1.0e5 / (units.l/units.t);
+                            merge_two_stars(&(star[knew]), &tempstar, &(star[knew]), kick_info, curr_st);
+                            star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);
+                            vt_add_kick(&(star[knew].vt),kick_info[6][0],kick_info[7][0], curr_st);
                         }
 						nmerged++;
 					}
@@ -1967,9 +1964,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					
 					//star[knew].id = star_get_id_new();
 
-					if(vs[1]!=0.0){
-						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
-						dprintf("dynhelp_merge1: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,star[knew].id);
+					if(kick_info[6][0]!=0.0){
+						VK0 = sqrt(sqr(kick_info[6][0])+sqr(kick_info[7][0])+sqr(kick_info[8][0]));
+						dprintf("dynhelp_merge1: TT=%.18g kick_info[0][0]=%.18g kick_info[6][0]=%.18g kick_info[7][0]=%.18g kick_info[8][0]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,kick_info[0][0],kick_info[6][0],kick_info[7][0],kick_info[8][0],VK0,star[knew].id);
 					}
 					
 					/* log collision */
@@ -2052,17 +2049,17 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 														  hier.obj[i]->obj[0]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[0]->e_500M[nmerged]);
                             tempstar.se_k = 14;
                         } else{
-                            merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+                            merge_two_stars(&tempstar, &tempstar2, &tempstar, kick_info, curr_st);
                             /* FIXME: really we're supposed to add the kick to each binary
                                member separately, then calculate the systemic kick to the binary,
                                but hopefully this doesn't happen too much. */
                                                     /* The kick routine within /bse_wrap/bse/ correctly updates COM velocity... */
-                            if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+                            if (sqrt(kick_info[6][0]*kick_info[6][0]+kick_info[7][0]*kick_info[7][0]+kick_info[8][0]*kick_info[8][0]) != 0.0) {
                                 wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
-                                    sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
+                                    sqrt(kick_info[6][0]*kick_info[6][0]+kick_info[7][0]*kick_info[7][0]+kick_info[8][0]*kick_info[8][0]));
                             }
-                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                            star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);					       
+                            vt_add_kick(&(star[knew].vt),kick_info[6][0],kick_info[7][0], curr_st);
                         }
 						nmerged++;
 					}
@@ -2074,10 +2071,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					//binary[star[knew].binind].id1 = star_get_id_new();
 					binary[star[knew].binind].id1 = tempstar.id;
 
-					if(vs[1]!=0.0){
-						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
-						dprintf("dynhelp_merge2: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id1);
-					}
+                                        if(kick_info[6][0]!=0.0){
+                                                VK0 = sqrt(sqr(kick_info[6][0])+sqr(kick_info[7][0])+sqr(kick_info[8][0]));
+                                                dprintf("dynhelp_merge2: TT=%.18g kick_info[0][0]=%.18g kick_info[6][0]=%.18g kick_info[7][0]=%.18g kick_info[8][0]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,kick_info[0][0],kick_info[6][0],kick_info[7][0],kick_info[8][0],VK0,binary[star[knew].binind].id1);
+                                        }
 					
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
@@ -2141,16 +2138,16 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 														  hier.obj[i]->obj[1]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[1]->e_500M[nmerged]);
                             tempstar.se_k = 14;
                         } else{
-                            merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+                            merge_two_stars(&tempstar, &tempstar2, &tempstar, kick_info, curr_st);
                             /* FIXME: really we're supposed to add the kick to each binary
                                member separately, then calculate the systemic kick to the binary,
                                but hopefully this doesn't happen too much. */
-                            if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+                            if (sqrt(kick_info[6][0]*kick_info[6][0]+kick_info[7][0]*kick_info[7][0]+kick_info[8][0]*kick_info[8][0]) != 0.0) {
                                 wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
-                                    sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
+                                    sqrt(kick_info[6][0]*kick_info[6][0]+kick_info[7][0]*kick_info[7][0]+kick_info[8][0]*kick_info[8][0]));
                             }
-                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                            star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);					       
+                            vt_add_kick(&(star[knew].vt),kick_info[6][0],kick_info[7][0], curr_st);
                         }
 						nmerged++;
 					}
@@ -2162,10 +2159,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					//binary[star[knew].binind].id2 = star_get_id_new();
 					binary[star[knew].binind].id2 = tempstar.id;
 
-					if(vs[1]!=0.0){
-						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
-						dprintf("dynhelp_merge3: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id2);
-					}
+                                        if(kick_info[6][0]!=0.0){
+                                                VK0 = sqrt(sqr(kick_info[6][0])+sqr(kick_info[7][0])+sqr(kick_info[8][0]));
+                                                dprintf("dynhelp_merge3: TT=%.18g kick_info[0][0]=%.18g kick_info[6][0]=%.18g kick_info[7][0]=%.18g kick_info[8][0]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,kick_info[0][0],kick_info[6][0],kick_info[7][0],kick_info[8][0],VK0,binary[star[knew].binind].id2);
+                                        }
 
 					/* log collision */
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
@@ -2283,21 +2280,21 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 														  hier.obj[i]->obj[sid]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[sid]->e_500M[nmerged]);
                             star[knewp].se_k = 14;
                         } else{
-                            merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), vs, curr_st);
-                            star[knewp].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
+                            merge_two_stars(&(star[knewp]), &tempstar, &(star[knewp]), kick_info, curr_st);
+                            star[knewp].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);					       
 
                             //MPI2: parallel rng mimicking removed due to parent function which takes k as parameter?
-                            vt_add_kick(&(star[knewp].vt),vs[1],vs[2], curr_st);
+                            vt_add_kick(&(star[knewp].vt),kick_info[6][0],kick_info[7][0], curr_st);
                         }
 						nmerged++;
 					}
 					set_star_EJ(knewp);
 
 					//star[knewp].id = star_get_id_new();
-					if(vs[1]!=0.0){
-						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
-						dprintf("dynhelp_merge4: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,star[knewp].id);
-					}
+					if(kick_info[6][0]!=0.0){
+                                                VK0 = sqrt(sqr(kick_info[6][0])+sqr(kick_info[7][0])+sqr(kick_info[8][0]));
+                                                dprintf("dynhelp_merge4: TT=%.18g kick_info[0][0]=%.18g kick_info[6][0]=%.18g kick_info[7][0]=%.18g kick_info[8][0]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,kick_info[0][0],kick_info[6][0],kick_info[7][0],kick_info[8][0],VK0,star[knewp].id);
+                                        }
 					/* log collision */
                     star_m[get_global_idx(knewp)] = star[knewp].m;
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
@@ -2375,16 +2372,16 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 														  hier.obj[i]->obj[bid]->obj[0]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[0]->e_500M[nmerged]);
                             tempstar.se_k = 14;
                         } else{
-                            merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+                            merge_two_stars(&tempstar, &tempstar2, &tempstar, kick_info, curr_st);
                             /* FIXME: really we're supposed to add the kick to each binary
                                member separately, then calculate the systemic kick to the binary,
                                but hopefully this doesn't happen too much. */
-                            if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+                            if (sqrt(kick_info[6][0]*kick_info[6][0]+kick_info[7][0]*kick_info[7][0]+kick_info[8][0]*kick_info[8][0]) != 0.0) {
                                 wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
-                                    sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
+                                    sqrt(kick_info[6][0]*kick_info[6][0]+kick_info[7][0]*kick_info[7][0]+kick_info[8][0]*kick_info[8][0]));
                             }
-                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                            star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);					       
+                            vt_add_kick(&(star[knew].vt),kick_info[6][0],kick_info[7][0], curr_st);
                         }
 						nmerged++;
 					}
@@ -2395,10 +2392,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 					binary[star[knew].binind].id1 = tempstar.id;
 					//binary[star[knew].binind].id1 = star_get_id_new();
-					if(vs[1]!=0.0){
-						VK0 = sqrt(sqr(vs[1])+sqr(vs[2])+sqr(vs[3]));
-						dprintf("dynhelp_merge5: TT=%.18g vs[0]=%.18g vs[1]=%.18g vs[2]=%.18g vs[3]=%.18g vs[4]=%.18g vs[5]=%.18g vs[6]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,vs[0],vs[1],vs[2],vs[3],vs[4],vs[5],vs[6],VK0,binary[star[knew].binind].id1);
-					}
+					if(kick_info[6][0]!=0.0){
+                                                VK0 = sqrt(sqr(kick_info[6][0])+sqr(kick_info[7][0])+sqr(kick_info[8][0]));
+                                                dprintf("dynhelp_merge5: TT=%.18g kick_info[0][0]=%.18g kick_info[6][0]=%.18g kick_info[7][0]=%.18g kick_info[8][0]=%.18g VK0=%.18g star_id=%ld\n",TotalTime,kick_info[0][0],kick_info[6][0],kick_info[7][0],kick_info[8][0],VK0,binary[star[knew].binind].id1);
+                                        }
 					/* log collision */
 					
 					binint_log_collision(isbinbin?"binary-binary":"binary-single",
@@ -2459,16 +2456,16 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 														  hier.obj[i]->obj[bid]->obj[1]->a_500M[nmerged]*cmc_units.l*units.l / FB_CONST_AU ,hier.obj[i]->obj[bid]->obj[1]->e_500M[nmerged]);
                             tempstar.se_k = 14;
                         } else{
-                            merge_two_stars(&tempstar, &tempstar2, &tempstar, vs, curr_st);
+                            merge_two_stars(&tempstar, &tempstar2, &tempstar, kick_info, curr_st);
                             /* FIXME: really we're supposed to add the kick to each binary
                                member separately, then calculate the systemic kick to the binary,
                                but hopefully this doesn't happen too much. */
-                            if (sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]) != 0.0) {
+                            if (sqrt(kick_info[6][0]*kick_info[6][0]+kick_info[7][0]*kick_info[7][0]+kick_info[8][0]*kick_info[8][0]) != 0.0) {
                                 wprintf("Adding merger-induced kick of %g km/s to binary CoM instead of binary member!\n",
-                                    sqrt(vs[1]*vs[1]+vs[2]*vs[2]+vs[3]*vs[3]));
+                                    sqrt(kick_info[6][0]*kick_info[6][0]+kick_info[7][0]*kick_info[7][0]+kick_info[8][0]*kick_info[8][0]));
                             }
-                            star[knew].vr += vs[3] * 1.0e5 / (units.l/units.t);					       
-                            vt_add_kick(&(star[knew].vt),vs[1],vs[2], curr_st);
+                            star[knew].vr += kick_info[8][0] * 1.0e5 / (units.l/units.t);					       
+                            vt_add_kick(&(star[knew].vt),kick_info[6][0],kick_info[7][0], curr_st);
                         }
 						nmerged++;
 					}

@@ -1164,6 +1164,43 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_STELLAR_EVOLUTION);
 				sscanf(values, "%ld", &STELLAR_EVOLUTION);
 				parsed.STELLAR_EVOLUTION = 1;
+			} else if (strcmp(parameter_name, "STELLAR_ENGINE") == 0) {
+				PRINT_PARSED(PARAMDOC_STELLAR_ENGINE);
+				if (strncmp(values, "sse", 3) == 0) {
+					STELLAR_ENGINE = 0;
+				} else if (strncmp(values, "metisse", 7) == 0) {
+					STELLAR_ENGINE = 1;
+				} else {
+					eprintf("ERROR: STELLAR_ENGINE must be 'sse' or 'metisse' (got '%s').\n", values);
+					exit_cleanly(-1, __FUNCTION__);
+				}
+				parsed.STELLAR_ENGINE = 1;
+			} else if (strcmp(parameter_name, "PATH_TO_TRACKS") == 0) {
+				PRINT_PARSED(PARAMDOC_PATH_TO_TRACKS);
+				if (strncmp(values, "None", 4) == 0) {
+					PATH_TO_TRACKS = NULL;
+				} else {
+					PATH_TO_TRACKS = (char *) malloc(sizeof(char) * 256);
+					strncpy(PATH_TO_TRACKS, values, 256);
+				}
+				parsed.PATH_TO_TRACKS = 1;
+			} else if (strcmp(parameter_name, "PATH_TO_HE_TRACKS") == 0) {
+				PRINT_PARSED(PARAMDOC_PATH_TO_HE_TRACKS);
+				if (strncmp(values, "None", 4) == 0) {
+					PATH_TO_HE_TRACKS = NULL;
+				} else {
+					PATH_TO_HE_TRACKS = (char *) malloc(sizeof(char) * 256);
+					strncpy(PATH_TO_HE_TRACKS, values, 256);
+				}
+				parsed.PATH_TO_HE_TRACKS = 1;
+			} else if (strcmp(parameter_name, "Z_MATCH_LIMIT") == 0) {
+				PRINT_PARSED(PARAMDOC_Z_MATCH_LIMIT);
+				sscanf(values, "%lf", &Z_MATCH_LIMIT);
+				parsed.Z_MATCH_LIMIT = 1;
+			} else if (strcmp(parameter_name, "METISSE_VERBOSE") == 0) {
+				PRINT_PARSED(PARAMDOC_METISSE_VERBOSE);
+				sscanf(values, "%ld", &METISSE_VERBOSE);
+				parsed.METISSE_VERBOSE = 1;
 			} else if (strcmp(parameter_name, "TIDAL_TREATMENT") == 0) {
 				PRINT_PARSED(PARAMDOC_TIDAL_TREATMENT);
 				sscanf(values, "%ld", &TIDAL_TREATMENT);
@@ -1670,6 +1707,11 @@ if(myid==0) {
 	CHECK_PARSED(TIDALLY_STRIP_STARS, 1, PARAMDOC_TIDALLY_STRIP_STARS);
 	CHECK_PARSED(THETASEMAX, 1.412, PARAMDOC_THETASEMAX);
 	CHECK_PARSED(STELLAR_EVOLUTION, 0, PARAMDOC_STELLAR_EVOLUTION);
+	CHECK_PARSED(STELLAR_ENGINE, 0, PARAMDOC_STELLAR_ENGINE);
+	CHECK_PARSED(PATH_TO_TRACKS, NULL, PARAMDOC_PATH_TO_TRACKS);
+	CHECK_PARSED(PATH_TO_HE_TRACKS, NULL, PARAMDOC_PATH_TO_HE_TRACKS);
+	CHECK_PARSED(Z_MATCH_LIMIT, 1.0e-2, PARAMDOC_Z_MATCH_LIMIT);
+	CHECK_PARSED(METISSE_VERBOSE, 0, PARAMDOC_METISSE_VERBOSE);
     CHECK_PARSED(WRITE_STELLAR_INFO, 0, PARAMDOC_WRITE_STELLAR_INFO);
     CHECK_PARSED(WRITE_BH_INFO, 0, PARAMDOC_WRITE_BH_INFO);
     CHECK_PARSED(WRITE_RWALK_INFO, 0, PARAMDOC_WRITE_RWALK_INFO);
@@ -2527,7 +2569,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 
 		// print header
 		if (WRITE_BH_INFO)
-			pararootfprintf(newbhfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:bh mass #8:bh_spin #9:birth-kick(km/s) #10-25:vsarray\n");
+			pararootfprintf(newbhfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:bh mass #8:bh_spin #9:birth-kick(km/s) #10-28:kick_info array\n");
 			pararootfprintf(bhmergerfile,"#1:time #2:type #3.r #4:id1 #5:id2 #6:m1[MSUN] #7:m2[MSUN] #8:spin1 #9:spin2 #10:final_id #11:m_final[MSUN] #12:spin_final #13:vkick[km/s] #14:v_esc[km/s] #15:a_final[AU] #16:e_final #17:a_50M[AU] #18:e_50 #19:a_100M[AU] #20:e_100M #21:a_500M[AU] #22:e_500M\n");
 			pararootfprintf(bhmergerfile,"#NOTE: if repeated mergers occur in fewbody (binary-single or binary-binary), the initial masses will be wrong; check collision.log\n");
 	//"#1:tcount  #2:TotalTime  #3:bh  #4:bh_single  #5:bh_binary  #6:bh-bh  #7:bh-ns  #8:bh-wd  #9:bh-star  #10:bh-nonbh  #11:fb_bh  #12:bh_tot  #13:bh_single_tot  #14:bh_binary_tot  #15:bh-bh_tot  #16:bh-ns_tot  #17:bh-wd_tot  #18:bh-star_tot  #19:bh-nonbh_tot  #20:fb_bh_tot\n");
@@ -2538,7 +2580,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
                 /* print header */ //CSY
                 if (WRITE_MOREPULSAR_INFO) {
                		pararootfprintf(morepulsarfile,"#1:tcount #2:TotalTime #3:binflag #4:id0 #5:id1 #6:m0[MSUN] #7:m1[MSUN] #8:B0[G] #9:B1[G] #10:P0[sec] #11:P1[sec] #12:startype0 #13:startype1 #14:a[AU] #15:ecc #16:radrol0 #17:radrol1 #18:dmdt0 #19:dmdt1 #20:r #21:vr #22:vt #23:bacc0 #24:bacc1 #25:tacc0 #26:tacc1 #27:formation0 #28:formation1\n");
-                        pararootfprintf(newnsfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:ns_mass #8:ns_formation #9:birth-kick(km/s) #10:kprev\n");
+                        pararootfprintf(newnsfile,"#1:time #2:r #3.binary? #4:ID #5:zams_m #6:m_progenitor #7:ns_mass #8:ns_formation #9:birth-kick(km/s) #10:kprev #11-29:kick_info array\n");
                 }
                 /* print header */ //Elena
                 if (WRITE_MORECOLL_INFO)

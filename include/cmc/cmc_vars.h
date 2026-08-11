@@ -59,6 +59,12 @@ _EXTERN_ struct CenMa cenma;
 _EXTERN_ char MASS_PC[1000], MASS_BINS[1000], INPUT_FILE[1000], BSE_QCRIT_ARRAY[1000], BSE_NATAL_KICK_ARRAY[1000], BSE_FPRIMC_ARRAY[1000];
 _EXTERN_ char *TT_FILE;
 _EXTERN_ char *DF_FILE;
+/* COSMIC 4.0 stellar-evolution engine selection (SSE vs. METISSE) */
+_EXTERN_ long STELLAR_ENGINE;       /* 0 = SSE, 1 = METISSE */
+_EXTERN_ char *PATH_TO_TRACKS;      /* METISSE main-sequence track dir */
+_EXTERN_ char *PATH_TO_HE_TRACKS;   /* METISSE helium-star track dir */
+_EXTERN_ double Z_MATCH_LIMIT;      /* METISSE metallicity match tolerance */
+_EXTERN_ long METISSE_VERBOSE;      /* 0 = off, 1 = on */
 _EXTERN_ char *SNAPSHOT_WINDOWS;
 _EXTERN_ char *SNAPSHOT_WINDOW_UNITS;
 _EXTERN_ int MASS_PC_BH_INCLUDE;

@@ -860,6 +860,31 @@ typedef struct{
 * @brief stellar evolution (0=off, 1=on)
 */
 	int STELLAR_EVOLUTION;
+#define PARAMDOC_STELLAR_ENGINE "stellar evolution engine (0=SSE Hurley fits, 1=METISSE interpolated tracks)"
+/**
+* @brief stellar evolution engine (0=SSE, 1=METISSE)
+*/
+	int STELLAR_ENGINE;
+#define PARAMDOC_PATH_TO_TRACKS "directory of main-sequence METISSE tracks (required when STELLAR_ENGINE=metisse)"
+/**
+* @brief directory of main-sequence METISSE tracks
+*/
+	int PATH_TO_TRACKS;
+#define PARAMDOC_PATH_TO_HE_TRACKS "directory of helium-star METISSE tracks (required when STELLAR_ENGINE=metisse)"
+/**
+* @brief directory of helium-star METISSE tracks
+*/
+	int PATH_TO_HE_TRACKS;
+#define PARAMDOC_Z_MATCH_LIMIT "max relative metallicity tolerance for matching METISSE tracks (default 1e-2)"
+/**
+* @brief METISSE metallicity match tolerance
+*/
+	int Z_MATCH_LIMIT;
+#define PARAMDOC_METISSE_VERBOSE "enable verbose METISSE diagnostic output (0=off, 1=on)"
+/**
+* @brief METISSE verbose output flag
+*/
+	int METISSE_VERBOSE;
 #define PARAMDOC_TIDAL_TREATMENT "choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)"
 /**
 * @brief choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)
@@ -1898,7 +1923,7 @@ void stellar_evolution_init(void);
 void restart_stellar_evolution(void);
 void do_stellar_evolution(gsl_rng *rng);
 void write_stellar_data(void);
-void handle_bse_outcome(long k, long kb, double *vs, double tphysf, int kprev0, int kprev1, double *VKO);
+void handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf, int kprev0, int kprev1, double VKO[2]);
 void cp_binmemb_to_star(long k, int kbi, long knew);
 void cp_SEvars_to_newstar(long oldk, int kbi, long knew);
 void cp_m_to_newstar(long oldk, int kbi, long knew);
@@ -1909,7 +1934,7 @@ void cp_starSEvars_to_binmember(star_t instar, long binindex, int bid);
 void cp_starmass_to_binmember(star_t instar, long binindex, int bid);
 void integrate_a_e_peters_eqn(long binidx);
 double r_of_m(double M);
-void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double *vs, int *fb);
+void cmc_bse_comenv(binary_t *tempbinary, double cmc_l_unit, double RbloodySUN, double *zpars, double kick_info[19][2], int *fb);
 
 /* Fewbody stuff */
 void destroy_obj(long i);
@@ -1965,7 +1990,7 @@ void zero_star(long j);
 void zero_binary(long j);
 
 void sscollision_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng);
-void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double *vs, struct rng_t113_state* s);
+void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double kick_info[19][2], struct rng_t113_state* s);
 double coll_CE(double Mrg, double Mint, double Mwd, double Rrg, double vinf);
 double coll_CE_twogiant(double M1, double M2, double Mc1, double Mc2, double R1, double R2, double vinf);
 void NS_TDE_spinup(double Mns, double Mstar, double Rstar, double Kstar, double B_old, double ospin_old, double TDE_arr[]);
