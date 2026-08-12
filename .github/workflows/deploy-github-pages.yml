@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+  pull_request:
 
 jobs:
   build:
@@ -37,7 +38,7 @@ jobs:
         touch docs/sphinx/build/html/.nojekyll
 
     - name: Deploy to GitHub Pages
-      if: success()
+      if: success() && github.event_name == 'push'
       uses: crazy-max/ghaction-github-pages@v4
       with:
         target_branch: gh-pages
