@@ -1639,7 +1639,7 @@ void binint_log_morecollision(const char interaction_type[], long remnant_id,
 	if(rho1_env >= 1.0e19){rho1_env = -100;}
 	if(rhor_env >= 1.0e19){rhor_env = -100;}
 
-	parafprintf(morecollfile, "%g %s %ld %ld %g %g %g %g %g %g %g %g %ld %ld %ld %g %g %g %g %d %g %g\n",
+	parafprintf(morecollfile, "%g %s %ld %ld %g %g %g %g %g %g %g %g %ld %ld %ld %g %g %g %g %ld %g %g\n",
 				    TotalTime, interaction_type, obj.id[0], obj.id[1], 
 				    binint_get_mass(k, kp, obj.id[0]) * units.mstar / FB_CONST_MSUN, 
 				    binint_get_mass(k, kp, obj.id[1]) * units.mstar / FB_CONST_MSUN,
