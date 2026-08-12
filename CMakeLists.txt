@@ -22,9 +22,15 @@ project(CMC VERSION 1.0.0 LANGUAGES C Fortran)
 # defaults to C23 (gnu23), which turns those long-standing idioms into hard
 # errors (e.g. conflicting decls of inv_comm_create); GCC 14 defaulted to gnu17.
 # Pin gnu17 so a compiler default-standard bump doesn't break the build.
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS ON)
+# Deliberately NOT via CMAKE_C_STANDARD: CMake accepts the value 17 only from
+# 3.21 and knows C17 flags only for some compilers (GCC >= 8, not classic icc),
+# so the property form breaks configure on older cluster toolchains. Compilers
+# that don't accept -std=gnu17 default to gnu11 or older, which builds fine.
+include(CheckCCompilerFlag)
+check_c_compiler_flag(-std=gnu17 C_COMPILER_HAS_STD_GNU17)
+if(C_COMPILER_HAS_STD_GNU17 AND NOT CMAKE_C_FLAGS MATCHES "-std=")
+  string(APPEND CMAKE_C_FLAGS " -std=gnu17")
+endif()
 
 # On macOS, force Xcode's ar/ranlib (BSD-format archives) over any Homebrew
 # binutils GNU ar that may be earlier in PATH. Apple's ld rejects SysV-format
