@@ -62,11 +62,13 @@ SNAPSHOT FLAGS
 
                                  **SNAPSHOT_CORE_COLLAPSE = 0**
 
-``SNAPSHOT_WINDOWS``             write snapshots every X units of time into the <output>.window.snapshots.h5 file.  Format is:
+``SNAPSHOT_WINDOWS``             write snapshots every X units of time into the <output>.window.snapshots.h5 file. Note that ``SNAPSHOTTING`` must be on. Format is:
 
                                      start_w0,step_w0,end_w0:start_w1,step_w1,stop_w1 ... etc
 
-                                 **SNAPSHOT_WINDOWS = "0,0.1,13.8"** (will write one snapshot to snapshot.h5 every 100 Myr)
+                                     ``NULL`` : no window snapshots
+
+                                 **SNAPSHOT_WINDOWS = 0,0.1,13.8** (will write one snapshot every 100 Myr)
  
 ``SNAPSHOT_WINDOW_UNITS``        What units should the snapshot windows be in.  Options are:
 
@@ -118,7 +120,16 @@ DYNAMICS FLAGS
 --------------
 
 ==================================  =====================================================
-``BINBIN``                          Turn on Fewbody encounters between two binaries 
+``PERTURB``                         Master switch for stellar dynamics. With this off, CMC is essentially a population synthesis code (that occasionally loses mass to tidal stripping).
+
+                                     ``0`` : Off
+
+                                     ``1`` : On
+
+                                    **PERTURB = 1**
+
+
+``BINBIN``                          Turn on Fewbody encounters between two binaries
 
                                      ``0`` : Off
 
@@ -149,7 +160,7 @@ DYNAMICS FLAGS
                                     **BH_RADIUS_MULTIPLYER = 5**
 
 
-``THREEBODYBINARIES``               Turn on three-body binary formation semi-analytic treatment from Morscher et al., 2013
+``THREEBODYBINARIES``               Turn on three-body binary formation semi-analytic treatment from `Morscher et al., 2013 <https://ui.adsabs.harvard.edu/abs/2013ApJ...763L..15M/abstract>`_
 
                                      ``0`` : Off
 
@@ -183,6 +194,11 @@ DYNAMICS FLAGS
                                     **BINARY_BREAKING_MIN = 0**
 
 
+``BINARY_DISTANCE_BREAKING``        If ``BINARY_BREAKING_MIN = 0``, what fraction of the interparticle seperation to break binaries at
+
+                                    **BINARY_DISTANCE_BREAKING = 0.1** (10%)
+
+
 ``SS_COLLISION``                    enable collisions between stars. NOTE: this activates collisions between single stars AND during fewbody encounters
 
                                      ``0`` : Off
@@ -192,7 +208,7 @@ DYNAMICS FLAGS
                                     **SS_COLLISION = 1**
  
  
-``TIDAL_CAPTURE``                   Enable collisions bewteen giants and other individual stars.  Can lead to binary formation. Uses cross sections from Lombardi et al., 2006.  Only activated if SS_COLLISION = 1
+``TIDAL_CAPTURE``                   Enable collisions bewteen giants and other individual stars.  Can lead to binary formation. Uses cross sections from `Lombardi et al., 2006 <https://ui.adsabs.harvard.edu/abs/2006ApJ...640..441L/abstract>`_.  Only activated if SS_COLLISION = 1
 
                                      ``0`` : Off
 
@@ -201,21 +217,30 @@ DYNAMICS FLAGS
                                     **TIDAL_CAPTURE = 0**
        
        
-``TC_POLYTROPE``                    Enable tidal captures during single-single interactions. Uses polytropic stellar models for stars. Uses cross sections from Kim & Lee 1999. Only activated if SS_COLLISION = 1
-           
+``TC_POLYTROPE``                    Enable tidal captures during single-single interactions. Uses polytropic stellar models for stars. Uses cross sections from `Kim & Lee, 1999 <https://ui.adsabs.harvard.edu/abs/1999A%26A...347..123K/abstract>`_. Only activated if SS_COLLISION = 1. Do not turn this on at the same time as ``TC_FACTOR``.
+
                                     ``0`` : Off
-                                    
+
                                     ``1`` : On
-                                    
+
                                     **TC_POLYTROPE = 0**
-                                    
-                                    
+
+
+``TC_FACTOR``                       Allow for tidal capture during single-single collisions, where the capture cross section is a multiple of the pericenter. Do not turn this on at the same time as ``TC_POLYTROPE``.
+
+                                    ``1`` : Off
+
+                                    ``>1`` : Set the multiplier on the pericenter
+
+                                    **TC_FACTOR = 1**
+
+
 ``COLL_FACTOR``                     Set the multiplying factor for direct collisions. Default = 1.0 (sticky sphere)
                                     
                                     **COLL_FACTOR = 1.0**
  
  
-``CO_TDE``                          Treat BH(NS,WD)--MS TDEs in TDE vs direct collision limit.  Follows prescription in Kremer et al., 2020
+``CO_TDE``                          Treat BH(NS,WD)--MS TDEs in TDE vs direct collision limit.  Follows prescription in `Kremer et al., 2020 <https://ui.adsabs.harvard.edu/abs/2020ApJS..247...48K/abstract>`_
 
 
                                      ``0`` : collision
@@ -224,7 +249,7 @@ DYNAMICS FLAGS
 
                                     **CO_TDE = 0**
 
-``WD_TC``                           Turn on wd-wd tidal capture in single-single and fewbody (0=off,>0=on). Follows prescription in Ye et al. 2024
+``WD_TC``                           Turn on wd-wd tidal capture in single-single and fewbody (0=off,>0=on). Follows prescription in `Ye et al., 2024 <https://ui.adsabs.harvard.edu/abs/2024ApJ...961...98Y/abstract>`_
 
                                     ``0`` : Off
 
@@ -232,8 +257,7 @@ DYNAMICS FLAGS
 
                                     **WD_TC = 0**
 
-``TDE_SPINUP``                      Turn on NS-MS star TDE mass accretion onto the NS (1=on, 0=off). Follows prescription i
-n Ye et al. 2024
+``TDE_SPINUP``                      Turn on NS-MS star TDE mass accretion onto the NS (1=on, 0=off). Follows prescription in `Ye et al., 2024 <https://ui.adsabs.harvard.edu/abs/2024ApJ...961...98Y/abstract>`_
 
                                     **TDE_SPINUP = 0**
 
@@ -254,7 +278,15 @@ INPUT OPTIONS
                                  **INPUT_FILE = input.hdf5**
 
 
+``OVERWRITE_RVIR``               Override the virial radius from the input file with a new value, in pc. A value of 0 keeps the input file's Rvir.
+
+                                 **OVERWRITE_RVIR = 0**
+
 ===============================  =====================================================
+
+.. warning::
+
+    ``OVERWRITE_RVIR`` only rescales the cluster's physical units; it does **not** rescale the stellar radii (which were set when the initial conditions were generated). Shrinking the virial radius can therefore place the components of close binaries inside one another's stellar radii, putting them in a merger state during the first timestep, which breaks the code. If you need to shrink the cluster significantly, regenerate the initial conditions with the desired virial radius.
 
 
 TIDAL FIELD OPTIONS
@@ -487,7 +519,7 @@ Parameters for controlling the CMC run.
 
                                  **DT_HARD_BINARIES = 0**              
 
-``HARD_BINARY_KT ``              The minimum binary binding energy (in units of kT) for a binary to be considered 'hard' for the time step calculation.
+``HARD_BINARY_KT``               The minimum binary binding energy (in units of kT) for a binary to be considered 'hard' for the time step calculation.
 
                                  **HARD_BINARY_KT = 0.7**
 
@@ -514,28 +546,43 @@ Parameters for controlling the CMC run.
     the type of parameter or flag.
 
 
+=======================  =====================================================
+``STELLAR_EVOLUTION``    Master switch for stellar evolution in CMC. When off, all stars are treated as point masses (and most ``[bse]`` parameters below are ignored).
+
+                             ``0`` : Off
+
+                             ``1`` : On
+
+                         **STELLAR_EVOLUTION = 1**
+=======================  =====================================================
+
+
 SAMPLING FLAGS
 --------------
 
-=======================  =====================================================
-``pts1``                 determines the timesteps chosen in each evolution phase as
-                         decimal fractions of the time taken in that phase for
-                         Main Sequence (MS) stars
+==========================  =====================================================
+``pts1``                    determines the timesteps chosen in each evolution phase as
+                            decimal fractions of the time taken in that phase for
+                            Main Sequence (MS) stars
 
-                         **pts1 = 0.001** following `Bannerjee+2019 <https://ui.adsabs.harvard.edu/abs/2019arXiv190207718B/abstract>`_
+                            **pts1 = 0.05** (use 0.001 for massive stars, following `Bannerjee+2019 <https://ui.adsabs.harvard.edu/abs/2019arXiv190207718B/abstract>`_, by setting ``pts1_highmass_cutoff``)
 
-``pts2``                 determines the timesteps chosen in each evolution phase as
-                         decimal fractions of the time taken in that phase for
-                         Giant Branch (GB, CHeB, AGB, HeGB) stars
+``pts2``                    determines the timesteps chosen in each evolution phase as
+                            decimal fractions of the time taken in that phase for
+                            Giant Branch (GB, CHeB, AGB, HeGB) stars
 
-                         **pts2 = 0.01** following `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
+                            **pts2 = 0.01** following `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
 
-``pts3``                 determines the timesteps chosen in each evolution phase as
-                         decimal fractions of the time taken in that phase for
-                         HG, HeMS stars
+``pts3``                    determines the timesteps chosen in each evolution phase as
+                            decimal fractions of the time taken in that phase for
+                            HG, HeMS stars
 
-                         **pts3 = 0.02** following `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
-=======================  =====================================================
+                            **pts3 = 0.02** following `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
+
+``pts1_highmass_cutoff``    Above this ZAMS mass (in solar masses), reduce ``pts1`` by a factor of 10 for MS and HeMS stars.
+
+                            **pts1_highmass_cutoff = 5**
+==========================  =====================================================
 
 
 
@@ -568,13 +615,13 @@ WIND FLAGS
 
                          **windflag = 3**
 
-``eddlimflag``           Limits the mass-loss rate of low-metallicity stars near
+``eddlimflag``           Adjusts the dependence of mass loss on metallicity for stars near
                          the Eddington limit
                          (see `Grafener+2011 <https://ui.adsabs.harvard.edu/abs/2011A%26A...535A..56G/abstract>`_, `Giacobbo+2018 <https://ui.adsabs.harvard.edu/abs/2018MNRAS.474.2959G/abstract>`_).
 
-                            ``0`` : does not apply Eddington limit
+                            ``0`` : does not adjust metallicity dependence for stars near the Eddington limit
 
-                            ``1`` : applies Eddington limit
+                            ``1`` : adjusts metallicity dependence for stars near the Eddington limit as in `Giacobbo+2018 <https://ui.adsabs.harvard.edu/abs/2018MNRAS.474.2959G/abstract>`_
 
                          **eddlimflag = 0**
 
@@ -595,7 +642,7 @@ WIND FLAGS
 
                          **bwind = 0, inactive for single**
 
-``hewind``               Helium star mass loss parameter: 10\ :sup:`-13` *hewind* L\ :sup:`2/3` gives He star mass-loss. Equivalent to 1 - :math:`{\mu}` in the last equation on `page 19 of SSE <http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2000MNRAS.315..543H&link_type=ARTICLE&db_key=AST&high=#page=19>`_.
+``hewind``               Helium star mass loss parameter: 10\ :sup:`-13` *hewind* L\ :sup:`2/3` gives He star mass-loss. Equivalent to 1 - :math:`{\mu}` in the last equation on `page 19 of SSE <http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2000MNRAS.315..543H&link_type=ARTICLE&db_key=AST&high=#page=19>`_. Only applies when ``windflag = 0``; otherwise it is overwritten by the chosen wind prescription.
 
                          **hewind = 0.5**
 
@@ -671,7 +718,7 @@ common envelope occurs regardless of the choices below:
                             ``1`` : Uses the `de Kool 1990 <https://ui.adsabs.harvard.edu/abs/1990ApJ...358..189D/abstract>`_
                             model
 
-                         **ceflag = 0**
+                         **ceflag = 1**
 
 ``cekickflag``           Selects which mass and separation values to use when
                          a supernova occurs during the CE and a kick
@@ -878,7 +925,7 @@ KICK FLAGS
                             instability SN and sets the maximum mass of the allowed
                             remnant
 
-                         **pisn = 45.0**
+                         **pisn = -2**
 
 ``bhsigmafrac``          Sets a fractional modification which scales down *sigma*
                          for BHs. This works in addition to whatever is chosen for
@@ -939,7 +986,7 @@ REMNANT MASS FLAGS
 
                             ``4`` : delayed prescription from `Fryer+2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...749...91F/abstract>`_
 
-                     **remnantflag = 3**
+                     **remnantflag = 4**
 
 ``mxns``             Sets the boundary between the maximum NS mass
                      and the minimum BH mass
@@ -959,8 +1006,8 @@ REMNANT MASS FLAGS
                      **rembar_massloss = 0.5**
 
 ``wd_mass_lim``      Determines if the maximum white dwarf mass is limited to
-                     the chandraekhar mass during mic. 1 implements the limit.
-                     
+                     the chandrasekhar mass during merger induced collapse. 1 implements the limit, while 0 does not.
+
                      **wd_mass_lim = 1**
 ===================  =====================================================
 
@@ -1042,7 +1089,9 @@ MASS TRANSFER FLAGS
                             `Hurley+2002 <https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract>`_
 
                             ``-2`` : donor mass loss rate is calculated following
-                             `Claeys+2014 <https://ui.adsabs.harvard.edu/abs/2014A%26A...563A..83C/abstract>`_
+                            `Claeys+2014 <https://ui.adsabs.harvard.edu/abs/2014A%26A...563A..83C/abstract>`_
+
+                         **don_lim = -1**
 
 ``acc_lim``              Limits the amount of mass accreted during Roche overflow
 
@@ -1060,6 +1109,8 @@ MASS TRANSFER FLAGS
 
                             ``>=0`` : sets overall accretion fraction of donor mass
                             as in Belcyznski+2008 w/ acc_lim = 0.5
+
+                         **acc_lim = -1**
 
 =======================  =====================================================
 
@@ -1152,7 +1203,7 @@ PULSAR FLAGS
                             ``negative values`` : sets k in Myr from Equation 8 to
                             -1 * *bconst*
 
-                         **bconst = -3000**
+                         **bconst = 3000**
 
 ``ck``                   Sets the magnetic field decay time-scale for pulsars following
                          Section 3 of `Kiel+2008 <https://academic.oup.com/mnras/article/388/1/393/1013977>`_.
@@ -1160,7 +1211,7 @@ PULSAR FLAGS
                             ``negative values`` : sets :math:`{\tau}`\ :sub:`b` in Myr
                             from Equation 2 to  -1 * *ck*
 
-                         **ck = -1000**
+                         **ck = 1000**
 =======================  =====================================================
 
 MIXING VARIABLES
@@ -1192,7 +1243,11 @@ MIXING VARIABLES
 
 ``bhms_coll_flag``       If set to 1 then if BH+star collision and if Mstar > Mbh, do not destroy the star
 
-                         **default = 0**
+                            ``0`` : Off
+
+                            ``1`` : On
+
+                         **bhms_coll_flag = 0**
 
 =======================  =====================================================
 
@@ -1225,9 +1280,12 @@ MISC FLAGS
                          **ST_cr = 1**
 
 ``rtmsflag``             Activates different prescriptions for stellar radius at main sequence turnoff
-                            ``0`` : uses the SSE rtms for M < 200 Msun and extrapolation for z < 0.0008 and M > 200 Msun.
-                            ``1`` : interpolates the rtms from Boost tracks (Szécsi et al. (2022)). Extrapolation is used after M > 575 Msun
-                            ``2`` : uses the best-fit power law for rtms vs stellar mass from BPASSv2.2 tracks (Stanway & Eldridge (2018)).
-                                    Rtms data for BPASS tracks is available only till 300 Msun and beyond that we follow the fitted power law profile.
-                         **rtmsflag = 0**                         
+
+                            ``0`` : uses the SSE rtms for M < 200 Msun and extrapolation for z < 0.0008 and M > 200 Msun
+
+                            ``1`` : interpolates the rtms from Boost tracks (Szécsi et al. 2022). Extrapolation is used after M > 575 Msun
+
+                            ``2`` : uses the best-fit power law for rtms vs stellar mass from BPASSv2.2 tracks (Stanway & Eldridge 2018). Rtms data for BPASS tracks is available only up to 300 Msun and beyond that we follow the fitted power law profile
+
+                         **rtmsflag = 0**
 =======================  =====================================================

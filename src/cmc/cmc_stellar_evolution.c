@@ -1119,6 +1119,7 @@ void handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf,
     /* secondary star gone */
     knew = create_star(k, 1);
     cp_binmemb_to_star(k, 0, knew);
+    star[knew].id = star_get_merger_id_new();
 
 	/*If this was a BBH merger, special things must be done*/
 	if(kprev0 == 14 && kprev1 == 14)
@@ -1185,6 +1186,7 @@ void handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf,
     //dprintf("binary disrupted via BSE with second star intact\n");
     knew = create_star(k, 1);
     cp_binmemb_to_star(k, 1, knew);
+    star[knew].id = star_get_merger_id_new();
 
 	/*If this was a BBH merger, special things must be done*/
 	if(kprev0 == 14 && kprev1 == 14)
