@@ -1812,7 +1812,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 		parafprintf(binintfile, "outcome: error\n");
 		print_interaction_error();
 	} else {
-		parafprintf(binintfile, "outcome: %s (%s)\n", fb_sprint_hier(hier, string1), fb_sprint_hier_hr(hier, string2));
+		parafprintf(binintfile, "outcome: t_final=%g %s (%s)\n", t, fb_sprint_hier(hier, string1), fb_sprint_hier_hr(hier, string2));
 		
 		for (i=0; i<hier.nobj; i++) {
 			/* logging */
