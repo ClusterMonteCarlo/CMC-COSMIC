@@ -1205,6 +1205,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_TIDAL_TREATMENT);
 				sscanf(values, "%ld", &TIDAL_TREATMENT);
 				parsed.TIDAL_TREATMENT = 1;
+			} else if (strcmp(parameter_name, "RTIDAL_COEFF") == 0) {
+			    PRINT_PARSED(PARAMDOC_RTIDAL_COEFF);
+			    sscanf(values, "%lf", &RTIDAL_COEFF);
+			    parsed.RTIDAL_COEFF = 1;
 			} else if (strcmp(parameter_name, "SS_COLLISION") == 0) {
 				PRINT_PARSED(PARAMDOC_SS_COLLISION);
 				sscanf(values, "%ld", &SS_COLLISION);
@@ -1722,6 +1726,7 @@ if(myid==0) {
 	CHECK_PARSED(CALCULATE10, 0, PARAMDOC_CALCULATE10);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
+	CHECK_PARSED(RTIDAL_COEFF, 1.0, PARAMDOC_RTIDAL_COEFF);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
 	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
 	CHECK_PARSED(CO_TDE, 0, PARAMDOC_CO_TDE);
@@ -2386,7 +2391,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			fprintf(centmass_file, "# Information on central black hole [code units unless otherwise noted]\n");
 			fprintf(centmass_file, "#1:t #2:cenma.m #3:Dt #4:rho_core #5:Etotal.tot #6:Etotal.K #7:Etotal.P\n");
 			fprintf(dynfile, "# Dynamical information [code units]\n");
-			fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN) #28.N_c_nb\n");
+			fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse[Msun] #27.DMrejuv[Msun] #28.N_c_nb\n");
 			//Sourav:printing properties at 10 lagrange radii
 			if (CALCULATE10){
 				fprintf(lagrad10file, "#Dynamical information at 0.1 lagrange radius\n");
@@ -2538,7 +2543,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 //MPI: Headers are written out only by the root node.
    // print header
     if(RESTART_TCOUNT <= 0){
-		pararootfprintf(escfile, "#1:tcount #2:t #3:m[MSUN] #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 #58:bhspin #59:bhspin1 #60:bhspin2 #61:ospin #62:B #63:formation\n");
+		pararootfprintf(escfile, "#1:tcount #2:t #3:m #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0 #17:m1 #18:id0 #19:id1 #20:a #21:e #22:st #23:st0 #24:st1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 #58:bhspin #59:bhspin0 #60:bhspin1 #61:ospin #62:B #63:formation #64:Ecrit\n");
 	   // print header
 		pararootfprintf(triplefile, "#1:time #2:min0 #3:min1 #4:mout #5:Rin0 #6:Rin1 #7:Rout #8:ain #9:aout #10:ein #11:eout #12:ktypein0 #13:ktypein1 #14:ktypeout #15:Tlk_quad #16:Tlk_oct#17:eps_oct #18:T_GR #19:eps_GR\n");
 	   // print header

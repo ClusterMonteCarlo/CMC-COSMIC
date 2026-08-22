@@ -301,13 +301,19 @@ TIDAL FIELD OPTIONS
 
                                  **TIDALLY_STRIP_STARS = 1**
 
-``TIDAL_TREATMENT``              choose the tidal cut-off criteria for removing stars
+``TIDAL_TREATMENT``              choose the tidal cut-off criterion for removing stars
 
-                                     ``0`` : radial criterion, :math:`{r_{\rm apo} > r_{t}}`
+                                     ``0`` : Apocenter/radial criterion, :math:`r_{\rm apo}' {\rm RTIDAL\_COEFF} \cdot r_t`.
 
-                                     ``1`` : Energy criterion, :math:`{\alpha E > \Phi(r_t)}`, following `Giersz et al. (2008) <https://ui.adsabs.harvard.edu/abs/2008MNRAS.388..429G/abstract>`_
+                                     ``1`` : Giersz alpha energy criterion, :math:`E > \alpha \phi(r_t)`, following `Giersz et al. (2008) <https://ui.adsabs.harvard.edu/abs/2008MNRAS.388..429G/abstract>`_. 
+
+                                     ``2`` : Raw/unmodified energy criterion, :math:`E > 1.5 \phi(r_t)`, predating the Giersz alpha energy criterion and retested in `Weatherford et al. (2024) <https://ui.adsabs.harvard.edu/abs/2024ApJ...967...42W/abstract>`_.
 
                                  **TIDAL_TREATMENT = 0**
+
+``RTIDAL_COEFF``                 A coefficient to multiply :math:`r_t` by when using the apocenter criterion for escape, :math:`r_{\rm apo} > {\rm RTIDAL\_COEFF} \cdot r_t`
+
+                                 **RTIDAL_COEFF = 1**
 
 ``USE_TT_FILE``                  whether to take the tidal boundary from a file (i.e. a tidal tensor)
 
