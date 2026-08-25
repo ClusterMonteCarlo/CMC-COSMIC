@@ -68,44 +68,34 @@ void print_results(void){
 /**
 * @brief prints a 2D snapshot
 */
-void print_2Dsnapshot(void)
-{
-	long i, j;
-	j=0;
-	char outfile[100];
-        char tablename[20];
+void print_2Dsnapshot(void) {
+	long i, j=0;
+	char outfile[100], tablename[50];
 	if (SNAPSHOTTING) {
-		// open file for 2D snapshot 
-	        sprintf(outfile, "%s.snapshots.h5", outprefix);
-	        sprintf(tablename, "%d(t=%.8g)", snap_num,TotalTime);
+		/* open file for 2D snapshot */
+	    sprintf(outfile, "%s.snapshots.h5", outprefix);
+	    sprintf(tablename, "%ld(tcount=%ld,t=%.8g)", snap_num, tcount, TotalTime);
 		write_snapshot(outfile, 0, tablename);
-		// global counter for snapshot output file 
+		/* global counter for snapshot output file */
 		snap_num++;
 	}
 }
-
 
 /**
 * @brief prints BH snapshots
 */
 void print_bh_snapshot(void) {
 	long i, j;
-	char outfile[100];
-        char tablename[20];
-	
+	char outfile[100], tablename[50];
 	if (BH_SNAPSHOTTING) {
 		/* open file for BH snapshot */
-	
-	        sprintf(outfile, "%s.blackhole.snapshots.h5", outprefix);
-	        sprintf(tablename, "t=%.8g", TotalTime);
+	    sprintf(outfile, "%s.blackhole.snapshots.h5", outprefix);
+	    sprintf(tablename, "tcount=%ld,t=%.8g", tcount, TotalTime);
 		write_snapshot(outfile, 1, tablename);
-
 		/* global counter for snapshot output file */
 		bh_snap_num++;
 	}
 }
-
-
 
 /**
 * @brief Calculates some quantities required for output and prints out log files. These are mostly files that need data only from the root node to be written out.
@@ -1205,6 +1195,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_TIDAL_TREATMENT);
 				sscanf(values, "%ld", &TIDAL_TREATMENT);
 				parsed.TIDAL_TREATMENT = 1;
+			} else if (strcmp(parameter_name, "RTIDAL_COEFF") == 0) {
+			    PRINT_PARSED(PARAMDOC_RTIDAL_COEFF);
+			    sscanf(values, "%lf", &RTIDAL_COEFF);
+			    parsed.RTIDAL_COEFF = 1;
 			} else if (strcmp(parameter_name, "SS_COLLISION") == 0) {
 				PRINT_PARSED(PARAMDOC_SS_COLLISION);
 				sscanf(values, "%ld", &SS_COLLISION);
@@ -1391,13 +1385,13 @@ if(myid==0) {
 				sscanf(values, "%i", &WRITE_PULSAR_INFO);
 				parsed.WRITE_PULSAR_INFO = 1;
 			} else if (strcmp(parameter_name, "WRITE_MOREPULSAR_INFO")== 0) {
-                                PRINT_PARSED(PARAMDOC_WRITE_MOREPULSAR_INFO);
-                                sscanf(values, "%i", &WRITE_MOREPULSAR_INFO);
-                                parsed.WRITE_MOREPULSAR_INFO = 1;
-                        } else if (strcmp(parameter_name, "WRITE_MORECOLL_INFO")== 0) {
-                                PRINT_PARSED(PARAMDOC_WRITE_MORECOLL_INFO);
-                                sscanf(values, "%i", &WRITE_MORECOLL_INFO);
-                                parsed.WRITE_MORECOLL_INFO = 1;
+                PRINT_PARSED(PARAMDOC_WRITE_MOREPULSAR_INFO);
+                sscanf(values, "%i", &WRITE_MOREPULSAR_INFO);
+                parsed.WRITE_MOREPULSAR_INFO = 1;
+            } else if (strcmp(parameter_name, "WRITE_MORECOLL_INFO")== 0) {
+                PRINT_PARSED(PARAMDOC_WRITE_MORECOLL_INFO);
+                sscanf(values, "%i", &WRITE_MORECOLL_INFO);
+                parsed.WRITE_MORECOLL_INFO = 1;
 			} else if (strcmp(parameter_name, "CALCULATE10")== 0) {
 				PRINT_PARSED(PARAMDOC_CALCULATE10);
 				sscanf(values, "%i", &CALCULATE10);
@@ -1722,16 +1716,17 @@ if(myid==0) {
 	CHECK_PARSED(CALCULATE10, 0, PARAMDOC_CALCULATE10);
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
+	CHECK_PARSED(RTIDAL_COEFF, 1.0, PARAMDOC_RTIDAL_COEFF);
 	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
 	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
 	CHECK_PARSED(CO_TDE, 0, PARAMDOC_CO_TDE);
-        CHECK_PARSED(WD_TC, 0, PARAMDOC_WD_TC);
-        CHECK_PARSED(TDE_SPINUP, 0, PARAMDOC_TDE_SPINUP);
-        CHECK_PARSED(S_TDE, 0.2, PARAMDOC_S_TDE);
+    CHECK_PARSED(WD_TC, 0, PARAMDOC_WD_TC);
+    CHECK_PARSED(TDE_SPINUP, 0, PARAMDOC_TDE_SPINUP);
+    CHECK_PARSED(S_TDE, 0.2, PARAMDOC_S_TDE);
 	CHECK_PARSED(BH_CAPTURE, 0, PARAMDOC_BH_CAPTURE);
-        CHECK_PARSED(TC_POLYTROPE, 0, PARAMDOC_TC_POLYTROPE);
-        CHECK_PARSED(TC_FACTOR, 1.0, PARAMDOC_TC_FACTOR);
-        CHECK_PARSED(COLL_FACTOR, 1.0, PARAMDOC_COLL_FACTOR);
+    CHECK_PARSED(TC_POLYTROPE, 0, PARAMDOC_TC_POLYTROPE);
+    CHECK_PARSED(TC_FACTOR, 1.0, PARAMDOC_TC_FACTOR);
+    CHECK_PARSED(COLL_FACTOR, 1.0, PARAMDOC_COLL_FACTOR);
 	/*Sourav: new parameter*/
 	CHECK_PARSED(STAR_AGING_SCHEME, 0, PARAMDOC_STAR_AGING_SCHEME);
 	CHECK_PARSED(SAMPLESIZE, 1024, PARAMDOC_SAMPLESIZE);
@@ -2538,7 +2533,12 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 //MPI: Headers are written out only by the root node.
    // print header
     if(RESTART_TCOUNT <= 0){
-		pararootfprintf(escfile, "#1:tcount #2:t #3:m[MSUN] #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 $53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 #58:bhspin #59:bhspin1 #60:bhspin2 #61:ospin #62:B #63:formation\n");
+		pararootfprintf(escfile,"#1:tcount #2:t #3:r #4:vr #5:vt #6:E #7:J #8:r_peri #9:r_apo #10:Rtidal "
+		                        "#11:phi_zero #12:phi_tidal #13:Ecrit #14:id0 #15:id1 #16:st0 #17:st1 #18:m0 #19:m1 #20:a "
+		                        "#21:e #22:eta #23:rad0 #24:rad1 #25:lum0 #26:lum1 #27:massc0 #28:massc1 #29:menv0 #30:menv1 "
+		                        "#31:radc0 #32:radc1 #33:renv0 #34:renv1 #35:radrol0 #36:radrol1 #37:tms0 #38:tms1 #39:dmdt0 #40:dmdt1 "
+		                        "#41:bacc0 #42:bacc1 #43:tacc0 #44:tacc1 #45:mass0_0 #46:mass0_1 #47:ospin0 #48:ospin1 #49:B0 #50:B1 "
+		                        "#51:epoch0 #52:epoch1 $53:formation0 #54:formation1 #55:bhspin0 #56:bhspin1\n");
 	   // print header
 		pararootfprintf(triplefile, "#1:time #2:min0 #3:min1 #4:mout #5:Rin0 #6:Rin1 #7:Rout #8:ain #9:aout #10:ein #11:eout #12:ktypein0 #13:ktypein1 #14:ktypeout #15:Tlk_quad #16:Tlk_oct#17:eps_oct #18:T_GR #19:eps_GR\n");
 	   // print header
@@ -2894,83 +2894,78 @@ char *sprint_bin_dyn(long k, char string[MAX_STRING_LENGTH])
 * @param param_string ?
 */
 void parse_snapshot_windows(char *param_string) {
-  char *cur_window, *intern_window=NULL, *intern_param=NULL;
-  char *cur_wstring, *cur_pstring;
-  int j;
+    char *cur_window, *intern_window=NULL, *intern_param=NULL;
+    char *cur_wstring, *cur_pstring;
+    int j;
 
-  if (param_string==NULL) {
-    return;
-  }
-  snapshot_window_count= 0;
-  snapshot_windows= NULL;
-  cur_wstring= param_string;
-  while ((cur_window = strtok_r(cur_wstring,":", &intern_window))!= NULL) {
-    snapshot_window_count++;
-    snapshot_windows = (double *) realloc(snapshot_windows, 3*snapshot_window_count*sizeof(double));
-    cur_wstring= NULL;
-    for (j=0, cur_pstring=cur_window; j< 3; j++, cur_pstring=NULL) {
-      char *wparam;
-      int cur_wpidx;
-      wparam= strtok_r(cur_pstring, ",", &intern_param);
-      if (wparam==NULL) {
-        eprintf("Error parsing snapshot window list.\n");
-        eprintf("The current window is %s, and the config parameter is %s.\n", 
-            cur_window, param_string);
-        free_arrays();
-        exit(-1);
-      }
-      cur_wpidx= (snapshot_window_count-1)*3+j;
-      sscanf(wparam, "%lf", &(snapshot_windows[cur_wpidx]));
+    if (param_string == NULL) return;
+    
+    snapshot_window_count = 0;
+    snapshot_windows = NULL;
+    cur_wstring = param_string;
+    while ((cur_window = strtok_r(cur_wstring,":",&intern_window)) != NULL) {
+        snapshot_window_count++;
+        snapshot_windows = (double *) realloc(snapshot_windows, 3*snapshot_window_count*sizeof(double));
+        cur_wstring = NULL;
+        for (j=0, cur_pstring=cur_window; j<3; j++, cur_pstring=NULL) {
+            char *wparam;
+            int cur_wpidx;
+            wparam = strtok_r(cur_pstring, ",", &intern_param);
+            if (wparam == NULL) {
+                eprintf("Error parsing snapshot window list.\n");
+                eprintf("The current window is %s, and the config parameter is %s.\n", cur_window, param_string);
+                free_arrays();
+                exit(-1);
+            }
+            cur_wpidx= (snapshot_window_count-1)*3+j;
+            sscanf(wparam, "%lf", &(snapshot_windows[cur_wpidx]));
+        }
     }
-  }
-
-  dprintf("Finished parsing window list.\n");
-  for (j=0; j< snapshot_window_count; j++) {
-    dprintf("Window %i: ", j);
-    dprintf("start %g, step %g, stop %g\n", snapshot_windows[3*j], snapshot_windows[3*j+1], snapshot_windows[3*j+2]);
-  }
-  snapshot_window_counters= (int *) calloc(snapshot_window_count, sizeof(int));
+    
+    dprintf("Finished parsing window list.\n");
+    for (j=0; j< snapshot_window_count; j++) {
+        dprintf("Window %i: ", j);
+        dprintf("start %g, step %g, stop %g\n", snapshot_windows[3*j], snapshot_windows[3*j+1], snapshot_windows[3*j+2]);
+    }
+    snapshot_window_counters = (int *) calloc(snapshot_window_count, sizeof(int));
 }
 
 /**
 * @brief ?
 */
 void print_snapshot_windows(void) {
-  int i, step_counter;
-  double start, stop, step, total_time;
-  total_time = 0;
+    long i, step_counter;
+    double start, stop, step, total_time=0;
 
-  if (!snapshot_window_count || SNAPSHOT_WINDOWS == NULL) return;
+    if (!snapshot_window_count || SNAPSHOT_WINDOWS == NULL) return;
 
-  if (strncmp(SNAPSHOT_WINDOW_UNITS, "Trel", 5)==0) {
-    total_time= TotalTime;
-  } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Gyr", 4)==0) {
-    total_time= TotalTime * units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / YEAR/1e9;
-  } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Tcr", 4)==0) {
-    total_time= TotalTime * log(GAMMA * clus.N_STAR) / clus.N_STAR;
-  } else {
-    eprintf("Unrecognized unit %s.", SNAPSHOT_WINDOW_UNITS);
-    exit_cleanly(-1, __FUNCTION__);
-  }
-
-  for (i=0; i<snapshot_window_count; i++) {
-    step_counter= snapshot_window_counters[i];
-    start= snapshot_windows[i*3];
-    step=  snapshot_windows[i*3+1];
-    stop=  snapshot_windows[i*3+2];
-    if (total_time>= start+step_counter*step && total_time<=stop) {
-      char outfile[500];
-      char tablename[500];
-      sprintf(outfile, "%s.window.snapshots.h5", outprefix);
-      sprintf(tablename, "%d(t=%.8g%s)",step_counter,total_time,SNAPSHOT_WINDOW_UNITS);
-      write_snapshot(outfile, 0, tablename);
-//		print_denprof_snapshot(outfile);
-
-      snapshot_window_counters[i]++;
-      dprintf("Wrote snapshot #%i for time window %i (%s) at time %g %s.\n", step_counter+1, i+1, outfile, 
-          total_time, SNAPSHOT_WINDOW_UNITS);
+    if (strncmp(SNAPSHOT_WINDOW_UNITS, "Trel", 5)==0) {
+        total_time = TotalTime;
+    } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Gyr", 4)==0) {
+        total_time = TotalTime * units.t * clus.N_STAR / log(GAMMA * clus.N_STAR) / YEAR / 1e9;
+    } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Tcr", 4)==0) {
+        total_time = TotalTime * log(GAMMA * clus.N_STAR) / clus.N_STAR;
+    } else {
+        eprintf("Unrecognized unit %s.", SNAPSHOT_WINDOW_UNITS);
+        exit_cleanly(-1,__FUNCTION__);
     }
-  }
+    
+    for (i=0; i<snapshot_window_count; i++) {
+        step_counter = snapshot_window_counters[i];
+        start = snapshot_windows[i*3  ];
+        step  = snapshot_windows[i*3+1];
+        stop  = snapshot_windows[i*3+2];
+        if (total_time >= start + step_counter * step   &&   total_time <= stop) {
+            char outfile[100], tablename[50];
+            sprintf(outfile, "%s.window.snapshots.h5", outprefix);
+            sprintf(tablename, "%ld(tcount=%ld,t=%.8g%s)", step_counter, tcount, total_time, SNAPSHOT_WINDOW_UNITS);
+            write_snapshot(outfile, 0, tablename);
+            //print_denprof_snapshot(outfile);
+            snapshot_window_counters[i]++;
+            dprintf("Wrote snapshot #%ld for time window %ld (%s) at time %g %s.\n",
+                    step_counter+1, i+1, outfile, total_time, SNAPSHOT_WINDOW_UNITS);
+        }
+    }
 }
 
 /**
@@ -2979,18 +2974,278 @@ void print_snapshot_windows(void) {
 * @return ?
 */
 int valid_snapshot_window_units(void) {
-  int valid;
+    int valid=0;
+    
+    if (strncmp(SNAPSHOT_WINDOW_UNITS, "Trel", 5) == 0) {
+        valid = 1;
+    } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Gyr", 4)) {
+        valid = 1;
+    } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Tcr", 4)) {
+        valid = 1;
+    }
+    return (valid);
+}
 
-  valid=0;
-  if (strncmp(SNAPSHOT_WINDOW_UNITS, "Trel", 5)==0) {
-    valid=1;
-  } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Gyr", 4)) {
-    valid=1;
-  } else if (strncmp(SNAPSHOT_WINDOW_UNITS, "Tcr", 4)) {
-    valid=1;
-  } 
+/* Per-column snapshot output () - Newlin (August 20, 2026)
+ * 
+ * To dramatically reduce read speed (~100x for 1 column, ~3x for whole snapshot), each snapshot is now an HDF5 group holding one 1D dataset per field (column) instead of a single
+ * compound-type table (the old layout). The original layout meant each snapshot had to be loaded entirely even if only a single column was desired. The rows in each column are
+ * also compressed into separate chunks. This speeds up file reading when only some rows are desired, since only some chunks need to be decompressed. The number of rows per chunk
+ * (set by SNAPSHOT_ROW_CHUNK below) barely matters when reading an entire column, but greatly affects read speed when loading only some rows from, especially when those rows are
+ * not consecutive (scattered across chunks). Such partial-column reading is unlikely to be used when analyzing CMC snapshots, but we still consider this below.
+ * 
+ * HDF5 must decompress an entire chunk to access any element of it, caching decompressed chunks up to a default 1024 KB cache size. SNAPSHOT_ROW_CHUNK determines how many chunks
+ * fit in the cache. For example, 2 chunks fit if SNAPSHOT_ROW_CHUNK < 128k for 64-bit data types, or < 256k for 32-bit data types. Ramifications for optimization are as follows:
+ *
+ *  - File size: Optimized by increasing SNAPSHOT_ROW_CHUNK up to the number of rows in the snapshot since this enhances compression. But gains steeply plateau, such that
+                 increasing SNAPSHOT_ROW_CHUNK from ~4K to ~60K reduces the size of highly compressible columns (e.g., those containing many duplicate entries) by only ~1%.
+ *
+ *  - Full-column read speed: Optimized for intermediate values of SNAPSHOT_ROW_CHUNK (~60K). Especially avoid very low values (<1K) to reduce per-chunk lookup overhead. At the level of
+ *                            a ~10% speedup, also avoid very large values of SNAPSHOT_ROW_CHUNK. Since HDF5 chunks are fixed-size, the last chunk gets padded with fill values that
+ *                            then also must be decompressed (albeit very quickly). This adds a slowdown when the remainder of NROWS / SNAPSHOT_ROW_CHUNK is large, which is more
+ *                            likely for high SNAPSHOT_ROW_CHUNK.
+ *
+ *  - Partial-column read speed: Optimized for low values of SNAPSHOT_ROW_CHUNK, especially if very few rows are desired or the rows are highly scattered (non-consecutive).
+ *                               Having a much larger SNAPSHOT_ROW_CHUNK than the desired number of rows will require decompressing a lot of fill values, like described above.
+ *                               If the desired rows are highly scattered, more chunks will need to be read. Since a higher SNAPSHOT_ROW_CHUNK means fewer chunks will fit in the
+ *                               cache, some chunks may have to be decompressed multiple or even many times. Intermediate values of SNAPSHOT_ROW_CHUNK are quite fast except when
+ *                               the desired rows are scattered.
+ */
+#define SNAPSHOT_ROW_CHUNK ((hsize_t) 40000) /* This intermediate value is near optimal under the above considerations for typical CMC snapshots with N ~ 2e5 to 1e6. */
 
-  return (valid);
+#define SNAPSHOT_GZIP_LEVEL 6 /* Level 6 is optimal since it yields 7% smaller files than level 1 while negligibly increasing per-snapshot write time (~4s vs ~2s) compared to the
+                                 total CMC runtime. Level 9 is not really worth it since it yields another 1% file size reduction at the cost of much higher write time (~40s).*/
+#define SNAPSHOT_LAYOUT_NAME "h5-per-column"
+#define SNAPSHOT_LAYOUT_VERSION 1
+
+/**
+* @brief creates or overwrites a scalar attribute
+*
+* @param loc file, group or dataset the attribute hangs off
+* @param name attribute name
+* @param type datatype of value
+* @param value pointer to the value to store
+*/
+static void snap_set_scalar_attr(hid_t loc, const char *name, hid_t type, const void *value) {
+    hid_t attr = -1;
+
+    if (H5Aexists(loc, name) > 0) {
+        attr = H5Aopen(loc, name, H5P_DEFAULT);
+    } else {
+        hid_t space = H5Screate(H5S_SCALAR);
+        attr = H5Acreate2(loc, name, type, space, H5P_DEFAULT, H5P_DEFAULT);
+        H5Sclose(space);
+    }
+
+    if (attr >= 0) {
+        H5Awrite(attr, type, value);
+        H5Aclose(attr);
+    }
+}
+
+/**
+* @brief creates or overwrites a variable-length string attribute
+*
+* @param loc file or group the attribute hangs off
+* @param name attribute name
+* @param value NUL-terminated string to store
+*/
+static void snap_set_string_attr(hid_t loc, const char *name, const char *value) {
+    hid_t type = H5Tcopy(H5T_C_S1);
+
+    H5Tset_size(type, H5T_VARIABLE);
+    /* UTF-8 so h5py hands these back as str rather than bytes */
+    H5Tset_cset(type, H5T_CSET_UTF8);
+    snap_set_scalar_attr(loc, name, type, &value);
+    H5Tclose(type);
+}
+
+/**
+* @brief records the column order on the snapshot group
+*
+* @param group snapshot group
+* @param field_names the NFIELDS column names
+*/
+static void snap_write_field_names(hid_t group, const char **field_names) {
+    hid_t   type, space, attr;
+    hsize_t dims[1];
+
+    dims[0] = NFIELDS;
+    type = H5Tcopy(H5T_C_S1);
+    H5Tset_size(type, H5T_VARIABLE);
+    H5Tset_cset(type, H5T_CSET_UTF8);
+    space = H5Screate_simple(1, dims, NULL);
+
+    attr = H5Acreate2(group, "field_names", type, space, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr >= 0) {
+        H5Awrite(attr, type, field_names);
+        H5Aclose(attr);
+    }
+
+    H5Sclose(space);
+    H5Tclose(type);
+}
+
+/**
+* @brief creates the snapshot group and its empty, extendable columns
+*
+* @param file_id open snapshot file
+* @param group_name snapshot name, e.g. "12(tcount=597,t=0.0534)"
+* @param field_names the NFIELDS column names
+* @param field_type the NFIELDS column datatypes
+* @param compress nonzero to gzip the columns
+*
+* @return 0 on success, -1 on failure
+*/
+static herr_t snap_create_group(hid_t file_id, const char *group_name,
+                                const char **field_names, hid_t *field_type, int compress) {
+    hid_t     group, space, dcpl, dset;
+    hsize_t   dims[1], maxdims[1], chunk[1];
+    long long nrows = 0;
+    long      tcnt;
+    double    tval;
+    int       idx;
+    unsigned int ii;
+
+    group = H5Gcreate2(file_id, group_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    if (group < 0) return -1;
+
+    /* start empty and unlimited: each MPI rank appends its own stars */
+    dims[0]    = 0;
+    maxdims[0] = H5S_UNLIMITED;
+    chunk[0]   = SNAPSHOT_ROW_CHUNK;
+
+    space = H5Screate_simple(1, dims, maxdims);
+    dcpl  = H5Pcreate(H5P_DATASET_CREATE);
+    H5Pset_chunk(dcpl, 1, chunk);
+    if (compress) H5Pset_deflate(dcpl, SNAPSHOT_GZIP_LEVEL);
+
+    for (ii = 0; ii < NFIELDS; ++ii) {
+        dset = H5Dcreate2(group, field_names[ii], field_type[ii], space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+        if (dset < 0) {
+            H5Pclose(dcpl);
+            H5Sclose(space);
+            H5Gclose(group);
+            return -1;
+        }
+        H5Dclose(dset);
+    }
+
+    H5Pclose(dcpl);
+    H5Sclose(space);
+
+    snap_write_field_names(group, field_names);
+    snap_set_scalar_attr(group, "nrows", H5T_NATIVE_LLONG, &nrows);
+
+    /* 2D and window snapshots are named "<n>(tcount=<timestep>,t=<time>)", black hole snapshots just "tcount=<timestep>,t=<time>" */
+    if (sscanf(group_name, "%d(tcount=%ld,t=%lf)", &idx, &tcnt, &tval) == 3) {
+        snap_set_scalar_attr(group, "snapshot_index", H5T_NATIVE_INT, &idx);
+        snap_set_scalar_attr(group, "time", H5T_NATIVE_DOUBLE, &tval);
+    } else if (sscanf(group_name, "tcount=%ld,t=%lf", &tcount, &tval) == 2) {
+        snap_set_scalar_attr(group, "time", H5T_NATIVE_DOUBLE, &tval);
+    }
+
+    H5Gclose(group);
+    return 0;
+}
+
+/**
+* @brief appends records to the end of every column of a snapshot group
+*
+* @param file_id open snapshot file
+* @param group_name snapshot name
+* @param field_names the NFIELDS column names
+* @param field_type the NFIELDS column datatypes
+* @param dst_offset byte offset of each field within a Snapshot
+* @param dst_sizes byte size of each field
+* @param record_size sizeof(Snapshot)
+* @param records array of nrecords Snapshot structs
+* @param nrecords number of records to append
+*
+* @return 0 on success, -1 on failure
+*/
+static herr_t snap_append_records(hid_t file_id, const char *group_name, const char **field_names,
+                                  hid_t *field_type, const size_t *dst_offset, const size_t *dst_sizes,
+                                  size_t record_size, const void *records, hsize_t nrecords) {
+    hid_t     group, dset, fspace, mspace;
+    hsize_t   dims[1], newdims[1], start[1], count[1], jj;
+    long long nrows = 0;
+    size_t    maxsize = 0;
+    char     *buf = NULL;
+    unsigned int ii;
+
+    group = H5Gopen2(file_id, group_name, H5P_DEFAULT);
+    if (group < 0) return -1;
+
+    /* one scratch column, reused for every field */
+    for (ii = 0; ii < NFIELDS; ++ii)
+        if (dst_sizes[ii] > maxsize)
+            maxsize = dst_sizes[ii];
+    
+
+    if (nrecords > 0) {
+        buf = (char *) malloc((size_t) nrecords * maxsize);
+        if (buf == NULL) {
+            H5Gclose(group);
+            return -1;
+        }
+    }
+
+    for (ii = 0; ii < NFIELDS; ++ii) {
+        dset = H5Dopen2(group, field_names[ii], H5P_DEFAULT);
+        if (dset < 0) {
+            free(buf);
+            H5Gclose(group);
+            return -1;
+        }
+
+        fspace = H5Dget_space(dset);
+        H5Sget_simple_extent_dims(fspace, dims, NULL);
+        H5Sclose(fspace);
+
+        newdims[0] = dims[0] + nrecords;
+        if (H5Dset_extent(dset, newdims) < 0) {
+            H5Dclose(dset);
+            free(buf);
+            H5Gclose(group);
+            return -1;
+        }
+
+        if (nrecords > 0) {
+            /* gather this field out of the array of structs */
+            for (jj = 0; jj < nrecords; ++jj) {
+                memcpy(buf + (size_t) jj * dst_sizes[ii],
+                            (const char *) records + (size_t) jj * record_size + dst_offset[ii],
+                            dst_sizes[ii]);
+            }
+
+            fspace   = H5Dget_space(dset);
+            start[0] = dims[0];
+            count[0] = nrecords;
+            H5Sselect_hyperslab(fspace, H5S_SELECT_SET, start, NULL, count, NULL);
+            mspace = H5Screate_simple(1, count, NULL);
+
+            if (H5Dwrite(dset, field_type[ii], mspace, fspace, H5P_DEFAULT, buf) < 0) {
+                H5Sclose(mspace);
+                H5Sclose(fspace);
+                H5Dclose(dset);
+                free(buf);
+                H5Gclose(group);
+                return -1;
+            }
+
+            H5Sclose(mspace);
+            H5Sclose(fspace);
+        }
+
+        nrows = (long long) newdims[0];
+        H5Dclose(dset);
+    }
+
+    free(buf);
+    snap_set_scalar_attr(group, "nrows", H5T_NATIVE_LLONG, &nrows);
+    H5Gclose(group);
+    return 0;
 }
 
 /**
@@ -3000,391 +3255,341 @@ int valid_snapshot_window_units(void) {
 * @param bh_only if bh_only>0 this'll print only BHs.
 */
 void write_snapshot(char *filename, int bh_only, char *tablename) {
-        /* Define field information */
-        const char *field_names[NFIELDS]  =
-        { "id","m_MSUN", "r", "vr", "vt", "E", "J", "binflag", "m0_MSUN", "m1_MSUN", "id0",
-        "id1", "a_AU", "e", "startype", "luminosity_LSUN", "radius_RSUN", "bin_startype0", "bin_startype1",
-        "bin_star_lum0_LSUN", "bin_star_lum1_LSUN", "bin_star_radius0_RSUN", "bin_star_radius1_RSUN",
-        "bin_Eb", "eta", "star_phi", "rad0", "rad1", "tb", "lum0", "lum1", "massc0", "massc1", "radc0",
-        "radc1", "menv0", "menv1", "renv0", "renv1", "tms0", "tms1", "dmdt0", "dmdt1", "radrol0",
-        "radrol1", "ospin0", "ospin1", "B0", "B1", "formation0", "formation1", "bacc0", "bacc1",
-        "tacc0", "tacc1","mass0_0", "mass0_1", "epoch0","epoch1","ospin", "B","formation"};
-        hid_t      field_type[NFIELDS];
-        hid_t      snapfile_hdf5;
-        htri_t          avail;
-        H5Z_filter_t    filter_type;
-        herr_t  status;
-        hsize_t    chunk_size = 10;
-        int        *fill_data = NULL;
-        int        compress  = 1;
-        int 	   ii;
-        unsigned int filter_info;
+    /* Define field information */
+    const char *field_names[NFIELDS] =
+        {"r", "vr", "vt", "E", "J", "phi_r", "id0", "id1", "st0", "st1", "m0", "m1", "a", "e", "eta",
+        "rad0", "rad1", "lum0", "lum1", "massc0", "massc1", "menv0", "menv1", "radc0", "radc1", "renv0", "renv1",
+        "radrol0", "radrol1", "tms0", "tms1", "dmdt0", "dmdt1", "bacc0", "bacc1", "tacc0", "tacc1", "mass0_0", "mass0_1",
+        "ospin0", "ospin1", "B0", "B1", "epoch0", "epoch1", "formation0", "formation1", "bhspin0", "bhspin1"};
+    hid_t        snapfile_hdf5, field_type[NFIELDS];
+    htri_t       avail;
+    H5Z_filter_t filter_type;
+    herr_t       status;
+    int ii, compress = 1;
+    unsigned int filter_info;
 
-	/*
-     * Check if gzip compression is available and can be used for both
-     * compression and decompression.
-     */
-		avail = H5Zfilter_avail(H5Z_FILTER_DEFLATE);
-		if (!avail) {
-			fprintf (stderr, "WARNING: gzip filter not available for HDF5\n");
-			fprintf (stderr, "Snapshots will be VERY large\n");
-            compress = 0;
-		}
-        status = H5Zget_filter_info (H5Z_FILTER_DEFLATE, &filter_info);
-		if ( !(filter_info & H5Z_FILTER_CONFIG_ENCODE_ENABLED) ||
-                    !(filter_info & H5Z_FILTER_CONFIG_DECODE_ENABLED) ) {
-			fprintf (stderr, "WARNING: gzip filter not available for encoding and decoding HDF5 groups\n");
-			fprintf (stderr, "Snapshots will be VERY large\n");
-            compress = 0;
-		}
+    /* Check if gzip compression is available and can be used for both compression and decompression. */
+	avail = H5Zfilter_avail(H5Z_FILTER_DEFLATE);
+	if (!avail) {
+		fprintf (stderr, "WARNING: gzip filter not available for HDF5. Snapshots will be VERY large.\n");
+        compress = 0;
+	}
+    status = H5Zget_filter_info(H5Z_FILTER_DEFLATE, &filter_info);
+	if ( !(filter_info & H5Z_FILTER_CONFIG_ENCODE_ENABLED) || !(filter_info & H5Z_FILTER_CONFIG_DECODE_ENABLED) ) {
+		fprintf (stderr, "WARNING: gzip filter not available for encoding/decoding HDF5 groups. Snapshots will be VERY large.\n");
+        compress = 0;
+	}
 
-        for (ii = 0; ii < NFIELDS; ++ii){
-          field_type[ii] = H5T_NATIVE_DOUBLE;
-        }
-        field_type[0] = H5T_NATIVE_LONG;
-        field_type[7] = H5T_NATIVE_LONG;
-        field_type[10] = H5T_NATIVE_LONG;
-        field_type[11] = H5T_NATIVE_LONG;
-        field_type[14] = H5T_NATIVE_INT;
-        field_type[17] = H5T_NATIVE_INT;
-        field_type[18] = H5T_NATIVE_INT;
-        /* Define an array of Particles */
-        Snapshot p_data[1] = {525,0.17924226,3.0778513,0.19755779,0.27799505,-0.15376079,0.85562742,-100.,-100.,-100.,-100,-100,-100.,-100.,0,0.006673921,0.19985968,-100,-100,-100.,-100.,-100.,-100,-100,-100,-0.211915956684,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,17.161,0,0.0000};
-        /* Calculate the size and the offsets of our struct members in memory */
-        size_t dst_size =  sizeof( Snapshot );
-        size_t dst_offset[NFIELDS] = {
-                                    /*0*/    HOFFSET( Snapshot, id ),
-                                    /*1*/     HOFFSET( Snapshot, m ),
-                                    /*2*/     HOFFSET( Snapshot, r ),
-                                    /*3*/     HOFFSET( Snapshot, vr ),
-                                    /*4*/     HOFFSET( Snapshot, vt ),
-                                    /*5*/     HOFFSET( Snapshot, E ),
-                                    /*6*/     HOFFSET( Snapshot, J ),
-                                    /*7*/     HOFFSET( Snapshot, binflag ),
-                                    /*8*/     HOFFSET( Snapshot, m0 ),
-                                    /*9*/     HOFFSET( Snapshot, m1 ),
-                                    /*10*/    HOFFSET( Snapshot, id0 ),
-                                    /*11*/    HOFFSET( Snapshot, id1 ),
-                                    /*12*/    HOFFSET( Snapshot, a ),
-                                    /*13*/    HOFFSET( Snapshot, e ),
-                                    /*14*/    HOFFSET( Snapshot, startype ),
-                                    /*15*/    HOFFSET( Snapshot, luminosity ),
-                                    /*16*/    HOFFSET( Snapshot, radius ),
-                                    /*17*/    HOFFSET( Snapshot, bin_startype0 ),
-                                    /*18*/    HOFFSET( Snapshot, bin_startype1 ),
-                                    /*19*/    HOFFSET( Snapshot, bin_star_lum0 ),
-                                    /*20*/    HOFFSET( Snapshot, bin_star_lum1 ),
-                                    /*21*/    HOFFSET( Snapshot, bin_star_radius0),
-                                    /*22*/    HOFFSET( Snapshot, bin_star_radius1 ),
-                                    /*23*/    HOFFSET( Snapshot, bin_Eb ),
-                                    /*24*/    HOFFSET( Snapshot, eta ),
-                                    /*25*/    HOFFSET( Snapshot, star_phi ),
-                                    /*26*/    HOFFSET( Snapshot, rad0 ),
-                                    /*27*/    HOFFSET( Snapshot, rad1 ),
-                                    /*28*/    HOFFSET( Snapshot, tb ),
-                                    /*29*/    HOFFSET( Snapshot, lum0 ),
-                                    /*30*/    HOFFSET( Snapshot, lum1 ),
-                                    /*31*/    HOFFSET( Snapshot, massc0 ),
-                                    /*32*/    HOFFSET( Snapshot, massc1 ),
-                                    /*33*/    HOFFSET( Snapshot, radc0 ),
-                                    /*34*/    HOFFSET( Snapshot, radc1 ),
-                                    /*35*/    HOFFSET( Snapshot, menv0 ),
-                                    /*36*/    HOFFSET( Snapshot, menv1 ),
-                                    /*37*/    HOFFSET( Snapshot, renv0 ),
-                                    /*38*/    HOFFSET( Snapshot, renv1 ),
-                                    /*39*/    HOFFSET( Snapshot, tms0 ),
-                                    /*40*/    HOFFSET( Snapshot, tms1 ),
-                                    /*41*/    HOFFSET( Snapshot, dmdt0 ),
-                                    /*42*/    HOFFSET( Snapshot, dmdt1 ),
-                                    /*43*/    HOFFSET( Snapshot, radrol0 ),
-                                    /*44*/    HOFFSET( Snapshot, radrol1 ),
-                                    /*45*/    HOFFSET( Snapshot, ospin0 ),
-                                    /*46*/    HOFFSET( Snapshot, ospin1 ),
-                                    /*47*/    HOFFSET( Snapshot, B0 ),
-                                    /*48*/    HOFFSET( Snapshot, B1 ),
-                                    /*49*/    HOFFSET( Snapshot, formation0 ),
-                                    /*50*/    HOFFSET( Snapshot, formation1 ),
-                                    /*51*/    HOFFSET( Snapshot, bacc0 ),
-                                    /*52*/    HOFFSET( Snapshot, bacc1 ),
-                                    /*53*/    HOFFSET( Snapshot, tacc0 ),
-                                    /*54*/    HOFFSET( Snapshot, tacc1 ),
-                                    /*55*/    HOFFSET( Snapshot, mass0_0 ),
-                                    /*56*/    HOFFSET( Snapshot, mass0_1 ),
-                                    /*57*/    HOFFSET( Snapshot, epoch0 ),
-                                    /*58*/    HOFFSET( Snapshot, epoch1 ),
-                                    /*59*/    HOFFSET( Snapshot, ospin ),
-                                    /*60*/    HOFFSET( Snapshot, B ),
-                                    /*61*/    HOFFSET( Snapshot, formation ),
-                                    };
+    for (ii = 0; ii < NFIELDS; ++ii) {
+        field_type[ii] = H5T_NATIVE_FLOAT;
+    }
+    field_type[ 6] = H5T_NATIVE_INT;
+    field_type[ 7] = H5T_NATIVE_INT;
+    field_type[ 8] = H5T_NATIVE_SCHAR;
+    field_type[ 9] = H5T_NATIVE_SCHAR;
+    field_type[45] = H5T_NATIVE_SCHAR;
+    field_type[46] = H5T_NATIVE_SCHAR;
+    /* Define an array of Particles */
+    Snapshot p_data[1] = {0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0,
+                          0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0};
+    /* Calculate the size and the offsets of our struct members in memory */
+    size_t dst_size =  sizeof( Snapshot );
+    size_t dst_offset[NFIELDS] = {
+        /* 0*/    HOFFSET( Snapshot, r          ),
+        /* 1*/    HOFFSET( Snapshot, vr         ),
+        /* 2*/    HOFFSET( Snapshot, vt         ),
+        /* 3*/    HOFFSET( Snapshot, E          ),
+        /* 4*/    HOFFSET( Snapshot, J          ),
+        /* 5*/    HOFFSET( Snapshot, phi_r      ),
+        /* 6*/    HOFFSET( Snapshot, id0        ),
+        /* 7*/    HOFFSET( Snapshot, id1        ),
+        /* 8*/    HOFFSET( Snapshot, st0        ),
+        /* 9*/    HOFFSET( Snapshot, st1        ),
+        /*10*/    HOFFSET( Snapshot, m0         ),
+        /*11*/    HOFFSET( Snapshot, m1         ),
+        /*12*/    HOFFSET( Snapshot, a          ),
+        /*13*/    HOFFSET( Snapshot, e          ),
+        /*14*/    HOFFSET( Snapshot, eta        ),
+        /*15*/    HOFFSET( Snapshot, rad0       ),
+        /*16*/    HOFFSET( Snapshot, rad1       ),
+        /*17*/    HOFFSET( Snapshot, lum0       ),
+        /*18*/    HOFFSET( Snapshot, lum1       ),
+        /*19*/    HOFFSET( Snapshot, massc0     ),
+        /*20*/    HOFFSET( Snapshot, massc1     ),
+        /*21*/    HOFFSET( Snapshot, menv0      ),
+        /*22*/    HOFFSET( Snapshot, menv1      ),
+        /*23*/    HOFFSET( Snapshot, radc0      ),
+        /*24*/    HOFFSET( Snapshot, radc1      ),
+        /*25*/    HOFFSET( Snapshot, renv0      ),
+        /*26*/    HOFFSET( Snapshot, renv1      ),
+        /*27*/    HOFFSET( Snapshot, radrol0    ),
+        /*28*/    HOFFSET( Snapshot, radrol1    ),
+        /*29*/    HOFFSET( Snapshot, tms0       ),
+        /*30*/    HOFFSET( Snapshot, tms1       ),
+        /*31*/    HOFFSET( Snapshot, dmdt0      ),
+        /*32*/    HOFFSET( Snapshot, dmdt1      ),
+        /*33*/    HOFFSET( Snapshot, bacc0      ),
+        /*34*/    HOFFSET( Snapshot, bacc1      ),
+        /*35*/    HOFFSET( Snapshot, tacc0      ),
+        /*36*/    HOFFSET( Snapshot, tacc1      ),
+        /*37*/    HOFFSET( Snapshot, mass0_0    ),
+        /*38*/    HOFFSET( Snapshot, mass0_1    ),
+        /*39*/    HOFFSET( Snapshot, ospin0     ),
+        /*40*/    HOFFSET( Snapshot, ospin1     ),
+        /*41*/    HOFFSET( Snapshot, B0         ),
+        /*42*/    HOFFSET( Snapshot, B1         ),
+        /*43*/    HOFFSET( Snapshot, epoch0     ),
+        /*44*/    HOFFSET( Snapshot, epoch1     ),
+        /*45*/    HOFFSET( Snapshot, formation0 ),
+        /*46*/    HOFFSET( Snapshot, formation1 ),
+        /*47*/    HOFFSET( Snapshot, bhspin0    ),
+        /*48*/    HOFFSET( Snapshot, bhspin1    )
+    };
 
+    size_t dst_sizes[NFIELDS] = {
+        /* 0*/    sizeof( p_data[0].r          ),
+        /* 1*/    sizeof( p_data[0].vr         ),
+        /* 2*/    sizeof( p_data[0].vt         ),
+        /* 3*/    sizeof( p_data[0].E          ),
+        /* 4*/    sizeof( p_data[0].J          ),
+        /* 5*/    sizeof( p_data[0].phi_r      ),
+        /* 6*/    sizeof( p_data[0].id0        ),
+        /* 7*/    sizeof( p_data[0].id1        ),
+        /* 8*/    sizeof( p_data[0].st0        ),
+        /* 9*/    sizeof( p_data[0].st1        ),
+        /*10*/    sizeof( p_data[0].m0         ),
+        /*11*/    sizeof( p_data[0].m1         ),
+        /*12*/    sizeof( p_data[0].a          ),
+        /*13*/    sizeof( p_data[0].e          ),
+        /*14*/    sizeof( p_data[0].eta        ),
+        /*15*/    sizeof( p_data[0].rad0       ),
+        /*16*/    sizeof( p_data[0].rad1       ),
+        /*17*/    sizeof( p_data[0].lum0       ),
+        /*18*/    sizeof( p_data[0].lum1       ),
+        /*19*/    sizeof( p_data[0].massc0     ),
+        /*20*/    sizeof( p_data[0].massc1     ),
+        /*21*/    sizeof( p_data[0].menv0      ),
+        /*22*/    sizeof( p_data[0].menv1      ),
+        /*23*/    sizeof( p_data[0].radc0      ),
+        /*24*/    sizeof( p_data[0].radc1      ),
+        /*25*/    sizeof( p_data[0].renv0      ),
+        /*26*/    sizeof( p_data[0].renv1      ),
+        /*27*/    sizeof( p_data[0].radrol0    ),
+        /*28*/    sizeof( p_data[0].radrol1    ),
+        /*29*/    sizeof( p_data[0].tms0       ),
+        /*30*/    sizeof( p_data[0].tms1       ),
+        /*31*/    sizeof( p_data[0].dmdt0      ),
+        /*32*/    sizeof( p_data[0].dmdt1      ),
+        /*33*/    sizeof( p_data[0].bacc0      ),
+        /*34*/    sizeof( p_data[0].bacc1      ),
+        /*35*/    sizeof( p_data[0].tacc0      ),
+        /*36*/    sizeof( p_data[0].tacc1      ),
+        /*37*/    sizeof( p_data[0].mass0_0    ),
+        /*38*/    sizeof( p_data[0].mass0_1    ),
+        /*39*/    sizeof( p_data[0].ospin0     ),
+        /*40*/    sizeof( p_data[0].ospin1     ),
+        /*41*/    sizeof( p_data[0].B0         ),
+        /*42*/    sizeof( p_data[0].B1         ),
+        /*43*/    sizeof( p_data[0].epoch0     ),
+        /*44*/    sizeof( p_data[0].epoch1     ),
+        /*45*/    sizeof( p_data[0].formation0 ),
+        /*46*/    sizeof( p_data[0].formation1 ),
+        /*47*/    sizeof( p_data[0].bhspin0    ),
+        /*48*/    sizeof( p_data[0].bhspin1    )
+    };
 
-        size_t dst_sizes[NFIELDS] = {
-                                        sizeof( p_data[0].id ),
-                                        sizeof( p_data[0].m ),
-                                        sizeof( p_data[0].r ),
-                                        sizeof( p_data[0].vr ),
-                                        sizeof( p_data[0].vt ),
-                                        sizeof( p_data[0].E ),
-                                        sizeof( p_data[0].J ),
-                                        sizeof( p_data[0].binflag ),
-                                        sizeof( p_data[0].m0 ),
-                                        sizeof( p_data[0].m1 ),
-                                        sizeof( p_data[0].id0 ),
-                                        sizeof( p_data[0].id1 ),
-                                        sizeof( p_data[0].a ),
-                                        sizeof( p_data[0].e ),
-                                        sizeof( p_data[0].startype ),
-                                        sizeof( p_data[0].luminosity ),
-                                        sizeof( p_data[0].radius ),
-                                        sizeof( p_data[0].bin_startype0 ),
-                                        sizeof( p_data[0].bin_startype1 ),
-                                        sizeof( p_data[0].bin_star_lum0 ),
-                                        sizeof( p_data[0].bin_star_lum1 ),
-                                        sizeof( p_data[0].bin_star_radius0 ),
-                                        sizeof( p_data[0].bin_star_radius1 ),
-                                        sizeof( p_data[0].bin_Eb ),
-                                        sizeof( p_data[0].eta ),
-                                        sizeof( p_data[0].star_phi ),
-                                        sizeof( p_data[0].rad0 ),
-                                        sizeof( p_data[0].rad1 ),
-                                        sizeof( p_data[0].tb ),
-                                        sizeof( p_data[0].lum0 ),
-                                        sizeof( p_data[0].lum1 ),
-                                        sizeof( p_data[0].massc0 ),
-                                        sizeof( p_data[0].massc1 ),
-                                        sizeof( p_data[0].radc0 ),
-                                        sizeof( p_data[0].radc1 ),
-                                        sizeof( p_data[0].menv0 ),
-                                        sizeof( p_data[0].menv1 ),
-                                        sizeof( p_data[0].renv0 ),
-                                        sizeof( p_data[0].renv1 ),
-                                        sizeof( p_data[0].tms0 ),
-                                        sizeof( p_data[0].tms1 ),
-                                        sizeof( p_data[0].dmdt0 ),
-                                        sizeof( p_data[0].dmdt1 ),
-                                        sizeof( p_data[0].radrol0 ),
-                                        sizeof( p_data[0].radrol1 ),
-                                        sizeof( p_data[0].ospin0 ),
-                                        sizeof( p_data[0].ospin1 ),
-                                        sizeof( p_data[0].B0 ),
-                                        sizeof( p_data[0].B1 ),
-                                        sizeof( p_data[0].formation0 ),
-                                        sizeof( p_data[0].formation1 ),
-                                        sizeof( p_data[0].bacc0 ),
-                                        sizeof( p_data[0].bacc1 ),
-                                        sizeof( p_data[0].tacc0 ),
-                                        sizeof( p_data[0].tacc1 ),
-                                        sizeof( p_data[0].mass0_0 ),
-                                        sizeof( p_data[0].mass0_1 ),
-                                        sizeof( p_data[0].epoch0 ),
-                                        sizeof( p_data[0].epoch1 ),
-                                        sizeof( p_data[0].ospin ),
-                                        sizeof( p_data[0].B ),
-                                        sizeof( p_data[0].formation ),
-                                    };
-
-        int k;
-	long i, j;
-	j=0;
+    int k;
+	long i, j=0;
 	double m, r, phi;
 
-        //Serializing the snapshot printing.
-        for(k=0; k<procs; k++)
-        {       
-                if(myid==k)
-                {       
-                        //Initial file created only by root node.
-                        if(myid==0){
-                                H5E_BEGIN_TRY {
-                                    snapfile_hdf5 = H5Fcreate(filename, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
-                                    H5Fclose( snapfile_hdf5 );
-                                } H5E_END_TRY
-                        }
+    /* Serializing the snapshot printing. */
+    for(k=0; k<procs; k++) {
+        if(myid==k) {
+            /* Initial file created only by root node. */
+            if(myid==0) {
+                H5E_BEGIN_TRY {
+                    snapfile_hdf5 = H5Fcreate(filename, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+                } H5E_END_TRY
+                /* H5Fcreate fails once the file exists, so this only tags the file on the first snapshot */
+                if(snapfile_hdf5 >= 0) {
+                    int layout_version = SNAPSHOT_LAYOUT_VERSION;
+                    snap_set_string_attr(snapfile_hdf5, "layout", SNAPSHOT_LAYOUT_NAME);
+                    snap_set_scalar_attr(snapfile_hdf5, "layout_version", H5T_NATIVE_INT, &layout_version);
+                    H5Fclose( snapfile_hdf5 );
                 }
-                MPI_Barrier(MPI_COMM_WORLD);
+            }
         }
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
 
-	//Serializing the snapshot printing.
-	for(k=0; k<procs; k++)
-	{
-		if(myid==k)
-		{
-			// then print data
+	/* Serializing the snapshot printing. */
+	for(k=0; k<procs; k++) {
+		if(myid==k) {
+			/* then print data */
 			long NRECORDS = 0, k = 0;
-			if(bh_only == 0)
+			if(bh_only == 0) {
 				NRECORDS = clus.N_MAX_NEW;
-			else
-				for (i=1; i<=clus.N_MAX_NEW; i++){
-					j=star[i].binind;
-					if( star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14 ) 
+			} else {
+				for (i=1; i<=clus.N_MAX_NEW; i++) {
+					j = star[i].binind;
+					if( star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14 ) {
 						NRECORDS++;
+					}
 				}
+			}
 
-                        //Snapshot all_objects[NRECORDS];
-                        Snapshot* all_objects = malloc(NRECORDS * sizeof(Snapshot));
-                        if (all_objects == NULL) {
-                            eprintf("Failed to allocate memory for %ld snapshot objects\n", NRECORDS);
-                            exit_cleanly(-1,__FUNCTION__);
-                        }
-                        for (i=1; i<=clus.N_MAX_NEW; i++) {
-                                long g_i = get_global_idx(i);
-                                m = star_m[g_i];
-                                r = star_r[g_i];
-                                phi = star_phi[g_i];
-				j=star[i].binind;
-				//if bh_only>0, print only BHs
-				if( (bh_only==0) || ( (bh_only!=0) && (star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14) ) )
-				{
-                                        all_objects[k].id = star[i].id;
-                                        all_objects[k].m = m * (units.m / clus.N_STAR) / MSUN;
-                                        all_objects[k].r = r;
-                                        all_objects[k].vr = star[i].vr;
-                                        all_objects[k].vt = star[i].vt;
-                                        all_objects[k].E = star[i].E;
-                                        all_objects[k].J = star[i].J;
+            Snapshot* all_objects = malloc(NRECORDS * sizeof(Snapshot));
+            if (all_objects == NULL) {
+                eprintf("Failed to allocate memory for %ld snapshot objects\n", NRECORDS);
+                exit_cleanly(-1,__FUNCTION__);
+            }
+
+            for (i=1; i<=clus.N_MAX_NEW; i++) {
+                long g_i = get_global_idx(i);
+                m = star_m[g_i];
+                r = star_r[g_i];
+                phi = star_phi[g_i];
+                j = star[i].binind;
+				/* if bh_only>0, print only BHs */
+				if( (bh_only==0) || ( (bh_only!=0) && (star[i].se_k==14 || binary[j].bse_kw[0]==14 || binary[j].bse_kw[1]==14) ) ) {
+                    all_objects[k].r = r;
+                    all_objects[k].vr = star[i].vr;
+                    all_objects[k].vt = star[i].vt;
+                    all_objects[k].E = star[i].E;
+                    all_objects[k].J = star[i].J;
+                    all_objects[k].phi_r = phi;
+
 					if (j) {
-                                                all_objects[k].binflag = 1;
-                                                all_objects[k].m0 = binary[j].m1 * (units.m / clus.N_STAR) / MSUN;
-                                                all_objects[k].m1 = binary[j].m2 * (units.m / clus.N_STAR) / MSUN;
-                                                all_objects[k].id0 = binary[j].id1;
-                                                all_objects[k].id1 = binary[j].id2;
-                                                all_objects[k].a = binary[j].a * units.l / AU;
-                                                all_objects[k].e = binary[j].e;
-					} else {
-                                                all_objects[k].binflag = -100;
-                                                all_objects[k].m0 = -100;
-                                                all_objects[k].m1 = -100;
-                                                all_objects[k].id0 = -100;
-                                                all_objects[k].id1 = -100;
-                                                all_objects[k].a = -100;
-                                                all_objects[k].e = -100;
-					}
-
-					if (j == 0) {
-                                                all_objects[k].startype = star[i].se_k;
-                                                all_objects[k].luminosity = star[i].se_lum;
-                                                all_objects[k].radius = star[i].rad * units.l / RSUN;
-                                                all_objects[k].bin_startype0 = -100;
-                                                all_objects[k].bin_startype1 = -100;
-                                                all_objects[k].bin_star_lum0 = -100;
-                                                all_objects[k].bin_star_lum1 = -100;
-                                                all_objects[k].bin_star_radius0 = -100;
-                                                all_objects[k].bin_star_radius1 = -100;
-                                                all_objects[k].bin_Eb = -100;
-                                                all_objects[k].eta = -100;
-					} else {
-                                                all_objects[k].startype = -100;
-                                                all_objects[k].luminosity = -100;
-                                                all_objects[k].radius = -100;
-                                                all_objects[k].bin_startype0 = binary[j].bse_kw[0];
-                                                all_objects[k].bin_startype1 = binary[j].bse_kw[1];
-                                                all_objects[k].bin_star_lum0 = binary[j].bse_lum[0];
-                                                all_objects[k].bin_star_lum1 = binary[j].bse_lum[1];
-                                                all_objects[k].bin_star_radius0 = binary[j].rad1*units.l/RSUN;
-                                                all_objects[k].bin_star_radius1 =  binary[j].rad2*units.l/RSUN;
-                                                all_objects[k].bin_Eb = -(binary[j].m1/clus.N_STAR)*(binary[j].m2/clus.N_STAR)/(2*binary[j].a);
-                                                all_objects[k].eta = (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
+                        all_objects[k].id0 = binary[j].id1;
+                        all_objects[k].id1 = binary[j].id2;
+                        all_objects[k].st0 = binary[j].bse_kw[0];
+                        all_objects[k].st1 = binary[j].bse_kw[1];
+                        all_objects[k].m0 = binary[j].m1 * (units.m / clus.N_STAR) / MSUN;
+                        all_objects[k].m1 = binary[j].m2 * (units.m / clus.N_STAR) / MSUN;
+                        all_objects[k].a = binary[j].a * units.l / AU;
+                        all_objects[k].e = binary[j].e;
+                        all_objects[k].eta = (binary[j].m1 * binary[j].m2 * sqr(madhoc)) /
                                  (binary[j].a * sqrt(calc_average_mass_sqr(i,clus.N_MAX)) * sqr(sigma_array.sigma[i]));
-					}
-                                        all_objects[k].star_phi = phi;
-					if (j == 0) {
-                                                all_objects[k].rad0 = 0.0 / 0.0;
-                                                all_objects[k].rad1 = 0.0 / 0.0;
-                                                all_objects[k].tb = 0.0 / 0.0;
-                                                all_objects[k].lum0 = 0.0 / 0.0;
-                                                all_objects[k].lum1 = 0.0 / 0.0;
-                                                all_objects[k].massc0 = 0.0 / 0.0;
-                                                all_objects[k].massc1 = 0.0 / 0.0;
-                                                all_objects[k].radc0 = 0.0 / 0.0;
-                                                all_objects[k].radc1 = 0.0 / 0.0;
-                                                all_objects[k].menv0 = 0.0 / 0.0;
-                                                all_objects[k].menv1 = 0.0 / 0.0;
-                                                all_objects[k].renv0 = 0.0 / 0.0;
-                                                all_objects[k].renv1 = 0.0 / 0.0;
-                                                all_objects[k].tms0 = 0.0 / 0.0;
-                                                all_objects[k].tms1 = 0.0 / 0.0;
-                                                all_objects[k].dmdt0 = 0.0 / 0.0;
-                                                all_objects[k].dmdt1 = 0.0 / 0.0;
-                                                all_objects[k].radrol0 = 0.0 / 0.0;
-                                                all_objects[k].radrol1 = 0.0 / 0.0;
-                                                all_objects[k].ospin0 = 0.0 / 0.0;
-                                                all_objects[k].ospin1 = 0.0 / 0.0;
-                                                all_objects[k].B0 = 0.0 / 0.0;
-                                                all_objects[k].B1 = 0.0 / 0.0;
-                                                all_objects[k].formation0 = 0.0 / 0.0;
-                                                all_objects[k].formation1 = 0.0 / 0.0;
-                                                all_objects[k].bacc0 = 0.0 / 0.0;
-                                                all_objects[k].bacc1 = 0.0 / 0.0;
-                                                all_objects[k].tacc0 = 0.0 / 0.0;
-                                                all_objects[k].tacc1 = 0.0 / 0.0;
-                                                all_objects[k].mass0_0 = 0.0 / 0.0;
-                                                all_objects[k].mass0_1 = 0.0 / 0.0;
-                                                all_objects[k].epoch0 = 0.0 / 0.0;
-                                                all_objects[k].epoch1 = 0.0 / 0.0;
-                                                all_objects[k].ospin = star[i].se_ospin;
-                                                all_objects[k].B = star[i].se_scm_B;
-                                                all_objects[k].formation = star[i].se_scm_formation;
-					} else {
-                                                all_objects[k].rad0 = binary[j].bse_radius[0];
-                                                all_objects[k].rad1 = binary[j].bse_radius[1];
-                                                all_objects[k].tb = binary[j].bse_tb;
-                                                all_objects[k].lum0 =binary[j].bse_lum[0];
-                                                all_objects[k].lum1 = binary[j].bse_lum[1];
-                                                all_objects[k].massc0 = binary[j].bse_massc[0];
-                                                all_objects[k].massc1 = binary[j].bse_massc[1];
-                                                all_objects[k].radc0 =  binary[j].bse_radc[0];
-                                                all_objects[k].radc1 =  binary[j].bse_radc[1];
-                                                all_objects[k].menv0 = binary[j].bse_menv[0];
-                                                all_objects[k].menv1 = binary[j].bse_menv[1];
-                                                all_objects[k].renv0 = binary[j].bse_renv[0];
-                                                all_objects[k].renv1 = binary[j].bse_renv[1];
-                                                all_objects[k].tms0 = binary[j].bse_tms[0];
-                                                all_objects[k].tms1 = binary[j].bse_tms[1];
-                                                all_objects[k].dmdt0 = binary[j].bse_bcm_dmdt[0];
-                                                all_objects[k].dmdt1 = binary[j].bse_bcm_dmdt[1];
-                                                all_objects[k].radrol0 = binary[j].bse_bcm_radrol[0];
-                                                all_objects[k].radrol1 = binary[j].bse_bcm_radrol[1];
-                                                all_objects[k].ospin0 = binary[j].bse_ospin[0];
-                                                all_objects[k].ospin1 = binary[j].bse_ospin[1];
-                                                all_objects[k].B0 = binary[j].bse_bcm_B[0];
-                                                all_objects[k].B1 = binary[j].bse_bcm_B[1];
-                                                all_objects[k].formation0 = binary[j].bse_bcm_formation[0];
-                                                all_objects[k].formation1 = binary[j].bse_bcm_formation[1];
-                                                all_objects[k].bacc0 = binary[j].bse_bacc[0];
-                                                all_objects[k].bacc1 = binary[j].bse_bacc[1];
-                                                all_objects[k].tacc0 = binary[j].bse_tacc[0];
-                                                all_objects[k].tacc1 = binary[j].bse_tacc[1];
-                                                all_objects[k].mass0_0 = binary[j].bse_mass0[0];
-                                                all_objects[k].mass0_1 = binary[j].bse_mass0[1];
-                                                all_objects[k].epoch0 = binary[j].bse_epoch[0];
-                                                all_objects[k].epoch1 = binary[j].bse_epoch[1];
-                                                all_objects[k].ospin = -100;
-                                                all_objects[k].B = -100;
-                                                all_objects[k].formation = -100;
-					}
+                        all_objects[k].rad0 = binary[j].bse_radius[0];
+                        all_objects[k].rad1 = binary[j].bse_radius[1];
+                        all_objects[k].lum0 = binary[j].bse_lum[0];
+                        all_objects[k].lum1 = binary[j].bse_lum[1];
+                        all_objects[k].massc0 = binary[j].bse_massc[0];
+                        all_objects[k].massc1 = binary[j].bse_massc[1];
+                        all_objects[k].menv0 = binary[j].bse_menv[0];
+                        all_objects[k].menv1 = binary[j].bse_menv[1];
+                        all_objects[k].radc0 = binary[j].bse_radc[0];
+                        all_objects[k].radc1 = binary[j].bse_radc[1];
+                        all_objects[k].renv0 = binary[j].bse_renv[0];
+                        all_objects[k].renv1 = binary[j].bse_renv[1];
+                        all_objects[k].radrol0 = binary[j].bse_bcm_radrol[0];
+                        all_objects[k].radrol1 = binary[j].bse_bcm_radrol[1];
+                        all_objects[k].tms0 = binary[j].bse_tms[0];
+                        all_objects[k].tms1 = binary[j].bse_tms[1];
+                        all_objects[k].dmdt0 = binary[j].bse_bcm_dmdt[0];
+                        all_objects[k].dmdt1 = binary[j].bse_bcm_dmdt[1];
+                        all_objects[k].bacc0 = binary[j].bse_bacc[0];
+                        all_objects[k].bacc1 = binary[j].bse_bacc[1];
+                        all_objects[k].tacc0 = binary[j].bse_tacc[0];
+                        all_objects[k].tacc1 = binary[j].bse_tacc[1];
+                        all_objects[k].mass0_0 = binary[j].bse_mass0[0];
+                        all_objects[k].mass0_1 = binary[j].bse_mass0[1];
+                        all_objects[k].ospin0 = binary[j].bse_ospin[0];
+                        all_objects[k].ospin1 = binary[j].bse_ospin[1];
+                        all_objects[k].B0 = binary[j].bse_bcm_B[0];
+                        all_objects[k].B1 = binary[j].bse_bcm_B[1];
+                        all_objects[k].epoch0 = binary[j].bse_epoch[0];
+                        all_objects[k].epoch1 = binary[j].bse_epoch[1];
+                        all_objects[k].formation0 = binary[j].bse_bcm_formation[0];
+                        all_objects[k].formation1 = binary[j].bse_bcm_formation[1];
+                        all_objects[k].bhspin0 = binary[j].bse_bhspin[0];
+                        all_objects[k].bhspin1 = binary[j].bse_bhspin[1];
+                    } else {
+                        all_objects[k].id0 = star[i].id;
+                        all_objects[k].id1 = -100;
+                        all_objects[k].st0 = star[i].se_k;
+                        all_objects[k].st1 = -100;
+                        all_objects[k].m0 = m * (units.m / clus.N_STAR) / MSUN;
+                        all_objects[k].m1 = -100;
+                        all_objects[k].a = -100;
+                        all_objects[k].e = -100;
+                        all_objects[k].eta = -100;
+                        all_objects[k].rad0 = star[i].se_radius;
+                        all_objects[k].rad1 = -100;
+                        all_objects[k].lum0 = star[i].se_lum;
+                        all_objects[k].lum1 = -100;
+                        all_objects[k].massc0 = star[i].se_mc;
+                        all_objects[k].massc1 = -100;
+                        all_objects[k].menv0 = star[i].se_menv;
+                        all_objects[k].menv1 = -100;
+                        all_objects[k].radc0 =  star[i].se_rc;
+                        all_objects[k].radc1 =  -100;
+                        all_objects[k].renv0 = star[i].se_renv;
+                        all_objects[k].renv1 = -100;
+                        all_objects[k].radrol0 = -100;
+                        all_objects[k].radrol1 = -100;
+                        all_objects[k].tms0 = star[i].se_tms;
+                        all_objects[k].tms1 = -100;
+                        all_objects[k].dmdt0 = -100;
+                        all_objects[k].dmdt1 = -100;
+                        all_objects[k].bacc0 = star[i].se_bacc;
+                        all_objects[k].bacc1 = -100;
+                        all_objects[k].tacc0 = star[i].se_tacc;
+                        all_objects[k].tacc1 = -100;
+                        all_objects[k].mass0_0 = star[i].se_mass;
+                        all_objects[k].mass0_1 = -100;
+                        all_objects[k].ospin0 = star[i].se_ospin;
+                        all_objects[k].ospin1 = -100;
+                        all_objects[k].B0 = star[i].se_scm_B;
+                        all_objects[k].B1 = -100;
+                        all_objects[k].epoch0 = star[i].se_epoch;
+                        all_objects[k].epoch1 = -100;
+                        all_objects[k].formation0 = star[i].se_scm_formation;
+                        all_objects[k].formation1 = -100;
+                        all_objects[k].bhspin0 = star[i].se_bhspin;
+                        all_objects[k].bhspin1 = -100;
+                    }
 					k++;
 				}
 			}
-//                        if(LIGHTCOLLISION_NRECORDS >200){
-//                            write_logs();
-//                            LIGHTCOLLISION_NRECORDS = 0;
-//                        }
-                        if(myid==0){
-                            snapfile_hdf5 = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
-                            H5TBmake_table( "Table Title",snapfile_hdf5, tablename, NFIELDS,NRECORDS,
-                                                dst_size, field_names, dst_offset, field_type,
-                                                chunk_size, fill_data, compress, all_objects);
-                            H5Fclose( snapfile_hdf5 );
-                        }
-                        else{
-                            snapfile_hdf5 = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
-                            H5TBappend_records(snapfile_hdf5, tablename, NRECORDS, dst_size, dst_offset, dst_sizes, all_objects);
-                            H5Fclose( snapfile_hdf5 );
-                        }
+			/*
+			// Old code for generating compound-type table snapshots
+            if(myid==0) {
+                snapfile_hdf5 = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+                H5TBmake_table( "Table Title", snapfile_hdf5, tablename, NFIELDS, NRECORDS,
+                                        dst_size, field_names, dst_offset, field_type,
+                                        chunk_size, fill_data, compress, all_objects);
+                H5Fclose( snapfile_hdf5 );
+            } else {
+                snapfile_hdf5 = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+                H5TBappend_records(snapfile_hdf5, tablename, NRECORDS, dst_size, dst_offset, dst_sizes, all_objects);
+                H5Fclose( snapfile_hdf5 );
+            }
+            */
+            snapfile_hdf5 = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+            if(snapfile_hdf5 < 0){
+                eprintf("Failed to open %s for snapshot output\n", filename);
+                exit_cleanly(-1,__FUNCTION__);
+            }
+
+            /* the root node lays out the group and its empty columns, then every node in turn appends its own stars */
+            if(myid==0) {
+                if(snap_create_group(snapfile_hdf5, tablename, field_names, field_type, compress) < 0) {
+                    eprintf("Failed to create snapshot group %s in %s\n", tablename, filename);
+                    exit_cleanly(-1,__FUNCTION__);
+                }
+            }
+
+            if(snap_append_records(snapfile_hdf5, tablename, field_names, field_type,
+                                    dst_offset, dst_sizes, dst_size, all_objects, (hsize_t) NRECORDS) < 0) {
+                eprintf("Failed to append %ld records to snapshot group %s\n", NRECORDS, tablename);
+                exit_cleanly(-1,__FUNCTION__);
+            }
+            H5Fclose( snapfile_hdf5 );
             free(all_objects);
-		}
-		MPI_Barrier(MPI_COMM_WORLD);
-	}
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
 }
 
 /**

@@ -217,7 +217,10 @@ void stellar_evolution_init(void){
 
   /* set collisions matrix */
   bse_instar();
-  dprintf("se_init: %g %g %g %d %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PISN, BSE_ALPHA1, BSE_LAMBDAF, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_RTMSFLAG, BSE_BHFLAG, BSE_REMNANTFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_POLAR_KICK_ANGLE);
+  dprintf("se_init: %g %g %g %d %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %g %g\n",
+            BSE_NETA  , BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG   , BSE_PISN    , BSE_ALPHA1, BSE_LAMBDAF    ,
+            BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG     , BSE_RTMSFLAG, BSE_BHFLAG, BSE_REMNANTFLAG,
+            BSE_MXNS  , BSE_IDUM , BSE_SIGMA , BSE_BHSIGMAFRAC, BSE_BETA    , BSE_EDDFAC, BSE_GAMMA      , BSE_POLAR_KICK_ANGLE);
 
   for (k=1; k<=mpiEnd-mpiBegin+1; k++) {
     long g_k = get_global_idx(k);
