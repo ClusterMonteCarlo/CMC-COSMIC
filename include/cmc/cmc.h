@@ -2003,10 +2003,10 @@ void NS_TDE_spinup(double Mns, double Mstar, double Rstar, double Kstar, double 
 void print_initial_binaries(void);
 
 void bs_calcunits(fb_obj_t *obj[2], fb_units_t *bs_units);
-fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hier_t *hier, gsl_rng *rng);
+fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, double rcm, fb_hier_t *hier, gsl_rng *rng);
 
 void bb_calcunits(fb_obj_t *obj[2], fb_units_t *bb_units);
-fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hier, gsl_rng *rng);
+fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, double rcm, fb_hier_t *hier, gsl_rng *rng);
 
 double binint_get_mass(long k, long kp, long id);
 long binint_get_startype(long k, long kp, long id);

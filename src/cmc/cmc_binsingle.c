@@ -36,7 +36,7 @@ void bs_calcunits(fb_obj_t *obj[2], fb_units_t *bs_units)
 *
 * @return ?
 */
-fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hier_t *hier, gsl_rng *rng)
+fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, double rcm, fb_hier_t *hier, gsl_rng *rng)
 {
 	int j;
 	long jbin;
@@ -159,17 +159,6 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	hier->obj[1] = &(hier->hier[hier->hi[2]+0]);
 	hier->obj[2] = NULL;
 
-	/* logging */
-	parafprintf(binintfile, "********************************************************************************\n");
-	parafprintf(binintfile, "type=BS t=%.9g\n", TotalTime);
-	parafprintf(binintfile, "params: b=%g v=%g\n", b, W/vc);
-	/* set units to 1 since we're already in CGS */
-	fb_units.v = fb_units.l = fb_units.t = fb_units.m = fb_units.E = 1.0;
-	parafprintf(binintfile, "input: ");
-	binint_log_obj(hier->obj[0], fb_units);
-	parafprintf(binintfile, "input: ");
-	binint_log_obj(hier->obj[1], fb_units);
-
 	/* get the units and normalize */
 	bs_calcunits(hier->obj, &fb_units);
 	fb_normalize(hier, fb_units);
@@ -191,6 +180,17 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	fb_downsync(&(hier->hier[hier->hi[2]+0]), *t);
 	fb_upsync(&(hier->hier[hier->hi[2]+0]), *t);
 	
+    /* logging */ // Maia: Moving logging to after the random orientations to get initial Lhats
+	parafprintf(binintfile, "********************************************************************************\n");
+	parafprintf(binintfile, "type=BS tcount=%ld t=%.9g r/rvir=%g\n", tcount, TotalTime, rcm);
+	parafprintf(binintfile, "params: b/a=%g v=%g\n", b, W/vc);
+	/* set units to 1 since we're already in CGS */
+	//fb_units.v = fb_units.l = fb_units.t = fb_units.m = fb_units.E = 1.0;
+	parafprintf(binintfile, "input: ");
+	binint_log_obj(hier->obj[0], fb_units);
+	parafprintf(binintfile, "input: ");
+	binint_log_obj(hier->obj[1], fb_units);
+
 	/* call fewbody! */
 	retval = fewbody(input, fb_units, hier, t, rng, curr_st);
 

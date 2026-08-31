@@ -160,9 +160,11 @@ Below is an exemplary output:
 
 ==============================  =====================================================
 ``type``						         Encounter type (BS for binary-single or BB for binary-binary)
+``tcount``                               Encounter tcount
 ``t``							         Encounter time
 ``b``							         Impact parameter [units of :math:`a` for binary-single or :math:`a_1+a_2` for binary-binary]
 ``v``							         Relative velocity at infinity [:math:`v_c`]
+``r``                                    Distance from the center of cluster
 ``m``							         Mass [:math:`{M_{\odot}}`]
 ``R``							         Radius [:math:`R_{\odot}`]
 ``Eint``			                  Internal energy
@@ -177,6 +179,7 @@ Below is an exemplary output:
 ``DE_GW``                        Energy loss due gravitational wave emission
 ``v_esc_cluster``			         Escape speed of the cluster where the encounter occured [km/s]
 ``tcpu``                         CPU time for integration (usually ~milliseconds, unless it's a GW capture)
+``t_final``                          Duration of the encounter [units of :math:`l/v_c` where :math:`l=a` for binary-single or :math:`l=a_1+a_2` for binary-binary]
 ``nstar``					         Number of stars
 ``nobj``						         Number of objects (single/binary)
 ``i [j k]``					         Final configuration after encounter, e.g.,  0 [1 2] (single-binary)
