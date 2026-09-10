@@ -15,9 +15,10 @@
 
 #define LARGE_DISTANCE 1.0e40
 
-/* Rows read per HDF5 hyperslab when loading the initial object table. Bounds the
-   temporary read buffer at ~4 MB (65536 rows x 8 doubles) regardless of N, in
-   place of the full-N x 8 matrix the reader used to allocate. */
+/* Rows read per HDF5 hyperslab when loading the initial object and binary tables.
+   Bounds the temporary read buffer at ~4 MB for the object table (65536 rows x 8
+   doubles) and ~6 MB for the binary table (65536 rows x 11 doubles), regardless of
+   N and N_b, in place of the full-table matrices the reader used to allocate. */
 #define CMC_READ_BLOCK_ROWS 65536
 
 
@@ -216,7 +217,6 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     hsize_t     dims[2] = {1, 1};
 
     herr_t      status;
-    double      **read_binary_objects;                       /* Read buffer */
     int         ndims,
                 i, j, k;
 
@@ -435,36 +435,72 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
 
     space = H5Dget_space (dset1);
     ndims = H5Sget_simple_extent_dims (space, dims, NULL);
-    read_binary_objects = (double **) malloc (dims[0] * sizeof (double *));
-    read_binary_objects[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
-    for (i=1; i<dims[0]; i++)
-        read_binary_objects[i] = read_binary_objects[0] + i * dims[1];
 
-    /*
-     * Read the data using the default properties.
-     */
-    status = H5Dread (dset1, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                      read_binary_objects[0]);
+    /* Read the binary table in row blocks straight into cfd, for the same reason as
+       the object table above. On a 50% binary-fraction 5e7 model (N_b = 1.7e7) that
+       temporary was ~1.4 GiB per rank plus a ~130 MiB row-pointer array, allocated on
+       every rank and alive at the same time as the object-table buffers. Row order,
+       field mapping and the double->long/int conversions below are unchanged; only the
+       buffering differs. */
+    {
+        hsize_t nrows  = dims[0];
+        hsize_t ncols  = dims[1];
+        hsize_t nblock = (nrows < (hsize_t) CMC_READ_BLOCK_ROWS) ? nrows : (hsize_t) CMC_READ_BLOCK_ROWS;
+        hsize_t offset[2], count[2], start, r;
+        hid_t   memspace;
+        double  *blk;
 
-    for (i=0; i<dims[0]; i++) {
-        cfd->bs_index[i] = read_binary_objects[i][0];
-        cfd->bs_id1[i] = read_binary_objects[i][1];
-        cfd->bs_k1[i] = read_binary_objects[i][2];
-        cfd->bs_m1[i] = read_binary_objects[i][3];
-        cfd->bs_Reff1[i] = read_binary_objects[i][4];
-        cfd->bs_id2[i] = read_binary_objects[i][5];
-        cfd->bs_k2[i] = read_binary_objects[i][6];
-        cfd->bs_m2[i] = read_binary_objects[i][7];
-        cfd->bs_Reff2[i] = read_binary_objects[i][8];
-        cfd->bs_a[i] = read_binary_objects[i][9];
-        cfd->bs_e[i] = read_binary_objects[i][10]; 
+        if (nblock == 0)        /* empty table: still make one valid block */
+            nblock = 1;
+
+        blk = (double *) malloc ((size_t) nblock * (size_t) ncols * sizeof (double));
+        if (blk == NULL) {
+            fprintf (stderr, "ERROR: cannot allocate %llu x %llu binary read block\n",
+                     (unsigned long long) nblock, (unsigned long long) ncols);
+            exit (1);
+        }
+
+        count[0] = nblock;
+        count[1] = ncols;
+        memspace = H5Screate_simple (2, count, NULL);
+
+        for (start = 0; start < nrows; start += nblock) {
+            hsize_t nthis = (nrows - start < nblock) ? nrows - start : nblock;
+
+            offset[0] = start;
+            offset[1] = 0;
+            count[0]  = nthis;
+            count[1]  = ncols;
+
+            status = H5Sselect_hyperslab (space, H5S_SELECT_SET, offset, NULL, count, NULL);
+            status = H5Sset_extent_simple (memspace, 2, count, NULL);
+            status = H5Dread (dset1, H5T_NATIVE_DOUBLE, memspace, space, H5P_DEFAULT, blk);
+
+            for (r = 0; r < nthis; r++) {
+                double  *row = blk + r * ncols;
+                hsize_t  gi  = start + r;
+
+                cfd->bs_index[gi] = row[0];
+                cfd->bs_id1[gi]   = row[1];
+                cfd->bs_k1[gi]    = row[2];
+                cfd->bs_m1[gi]    = row[3];
+                cfd->bs_Reff1[gi] = row[4];
+                cfd->bs_id2[gi]   = row[5];
+                cfd->bs_k2[gi]    = row[6];
+                cfd->bs_m2[gi]    = row[7];
+                cfd->bs_Reff2[gi] = row[8];
+                cfd->bs_a[gi]     = row[9];
+                cfd->bs_e[gi]     = row[10];
+            }
+        }
+
+        status = H5Sclose (memspace);
+        free (blk);
     }
 
     /*
      * Close and release resources.
      */
-    free (read_binary_objects[0]);
-    free(read_binary_objects);
     free (read_z[0]);
     free (read_z);
     free (read_mclus[0]);
