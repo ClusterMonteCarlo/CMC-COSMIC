@@ -3,6 +3,16 @@
 #ifndef _FITSLIB_H
 #define _FITSLIB_H 1
 
+#ifndef LARGE_DISTANCE
+#define LARGE_DISTANCE 1.0e40
+#endif
+
+/* Rows read per HDF5 hyperslab when loading the initial object and binary tables.
+   Bounds the temporary read buffer at ~4 MB for the object table (65536 rows x 8
+   doubles) and ~6 MB for the binary table (65536 rows x 11 doubles), regardless of
+   N and N_b, in place of the full-table matrices the reader used to allocate. */
+#define CMC_READ_BLOCK_ROWS 65536
+
 typedef struct{
 	long NOBJ;
 	long NBINARY;
