@@ -331,6 +331,7 @@ double bse_get_lambdaf(void); /* get CE lambda */
 double bse_get_spp(int i, int j); /* stellar evolution log */
 double bse_get_scm(int i, int j); /* stored stellar parameters at interval dtp */
 double bse_get_bpp(int i, int j); /* binary evolution log */
+void print_bpp_array(void); /* dump bpp rows of the last evolv2 call to stderr (debugging) */
 double bse_get_bcm(int i, int j); /* stored binary parameters at interval dtp */
 char *bse_get_sselabel(int kw); /* converts stellar type number to text label */
 char *bse_get_bselabel(int kw); /* converts binary type number to text label */
