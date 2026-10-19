@@ -134,6 +134,52 @@ static int bse_last_bpp_index = 0;
 int bse_get_bcm_index(void) { return bse_last_bcm_index; }
 int bse_get_bpp_index(void) { return bse_last_bpp_index; }
 
+/**
+* @brief Prints the bpp array from a single bse_evolv2 call to stderr (for debugging purposes only)
+* Based on print_bpp_array by Maia Martinez (CMC-dev). Column names follow ALL_COLUMNS in COSMIC v4.3.0
+* (src/cosmic/consts.py, 52 columns).
+* Rows are read until the tphys < 0 terminator that evolv2 writes after the last row of
+* each call (evolv2.f: bpp(bpp_ind+1,1) = -1), capped at BPP_NUM_ROWS.
+* There is an extremely small risk that other processors will print to stderr in between the fprintf calls in this function
+*/
+void print_bpp_array(void)
+{
+    static const char *bpp_colnames[BPP_NUM_COLUMNS] = {
+        "tphys", "mass_1", "mass_2", "kstar_1", "kstar_2",
+        "sep", "porb", "ecc", "RRLO_1", "RRLO_2",
+        "evol_type", "aj_1", "aj_2", "tms_1", "tms_2",
+        "massc_he_layer_1", "massc_he_layer_2", "massc_co_layer_1", "massc_co_layer_2", "rad_1",
+        "rad_2", "mass0_1", "mass0_2", "lum_1", "lum_2",
+        "teff_1", "teff_2", "radc_1", "radc_2", "menv_1",
+        "menv_2", "renv_1", "renv_2", "omega_spin_1", "omega_spin_2",
+        "B_1", "B_2", "bacc_1", "bacc_2", "tacc_1",
+        "tacc_2", "epoch_1", "epoch_2", "bhspin_1", "bhspin_2",
+        "deltam_1", "deltam_2", "SN_1", "SN_2", "bin_state",
+        "merger_type", "metallicity"
+    };
+
+    int i, j;
+
+    fprintf(stderr, "===== BEGIN bpp DUMP =====\n");
+
+    i = 1;
+    while (i <= BPP_NUM_ROWS && bse_get_bpp(i, 1) >= 0.0) {
+
+        fprintf(stderr, "bpp row %d:", i);
+
+        for (j = 1; j <= BPP_NUM_COLUMNS; j++) {
+            fprintf(stderr, " %s=%.10g",
+                    bpp_colnames[j - 1],
+                    bse_get_bpp(i, j));
+        }
+
+        fprintf(stderr, "\n");
+        i++;
+    }
+
+    fprintf(stderr, "===== END bpp DUMP (%d rows) =====\n", i - 1);
+}
+
 void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lum,
 		double *massc, double *radc, double *menv, double *renv, double *ospin,
                 double *B_0, double *bacc, double *tacc,
@@ -154,7 +200,89 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
     int bpp_index_out = 0;
     int bcm_index_out = 0;
 
+    /* ---- [mass-gain check] save the input state before COSMIC modifies it in place ---- */
+    int    in_kw[2];
+    double in_m[2], in_m0[2], in_rad[2], in_lum[2], in_mc[2], in_rc[2], in_menv[2], in_renv[2];
+    double in_ospin[2], in_B0[2], in_bacc[2], in_tacc[2], in_epoch[2], in_tms[2], in_bhspin[2];
+    double in_tphys = *tphys, in_tphysf = *tphysf, in_dtp = *dtp, in_tb = *tb, in_ecc = *ecc;
+    double in_pts1 = points_.pts1;
+    for (i = 0; i < 2; i++) {
+        in_kw[i] = kstar[i];   in_m[i] = mass[i];     in_m0[i] = mass0[i];
+        in_rad[i] = rad[i];    in_lum[i] = lum[i];    in_mc[i] = massc[i];  in_rc[i] = radc[i];
+        in_menv[i] = menv[i];  in_renv[i] = renv[i];  in_ospin[i] = ospin[i];
+        in_B0[i] = B_0[i];     in_bacc[i] = bacc[i];  in_tacc[i] = tacc[i];
+        in_epoch[i] = epoch[i]; in_tms[i] = tms[i];   in_bhspin[i] = bhspin[i];
+    }
+
     evolv2_(kstar,mass,tb,ecc,z,tphysf,dtp,mass0,rad,lum,massc,radc, menv,renv,ospin,B_0,bacc,tacc,epoch,tms,bhspin,tphys,zpars, kick_info, &bpp_index_out, &bcm_index_out);
+
+    /* ---- [mass-gain check] sanity checks on one isolated evolv2 call ----
+     * Flags calls in which
+     *   1. the total mass grows by more than BSE_MASS_GAIN_TOL Msun (or becomes NaN);
+     *   2. tphys ends before it started (time ran backwards);
+     *   3. porb changes by more than BSE_PORB_JUMP_FAC while the binary survived, and the
+     *      orbital angular momentum Jorb ~ m1 m2 (m1+m2)^(-1/3) porb^(1/3) sqrt(1-e^2)
+     *      changes by more than BSE_JORB_JUMP_FAC in the same direction. The Jorb condition
+     *      skips tidal circularization (Jorb conserved) and orbit widening from mass loss
+     *      (Jorb does not grow). Growth is also ignored if a star became a NS/BH in this
+     *      call (SN mass loss / kick), and shrinkage if either kstar changed (common envelope).
+     * Example: a He-MS star (kw 7) whose tidal torque is left out of COSMIC's timestep
+     * limit can drive jorb negative within one step; the next step is then negative, time
+     * runs backwards and the wind turns into mass gain (1 and 2), or, if it was the last
+     * step of the call, the orbit comes back 10-25x too wide (3).
+     * Any hit writes a warning to stderr (error.out) with the full input row, so
+     * the call can be replayed in standalone COSMIC. MASS_GAIN and TPHYS_BACK also
+     * dump the bpp rows of this call. The run continues unchanged. */
+    {
+        const double BSE_MASS_GAIN_TOL = 1.0e-6;   /* Msun; far above round-off, below any real gain we have seen */
+        const double BSE_PORB_JUMP_FAC = 10.0;
+        const double BSE_JORB_JUMP_FAC = 2.0;
+        double m_before = in_m[0] + in_m[1];
+        double m_after  = mass[0] + mass[1];
+        int mass_gain = isnan(m_after) || m_after - m_before > BSE_MASS_GAIN_TOL;
+        int tphys_back = isnan(*tphys) || *tphys < in_tphys;
+        int porb_jump = 0;
+        double jorb_ratio = 0.0;
+        if (in_tb > 0.0 && in_kw[0] < 15 && in_kw[1] < 15 && kstar[0] < 15 && kstar[1] < 15) {
+            if (isnan(*tb)) {
+                porb_jump = 1;
+            } else if (*tb > 0.0) {
+                int new_remnant = 0, kw_changed = 0;
+                double jorb_before, jorb_after;
+                for (i = 0; i < 2; i++) {
+                    if (kstar[i] != in_kw[i]) kw_changed = 1;
+                    if ((kstar[i] == 13 || kstar[i] == 14) && kstar[i] != in_kw[i]) new_remnant = 1;
+                }
+                /* common factors (G, 2 pi) cancel in the ratio */
+                jorb_before = in_m[0] * in_m[1] * pow(m_before, -1.0/3.0) * cbrt(in_tb) * sqrt(fmax(1.0 - in_ecc * in_ecc, 0.0));
+                jorb_after  = mass[0] * mass[1] * pow(m_after,  -1.0/3.0) * cbrt(*tb)   * sqrt(fmax(1.0 - *ecc * *ecc, 0.0));
+                jorb_ratio = jorb_before > 0.0 ? jorb_after / jorb_before : INFINITY;
+                if (*tb > BSE_PORB_JUMP_FAC * in_tb && jorb_ratio > BSE_JORB_JUMP_FAC && !new_remnant) porb_jump = 1;
+                if (*tb < in_tb / BSE_PORB_JUMP_FAC && jorb_ratio < 1.0 / BSE_JORB_JUMP_FAC && !kw_changed) porb_jump = 1;
+            }
+        }
+        if (mass_gain || tphys_back || porb_jump) {
+            fprintf(stderr, "WARNING [mass-gain] evolv2 sanity check failed:%s%s%s "
+                    "M %.6g -> %.6g Msun (dM = %+.6g), tphys %.10g -> %.10g, tb %.6g -> %.6g (x%.3g), Jorb x%.3g\n",
+                    mass_gain ? " MASS_GAIN" : "", tphys_back ? " TPHYS_BACK" : "", porb_jump ? " PORB_JUMP" : "",
+                    m_before, m_after, m_after - m_before, in_tphys, *tphys, in_tb, *tb,
+                    in_tb > 0.0 ? *tb / in_tb : 0.0, jorb_ratio);
+            fprintf(stderr, "WARNING [mass-gain] before: kw=(%d,%d) m=(%.6g,%.6g) tphys=%.10g tphysf=%.10g dtp=%.6g tb=%.6g ecc=%.6g pts1=%.6g\n",
+                    in_kw[0], in_kw[1], in_m[0], in_m[1], in_tphys, in_tphysf, in_dtp, in_tb, in_ecc, in_pts1);
+            fprintf(stderr, "WARNING [mass-gain] after:  kw=(%d,%d) m=(%.6g,%.6g) m0=(%.6g,%.6g) tphys=%.10g tb=%.6g ecc=%.6g\n",
+                    kstar[0], kstar[1], mass[0], mass[1], mass0[0], mass0[1], *tphys, *tb, *ecc);
+            fprintf(stderr, "WARNING [mass-gain] input row: kstar_1,kstar_2,mass_1,mass_2,porb,ecc,metallicity,tphysf,mass0_1,mass0_2,rad_1,rad_2,lum_1,lum_2,massc_1,massc_2,radc_1,radc_2,menv_1,menv_2,renv_1,renv_2,omega_spin_1,omega_spin_2,B_1,B_2,bacc_1,bacc_2,tacc_1,tacc_2,epoch_1,epoch_2,tms_1,tms_2,bhspin_1,bhspin_2,tphys,dtp,pts1\n");
+            fprintf(stderr, "WARNING [mass-gain] input row: %d,%d,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g\n",
+                    in_kw[0], in_kw[1], in_m[0], in_m[1], in_tb, in_ecc, *z, in_tphysf,
+                    in_m0[0], in_m0[1], in_rad[0], in_rad[1], in_lum[0], in_lum[1],
+                    in_mc[0], in_mc[1], in_rc[0], in_rc[1], in_menv[0], in_menv[1], in_renv[0], in_renv[1],
+                    in_ospin[0], in_ospin[1], in_B0[0], in_B0[1], in_bacc[0], in_bacc[1], in_tacc[0], in_tacc[1],
+                    in_epoch[0], in_epoch[1], in_tms[0], in_tms[1], in_bhspin[0], in_bhspin[1],
+                    in_tphys, in_dtp, in_pts1);
+            if (mass_gain || tphys_back) print_bpp_array();
+            fflush(stderr);
+        }
+    }
 
     bse_last_bcm_index = bcm_index_out;
     bse_last_bpp_index = bpp_index_out;
