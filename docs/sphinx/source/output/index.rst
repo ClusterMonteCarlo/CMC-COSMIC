@@ -160,17 +160,17 @@ Below is an exemplary output:
 
 ==============================  =====================================================
 ``type``						         Encounter type (BS for binary-single or BB for binary-binary)
-``tcount``                               Encounter tcount
-``t``							         Encounter time
-``b``							         Impact parameter [units of :math:`a` for binary-single or :math:`a_1+a_2` for binary-binary]
-``v``							         Relative velocity at infinity [:math:`v_c`]
+``tcount``                       Encounter tcount
+``TotalTime``							Encounter time
+``b/a``							         Impact parameter [units of :math:`a` for binary-single or :math:`a_1+a_2` for binary-binary]
+``v/v_crit``							         Relative velocity at infinity [:math:`v_{crit}`]
 ``r``                                    Distance from the center of cluster
-``m``							         Mass [:math:`{M_{\odot}}`]
-``R``							         Radius [:math:`R_{\odot}`]
+``m_MSUN``							         Mass [:math:`{M_{\odot}}`]
+``R_RSUN``							         Radius [:math:`R_{\odot}`]
 ``Eint``			                  Internal energy
 ``id``						         ID number 
 ``kytpe``					         Stellar type
-``a``							         Semi-major axis [AU]
+``a_AU``							         Semi-major axis [AU]
 ``e``							         Eccentricity
 ``dE/E``			                  Fractional change in energy
 ``DE``                           Total change in energy
