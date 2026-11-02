@@ -209,8 +209,8 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, double rcm, f
 
     /* logging */ // Maia: Moving logging to after the random orientations to get initial Lhats
 	parafprintf(binintfile, "********************************************************************************\n");
-	parafprintf(binintfile, "type=BB tcount=%ld t=%.9g r/rvir=%g\n", tcount, TotalTime, rcm);
-	parafprintf(binintfile, "params: b/(a1+a2)=%g v=%g\n", b, W/vc);
+	parafprintf(binintfile, "type=BB tcount=%ld TotalTime=%.18g r_RVIR=%g\n", tcount, TotalTime, rcm);
+	parafprintf(binintfile, "params: b/(a1+a2)=%g v/v_crit=%g\n", b, W/vc);
 	/* set units to 1 since we're already in CGS */
 	// fb_units.v = fb_units.l = fb_units.t = fb_units.m = fb_units.E = 1.0;
 	parafprintf(binintfile, "input: ");
