@@ -1436,7 +1436,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring1, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=single m=%g R=%g Eint=%g id=%s ktype=%d\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, obj->Eint*units.E, idstring1, obj->k_type);
+		parafprintf(binintfile, "type=single m_MSUN=%g r_RSUN=%g Eint=%g id=%s ktype=%d\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, obj->Eint*units.E, idstring1, obj->k_type);
 	} else if (fb_n_hier(obj) == 2) {
 		/* first write id strings */
 		snprintf(idstring1, FB_MAX_STRING_LENGTH, "%ld", obj->obj[0]->id[0]);
@@ -1450,7 +1450,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring2, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=binary m0=%g m1=%g R0=%g R1=%g Eint1=%g Eint2=%g id0=%s id1=%s a=%g e=%g ktype1=%d ktype2=%d Lhat_x=%g Lhat_y=%g Lhat_z=%g\n", 
+		parafprintf(binintfile, "type=binary m0_MSUN=%g m1_MSUN=%g r0_RSUN=%g r1_RSUN=%g Eint1=%g Eint2=%g id0=%s id1=%s a_AU=%g e=%g ktype0=%d ktype1=%d Lhat_x=%g Lhat_y=%g Lhat_z=%g\n", 
 			obj->obj[0]->m*units.m/MSUN, obj->obj[1]->m*units.m/MSUN, 
 			obj->obj[0]->R*units.l/RSUN, obj->obj[1]->R*units.l/RSUN, 
 			obj->obj[0]->Eint*units.E, obj->obj[1]->Eint*units.E, 
@@ -1484,7 +1484,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring3, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=triple min0=%g min1=%g mout=%g Rin0=%g Rin1=%g Rout=%g Eintin0=%g Eintin1=%g Eintout=%g idin1=%s idin2=%s idout=%s ain=%g aout=%g ein=%g eout=%g ktypein1=%d ktypein2=%d ktypeout=%d Lhat_in_x=%g Lhat_in_y=%g Lhat_in_z=%g Lhat_out_x=%g Lhat_out_y=%g Lhat_out_z=%g\n",
+		parafprintf(binintfile, "type=triple min0_MSUN=%g min1_MSUN=%g mout_MSUN=%g rin0_RSUN=%g rin1_RSUN=%g rout_RSUN=%g Eintin0=%g Eintin1=%g Eintout=%g idin0=%s idin1=%s idout=%s ain_AU=%g aout_AU=%g ein=%g eout=%g ktypein0=%d ktypein1=%d ktypeout=%d Lhat_in_x=%g Lhat_in_y=%g Lhat_in_z=%g Lhat_out_x=%g Lhat_out_y=%g Lhat_out_z=%g\n",
 			obj->obj[bid]->obj[0]->m*units.m/MSUN, obj->obj[bid]->obj[1]->m*units.m/MSUN, obj->obj[sid]->m*units.m/MSUN,
 			obj->obj[bid]->obj[0]->R*units.l/RSUN, obj->obj[bid]->obj[1]->R*units.l/RSUN, obj->obj[sid]->R*units.l/RSUN,
 			obj->obj[bid]->obj[0]->Eint*units.E, obj->obj[bid]->obj[1]->Eint*units.E, obj->obj[sid]->Eint*units.E,
