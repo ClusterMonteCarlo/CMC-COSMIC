@@ -1249,6 +1249,11 @@ typedef struct{
 * @brief ceflag sets CE prescription used. = 0 sets Tout et al. method, = 3 activates de Kool common-envelope models (normally 0).
 */
 	int BSE_CEFLAG;
+#define PARAMDOC_BSE_CE2STAGEFLAG "ce2stageflag sets the CE energy formalism. = 0 uses the standard energy formalism, = 1 uses the two-stage formalism from Hirai & Mandel 2022 (normally 0)."
+/**
+* @brief ce2stageflag sets the CE energy formalism. = 0 uses the standard energy formalism, = 1 uses the two-stage formalism from Hirai & Mandel 2022 (normally 0).
+*/
+	int BSE_CE2STAGEFLAG;
 #define PARAMDOC_BSE_CEKICKFLAG "neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally)."
 /**
  * * @brief neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).

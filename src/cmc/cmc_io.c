@@ -1484,6 +1484,10 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_CEFLAG);
                                 sscanf(values, "%i", &BSE_CEFLAG);
                                 parsed.BSE_CEFLAG = 1;
+                        } else if (strcmp(parameter_name, "CE2STAGEFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_CE2STAGEFLAG);
+                                sscanf(values, "%i", &BSE_CE2STAGEFLAG);
+                                parsed.BSE_CE2STAGEFLAG = 1;
                         } else if (strcmp(parameter_name, "CEKICKFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_CEKICKFLAG);
                                 sscanf(values, "%i", &BSE_CEKICKFLAG);
@@ -1872,6 +1876,12 @@ if(myid==0) {
         // ceflag=0 does not use this method (uses the core mass to calculate initial orbital energy)
         // default=0
         CHECK_PARSED(BSE_CEFLAG, 1, PARAMDOC_BSE_CEFLAG);
+		
+        // ce2stageflag sets the CE energy formalism
+        // 0: standard energy formalism
+        // 1: two-stage formalism from Hirai & Mandel 2022
+        // default=0
+        CHECK_PARSED(BSE_CE2STAGEFLAG, 0, PARAMDOC_BSE_CE2STAGEFLAG);
 
         // cekickflag determined the prescription for calling kick.f in comenv.f
         // 0: default BSE

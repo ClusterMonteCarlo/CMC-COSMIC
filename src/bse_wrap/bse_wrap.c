@@ -856,6 +856,7 @@ void bse_set_pts3(double pts3) { points_.pts3 = pts3; }
 void bse_set_alpha1(double alpha1) { cevars_.alpha1[0] = alpha1; cevars_.alpha1[1] = alpha1; }
 void bse_set_lambdaf(double lambdaf) { cevars_.lambdaf = lambdaf; }
 void bse_set_ceflag(int ceflag) { ceflags_.ceflag = ceflag; }
+void bse_set_ce2stageflag(int ce2stageflag) { ceflags_.ce2stageflag = ce2stageflag; }
 void bse_set_cemergeflag(int cemergeflag) { ceflags_.cemergeflag = cemergeflag; }
 void bse_set_cekickflag(int cekickflag) { ceflags_.cekickflag = cekickflag; }
 void bse_set_cehestarflag(int cehestarflag) { ceflags_.cehestarflag = cehestarflag; }

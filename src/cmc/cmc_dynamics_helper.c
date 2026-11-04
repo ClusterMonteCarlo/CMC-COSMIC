@@ -458,6 +458,7 @@ double get_eta(double eta_min, double eta_power, long k1, long k2, long k3, doub
 	comp_y=1e6;
 	found_eta = 0;
 
+
 	if (eta_power==-2.0){
 		eta_power=-2.01; //  avoid divergence of distribution at eta^-2
 		//TODO implement logarithmic distribution for this case
@@ -468,6 +469,7 @@ double get_eta(double eta_min, double eta_power, long k1, long k2, long k3, doub
 
 	/* now start a while loop that will keep restarting as long as the last computed comp_value was rejected */
 	while (found_eta == 0) {
+
 		/* total area under comparison curve in range of eta from eta_min to eta_max */
         area_max = fabs(norm * kk * ((pow(eta_max,2.+eta_power)) - (pow(eta_min, 2.+eta_power))) / (2.+eta_power));
 		/* choose area in range (0, area_max); this area corresponds to a particular value of eta */

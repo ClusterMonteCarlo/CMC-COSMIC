@@ -158,6 +158,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
         double BSE_ALPHA1= 1.0;
         double BSE_LAMBDAF= 0.5;
         int BSE_CEFLAG= 0;
+        int BSE_CE2STAGEFLAG= 0;
         int BSE_CEKICKFLAG= 2;
         int BSE_CEMERGEFLAG= 0;
         int BSE_CEHESTARFLAG= 0;
@@ -226,6 +227,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	bse_set_alpha1(BSE_ALPHA1);
 	bse_set_lambdaf(BSE_LAMBDAF);
 	bse_set_ceflag(BSE_CEFLAG);
+	bse_set_ce2stageflag(BSE_CE2STAGEFLAG);
 	bse_set_cehestarflag(BSE_CEHESTARFLAG);
 	bse_set_cemergeflag(BSE_CEMERGEFLAG);
 	bse_set_cekickflag(BSE_CEKICKFLAG);
