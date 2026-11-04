@@ -259,7 +259,7 @@ void set_velocities3(void){
 	double alpha;
 	long i;
 	int g_i;
-	double m, E_dump, E_dump_capacity, Eexcess_check, v2, v2_new;
+	double m, E_dump, E_dump_capacity, Eexcess_check, Eexcess_transit, v2, v2_new;
 	double E_dump_factor = 0.8; //Percentage of excess energy to be dumped on each star.
 	char *vnew2_arr = (char *) malloc ((clus.N_MAX_NEW+1) * sizeof(char));
 	MPI_Status stat;
@@ -323,7 +323,10 @@ void set_velocities3(void){
 			MPI_Recv(&Eexcess_prev, 1, MPI_DOUBLE, ( myid - 1), 0, MPI_COMM_WORLD, &stat);
 		timeEndSimple(tmpTimeStart, &t_comm);
 
-		Eexcess = Eexcess_prev;
+		if(myid == procs-1)
+			Eexcess += Eexcess_prev;	/* last rank sent nothing: keep own leftover, add incoming */
+		else
+			Eexcess = Eexcess_prev;		/* own leftover already sent to myid+1 */
 		for (i = 1; i <= clus.N_MAX_NEW; i++) {
 			g_i = get_global_idx(i);
 			m = star_m[g_i];
@@ -332,7 +335,7 @@ void set_velocities3(void){
 			v2 = sqr(star[i].vr)+sqr(star[i].vt);
 			if (star[i].interacted == 0) {
 				if (vnew2_arr[i] ==1) {
-					E_dump_capacity = v2*m*0.5 - E_dump_factor * 0.5 * m * v2_new;
+					E_dump_capacity = MAX( 0.0, v2*m*0.5 - E_dump_factor * 0.5 * m * v2_new );
 					E_dump = MIN( E_dump_capacity, Eexcess );
 					if(Eexcess > 0) {
 						exc_ratio = sqrt( (v2 - 2 * E_dump / m) / v2 );
@@ -343,14 +346,21 @@ void set_velocities3(void){
 				}
 			}
 		}
+		/* stop once no energy is left to forward, i.e. any remainder sits
+		   on the last rank, which has already tried to place it */
+		Eexcess_transit = (myid != procs-1) ? Eexcess : 0.0;
 		tmpTimeStart = timeStartSimple();
-		MPI_Allreduce(&Eexcess, &Eexcess_check, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+		MPI_Allreduce(&Eexcess_transit, &Eexcess_check, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
 		timeEndSimple(tmpTimeStart, &t_comm);
 	} while(Eexcess_check > 0);
 
 	free(vnew2_arr);
-	/* keep track of the energy that's vanishing due to our negligence */
-	Eoops += -Eexcess * madhoc;
+	/* keep track of the energy that's vanishing due to our negligence;
+	   Eoops is not reduced (root prints it), so add the global total on every rank */
+	tmpTimeStart = timeStartSimple();
+	MPI_Allreduce(&Eexcess, &Eexcess_check, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	timeEndSimple(tmpTimeStart, &t_comm);
+	Eoops += -Eexcess_check * madhoc;
 }
 
 
