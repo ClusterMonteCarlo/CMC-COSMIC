@@ -279,45 +279,7 @@ int main(int argc, char *argv[])
 		clus.N_MAX_NEW = mpiEnd-mpiBegin+1;
 		timeEndSimple(tmpTimeStart, &t_oth);
 
-		/* qsorts_new() (+ the calls that normally follow it) runs at the end of
-		 * every timestep (see below), so it compacts out any star destroyed
-		 * (zero_star/destroy_obj) during that timestep, and updates mpiBegin/
-		 * mpiEnd (via findLimits) to match the new, smaller N_MAX, before the
-		 * next timestep starts. But nothing runs this sequence between
-		 * stellar_evolution_init() and this, the very first timestep -- so a
-		 * star destroyed during initial stellar evolution (e.g. an SN-kick
-		 * disruption) is still sitting in the pairing range the first time
-		 * dynamics_apply() runs, and calc_encounter_dyns() chokes on it (W=0
-		 * for a zeroed star). Run the same sequence once here, first timestep
-		 * of a fresh run only, to close that gap.
-		 *
-		 * destroy_obj() marks a destroyed star via remove_star_center(),
-		 * which sets star[i].rnew=SF_INFINITY (the sentinel qsorts_new()'s
-		 * sample_sort/remove_stripped_stars actually strips on) and
-		 * star_m[]=DBL_MIN -- but .rnew only becomes the real .r via
-		 * ComputeIntermediateEnergy()'s "new -> current" transfer, which
-		 * itself depends on every star's .rnew already being freshly set by
-		 * dynamics_apply()'s position-perturbation step. That hasn't run yet
-		 * on the very first timestep, so calling ComputeIntermediateEnergy()
-		 * here would stomp every OTHER star's .r with not-yet-meaningful
-		 * data. Instead, just finish the same r/m transfer destroy_obj()
-		 * already started, but only for the specific stars it marked
-		 * (zero_star() leaves id==0), before sorting. */
-		if (tcount == 1 && RESTART_TCOUNT == 0) {
-			for (i = 1; i <= clus.N_MAX_NEW; i++) {
-				if (star[i].id == 0) {
-					int g_i = get_global_idx(i);
-					star[i].r = star[i].rnew;
-					star[i].m = star_m[g_i];
-				}
-			}
-			qsorts_new();
-			post_sort_comm();
-			calc_potential_new();
-			findLimits(clus.N_MAX, MIN_CHUNK_SIZE);
-		}
-
-		/* Perturb velocities of all N_MAX stars.
+		/* Perturb velocities of all N_MAX stars. 
 		 * Using sr[], sv[], get NEW E, J for all stars */
 		tmpTimeStart = timeStartSimple();
 		if (PERTURB > 0)

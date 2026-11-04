@@ -458,15 +458,6 @@ double get_eta(double eta_min, double eta_power, long k1, long k2, long k3, doub
 	comp_y=1e6;
 	found_eta = 0;
 
-	/* vrel3[0]==0 (or otherwise degenerate input) sends kk to inf/NaN, which
-	 * then propagates through every pow() below and makes comp_y<true_y
-	 * unsatisfiable -- the rejection sampling loop further down would spin
-	 * forever. Bail out to eta_min instead of ever starting it. */
-	if (!isfinite(kk)) {
-		wprintf("get_eta(): non-finite kk (%g) for triplet ids %ld,%ld,%ld -- vrel12[0]=%g vrel3[0]=%g; returning eta_min\n",
-			kk, star[k1].id, star[k2].id, star[k3].id, vrel12[0], vrel3[0]);
-		return eta_min;
-	}
 
 	if (eta_power==-2.0){
 		eta_power=-2.01; //  avoid divergence of distribution at eta^-2
@@ -476,17 +467,8 @@ double get_eta(double eta_min, double eta_power, long k1, long k2, long k3, doub
 	/* normalize distribution, d(Rate)/d(eta) ~ eta^-power (differential rate of 3bb formation); take abs. value*/
 	norm = fabs(1.0/(-1*(pow(eta_max, eta_power)) + (pow(eta_min, eta_power)) + (kk + 2) * ( -1*(pow(eta_max, eta_power+1.)) + (pow(eta_min, eta_power+1.)) ) + 2 * kk * ( -1*(pow(eta_max, eta_power+2.)) + (pow(eta_min, eta_power+2.)))));
 
-	/* now start a while loop that will keep restarting as long as the last computed comp_value was rejected.
-	 * Capped defensively -- this is rejection sampling, so it should virtually
-	 * always accept within a handful of tries, but nothing enforces that. */
-	long eta_tries = 0;
+	/* now start a while loop that will keep restarting as long as the last computed comp_value was rejected */
 	while (found_eta == 0) {
-		eta_tries++;
-		if (eta_tries > 100000) {
-			wprintf("get_eta(): failed to find a valid eta after %ld tries for triplet ids %ld,%ld,%ld; returning eta_min\n",
-				eta_tries, star[k1].id, star[k2].id, star[k3].id);
-			return eta_min;
-		}
 
 		/* total area under comparison curve in range of eta from eta_min to eta_max */
         area_max = fabs(norm * kk * ((pow(eta_max,2.+eta_power)) - (pow(eta_min, 2.+eta_power))) / (2.+eta_power));
