@@ -789,7 +789,6 @@ long star_get_id_new(void)
 	return(newstarid);
 }
 
-
 /**
 * @brief generate unique star id's. Maia: The previous parallel version (above) could have ID collisions. This new version is guaranteed to be collisionless and reduces to the old serial version for procs=1.
 *
@@ -1483,7 +1482,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring1, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=single m=%g R=%g Eint=%g id=%s ktype=%d\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, obj->Eint*units.E, idstring1, obj->k_type);
+		parafprintf(binintfile, "type=single m_MSUN=%g r_RSUN=%g Eint=%g id=%s ktype=%d\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, obj->Eint*units.E, idstring1, obj->k_type);
 	} else if (fb_n_hier(obj) == 2) {
 		/* first write id strings */
 		snprintf(idstring1, FB_MAX_STRING_LENGTH, "%ld", obj->obj[0]->id[0]);
@@ -1497,13 +1496,14 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring2, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=binary m0=%g m1=%g R0=%g R1=%g Eint1=%g Eint2=%g id0=%s id1=%s a=%g e=%g ktype1=%d ktype2=%d\n", 
+		parafprintf(binintfile, "type=binary m0_MSUN=%g m1_MSUN=%g r0_RSUN=%g r1_RSUN=%g Eint1=%g Eint2=%g id0=%s id1=%s a_AU=%g e=%g ktype0=%d ktype1=%d Lhat_x=%g Lhat_y=%g Lhat_z=%g\n", 
 			obj->obj[0]->m*units.m/MSUN, obj->obj[1]->m*units.m/MSUN, 
 			obj->obj[0]->R*units.l/RSUN, obj->obj[1]->R*units.l/RSUN, 
 			obj->obj[0]->Eint*units.E, obj->obj[1]->Eint*units.E, 
 			idstring1, idstring2, 
 			obj->a*units.l/AU, obj->e,
-			obj->obj[0]->k_type, obj->obj[1]->k_type);
+			obj->obj[0]->k_type, obj->obj[1]->k_type,
+            obj->Lhat[0], obj->Lhat[1], obj->Lhat[2]);
 	} else if (fb_n_hier(obj) == 3) {
 		/* identify inner binary */
 		if (obj->obj[0]->n==2) {
@@ -1530,14 +1530,16 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 			strncat(idstring3, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=triple min0=%g min1=%g mout=%g Rin0=%g Rin1=%g Rout=%g Eintin0=%g Eintin1=%g Eintout=%g idin1=%s idin2=%s idout=%s ain=%g aout=%g ein=%g eout=%g ktypein1=%d ktypein1=%d ktypeout=%d\n",
+		parafprintf(binintfile, "type=triple min0_MSUN=%g min1_MSUN=%g mout_MSUN=%g rin0_RSUN=%g rin1_RSUN=%g rout_RSUN=%g Eintin0=%g Eintin1=%g Eintout=%g idin0=%s idin1=%s idout=%s ain_AU=%g aout_AU=%g ein=%g eout=%g ktypein0=%d ktypein1=%d ktypeout=%d Lhat_in_x=%g Lhat_in_y=%g Lhat_in_z=%g Lhat_out_x=%g Lhat_out_y=%g Lhat_out_z=%g\n",
 			obj->obj[bid]->obj[0]->m*units.m/MSUN, obj->obj[bid]->obj[1]->m*units.m/MSUN, obj->obj[sid]->m*units.m/MSUN,
 			obj->obj[bid]->obj[0]->R*units.l/RSUN, obj->obj[bid]->obj[1]->R*units.l/RSUN, obj->obj[sid]->R*units.l/RSUN,
 			obj->obj[bid]->obj[0]->Eint*units.E, obj->obj[bid]->obj[1]->Eint*units.E, obj->obj[sid]->Eint*units.E,
 			idstring1, idstring2, idstring3, 
 			obj->obj[bid]->a*units.l/AU, obj->a*units.l/AU,
 			obj->obj[bid]->e, obj->e,
-			obj->obj[bid]->obj[0]->k_type, obj->obj[bid]->obj[1]->k_type, obj->obj[sid]->k_type);
+			obj->obj[bid]->obj[0]->k_type, obj->obj[bid]->obj[1]->k_type, obj->obj[sid]->k_type, 
+            obj->obj[bid]->Lhat[0], obj->obj[bid]->Lhat[1], obj->obj[bid]->Lhat[2],
+            obj->Lhat[0], obj->Lhat[1], obj->Lhat[2]);
 
 		/* In addition, for triples we may want the full configuration of the system*/
 
@@ -1786,9 +1788,9 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 	/* call fewbody! */
 	if (isbinbin) {
-		retval = binbin(&t, k, kp, W, bmax, &hier, rng);
+		retval = binbin(&t, k, kp, W, bmax, rcm, &hier, rng);
 	} else {
-		retval = binsingle(&t, ksin, kbin, W, bmax, &hier, rng);
+		retval = binsingle(&t, ksin, kbin, W, bmax, rcm, &hier, rng);
 	}
 
 	/* set up axes */
@@ -1856,7 +1858,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 		parafprintf(binintfile, "outcome: error\n");
 		print_interaction_error();
 	} else {
-		parafprintf(binintfile, "outcome: %s (%s)\n", fb_sprint_hier(hier, string1), fb_sprint_hier_hr(hier, string2));
+		parafprintf(binintfile, "outcome: t_final=%g %s (%s)\n", t, fb_sprint_hier(hier, string1), fb_sprint_hier_hr(hier, string2));
 		
 		for (i=0; i<hier.nobj; i++) {
 			/* logging */
