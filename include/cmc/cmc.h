@@ -2035,7 +2035,7 @@ void calc_sigma_local(long k1, long p, long N_LIMIT, double *ave_local_mass, dou
 int remove_old_star(double time, long k);
 
 // Chris O'C -- generalized 3BBF
-void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double eta_power, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_running, gsl_rng *rng);
+void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double eta_power, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], gsl_rng *rng);
 void shuffle_three_masses(long sq, long *k1, long *k2, long *k3, gsl_rng *rng);
 double get_eta(double eta_min, double eta_power, long k1, long k2, long k3, double vrel12[4], double vrel3[4]);
 
