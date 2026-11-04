@@ -728,7 +728,7 @@ void do_stellar_evolution(gsl_rng *rng)
 			}
 			parafprintf (newbhfile, "\n");
 		}
-		if (kprev1!=14 && binary[kb].bse_kw[1]==14 && binary[kb].id2 != 0) { // newly formed BH
+		if (kprev1!=14 && binary[kb].bse_kw[1]==14) { // newly formed BH
 			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], prev_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bhspin[1],VKO[1]);
 			for (ii=0; ii<19; ii++){
 			    parafprintf (newbhfile, " %g", kick_info[ii][1]);
@@ -745,7 +745,7 @@ void do_stellar_evolution(gsl_rng *rng)
                         }
                         parafprintf(newnsfile, "\n");
                 }
-                if (kprev1!=13 && binary[kb].bse_kw[1]==13 && binary[kb].id2 != 0) { // newly formed NS
+                if (kprev1!=13 && binary[kb].bse_kw[1]==13) { // newly formed NS
                         parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], prev_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bcm_formation[1],VKO[1],kprev1);
                         for (ii=0; ii<19; ii++){
                             parafprintf (newnsfile, " %g", kick_info[ii][1]);
@@ -778,6 +778,8 @@ void do_stellar_evolution(gsl_rng *rng)
       MPI_Recv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &stat);
       DMse += temp;
     }
+  //MPI: all ranks need the global DMse so DTse (computed on every rank in GetTimeStep) agrees
+  MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	timeEndSimple(tmpTimeStart, &t_comm);
 }
 

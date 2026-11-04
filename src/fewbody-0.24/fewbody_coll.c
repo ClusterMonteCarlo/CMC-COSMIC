@@ -56,14 +56,9 @@ int fb_is_collision(double r, double R1, double R2, double M1, double M2, double
                 collisions_multiple = 1.0;
         }
 
-        if (wd_tc_flag > 0) {
-                if ((k1 >=10 && k1 <= 12) && (k2 >=10 && k2 <= 12)) {
-                        collisions_multiple = wd_tc_flag;
-                 } else {
-                        collisions_multiple = 1.0;
-                 }
-        } else {
-                collisions_multiple = 1.0;
+        /* WD_TC only overrides for WD-WD pairs; otherwise keep the CO_TDE/default value above */
+        if (wd_tc_flag > 0 && (k1 >=10 && k1 <= 12) && (k2 >=10 && k2 <= 12)) {
+                collisions_multiple = wd_tc_flag;
         }
 
         if (r < collisions_multiple*(R1 + R2)) {
