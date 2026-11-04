@@ -76,14 +76,9 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
 		collisions_multiple = COLL_FACTOR;
 	}
 
-        if (WD_TC > 0) {
-                if ((star[kp].se_k >= 10 && star[kp].se_k <=12) && (star[k].se_k >= 10 && star[k].se_k <= 12)) {
-                        collisions_multiple = WD_TC;
-                } else {
-                        collisions_multiple = COLL_FACTOR;
-                }
-        } else {
-                collisions_multiple = COLL_FACTOR;
+        /* WD_TC only overrides for WD-WD pairs; otherwise keep the CO_TDE/COLL_FACTOR value above */
+        if (WD_TC > 0 && (star[kp].se_k >= 10 && star[kp].se_k <=12) && (star[k].se_k >= 10 && star[k].se_k <= 12)) {
+                collisions_multiple = WD_TC;
         }
 
 	if (TIDAL_CAPTURE && (star[k].se_k <= 1 || star[k].se_k >= 10 || star[k].se_k == 7) && (star[kp].se_k >= 2 && star[kp].se_k <= 9 && star[kp].se_k != 7) && (rperi <= 1.3*star[kp].rad && star[kp].rad > 2*star[k].rad)) {
