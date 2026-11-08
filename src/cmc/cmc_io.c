@@ -273,8 +273,8 @@ void PrintFileOutput(void) {
 	rootfprintf(v2_tan_file, "%.9e ",TotalTime);
 	for(i=0; i<NO_MASS_BINS-1; i++){
 		multimassr_empty[i] = 1;
-		for(j=0; j<NO_MASS_BINS-1; j++){
-			if (multi_mass_r[j][i] > 0.0) multimassr_empty[i] = 0;
+		for(j=0; j<MASS_PC_COUNT; j++){
+			if (multi_mass_r[i][j] > 0.0) multimassr_empty[i] = 0;
 		}
 	}
 	for(i=0; i<NO_MASS_BINS-1; i++){
@@ -392,7 +392,7 @@ void PrintFileOutput(void) {
             }
         }
 
-        rootfprintf(lagrad10file, "%.8g %.8g %.ld %ld %.8g %ld %.8g %ld %.8g %.8g %.8g\n",
+        rootfprintf(lagrad10file, "%.8g %.8g %ld %ld %.8g %ld %.8g %ld %.8g %.8g %.8g\n",
                 TotalTime, Dt, tcount, n_10, m_10, n_sing_10, m_sing_10, n_bin_10, m_bin_10, r_10, rho_10);
 
 	}
@@ -705,9 +705,10 @@ void PrintParaFileOutput(void)
 		 mpi_para_file_write(mpi_pulsarfile_wrbuf, &mpi_pulsarfile_len, &mpi_pulsarfile_ofst_total, &mpi_pulsarfile);
 
 /* CSY */
-    if (WRITE_MOREPULSAR_INFO)
+    if (WRITE_MOREPULSAR_INFO){
         mpi_para_file_write(mpi_morepulsarfile_wrbuf, &mpi_morepulsarfile_len, &mpi_morepulsarfile_ofst_total, &mpi_morepulsarfile);
         mpi_para_file_write(mpi_newnsfile_wrbuf, &mpi_newnsfile_len, &mpi_newnsfile_ofst_total, &mpi_newnsfile);
+    }
 
     if (TDE_SPINUP){
         mpi_para_file_write(mpi_tdefile_wrbuf, &mpi_tdefile_len, &mpi_tdefile_ofst_total, &mpi_tdefile);
@@ -863,7 +864,7 @@ void parser(int argc, char *argv[], gsl_rng *r)
 			print_version(stdout);
 			exit(0);
 		case 's':
-			procs = atoi(optarg);
+			STREAMS = atoi(optarg);
 			break;
 		case 'R':
 			RESTART_TCOUNT = -atol(optarg);
@@ -986,7 +987,8 @@ if(myid==0) {
 				parsed.BINSINGLE = 1;
 			} else if (strcmp(parameter_name, "STREAMS") == 0) {
 				PRINT_PARSED(PARAMDOC_STREAMS);
-				sscanf(values, "%d", &procs);
+				/* obsolete in the MPI build: parsed for backward compatibility only, must not overwrite procs (set by MPI_Comm_size) */
+				sscanf(values, "%d", &STREAMS);
 				parsed.STREAMS = 1;
 	/* Meagan: new parameters for three-body binaries: THREEBODYBINARIES, MIN_BINARY_HARDNESS, ONLY_FORM_BH_THREEBODYBINARIES */
 	// Chris O'C: added BINARY_HARDNESS_POWER March 2026
@@ -2009,6 +2011,11 @@ if(myid==0) {
         CHECK_PARSED(BSE_WD_MASS_LIM, 1, PARAMDOC_BSE_WD_MASS_LIM);
 
         // bhspinflag uses different prescriptions for BH spin after formation 
+        // rembar_massloss sets the baryonic-to-gravitational mass loss when a compact object forms
+        // positive values: maximum mass lost (Msun); -1 < rembar_massloss < 0: constant fractional mass loss
+        // default=0.5
+        CHECK_PARSED(BSE_REMBAR_MASSLOSS, 0.5, PARAMDOC_BSE_REMBAR_MASSLOSS);
+
         // bhspinflag=0// sets all BH spins to bhspinmag
         // bhspinflag=1// draws a random BH spin between 0 and bhspinmag for every BH
         // bhspinflag=2// core-mass dependent BH spin (based on Belczynski+2017// 1706.07053, v1)
@@ -3727,6 +3734,12 @@ typedef struct{
     long long s_mpi_binintfile_ofst_total;
     long long s_mpi_collisionfile_ofst_total;
     long long s_mpi_tidalcapturefile_ofst_total;
+    long long s_mpi_newnsfile_len;
+    long long s_mpi_newbhfile_len;
+    long long s_mpi_threebbfile_len;
+    long long s_mpi_threebbprobabilityfile_len;
+    long long s_mpi_lightcollisionfile_len;
+    long long s_mpi_threebbdebugfile_len;
     long long s_mpi_tdefile_ofst_total;
     long long s_mpi_semergedisruptfile_ofst_total;
     long long s_mpi_removestarfile_ofst_total;
@@ -3742,6 +3755,12 @@ typedef struct{
 	long   s_N_bb;		
 	long   s_N_bs;
 	double s_E_bb;
+    long long s_mpi_newnsfile_ofst_total;
+    long long s_mpi_newbhfile_ofst_total;
+    long long s_mpi_threebbfile_ofst_total;
+    long long s_mpi_threebbprobabilityfile_ofst_total;
+    long long s_mpi_lightcollisionfile_ofst_total;
+    long long s_mpi_threebbdebugfile_ofst_total;
 	double s_E_bs;
 	long   s_Echeck; 		
 	int    s_se_file_counter; 	
@@ -3789,13 +3808,19 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_mpi_binintfile_ofst_total          =mpi_binintfile_ofst_total;
 	rest->s_mpi_collisionfile_ofst_total       =mpi_collisionfile_ofst_total;
 	rest->s_mpi_tidalcapturefile_ofst_total    =mpi_tidalcapturefile_ofst_total;
+	rest->s_mpi_newnsfile_len                  =mpi_newnsfile_len;
+	rest->s_mpi_newbhfile_len                  =mpi_newbhfile_len;
+	rest->s_mpi_threebbfile_len                =mpi_threebbfile_len;
+	rest->s_mpi_threebbprobabilityfile_len     =mpi_threebbprobabilityfile_len;
+	rest->s_mpi_lightcollisionfile_len         =mpi_lightcollisionfile_len;
+	rest->s_mpi_threebbdebugfile_len           =mpi_threebbdebugfile_len;
         rest->s_mpi_tdefile_ofst_total             =mpi_tdefile_ofst_total;
 	rest->s_mpi_semergedisruptfile_ofst_total  =mpi_semergedisruptfile_ofst_total;
 	rest->s_mpi_removestarfile_ofst_total      =mpi_removestarfile_ofst_total;
 	rest->s_mpi_relaxationfile_ofst_total      =mpi_relaxationfile_ofst_total;
 	rest->s_mpi_pulsarfile_ofst_total          =mpi_pulsarfile_ofst_total;
         rest->s_mpi_morepulsarfile_ofst_total      =mpi_morepulsarfile_ofst_total;
-        rest->s_mpi_morecollfile_len               =mpi_morecollfile_len;        
+        rest->s_mpi_morecollfile_ofst_total        =mpi_morecollfile_ofst_total;
         rest->s_mpi_triplefile_ofst_total          =mpi_triplefile_ofst_total;
 	rest->s_mpi_bhmergerfile_ofst_total        =mpi_bhmergerfile_ofst_total;
 
@@ -3804,6 +3829,12 @@ void save_global_vars(restart_struct_t *rest){
 	rest->s_N_bb		                       =N_bb;		
 	rest->s_N_bs                               =N_bs;
 	rest->s_E_bb                               =E_bb;
+	rest->s_mpi_newnsfile_ofst_total           =mpi_newnsfile_ofst_total;
+	rest->s_mpi_newbhfile_ofst_total           =mpi_newbhfile_ofst_total;
+	rest->s_mpi_threebbfile_ofst_total         =mpi_threebbfile_ofst_total;
+	rest->s_mpi_threebbprobabilityfile_ofst_total=mpi_threebbprobabilityfile_ofst_total;
+	rest->s_mpi_lightcollisionfile_ofst_total  =mpi_lightcollisionfile_ofst_total;
+	rest->s_mpi_threebbdebugfile_ofst_total    =mpi_threebbdebugfile_ofst_total;
 	rest->s_E_bs                               =E_bs;
 	rest->s_Echeck 		                       =Echeck; 		
 	rest->s_se_file_counter 	               =se_file_counter; 	
@@ -3851,6 +3882,12 @@ void load_global_vars(restart_struct_t *rest){
 	mpi_binintfile_ofst_total          =rest->s_mpi_binintfile_ofst_total;
 	mpi_collisionfile_ofst_total       =rest->s_mpi_collisionfile_ofst_total;
 	mpi_tidalcapturefile_ofst_total    =rest->s_mpi_tidalcapturefile_ofst_total;
+	mpi_newnsfile_len                  =rest->s_mpi_newnsfile_len;
+	mpi_newbhfile_len                  =rest->s_mpi_newbhfile_len;
+	mpi_threebbfile_len                =rest->s_mpi_threebbfile_len;
+	mpi_threebbprobabilityfile_len     =rest->s_mpi_threebbprobabilityfile_len;
+	mpi_lightcollisionfile_len         =rest->s_mpi_lightcollisionfile_len;
+	mpi_threebbdebugfile_len           =rest->s_mpi_threebbdebugfile_len;
         mpi_tdefile_ofst_total             =rest->s_mpi_tdefile_ofst_total;
 	mpi_semergedisruptfile_ofst_total  =rest->s_mpi_semergedisruptfile_ofst_total;
 	mpi_removestarfile_ofst_total      =rest->s_mpi_removestarfile_ofst_total;
@@ -3866,6 +3903,12 @@ void load_global_vars(restart_struct_t *rest){
 	N_bb		                       =rest->s_N_bb;		
 	N_bs                               =rest->s_N_bs;
 	E_bb                               =rest->s_E_bb;
+	mpi_newnsfile_ofst_total           =rest->s_mpi_newnsfile_ofst_total;
+	mpi_newbhfile_ofst_total           =rest->s_mpi_newbhfile_ofst_total;
+	mpi_threebbfile_ofst_total         =rest->s_mpi_threebbfile_ofst_total;
+	mpi_threebbprobabilityfile_ofst_total=rest->s_mpi_threebbprobabilityfile_ofst_total;
+	mpi_lightcollisionfile_ofst_total  =rest->s_mpi_lightcollisionfile_ofst_total;
+	mpi_threebbdebugfile_ofst_total    =rest->s_mpi_threebbdebugfile_ofst_total;
 	E_bs                               =rest->s_E_bs;
 	Echeck 		                       =rest->s_Echeck; 		
 	se_file_counter 	               =rest->s_se_file_counter; 	
@@ -4059,6 +4102,10 @@ void load_restart_file(){
         mpi_binaryfile_ofst_total=0;
         mpi_binintfile_ofst_total=0;
         mpi_collisionfile_ofst_total=0;
+	mpi_threebbfile_len=0;
+	mpi_threebbprobabilityfile_len=0;
+	mpi_lightcollisionfile_len=0;
+	mpi_threebbdebugfile_len=0;
         mpi_tidalcapturefile_ofst_total=0;
         mpi_tdefile_ofst_total=0;
         mpi_semergedisruptfile_ofst_total=0;
@@ -4077,6 +4124,10 @@ void load_restart_file(){
 	NEXT_RESTART = local_restart + 1;
 
 	/*Bit of arrray-based housekeeping*/
+	mpi_threebbfile_ofst_total=0;
+	mpi_threebbprobabilityfile_ofst_total=0;
+	mpi_lightcollisionfile_ofst_total=0;
+	mpi_threebbdebugfile_ofst_total=0;
 	star_r[0] = ZERO; 
 	star_r[clus.N_STAR + 1] = SF_INFINITY;
 	cenma.m_new= star_m[0];

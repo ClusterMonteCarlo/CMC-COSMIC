@@ -872,12 +872,14 @@ void comp_multi_mass_percent(){
 void comp_mass_percent(){
 	double mprev, ke_rad_prev=0.0, ke_tan_prev=0.0, v2_rad_prev=0.0, v2_tan_prev=0.0;
 	long int k, mcount;
+	/* reference mass for the mass fractions: Mtotal includes the central BH, so remove it when it is excluded */
+	double Mref = MASS_PC_BH_INCLUDE ? Mtotal : Mtotal - cenma.m * madhoc;
 
 	/* Computing radii containing mass_pc[i] % of the mass */
 	if (MASS_PC_BH_INCLUDE) {
 		mprev = cenma.m * madhoc;
 		for(mcount=0; mcount<MASS_PC_COUNT; mcount++){
-			if ( mprev/Mtotal > mass_pc[mcount] ) {
+			if ( mprev/Mref > mass_pc[mcount] ) {
 				mass_r[mcount] = MINIMUM_R;
 				ave_mass_r[mcount] = 0.0;
 				no_star_r[mcount] = 0;
@@ -931,9 +933,9 @@ void comp_mass_percent(){
 	for (k = 1; k <= clus.N_MAX; k++) {
 		mprev += star_m[k] / clus.N_STAR;
 
-		if (mprev > mass_pc[mcount] * Mtotal) {
+		if (mprev > mass_pc[mcount] * Mref) {
 			mass_r[mcount] = star_r[k];
-			ave_mass_r[mcount] = mprev/Mtotal/k*initial_total_mass;
+			ave_mass_r[mcount] = mprev/k;
 			no_star_r[mcount] = k;
 			densities_r[mcount] = mprev / (4.0 / 3.0 * PI * pow(star_r[k],3));
 
