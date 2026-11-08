@@ -1401,9 +1401,9 @@ typedef struct{
 * @brief remnantflag = 0 gives the NS/BH mass distribution from default BSE; 1 uses the distribution of Belczynski et al. 2002, ApJ, 572, 407 (1), while 2, 3, and 4 give you the standard, 'rapid' and 'delayed' models of Fryer et al. 2012, ApJ, 749, 91
 */
         int BSE_ZSUN;
-#define PARAMDOC_BSE_REMBAR_MASSLOSS "0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN"
+#define PARAMDOC_BSE_REMBAR_MASSLOSS "baryonic-to-gravitational mass loss when a proto-compact object collapses: positive values set the maximum mass lost (in Msun); -1 < value < 0 removes a constant fraction of the baryonic mass (e.g. -0.1 gives a remnant with 90% of the baryonic mass)"
 /**
-* @brief remnantflag = 0 gives the NS/BH mass distribution from default BSE; 1 uses the distribution of Belczynski et al. 2002, ApJ, 572, 407 (1), while 2, 3, and 4 give you the standard, 'rapid' and 'delayed' models of Fryer et al. 2012, ApJ, 749, 91
+* @brief rembar_massloss: positive values give the maximum baryonic-to-gravitational mass loss (Msun) when a compact object forms; -1 < rembar_massloss < 0 removes a constant fraction of the proto-compact object's baryonic mass
 */
         int BSE_REMBAR_MASSLOSS;
 #define PARAMDOC_BSE_REMNANTFLAG "0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN"
