@@ -28,8 +28,8 @@
 int fb_is_collision(double r, double R1, double R2, double M1, double M2, double k1, double k2, double mass_units, double length_units, double co_tde_flag, double wd_tc_flag)
 {
         double collisions_multiple;
-        k1 = abs(k1);
-        k2 = abs(k2);
+        k1 = fabs(k1);
+        k2 = fabs(k2);
         M1 = M1*mass_units/FB_CONST_MSUN;
         M2 = M2*mass_units/FB_CONST_MSUN;
         R1 = R1*length_units/FB_CONST_RSUN;
@@ -131,7 +131,19 @@ int fb_collide(fb_hier_t *hier, double f_exp, fb_units_t units, gsl_rng *rng, st
 	return(retval);
 }
 
-// PAU void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp)
+/* fb_check_ecc_for_inspiral() writes the same a,e to both members of a pair, so only
+   use the values if obj1 and obj2 agree; otherwise they came from another partner */
+static void fb_merger_orbit(double a1, double e1, double a2, double e2, double *a, double *e)
+{
+	if (a1 == a2 && e1 == e2) {
+		*a = a1;
+		*e = e1;
+	} else {
+		*a = 0.0;
+		*e = -1.0;
+	}
+}
+
 void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_units_t units, gsl_rng *rng, struct rng_t113_state *curr_st, double bh_reff)
 {
 	int i;
@@ -139,7 +151,7 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
     double E;
 	double clight, vrel[3], x[3], y[3], z[3], theta;
 	double v_perp, v_para, afinal, mass_frac;
-	fb_obj_t tmpobj;
+	fb_obj_t tmpobj = {0}; /* zeroed, so fields not set below are not left uninitialized */
 	clight = FB_CONST_C / units.v;
 
 	/* sanity check */
@@ -176,15 +188,17 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
 	}
 	for (i=0; i<obj2->ncoll; i++) {
 		tmpobj.id[obj1->ncoll + i] = obj2->id[i];
-		tmpobj.vkick[obj1->ncoll + i] = obj2->vkick[i];
-		tmpobj.a_merger[obj1->ncoll + i] = obj2->a_merger[i];
-		tmpobj.e_merger[obj1->ncoll + i] = obj2->e_merger[i];
-		tmpobj.a_500M[obj1->ncoll + i] = obj2->a_500M[i];
-		tmpobj.e_500M[obj1->ncoll + i] = obj2->e_500M[i];
-		tmpobj.a_100M[obj1->ncoll + i] = obj2->a_100M[i];
-		tmpobj.e_100M[obj1->ncoll + i] = obj2->e_100M[i];
-		tmpobj.a_50M[obj1->ncoll + i] = obj2->a_50M[i];
-		tmpobj.e_50M[obj1->ncoll + i] = obj2->e_50M[i];
+	}
+	for (i=1; i<obj2->ncoll; i++) {
+		tmpobj.vkick[obj1->ncoll + i - 1] = obj2->vkick[i];
+		tmpobj.a_merger[obj1->ncoll + i - 1] = obj2->a_merger[i];
+		tmpobj.e_merger[obj1->ncoll + i - 1] = obj2->e_merger[i];
+		tmpobj.a_500M[obj1->ncoll + i - 1] = obj2->a_500M[i];
+		tmpobj.e_500M[obj1->ncoll + i - 1] = obj2->e_500M[i];
+		tmpobj.a_100M[obj1->ncoll + i - 1] = obj2->a_100M[i];
+		tmpobj.e_100M[obj1->ncoll + i - 1] = obj2->e_100M[i];
+		tmpobj.a_50M[obj1->ncoll + i - 1] = obj2->a_50M[i];
+		tmpobj.e_50M[obj1->ncoll + i - 1] = obj2->e_50M[i];
 	}
     tmpobj.vkick[tmpobj.ncoll-1] = 0; 
 
@@ -228,12 +242,16 @@ void fb_merge(fb_obj_t *obj1, fb_obj_t *obj2, int nstarinit, double f_exp, fb_un
     /* magnitude of A gives the eccentricity at merger*/
     fb_n_ecc(obj1,obj2,&tmpobj.a_merger[tmpobj.ncoll-1],&tmpobj.e_merger[tmpobj.ncoll-1],units);
 
-    tmpobj.e_50M[tmpobj.ncoll-1] = obj1->e_50M[obj1->ncoll-1];
-    tmpobj.a_50M[tmpobj.ncoll-1] = obj1->a_50M[obj1->ncoll-1];
-    tmpobj.e_100M[tmpobj.ncoll-1] = obj1->e_100M[obj1->ncoll-1];
-    tmpobj.a_100M[tmpobj.ncoll-1] = obj1->a_100M[obj1->ncoll-1];
-    tmpobj.e_500M[tmpobj.ncoll-1] = obj1->e_500M[obj1->ncoll-1];
-    tmpobj.a_500M[tmpobj.ncoll-1] = obj1->a_500M[obj1->ncoll-1];
+    fb_merger_orbit(obj1->a_50M_pending, obj1->e_50M_pending, obj2->a_50M_pending, obj2->e_50M_pending,
+                    &tmpobj.a_50M[tmpobj.ncoll-1], &tmpobj.e_50M[tmpobj.ncoll-1]);
+    fb_merger_orbit(obj1->a_100M_pending, obj1->e_100M_pending, obj2->a_100M_pending, obj2->e_100M_pending,
+                    &tmpobj.a_100M[tmpobj.ncoll-1], &tmpobj.e_100M[tmpobj.ncoll-1]);
+    fb_merger_orbit(obj1->a_500M_pending, obj1->e_500M_pending, obj2->a_500M_pending, obj2->e_500M_pending,
+                    &tmpobj.a_500M[tmpobj.ncoll-1], &tmpobj.e_500M[tmpobj.ncoll-1]);
+
+    /* the product starts with no inspiral history of its own */
+    fb_reset_pending_orbit(&tmpobj);
+    tmpobj.last_sepM = 0.0;
 	
 	/* Apply a change in mass/spin/recoil speed for compact-object mergers */
 	if (obj1->k_type == 14 && obj2->k_type == 14){

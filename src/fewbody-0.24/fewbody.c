@@ -63,6 +63,8 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 	retval.Rmin_j = -1;
 	retval.Nosc = 0;
 	retval.DeltaE_GW = 0.;
+	retval.DeltaE_GWfrac = 0.;
+	retval.PN_ON = 0;
 	strncpy(logentry, input.firstlogentry, FB_MAX_LOGENTRY_LENGTH);
 
 	/* set up the perturbation tree, initially flat */
@@ -99,6 +101,16 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 		ks_params.kstar = ks_params.nstar*(ks_params.nstar-1)/2;
 		fb_malloc_ks_params(&ks_params);
 		fb_init_ks_params(&ks_params, *hier);
+		/* the KS integrator has no PN terms, but nonks_params is still read by the energy
+		   bookkeeping (fb_Etot_rel, fb_dedt_gw, fb_collapse), so mark PN as off */
+		nonks_params.nstar = 0;
+		nonks_params.m = NULL;
+		nonks_params.PN1 = 0;
+		nonks_params.PN2 = 0;
+		nonks_params.PN25 = 0;
+		nonks_params.PN3 = 0;
+		nonks_params.PN35 = 0;
+		nonks_params.units = units;
 	} else {
 		nonks_params.nstar = hier->nstar;
 		fb_malloc_nonks_params(&nonks_params);
@@ -111,7 +123,7 @@ fb_ret_t fewbody(fb_input_t input, fb_units_t units, fb_hier_t *hier, double *t,
 		nonks_params.units = units;
 	}
 
-    if (input.PN1 == 1 || input.PN2 == 1 || input.PN25 == 1 || input.PN3 == 1 || input.PN35 == 1){
+    if (!input.ks && (input.PN1 == 1 || input.PN2 == 1 || input.PN25 == 1 || input.PN3 == 1 || input.PN35 == 1)){
         retval.PN_ON = 1;
     }
 

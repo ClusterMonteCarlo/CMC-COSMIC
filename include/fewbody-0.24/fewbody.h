@@ -95,6 +95,12 @@ typedef struct fb_obj{
     double *e_500M; /* Array for recording the eccentricities for BBH at 500M */
 	double chi; /*Dimensionless Kerr parameter (negative for non-BH/NSs)*/
 	double last_sepM;
+	/* a,e of the current inspiral when it crossed 50/100/500M, set by fb_check_ecc_for_inspiral()
+	   on both members of the pair and copied into the merger record by fb_merge();
+	   e < 0 means not recorded */
+	double a_50M_pending, e_50M_pending;
+	double a_100M_pending, e_100M_pending;
+	double a_500M_pending, e_500M_pending;
 	double suppress;
 	double last_pn_E;
 	double last_pn_J;
@@ -267,6 +273,7 @@ double E_rel(fb_obj_t *star1, fb_obj_t *star2, fb_units_t units, fb_nonks_params
 double J_rel(fb_obj_t *star1, fb_obj_t *star2, fb_units_t units, fb_nonks_params_t nonks_params);
 void fb_n_ecc(fb_obj_t *obj1, fb_obj_t *obj2, double *a, double *e, fb_units_t units);
 void fb_check_ecc_for_inspiral(fb_obj_t *obj1, fb_obj_t *obj2, double sep_M, fb_units_t units);
+void fb_reset_pending_orbit(fb_obj_t *obj);
 double fb_pn_ecc_t(fb_obj_t *star1, fb_obj_t *star2, fb_units_t units, fb_nonks_params_t nonks_params);
 double fb_compute_distance_in_M(fb_obj_t *star1, fb_obj_t *star2, fb_units_t units);
 double fb_dedt_gw(fb_obj_t *star, int nstar, fb_units_t units, fb_nonks_params_t nonks_params);

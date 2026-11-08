@@ -50,6 +50,7 @@ void fb_malloc_hier(fb_hier_t *hier)
 		hier->hier[i].e_100M = (double *) malloc(hier->nstarinit * sizeof(double));
 		hier->hier[i].a_500M = (double *) malloc(hier->nstarinit * sizeof(double));
 		hier->hier[i].e_500M = (double *) malloc(hier->nstarinit * sizeof(double));
+		fb_reset_pending_orbit(&(hier->hier[i]));
 	}
 	hier->obj = (fb_obj_t **) malloc(hier->nstarinit * sizeof(fb_obj_t *));
 }
