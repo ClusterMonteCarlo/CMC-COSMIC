@@ -1828,7 +1828,7 @@ if(myid==0) {
 
         // windflag sets the wind prescription
         // windflag=0: stock BSE// windflag=1: StarTrack 2008
-        // windflag=2: Vink+2001// windflag=3: Vink+2005 (Vink plus LBV winds)
+        // windflag=2: Vink+2001// windflag=3: Vink+2005 (Vink plus LBV winds for all stars; LBV prescription set by LBV_flag)
         // default=3
         CHECK_PARSED(BSE_WINDFLAG, 3, PARAMDOC_BSE_WINDFLAG);
 

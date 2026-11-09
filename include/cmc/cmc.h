@@ -1204,9 +1204,9 @@ typedef struct{
 * @brief hewind is a helium star mass-loss factor (0.5 normally).
 */
 	int BSE_HEWIND;
-#define PARAMDOC_BSE_WINDFLAG "windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars)."
+#define PARAMDOC_BSE_WINDFLAG "windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars; the LBV prescription is set by LBV_flag)."
 /**
-* @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars).
+* @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars; the LBV prescription is set by LBV_flag).
 */
 	int BSE_WINDFLAG;
 #define PARAMDOC_BSE_LBV_FLAG "LBV_flag sets the LBV-like mass loss for stars beyond the Humphreys-Davidson limit (0=none, 1=Hurley+2000, 2=StarTrack/Belczynski+08 constant 1.5e-4 Msun/yr; 2 reproduces windflag=3 behavior of COSMIC < v4)."
