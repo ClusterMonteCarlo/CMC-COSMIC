@@ -18,10 +18,12 @@
 /* Rank-local copy of the binary input rows this rank needs, indexed by LOCAL binary row:
    position 0 is global binary row 0 (the sentinel); positions 1..n-1 are the consecutive
    global rows first..first+n-2. Only the fields cmc uses are kept; types match cfd's bs_*
-   arrays so the double -> long conversions stay two-step as before. */
+   arrays so the double -> long conversions stay two-step as before. For FITS input the
+   slice aliases cfd's full-length arrays instead (owned == 0; see bin_slice_alias_cfd). */
 typedef struct {
 	long    n;
 	long    first;
+	int     owned;
 	long    *id1;
 	long    *id2;
 	double  *m1;
@@ -36,6 +38,7 @@ static void bin_slice_alloc(bin_slice_t *s, long n, long first)
 {
 	s->n     = n;
 	s->first = first;
+	s->owned = 1;
 	s->id1   = (long *)   calloc(n, sizeof(long));
 	s->id2   = (long *)   calloc(n, sizeof(long));
 	s->m1    = (double *) calloc(n, sizeof(double));
@@ -50,8 +53,27 @@ static void bin_slice_alloc(bin_slice_t *s, long n, long first)
 	}
 }
 
+/* Points the slice at cfd's full-length binary arrays (FITS input) without copying, so
+   local row g is global row g. cfd stays allocated until after get_star_data() returns. */
+static void bin_slice_alias_cfd(bin_slice_t *s)
+{
+	s->n     = cfd.NBINARY + 1;
+	s->first = 1;
+	s->owned = 0;
+	s->id1   = cfd.bs_id1;
+	s->id2   = cfd.bs_id2;
+	s->m1    = cfd.bs_m1;
+	s->m2    = cfd.bs_m2;
+	s->Reff1 = cfd.bs_Reff1;
+	s->Reff2 = cfd.bs_Reff2;
+	s->a     = cfd.bs_a;
+	s->e     = cfd.bs_e;
+}
+
 static void bin_slice_free(bin_slice_t *s)
 {
+	if (!s->owned)
+		return;
 	free(s->id1); free(s->id2); free(s->m1); free(s->m2);
 	free(s->Reff1); free(s->Reff2); free(s->a); free(s->e);
 }
@@ -374,7 +396,8 @@ void load_fits_file_data(void)
 	/* MPI: the binary rows this rank needs are the nonzero binind values of its objects.
 	   For generated inputs they form one consecutive run, so a direct-mapped slice
 	   [bmin, bmax] holds exactly them. The slice is correct for any binind set; if the
-	   run is not consecutive it is only larger than necessary, and we say so. */
+	   run is not consecutive it is only larger than necessary, and we say so. FITS input
+	   already holds the full binary table in cfd, so it is used in place instead. */
 	for (i=0; i<=nown; i++) {
 		long b = objs.binind[i];
 		if (!b)
@@ -394,25 +417,13 @@ void load_fits_file_data(void)
 		prev = b;
 		nbin++;
 	}
-	if (nbin > 0 && !consecutive)
-		fprintf(stderr, "WARNING: rank %d: owned binind values are not one consecutive run; reading binary rows %ld..%ld (%ld rows) for %ld binaries\n",
-			myid, bmin, bmax, bmax - bmin + 1, nbin);
-	bin_slice_alloc(&bins, (nbin > 0) ? bmax - bmin + 2 : 1, (nbin > 0) ? bmin : 0);
-
 	if (cfd.bs_id1 != NULL) {	/* FITS reader: full-length cfd binary arrays */
-		long p;
-		for (p = 0; p < bins.n; p++) {
-			long g = (p == 0) ? 0 : bins.first + p - 1;
-			bins.id1[p]   = cfd.bs_id1[g];
-			bins.id2[p]   = cfd.bs_id2[g];
-			bins.m1[p]    = cfd.bs_m1[g];
-			bins.m2[p]    = cfd.bs_m2[g];
-			bins.Reff1[p] = cfd.bs_Reff1[g];
-			bins.Reff2[p] = cfd.bs_Reff2[g];
-			bins.a[p]     = cfd.bs_a[g];
-			bins.e[p]     = cfd.bs_e[g];
-		}
+		bin_slice_alias_cfd(&bins);
 	} else {
+		if (nbin > 0 && !consecutive)
+			fprintf(stderr, "WARNING: rank %d: owned binind values are not one consecutive run; reading binary rows %ld..%ld (%ld rows) for %ld binaries\n",
+				myid, bmin, bmax, bmax - bmin + 1, nbin);
+		bin_slice_alloc(&bins, (nbin > 0) ? bmax - bmin + 2 : 1, (nbin > 0) ? bmin : 0);
 		load_hdf5_binaries(&bins);
 	}
 
