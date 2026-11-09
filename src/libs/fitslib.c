@@ -13,7 +13,6 @@
 #include "fitslib.h"
 #include "hdf5.h"
 
-#define LARGE_DISTANCE 1.0e40
 
 
 #ifdef USE_FITS
@@ -94,6 +93,16 @@ void cmc_malloc_fits_data_t(cmc_fits_data_t *cfd){
 	cfd->bs_Reff2[0] = 0.0;
 	cfd->bs_a[0] = 0.0;
 	cfd->bs_e[0] = 0.0;
+}
+
+/* The cmc HDF5 path keeps no full-length input arrays in cfd: load_fits_file_data reads the
+   object and binary tables per rank once rank ownership is known. */
+static void cmc_null_fits_data_arrays(cmc_fits_data_t *cfd){
+	cfd->obj_id = NULL; cfd->obj_k = NULL; cfd->obj_m = NULL; cfd->obj_Reff = NULL;
+	cfd->obj_r = NULL; cfd->obj_vr = NULL; cfd->obj_vt = NULL; cfd->obj_binind = NULL;
+	cfd->bs_index = NULL; cfd->bs_id1 = NULL; cfd->bs_k1 = NULL; cfd->bs_m1 = NULL;
+	cfd->bs_Reff1 = NULL; cfd->bs_id2 = NULL; cfd->bs_k2 = NULL; cfd->bs_m2 = NULL;
+	cfd->bs_Reff2 = NULL; cfd->bs_a = NULL; cfd->bs_e = NULL;
 }
 
 /**
@@ -211,8 +220,6 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
     hsize_t     dims[2] = {1, 1};
 
     herr_t      status;
-    double      **read_stellar_objects;                       /* Read buffer */
-    double      **read_binary_objects;                       /* Read buffer */
     int         ndims,
                 i, j, k;
 
@@ -362,67 +369,11 @@ void cmc_read_hdf5_file(char *filename, cmc_fits_data_t *cfd, long RESTART_TCOUN
         return;
     }
 
-    /* Allocate cfd */
-    cmc_malloc_fits_data_t(cfd);
-
-    /*
-     * Get dataspace and allocate memory for the read buffer as before.
-     */
-    space = H5Dget_space (dset);
-    ndims = H5Sget_simple_extent_dims (space, dims, NULL);
-    read_stellar_objects = (double **) malloc (dims[0] * sizeof (double *));
-    read_stellar_objects[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
-    for (i=1; i<dims[0]; i++)
-        read_stellar_objects[i] = read_stellar_objects[0] + i * dims[1];
-
-    status = H5Dread (dset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                read_stellar_objects[0]);
-
-    for (i=0; i<dims[0]; i++) {
-        cfd->obj_id[i] = read_stellar_objects[i][0];
-        cfd->obj_k[i] = read_stellar_objects[i][1];
-        cfd->obj_m[i] = read_stellar_objects[i][2];
-        cfd->obj_Reff[i] = read_stellar_objects[i][3];
-        cfd->obj_r[i] = read_stellar_objects[i][4];
-        cfd->obj_vr[i] = read_stellar_objects[i][5];
-        cfd->obj_vt[i] = read_stellar_objects[i][6];
-        cfd->obj_binind[i] = read_stellar_objects[i][7];
-    }
-
-    space = H5Dget_space (dset1);
-    ndims = H5Sget_simple_extent_dims (space, dims, NULL);
-    read_binary_objects = (double **) malloc (dims[0] * sizeof (double *));
-    read_binary_objects[0] = (double *) malloc (dims[0] * dims[1] * sizeof (double));
-    for (i=1; i<dims[0]; i++)
-        read_binary_objects[i] = read_binary_objects[0] + i * dims[1];
-
-    /*
-     * Read the data using the default properties.
-     */
-    status = H5Dread (dset1, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                      read_binary_objects[0]);
-
-    for (i=0; i<dims[0]; i++) {
-        cfd->bs_index[i] = read_binary_objects[i][0];
-        cfd->bs_id1[i] = read_binary_objects[i][1];
-        cfd->bs_k1[i] = read_binary_objects[i][2];
-        cfd->bs_m1[i] = read_binary_objects[i][3];
-        cfd->bs_Reff1[i] = read_binary_objects[i][4];
-        cfd->bs_id2[i] = read_binary_objects[i][5];
-        cfd->bs_k2[i] = read_binary_objects[i][6];
-        cfd->bs_m2[i] = read_binary_objects[i][7];
-        cfd->bs_Reff2[i] = read_binary_objects[i][8];
-        cfd->bs_a[i] = read_binary_objects[i][9];
-        cfd->bs_e[i] = read_binary_objects[i][10]; 
-    }
+    cmc_null_fits_data_arrays(cfd);
 
     /*
      * Close and release resources.
      */
-    free (read_stellar_objects[0]);
-    free(read_stellar_objects);
-    free (read_binary_objects[0]);
-    free(read_binary_objects);
     free (read_z[0]);
     free (read_z);
     free (read_mclus[0]);
