@@ -1444,6 +1444,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_WINDFLAG);
 				sscanf(values, "%d", &BSE_WINDFLAG);
 				parsed.BSE_WINDFLAG = 1;
+			} else if (strcmp(parameter_name, "LBV_FLAG")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_LBV_FLAG);
+				sscanf(values, "%d", &BSE_LBV_FLAG);
+				parsed.BSE_LBV_FLAG = 1;
                         } else if (strcmp(parameter_name, "EDDLIMFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_EDDLIMFLAG);
                                 sscanf(values, "%d", &BSE_EDDLIMFLAG);
@@ -1827,6 +1831,12 @@ if(myid==0) {
         // windflag=2: Vink+2001// windflag=3: Vink+2005 (Vink plus LBV winds)
         // default=3
         CHECK_PARSED(BSE_WINDFLAG, 3, PARAMDOC_BSE_WINDFLAG);
+
+        // LBV_flag sets the LBV-like mass loss beyond the Humphreys-Davidson limit
+        // (introduced in COSMIC v4; previously part of windflag=3)
+        // LBV_flag=0: none// LBV_flag=1: Hurley+2000// LBV_flag=2: StarTrack (Belczynski+08)
+        // default=2, which reproduces windflag=3 in COSMIC < v4
+        CHECK_PARSED(BSE_LBV_FLAG, 2, PARAMDOC_BSE_LBV_FLAG);
 
         // eddlimflag turns on metallicity dependence on winds, affecting the
         // mass-loss rate of low-metallicity stars near the Eddington limit

@@ -255,6 +255,7 @@ void bse_set_metisse_inputs(char *path_to_tracks, char *path_to_he_tracks,
 void bse_set_neta(double neta); /* Reimers mass-loss coefficent (neta*4x10^-13; 0.5 normally) */
 void bse_set_bwind(double bwind); /* binary enhanced mass loss parameter (inactive for single) */
 void bse_set_hewind(double hewind); /* helium star mass loss factor (1.0 normally) */
+void bse_set_LBV_flag(int LBV_flag); /* LBV-like mass loss (0=none, 1=Hurley+2000, 2=StarTrack) */
 void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
 void bse_set_eddlimflag(int eddlimflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
 // rejuvflag toggles between the original BSE prescription for MS mixing and 

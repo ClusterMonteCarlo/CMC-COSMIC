@@ -208,6 +208,7 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	bse_set_bwind(BSE_BWIND);
 	bse_set_hewind(BSE_HEWIND);
 	bse_set_windflag(BSE_WINDFLAG);
+	bse_set_LBV_flag(2);
 	bse_set_eddlimflag(BSE_EDDLIMFLAG);
 	bse_set_pisn(BSE_PISN);
 	bse_set_ecsn(BSE_ECSN);

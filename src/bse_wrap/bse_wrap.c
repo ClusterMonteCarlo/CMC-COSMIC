@@ -831,6 +831,7 @@ void bse_set_neta(double neta) { windvars_.neta = neta; }
 void bse_set_bwind(double bwind) { windvars_.bwind = bwind; }
 void bse_set_hewind(double hewind) { windvars_.hewind = hewind; }
 void bse_set_windflag(int windflag) { flags_.windflag = windflag; }
+void bse_set_LBV_flag(int LBV_flag) { windvars_.LBV_flag = LBV_flag; }
 void bse_set_pisn(double pisn) { snvars_.pisn = pisn; }
 void bse_set_ecsn(double ecsn) { snvars_.ecsn = ecsn; }
 void bse_set_ecsn_mlow(double ecsn_mlow) { snvars_.ecsn_mlow = ecsn_mlow; }
