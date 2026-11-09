@@ -200,7 +200,7 @@ extern struct {
         bhms_coll_flag, wd_mass_lim, rtmsflag, maltsev_mode;
 } flags_;
 extern struct { double don_lim, acc_lim[2], Mbh_initial, smt_periastron_check; } mtvars_;
-extern struct { int ceflag, cekickflag, cemergeflag, cehestarflag, ussn; } ceflags_;
+extern struct { int ce2stageflag, ceflag, cekickflag, cemergeflag, cehestarflag, ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 extern struct { double zsun; } metvars_;
 extern struct {
@@ -308,6 +308,7 @@ void bse_set_pts3(double pts3); /* timestep taken in HG, HeMS phases (0.02) */
 void bse_set_alpha1(double alpha1); /* common-envelope efficiency parameter (1.0) */
 void bse_set_lambdaf(double lambdaf); /* binding energy factor for common envelope evolution (0.5) */
 void bse_set_ceflag(int ceflag); /* ceflag > 0 activates spin-energy correction in common-envelope (0); ceflag = 3 activates de Kool common-envelope model (0) */
+void bse_set_ce2stageflag(int ce2stageflag); /* 0 = standard energy formalism for CE; 1 = two-stage CE from Hirai & Mandel 2022 (0) */
 void bse_set_cehestarflag(int cehestarflag); /* cehestarflag > 0 activates spin-energy correction in common-envelope (0); cehestarflag = 3 activates de Kool common-envelope model (0) */
 void bse_set_cemergeflag(int cemergeflag); /* cemergeflag > 0 activates spin-energy correction in common-envelope (0); cemergeflag = 3 activates de Kool common-envelope model (0) */
 void bse_set_cekickflag(int cekickflag); /* cekickflag > 0 activates spin-energy correction in common-envelope (0); cekickflag = 3 activates de Kool common-envelope model (0) */
@@ -331,6 +332,7 @@ double bse_get_lambdaf(void); /* get CE lambda */
 double bse_get_spp(int i, int j); /* stellar evolution log */
 double bse_get_scm(int i, int j); /* stored stellar parameters at interval dtp */
 double bse_get_bpp(int i, int j); /* binary evolution log */
+void print_bpp_array(void); /* dump bpp rows of the last evolv2 call to stderr (debugging) */
 double bse_get_bcm(int i, int j); /* stored binary parameters at interval dtp */
 char *bse_get_sselabel(int kw); /* converts stellar type number to text label */
 char *bse_get_bselabel(int kw); /* converts binary type number to text label */

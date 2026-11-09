@@ -164,7 +164,9 @@ DYNAMICS FLAGS
 
                                      ``0`` : Off
 
-                                     ``1`` : On
+                                     ``1`` : On w/ pairing of two most massive bodies (Morscher et al., 2013)
+
+                                     ``2`` : On w/ pairing at random (Atallah et al., 2024)
 
                                     **THREEBODYBINARIES = 1**
 
@@ -178,11 +180,14 @@ DYNAMICS FLAGS
 
                                     **ONLY_FORM_BH_THREEBODYBINARIES = 1**
 
+``BINARY_HARDNESS_POWER``           Power-law index for hardness distribution of three-body binaries; common choices are -3 (Goodman & Hut 1993; Atallah+ 2024) and -5.5 (Morscher et al., 2013) ; default is -5.5.
+
+                                    **BINARY_HARDNESS_POWER = -5.5**
 
 ``MIN_BINARY_HARDNESS``             Minimum hardness ratio for forming three-body binaries (or breaking wide binaries if BINARY_BREAKING_MIN = 1)
 
 
-                                    **MIN_BINARY_HARDNESS = 5**
+                                    **MIN_BINARY_HARDNESS = 1**
 
 
 ``BINARY_BREAKING_MIN``             whether to use 10% of the interparticle seperation (0, default) or MIN_BINARY_HARDNESS (1) as the criterion for breaking wide binaries

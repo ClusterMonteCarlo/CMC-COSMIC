@@ -989,10 +989,15 @@ if(myid==0) {
 				sscanf(values, "%d", &procs);
 				parsed.STREAMS = 1;
 	/* Meagan: new parameters for three-body binaries: THREEBODYBINARIES, MIN_BINARY_HARDNESS, ONLY_FORM_BH_THREEBODYBINARIES */
+	// Chris O'C: added BINARY_HARDNESS_POWER March 2026
 			} else if (strcmp(parameter_name, "THREEBODYBINARIES") == 0) {
 				PRINT_PARSED(PARAMDOC_THREEBODYBINARIES);
 				sscanf(values, "%d", &THREEBODYBINARIES);
 				parsed.THREEBODYBINARIES = 1;
+			} else if (strcmp(parameter_name, "BINARY_HARDNESS_POWER") == 0) {
+				PRINT_PARSED(PARAMDOC_BINARY_HARDNESS_POWER);
+				sscanf(values, "%lf", &BINARY_HARDNESS_POWER);
+				parsed.BINARY_HARDNESS_POWER = 1;
 			} else if (strcmp(parameter_name, "MIN_BINARY_HARDNESS") == 0) {
 				PRINT_PARSED(PARAMDOC_MIN_BINARY_HARDNESS);
 				sscanf(values, "%lf", &MIN_BINARY_HARDNESS);
@@ -1483,6 +1488,10 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_CEFLAG);
                                 sscanf(values, "%i", &BSE_CEFLAG);
                                 parsed.BSE_CEFLAG = 1;
+                        } else if (strcmp(parameter_name, "CE2STAGEFLAG")== 0) {
+                                PRINT_PARSED(PARAMDOC_BSE_CE2STAGEFLAG);
+                                sscanf(values, "%i", &BSE_CE2STAGEFLAG);
+                                parsed.BSE_CE2STAGEFLAG = 1;
                         } else if (strcmp(parameter_name, "CEKICKFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_CEKICKFLAG);
                                 sscanf(values, "%i", &BSE_CEKICKFLAG);
@@ -1746,7 +1755,9 @@ if(myid==0) {
 	CHECK_PARSED(STREAMS, 1, PARAMDOC_STREAMS);
 	/*Meagan: new parameters for 3-body binary formation*/
 	CHECK_PARSED(THREEBODYBINARIES, 0, PARAMDOC_THREEBODYBINARIES);
-	CHECK_PARSED(MIN_BINARY_HARDNESS, 5.0, PARAMDOC_MIN_BINARY_HARDNESS);
+	CHECK_PARSED(MIN_BINARY_HARDNESS, 1.0, PARAMDOC_MIN_BINARY_HARDNESS);
+	// Chris O'C - new parameter to adjust the hardness distribution for 3BBF
+	CHECK_PARSED(BINARY_HARDNESS_POWER, -5.5, PARAMDOC_BINARY_HARDNESS_POWER);
 	CHECK_PARSED(ONLY_FORM_BH_THREEBODYBINARIES, 1, PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES);
 	// default - 1: three-body binary formation only allowed for black holes
 	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);
@@ -1870,6 +1881,12 @@ if(myid==0) {
         // ceflag=0 does not use this method (uses the core mass to calculate initial orbital energy)
         // default=0
         CHECK_PARSED(BSE_CEFLAG, 1, PARAMDOC_BSE_CEFLAG);
+		
+        // ce2stageflag sets the CE energy formalism
+        // 0: standard energy formalism
+        // 1: two-stage formalism from Hirai & Mandel 2022
+        // default=0
+        CHECK_PARSED(BSE_CE2STAGEFLAG, 0, PARAMDOC_BSE_CE2STAGEFLAG);
 
         // cekickflag determined the prescription for calling kick.f in comenv.f
         // 0: default BSE

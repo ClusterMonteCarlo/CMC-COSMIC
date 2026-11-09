@@ -30,7 +30,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	long sq, k1, k2, k3, form_binary;
 	double n_threshold, triplet_count, num_triplets_averaged=200;
 	double ave_local_mass, sigma_local, vrel_ave, v1[4], v2[4], v3[4], vrel12[4], vrel3[4]; 
-	double eta_min=MIN_BINARY_HARDNESS, Y1, rate_3bb, rate_ave=0.0, P_3bb, P_ave=0.0;
+	double eta_min=MIN_BINARY_HARDNESS, eta_power=BINARY_HARDNESS_POWER, Y1, rate_3bb, rate_ave=0.0, P_3bb, P_ave=0.0;
 	double clight10o7;
 	double collisions_multiple;
 
@@ -66,8 +66,6 @@ void dynamics_apply(double dt, gsl_rng *rng)
 
 	pararootfprintf(logfile, "%s(): performing interactions:", __FUNCTION__);
 
-
-
 /* Added by Meagan 3/10/11  */
 	//================================
 	//  Three-body binary formation  |
@@ -96,8 +94,13 @@ void dynamics_apply(double dt, gsl_rng *rng)
 			{
 				dt = SaveDt;
 				form_binary = 0; // reset this to zero; later we decide whether to form a binary, and if so, set form_binary=1
-				// Sort stars by mass (k1 is most massive)
-				sort_three_masses(sq, &k1, &k2, &k3);
+				// Sort stars by mass (k1 is most massive); >Feb 2026 only if using Morscher prescription for 3BBF
+				if (THREEBODYBINARIES == 1) {
+					sort_three_masses(sq, &k1, &k2, &k3);
+				} else {
+					shuffle_three_masses(sq, &k1, &k2, &k3, rng);
+				}
+				//sort_three_masses(sq, &k1, &k2, &k3);
 				n_local = calc_n_local(get_global_idx(k1), BH_AVEKERNEL, N_LIMIT);
 				// If density above threshold, check for 3bb formation
 				if (n_local > n_threshold) {
@@ -122,17 +125,22 @@ void dynamics_apply(double dt, gsl_rng *rng)
 						// Calculate RATE of binary formation
 
 						// Below is rate_3bb with all the velocity terms vrel_3 and vrel_12 replaced with the averaged local relative velocity, vrel_ave. We did this because we were finding that when we used the actual relative velocities, vrel12, if too large, the 3bb rate would be extremely low and binaries would not form (since it depends strongly on v: v^-9). When we replaced vrel12 with the average relative velocity (over 20 stars), the 3bb formation rate was high enough that binaries would form. We decided to use the average relative velocity for all relative velocity terms, vrel_3 and vrel_12.
-
-					// *Note* Factor of 0.5 in front of rate_3bb ensures that our sampling method produces the correct overall analytic 3bb rate
-					rate_3bb = 0.5 * sqrt(2) * sqr(PI) * sqr(n_local) *  pow(vrel_ave, -9) * pow(((star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)]) * madhoc), 5.0) * pow(eta_min, -5.5) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)] + star_m[get_global_idx(k3)]) / (star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)])) * eta_min);
+						rate_3bb = sqr(n_local) * pow(vrel_ave, -9) * pow(((star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)]) * madhoc), 5.0) * pow(eta_min, eta_power) * (1.0 + 2.0*eta_min) * (1.0 + 2.0 * ((star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)] + star_m[get_global_idx(k3)]) / (star_m[get_global_idx(k1)] + star_m[get_global_idx(k2)])) * eta_min);
+						if (THREEBODYBINARIES==1) {
+							// rate with coefficient from Morscher et al. 2013
+							rate_3bb *= 0.5 * sqrt(2) * sqr(PI); 
+						} else if (THREEBODYBINARIES==2) { 
+							// rate with coefficient from Atallah et al. 2024, plus user-specified power law
+							rate_3bb *= 0.1328 * sqrt(10.); 
+						}
 
 						// Calculate PROBABILITY of binary formation
 						P_3bb = rate_3bb * (dt * ((double) clus.N_STAR)/log(GAMMA*((double) clus.N_STAR)));
 
 						// print info on probability calculation, for innermost 200 triplets, in each timestep
 						if (triplet_count <= num_triplets_averaged) {
-						P_ave += P_3bb;
-						rate_ave += rate_3bb;
+							P_ave += P_3bb;
+							rate_ave += rate_3bb;
 						}
 /* //MPI: Commenting out since this will cause a deadlock, and is also this needs a reduction for each star.
 						// For each timestep, output average rate and probability of 3bb formation, 
@@ -171,7 +179,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 							/* Here is where new binary properties are calculated.
 								if form_binary=1, the new binary will be created, but if form_binary=0,
 								the interaction will be logged in lightcollision log  */
-							make_threebodybinary(P_3bb, k1, k2, k3, form_binary, eta_min, ave_local_mass, n_local, sigma_local, v1, v2, v3, vrel12, vrel3, delta_E_3bb, rng);
+							make_threebodybinary(P_3bb, k1, k2, k3, form_binary, eta_min, eta_power, ave_local_mass, n_local, sigma_local, v1, v2, v3, vrel12, vrel3, delta_E_3bb, rng);
 						} else { // Probability of 3bb formation too low ==> No binary formed
 							form_binary = 0;
 							/* do nothing; check 3bb formation for next 3 stars */
