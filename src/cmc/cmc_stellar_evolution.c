@@ -39,6 +39,7 @@ void restart_stellar_evolution(void){
   bse_set_lambdaf(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
   bse_set_cehestarflag(BSE_CEHESTARFLAG);
+  bse_set_ce2stageflag(BSE_CE2STAGEFLAG);
   bse_set_cemergeflag(BSE_CEMERGEFLAG);
   bse_set_cekickflag(BSE_CEKICKFLAG);
   bse_set_tflag(BSE_TFLAG);
@@ -151,6 +152,7 @@ void stellar_evolution_init(void){
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambdaf(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
+  bse_set_ce2stageflag(BSE_CE2STAGEFLAG);
   bse_set_cehestarflag(BSE_CEHESTARFLAG);
   bse_set_cemergeflag(BSE_CEMERGEFLAG);
   bse_set_cekickflag(BSE_CEKICKFLAG);
