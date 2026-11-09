@@ -1833,9 +1833,9 @@ if(myid==0) {
         CHECK_PARSED(BSE_WINDFLAG, 3, PARAMDOC_BSE_WINDFLAG);
 
         // LBV_flag sets the LBV-like mass loss beyond the Humphreys-Davidson limit
-        // (introduced in COSMIC v4; previously part of windflag=3)
+        // (introduced in COSMIC v3.7.2; previously part of windflag=3)
         // LBV_flag=0: none// LBV_flag=1: Hurley+2000// LBV_flag=2: StarTrack (Belczynski+08)
-        // default=2, which reproduces windflag=3 in COSMIC < v4
+        // default=2, which reproduces windflag=3 in COSMIC < v3.7.2
         CHECK_PARSED(BSE_LBV_FLAG, 2, PARAMDOC_BSE_LBV_FLAG);
 
         // eddlimflag turns on metallicity dependence on winds, affecting the

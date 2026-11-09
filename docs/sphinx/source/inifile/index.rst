@@ -628,6 +628,7 @@ WIND FLAGS
                             ``1`` : `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
 
                             ``2`` : StarTrack (`Belczynski+2008 <https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract>`_)
+
                          **LBV_flag = 2**
 
 ``eddlimflag``           Adjusts the dependence of mass loss on metallicity for stars near
