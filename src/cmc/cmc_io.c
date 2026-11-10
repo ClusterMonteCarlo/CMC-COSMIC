@@ -2398,7 +2398,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 			fprintf(centmass_file, "# Information on central black hole [code units unless otherwise noted]\n");
 			fprintf(centmass_file, "#1:t #2:cenma.m #3:Dt #4:rho_core #5:Etotal.tot #6:Etotal.K #7:Etotal.P\n");
 			fprintf(dynfile, "# Dynamical information [code units]\n");
-			fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse(MSUN) #27.DMrejuv(MSUN) #28.N_c_nb\n");
+			fprintf(dynfile, "#1:t #2:Dt #3:tcount #4:N #5:M #6:VR #7:N_c #8:r_c #9:r_max #10:Etot #11:KE #12:PE #13:Etot_int #14:Etot_bin #15:E_cenma #16:Eesc #17:Ebesc #18:Eintesc #19:Eoops #20:Etot+Eoops #21:r_h #22:rho_0 #23:rc_spitzer #24:v0_rms #25:rc_nb #26.DMse[Msun] #27.DMrejuv[Msun] #28.N_c_nb\n");
 			//Sourav:printing properties at 10 lagrange radii
 			if (CALCULATE10){
 				fprintf(lagrad10file, "#Dynamical information at 0.1 lagrange radius\n");
