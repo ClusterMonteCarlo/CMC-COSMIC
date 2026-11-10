@@ -18,23 +18,14 @@ Analyzing CMC Output
    In [146]: ion() 
 
 
-Here we list all of the output files that are generated in a typical CMC run, 
-and offer some suggestsions on how to analyze them.  Generally, the output 
-comes in one of two types: `log files`, where individual events (e.g. stellar 
-collisions, mergers, fewbody interactions) are logged whenenver they happen or 
-when specific quantities are recorded every timestep (e.g. the number of black 
-holes, the core radius, the lagrange radii), and `snapshots`, where the state 
-of every star and binary in the cluster is recorded.  These are saved in plain 
-text dat files and hdf5 files, respectively.
+Here we list all of the output files that are generated in a typical CMC run, and offer some suggestsions on how to analyze them. Generally, the output comes in
+one of two types: `log files`, where individual events (e.g. stellar collisions, mergers, fewbody interactions) are logged whenenver they happen or when specific
+quantities are recorded every timestep (e.g. the number of black holes, the core radius, the lagrange radii), and `snapshots`, where the state of every star and binary in the cluster is recorded. These are saved in plain text dat files and hdf5 files, respectively.
 
-Most of the log files are in plain text (.dat) with easily readable columns 
-that can be loaded in python with either ``loadtxt`` or the appropriate pandas 
-commands.  However, a handful of the event log files, such as the binary 
-interaction (binint.log), collision (collision.log), and stellar evolution 
-distruption (semergedistrupt.log), are somewhat more difficult to parse.  We 
-have provided a python package to make parsing these easier; it is located in 
-the ``CMC-COSMIC/tools`` directory of the main CMC folder (the `cmc_parser.py 
-<https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/tools>`_ file).
+Most of the log files are in plain text (.dat) with easily readable columns that can be loaded in python with either ``loadtxt`` or the appropriate pandas
+commands. However, a handful of the event log files, such as for binary interactions (binint.log), collisions (collision.log), and disruptions by stellar evolution
+(semergedistrupt.log), are somewhat more difficult to parse. We have provided a python package to make parsing these easier; it is located in the
+``CMC-COSMIC/tools`` directory of the main CMC folder (the `cmc_parser.py <https://github.com/ClusterMonteCarlo/CMC-COSMIC/tree/master/tools>`_ file).
 
 .. _cmcparser:
 
@@ -48,32 +39,22 @@ The log files can be imported using (specifying only the prefix that you provide
 
 We will discuss each of these below.
 
-The HDF5 snapshots are designed to be importable as Pandas tables and are 
-described below.  These snapshots can also be converted into various 
-observational quantities, such as surface brightness profiles, velocity 
-dispersion profiles, and more, using the `cmctoolkit` package (`Rui et al., 
-2021 <https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_).  We 
-include the python code from the main package in the ``CMC-COSMIC/tools`` 
-folder, but please see `here <https://github.com/NicholasRui/cmctoolkit>`_ for 
-complete instructions and useage.
+The HDF5 snapshots are designed to be importable as Pandas tables and are described below. These snapshots can also be converted into various observational
+quantities, such as surface brightness profiles, velocity dispersion profiles, and more, using the `cmctoolkit` package
+(`Rui et al. 2021 <https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_). We include the python code from the main package in the
+``CMC-COSMIC/tools`` directory, but please see `here <https://github.com/NicholasRui/cmctoolkit>`_ for complete instructions and useage.
 
 .. note::
 
-        Here we are using the output from the :ref:`realistic-initial-conditions` example, running it for 15 Myr (though note that the default ini file runs it for 13.8 Gyr) and having it print a window snapshot every 10 Myr.  On 28 cores of the Vera machine, this takes about 10 minutes.  
+        Here we are using the output from the :ref:`realistic-initial-conditions` example, running it for 15 Myr (though note that the default ini file runs it for 13.8 Gyr) and having it print a window snapshot every 10 Myr. On 28 cores of the Vera machine, this takes about 10 minutes.  
 
 ==========
 Code Units
 ==========
 
-CMC uses the standard N-body units `(Hénon 1971a) 
-<https://link.springer.com/article/10.1007/BF00649159>`_ in all numerical 
-calculations: the gravitational constant :math:`{G=1}`, the initial total mass 
-:math:`{M=1}`, and the initial total energy :math:`{E_0=-1/4}`. The conversion 
-from code units to physical units for time is done by calculating the initial 
-half-mass relaxation time in years. The file ``<output>.conv.sh`` contains all 
-conversion factors used to convert from code to physical units. For example, to 
-convert from code units of time to Myr, multiply by the factor timeunitsmyr, 
-and so on. **Unless otherwise noted, all values below are in code units.** 
+CMC uses the standard N-body units `(Hénon 1971a) <https://link.springer.com/article/10.1007/BF00649159>`_ in all numerical calculations: the gravitational constant :math:`G=1`, the initial total mass :math:`M=1`, and the initial total energy :math:`E_0=-1/4`. The conversion from code units to physical units for time is done by calculating the initial half-mass relaxation time in years. The file ``<output>.conv.sh`` contains all conversion factors used to convert from code to physical
+units. For example, to convert from code units of time to Myr, multiply by the factor timeunitsmyr, and so on.
+**Unless otherwise noted, all values below are in code units.** 
 
 This file can be parsed using the above command, or using a stand-alone command for only the conversion dictionary:
 
@@ -88,63 +69,55 @@ This file can be parsed using the above command, or using a stand-alone command 
 Log Files
 ==========
 
-Listed below are the output files of CMC with the variables printed out. 
+Listed below are the output files of CMC with the 0-indexed variables tabulated with brief descriptions. 
 
 initial.dyn.dat
 ---------------
 
-The **initial.dyn.dat** files contains various theoretical quantities pertaining 
-to the dynamical evolution of your cluster, such as theoretical core radius, 
-total mass, central density, central velocity dispersion, etc. This file may be 
-used to create, for example, plots of core radii or half-mass radii versus time 
-for a given simulation. Be warned that these theoretical quantities are not 
-necessarily the same as the way observers would define these quantities. 
-However, these quantities are all useful for establishing a general idea of how 
-the cluster evolves.
+The **initial.dyn.dat** file contains various theoretical quantities pertaining to the dynamical evolution of the cluster, such as theoretical core radius, total mass,
+central density, central velocity dispersion, etc. This file may be used to create, for example, plots of core radii or half-mass radii versus time for a given
+simulation. Be warned that these theoretical quantities are not necessarily the same as the way observers would define these quantities. However, these quantities are
+all useful for establishing a general idea of how the cluster evolves.
 
-================  =====================================================
-``t``               Time [code units]
-``dt``              Time step
-``tcount``          Time count
-``N``               Total number of objects (single+binary)
-``M``               Total mass (in units of initial mass)
-``VR``              Measure how far away the cluster is from virial equilibrium (-2.0*Etotal.K/Etotal.P)
-``N_c``             Total number of stars within the core: :math:`\frac{4 \pi}{3} r_c^3  \frac{n_{\rm c}}{2}`
-``r_c``             Theoretical, mass-density-weighted core radius from Eq. II.4 of Casertano & Hut (1985)
-``r_max``           Maximum radius of a star 
-``Etot``            Total energy 
-``KE``              Total kinetic energy 
-``PE``              Total potential energy 
-``Etot_int``        Total internal energy of single stars
-``Etot_bin``        Total internal energy of binary stars
-``E_cenma``         Central BH mass (i.e., when there is a central IMBH)
-``Eesc``            Total energy of the escaped single stars
-``Ebesc``           Total energy of the escaped binary stars
-``Eintesc``         Total internal energy in the escaped stars
-``Eoops``           Energy error loss due to Stodolkiwecz's potential correction 
-``Etot+Eoops``      Total energy + Eoops
-``r_h``             Half-mass radius
-``rho_0``           Central density (mass-density-weighted density) from Eq. II.5 of Casertano & Hut (1985)
-``rc_spitzer``      Core radius from Spitzer (1987): :math:`\sqrt{3  \sigma_0^2}{4 \pi \rho_0}`
-``v0_rms``          RMS density-weighted velocity dispersion at the cluster center
-``rc_nb``           Theoretical (mass-density-squared)-weighted core radius used in NBODY6, originating in Eq. 5 of McMillan, Hut & Makino (1990)
-``DMse``            Total mass loss from the cluster per time step due to stellar evolution [:math:`{M_{\odot}}`]
-``DMrejuv`` 	     Mass loss from rejuvenation per time step [:math:`{M_{\odot}}`]
-``N_c_nb``          Number of stars within the core: :math:`\frac{4 \pi}{3} rc_{\rm nb}^3  \frac{n_{\rm c}}{2}`
-================  =====================================================
+======  ==============  =====================================================
+0       ``t``           Time
+1       ``Dt``          Time step size
+2       ``tcount``      Time step count
+3       ``N``           Total number of objects (single + binary)
+4       ``M``           Total mass (in units of initial mass)
+5       ``VR``          Measures how far away the cluster is from virial equilibrium (-2.0*Etotal.K/Etotal.P)
+6       ``N_c``         Total number of stars within the core radius ``r_c``: :math:`\frac{4 \pi}{3} r_c^3  \frac{n_{\rm c}}{2}`
+7       ``r_c``         Theoretical, mass-density-weighted core radius from Eq. II.4 of `Casertano & Hut (1985) <https://ui.adsabs.harvard.edu/abs/1985ApJ...298...80C/abstract>`_
+8       ``r_max``       Maximum clustercentric radial position of any star in the cluster
+9       ``Etot``        Total energy 
+10      ``KE``          Total kinetic energy 
+11      ``PE``          Total potential energy 
+12      ``Etot_int``    Total internal energy of single stars
+13      ``Etot_bin``    Total internal energy of binary stars
+14      ``E_cenma``     Central BH mass (i.e., when there is a central IMBH)
+15      ``Eesc``        Total energy of the escaped single stars
+16      ``Ebesc``       Total energy of the escaped binary stars
+17      ``Eintesc``     Total internal energy in the escaped stars
+18      ``Eoops``       Energy lost due to the `Stodółkiewicz (1982) <https://ui.adsabs.harvard.edu/abs/1982AcA....32...63S/abstract>`_ potential correction step
+19      ``Etot+Eoops``  ``Etot`` + ``Eoops``
+20      ``r_h``         Half-mass radius
+21      ``rho_0``       Central density (mass-density-weighted density) from Eq. II.5 of `Casertano & Hut (1985) <https://ui.adsabs.harvard.edu/abs/1985ApJ...298...80C/abstract>`_
+22      ``rc_spitzer``  Core radius from `Spitzer (1987) <https://ui.adsabs.harvard.edu/abs/1987degc.book.....S/abstract>`_, :math:`\sqrt{3  \sigma_0^2}{4 \pi \rho_0}`
+23      ``v0_rms``      RMS density-weighted velocity dispersion at the cluster center
+24      ``rc_nb``       Theoretical (mass-density-squared)-weighted core radius used in NBODY6, originating in Eq. 5 of `McMillan, Hut & Makino (1990) <https://ui.adsabs.harvard.edu/abs/1990ApJ...362..522M/abstract>`_ 
+25      ``DMse``        Total mass loss from the cluster per time step due to stellar evolution [:math:`M_{\odot}`]
+26      ``DMrejuv``     Mass loss from rejuvenation per time step [:math:`M_{\odot}`]
+27      ``N_c_nb``      Number of stars within the core radius ``rc_nb``: :math:`\frac{4 \pi}{3} rc_{\rm nb}^3  \frac{n_{\rm c}}{2}`
+======  ==============  =====================================================
 
 initial.binint.log
 ------------------
 
-Over the course of the evolution of the cluster, single stars and binaries will 
-frequently undergo three- and four-body dynamical encounters, which are 
-integrated directly in CMC using the Fewbody package (Fregeau et al. 2007). The 
-file **initial.binint.log** records all input and output parameters (e.g., 
-component masses, IDS, stellar types, semi-major axes, etc.) each time fewbody 
-is called. 
+Over the course of the evolution of the cluster, single stars and binaries will frequently undergo three- and four-body dynamical encounters, integrated directly in CMC using the Fewbody package (`Fregeau et al. 2004 <https://ui.adsabs.harvard.edu/abs/2004MNRAS.352....1F/abstract>`_,
+`Fregeau et al. 2007 <https://ui.adsabs.harvard.edu/abs/2007ApJ...658.1047F/abstract>`_).
+The file **initial.binint.log** records key input and output parameters (e.g., component masses, IDS, stellar types, semi-major axes, etc.) each time fewbody is called. 
 
-Every encounter information is printed between two lines of asterisks.
-Below is an exemplary output:
+Information for each encounter is printed between two lines of asterisks. Below is an example output:
 
 .. code-block:: bash
 
@@ -152,40 +125,43 @@ Below is an exemplary output:
       type=BS t=5.85010072e-06
       params: b=1.46611 v=0.379587
       input: type=single m=0.0284732 R=0.215538 Eint=0 id=170307 ktype=0
-      input: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.0908923 e=0.0641548 ktype1=0 ktype2=0 status:      DE/E=-1.79889e-08 DE=1.71461e-10 DL/L=2.54957e-08 DL=8.18406e-10 DE_GW/E=-0 DE_GW=0 v_esc_cluster[km/s]=77.9847 tcpu=0.01
+      input: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.0908923 e=0.0641548 ktype1=0 ktype2=0
+      status: DE/E=-1.79889e-08 DE=1.71461e-10 DL/L=2.54957e-08 DL=8.18406e-10 DE_GW/E=-0 DE_GW=0 v_esc_cluster[km/s]=77.9847 tcpu=0.01
       outcome: nstar=3 nobj=2:  0 [1 2] (single-binary)
       output: type=single m=0.0284732 R=0.215538 Eint=0 id=170307 ktype=0
       output: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.09094 e=0.123848 ktype1=0 ktype2=0
       ********************************************************************************
 
-==============================  =====================================================
-``type``						         Encounter type (BS for binary-single or BB for binary-binary)
-``t``							         Encounter time
-``b``							         Impact parameter [units of :math:`a` for binary-single or :math:`a_1+a_2` for binary-binary]
-``v``							         Relative velocity at infinity [:math:`v_c`]
-``m``							         Mass [:math:`{M_{\odot}}`]
-``R``							         Radius [:math:`R_{\odot}`]
-``Eint``			                  Internal energy
-``id``						         ID number 
-``kytpe``					         Stellar type
-``a``							         Semi-major axis [AU]
-``e``							         Eccentricity
-``dE/E``			                  Fractional change in energy
-``DE``                           Total change in energy
-``DL/L``                         Fractional change in angular momentum
-``DL``                           Change in angular momentum
-``DE_GW``                        Energy loss due gravitational wave emission
-``v_esc_cluster``			         Escape speed of the cluster where the encounter occured [km/s]
-``tcpu``                         CPU time for integration (usually ~milliseconds, unless it's a GW capture)
-``nstar``					         Number of stars
-``nobj``						         Number of objects (single/binary)
-``i [j k]``					         Final configuration after encounter, e.g.,  0 [1 2] (single-binary)
-==============================  =====================================================
+======================  =====================================================
+``type``                Encounter type (BS for binary-single or BB for binary-binary)
+``t``                   Time at which encounter occurred
+``b``                   Impact parameter [units of :math:`a` for binary-single or :math:`a_1+a_2` for binary-binary]
+``v``                   Relative velocity at infinity, :math:`v_c`
+``input: type``         Type of incoming particle (hierarchy): either single or binary
+``m``                   Body mass [:math:`M_{\odot}`]
+``R``                   Body radius [:math:`R_{\odot}`]
+``Eint``                Body internal energy
+``id``                  Body ID
+``ktype``               Body stellar type
+``a``                   Binary semi-major axis [AU]
+``e``                   Binary eccentricity
+``dE/E``                Fractional change in energy
+``DE``                  Total change in energy
+``DL/L``                Fractional change in angular momentum
+``DL``                  Change in angular momentum
+``DE_GW/E``             Fractional change in energy due to gravitational wave emission
+``DE_GW``               Energy loss due gravitational wave emission
+``v_esc_cluster``       Escape speed of the cluster where the encounter occured [:math:`{\rm km\,s}^{-1}`]
+``tcpu``                CPU time for integration (usually ~milliseconds, unless it's a GW capture)
+``ouput: type``         Type of outgoing particle (hierarchy): either single, binary, or triple (though note CMC breaks apart triples shortly thereafter)
+``nstar``               Number of stars post-encounter
+``nobj``                Number of separate hierarchies (single, binary, or triple) post-encounter
+``i [j k]``             Post-encounter configuration, with brackets enclosing mutually bound hierarchies and colons indicating collisions/mergers. In the
+                        above example, "0 [1 2]" indicates a single and binary. See below for a full list of possible outcomes.
+======================  =====================================================
 
-Objects are labelled starting from 0 to 3. The binary-single and binary-binary 
-encounters are denoted as BS and BB, respectively. For type=binary, indices 0 
-and 1 in mass, radius,id,etc. denote the primary and secondary objects in a 
-binary.
+Bodies are labeled from 0 to 3. The binary-single and binary-binary encounters are denoted as BS and BB, respectively. For type=binary, indices 0 and 1
+in mass, radius, id, etc. denote the primary and secondary bodies in a binary.
 
 Possible outcomes for ``type=BS``:
 
@@ -196,7 +172,7 @@ Possible outcomes for ``type=BS``:
 * binary [0:1 2]
 * single 0:1:2
 
-Possible outcomes for ``type=BB``: 
+Possible outcomes for ``type=BB``:
 
 * binary [0 1:2:3]
 * single-binary 0:1 [2 3]
@@ -208,13 +184,10 @@ Possible outcomes for ``type=BB``:
 * binary-single-single [0 1] 3 2
 * single-binary-single 0 [1 3] 2
 
-0:1 denotes the fact that objects 0 and 1 have merged, and [0 1] indicates that 
-objects 0 and 1 have formed a binary. The same is true for any pairs from 0 to 
-3.
+0:1 denotes that bodies 0 and 1 have collided/merged, and [0 1] indicates that bodies 0 and 1 have formed a binary. The same is true for any pairs from 0 to 3.
 
-While the `binint` file is easy to read, it can be difficult to parse.  Using 
-the ``load_interaction_files`` command from :ref:`above <cmcparser>` provides 
-the ``binints`` object, a python list of dictionaries of every encounter:
+While the `binint` file is easy to read, it can be difficult to parse. Using the ``load_interaction_files`` command from :ref:`above <cmcparser>` provides the
+``binints`` object, a python list of dictionaries of every encounter:
 
 .. ipython:: python
 
@@ -235,122 +208,112 @@ the ``binints`` object, a python list of dictionaries of every encounter:
 initial.bh.dat
 -------------
 
-This file contains the number of BHs (as well as BH binaries, etc.) at each 
-dynamical time step. This is useful to plot, for example, the number of 
-retained BHs versus time. For BH mergers, you want to look in 
-**initial.bhmerger.dat**, which records all BH-BH mergers that occur inside the 
-cluster during the cluster evolution.
+This file contains the number of BHs (as well as BH binaries, etc.) at each time step. This is useful to plot, for example, the number of retained BHs versus time.
+For BH mergers, you want to look in **initial.bhmerger.dat**, which records all BH-BH mergers that occur within the cluster during its evolution (ejected mergers
+must be analyzed separately by computing the inspiral times of all BH-BH binaries appearing in the **initial.esc.dat** file).
 
-==============================  =====================================================
-``tcount``						      Time count
-``Totaltime``					      Total time
-``Nbh,tot``						      Total number of BHs
-``Nbh,single``					      Number of single BHs
-``Nbinarybh``					      Number of binary BHs
-``Nbh-bh``						      Number of BH-BH binaries
-``Nbh-nonbh``			            Number of BH-non BH binaries
-``Nbh-ns``					         Number of BH-NS binaries
-``Nbh-wd``						      Number of BH-WD binaries
-``N_bh-star``				 	      Number of stars including MS stars and giants 
-``Nbh-ms``						      Number of BH-MS binaries	
-``Nbh-postms``			            Number of BH-giant binaries
-``fb_bh``						      Number of binaries containing a black hole / total number of systems containing a black hole 
-==============================  =====================================================
+======  ======================  =====================================================
+0       ``tcount``              Time step count
+1       ``Totaltime``           Time
+2       ``Nbh,tot``             Total number of BHs (``Nbh,single`` + ``Nbh-nonbh`` + 2 * ``Nbh-bh``)
+3       ``Nbh,single``          Number of single BHs
+4       ``Nbinarybh``           Number of binary BHs (``Nbh-nonbh`` + ``Nbh-bh``)
+5       ``Nbh-bh``              Number of BH-BH binaries
+6       ``Nbh-nonbh``           Number of BH-nonBH binaries
+7       ``Nbh-ns``              Number of BH-NS binaries
+8       ``Nbh-wd``              Number of BH-WD binaries
+9       ``N_bh-star``           Number of stars including MS stars and giants 
+10      ``Nbh-ms``              Number of BH-MS binaries	
+11      ``Nbh-postms``          Number of BH-giant binaries
+12      ``fb_bh``               Number of BH-containing binaries / number of BH-containing systems (singles or binaries): ``Nbinarybh`` / (``Nbh,single`` + ``Nbinarybh``)
+======  ======================  =====================================================
 
 initial.bh.esc.dat
 ----------------
-This file contains the number of ejected BHs at each dynamical time step. It 
-includes the same columns in the **initial.bh.dat** file.
+This file contains the number of ejected BHs at each time step. It includes the same columns in the **initial.bh.dat** file.
 
 initial.bhmerger.dat
 ---------------------
 
-List of all binary black hole mergers that occur in the cluster (note this does 
-not include BBHs that may be ejected from the cluster and merge later).  There 
-are four categories of mergers that occur inside the cluster:
+List of all BH-BH mergers that occur in the cluster (note this does not include BH-BH binaries that may be ejected from the cluster and merge later).
+There are four categories of mergers that occur inside the cluster:
 
  * **isolat-binary** - merger that occurs in a binary, but not due to GW capture
  * **binary-single** - merger that occurs due to GW capture during a binary-single encounter
  * **binary-binary** - merger that occurs due to GW capture during a binary-binary encounter
- * **single-single** - merger that occurs due to GW capture between two isoalted black holes
+ * **single-single** - merger that occurs due to GW capture between two isolated BHs
 
-==============================  =====================================================
-``time``                        Time merger occurs
-``type``                        What kind of merger was this 
-``r``                           Radius in cluster where merger occured
-``id1``                         ID of primary
-``id2``                         ID of secondary 
-``m1``                          Mass of primary :math:`[M_{\odot}]`
-``m2``                          Mass of secondary :math:`[M_{\odot}]`
-``spin1``                       Spin of primary 
-``spin2``                       Spin of secondary 
-``m_final``                     Mass of merger remnant :math:`[M_{\odot}]`
-``spin_final``                  Spin of merger remnant
-``vkick``                       Kick merger remnant recieves [km/s]
-``v_esc``                       Escape speed of cluster where merger occurs [km/s]
-``a_final``                     Last semi-major axis recorded for binary (see note) [AU]
-``e_final``                     Last eccentricity recorded for binary
-``a_50M``                       (Newtonian) semi-major axis when the BHs were 50M apart; only for binary-single or binary-binary [AU] 
-``e_50M``                       (Newtonian) eccentricity when BHs were 50M apart  
-``a_100M``                      Same, but 100M apart [AU] 
-``e_100M``                      "
-``a_500M``                      "
-``e_500M``                      "
-==============================  =====================================================
+======  ======================  =====================================================
+0       ``time``                Time merger occurs
+1       ``type``                What kind of merger was this
+2       ``r``                   Radius in cluster where merger occured
+3       ``id1``                 ID of primary
+4       ``id2``                 ID of secondary
+5       ``m1``                  Mass of primary [:math:`M_{\odot}`]
+6       ``m2``                  Mass of secondary [:math:`M_{\odot}`]
+7       ``spin1``               Spin of primary
+8       ``spin2``               Spin of secondary
+9       ``final_id``            ID of merger remnant
+10      ``m_final``             Mass of merger remnant [:math:`M_{\odot}`]
+11      ``spin_final``          Spin of merger remnant
+12      ``vkick``               Kick merger remnant recieves [:math:`{\rm km\,s}^{-1}`]
+13      ``v_esc``               Escape speed of cluster where merger occurs [:math:`{\rm km\,s}^{-1}`]
+14      ``a_final``             Last semi-major axis recorded for binary (see note) [AU]
+15      ``e_final``             Last eccentricity recorded for binary
+16      ``a_50M``               (Newtonian) semi-major axis when the BHs were 50M apart; only for binary-single or binary-binary [AU]
+17      ``e_50M``               (Newtonian) eccentricity when BHs were 50M apart
+18      ``a_100M``              Same, but 100M apart [AU]
+19      ``e_100M``              "
+20      ``a_500M``              "
+21      ``e_500M``              "
+======  ======================  =====================================================
 
  .. DANGER::
 
-        The ``a_final`` and ``e_final`` parameters change depending on the type of encounter.  For binary-single and binary-binary GW captures, these record the 
-        (Newtonian) semi-major axis and eccentricity at 10M (when we consider the BHs to have mergred.  However, this is an unreliable quantity, since the orbit 
-        is decidedly non-Newtonian at that point.  If you want eccentricities, use ``a_100M`` and ``e_100M``, or preferably the outermost value above).
+        The ``a_final`` and ``e_final`` parameters change depending on the type of encounter. For binary-single and binary-binary GW captures, these record the 
+        (Newtonian) semi-major axis and eccentricity at 10M (when we consider the BHs to have mergred. However, this is an unreliable quantity, since the orbit 
+        is decidedly non-Newtonian at that point. If you want eccentricities, use ``a_100M`` and ``e_100M``, or preferably the outermost value above).
 
-        For single-single GW captures, ``a_final`` and ``e_final`` are the semi-major axis and eccentricity that the GW capture formed at.  For isolat-binary 
+        For single-single GW captures, ``a_final`` and ``e_final`` are the semi-major axis and eccentricity that the GW capture formed at. For **isolat-binary** 
         mergers, it's the last semi-major axis and eccentricity that were recorded in the cluster.
 
 
 initial.collision.log
 ---------------------
 
-This file lists stellar types and properties for all stellar collisions 
-occurring in the given simulation. See Sections 6 and 7 of Kremer et al. 2019 
-for further detail. 
+This file lists stellar types and properties for all stellar collisions occurring in the simulation. See Sections 6 and 7 of
+`Kremer et al. (2019) <https://ui.adsabs.harvard.edu/abs/2019ApJ...881...75K/abstract>`_ for further detail.
 
-==============================  =====================================================
-``t``						           Collision time
-``interaction type``		        Interaction type e.g., single-binary, binary-binary, etc.
-``idm(mm)``						     ID_merger(mass of merged body)
-``id1(m1)``					        ID_1 (mass of collided body_1)
-``id2(m2)``					 	     ID_2 (mass of the collided body_2)
-``r``						           Distance from the center of cluster
-``typem``			              Merger stellar type
-``type1``					        Stellar type of body_1
-``type2``						     Stellar type of body_2 
-``b``                            Impact parameter at infinity [:math:`R_{\odot}`]
-``vinf``                         Relative velocity of two objects at infinity [km/s] 
-``rad1``                         Radius of body_1
-``rad2``                         Radius of body_2
-``rperi``                        Pericenter distance at collision
-``coll_mult``                    Collison multiplyer e.g., sticky sphere (``coll_mul`` = 1), TDE (``coll_mul``> 1)
-==============================  =====================================================
+======  ======================  =====================================================
+0       ``t``                   Collision time
+1       ``interaction type``    Interaction type e.g., single-binary, binary-binary, etc.
+2       ``idm(mm)``             ID_merger(mass of merged body)
+3       ``id1(m1)``             ID_1 (mass of collided body_1)
+4       ``id2(m2)``             ID_2 (mass of the collided body_2)
+5       ``r``                   Distance from the center of cluster
+6       ``typem``               Merger stellar type
+7       ``type1``               Stellar type of body_1
+8       ``type2``               Stellar type of body_2 
+9       ``b``                   Impact parameter at infinity [:math:`R_{\odot}`]
+10      ``vinf``                Relative velocity of two objects at infinity [:math:`{\rm km\,s}^{-1}`] 
+11      ``rad1``                Radius of body_1
+12      ``rad2``                Radius of body_2
+13      ``rperi``               Pericenter distance at collision
+14      ``coll_mult``           Collison multiplyer e.g., sticky sphere (``coll_mul`` = 1), TDE (``coll_mul``> 1)
+======  ======================  =====================================================
 
 
-The single-single, binary-single, etc indicate whether the collision occurred 
-during a binary encounter or not. When there are three stars listed for the 
-collision it means that all three stars collided during the encounter. This is 
-rare, but it does happen occasionally. Typically, one will see something like:
+The single-single, binary-single, etc indicate whether the collision occurred during a binary encounter or not. When there are three stars listed for the collision it means that all three stars collided during the encounter. This is rare, but it does happen occasionally. Typically, one will see something like:
 
 .. code-block:: bash 
 
       t=0.00266079 binary-single idm=717258(mm=1.0954) id1=286760(m1=0.669391):id2=415309 (m2=0.426012) (r=0.370419) typem=1 type1=0 type2=0
 
-In this case the colliding stars are m1=0.66 and m2=0.42. The information about 
-the third star in this binary--single encounter is not stored in the 
-collision.log file. The only way to get information about the third star is to 
-find this binary-single encounter in the **initial.binint.log** file (can be 
-identified easily using the encounter time (here t=0.00266) and also 
-cross-checking the id numbers for the two stars listed in the collision file).
+In this case the colliding stars are m1=0.66 and m2=0.42. The information about the third star in this binary--single encounter is not stored in the collision.log file.
+The only way to get information about the third star is to find this binary-single encounter in the **initial.binint.log** file (can be identified easily using the
+encounter time (here t=0.00266) and also cross-checking the id numbers for the two stars listed in the collision file).
 
-Similarly to the binint file, the collision file can be processed using the :ref:`load_interaction_file <cmcparser>` command
+Similarly to the binint file, the collision file can be processed using the :ref:`load_interaction_file <cmcparser>` command.
 
 .. ipython:: python
 
@@ -362,17 +325,17 @@ initial.semergedisrupt.log
 
 This file lists all stellar mergers that occur through binary evolution in each simulation. 
 
-==============================  =====================================================
-``t``						            Time
-``interaction type``		         Interaction type e.g., disrupted1, disrupted2, disrupted both
-``idr(mr)``						      ID_remnant(mass of the remnant)
-``id1(r1)``					         ID_1 (mass of body_1)
-``id2(m2)``					 	      ID_2 (mass of body_2)
-``r``						            Distance from the center of cluster
-``typer``			               Stellar type of merger
-``type1``					         Stellar type of body_1 
-``type2``						      Stellar type of body_2 
-==============================  =====================================================
+======  ======================  =====================================================
+0       ``t``                   Time
+1       ``interaction type``    Interaction type e.g., disrupted1, disrupted2, disrupted both
+2       ``idr(mr)``             ID_remnant(mass of the remnant)
+3       ``id1(r1)``             ID_1 (mass of body_1)
+4       ``id2(m2)``             ID_2 (mass of body_2)
+5       ``r``                   Distance from the center of cluster
+6       ``typer``               Stellar type of merger
+7       ``type1``               Stellar type of body_1 
+8       ``type2``               Stellar type of body_2 
+======  ======================  =====================================================
 
 
 The semergedisrupt file can also be processed using the :ref:`load_interaction_file <cmcparser>` command
@@ -386,75 +349,60 @@ The semergedisrupt file can also be processed using the :ref:`load_interaction_f
 initial.esc.dat
 ---------------
 
-As the result of dynamical encounters (and other mechanisms such as cluster 
-tidal truncation) single stars and binaries often become unbound from the 
-cluster potential and are ejected from the system. When this happens, the 
-ejection is recorded in **initial.esc.dat**. In particular, this ejection 
-process plays an intimate role in the formation of merging BH binaries. If a 
-BH-BH binary is ejected from the cluster with sufficiently small orbital 
-separation it may merge within a Hubble time and be a possible LIGO source. To 
-determine the number of such mergers, calculate the inspiral times for all 
-BH-BH binaries that appear in the **initial.esc.dat** file.
+As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected
+from the cluster. When this happens, the ejection is recorded in **initial.esc.dat**. Such escapers are often still important to consider: for example, when studying stellar streams or
+binary phenomena that still occur after ejection. For instance, if a BH-BH binary is ejected from the cluster with sufficiently small orbital separation it may merge within a Hubble time
+and be a possible LIGO source. To determine the number of such mergers, calculate the inspiral times for all BH-BH binaries that appear in **initial.esc.dat**.
 
+As of September 2026, **initial.esc.dat** now stores all necessary information to restart stellar evolution of both binary and single ejecta in post-processing using the COSMIC stellar evolution code. Previously, this was only possible for binaries since relevant information for singles was missing from **initial.esc.dat**.
 
-Parameters with a `_0` (i.e., mass, radius, star type, etc) correspond to the 
-primary star in a binary. There is also the same column for the secondary star 
-with `_0` replaced by `_1` in the **initial.esc.dat** file. Parameters without 
-indicies indicate single stars.  
+Parameters ending with a `0` (e.g., ``id0``) contain information about the stellar body if it's a single, or about the primary body if the system is a binary. The corresponding columns for the secondary bodies of binaries end with a `1` (e.g., ``id1``) and are filled with values of `-100` for singles. For brevity, these columns for binary secondaries are not listed in the table below, but each one's position in the file immediately follows the corresponding column for binary primaries and singles, reflected in the missing column indices in the table. In addition to columns ending in a `1`, a few additional columns are meaningful for binaries only and are filled with values of `-100` for singles. These columns are: ``a``, ``e``, ``eta``, ``radrol0``, and ``dmdt0``.
 
-==============================  =====================================================
-``tcount``						     Time count
-``t``		     					     Time
-``m``						           Mass [:math:`M_{\odot}`]. If the object is binary,  ``m`` corresponds to total mass of the primary and secondary stars 
-``r``					              Clustercentric radial position
-``vr``					 	        Radial velocity
-``vt``						 		  Tangential velocity
-``r_peri``			              Pericenter of star's orbit in the cluster when it was ejected    
-``r_apo``                       Apocenter of star's orbit in the cluster 
-``Rtidal``	                    Tidal radius
-``phi_rtidal``                  Potential at the tidal radius
-``phi_zero``                    Potential at center
-``E``                           Total energy
-``J``                           Total angular momentum
-``id``                          Single ID number
-``binflag``                     Binary flag. If ``binflag`` = 1, the object is binary; otherwise single
-``m0``                          Primary mass [:math:`M_{\odot}`]
-``id0``                         Primary ID number
-``a``                           Semi-major axis [AU]
-``e``                           Eccentricity
-``startype``                    Single star type
-``bin_startype0``	              Primary star type 
-``rad0``                        Primary radius [:math:`R_{\odot}`]
-``tb``                          Binary orbital period [days]
-``lum0``                        Primary luminosity [:math:`L_{\odot}`]
-``massc0``                      Primary core mass [:math:`M_{\odot}`
-``radc0``                       Primary core radius [:math:`R_{\odot}`]
-``menv0``                       Primary envelope mass [:math:`M_{\odot}`]
-``renv0``                       Primary envelope radius [:math:`R_{\odot}`]
-``tms0``                        Primary timescale of the main sequence
-``dmdt0``                       Primary mass accreting rate 
-``radrol0``                     Ratio of Roche Lobe to radius
-``ospin0``                      Primary spin angular momentum
-``B0``                          Primary magnetic field [G]
-``formation0``                  Primary formation channel for supernova, e.g., core collapse, pair instability, etc.)
-``bacc0``                       Mass accreted to the primary
-``tacc0``                       Time spent accreting mass to the primary 
-``mass0_0``                     Primary initial mass 
-``epoch0``                      
-``bhspin``                      BH spin (if single)
-``bhspin1``                     BH spin for primary (if binary)  
-``ospin``                       Single star spin angular momentum
-``B``                           Single star magnetic field [G]
-``formation``	                 Single star formation channel for supernova			 
-==============================  =====================================================
+======  ======================  =====================================================
+0       ``tcount``              Timestep count
+1       ``t``                   Time
+2       ``r``                   Clustercentric radial position
+3       ``vr``                  Radial velocity, :math:`v_r`
+4       ``vt``                  Tangential velocity, :math:`v_t`
+5       ``E``                   Energy of star's orbit in the cluster, :math:`E=\frac{v_r^2 + v_t^2}{2} + \phi(r)`. Note this includes the single/binary's own contribution to :math:`\phi(r)`---i.e., :math:`-G(m_0+m_1)/r`---but this self-contribution is explicitly excluded in the criterion for escape: ``E`` + G (``m0`` + ``m1``) / ``r`` > ``Ecrit``, where ``Ecrit`` (below) also excludes the self-contribution.
+6       ``J``                   Angular momentum of system's orbit in the cluster, :math:`J = r v_t`
+7       ``r_peri``              Pericenter of star's orbit in the cluster when it was ejected
+8       ``r_apo``               Apocenter of star's orbit in the cluster
+9       ``r_tidal``             Tidal radius, :math:`r_t`
+10      ``phi_zero``            Potential at cluster center
+11      ``phi_tidal``           Potential at the tidal radius, :math:`\phi(r_t)`
+12      ``Ecrit``               Critical energy required to escape, excluding the single/binary's own contribution to :math:`\phi(r_t)`, i.e., :math:`-G (m_0 + m_1) / r_t`. By default, :math:`E_{\rm crit} = \alpha \phi(r_t) + G (m_0 + m_1) / r_t` where :math:`\alpha = 1.5 - 3 \left(\frac{\ln\Lambda}{N}\right)^{1/4}` (`Giersz et al. 2008 <https://ui.adsabs.harvard.edu/abs/2008MNRAS.388..429G/abstract>`_). Here, :math:`\ln\Lambda = \gamma N` is the Coulomb logarithm, and CMC's default :math:`\gamma=0.01` is appropriate for realistic stellar initial mass functions (`Freitag et al. 2006 <https://ui.adsabs.harvard.edu/abs/2006MNRAS.368..121F/abstract>`_, `Rodriguez et al. 2018 <https://ui.adsabs.harvard.edu/abs/2018ComAC...5....5R/abstract>`_).
+13      ``id0``                 ID of binary primary or single
+15      ``st0``                 Stellar type
+17      ``m0``                  Mass, :math:`m_0` [:math:`M_{\odot}`]
+19      ``a``                   Binary semi-major axis [AU]; `-100` if single
+20      ``e``                   Binary eccentricity; `-100` if single
+21      ``eta``                 Binary hardness, :math:`\eta = \frac{G(m_0+m_1)}{a \langle m^2 \sigma^2\rangle}`, where the local average over mass :math:`m` (``m0`` + ``m1`` if a binary) and velocity dispsersion :math:`\sigma` is done over the 30 nearest particles (singles or binaries). ``eta`` = `-100` if single
+22      ``rad0``                Radius [:math:`R_{\odot}`]
+24      ``lum0``                Luminosity [:math:`L_{\odot}`]
+26      ``massc0``              Core mass [:math:`M_{\odot}`]
+28      ``menv0``               Envelope mass [:math:`M_{\odot}`]
+30      ``radc0``               Core radius [:math:`R_{\odot}`]
+32      ``renv0``               Envelope radius [:math:`R_{\odot}`]
+34      ``radrol0``             Ratio of binary primary's radius to its enclosing Roche lobe radius; `-100` if single
+36      ``tms0``                Main-sequence timescale [Myr]
+38      ``dmdt0``               Binary primary star's mass rate of change [:math:`M_{\odot}\,{\rm yr}^{-1}`]; `-100` if single
+40      ``bacc0``               Total previously accreted mass [:math:`M_{\odot}`]
+42      ``tacc0``               Time [Myr] spent accreting mass
+44      ``mass0_0``             Initial mass [:math:`M_{\odot}`]
+46      ``ospin0``              Spin angular momentum [:math:`M_{\odot}\,R_{\odot}^2\,{\rm yr}^{-1}`]
+48      ``B0``                  Magnetic field strength [G]
+50      ``epoch0``              COSMIC parameter establishing a time offset for restarting stellar evolution [:math:`M_{\odot}`]
+52      ``formation0``          Supernova remnant formation channel (e.g., core collapse, pair instability, etc.)
+54      ``bhspin0``             BH spin
+======  ======================  =====================================================
 
 
 initial.morepulsars.dat
 -----------------------
 
-This files contains detailed information on all neutron stars for each 
-simulation. For further information on treatment of neutron stars, see Ye et 
-al. 2019, ApJ.
+This files contains detailed information on all neutron stars for each simulation. For further information on treatment of neutron stars, see
+`Ye et al. (2019) <https://ui.adsabs.harvard.edu/abs/2019ApJ...877..122Y/abstract>`_.
 
 ==============================  =====================================================
 ``tcount``						           Time count			 
@@ -707,7 +655,7 @@ This file contains information about newly formed BHs.
 ``m_progenitor``                Mass of progenitor before explosion
 ``bh mass``                     Mass of BH
 ``bh_spin``                     Spin of BH
-``birth-kick``                  Birth kick magnitude of natal kick [km/s]
+``birth-kick``                  Birth kick magnitude of natal kick [:math:`{\rm km\,s}^{-1}`]
 ``vsarray``                     Array of natal kicks 
 ==============================  =====================================================
 
@@ -796,123 +744,102 @@ Snapshots
         
 There are three different kinds of snapshots that CMC saves:
 
- * **output.snapshot.h5** -- every star and binary, saved every ``SNAPSHOT_DELTACOUNT`` number of code timesteps
- * **output.window.snapshot.h5** -- every star and binary, saved in uniform physical timesteps (set in ``SNAPSHOT_WINDOWS``)
- * **output.bhsnapshot.h5** -- same as output.shapshot.h5, but just for black holes 
+ * **initial.snapshot.h5** -- every star and binary, saved every ``SNAPSHOT_DELTACOUNT`` number of code timesteps
+ * **initial.window.snapshot.h5** -- every star and binary, saved in uniform physical timesteps (set in ``SNAPSHOT_WINDOWS``)
+ * **initial.bhsnapshot.h5** -- same as initial.shapshot.h5, but just for black holes 
 
-Each snapshot is saved as a table in the respective hdf5 file.  To see the 
-names of the snapshots, use ``h5ls``:
+As of September 2026, the snapshots have been redesigned to be read strictly using the ``h5py`` python package (or equivalent in other coding languages for reading HDF5) rather than the
+``read_hdf`` function in ``pandas``, which will no longer work on snapshots from the latest CMC models. This change enables a 100x speedup when reading only a single column of data from a
+snapshot, a 4x speedup when reading the entire snaphsot, and a 40% reduction in snapshot storage size (even after having added new data). For convenience, we have updated the ``Snapshot``
+class of **cmctoolkit** (below) to automatically determine which snapshot format is used by an input CMC simulation---including the even older `dat.gz` format used for the `CMC Cluster
+Catalog (Kremer et al. 2020) <https://ui.adsabs.harvard.edu/abs/2020ApJS..247...48K/abstract>`_, prior to CMC's public release---and extract a pandas dataframe containing all snapshot data
+regardless of snapshot format. However, unlike the newest snapshots, those from prior to September 2026 (formats `dat.gz` and `h5-table` in **cmctoolkit**'s ``Snapshot`` class) did not
+contain all necessary data to continue stellar evolution of single stars with COSMIC in post-processing, and did not feature the ``bhspin0`` and ``bhspin1`` columns.
+
+Each snapshot is now an HDF5 group holding one 1D dataset per field (column of data) instead of a single compound-type table readable by both ``h5py`` `and` ``pandas`` (the old layout).
+To see the names of the snapshots, use ``h5ls``:
 
 .. code-block:: bash
 
-        h5ls output.window.snapshot.h5
+        h5ls initial.window.snapshots.h5
 
 On the window snapshots from our test example, this shows two snapshots
 
 .. code-block:: bash
 
-        0(t=0Gyr)                Dataset {100009/Inf}
-        1(t=0.010001767Gyr)      Dataset {99233/Inf}
+        0(tcount=1,t=0Gyr)       Group
+        1(tcount=260,t=0.10016393Gyr) Group
 
-For the windows, this shows the number of the snapshot, and the time that the 
-snapshot was made (in whatever units the window is using).  For the other 
-snapshots, the time is the time in code units.
+For the windows, this shows the number of the snapshot, the timestep count, and time that the snapshot was made (in whatever units the window is using).
+For the other snapshots, the time is the time in code units.
 
-The snapshots themselves are designed to be imported as pandas tables, which 
-each table name referring to a key in the hdf5 file.  To read in the snapshot 
-at 10Myr:
+To read in the first snapshot, we can use the provided **cmctoolkit.py** script (``snapshot_type`` defaults to 'window', but can also be '' or 'bh', for the other two kinds of
+snapshots mentioned above):
 
 .. ipython:: python
 
-        import pandas as pd 
-        snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010001767Gyr)')
-        print(snap)
+        import cmctoolkit as cmct
+        snap = cmct.Snapshot(model_dir='source/example_output', snapshot='0(tcount=1,t=0Gyr)', snapshot_type='window')
+        print(snap.data)
 
-This contains all the necessary information about the state of every star and 
-binary at this given time.  We can also see the column names
+This contains all the necessary information about the state of every star and binary at the given time. Note that if the specific snapshot (``snapshot`` parameter) is not specified, the **cmctoolkit** ``Snapshot`` class will load in the final snapshot by default (in our example, identical to specifying ``snapshot`` = '1(tcount=260,t=0.10016393Gyr)'):
 
 .. ipython:: python
 
-        print(snap.columns) 
+        last_snap = cmct.Snapshot('source/example_output')
+        print(last_snap.data)
 
-You may notice, however, that these columns are exactly the same as those in 
-the :ref:`output.esc.dat <escfile>`  file!
+From the number of rows, we can see the cluster has lost some stars as it's evolved. We can also easily see the column names of any snapshot:
 
-The following are the columns in the snapshots but not in the escape file.
+.. ipython:: python
 
-==============================  =====================================================
-``luminosity``                  Luminosity of isolated stars [LSUN]
-``radius``                      Radius of isolated stars [RSUN]
-``bin_star_lum0``               Same as lum0
-``bin_star_lum1``               Same as lum1
-``bin_star_radius0``            [RSUN]
-``bin_star_radius1``            [RSUN]
-``bin_Eb``                      Binary binding energy
-``eta``                         Binary hardness
-``star.phi``                    Potential at the star's position r
-==============================  =====================================================
+        print(snap.data.columns)
+
+Most snapshot columns contain identical information to **initial.esc.dat**, described above, but for particles (singles or binaries) that are still in the cluster rather than those that
+have escaped. Specifically, the snapshots feature columns 2--6 (``r``--``J``) and 13--55 (``id0``--``bhspin1``) of **initial.esc.dat**. In addition, the snapshots also have the following column: ``phi_r``, specifying the cluster potential at the clustercentric radial position (``r``) of the particle.
+
+To quickly load only a specific subset of columns and/or rows of the snapshot, you can use the ``columns`` and/or ``row_range`` inputs of **cmctoolkit**'s ``Snapshot`` class. This is is significantly faster and less memory-intensive than loading an entire snapshot, so is recommended when the entire snapshot is not needed. For example, to load only the columns ['id0','id1','r'] for the 3 innermost particles (first 3 rows) of the last snapshot, execute the following:
+
+.. ipython:: python
+
+        last_snap_truncated = cmct.Snapshot('source/example_output', columns=['id0','id1','r'], row_range=[0,3])
+        print(last_snap_truncated.data)
+
+Note the row truncation still works properly even if the final row specified is much larger than the number of rows in the column (it will simply read up to the final row).
 
 ====================
 Cluster Observables
 ====================
 
-The `cmctoolkit <https://github.com/NicholasRui/cmctoolkit>`_ is a seperate 
-python package specifically designed to analyze CMC snapshots.  It then 
-computes many of the relevant astrophysical profiles of interest to observers 
-(e.g. surface brightness profiles, number density profiles, velocity 
-dispersions, mass-to-light ratios) allowing CMC to be directly compared to 
-globular clusters and super star clusters in the local universe.  This is 
-accomplished by a rigorous statistical averaging of the individual cluster 
-orbits for each star; see `Rui et al., (2021) 
-<https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_ for details.
+The `cmctoolkit <https://github.com/NicholasRui/cmctoolkit>`_ is a seperate python package specifically designed to analyze CMC snapshots, and is included as **cmctoolkit.py** in any
+installation of CMC-COSMIC. After loading in CMC snapshots like above, it can compute many of the relevant astrophysical profiles of interest to observers (e.g. surface brightness
+profiles, number density profiles, velocity dispersions, mass-to-light ratios) allowing CMC to be directly compared to globular clusters and super star clusters in the local universe. 
+This is accomplished by a rigorous statistical averaging of the individual cluster orbits for each star; see
+`Rui et al., (2021) <https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_ for details.
 
-By default, the cmctoolkit will import the last snapshot in an hdf5 snapshot file:
+As shown above, the **cmctoolkit** can load any snapshot by specifying its key (defaulting to importing the last snapshot if no key provided), but we can demonstrate additional capabilities if we reload the snapshots while also specifying a pseudo observing distance (``dist`` in kpc) and cluster metallicy (``z``):
 
 .. ipython:: python
 
         import cmctoolkit as cmct
-        last_snap = cmct.Snapshot(fname='source/example_output/output.window.snapshots.h5',
-                                  conv='source/example_output/output.conv.sh',
-                                  dist=15, # distance to cluster in kpc
-                                  z=0.0017) # metallicity 
-                                 
-
-But any snapshot in the file can be loaded by specifying the hdf5 key:
-
-.. ipython:: python
-
-        import cmctoolkit as cmct
-        first_snap = cmct.Snapshot(fname='source/example_output/output.window.snapshots.h5',
-                                  conv='source/example_output/output.conv.sh',
-                                  snapshot_name='0(t=0Gyr)',
-                                  dist=15, # distance to cluster in kpc
-                                  z=0.0017) # metallicity
+        first_snap = cmct.Snapshot('source/example_output', '0(tcount=1,t=0Gyr)', dist=15, z=0.0014)
+        last_snap = cmct.Snapshot('source/example_output', dist=15, z=0.0014)
                                 
-
-As an example of what the `cmctoolkit` can do, we can create V-band surface 
-brightness profiles for both snapshots, seeing they change due to the combined 
-effects of stellar evolution and the early expansion of the cluster due to mass 
-loss:
+As an example of what more the **cmctoolkit** can do, we can create V-band surface brightness profiles for both snapshots, seeing they change due to the combined  effects of stellar
+evolution and the early expansion of the cluster due to mass loss:
 
 .. ipython:: python
 
         first_snap.add_photometry('source/output/filt_index.txt');
+        last_snap .add_photometry('source/output/filt_index.txt');
 
-        v_bincenter_first, v_profile_first = first_snap.make_smoothed_brightness_profile('V', bins=80,
-                                                                       min_mass=None, max_mass=None,
-                                                                       max_lum=None, fluxdict=None,
-                                                                       startypes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-                                                                       min_logr=-1.5)
+        v_bincenter_first, v_profile_first = first_snap.make_smoothed_brightness_profile('V',
+                                                  bins=80, startypes=list(range(0,10)), min_logr=-1.5);
+        v_bincenter_last , v_profile_last  = last_snap .make_smoothed_brightness_profile('V',
+                                                  bins=80, startypes=list(range(0,10)), min_logr=-1.5);
 
-        last_snap.add_photometry('source/output/filt_index.txt');
-
-        v_bincenter_last, v_profile_last = last_snap.make_smoothed_brightness_profile('V', bins=80,
-                                                                       min_mass=None, max_mass=None,
-                                                                       max_lum=None, fluxdict=None,
-                                                                       startypes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-                                                                       min_logr=-1.5)
-        plt.plot(v_bincenter_first, v_profile_first, lw=2, label='0 Myr');
-        plt.plot(v_bincenter_last, v_profile_last, lw=2, label='10 Myr');
+        plt.plot(v_bincenter_first, v_profile_first, lw=2, label=  '0 Myr');
+        plt.plot(v_bincenter_last , v_profile_last , lw=2, label='100 Myr');
 
         plt.legend(loc='lower left',fontsize=14);
         plt.xlabel('$r$ (arcsec)',fontsize=15);
@@ -930,4 +857,4 @@ Examples of other properties which can be easily computed by `cmctoolkit`:
  * Binary fractions
  * Blue stragglers
 
-See the documentation on the `cmctoolkit` for more details.
+See the documentation on **cmctoolkit** for more details.
