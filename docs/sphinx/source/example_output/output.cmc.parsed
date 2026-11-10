@@ -12,9 +12,11 @@ BH_SNAPSHOT_DELTACOUNT   500
 SNAPSHOT_CORE_COLLAPSE   0
 # Output extra snapshots within time windows. 
 #The format is start_w0,step_w0,end_w0:start_w1,step_w1,stop_w1 ... etc.
-SNAPSHOT_WINDOWS   0,0.01,0.05
+SNAPSHOT_WINDOWS   0,0.1,13.8
 # Units used for time window parameters. Possible choices: Gyr, Trel, and Tcr
 SNAPSHOT_WINDOW_UNITS   Gyr
+# perform two-body relaxation (0=off, 1=on)
+RELAXATION   1
 # gamma in Coulomb logarithm
 CMC_GAMMA   0.01
 # maximum super-encounter scattering angle (radians)
@@ -25,6 +27,8 @@ BINBIN   1
 BINSINGLE   1
 # Allow for the formation of binary black holes from gravitational-wave emission during single-single encounters; SS_COLLISION must be 1
 BH_CAPTURE   1
+# Factor to multiply the radii of BHs by for collisions (default is 5, since PN breaks down at ~10M)
+BH_RADIUS_MULTIPLYER   5
 # toggles three-body binary formation (0=off, 1=on)
 THREEBODYBINARIES   1
 # allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)
@@ -33,19 +37,23 @@ ONLY_FORM_BH_THREEBODYBINARIES   1
 MIN_BINARY_HARDNESS   5.0
 # Should I use the interparticle seperation or MIN_BINARY_HARDNESS to break soft binaries (0=interparticle, 1=MIN_BINARY_HARDNESS)
 BINARY_BREAKING_MIN   0
+# What fraction of the local interparticle seperation do binaries have to be apart to be broken up (default is 0.1)
+BINARY_DISTANCE_BREAKING   0.1
 # perform physical stellar collisions (0=off, 1=on)
 SS_COLLISION   1
-# allow for tidal capture in single-single interactions, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)
+# allow for tidal capture in single-single interactions for Giants, including Lombardi, et al. (2006) collisional binary formation mechanism (0=off, 1=on)
 TIDAL_CAPTURE   0
-# Allow for tidal capture in single-single interactions for non-giant stars (0=off, 1=on)
+# allow for tidal capture in single-single interactions for non-giant stars (0=off, 1=on)
 TC_POLYTROPE   0
-# Allow for tidal capture (a multiple of the set factor of the pericenter) during single-single collision (1=off, greater than 1 sets different multiplyers); Do not turn this on the same time as TC_POLYTROPE
-TC_FACTOR   1
+# allow for different factors for the sticky-sphere pericenter distance (1=off, greater than 1 sets different multiplyers)
+COLL_FACTOR   1.0
 # Treat BH(NS,WD)--MS TDEs in TDE vs direct collision limit (1=TDE, 0=coll)
 CO_TDE   0
-# Turn on wd-wd tidal capture in single-single and fewbody (0=off, >0=set the capture factor)
+# allow for tidal capture (a multiple of the set factor of the pericenter) during single-single collision (1=off, greater than 1 sets different multiplyers)
+TC_FACTOR   1
+# turn on wd-wd tidal capture in single-single and fewbody (0=off, >0=set the capture factor)
 WD_TC   0
-# Turn on NS-MS star TDE mass accretion (1=on, 0=off)
+# Turn on NS-MS star TDE mass accretion onto NS (1=on, 0=off)
 TDE_SPINUP   0
 # Mass transport rate for TDE_SPINUP; 0 is the highest. 1 the lowest. (default=0.2)
 S_TDE   0.2
@@ -53,14 +61,14 @@ S_TDE   0.2
 INPUT_FILE   king.hdf5
 # remove stars that pass beyond the tidal boundary
 TIDALLY_STRIP_STARS   1
-# choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)
+# choose the tidal cut-off criterion (0=apocenter criterion, 1=Giersz alpha energy criterion, 2=raw energy criterion)
 TIDAL_TREATMENT   1
 # Whether to use a Tidal Tensor file
-USE_TT_FILE 0
+USE_TT_FILE   0
 # Tidal Tensor file
 TT_FILE   NULL
 # maximum integration time (Gyr)
-T_MAX_PHYS   0.015 
+T_MAX_PHYS   0.11
 # maximum integration time (FP units)
 T_MAX   100
 # maximum number of time steps
@@ -72,11 +80,11 @@ CHECKPOINT_INTERVAL   7200
 # how many checkpoints to keep
 CHECKPOINTS_TO_KEEP   2
 # energy change calculation stopping criterion
-TERMINAL_ENERGY_DISPLACEMENT   10
+TERMINAL_ENERGY_DISPLACEMENT   10000
 # stop calculation at core collapse (0=no, 1=yes)
 STOPATCORECOLLAPSE   0
 # Dynamical Friction cutoff
-USE_DF_CUTOFF 0
+USE_DF_CUTOFF   0
 # Dynamical Friction file
 DF_FILE   NULL
 # Dynamical Friction termination criterion
@@ -90,7 +98,7 @@ WRITE_EXTRA_CORE_INFO   0
 # Write out information about BHs each timestep, (0=off, 1=on)
 WRITE_BH_INFO   1
 # Write out information about pulsars (0=off, 1=on)
-WRITE_PULSAR_INFO   1
+WRITE_PULSAR_INFO   0
 # Write out information about neutron stars (0=off, 1=on)
 WRITE_MOREPULSAR_INFO   0
 # Pulsar output interval in time steps
@@ -104,7 +112,7 @@ BH_AVEKERNEL   3
 # minimum size of chunks that get partitioned across processors in the parallel code
 MIN_CHUNK_SIZE   40
 # random number generator seed
-IDUM   1234 
+IDUM   1234
 # idum in the random number seed used by kick.f and setting initial pulsar spin period and magnetic field.
 BSE_IDUM   1234
 # enable or disable timers. This would return a detailed profiling of the code, but uses barriers, so might slow down the code a bit.
@@ -115,16 +123,32 @@ FORCE_RLX_STEP   0
 DT_HARD_BINARIES   0  
 # The minimum binary binding energy (in units of kT) for a binary to be considered 'hard' for the time step calculation.
 HARD_BINARY_KT   0.7
+# no.of sample keys contributed per processor for sample sort--binary interactions. Applicable only for the parallel version
+SAMPLESIZE   1024
+# number of central stars used to calculate certain averages
+NUM_CENTRAL_STARS   300
+# stellar evolution engine (0=SSE Hurley fits, 1=METISSE interpolated tracks)
+STELLAR_ENGINE   sse
+# directory of main-sequence METISSE tracks (required when STELLAR_ENGINE=metisse)
+PATH_TO_TRACKS   None
+# directory of helium-star METISSE tracks (required when STELLAR_ENGINE=metisse)
+PATH_TO_HE_TRACKS   None
+# max relative metallicity tolerance for matching METISSE tracks (default 1e-2)
+Z_MATCH_LIMIT   1e-2
+# enable verbose METISSE diagnostic output (0=off, 1=on)
+METISSE_VERBOSE   0
 # stellar evolution (0=off, 1=on)
 STELLAR_EVOLUTION   1
 # neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
-PTS1   0.02
+PTS1   0.05
 # neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
 PTS2   0.01
 # neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
 PTS3   0.02
+# Reduces PTS1 by a factor of 10 for any stars with ZAMS mass below this
+PTS1_HIGHMASS_CUTOFF   5
 # 0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN
-ZSUN   0.017
+ZSUN   0.014
 # windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars).
 WINDFLAG   3
 # neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
@@ -158,7 +182,7 @@ QCFLAG   1
 # qcrit_array is a 16-length array for user-input values for the critical mass ratios that govern the onset of unstable mass transfer and a common envelope
 QCRIT_ARRAY   [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
 # 0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN
-KICKFLAG   0
+KICKFLAG   1
 # sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).
 SIGMA   265.0
 # sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).
@@ -180,14 +204,14 @@ PISN   -2
 # Opening angle (in degrees) for SN kicks around the north pole of the star.  Default (180) means isotropic kicks
 POLAR_KICK_ANGLE   90.0
 # natal_kick_array is a 6-length array for user-input values for the SN natal kick formatted as: (vk1, vk2, phi1, phi2, theta1, theta2)
-NATAL_KICK_ARRAY [[-100.0,-100.0,-100.0,-100.0,0],[-100.0,-100.0,-100.0,-100.0,0.0]]
+NATAL_KICK_ARRAY   [[-100.0,-100.0,-100.0,-100.0,0],[-100.0,-100.0,-100.0,-100.0,0.0]]
 # 0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN
 REMNANTFLAG   4
 # mxns is the maximum NS mass (1.8, remnantflag=0; 3.0, remnantflag=1).
 MXNS   3.0
 # 0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN
 REMBAR_MASSLOSS   0.5
-# wd_mass_lim determines if the maximum white dwarf mass is limited to the chandraekhar mass during merger induced collapse. (1=on; 0=off)
+# wd_mass_lim limits the maximum WD mass to the Chandrasekhar mass during mic. (0-without limit for mic; 1-with limits for mic)
 WD_MASS_LIM   1
 # different functions for setting the BH spin from single stars
 BHSPINFLAG   0
@@ -197,16 +221,18 @@ BHSPINMAG   0.0
 EDDFAC   1.0
 # gamma is the angular momentum factor for mass lost during Roche (-1.0, see evolv2.f for more details).
 GAMMA   -2
+# don_lim is the donor limit during RLO mass transfer
+DON_LIM   -1
+# acc_lim is the accretor limit during RLO mass transfer
+ACC_LIM   -1
 # tflag > 0 activates tidal circularisation (1).
 TFLAG   1
 # ST_tide sets which tidal method to use. 0=Hurley+2002, 1=StarTrack: Belczynski+2008. Note, here startrack method does not use a better integration scheme (yet) but simply  follows similar set up to startrack (including initial vrot, using roche-lobe check at periastron, and circularisation and synchronisation at start of MT).
 ST_TIDE   1
 # fprimc_array controls the scaling factor for convective tides each item is set individually for its associated kstar. The releveant equation is Equation 21 from the BSE paper. The default is to send the same coefficient (2/21) as is in the equation for every kstar
-FPRIMC_ARRAY   [2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0,2.0/21.0]
+FPRIMC_ARRAY   [0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381,0.0952381]
 # ifflag > 0 uses WD IFMR of HPE, 1995, MNRAS, 272, 800 (0).
 IFFLAG   0
-# rtmsflag > 0 uses rtms data from 1-D stellar evolution codes (0).
-RTMSFLAG   0
 # wdflag > 0 uses modified-Mestel cooling for WDs (1).
 WDFLAG   1
 # gamma is the angular momentum factor for mass lost during Roche (-1.0, see evolv2.f for more details).
@@ -222,27 +248,29 @@ REJUV_FAC   1.0
 # whether to use the default BSE mixing prescription or not
 REJUVFLAG   0
 # If set to 1 then if BH+star collision and if Mstar > Mbh, do not destroy the star
-BHMS_COLL_FLAG 0
+BHMS_COLL_FLAG   0
 # htpmb allows for different magnetic braking models.   0=follows BSE paper Section 2.4. 1=follows Ivanova & Taam 2003 method which kicks in later than the standard
 HTPMB   1
 # ST_cr sets which convective/radiative boundary to use.  0 is BSE paper, 1 is StarTrack
 ST_CR   1
+# rtmsflag > 0 uses data for radius at main sequence turnoff from 1-D stellar evolution codes
+RTMSFLAG   0
 # 0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN
 GRFLAG   1
 # Shall the central black hole be included for the calculation of the Lagrange radii? (1=yes, 0=no)
 MASS_PC_BH_INCLUDE 1     # default value
-# perform two-body relaxation (0=off, 1=on)
-RELAXATION 1     # default value
 # Write out information about the random walk in J-space around the central black hole, (0=off, 1=on)
 WRITE_RWALK_INFO 0     # default value
+# Write out information about stellar collisions (0=off, 1=on)
+WRITE_MORECOLL_INFO 0     # default value
 # Write out information about 10% lagrange radius (0=off, 1=on)
 CALCULATE10 0     # default value
 # stellar evolution wind mass loss factor (0.5-2)
 WIND_FACTOR 1.0     # default value
+# adjust the apocenter escape criterion (if TIDAL_TREATMENT==0) by a coefficient RTIDAL_COEFF so that escape occurs when r_apo >= RTIDAL_COEFF * Rtidal
+RTIDAL_COEFF 1.0     # default value
 # the aging scheme of the stars (0=infinite age of all stars, 1=rejuvenation, 2=zero lifetime of collision stars, 3=arbitrary lifetime)
 STAR_AGING_SCHEME 0     # default value
-# no.of sample keys contributed per processor for sample sort--binary interactions. Applicable only for the parallel version
-SAMPLESIZE 1024     # default value
 # preage the cluster (0=off, 1=on)
 PREAGING 0     # default value
 # to run the serial version with the given number of random streams - primarily used to mimic the parallel version running with the same no.of processors
@@ -255,12 +283,8 @@ MINIMUM_R 0.0     # default value
 BH_R_DISRUPT_NB 0.     # default value
 # A threshold value for the difference between apastron and periastron below which an orbit is considered to be circular. Currently this is only used for the period calculation in the loss-cone routine.
 CIRC_PERIOD_THRESHOLD 1e-18     # default value
-# What fraction of the local interparticle seperation do binaries have to be apart to be broken up (default is 0.1)
-BINARY_DISTANCE_BREAKING 0.1     # default value
 # where to start the dynamical friction integral
 INITIAL_VALUE_DF_INTEGRAND 0.     # default value
-# number of central stars used to calculate certain averages
-NUM_CENTRAL_STARS 300     # default value
 # search grid (0=off, 1=on)
 SEARCH_GRID 0     # default value
 # number of stars that should ideally be in each search bin
@@ -291,9 +315,3 @@ OVERWRITE_Z 0.     # default value
 OVERWRITE_RTID 0.     # default value
 # Instead of reading the cluster mass from the fits file use this value [Msun]
 OVERWRITE_MCLUS 0.     # default value
-# don_lim is the donor limit during RLO mass transfer
-BSE_DON_LIM -1     # default value
-# acc_lim is the accretor limit during RLO mass transfer
-BSE_ACC_LIM -1     # default value
-# Factor to multiply the radii of BHs by for collisions (default is 5, since PN breaks down at ~10M)
-BH_RADIUS_MULTIPLYER 5     # default value

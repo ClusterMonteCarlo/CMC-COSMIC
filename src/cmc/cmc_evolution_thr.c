@@ -559,7 +559,7 @@ void tidally_strip_stars(void) {
 * @param phi_zero potential at zero
 */
 void remove_star(long j, double phi_rtidal, double phi_zero) {
-	double m, r, Ecrit, phi_rtidal_without_self_gravity;
+	double m, r, binary_hardness, Ecrit, phi_rtidal_without_self_gravity;
 	long k = star[j].binind;
 	int g_j = get_global_idx(j);
 	
@@ -585,6 +585,8 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	if (k == 0) {
 		Eintescaped += star[j].Eint;
 	} else {
+	    binary_hardness = (binary[k].m1 * binary[k].m2 * sqr(madhoc))
+	                        / (binary[k].a * sqrt(calc_average_mass_sqr(j,clus.N_MAX)) * sqr(sigma_array.sigma[j]));
 		Ebescaped += -(binary[k].m1/clus.N_STAR) * (binary[k].m2/clus.N_STAR) / (2*binary[k].a);
 		Eintescaped += binary[k].Eint1 + binary[k].Eint2;
 	}
@@ -595,51 +597,80 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	// Etidal += star[j].E * m / clus.N_STAR;
 
 	/* logging */
-	parafprintf(escfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %ld ",
-	        tcount, TotalTime, m * (units.m / clus.N_STAR) / MSUN, r,
-	        star[j].vr, star[j].vt, star[j].r_peri, star[j].r_apo,
-	        Rtidal, phi_rtidal, phi_zero, star[j].E, star[j].J, star[j].id);
-	
-	/* Newlin (June 10, 2026): Now properties of single stars necessary for continuing evolution with COSMIC are output here, too, replacing 'na' values in the
-                               corresponding columns for binary primaries. Previously, the necessary data for COSMIC was only saved for binaries. Note several
-                               preexisting columns for singles (se_k, se_bhspin, se_ospin, se_scm_B, and se_scm_formation) are kept as duplicates to ensure
-                               backwards compatibility. Since the new data is inserted into existing columns, no columns have been moved around, removed, or added. */
+	parafprintf(escfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g",
+	        /* 0*/  tcount,
+	        /* 1*/  TotalTime,
+	        /* 2*/  r,
+	        /* 3*/  star[j].vr,
+	        /* 4*/  star[j].vt,
+	        /* 5*/  star[j].E,
+	        /* 6*/  star[j].J,
+	        /* 7*/  star[j].r_peri,
+	        /* 8*/  star[j].r_apo,
+	        /* 9*/  Rtidal,
+	        /*10*/  phi_zero,
+	        /*11*/  phi_rtidal,
+	        /*12*/  Ecrit);
 	if (k == 0) {
-	    parafprintf(escfile, "0 -100 -100 -100 -100 -100 -100 %d ", star[j].se_k);
-	    parafprintf(escfile, "%d -100 %g -100 -100 %g -100 %g -100 %g -100 %g -100 %g -100 %g -100 -100 -100 -100 -100 %g -100 %g -100 %g -100 %g -100 %g -100 %g -100 %g -100 %g %g -100 %g %g %g %g",
-	            star[j].se_k, star[j].se_radius,
-	            star[j].se_lum, star[j].se_mc, star[j].se_rc, star[j].se_menv, star[j].se_renv, star[j].se_tms,
-	            star[j].se_ospin, star[j].se_scm_B, star[j].se_scm_formation,
-	            star[j].se_bacc, star[j].se_tacc, star[j].se_mass, star[j].se_epoch,
-	            star[j].se_bhspin, star[j].se_bhspin, star[j].se_ospin, star[j].se_scm_B, star[j].se_scm_formation, Ecrit);
+	    parafprintf(escfile,
+	        "%i -100 %d -100 %.8g -100 -100 -100 -100 "
+	        "%.8g -100 %.8g -100 %.8g -100 %.8g -100 %.8g -100 "
+	        "%.8g -100 -100 -100 %.8g -100 -100 -100 %.8g -100 "
+	        "%.8g -100 %.8g -100 %.8g -100 %.8g -100 %.8g -100 "
+	        "%.8g -100 %.8g -100\n",
+	        /*13*/  star[j].id,
+	        /*15*/  star[j].se_k,
+	        /*17*/  m * (units.m / clus.N_STAR) / MSUN,
+	        /*22*/  star[j].se_radius,
+	        /*24*/  star[j].se_lum,
+	        /*26*/  star[j].se_mc,
+	        /*28*/  star[j].se_menv,
+	        /*30*/  star[j].se_rc,
+	        /*32*/  star[j].se_renv,
+	        /*36*/  star[j].se_tms,
+	        /*40*/  star[j].se_bacc,
+	        /*42*/  star[j].se_tacc,
+	        /*44*/  star[j].se_mass,
+	        /*46*/  star[j].se_ospin,
+	        /*48*/  star[j].se_scm_B,
+	        /*50*/  star[j].se_epoch,
+	        /*52*/  star[j].se_scm_formation,
+	        /*54*/  star[j].se_bhspin);
 	} else {
-	    parafprintf(escfile, "1 %.8g %.8g %ld %ld %.8g %.8g -100 ",
-	            binary[k].m1 * (units.m / clus.N_STAR) / MSUN,
-	            binary[k].m2 * (units.m / clus.N_STAR) / MSUN,
-	            binary[k].id1, binary[k].id2,
-	            binary[k].a * units.l / AU, binary[k].e);
-	    parafprintf(escfile, "%d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g -100 %g %g -100 -100 -100 %g",
-	            binary[k].bse_kw           [0], binary[k].bse_kw           [1],
-	            binary[k].bse_radius       [0], binary[k].bse_radius       [1], binary[k].bse_tb,
-	            binary[k].bse_lum          [0], binary[k].bse_lum          [1],
-	            binary[k].bse_massc        [0], binary[k].bse_massc        [1],
-	            binary[k].bse_radc         [0], binary[k].bse_radc         [1],
-	            binary[k].bse_menv         [0], binary[k].bse_menv         [1],
-	            binary[k].bse_renv         [0], binary[k].bse_renv         [1],
-	            binary[k].bse_tms          [0], binary[k].bse_tms          [1],
-	            binary[k].bse_bcm_dmdt     [0], binary[k].bse_bcm_dmdt     [1],
-	            binary[k].bse_bcm_radrol   [0], binary[k].bse_bcm_radrol   [1],
-	            binary[k].bse_ospin        [0], binary[k].bse_ospin        [1],
-	            binary[k].bse_bcm_B        [0], binary[k].bse_bcm_B        [1],
-	            binary[k].bse_bcm_formation[0], binary[k].bse_bcm_formation[1],
-	            binary[k].bse_bacc         [0], binary[k].bse_bacc         [1],
-	            binary[k].bse_tacc         [0], binary[k].bse_tacc         [1],
-	            binary[k].bse_mass0        [0], binary[k].bse_mass0        [1],
-	            binary[k].bse_epoch        [0], binary[k].bse_epoch        [1],
-	            binary[k].bse_bhspin       [0], binary[k].bse_bhspin       [1], Ecrit);
+	    parafprintf(escfile,
+	        "%i %i %d %d %.8g %.8g %.8g %.8g %.8g "
+	        "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g "
+	        "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g "
+	        "%.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g "
+	        "%.8g %.8g %.8g %.8g\n",
+	        /*13*/  binary[k].id1,
+	        /*14*/  binary[k].id2,
+	        /*15*/  binary[k].bse_kw[0],
+	        /*16*/  binary[k].bse_kw[1],
+	        /*17*/  binary[k].m1 * (units.m / clus.N_STAR) / MSUN,
+	        /*18*/  binary[k].m2 * (units.m / clus.N_STAR) / MSUN,
+	        /*19*/  binary[k].a * units.l / AU,
+	        /*20*/  binary[k].e,
+	        /*21*/  binary_hardness,
+	        /*22*/  binary[k].bse_radius       [0],     /*23*/  binary[k].bse_radius       [1],
+	        /*24*/  binary[k].bse_lum          [0],     /*25*/  binary[k].bse_lum          [1],
+	        /*26*/  binary[k].bse_massc        [0],     /*27*/  binary[k].bse_massc        [1],
+	        /*28*/  binary[k].bse_menv         [0],     /*29*/  binary[k].bse_menv         [1],
+	        /*30*/  binary[k].bse_radc         [0],     /*31*/  binary[k].bse_radc         [1],
+	        /*32*/  binary[k].bse_renv         [0],     /*33*/  binary[k].bse_renv         [1],
+	        /*34*/  binary[k].bse_bcm_radrol   [0],     /*35*/  binary[k].bse_bcm_radrol   [1],
+	        /*36*/  binary[k].bse_tms          [0],     /*37*/  binary[k].bse_tms          [1],
+	        /*38*/  binary[k].bse_bcm_dmdt     [0],     /*39*/  binary[k].bse_bcm_dmdt     [1],
+	        /*40*/  binary[k].bse_bacc         [0],     /*41*/  binary[k].bse_bacc         [1],
+	        /*42*/  binary[k].bse_tacc         [0],     /*43*/  binary[k].bse_tacc         [1],
+	        /*44*/  binary[k].bse_mass0        [0],     /*45*/  binary[k].bse_mass0        [1],
+	        /*46*/  binary[k].bse_ospin        [0],     /*47*/  binary[k].bse_ospin        [1],
+	        /*48*/  binary[k].bse_bcm_B        [0],     /*49*/  binary[k].bse_bcm_B        [1],
+	        /*50*/  binary[k].bse_epoch        [0],     /*51*/  binary[k].bse_epoch        [1],
+	        /*52*/  binary[k].bse_bcm_formation[0],     /*53*/  binary[k].bse_bcm_formation[1],
+	        /*54*/  binary[k].bse_bhspin       [0],     /*55*/  binary[k].bse_bhspin       [1]);
 	}
-	parafprintf(escfile, "\n");
-	destroy_obj(j); // This prevents stars from being ejected (and counted) multiple times
+	destroy_obj(j); /* This prevents stars from being ejected (and counted) multiple times. */
 }
 
 /**

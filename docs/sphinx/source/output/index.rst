@@ -349,63 +349,52 @@ The semergedisrupt file can also be processed using the :ref:`load_interaction_f
 initial.esc.dat
 ---------------
 
-As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential
-and are ejected from the system. When this happens, the ejection is recorded in **initial.esc.dat**. In particular, this ejection process plays an intimate role in the
-formation of merging BH binaries. If a BH-BH binary is ejected from the cluster with sufficiently small orbital separation it may merge within a Hubble time and be a
-possible LIGO source. To determine the number of such mergers, calculate the inspiral times for all BH-BH binaries that appear in the **initial.esc.dat** file.
+As the result of dynamical encounters (and other mechanisms such as cluster tidal truncation) single stars and binaries often become unbound from the cluster potential and are ejected
+from the cluster. When this happens, the ejection is recorded in **initial.esc.dat**. Such escapers are often still important to consider: for example, when studying stellar streams or
+binary phenomena that still occur after ejection. For instance, if a BH-BH binary is ejected from the cluster with sufficiently small orbital separation it may merge within a Hubble time
+and be a possible LIGO source. To determine the number of such mergers, calculate the inspiral times for all BH-BH binaries that appear in **initial.esc.dat**.
 
-Some parameters ending with a `0` (e.g., ``id0``) only contain information about the primary star in a binary, with entries of `-100` for singles. But as of mid-2026,
-many such columns now also store previouly missing information for singles in place of the `-100` mask. The corresponding columns for the secondary star end with a `1`
-(e.g., ``id1``) and never include information for singles (always `-100` in that case). For brevity they are not listed below. Except ``a``, ``e``, and ``tb``, all
-parameters below after ``J`` that have no index (don't end in `0` or `1`) store data only for singles, with `-100`entries for binaries. You may note some columns are
-redundant for full backwards compatibility, but the **initial.esc.dat** file now stores all necessary information to restart stellar evolution of both binary and single
-ejecta in post-processing using the COSMIC stellar evolution code. (Prior to mid-2026, this was only possible for binaries since relevant information for singles was missing from the **initial.esc.dat** file.)
+As of September 2026, **initial.esc.dat** now stores all necessary information to restart stellar evolution of both binary and single ejecta in post-processing using the COSMIC stellar evolution code. Previously, this was only possible for binaries since relevant information for singles was missing from **initial.esc.dat**.
+
+Parameters ending with a `0` (e.g., ``id0``) contain information about the stellar body if it's a single, or about the primary body if the system is a binary. The corresponding columns for the secondary bodies of binaries end with a `1` (e.g., ``id1``) and are filled with values of `-100` for singles. For brevity, these columns for binary secondaries are not listed in the table below, but each one's position in the file immediately follows the corresponding column for binary primaries and singles, reflected in the missing column indices in the table. In addition to columns ending in a `1`, a few additional columns are meaningful for binaries only and are filled with values of `-100` for singles. These columns are: ``a``, ``e``, ``eta``, ``radrol0``, and ``dmdt0``.
 
 ======  ======================  =====================================================
 0       ``tcount``              Timestep count
 1       ``t``                   Time
-2       ``m``                   System mass [:math:`M_{\odot}`]; mass of a single star or the total mass of the primary and secondary in a binary
-3       ``r``                   Clustercentric radial position
+2       ``r``                   Clustercentric radial position
 3       ``vr``                  Radial velocity, :math:`v_r`
-5       ``vt``                  Tangential velocity, :math:`v_t`
-6       ``r_peri``              Pericenter of star's orbit in the cluster when it was ejected
-7       ``r_apo``               Apocenter of star's orbit in the cluster
-8       ``Rtidal``              Tidal radius, :math:`r_t`
-9       ``phi_rtidal``          Potential at the tidal radius, :math:`\phi(r_t)`
+4       ``vt``                  Tangential velocity, :math:`v_t`
+5       ``E``                   Energy of star's orbit in the cluster, :math:`E=\frac{v_r^2 + v_t^2}{2} + \phi(r)`. Note this includes the single/binary's own contribution to :math:`\phi(r)`---i.e., :math:`-G(m_0+m_1)/r`---but this self-contribution is explicitly excluded in the criterion for escape: ``E`` + G (``m0`` + ``m1``) / ``r`` > ``Ecrit``, where ``Ecrit`` (below) also excludes the self-contribution.
+6       ``J``                   Angular momentum of system's orbit in the cluster, :math:`J = r v_t`
+7       ``r_peri``              Pericenter of star's orbit in the cluster when it was ejected
+8       ``r_apo``               Apocenter of star's orbit in the cluster
+9       ``r_tidal``             Tidal radius, :math:`r_t`
 10      ``phi_zero``            Potential at cluster center
-11      ``E``                   Energy of star's orbit in the cluster, :math:`E=\frac{v_r^2 + v_t^2}{2} + \phi(r)`. Note this includes the star's own contribution to :math:`\phi(r)`---i.e., :math:`-Gm/r`---but this self-contribution is explicitly excluded in the criterion for escape: ``E`` + G ``m`` / ``r`` > ``Ecrit``, where ``Ecrit`` also excludes the self-contribution (see below).
-12      ``J``                   Angular momentum of system's orbit in the cluster, :math:`J = r v_t`
-13      ``id``                  ID of both singles and binary primaries
-14      ``binflag``             Binary flag. ``binflag`` = 1 if the system is a binary; else `-100`
-15      ``m0``                  Binary primary star mass [:math:`M_{\odot}`]; `-100` if single
-17      ``id0``                 Binary primary star ID; `-100` if single
+11      ``phi_tidal``           Potential at the tidal radius, :math:`\phi(r_t)`
+12      ``Ecrit``               Critical energy required to escape, excluding the single/binary's own contribution to :math:`\phi(r_t)`, i.e., :math:`-G (m_0 + m_1) / r_t`. By default, :math:`E_{\rm crit} = \alpha \phi(r_t) + G (m_0 + m_1) / r_t` where :math:`\alpha = 1.5 - 3 \left(\frac{\ln\Lambda}{N}\right)^{1/4}` (`Giersz et al. 2008 <https://ui.adsabs.harvard.edu/abs/2008MNRAS.388..429G/abstract>`_). Here, :math:`\ln\Lambda = \gamma N` is the Coulomb logarithm, and CMC's default :math:`\gamma=0.01` is appropriate for realistic stellar initial mass functions (`Freitag et al. 2006 <https://ui.adsabs.harvard.edu/abs/2006MNRAS.368..121F/abstract>`_, `Rodriguez et al. 2018 <https://ui.adsabs.harvard.edu/abs/2018ComAC...5....5R/abstract>`_).
+13      ``id0``                 ID of binary primary or single
+15      ``st0``                 Stellar type
+17      ``m0``                  Mass, :math:`m_0` [:math:`M_{\odot}`]
 19      ``a``                   Binary semi-major axis [AU]; `-100` if single
 20      ``e``                   Binary eccentricity; `-100` if single
-21      ``st``                  Single stellar type; `-100` if binary
-22      ``st0``                 Binary primary stellar type; else `-100`
-24      ``rad0``                Radius [:math:`R_{\odot}`] of primaries/singles
-26      ``tb``                  Orbital period [days]; `-100` if single
-27      ``lum0``                Luminosity [:math:`L_{\odot}`] of primaries/singles
-29      ``massc0``              Core mass [:math:`M_{\odot}`] of primaries/singles
-31      ``radc0``               Core radius [:math:`R_{\odot}`] of primaries/singles
-33      ``menv0``               Envelope mass [:math:`M_{\odot}`] of primaries/singles
-35      ``renv0``               Envelope radius [:math:`R_{\odot}`] of primaries/singles
-37      ``tms0``                Main-sequence timescale [Myr] of primaries/singles
-39      ``dmdt0``               Binary primary star's mass rate of change [:math:`M_{\odot}\,{\rm yr}^{-1}`];`-100` if single
-41      ``radrol0``             Ratio of primary star's radius to its enclosing Roche lobe if a binary, else `-100`
-43      ``ospin0``              Spin angular momentum [:math:`M_{\odot}\,R_{\odot}^2\,{\rm yr}^{-1}`] of primaries/singles
-45      ``B0``                  Star magnetic field strength [G] of both binary primaries and singles
-47      ``formation0``          Supernova remnant formation channel (e.g., core collapse, pair instability, etc.) of primaries/singles
-49      ``bacc0``               Total previously accreted mass [:math:`M_{\odot}`] for primaries/singles
-51      ``tacc0``               Time [Myr] spent accreting mass for both primaries/singles
-53      ``mass0_0``             Initial mass [:math:`M_{\odot}`] of primaries/singles
-55      ``epoch0``              COSMIC parameter establishing a time offset for restarting stellar evolution [:math:`M_{\odot}`]
-57      ``bhspin``              Single BH spin; `-100` if binary or non-BH
-58      ``bhspin0``             Binary primary BH spin;`-100` if single or non-BH
-60      ``ospin``               Single star spin angular momentum [:math:`M_{\odot}\,R_{\odot}^2\,{\rm yr}^{-1}`]; `-100` if binary
-61      ``B``                   Star magnetic field strength [G] if a single; else `-100`
-62      ``formation``           Single supernova remnant formation channel (e.g., core collapse, pair instability, etc.); `-100` if binary
-63      ``Ecrit``               Critical energy required to escape, excluding the system's own contribution to :math:`\phi(r_t)`, i.e., :math:`-Gm/r_t`. By default, :math:`E_{\rm crit} = \alpha \phi(r_t) + Gm/r_t` where :math:`\alpha = 1.5 - 3 \left(\frac{\ln\Lambda}{N}\right)^{1/4}` (`Giersz et al. 2008 <https://ui.adsabs.harvard.edu/abs/2008MNRAS.388..429G/abstract>`_). Here, :math:`\ln\Lambda = \gamma N` is the Coulomb logarithm, and CMC's default :math:`\gamma=0.01` is appropriate for realistic stellar initial mass functions (`Freitag et al. 2006 <https://ui.adsabs.harvard.edu/abs/2006MNRAS.368..121F/abstract>`_, `Rodriguez et al. 2018 <https://ui.adsabs.harvard.edu/abs/2018ComAC...5....5R/abstract>`_).
+21      ``eta``                 Binary hardness, :math:`\eta = \frac{G(m_0+m_1)}{a \langle m^2 \sigma^2\rangle}`, where the local average over mass :math:`m` (``m0`` + ``m1`` if a binary) and velocity dispsersion :math:`\sigma` is done over the 30 nearest particles (singles or binaries). ``eta`` = `-100` if single
+22      ``rad0``                Radius [:math:`R_{\odot}`]
+24      ``lum0``                Luminosity [:math:`L_{\odot}`]
+26      ``massc0``              Core mass [:math:`M_{\odot}`]
+28      ``menv0``               Envelope mass [:math:`M_{\odot}`]
+30      ``radc0``               Core radius [:math:`R_{\odot}`]
+32      ``renv0``               Envelope radius [:math:`R_{\odot}`]
+34      ``radrol0``             Ratio of binary primary's radius to its enclosing Roche lobe radius; `-100` if single
+36      ``tms0``                Main-sequence timescale [Myr]
+38      ``dmdt0``               Binary primary star's mass rate of change [:math:`M_{\odot}\,{\rm yr}^{-1}`]; `-100` if single
+40      ``bacc0``               Total previously accreted mass [:math:`M_{\odot}`]
+42      ``tacc0``               Time [Myr] spent accreting mass
+44      ``mass0_0``             Initial mass [:math:`M_{\odot}`]
+46      ``ospin0``              Spin angular momentum [:math:`M_{\odot}\,R_{\odot}^2\,{\rm yr}^{-1}`]
+48      ``B0``                  Magnetic field strength [G]
+50      ``epoch0``              COSMIC parameter establishing a time offset for restarting stellar evolution [:math:`M_{\odot}`]
+52      ``formation0``          Supernova remnant formation channel (e.g., core collapse, pair instability, etc.)
+54      ``bhspin0``             BH spin
 ======  ======================  =====================================================
 
 
@@ -755,121 +744,102 @@ Snapshots
         
 There are three different kinds of snapshots that CMC saves:
 
- * **output.snapshot.h5** -- every star and binary, saved every ``SNAPSHOT_DELTACOUNT`` number of code timesteps
- * **output.window.snapshot.h5** -- every star and binary, saved in uniform physical timesteps (set in ``SNAPSHOT_WINDOWS``)
- * **output.bhsnapshot.h5** -- same as output.shapshot.h5, but just for black holes 
+ * **initial.snapshot.h5** -- every star and binary, saved every ``SNAPSHOT_DELTACOUNT`` number of code timesteps
+ * **initial.window.snapshot.h5** -- every star and binary, saved in uniform physical timesteps (set in ``SNAPSHOT_WINDOWS``)
+ * **initial.bhsnapshot.h5** -- same as initial.shapshot.h5, but just for black holes 
 
-Each snapshot is saved as a table in the respective hdf5 file.  To see the 
-names of the snapshots, use ``h5ls``:
+As of September 2026, the snapshots have been redesigned to be read strictly using the ``h5py`` python package (or equivalent in other coding languages for reading HDF5) rather than the
+``read_hdf`` function in ``pandas``, which will no longer work on snapshots from the latest CMC models. This change enables a 100x speedup when reading only a single column of data from a
+snapshot, a 4x speedup when reading the entire snaphsot, and a 40% reduction in snapshot storage size (even after having added new data). For convenience, we have updated the ``Snapshot``
+class of **cmctoolkit** (below) to automatically determine which snapshot format is used by an input CMC simulation---including the even older `dat.gz` format used for the `CMC Cluster
+Catalog (Kremer et al. 2020) <https://ui.adsabs.harvard.edu/abs/2020ApJS..247...48K/abstract>`_, prior to CMC's public release---and extract a pandas dataframe containing all snapshot data
+regardless of snapshot format. However, unlike the newest snapshots, those from prior to September 2026 (formats `dat.gz` and `h5-table` in **cmctoolkit**'s ``Snapshot`` class) did not
+contain all necessary data to continue stellar evolution of single stars with COSMIC in post-processing, and did not feature the ``bhspin0`` and ``bhspin1`` columns.
+
+Each snapshot is now an HDF5 group holding one 1D dataset per field (column of data) instead of a single compound-type table readable by both ``h5py`` `and` ``pandas`` (the old layout).
+To see the names of the snapshots, use ``h5ls``:
 
 .. code-block:: bash
 
-        h5ls output.window.snapshot.h5
+        h5ls initial.window.snapshots.h5
 
 On the window snapshots from our test example, this shows two snapshots
 
 .. code-block:: bash
 
-        0(t=0Gyr)                Dataset {100009/Inf}
-        1(t=0.010001767Gyr)      Dataset {99233/Inf}
+        0(tcount=1,t=0Gyr)       Group
+        1(tcount=260,t=0.10016393Gyr) Group
 
-For the windows, this shows the number of the snapshot, and the time that the 
-snapshot was made (in whatever units the window is using).  For the other 
-snapshots, the time is the time in code units.
+For the windows, this shows the number of the snapshot, the timestep count, and time that the snapshot was made (in whatever units the window is using).
+For the other snapshots, the time is the time in code units.
 
-The snapshots themselves are designed to be imported as pandas tables, which 
-each table name referring to a key in the hdf5 file.  To read in the snapshot 
-at 10Myr:
+To read in the first snapshot, we can use the provided **cmctoolkit.py** script (``snapshot_type`` defaults to 'window', but can also be '' or 'bh', for the other two kinds of
+snapshots mentioned above):
 
 .. ipython:: python
 
-        import pandas as pd 
-        snap = pd.read_hdf('source/example_output/output.window.snapshots.h5',key='1(t=0.010001767Gyr)')
-        print(snap)
+        import cmctoolkit as cmct
+        snap = cmct.Snapshot(model_dir='source/example_output', snapshot='0(tcount=1,t=0Gyr)', snapshot_type='window')
+        print(snap.data)
 
-This contains all the necessary information about the state of every star and binary at this given time. We can also see the column names:
+This contains all the necessary information about the state of every star and binary at the given time. Note that if the specific snapshot (``snapshot`` parameter) is not specified, the **cmctoolkit** ``Snapshot`` class will load in the final snapshot by default (in our example, identical to specifying ``snapshot`` = '1(tcount=260,t=0.10016393Gyr)'):
 
 .. ipython:: python
 
-        print(snap.columns) 
+        last_snap = cmct.Snapshot('source/example_output')
+        print(last_snap.data)
 
-You may notice, however, that most of these columns are exactly the same as those in the :ref:`output.esc.dat <escfile>` file! A big difference is that in the snapshots none of the columns for binary primaries also include data on singles. This means the snapshots are currently missing some information needed to continue stellar evolution in post-processing. Additionally, some filler values are `0`, or `na` instead of `-100`. Upcoming updates will fix this.
+From the number of rows, we can see the cluster has lost some stars as it's evolved. We can also easily see the column names of any snapshot:
 
-The following are the columns in the snapshots but not in the escape file.
+.. ipython:: python
 
-==============================  =====================================================
-``luminosity``                  Luminosity of isolated stars [LSUN]
-``radius``                      Radius of isolated stars [RSUN]
-``bin_star_lum0``               Same as lum0
-``bin_star_lum1``               Same as lum1
-``bin_star_radius0``            [RSUN]
-``bin_star_radius1``            [RSUN]
-``bin_Eb``                      Binary binding energy
-``eta``                         Binary hardness
-``star.phi``                    Potential at the star's position r
-==============================  =====================================================
+        print(snap.data.columns)
+
+Most snapshot columns contain identical information to **initial.esc.dat**, described above, but for particles (singles or binaries) that are still in the cluster rather than those that
+have escaped. Specifically, the snapshots feature columns 2--6 (``r``--``J``) and 13--55 (``id0``--``bhspin1``) of **initial.esc.dat**. In addition, the snapshots also have the following column: ``phi_r``, specifying the cluster potential at the clustercentric radial position (``r``) of the particle.
+
+To quickly load only a specific subset of columns and/or rows of the snapshot, you can use the ``columns`` and/or ``row_range`` inputs of **cmctoolkit**'s ``Snapshot`` class. This is is significantly faster and less memory-intensive than loading an entire snapshot, so is recommended when the entire snapshot is not needed. For example, to load only the columns ['id0','id1','r'] for the 3 innermost particles (first 3 rows) of the last snapshot, execute the following:
+
+.. ipython:: python
+
+        last_snap_truncated = cmct.Snapshot('source/example_output', columns=['id0','id1','r'], row_range=[0,3])
+        print(last_snap_truncated.data)
+
+Note the row truncation still works properly even if the final row specified is much larger than the number of rows in the column (it will simply read up to the final row).
 
 ====================
 Cluster Observables
 ====================
 
-The `cmctoolkit <https://github.com/NicholasRui/cmctoolkit>`_ is a seperate 
-python package specifically designed to analyze CMC snapshots.  It then 
-computes many of the relevant astrophysical profiles of interest to observers 
-(e.g. surface brightness profiles, number density profiles, velocity 
-dispersions, mass-to-light ratios) allowing CMC to be directly compared to 
-globular clusters and super star clusters in the local universe.  This is 
-accomplished by a rigorous statistical averaging of the individual cluster 
-orbits for each star; see `Rui et al., (2021) 
-<https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_ for details.
+The `cmctoolkit <https://github.com/NicholasRui/cmctoolkit>`_ is a seperate python package specifically designed to analyze CMC snapshots, and is included as **cmctoolkit.py** in any
+installation of CMC-COSMIC. After loading in CMC snapshots like above, it can compute many of the relevant astrophysical profiles of interest to observers (e.g. surface brightness
+profiles, number density profiles, velocity dispersions, mass-to-light ratios) allowing CMC to be directly compared to globular clusters and super star clusters in the local universe. 
+This is accomplished by a rigorous statistical averaging of the individual cluster orbits for each star; see
+`Rui et al., (2021) <https://ui.adsabs.harvard.edu/abs/2021arXiv210305033R/abstract>`_ for details.
 
-By default, the cmctoolkit will import the last snapshot in an hdf5 snapshot file:
+As shown above, the **cmctoolkit** can load any snapshot by specifying its key (defaulting to importing the last snapshot if no key provided), but we can demonstrate additional capabilities if we reload the snapshots while also specifying a pseudo observing distance (``dist`` in kpc) and cluster metallicy (``z``):
 
 .. ipython:: python
 
         import cmctoolkit as cmct
-        last_snap = cmct.Snapshot(fname='source/example_output/output.window.snapshots.h5',
-                                  conv='source/example_output/output.conv.sh',
-                                  dist=15, # distance to cluster in kpc
-                                  z=0.0017) # metallicity 
-                                 
-
-But any snapshot in the file can be loaded by specifying the hdf5 key:
-
-.. ipython:: python
-
-        import cmctoolkit as cmct
-        first_snap = cmct.Snapshot(fname='source/example_output/output.window.snapshots.h5',
-                                  conv='source/example_output/output.conv.sh',
-                                  snapshot_name='0(t=0Gyr)',
-                                  dist=15, # distance to cluster in kpc
-                                  z=0.0017) # metallicity
+        first_snap = cmct.Snapshot('source/example_output', '0(tcount=1,t=0Gyr)', dist=15, z=0.0014)
+        last_snap = cmct.Snapshot('source/example_output', dist=15, z=0.0014)
                                 
-
-As an example of what the `cmctoolkit` can do, we can create V-band surface 
-brightness profiles for both snapshots, seeing they change due to the combined 
-effects of stellar evolution and the early expansion of the cluster due to mass 
-loss:
+As an example of what more the **cmctoolkit** can do, we can create V-band surface brightness profiles for both snapshots, seeing they change due to the combined  effects of stellar
+evolution and the early expansion of the cluster due to mass loss:
 
 .. ipython:: python
 
         first_snap.add_photometry('source/output/filt_index.txt');
+        last_snap .add_photometry('source/output/filt_index.txt');
 
-        v_bincenter_first, v_profile_first = first_snap.make_smoothed_brightness_profile('V', bins=80,
-                                                                       min_mass=None, max_mass=None,
-                                                                       max_lum=None, fluxdict=None,
-                                                                       startypes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-                                                                       min_logr=-1.5)
+        v_bincenter_first, v_profile_first = first_snap.make_smoothed_brightness_profile('V',
+                                                  bins=80, startypes=list(range(0,10)), min_logr=-1.5);
+        v_bincenter_last , v_profile_last  = last_snap .make_smoothed_brightness_profile('V',
+                                                  bins=80, startypes=list(range(0,10)), min_logr=-1.5);
 
-        last_snap.add_photometry('source/output/filt_index.txt');
-
-        v_bincenter_last, v_profile_last = last_snap.make_smoothed_brightness_profile('V', bins=80,
-                                                                       min_mass=None, max_mass=None,
-                                                                       max_lum=None, fluxdict=None,
-                                                                       startypes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-                                                                       min_logr=-1.5)
-        plt.plot(v_bincenter_first, v_profile_first, lw=2, label='0 Myr');
-        plt.plot(v_bincenter_last, v_profile_last, lw=2, label='10 Myr');
+        plt.plot(v_bincenter_first, v_profile_first, lw=2, label=  '0 Myr');
+        plt.plot(v_bincenter_last , v_profile_last , lw=2, label='100 Myr');
 
         plt.legend(loc='lower left',fontsize=14);
         plt.xlabel('$r$ (arcsec)',fontsize=15);
@@ -887,4 +857,4 @@ Examples of other properties which can be easily computed by `cmctoolkit`:
  * Binary fractions
  * Blue stragglers
 
-See the documentation on the `cmctoolkit` for more details.
+See the documentation on **cmctoolkit** for more details.

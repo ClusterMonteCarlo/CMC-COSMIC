@@ -6,6 +6,9 @@ import scipy.interpolate
 import gzip
 import time
 import os
+from glob import glob
+import re
+
 
 ################################################################################
 # DEFINE CGS CONSTANTS
@@ -24,6 +27,103 @@ startype_wd = np.array([10, 11, 12])
 startype_other = np.array([7])
 startype_remnant = np.array([10, 11, 12, 13, 14])
 startype_bh = np.array([14])
+
+# Example rows for a single and a binary in the old `dat.gz` or `h5-table` formats
+#7 1.2148252 0.01241145 0.88501829 0.45910308 -1.1703973 0.005698135 -100 -100 -100 -100 -100 -100 -100 1 3.1357837 1.0733999 -100 -100 -100 -100 -100 -100 -100 -100 -1.66741382329 na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na 1562.71 0 0 
+#-100 0.51848237 0.012775546 0.1102745 0.56633355 -1.5009573 0.0072352204 1 0.35557733 0.16290505 8 818032 0.032612913 0.45649007 -100 -100 -100 0 0 0.021475304 0.0050711441 0.33354305 0.18572501 -7.7923332e-07 1.3596778 -1.66740441457 0.333543 0.185725 2.9875 0.0214753 0.00507114 0 0 0 0 0.353001 0.0814525 0.330114 0.120721 201741 1.00347e+06 -0 0 0.106253 0.0844341 98.4269 13.4728 0 0 0 0 0 0 0 0 0.355577 0.162905 0 0 -100 -100 -100
+
+snapshot_columns = {"dat.gz":
+                        {0:"id", 1:"m[MSUN]", 2:"r", 3:"vr", 4:"vt", 5:"E", 6:"J", 7:"binflag", 8:"m0[MSUN]", 9:"m1[MSUN]",
+                        10:"id0", 11:"id1", 12:"a[AU]", 13:"e", 14:"startype", 15:"luminosity[LSUN]", 16:"radius[RSUN]",
+                        17:"bin_startype0", 18:"bin_startype1", 19:"bin_star_lum0[LSUN]", 20:"bin_star_lum1[LSUN]",
+                        21:"bin_star_radius0[RSUN]", 22:"bin_star_radius1[RSUN]", 23:"bin.Eb", 24:"eta", 25:"star.phi",
+                        26:"rad0", 27:"rad1", 28:"tb", 29:"lum0", 30:"lum1", 31:"massc0", 32:"massc1", 33:"radc0",
+                        34:"radc1", 35:"menv0", 36:"menv1", 37:"renv0", 38:"renv1", 39:"tms0", 40:"tms1", 41:"dmdt0",
+                        42:"dmdt1", 43:"radrol0", 44:"radrol1", 45:"ospin0", 46:"ospin1", 47:"B0", 48:"B1", 49:"formation0",
+                        50:"formation1", 51:"bacc0", 52:"bacc1", 53:"tacc0", 54:"tacc1", 55:"mass0_0", 56:"mass0_1",
+                        57:"epoch0", 58:"epoch1", 59:"ospin", 60:"B", 61:"formation"},
+                    "h5-table":
+                        {0:"id", 1:"m_MSUN", 2:"r", 3:"vr", 4:"vt", 5:"E", 6:"J", 7:"binflag", 8:"m0_MSUN", 9:"m1_MSUN",
+                        10:"id0", 11:"id1", 12:"a_AU", 13:"e", 14:"startype", 15:"luminosity_LSUN", 16:"radius_RSUN",
+                        17:"bin_startype0", 18:"bin_startype1", 19:"bin_star_lum0_LSUN", 20:"bin_star_lum1_LSUN",
+                        21:"bin_star_radius0_RSUN", 22:"bin_star_radius1_RSUN", 23:"bin_Eb", 24:"eta", 25:"star_phi",
+                        26:"rad0", 27:"rad1", 28:"tb", 29:"lum0", 30:"lum1", 31:"massc0", 32:"massc1", 33:"radc0",
+                        34:"radc1", 35:"menv0", 36:"menv1", 37:"renv0", 38:"renv1", 39:"tms0", 40:"tms1", 41:"dmdt0",
+                        42:"dmdt1", 43:"radrol0", 44:"radrol1", 45:"ospin0", 46:"ospin1", 47:"B0", 48:"B1", 49:"formation0",
+                        50:"formation1", 51:"bacc0", 52:"bacc1", 53:"tacc0", 54:"tacc1", 55:"mass0_0", 56:"mass0_1",
+                        57:"epoch0", 58:"epoch1", 59:"ospin", 60:"B", 61:"formation"},
+                    "h5-per-column":
+                        {0:'r', 1:'vr', 2:'vt', 3:'E', 4:'J', 5:'phi_r', 6:'id0', 7:'id1', 8:'st0', 9:'st1',
+                        10:'m0', 11:'m1', 12:'a', 13:'e', 14:'eta', 15:'rad0', 16:'rad1', 17:'lum0', 18:'lum1',
+                        19:'massc0', 20:'massc1', 21:'menv0', 22:'menv1', 23:'radc0', 24:'radc1', 25:'renv0', 26:'renv1',
+                        27:'radrol0', 28:'radrol1', 29:'tms0', 30:'tms1', 31:'dmdt0', 32:'dmdt1', 33:'tacc0', 34:'tacc1',
+                        35:'bacc0', 36:'bacc1', 37:'mass0_0', 38:'mass0_1', 39:'ospin0', 40:'ospin1', 41:'B0', 42:'B1',
+                        43:'epoch0', 44:'epoch1', 45:'formation0', 46:'formation1', 47:'bhspin0', 48:'bhspin1'}}
+
+def determine_necessary_snapshot_columns(desired_columns, file_format='h5-table'):
+    """ Given an input list of desired columns in the newer, condensed `h5-per-column` format, this function
+        returns a list of the columns needed under the older file formats `h5-table` or `dat.gz`. """
+    new_h5_columns = snapshot_columns['h5-per-column'].values
+    needed_columns = []
+    # Raise an error for any unrecognized columns
+    bhspin_warning = 1
+    for col in desired_columns:
+        if col in ('r','vr','vt','E','J','e','eta','radrol0','radrol1','dmdt0','dmdt1',
+                   'id1','rad1','lum1','massc1','menv1','radc1','renv1','tms1',
+                   'tacc1','bacc1','mass0_1','ospin1','B1','epoch1','formation1','massc0',
+                   'menv0','radc0','renv0','tms0','tacc0','bacc0','mass0_0','epoch0'): needed_columns.append(col)
+        elif col in ('id0','ospin0','B0','formation0'): needed_columns.append(col); needed_columns.append(col[:-1]) # For these parameters, also append data for singles
+        elif col == 'phi_r' and file_format == 'h5-table': needed_columns.append('star_phi')
+        elif col == 'phi_r' and file_format == 'dat.gz'  : needed_columns.append('star.phi')  
+        elif col == 'st0'                                : needed_columns.append('bin_startype0'); needed_columns.append('startype')
+        elif col == 'st1'                                : needed_columns.append('bin_startype1')
+        elif col == 'm0'    and file_format == 'h5-table': needed_columns.append('m0_MSUN'      ); needed_columns.append('m_MSUN')
+        elif col == 'm0'    and file_format == 'dat.gz'  : needed_columns.append('m0[MSUN]'     ); needed_columns.append('m[MSUN]')
+        elif col == 'm1'    and file_format == 'h5-table': needed_columns.append('m1_MSUN'      )
+        elif col == 'm1'    and file_format == 'dat.gz'  : needed_columns.append('m1[MSUN]'     )
+        elif col == 'a'     and file_format == 'h5-table': needed_columns.append('a_AU'         )
+        elif col == 'a'     and file_format == 'dat.gz'  : needed_columns.append('a[AU]'        )
+        elif col == 'rad0'  and file_format == 'h5-table': needed_columns.append('rad0'         ); needed_columns.append('radius_RSUN')
+        elif col == 'rad0'  and file_format == 'dat.gz'  : needed_columns.append('rad0'         ); needed_columns.append('radius[RSUN]')
+        elif col == 'lum0'  and file_format == 'h5-table': needed_columns.append('lum0'         ); needed_columns.append('luminosity_LSUN')
+        elif col == 'lum0'  and file_format == 'dat.gz'  : needed_columns.append('lum0'         ); needed_columns.append('luminosity[LSUN]')
+        elif col in ('bhspin0','bhspin1'):
+            if bhspin_warning < 1:
+                bhspin_warning += 1
+                print("WARNING: Your list of requested columns includes 'bhspin0' or 'bhspin1', which were not provided in the old snapshot formats 'h5-table'\n"
+                      "         or 'dat.gz'. Your specified CMC model uses one of these formats, so your snapshot DataFrame will not have these two columns.")
+        else: raise ValueError(f"The column `{col}` does not exist in the new `h5-per-column` snapshot format. Consult the docs for allowed column names.")
+    return needed_columns
+
+def convert_to_new_snapshot_columns(df):
+    """ Converts the input DataFrame of snapshot columns in the old `dat.gz` or `h5-table` formats to the newer, condensed `h5-per-column` format. """
+    df.replace(['na',-100], np.nan, inplace=True)
+    old_cols = df.keys()
+    '''
+    There is no need to replace the following columns (same name and data):
+        ['r','vr','vt','E','J','id1','e','eta','rad1','lum1','massc0','massc1','menv0','menv1','radc0','radc1','renv0','renv1',
+         'radrol0','radrol1','tms0','tms1','dmdt0','dmdt1','tacc0','tacc1','bacc0','bacc1','mass0_0','mass0_1','epoch0','epoch1']
+    This leaves the following columns that need to be made by renaming old columns and/or merging together from multiple old columns:
+        ['phi_r','id0','st0','st1','m0','m1','a','rad0','lum0','ospin0','B0','formation0']
+    '''
+
+    # If any of the following column names appear in old_cols, rename them to match the naming convention in the `h5-per-column` format
+    new_col_names = {'star_phi':'phi_r', 'star.phi':'phi_r', 'startype':'st', 'bin_startype0':'st0', 'bin_startype1':'st1',
+                     'm_MSUN':'m', 'm[MSUN]':'m', 'm0_MSUN':'m0', 'm0[MSUN]':'m0', 'm1_MSUN':'m1', 'm1[MSUN]':'m1', 'a_AU':'a', 'a[AU]':'a',
+                     'radius_RSUN':'rad', 'radius[RSUN]':'rad', 'luminosity_LSUN':'lum', 'luminosity[LSUN]':'lum'}
+    for col in new_col_names.keys(): 
+        if col in df.keys(): df.rename(columns={col:new_col_names[col]}, inplace=True)
+
+    # Now merge data columns for singles with the corresponding data columns for binary primaries
+    # For columns containing data on binary primaries, we fill in nan values with the values for singles (if available), and then delete the columns for singles
+
+    for col in ('id0','st0','m0','rad0','lum0','ospin0','B0','formation0'):
+        if col in df.keys():
+            df[col] = df[col].fillna(df[col[:-1]])
+            df.drop(columns=[col[:-1]], inplace=True)
+            
+    return df
+
 
 def make_unitdict(convfile):
     """
@@ -177,7 +277,7 @@ def smooth_filter(filtfunc, seglength=100):
         wavelength = (wavelength_arr[-1] + wavelength_arr[0]) / 2
         trans = area / (wavelength_arr[-1] - wavelength_arr[0])
                 
-        f.write('{} {}\n'.format(wavelength, trans))
+        f.write(rf'{wavelength} {trans}\n')
         
     f.close()
 
@@ -198,7 +298,7 @@ def add_mags(mag1, mag2):
     tot_mag: float
         sum of the magnitudes
     """
-    tot_mag = -2.5 * np.log10( 10 ** (-mag1 / 2.5) + 10 ** (-mag2 / 2.5) )
+    tot_mag = -2.5 * np.log10( np.nansum([10**(-mag1/2.5), 10**(-mag2/2.5)], axis=0) )
     return tot_mag
 
 def find_t_ms(z, m):
@@ -662,22 +762,20 @@ def find_MS_TO(t, z):
 
 class Snapshot:
     """
-    Snapshot class for snapshot file, usually something like 'initial.snap0137.dat.gz' 
-    or 'initial.snapshots.h5', paired alongside conversion file and, preferably, 
-    distance and metallicity.
+    Snapshot class for snapshot file, usually something like 'initial.snap0137.dat.gz' or 'initial.snapshots.h5', preferably with 
+    distance and metallicity provided.
 
     Parameters
     ----------
-    fname: str
-        filename of snapshot
+    model_dir: str
+        directory of snapshot file
 
-    conv: str, dict, or pd.DataFrame
-        if str, filename of unitfile (e.g., initial.conv.sh)
-        if dict, dictionary of unit conversion factors
-        if pd.DataFrame, table corresponding to initial.conv.sh
+    snapshot: str (default: None)
+        key name for h5 snapshots or snapshot number (four digit str) for dat.gz snapshots; defaults to the last snapshot if unspecified
 
-    snapshot_name: str
-        key name for h5 snapshots; if unspecified, defaults to the last snapshot
+    snapshot_type: str (default: 'window')
+        kind of snapshot to load, either '' (for initial.snapshots.h5, ), 'window' (for initial.window.snapshots.h5), or 'bh' (for initial.bhsnapshots.h5).
+        snapshot_type is irrelevant if the model directory contains only dat.gz snapshots
 
     dist: float (default: None)
         distance to cluster in kpc
@@ -685,96 +783,193 @@ class Snapshot:
     z: float (default: None)
         cluster metallicity
 
-    Attributes
+    columns: array-like of strs (default: see below)
+        columns to load (see CMC-COSMIC Github documentation for definitions); default is all available columns
+            ['r', 'vr', 'vt', 'E', 'J', 'phi_r', 'id0', 'id1', 'st0', 'st1', 'm0', 'm1', 'a', 'e', 'eta', 'rad0', 'rad1', 'lum0', 'lum1', 'massc0', 'massc1',
+             'menv0', 'menv1', 'radc0', 'radc1', 'renv0', 'renv1', 'radrol0', 'radrol1', 'tms0', 'tms1', 'dmdt0', 'dmdt1', 'tacc0', 'tacc1', 'bacc0', 'bacc1',
+             'mass0_0', 'mass0_1', 'ospin0', 'ospin1', 'B0', 'B1', 'epoch0', 'epoch1', 'formation0', 'formation1', 'bhspin0', 'bhspin1']
+        
+        Warning: if the snapshots were made using a CMC-COSMIC version prior to September, 2026 (snapshot formats 'dat.gz' or 'h5-table'), then the column names
+                 ending with 0 from massc0 thru mass0_0, and also epoch0, will not contain the relevant data for continuing stellar evolution of singles, only
+                 binaries. In this case, the `bhspin0` and `bhspin1` columns will also not appear in the output DataFrame `self.data`.
+    
+    row_range: array-like of shape (2,) (default: [0,None])
+        The range---minimum and maximum (+1)---of row indices to load from the snapshot. Note rows in CMC snapshots are ordered from smallest to largest 'r'.
+    
+    READ_BLOCK: int (default 200_000)
+        The maximum chunk size of rows to read in if the snapshots are in the old 'h5-table' format.
+        The default of 200_000 seems to optimize read speed for typical snapshots.
+    
+        
+    Attributes (also includes all Parameters above except READ_BLOCK)
     ----------
     data: pd.DataFrame
-        snapshot table
+        snapshot data
 
     unitdict: dict
-        Dictionary containing unit conversion information
-
-    dist: float (None)
-        distance to cluster in kpc
+        dictionary containing unit conversion information
 
     age: float (None)
-        age of cluster in Gyr 
+        age of cluster in Gyr
 
+    fname: str
+        snapshot file path
+
+    prefix: str
+        cmc output file prefix (typically 'initial')
+
+    snapshot_format: str
+        format of the snapshot file that the data attribute is based on.
+        Options include:
+            - 'dat.gz': snapshot files prior to CMC's first public release (e.g., in the CMC Cluster Catalog; Kremer et al. 2020)
+            - 'h5-table': snapshot files from CMC's first public release to approximately August 2026
+            - 'h5-per-column': latest version of snapshot files circa September 2026
+        See CMC-COSMIC's online Github documentation for more information.
+    
     filtertable: pd.DataFrame
         table containing information about all filter for which photometry exists
     """
-    def __init__(self, fname, conv, snapshot_name=None, dist=None, z=None):
+    def __init__(self, model_dir, snapshot=None, snapshot_type='window', columns=snapshot_columns['h5-per-column'].values(),
+                 row_range=(0,None), dist=None, z=None, READ_BLOCK=200_000):
+        self.model_dir = model_dir
+        self.snapshot = snapshot
+        self.snapshot_type = 'window'
+        if isinstance(columns, str): columns = [columns]
+        self.columns = columns
+        start = int(row_range[0])
+        stop = int(row_range[1]) if row_range[1] is not None else None
+        self.row_range = [start,stop]
         self.dist = dist
         self.z = z
 
-        # Can either load old gzip snapshots or new hdf5 snapshots
-        if '.dat.gz' in fname:
-            # For gzip, read in snapshot as long list where each line is a str
-            f = gzip.open(fname,'rb')
-            text = str(f.read()).split('\\n')
-            f.close()
+        # Find the unit conversion file and build the unit conversion dictionary
+        conv_search = glob(f"{self.model_dir}/*.conv.sh")
+        if   len(conv_search) == 1: conv = conv_search[0]
+        elif len(conv_search)  > 1: conv = conv_search[0]; print("WARNING: Found multiple unit conversion files in specified model directory. Using first one.")
+        else: raise ValueError(f"Found no unit conversion file in the specified model directory.")
+        with open(conv, 'r') as f:
+            self.unitdict = make_unitdict(f.read().split('\n'))
 
-            # Extract column names
-            colrow = text[1].replace('#',' ').replace('  ',' ').split()
-            colnames = [ colrow[ii][len(str(ii+1))+1:].replace(':','') for ii in range(len(colrow)) ]
+        # Determine the output file prefix and corresponding start of the snapshot file name
+        self.prefix = conv.split('/')[-1].rstrip('.conv.sh')
+        self.fname = f"{self.model_dir}/{self.prefix}"
 
-            # Extract snapshot time
-            t_snapshot = text[0].split('#')[1].split('=')[1].split()[0]
-
-            # Make a list of lists each of which contains the contents of each object
-            text = text[2:-1]
-            rows = np.array([ np.array(row.split())[:len(colnames)] for row in text ])
-
-            rows[np.where(rows == 'na')] = 'nan'
-            rows = rows.astype(float)
-
-            # Build a dictionary and cast to pandas DataFrame object
-            table = {}
-            for ii in range(len(colnames)):
-                table[colnames[ii]] = rows[:, ii]
-
-            self.data = pd.DataFrame(table)
-
-        elif '.h5' in fname:
-            # Take the last snapshot from the file if not specified
-            if snapshot_name == None:
-                snapshot_name = list(h5py.File(fname,'r').keys())[-1]
-
-            # New version of CMC prints out pandas DataFrame formatted hdf5 files
-            self.data = pd.read_hdf(fname,key=snapshot_name)
-
-            # Extract snapshot time
-            t_snapshot = snapshot_name.split('=')[1].rstrip(')')
-
+        # Search for h5 snapshot
+        if snapshot_type in ('','window'): h5_file = self.fname + f".{snapshot_type}.snapshots.h5"
+        elif snapshot_type == 'bh':        h5_file = self.fname + f".bhsnapshots.h5"
+        else: raise ValueError(rf"Unrecognized value of snapshot_type; must be '', 'window', or 'bh'.")
+        
+        if len(glob(h5_file)) > 0:
+            self.fname = h5_file
+            with h5py.File(self.fname, 'r') as f:
+                if f.attrs.get('layout') in ('cmc-per-column','h5-per-column'): self.snapshot_format = 'h5-per-column'
+                else:                                                           self.snapshot_format = 'h5-table'
+            if self.snapshot == None: # If unspecified, then default to the final snapshot
+                self.snapshot = self.list_snapshots(print_t_unit=False)['key'].values[-1]
+        
+        # Search for the specified dat.gz snapshot, or the last of any dat.gz snapshots if `snapshot` is left unspecified
         else:
-            raise ValueError('unsupported snapshot file type')
+            match_pattern = "[0-9][0-9][0-9][0-9]" if self.snapshot == None else f"{self.snapshot}"
+            datgz_file = self.fname+f".snap{match_pattern}.dat.gz"
+            sorted_snapshots = sorted(glob(datgz_file))
+            if len(sorted_snapshots) > 0:
+                self.snapshot_format = 'dat.gz'
+                if self.snapshot == None: # If unspecified, then default to the final snapshot
+                    self.fname = sorted_snapshots[-1]
+                    self.snapshot = self.fname.split('snap')[1].rstrip('.dat.gz')
+                else: self.fname = datgz_file
+            
+            else: print(f"Found no files of the form {datgz_file}.")
+        
+        if self.fname == f"{self.model_dir}/{self.prefix}":
+            raise ValueError(rf"Found no files of the forms {h5_file}\n or {datgz_file}.")
 
-        # Now, build conversion dictionary
-        if (type(conv) == str) or (type(conv) == pd.DataFrame):
-            if type(conv) == str:
-                f = open(conv, 'r')
-                convfile = f.read().split('\n')
-                f.close()
+        # Determine the columns from older file formats needed to make desired set of columns in the new file format (`h5-per-column`)
+        if self.snapshot_format in ('h5-table', 'dat.gz'):
+            columns = determine_necessary_snapshot_columns(columns, self.snapshot_format)
+        #print(self.snapshot_format, len(columns), '\n', columns, '\n')
 
-            # Produce unit dictionary
-            self.unitdict = make_unitdict(convfile)
+        if self.snapshot_format == 'h5-per-column':
+            with h5py.File(self.fname, 'r') as f:
+                dset = f[self.snapshot]
+                nrows = int(dset.attrs['nrows'])
+                stop = nrows if stop is None else min(stop, nrows)
+                self.data = pd.DataFrame({col: dset[col][start:stop] for col in columns})
+            self.data.replace(['na',-100], np.nan, inplace=True) # Makes output consistent with the `h5-table` and `dat.gz` options below
+            t_snapshot = self.snapshot.split('=')[2].rstrip(')')
 
-        elif type(conv) == dict:
-            self.unitdict = conv
+        elif self.snapshot_format == 'h5-table':
+            # Compound type layout from publicly released CMC-COSMIC v1.0. Read in row blocks: otherwise, a single 
+            # whole-dataset hyperslab over the 10-row chunks balloons the HDF5 chunk cache to several hundred MB.
+            with h5py.File(self.fname, 'r') as f:
+                dset = f[self.snapshot]
+                nrows = dset.shape[0]
+                stop = nrows if stop is None else min(stop, nrows)
+                length = max(stop - start, 0)
+                data = {col: np.empty(length, dtype=dset.dtype[col]) for col in columns}
+                for i in range(start, stop, READ_BLOCK):
+                    j = min(i + READ_BLOCK, stop)
+                    block = dset.fields(columns)[i:j]
+                    for col in columns: data[col][i - start : j - start] = block[col]
+            self.data = convert_to_new_snapshot_columns(pd.DataFrame(data))
+            t_snapshot = self.snapshot.split('=')[1].rstrip(')')
 
-        else:
-            raise ValueError('convfile must be either str or pd.DataFrame')
+        elif self.snapshot_format == 'dat.gz':
+            # Old format from before the public release of CMC-COSMIC. Notably used in the CMC Cluster Catalog (Kremer et al. 2020)
+            if stop is None: stop = int(1e12) # Set to an arbitrarily high-enough value that no reasonable snapshot would have this many rows
+            length = max(stop - start, 0)
+            indices_of_columns = {value: key for key, value in snapshot_columns['dat.gz'].items()}
+            usecols = sorted([indices_of_columns[col] for col in columns]) 
+            # Note: pd.read_csv will sort usecols automatically, but we need to know the resorted order if we want to convert back to the input order
+            names = [snapshot_columns['dat.gz'][idx] for idx in usecols]
+            # Explicitly match the column order input by the user, removing instances of 'bhspin0' or 'bhspin1' since these don't appear in the old 'dat.gz' snapshots
+            column_order = [col for col in self.columns if col not in ('bhspin0','bhspin1')]
+            self.data = convert_to_new_snapshot_columns(pd.read_csv(self.fname, sep=r'\s+', na_values='na', dtype=float, header=None, skiprows=2+start, nrows=length, usecols=usecols,
+                names=names)).iloc[start:stop][column_order] # Note: the [column_order] filter ensures the DataFrame preserves the column order input by the user
+            with gzip.open(self.fname,'r') as f: first_line = f.readline().decode('utf-8')
+            time_scan = re.findall('\d+[\.]?\d*', first_line)
+            t_snapshot = time_scan[0] if time_scan else '0' # Sets t_snapshot = 0 for snapshot files without a time header
 
         # Also read in the time of the snapshot (code units) and convert to gyr
-        if 'Gyr' in t_snapshot:
-            self.age = float(t_snapshot.rstrip('Gyr'))
-        elif 'Trl' in t_snapshot or 'Tcr' in t_snapshot:
-            raise ValueError('Unsupported snapshot window units')
-        else:
-            self.age = self.convert_units(float(t_snapshot), 'code', 'gyr')
+        if 'Trl' in t_snapshot or 'Tcr' in t_snapshot: raise ValueError('Unsupported snapshot window units')
+        elif 'Gyr' in t_snapshot: self.age = float(t_snapshot.rstrip('Gyr'))
+        else: self.age = self.convert_units(float(t_snapshot), 'code', 'gyr')
 
-        self.filtertable = pd.DataFrame({'filtname': [],
-                                             'path': [],
-                              'zp_spectralflux[JY]': []})
+        self.filtertable = pd.DataFrame({'filtname':[],   'path':[],   'zp_spectralflux[JY]':[]})
+
+
+    def list_snapshots(self, want_nrows=False, print_t_unit=True):
+        """ Return a DataFrame of the snapshots in the model, sorted by time. Very slow for dat.gz format to get number of rows, hence the want_nrows flag. """
+        rows = []
+        if self.snapshot_format == 'dat.gz':
+            for snap in glob(f"{self.model_dir}/{self.prefix}.snap[0-9][0-9][0-9][0-9].dat.gz"):
+                with gzip.open(snap,'r') as f: first_line = f.readline().decode('utf-8')
+                if not re.findall('\d+[\.]?\d*', first_line):
+                    t_snapshot = 0.0; print('WARNING: Could not read snapshot age, assuming 0') # Returns time = 0 for snapshot files without a time header
+                else: t_snapshot = self.convert_units(float(re.findall('\d+[\.]?\d*', first_line)[0]), 'code', 'gyr')
+                if want_nrows:
+                    nrows = -2 # Starts from -2 since the first two lines of the dat.gz file are the header
+                    with gzip.open(snap, 'rb') as f:
+                        while True:
+                            chunk = f.read(int(1e7))
+                            if not chunk: break
+                            nrows += chunk.count(b'\n')
+                    rows.append({"key":snap.split('snap')[-1].rstrip('.dat.gz'), "time":t_snapshot, "nrows":nrows})
+                else: rows.append({"key":snap.split('snap')[-1].rstrip('.dat.gz'), "time":t_snapshot})
+            t_unit = 'Gyr'
+
+        else:
+            with h5py.File(self.fname, 'r') as f:
+                for key in f:
+                    if self.snapshot_format == 'h5-table':
+                        rows.append({"key":key, "time":float(key.split('=')[1].rstrip('GyrTrelTcr)')), "nrows":f[key].shape[0]})
+                    elif self.snapshot_format == 'h5-per-column':
+                        rows.append({"key":key, "tcount":int(key.split('=')[1].split(',')[0]),
+                                     "time":float(key.split('=')[2].rstrip('GyrTrelTcr)')), "nrows":int(f[key].attrs["nrows"])})
+                t_unit = re.split( '\d+', rows[0]["key"] )[-1].rstrip(')')
+        if print_t_unit: print(f"Time unit for snapshot list: {t_unit}")
+        return pd.DataFrame(rows).sort_values("time").reset_index(drop=True)
+
 
     def convert_units(self, arr, in_unit='code', out_unit='code'):
         """
@@ -800,6 +995,9 @@ class Snapshot:
         converted: array-like
             converted array
         """
+        # arr.dtype may be float32 (e.g., for snapshots in the new `h5-per-column` format), so convert to float64 to ensure we don't exceed the maximum value for float32.
+        if np.ndim(arr) > 0: arr = arr.astype(float)
+        
         # Make sure both specified units are good
         if in_unit in self.unitdict.keys():
             ValueError('{} is not a recognized unit.'.format(in_unit))
@@ -808,6 +1006,7 @@ class Snapshot:
 
         # Converted array
         converted = self.unitdict[out_unit] * arr / self.unitdict[in_unit]
+        # Note: If arr.dtype is float32 (e.g., for snapshots in the new `h5-per-column` format), the astype(float) statement ensures we don't exceed the maximum value for float32.
 
         return converted
 
@@ -848,16 +1047,13 @@ class Snapshot:
         # At the beginning, nothing is cut
         good = np.ones(len(self.data)).astype(bool)
 
-        single = (self.data['binflag'] != 1)
-        binary = (self.data['binflag'] == 1)
+        single =  np.isnan(self.data['id1'])
+        binary = ~single
 
-        # Mass cuts
-        if min_mass is not None: # Pretend binaries are a single star with double mass
-            good = good & ( ( (self.data['m_MSUN'] > min_mass)                          & single ) |
-                            ( (self.data['m0_MSUN'] + self.data['m1_MSUN'] > min_mass) & binary ) )
-        if max_mass is not None:
-            good = good & ( ( (self.data['m_MSUN'] < max_mass)                          & single ) |
-                            ( (self.data['m0_MSUN'] + self.data['m1_MSUN'] < max_mass) & binary ) )
+        # Mass cuts, pretending binaries are a single star with double mass
+        if 'm' not in self.data.keys(): self.data['m'] = self.data[['m0','m1']].sum(axis=1) # Behaves like np.nansum
+        if min_mass is not None: good = good & ( self.data['m'] > min_mass )
+        if max_mass is not None: good = good & ( self.data['m'] < max_mass )
 
         # Cuts on projected radius (in d)
         if (dmin is not None) | (dmax is not None):
@@ -866,15 +1062,12 @@ class Snapshot:
 
             d_pc_arr = np.array(self.data['d[PC]'])
 
-            if dmin is not None:
-                good = good & ( d_pc_arr > dmin )
-            if dmax is not None:
-                good = good & ( d_pc_arr < dmax )
+            if dmin is not None: good = good & ( d_pc_arr > dmin )
+            if dmax is not None: good = good & ( d_pc_arr < dmax )
                 
         # Cut on luminosity
-        if max_lum is not None:
-            good = good & ( ( single & (self.data['luminosity_LSUN'] < max_lum) ) |
-                            ( binary & (self.data['bin_star_lum0_LSUN'] + self.data['bin_star_lum1_LSUN'] < max_lum) ) )
+        if 'lum' not in self.data.keys(): self.data['lum'] = self.data[['lum0','lum1']].sum(axis=1) # Behaves like np.nansum
+        if max_lum is not None: good = good & ( self.data['lum'] < max_lum )
 
         # Make sure all of the filters are actually there
         if fluxdict is not None:
@@ -886,36 +1079,26 @@ class Snapshot:
                 faint_cut = fluxdict[filtname][0]
                 bright_cut = fluxdict[filtname][1]
 
-                colname = 'obsMag_{}'.format(filtname)
-                bincolname0 = 'bin_obsMag0_{}'.format(filtname)
-                bincolname1 = 'bin_obsMag1_{}'.format(filtname)
+                self.data[f'obsMag_{filtname}'] = add_mags(self.data[f'obsMag0_{filtname}'], self.data[f'obsMag1_{filtname}'])
 
-                if faint_cut is not None:
-                    good = good & ( ( (self.data[colname] < faint_cut)                                       & single ) |
-                                    ( (add_mags(self.data[bincolname0], self.data[bincolname1]) < faint_cut) & binary ) )
-
-                if bright_cut is not None:
-                    good = good & ( ( (self.data[colname] > bright_cut)                                       & single ) |
-                                    ( (add_mags(self.data[bincolname0], self.data[bincolname1]) > bright_cut) & binary ) )
+                if faint_cut  is not None: good = good & (self.data[f'obsMag_{filtname}'] < faint_cut)
+                if bright_cut is not None: good = good & (self.data[f'obsMag_{filtname}'] > bright_cut)
 
         return good
 
     def add_photometry(self, filttable):
         """
-        Function which, assuming black-body behavior, assigns observed magnitudes
-        to stars in desired filters
+        Function which, assuming black-body behavior, assigns observed magnitudes to stars in desired filters
 
         For each filter, adds the following columns (# = filter name):
-        absMag_#: absolute magnitude in filter # for single (np.nan for binary or black hole)
-        bin_absMag0_#: absolute magnitude in filter # for first star in binary (np.nan for single or black hole)
-        bin_absMag1_#: absolute magnitude in filter # for second star in binary (np.nan for single or black hole)
-        tot_absMag_#: total magnitude in filter #, same as absMag_# for singles and is the magnitude sum of a binary pair if binary
+        absMag0_#: absolute magnitude in filter # for first star in binary or a single (np.nan for black hole)
+        absMag1_#: absolute magnitude in filter # for second star in binary or a single (np.nan for black hole)
+        absMag_#: total magnitude in filter #, same as absMag0_# for singles and is the magnitude sum of a binary pair if binary
 
         If distance is given, also add:
-        obsMag_#: observed magnitude in filter # for single (np.nan for binary or black hole)
-        bin_obsMag0_#: observed magnitude in filter # for first star in binary (np.nan for single or black hole)
-        bin_obsMag1_#: observed magnitude in filter # for second star in binary (np.nan for single or black hole)
-        tot_obsMag_#: total observed magnitude in filter #, same as absMag_# for singles and is the magnitude sum of a binary pair if binary
+        obsMag0_#: observed magnitude in filter # for first star in binary or a single (np.nan for black hole)
+        obsMag1_#: observed magnitude in filter # for second star in binary or a single (np.nan for black hole)
+        obsMag_#: total observed magnitude in filter #, same as absMag0_# for singles and is the magnitude sum of a binary pair if binary
         
         Code assumes calculation in energy units, photometry in energy units.
 
@@ -947,98 +1130,78 @@ class Snapshot:
         if self.dist is not None:
             distance_modulus = 5 * np.log10(self.dist / 0.01)
 
+
         # Calculate magnitudes
         for ii in range(len(filtnames)):
-            self.data['absMag_' + filtnames[ii]] = np.nan * np.ones(len(self.data))
-            self.data['bin_absMag0_' + filtnames[ii]] = np.nan * np.ones(len(self.data))
-            self.data['bin_absMag1_' + filtnames[ii]] = np.nan * np.ones(len(self.data))
+            self.data['absMag0_' + filtnames[ii]] = np.nan * np.ones(len(self.data))
+            self.data['absMag1_' + filtnames[ii]] = np.nan * np.ones(len(self.data))
 
             # Get filter function information
             wavelength_cm = np.array(self.convert_units(filtfuncs[ii]['wavelength[ANGSTROM]'], 'angstrom', 'cm'))
             transmission = np.array(filtfuncs[ii]['transmission'])
-            
+
             # Get normalization integral
             passband_wl = np.sum(0.5 * (transmission[1:] + transmission[:-1]) * (wavelength_cm[1:] - wavelength_cm[:-1]))
 
-            # Use trapezoid rule to evaluate integral of filtfunc * Planck distribution
-            Teff_K = self.data.loc[(self.data['binflag'] != 1) & (self.data['startype'] != 14), 'Teff[K]']
+
+            # Evaluate the integral of filtfunc * Planck distribution using the trapezoid rule
+            # First do so for singles that aren't BHs and binaries whose primaries aren't BHs
+            nonbh0 = (self.data['st0'] != 14)
+            Teff_K = self.data.loc[nonbh0, 'Teff0[K]']
             planck = 2 * h * c ** 2 / (wavelength_cm.reshape((1, wavelength_cm.size)) ** 5 * (np.exp(h * c / (k * np.outer(Teff_K, wavelength_cm))) - 1))
 
             planck_weighted = planck * transmission.reshape((1, transmission.size))
             integrated_planck_weighted = np.sum(0.5 * (planck_weighted[:,1:] + planck_weighted[:,:-1]) * (wavelength_cm[1:] - wavelength_cm[:-1]), axis=1)
 
-            rad_rsun = self.data.loc[(self.data['binflag'] != 1) & (self.data['startype'] != 14), 'radius_RSUN']
-            rad_cm = self.convert_units(rad_rsun, 'rsun', 'cm')
+            rad_cm = self.convert_units(self.data.loc[nonbh0, 'rad0'], 'rsun', 'cm')
             luminosity_cgs = 4 * np.pi ** 2 * rad_cm ** 2 * integrated_planck_weighted
-
             spectral_lum = luminosity_cgs / (4 * np.pi * self.convert_units(10, 'pc', 'cm') ** 2 * passband_wl)
 
-            # Calculate magnitudes (exclude black holes)
-            self.data.loc[(self.data['binflag'] != 1) & (self.data['startype'] != 14), 'absMag_' + filtnames[ii]] = -2.5 * np.log10(spectral_lum / zp_spectralflux[ii])
+            # Calculate magnitudes
+            self.data.loc[nonbh0, 'absMag0_' + filtnames[ii]] = -2.5 * np.log10(spectral_lum / zp_spectralflux[ii])
+            if self.dist is not None:
+                self.data['obsMag0_' + filtnames[ii]] = self.data['absMag0_' + filtnames[ii]]
+                self.data['obsMag0_' + filtnames[ii]] += distance_modulus
+
+
+            # Repeat this process for secondaries that aren't BHs
+            binary_nonbh1 = ~np.isnan(self.data['st1']) & (self.data['st1'] != 14)
+            Teff_K = self.data.loc[binary_nonbh1, 'Teff1[K]']
+            planck = 2 * h * c ** 2 / (wavelength_cm.reshape((1, wavelength_cm.size)) ** 5 * (np.exp(h * c / (k * np.outer(Teff_K, wavelength_cm))) - 1))
+
+            planck_weighted = planck * transmission.reshape((1, transmission.size))
+            integrated_planck_weighted = np.sum(0.5 * (planck_weighted[:,1:] + planck_weighted[:,:-1]) * (wavelength_cm[1:] - wavelength_cm[:-1]), axis=1)
+
+            rad_cm = self.convert_units(self.data.loc[binary_nonbh1, 'rad1'], 'rsun', 'cm')
+            luminosity_cgs = 4 * np.pi ** 2 * rad_cm ** 2 * integrated_planck_weighted
+            spectral_lum = luminosity_cgs / (4 * np.pi * self.convert_units(10, 'pc', 'cm') ** 2 * passband_wl)
+
+            # Calculate magnitudes
+            self.data.loc[binary_nonbh1, 'absMag1_' + filtnames[ii]] = -2.5 * np.log10(spectral_lum / zp_spectralflux[ii])
+            if self.dist is not None:
+                self.data['obsMag1_' + filtnames[ii]] = self.data['absMag1_' + filtnames[ii]]
+                self.data['obsMag1_' + filtnames[ii]] += distance_modulus
+
+
+            # Add total magnitude columns together
+            self.data['absMag_' + filtnames[ii]] = np.nan * np.ones(len(self.data))
+
+            good_single = np.isnan(self.data['st1']) & (self.data['st0'] != 14)
+            self.data.loc[good_single, 'absMag_' + filtnames[ii]] = self.data.loc[good_single, 'absMag0_' + filtnames[ii]]
+
+            good_binary = ~np.isnan(self.data['st1']) & (self.data['st0'] != 14) & (self.data['st1'] != 14)
+            self.data.loc[good_binary, 'absMag_' + filtnames[ii]] = add_mags(self.data.loc[good_binary, 'absMag0_' + filtnames[ii]],
+                                                                                 self.data.loc[good_binary, 'absMag1_' + filtnames[ii]])
+
+            good0_bad1 = ~np.isnan(self.data['st1']) & (self.data['st0'] != 14) & (self.data['st1'] == 14)
+            self.data.loc[good0_bad1, 'absMag_' + filtnames[ii]] = self.data.loc[good0_bad1, 'absMag0_' + filtnames[ii]]
+
+            good1_bad0 = ~np.isnan(self.data['st1']) & (self.data['st0'] == 14) & (self.data['st1'] != 14)
+            self.data.loc[good1_bad0, 'absMag_' + filtnames[ii]] = self.data.loc[good1_bad0, 'absMag1_' + filtnames[ii]]
 
             if self.dist is not None:
                 self.data['obsMag_' + filtnames[ii]] = self.data['absMag_' + filtnames[ii]]
                 self.data['obsMag_' + filtnames[ii]] += distance_modulus
-
-            # Repeat this process for the first star in each binary
-            Teff0_K = self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14), 'bin_Teff0[K]']
-            planck0 = 2 * h * c ** 2 / (wavelength_cm.reshape((1, wavelength_cm.size)) ** 5 * (np.exp(h * c / (k * np.outer(Teff0_K, wavelength_cm))) - 1))
-
-            planck_weighted0 = planck0 * transmission.reshape((1, transmission.size))
-            integrated_planck_weighted0 = np.sum(0.5 * (planck_weighted0[:,1:] + planck_weighted0[:,:-1]) * (wavelength_cm[1:] - wavelength_cm[:-1]), axis=1)
-
-            rad0_rsun = self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14), 'bin_star_radius0_RSUN']
-            rad0_cm = self.convert_units(rad0_rsun, 'rsun', 'cm')
-            luminosity0_cgs = 4 * np.pi ** 2 * rad0_cm ** 2 * integrated_planck_weighted0
-
-            spectral_lum0 = luminosity0_cgs / (4 * np.pi * self.convert_units(10, 'pc', 'cm') ** 2 * passband_wl)
-
-            # Calculate magnitudes
-            self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14), 'bin_absMag0_' + filtnames[ii]] = -2.5 * np.log10(spectral_lum0 / zp_spectralflux[ii])
-
-            if self.dist is not None:
-                self.data['bin_obsMag0_' + filtnames[ii]] = self.data['bin_absMag0_' + filtnames[ii]]
-                self.data['bin_obsMag0_' + filtnames[ii]] += distance_modulus
-
-            # Repeat this process for the second star in each binary
-            Teff1_K = self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype1'] != 14), 'bin_Teff1[K]']
-            planck1 = 2 * h * c ** 2 / (wavelength_cm.reshape((1, wavelength_cm.size)) ** 5 * (np.exp(h * c / (k * np.outer(Teff1_K, wavelength_cm))) - 1))
-
-            planck_weighted1 = planck1 * transmission.reshape((1, transmission.size))
-            integrated_planck_weighted1 = np.sum(0.5 * (planck_weighted1[:,1:] + planck_weighted1[:,:-1]) * (wavelength_cm[1:] - wavelength_cm[:-1]), axis=1)
-
-            rad1_rsun = self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype1'] != 14), 'bin_star_radius1_RSUN']
-            rad1_cm = self.convert_units(rad1_rsun, 'rsun', 'cm')
-            luminosity1_cgs = 4 * np.pi ** 2 * rad1_cm ** 2 * integrated_planck_weighted1
-
-            spectral_lum1 = luminosity1_cgs / (4 * np.pi * self.convert_units(10, 'pc', 'cm') ** 2 * passband_wl)
-
-            # Calculate magnitudes
-            self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype1'] != 14), 'bin_absMag1_' + filtnames[ii]] = -2.5 * np.log10(spectral_lum1 / zp_spectralflux[ii])
-
-            if self.dist is not None:
-                self.data['bin_obsMag1_' + filtnames[ii]] = self.data['bin_absMag1_' + filtnames[ii]]
-                self.data['bin_obsMag1_' + filtnames[ii]] += distance_modulus
-                
-            # Add total magnitude columns together
-            self.data['tot_absMag_' + filtnames[ii]] = np.nan * np.ones(len(self.data))
-            
-            good_single = (self.data['binflag'] != 1) & (self.data['startype'] != 14)
-            self.data.loc[good_single, 'tot_absMag_' + filtnames[ii]] = self.data.loc[good_single, 'absMag_' + filtnames[ii]]
-            
-            good_binary = (self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14) & (self.data['bin_startype1'] != 14)
-            self.data.loc[good_binary, 'tot_absMag_' + filtnames[ii]] = add_mags(self.data.loc[good_binary, 'bin_absMag0_' + filtnames[ii]],
-                                                                                 self.data.loc[good_binary, 'bin_absMag1_' + filtnames[ii]])
-                                                                                 
-            good0_bad1 = (self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14) & (self.data['bin_startype1'] == 14)
-            self.data.loc[good0_bad1, 'tot_absMag_' + filtnames[ii]] = self.data.loc[good0_bad1, 'bin_absMag0_' + filtnames[ii]]
-            
-            good1_bad0 = (self.data['binflag'] == 1) & (self.data['bin_startype0'] == 14) & (self.data['bin_startype1'] != 14)
-            self.data.loc[good1_bad0, 'tot_absMag_' + filtnames[ii]] = self.data.loc[good1_bad0, 'bin_absMag1_' + filtnames[ii]]
-            
-            if self.dist is not None:
-                self.data['tot_obsMag_' + filtnames[ii]] = self.data['tot_absMag_' + filtnames[ii]]
-                self.data['tot_obsMag_' + filtnames[ii]] += distance_modulus
 
             # Add filter to filtertable
             filterrow = pd.DataFrame({'filtname': [filtnames[ii]],
@@ -1131,57 +1294,35 @@ class Snapshot:
         Calculate the effective temperature Teff for every (non-BH) star in the catalog.
 
         Adds the following columns:
-        Teff[K] : Effective temperature of a single star, np.nan for a binary or black hole
-        bin_Teff0[K] : Effective temperature for first star in a binary, np.nan for a single or black hole
-        bin_Teff1[K] : Effective temperature for second star in a binary, np.nan for a single or black hole
+        Teff0[K] : Effective temperature for the primary star in a binary or a single star, np.nan for a black hole
+        Teff1[K] : Effective temperature for the secondary star in a binary, np.nan for a single star or black hole
 
         Parameters
         ----------
         none
         """
-        # Add columns for Teff
-        self.data['Teff[K]'] = np.nan * np.ones(len(self.data))
-        self.data['bin_Teff0[K]'] = np.nan * np.ones(len(self.data))
-        self.data['bin_Teff1[K]'] = np.nan * np.ones(len(self.data))
+        self.data['Teff0[K]'] = np.nan * np.ones(len(self.data))
+        self.data['Teff1[K]'] = np.nan * np.ones(len(self.data))
 
-        # First, calculate Teff for non-BH singles
-        single = (self.data['binflag'] != 1) & (self.data['startype'] != 14)
-        lum_lsun = self.data.loc[single, 'luminosity_LSUN']
-        rad_rsun = self.data.loc[single, 'radius_RSUN']
+        # First, calculate Teff for singles that aren't BHs and binaries whose primaries aren't BHs
+        nonbh0 = (self.data['st0'] != 14)
+        lum = self.convert_units(self.data.loc[nonbh0, 'lum0'], 'lsun', 'erg/s')
+        rad = self.convert_units(self.data.loc[nonbh0, 'rad0'], 'rsun', 'cm')
+        self.data.loc[nonbh0, 'Teff0[K]'] = (lum / (4 * np.pi * rad ** 2 * sigma)) ** 0.25
 
-        lum = self.convert_units(lum_lsun, 'lsun', 'erg/s')
-        rad = self.convert_units(rad_rsun, 'rsun', 'cm')
-
-        self.data.loc[single, 'Teff[K]'] = (lum / (4 * np.pi * rad ** 2 * sigma)) ** 0.25
-
-        # Next, calculate Teff for non-BH doubles... start with the first of the pair
-        binary0 = (self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14)
-        lum0_lsun = self.data.loc[binary0, 'bin_star_lum0_LSUN']
-        rad0_rsun = self.data.loc[binary0, 'bin_star_radius0_RSUN']
-
-        lum0 = self.convert_units(lum0_lsun, 'lsun', 'erg/s')
-        rad0 = self.convert_units(rad0_rsun, 'rsun', 'cm')
-
-        self.data.loc[(self.data['binflag'] == 1) & (self.data['bin_startype0'] != 14), 'bin_Teff0[K]'] = (lum0 / (4 * np.pi * rad0 ** 2 * sigma)) ** 0.25
-
-        # Same as above but for the second star in each binary pair
-        binary1 = (self.data['binflag'] == 1) & (self.data['bin_startype1'] != 14)
-        lum1_lsun = self.data.loc[binary1, 'bin_star_lum1_LSUN']
-        rad1_rsun = self.data.loc[binary1, 'bin_star_radius1_RSUN']
-
-        lum1 = self.convert_units(lum1_lsun, 'lsun', 'erg/s')
-        rad1 = self.convert_units(rad1_rsun, 'rsun', 'cm')
-
-        self.data.loc[binary1, 'bin_Teff1[K]'] = (lum1 / (4 * np.pi * rad1 ** 2 * sigma)) ** 0.25
+        # Next, calculate Teff for secondaries that aren't BHs
+        binary_nonbh1 = ~np.isnan(self.data['st1']) & (self.data['st1'] != 14)
+        lum = self.convert_units(self.data.loc[binary_nonbh1, 'lum1'], 'lsun', 'erg/s')
+        rad = self.convert_units(self.data.loc[binary_nonbh1, 'rad1'], 'rsun', 'cm')
+        self.data.loc[binary_nonbh1, 'Teff1[K]'] = (lum / (4 * np.pi * rad ** 2 * sigma)) ** 0.25
 
     def calc_surface_gravity(self):
         """
         Adds surface gravity columns to snapshot table.
 
         Adds the following columns:
-        g[CM/S] : Surface gravity of a single star, np.nan for a binary
-        bin_g0[CM/S] : Surface gravity for first star in a binary, np.nan for a single
-        bin_g1[CM/S] : Surface gravity for second star in a binary, np.nan for a single
+        g0[CM/S] : Surface gravity for the primary star in a binary or a single star
+        g1[CM/S] : Surface gravity for the secondary star in a binary, np.nan for a single
 
         Parameters
         ----------
@@ -1191,34 +1332,17 @@ class Snapshot:
         -------
         none
         """
-        # Add columns for g
-        self.data['g[CM/S2]'] = np.nan * np.ones(len(self.data))
-        self.data['bin_g0[CM/S2]'] = np.nan * np.ones(len(self.data))
-        self.data['bin_g1[CM/S2]'] = np.nan * np.ones(len(self.data))
-
-        # Add surface gravity for single
-        mass_msun = self.data.loc[self.data['binflag'] != 1, 'm_MSUN']
-        mass_g = self.convert_units(mass_msun, 'msun', 'g')
-        rad_rsun = self.data.loc[self.data['binflag'] != 1, 'radius_RSUN']
-        rad_cm = self.convert_units(rad_rsun, 'rsun', 'cm')
-
-        self.data.loc[self.data['binflag'] != 1, 'g[CM/S2]'] = G * mass_g / rad_cm ** 2
-
-        # Add surface gravity for first binary
-        mass0_msun = self.data.loc[self.data['binflag'] != 1, 'm0_MSUN']
-        mass0_g = self.convert_units(mass0_msun, 'msun', 'g')
-        rad0_rsun = self.data.loc[self.data['binflag'] != 1, 'bin_star_radius0_RSUN']
-        rad0_cm = self.convert_units(rad0_rsun, 'rsun', 'cm')
-
-        self.data.loc[self.data['binflag'] == 1, 'g0[CM/S2]'] = G * mass0_g / rad0_cm ** 2
-
-        # Add surface gravity for second binary
-        mass1_msun = self.data.loc[self.data['binflag'] != 1, 'm1_MSUN']
-        mass1_g = self.convert_units(mass1_msun, 'msun', 'g')
-        rad1_rsun = self.data.loc[self.data['binflag'] != 1, 'bin_star_radius1_RSUN']
-        rad1_cm = self.convert_units(rad1_rsun, 'rsun', 'cm')
-
-        self.data.loc[self.data['binflag'] == 1, 'g1[CM/S2]'] = G * mass1_g / rad1_cm ** 2
+        # First, calculate surface gravity for singles and primary stars of binaries
+        mass_g = self.convert_units(self.data['m0'], 'msun', 'g')
+        rad_cm = self.convert_units(self.data['rad0'], 'rsun', 'cm')
+        self.data['g0[CM/S2]'] = G * mass_g / rad_cm ** 2
+        
+        # Next, calculate surface gravity for the secondary stars of binaries
+        self.data['g1[CM/S2]'] = np.nan * np.ones(len(self.data))
+        binary = ~np.isnan(self.data['m1'])
+        mass_g = self.convert_units(self.data.loc[binary, 'm1'], 'msun', 'g')
+        rad_cm = self.convert_units(self.data.loc[binary, 'rad1'], 'rsun', 'cm')
+        self.data.loc[binary, 'g1[CM/S2]'] = G * mass_g / rad_cm ** 2
 
     def make_spatial_density_profile(self, bin_edges=None, min_mass=None, max_mass=None, fluxdict=None, startypes=startype_star):
         """
@@ -1263,23 +1387,15 @@ class Snapshot:
         if bin_edges is None:
             bin_edges = np.logspace( np.log10(np.min(self.data['d[PC]'])), np.log10(np.max(self.data['d[PC]'])), 100 )
 
-        # Read columns and make cuts
-        startype_arr = self.data['startype']
-        bin_startype0_arr = self.data['bin_startype0']
-        bin_startype1_arr = self.data['bin_startype1']
-
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, fluxdict=fluxdict) # make cuts
-        good = good & ( ((self.data['binflag'] != 1) & np.isin(startype_arr, startypes))
-                      | ((self.data['binflag'] == 1) & (np.isin(bin_startype0_arr, startypes) | np.isin(bin_startype1_arr, startypes)) ) )
-        mass_arr = np.array(self.data.loc[good, 'm_MSUN'])
-        d_pc_arr = np.array(self.data.loc[good, 'd[PC]'])
+        good = good & (np.isin(self.data['st0'], startypes) | np.isin(self.data['st1'], startypes))
 
-        count, _ = np.histogram(d_pc_arr, bin_edges)
+        hist, _ = np.histogram(self.data.loc[good,'d[PC]'].values, bin_edges)
 
         # Create spatial density profile by binning and dividing by annulus area
-        area = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
-        profile = count / area
-        e_profile = np.sqrt(count) / area
+        area = np.pi * (bin_edges[1:]**2 - bin_edges[:-1]**2)
+        profile = hist / area
+        e_profile = np.sqrt(hist) / area
 
         return bin_edges, profile, e_profile
 
@@ -1363,18 +1479,11 @@ class Snapshot:
         if 'd[PC]' not in self.data.keys():
             self.make_2d_projection()
 
-        # Define cut and find relevant arrays, only using relevant startypes
-        # As long as one of a binary pair is a good startype, include it
-        startype_arr = self.data['startype']
-        bin_startype0_arr = self.data['bin_startype0']
-        bin_startype1_arr = self.data['bin_startype1']
-
+        # Define cut and find relevant arrays, only using relevant startypes. As long as one of a binary pair is a good startype, include it.
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, fluxdict=fluxdict)
-        good = good & ( ((self.data['binflag'] != 1) & np.isin(startype_arr, startypes))
-                      | ((self.data['binflag'] == 1) & (np.isin(bin_startype0_arr, startypes) | np.isin(bin_startype1_arr, startypes)) ) )
-        mass_arr = np.array(self.data.loc[good, 'm_MSUN'])
-        d_pc_arr = np.array(self.data.loc[good, 'd[PC]'])
-        v_kms_arr = np.array(np.hypot(self.data.loc[good, 'vx[KM/S]'], np.hypot(self.data.loc[good, 'vy[KM/S]'], self.data.loc[good, 'vz[KM/S]'])))
+        good = good & (np.isin(self.data['st0'], startypes) | np.isin(self.data['st1'], startypes))
+        d_pc_arr = self.data.loc[good,'d[PC]'].values
+        v_kms_arr = np.hypot(self.data.loc[good, 'vx[KM/S]'], np.hypot(self.data.loc[good, 'vy[KM/S]'], self.data.loc[good, 'vz[KM/S]'])).values
 
         # If bin_edges is not specified, use default
         if bin_edges is None:
@@ -1425,39 +1534,33 @@ class Snapshot:
         e_mf: array-like
             Mass function uncertainty
         """
+        # Make relevant cuts
+        if 'm' not in self.data.keys(): self.data['m'] = self.data[['m0','m1']].sum(axis=1) # Behaves like np.nansum
+        good = self.make_cuts(dmin=dmin, dmax=dmax, fluxdict=fluxdict)
+        good = good & (np.isin(self.data['st0'], startypes) | np.isin(self.data['st1'], startypes))
+        mass   = self.data.loc[good, 'm']
+        st0    = self.data.loc[good, 'st0']
+        st1    = self.data.loc[good, 'st1']
+        binary = ~np.isnan(st1)
+        st0_ok = np.isin(st0, startypes)
+        st1_ok = np.isin(st1, startypes)
+        good_bin01 = binary &  st0_ok &  st1_ok
+        good_bin0  = binary &  st0_ok & ~st1_ok
+        good_bin1  = binary & ~st0_ok &  st1_ok
+        mass[good_bin01] = self.data.loc[good].loc[good_bin01, 'm' ]
+        mass[good_bin0 ] = self.data.loc[good].loc[good_bin0 , 'm0']
+        mass[good_bin1 ] = self.data.loc[good].loc[good_bin1 , 'm1']
+
         # If bin_edges is not specified, use default
         if bin_edges is None:
-            bin_edges = np.logspace( np.log10(np.min(self.data['m_MSUN'])), np.log10(np.max(self.data['m_MSUN'])), 100 )
-
-        # Make relevant cuts
-        startype_arr = self.data['startype']
-        bin_startype0_arr = self.data['bin_startype0']
-        bin_startype1_arr = self.data['bin_startype1']
-
-        good = self.make_cuts(dmin=dmin, dmax=dmax, fluxdict=fluxdict)
-        
-        good = good & ( ((self.data['binflag'] != 1) & np.isin(startype_arr, startypes))
-                      | ((self.data['binflag'] == 1) & (np.isin(bin_startype0_arr, startypes) | np.isin(bin_startype1_arr, startypes)) ) )
-
-        mass_arr = np.array(self.data['m_MSUN'])
-
-        binary = np.array(self.data['binflag'] == 1)
-        good_both_bin = np.array(np.isin(bin_startype0_arr, startypes) & np.isin(bin_startype1_arr, startypes))
-        good_bin0 = np.array(np.isin(bin_startype0_arr, startypes) & ~np.isin(bin_startype1_arr, startypes))
-        good_bin1 = np.array(~np.isin(bin_startype0_arr, startypes) & np.isin(bin_startype1_arr, startypes))
-        
-        mass_arr[good & binary & good_both_bin] = np.array(self.data.loc[good & binary & good_both_bin, 'm0_MSUN']) + np.array(self.data.loc[good & binary & good_both_bin, 'm1_MSUN'])
-        mass_arr[good & binary & good_bin0] = np.array(self.data.loc[good & binary & good_bin0, 'm0_MSUN'])
-        mass_arr[good & binary & good_bin1] = np.array(self.data.loc[good & binary & good_bin1, 'm1_MSUN'])
-        
-        mass_arr = mass_arr[good]
+            bin_edges = np.logspace( np.log10(np.min(self.data['m'])), np.log10(np.max(self.data['m'])), 100 )
 
         # Obtain mass function
-        count, _ = np.histogram(mass_arr, bin_edges)
+        hist, _ = np.histogram(mass.values, bin_edges)
         dm = bin_edges[1:] - bin_edges[:-1]
 
-        mf = count / dm
-        e_mf = np.sqrt(count) / dm
+        mf = hist / dm
+        e_mf = np.sqrt(hist) / dm
 
         return mf, e_mf
 
@@ -1498,17 +1601,11 @@ class Snapshot:
             Converged value for mass function slope (if failed fit, returns np.nan)
         """
         # Make relevant cuts
-        startype_arr = self.data['startype']
-        bin_startype0_arr = self.data['bin_startype0']
-        bin_startype1_arr = self.data['bin_startype1']
-
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, dmin=dmin, dmax=dmax, fluxdict=fluxdict)
-        good = good & ( ((self.data['binflag'] != 1) & np.isin(startype_arr, startypes))
-                      | ((self.data['binflag'] == 1) & (np.isin(bin_startype0_arr, startypes) | np.isin(bin_startype1_arr, startypes)) ) )
-        mass_arr = np.array(self.data.loc[good, 'm_MSUN'])
+        good = good & (np.isin(self.data['st0'], startypes) | np.isin(self.data['st1'], startypes))
+        mass_arr = self.data.loc[good, 'm'].values
 
-        # Define -1 * loglikelihood function, we wish to minimize this likelihood function
-        # (in other words, minimize -1 * loglikelihood)
+        # Define -1 * loglikelihood function, we wish to minimize this likelihood function (in other words, minimize -1 * loglikelihood)
         if min_mass == None:
             min_mass = np.min(mass_arr)
         if max_mass == None:
@@ -1566,15 +1663,9 @@ class Snapshot:
         e_profile: array-like
             uncertainty in number density
         """
-        # Define cut and find relevant arrays, only using relevant startypes
-        # As long as one of a binary pair is a good startype, include it
-        startype_arr = self.data['startype']
-        bin_startype0_arr = self.data['bin_startype0']
-        bin_startype1_arr = self.data['bin_startype1']
-
+        # Define cut and find relevant arrays, only using relevant startypes. As long as one of a binary pair is a good startype, include it.
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, fluxdict=fluxdict)
-        good = good & ( ((self.data['binflag'] != 1) & np.isin(startype_arr, startypes))
-                      | ((self.data['binflag'] == 1) & (np.isin(bin_startype0_arr, startypes) | np.isin(bin_startype1_arr, startypes)) ) )
+        good = good & (np.isin(self.data['st0'], startypes) | np.isin(self.data['st1'], startypes))
 
         r_pc_arr = self.convert_units(self.data.loc[good, 'r'], 'code', 'pc')
         r_pc_arr = r_pc_arr.values.reshape(len(r_pc_arr), 1)
@@ -1645,13 +1736,9 @@ class Snapshot:
         assert self.dist is not None
         
         # Make relevant cuts
-        startype_arr = self.data['startype']
-        bin_startype0_arr = self.data['bin_startype0']
-        bin_startype1_arr = self.data['bin_startype1']
-
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, fluxdict=fluxdict, max_lum=max_lum)
-        good = good & ( ((self.data['binflag'] != 1) & np.isin(startype_arr, startypes))
-                      | ((self.data['binflag'] == 1) & (np.isin(bin_startype0_arr, startypes) | np.isin(bin_startype1_arr, startypes)) ) )
+        good = good & (np.isin(self.data['st0'], startypes) | np.isin(self.data['st1'], startypes))
+
         r_pc_arr = self.convert_units(self.data.loc[good, 'r'], 'code', 'pc')
         r_pc_arr = r_pc_arr.values.reshape(len(r_pc_arr), 1)
 
@@ -1666,26 +1753,26 @@ class Snapshot:
 
         weight = r_pc_arr ** -1 * ( np.sqrt(inner) - np.sqrt(outer) )
 
-        # Pull magnitudes from specified filter (making sure binaries
-        # are handled correctly)
+        # Pull magnitudes from specified filter (making sure binaries are handled correctly)
         if filtname not in np.array(self.filtertable['filtname']): # make sure the filter actually has photometry
             raise ValueError('Given filter does not have photometry')
 
-        mag = self.data.loc[good, 'obsMag_{}'.format(filtname)]
-        binmag0 = self.data.loc[good, 'bin_obsMag0_{}'.format(filtname)]
-        binmag1 = self.data.loc[good, 'bin_obsMag1_{}'.format(filtname)]
-        startype0 = self.data.loc[good, 'bin_startype0']
-        startype1 = self.data.loc[good, 'bin_startype1']
-        binflag = self.data.loc[good, 'binflag']
+        mag     = self.data.loc[good, f'obsMag_{filtname}']
+        binmag0 = self.data.loc[good, f'obsMag0_{filtname}']
+        binmag1 = self.data.loc[good, f'obsMag1_{filtname}']
+        st0     = self.data.loc[good, 'st0']
+        st1     = self.data.loc[good, 'st1']
+        binary  = ~np.isnan(st1)
+        st0_ok = np.isin(st0, startypes)
+        st1_ok = np.isin(st1, startypes)
+        good_bin01 = binary &  st0_ok &  st1_ok
+        good_bin0  = binary &  st0_ok & ~st1_ok
+        good_bin1  = binary & ~st0_ok &  st1_ok
 
-        good_bin01 = (binflag == 1) & np.isin(startype0, startypes) & np.isin(startype1, startypes)
-        good_bin0 = (binflag == 1) & np.isin(startype0, startypes) & ~np.isin(startype1, startypes)
-        good_bin1 = (binflag == 1) & ~np.isin(startype0, startypes) & np.isin(startype1, startypes)
         mag[good_bin01] = add_mags(binmag0[good_bin01], binmag1[good_bin01])
-        mag[good_bin0] = binmag0[good_bin0]
-        mag[good_bin1] = binmag1[good_bin1]
+        mag[good_bin0 ] = binmag0[good_bin0]
+        mag[good_bin1 ] = binmag1[good_bin1]
         mag = mag.values.reshape(len(mag), 1)
-
         mag_weight = np.sum(10 ** (-mag / 2.5) * weight, axis=0)
 
         # Make profile (mag / arcsec^2)
@@ -1742,13 +1829,8 @@ class Snapshot:
             uncertainty in velocity dispersions (in km/s)
         """
         # Make relevant cuts
-        startype_arr = self.data['startype']
-        bin_startype0_arr = self.data['bin_startype0']
-        bin_startype1_arr = self.data['bin_startype1']
-
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, fluxdict=fluxdict)
-        good = good & ( ((self.data['binflag'] != 1) & np.isin(startype_arr, startypes))
-                      | ((self.data['binflag'] == 1) & (np.isin(bin_startype0_arr, startypes) | np.isin(bin_startype1_arr, startypes)) ) )
+        good = good & (np.isin(self.data['st0'], startypes) | np.isin(self.data['st1'], startypes))
         r_pc_arr = self.convert_units(self.data.loc[good, 'r'], 'code', 'pc')
         r_pc_arr = r_pc_arr.values.reshape(len(r_pc_arr), 1)
 
@@ -1769,7 +1851,7 @@ class Snapshot:
         # Read in velocities
         bin_center = (bin_edges[0,:-1] + bin_edges[0,1:]) / 2
 
-        v_arr = np.array(np.hypot(self.data.loc[good, 'vt'], self.data.loc[good, 'vr']))
+        v_arr = np.hypot(self.data.loc[good, 'vt'], self.data.loc[good, 'vr']).values
         v_kms_arr = self.convert_units(v_arr, 'code', 'nb_km/s')
         v_kms_arr = v_kms_arr.reshape(len(v_kms_arr), 1)
 
@@ -1819,43 +1901,43 @@ class Snapshot:
         if (enclosed_frac >= 1) or (enclosed_frac <= 0):
             raise ValueError('enclosed_frac must be between 0 and 1, exclusive')
         
-        # Find startypes and make cuts
-        startype_arr = self.data['startype']
-        bin_startype0_arr = self.data['bin_startype0']
-        bin_startype1_arr = self.data['bin_startype1']
-        
+        # Make relevant cuts
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, fluxdict=fluxdict)
-        good = good & ( ((self.data['binflag'] != 1) & np.isin(startype_arr, startypes))
-                      | ((self.data['binflag'] == 1) & (np.isin(bin_startype0_arr, startypes) | np.isin(bin_startype1_arr, startypes)) ) )
+        good = good & (np.isin(self.data['st0'], startypes) | np.isin(self.data['st1'], startypes))
         
         # Calculate weighted mass distribution
         r_pc_arr = self.convert_units(self.data.loc[good, 'r'], 'code', 'pc')
         r_pc_arr = r_pc_arr.values.reshape(len(r_pc_arr), 1)
 
-        binflag = np.array(self.data.loc[good, 'binflag'])
-        startype0 = np.array(self.data.loc[good, 'bin_startype0'])
-        startype1 = np.array(self.data.loc[good, 'bin_startype1'])
-        
-        binary = (binflag == 1)
-        startype0_ok = (np.isin(startype0, startypes))
-        startype1_ok = (np.isin(startype1, startypes))
-        
+        st0    = self.data.loc[good, 'st0']
+        st1    = self.data.loc[good, 'st1']
+        binary = ~np.isnan(st1)
+        st0_ok = np.isin(st0, startypes)
+        st1_ok = np.isin(st1, startypes)
+        good_bin01 = binary &  st0_ok &  st1_ok
+        good_bin0  = binary &  st0_ok & ~st1_ok
+        good_bin1  = binary & ~st0_ok &  st1_ok
+
         if qty == 'mass':
-            mass_arr = np.array(self.data.loc[good, 'm_MSUN'])
-            mass0_arr = np.array(self.data.loc[good, 'm0_MSUN'])
-            mass1_arr = np.array(self.data.loc[good, 'm1_MSUN'])
-            
-            mass_arr[binary & startype0_ok & startype1_ok] = mass0_arr[binary & startype0_ok & startype1_ok] + mass1_arr[binary & startype0_ok & startype1_ok]
-            mass_arr[binary & startype0_ok & ~startype1_ok] = mass0_arr[binary & startype0_ok & ~startype1_ok]
-            mass_arr[binary & ~startype0_ok & startype1_ok] = mass1_arr[binary & ~startype0_ok & startype1_ok]
+            mass  = self.data.loc[good, 'm']
+            mass0 = self.data.loc[good, 'm0']
+            mass1 = self.data.loc[good, 'm1']
+
+            mass[good_bin01] = mass0[good_bin01] + mass1[good_bin01]
+            mass[good_bin0 ] = mass0[good_bin0]
+            mass[good_bin1 ] = mass1[good_bin1]
+            mass = mass.values
+
         elif qty == 'light':
-            lum_arr = np.array(self.data.loc[good,'luminosity_LSUN'])
-            lum0_arr = np.array(self.data.loc[good,'bin_star_lum0_LSUN'])
-            lum1_arr = np.array(self.data.loc[good,'bin_star_lum1_LSUN'])
+            lum  = self.data.loc[good, 'lum']
+            lum0 = self.data.loc[good, 'lum0']
+            lum1 = self.data.loc[good, 'lum1']
+
+            lum[good_bin01] = lum0[good_bin01] + lum1[good_bin01]
+            lum[good_bin0 ] = lum0[good_bin0]
+            lum[good_bin1 ] = lum1[good_bin1]
+            lum = lum.values
             
-            lum_arr[binary & startype0_ok & startype1_ok] = lum0_arr[binary & startype0_ok & startype1_ok] + lum1_arr[binary & startype0_ok & startype1_ok]
-            lum_arr[binary & startype0_ok & ~startype1_ok] = lum0_arr[binary & startype0_ok & ~startype1_ok]
-            lum_arr[binary & ~startype0_ok & startype1_ok] = lum1_arr[binary & ~startype0_ok & startype1_ok]
         else:
             raise ValueError("qty must be either 'mass' or 'light'")
             
@@ -1872,10 +1954,10 @@ class Snapshot:
         weight = r_pc_arr ** -1 * ( np.sqrt(inner) - np.sqrt(outer) )
         
         if qty == 'mass':
-            bin_mass = np.sum(mass_arr.reshape(len(mass_arr), 1) * weight, axis=0)
+            bin_mass = np.sum(mass.reshape(len(mass), 1) * weight, axis=0)
             cumdist = np.cumsum(bin_mass) / np.sum(bin_mass)
         elif qty == 'light':
-            bin_light = np.sum(lum_arr.reshape(len(lum_arr), 1) * weight, axis=0)
+            bin_light = np.sum(lum.reshape(len(lum), 1) * weight, axis=0)
             cumdist = np.cumsum(bin_light) / np.sum(bin_light)
         
         # Interpolate bin_center AS A FUNCTION OF cumdist and calculate rhm
@@ -1901,70 +1983,65 @@ class Snapshot:
         paramdict = {}
 
         # Get relevant columns
-        binary = (self.data['binflag'] == 1)
-        startype = np.array(self.data['startype'])
-        bin_startype0 = np.array(self.data['bin_startype0'])
-        bin_startype1 = np.array(self.data['bin_startype1'])
-        ospin = np.array(self.data['ospin'])
-        ospin0 = np.array(self.data['ospin0'])
-        ospin1 = np.array(self.data['ospin1'])
-
-        mass = np.array(self.data['m_MSUN'])
-        mass0 = np.array(self.data['m0_MSUN'])
-        mass1 = np.array(self.data['m1_MSUN'])
-
-        lum = np.array(self.data['luminosity_LSUN'])
-        lum0 = np.array(self.data['bin_star_lum0_LSUN'])
-        lum1 = np.array(self.data['bin_star_lum1_LSUN'])
-
-        dmdt0 = np.array(self.data['dmdt0'])
-        dmdt1 = np.array(self.data['dmdt1'])
+        binary = ~np.isnan(self.data['st1']).values
+        st0 = self.data['st0'].values
+        st1 = self.data['st1'].values
+        ospin0 = self.data['ospin0'].values
+        ospin1 = self.data['ospin1'].values
+        if 'm' not in self.data.keys(): self.data['m'] = self.data[['m0','m1']].sum(axis=1) # Behaves like np.nansum
+        mass  = self.data['m'].values
+        mass0 = self.data['m0'].values
+        mass1 = self.data['m1'].values
+        if 'lum' not in self.data.keys(): self.data['lum'] = self.data[['lum0','lum1']].sum(axis=1) # Behaves like np.nansum
+        lum  = self.data['lum'].values
+        lum0 = self.data['lum0'].values
+        lum1 = self.data['lum1'].values
+        dmdt0 = self.data['dmdt0'].values
+        dmdt1 = self.data['dmdt1'].values
 
         # Get count values
-        paramdict['Nsys'] = len(startype)
+        paramdict['Nsys'] = len(mass)
         paramdict['Nobj'] = np.sum(~binary) + 2 * np.sum(binary)
-        paramdict['Nlum'] = np.sum(~binary & np.isin(startype, startype_star)) + np.sum(binary & (np.isin(bin_startype0, startype_star) | np.isin(bin_startype1, startype_star)))
-        paramdict['Nstar'] = np.sum(np.isin(startype, startype_star)) + np.sum(np.isin(bin_startype0, startype_star)) + np.sum(np.isin(bin_startype1, startype_star))
+        paramdict['Nlum'] = np.sum(~binary & np.isin(st0, startype_star)) + np.sum(binary & (np.isin(st0, startype_star) | np.isin(st1, startype_star)))
+        paramdict['Nstar'] = np.sum(np.isin(st0, startype_star)) + np.sum(np.isin(st1, startype_star))
 
         for ii in range(16):
-            paramdict['N_{}'.format(ii)] = np.sum(np.isin(startype, ii)) + np.sum(np.isin(bin_startype0, ii)) + np.sum(np.isin(bin_startype1, ii))
+            paramdict[f'N_{ii}'] = np.sum(np.isin(st0, ii)) + np.sum(np.isin(st1, ii))
 
         # Counting binaries
         paramdict['Nbin'] = np.sum(binary)
-        paramdict['Nbinl'] = np.sum(np.isin(bin_startype0, startype_star) | np.isin(bin_startype1, startype_star))
-        paramdict['Nbins'] = np.sum(np.isin(bin_startype0, startype_star) & np.isin(bin_startype1, startype_star))
-        paramdict['Nbinr'] = np.sum(np.isin(bin_startype0, startype_remnant) | np.isin(bin_startype1, startype_remnant))
+        paramdict['Nbinl'] = np.sum(np.isin(st0, startype_star) | np.isin(st1, startype_star))
+        paramdict['Nbins'] = np.sum(np.isin(st0, startype_star) & np.isin(st1, startype_star))
+        paramdict['Nbinr'] = np.sum(np.isin(st0, startype_remnant) | np.isin(st1, startype_remnant))
         paramdict['Nbint'] = np.sum( (dmdt0 != 0) & ~np.isnan(dmdt0) )
 
         for ii in range(16):
             for jj in range(ii+1):
                 if ii == jj:
-                    paramdict['Nbin_{}_{}'.format(ii, jj)] = np.sum(np.isin(bin_startype0, ii) & np.isin(bin_startype1, ii))
+                    paramdict[f'Nbin_{ii}_{jj}'] = np.sum(np.isin(st0, ii) & np.isin(st1, ii))
                 else:
-                    paramdict['Nbin_{}_{}'.format(ii, jj)] = np.sum(np.isin(bin_startype0, ii) & np.isin(bin_startype1, jj)) + np.sum(np.isin(bin_startype0, jj) & np.isin(bin_startype1, ii))
+                    paramdict[f'Nbin_{ii}_{jj}'] = np.sum(np.isin(st0, ii) & np.isin(st1, jj)) + np.sum(np.isin(st0, jj) & np.isin(st1, ii))
 
         # Mass transferring binaries
         for ii in range(16):
             for jj in range(16):
                 if ii == jj:
-                    paramdict['Nbint_{}_on_{}'.format(ii, jj)] = np.sum(np.isin(bin_startype0, ii) & np.isin(bin_startype1, ii) & (dmdt0 != 0) & ~np.isnan(dmdt0))
+                    paramdict[f'Nbint_{ii}_on_{jj}'] = np.sum(np.isin(st0, ii) & np.isin(st1, ii) & (dmdt0 != 0) & ~np.isnan(dmdt0))
                 else:
-                    paramdict['Nbint_{}_on_{}'.format(ii, jj)] = np.sum(np.isin(bin_startype0, ii) & np.isin(bin_startype1, jj) & (dmdt1 > 0) & ~np.isnan(dmdt0)) + np.sum(np.isin(bin_startype0, jj) & np.isin(bin_startype1, ii) & (dmdt0 > 0) & ~np.isnan(dmdt0))
+                    paramdict[f'Nbint_{ii}_on_{jj}'] = np.sum(np.isin(st0, ii) & np.isin(st1, jj) & (dmdt1 > 0) & ~np.isnan(dmdt0)) + np.sum(np.isin(st0, jj) & np.isin(st1, ii) & (dmdt0 > 0) & ~np.isnan(dmdt0))
 
         # Get mass quantities
-        paramdict['Mtot'] = np.sum(mass * ~binary) + np.sum(mass0 * binary) + np.sum(mass1 * binary)
-        paramdict['Mstar'] = np.sum(mass * np.isin(startype, startype_star)) + np.sum(mass0 * np.isin(bin_startype0, startype_star)) + np.sum(mass1 * np.isin(bin_startype1, startype_star))
-        paramdict['Mbh'] = np.sum(mass * np.isin(startype, 14)) + np.sum(mass0 * np.isin(bin_startype0, 14)) + np.sum(mass1 * np.isin(bin_startype1, 14))
-
-        paramdict['Ltot'] = np.sum(lum * np.isin(startype, startype_star)) + np.sum(lum0 * np.isin(bin_startype0, startype_star)) + np.sum(lum1 * np.isin(bin_startype1, startype_star))
+        paramdict['Mtot' ] = np.sum(mass)
+        paramdict['Mstar'] = np.nansum(mass0 * np.isin(st0, startype_star)) + np.nansum(mass1 * np.isin(st1, startype_star))
+        paramdict['Mbh'  ] = np.nansum(mass0 * np.isin(st0, 14           )) + np.nansum(mass1 * np.isin(st1, 14           ))
+        paramdict['Ltot' ] = np.nansum(lum0  * np.isin(st0, startype_star)) + np.nansum(lum1  * np.isin(st1, startype_star))
 
         # Count other exotica
 
         # Millisecond pulsars
-        per = 2 * np.pi / self.convert_units(ospin[np.isin(startype, 13)], '1/yr', 'Hz')
-        per0 = 2 * np.pi / self.convert_units(ospin0[np.isin(bin_startype0, 13)], '1/yr', 'Hz')
-        per1 = 2 * np.pi / self.convert_units(ospin1[np.isin(bin_startype1, 13)], '1/yr', 'Hz')
-        per_list = list(per) + list(per0) + list(per1)
+        per0 = 2 * np.pi / self.convert_units(ospin0[np.isin(st0, 13)], '1/yr', 'Hz')
+        per1 = 2 * np.pi / self.convert_units(ospin1[np.isin(st1, 13)], '1/yr', 'Hz')
+        per_list = list(per0) + list(per1)
 
         if len(per_list) > 0:
             paramdict['min_ns_per'] = np.min(per_list)
@@ -1977,19 +2054,19 @@ class Snapshot:
         if (self.z is not None) and (self.age > 0.01):
             mto = find_MS_TO(self.age, self.z)
             paramdict['mto'] = mto
-            paramdict['Nbs'] = np.sum((mass > mto) & np.isin(startype, startype_ms)) + np.sum((mass0 > mto) & np.isin(bin_startype0, startype_ms)) + np.sum((mass1 > mto) & np.isin(bin_startype1, startype_ms))
+            paramdict['Nbs'] = np.sum((mass0 > mto) & np.isin(st0, startype_ms)) + np.sum((mass1 > mto) & np.isin(st1, startype_ms))
         else:
             paramdict['mto'] = np.nan
             paramdict['Nbs'] = np.nan
             
         # Most massive object of each stellar type
         for ii in range(16):
-            if paramdict['N_{}'.format(ii)] != 0:
-                paramdict['mmax_{}'.format(ii)] = np.max(np.append(mass, np.append(mass0, mass1))[np.append(startype, np.append(bin_startype0, bin_startype1)) == ii])
-                paramdict['mmin_{}'.format(ii)] = np.min(np.append(mass, np.append(mass0, mass1))[np.append(startype, np.append(bin_startype0, bin_startype1)) == ii])
+            if paramdict[f'N_{ii}'] != 0:
+                paramdict[f'mmax_{ii}'] = np.max( np.append(mass0,mass1) [np.append(st0,st1) == ii] )
+                paramdict[f'mmin_{ii}'] = np.min( np.append(mass0,mass1) [np.append(st0,st1) == ii] )
             else:
-                paramdict['mmax_{}'.format(ii)] = np.nan
-                paramdict['mmin_{}'.format(ii)] = np.nan
+                paramdict[f'mmax_{ii}'] = np.nan
+                paramdict[f'mmin_{ii}'] = np.nan
         
         # Half-mass & half-light radii (calculated using only stars)
         paramdict['rhm'] = self.calculate_renclosed(enclosed_frac=0.5, qty='mass')
@@ -1997,36 +2074,36 @@ class Snapshot:
         
         # Velocity dispersion for all startypes (velocity dispersion of any combination of startypes can be deduced)
         # & central velocity dispersion
-        paramdict['sig'] = self.make_smoothed_veldisp_profile(bins=1)[1][0]
+        paramdict['sig'  ] = self.make_smoothed_veldisp_profile(bins=1)[1][0]
         paramdict['sighm'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'])[1][0]
         paramdict['sighl'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'])[1][0]
         
-        paramdict['sig_star'] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_star)[1][0]
+        paramdict['sig_star'  ] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_star)[1][0]
         paramdict['sighm_star'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'], startypes=startype_star)[1][0]
         paramdict['sighl_star'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=startype_star)[1][0]
         
-        paramdict['sig_ms'] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_ms)[1][0]
+        paramdict['sig_ms'  ] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_ms)[1][0]
         paramdict['sighm_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'], startypes=startype_ms)[1][0]
         paramdict['sighl_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=startype_ms)[1][0]
         
-        if np.sum(np.isin(startype, startype_giant)) + np.sum(np.isin(bin_startype0, startype_giant)) + np.sum(np.isin(bin_startype1, startype_giant)) != 0:
-            paramdict['sig_ms'] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_giant)[1][0]
+        if np.sum(np.isin(st0, startype_giant)) + np.sum(np.isin(st1, startype_giant)) != 0:
+            paramdict['sig_ms'  ] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_giant)[1][0]
             paramdict['sighm_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'], startypes=startype_giant)[1][0]
             paramdict['sighl_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=startype_giant)[1][0]
         else:
-            paramdict['sig_ms'] = np.nan
+            paramdict['sig_ms'  ] = np.nan
             paramdict['sighm_ms'] = np.nan
             paramdict['sighl_ms'] = np.nan
         
         for ii in range(16):
-            if paramdict['N_{}'.format(ii)] != 0:
-                paramdict['sig_{}'.format(ii)] = self.make_smoothed_veldisp_profile(bins=1, startypes=ii)[1][0]
-                paramdict['sighm_{}'.format(ii)] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'], startypes=ii)[1][0]
-                paramdict['sighl_{}'.format(ii)] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=ii)[1][0]
+            if paramdict[f'N_{ii}'] != 0:
+                paramdict[f'sig_{ii}'  ] = self.make_smoothed_veldisp_profile(bins=1, startypes=ii)[1][0]
+                paramdict[f'sighm_{ii}'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'], startypes=ii)[1][0]
+                paramdict[f'sighl_{ii}'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=ii)[1][0]
             else:
-                paramdict['sig_{}'.format(ii)] = np.nan
-                paramdict['sighm_{}'.format(ii)] = np.nan
-                paramdict['sighl_{}'.format(ii)] = np.nan
+                paramdict[f'sig_{ii}'  ] = np.nan
+                paramdict[f'sighm_{ii}'] = np.nan
+                paramdict[f'sighl_{ii}'] = np.nan
         
         paramdict['age'] = self.age
         
@@ -2080,16 +2157,9 @@ class Snapshot:
         e_binfrac: float
             Error in the binary fraction, assuming Poissoninan counting error.
         """
-        # Define cut and find relevant arrays, only using relevant startypes
-        # As long as one of a binary pair is a good startype, include it
-        startype_arr = self.data['startype']
-        bin_startype0_arr = self.data['bin_startype0']
-        bin_startype1_arr = self.data['bin_startype1']
-
+        # Define cut and find relevant arrays, only using relevant startypes. As long as one of a binary pair is a good startype, include it.
         good = self.make_cuts(min_mass=min_mass, max_mass=max_mass, fluxdict=fluxdict)
-        good = good & ( ((self.data['binflag'] != 1) & np.isin(startype_arr, startypes))
-                      | ((self.data['binflag'] == 1) & (np.isin(bin_startype0_arr, startypes) | np.isin(bin_startype1_arr, startypes)) ) )
-        
+        good = good & (np.isin(self.data['st0'], startypes) | np.isin(self.data['st1'], startypes))
         r_pc_arr = self.convert_units(self.data.loc[good, 'r'], 'code', 'pc')
         r_pc_arr = r_pc_arr.values.reshape(len(r_pc_arr), 1)
         
@@ -2113,11 +2183,11 @@ class Snapshot:
         # fraction
         all_weight = np.sum(weight)
         
-        bin_good = (self.data.loc[good, 'binflag'] == 1)
-        bintype_good = np.isin(bin_startype0_arr[good], bin_startypes) & np.isin(bin_startype1_arr[good], bin_startypes)
+        bin_good = ~np.isnan(self.data.loc[good, 'st1'])
+        bintype_good = np.isin(self.data.loc[good, 'st0'], bin_startypes) & np.isin(self.data.loc[good, 'st1'], bin_startypes)
         
         if (min_q is not None) or (max_q is not None):
-            q_arr = np.array(self.data.loc[good, 'm1_MSUN'] / self.data.loc[good, 'm0_MSUN']) # mass ratio
+            q_arr = np.array(self.data.loc[bin_good, 'm1'] / self.data.loc[bin_good, 'm0']) # mass ratio
             q_arr[q_arr > 1] **= -1
             
             if (min_q is not None) and (max_q is not None):
@@ -2127,16 +2197,16 @@ class Snapshot:
             elif (max_q is not None):
                 good_q = (q_arr < max_q)
             
-            bin_weight = np.sum(weight[good_q & bintype_good & bin_good])
+            bin_weight = np.sum(weight[good_q & bintype_good])
         else:    
-            bin_weight = np.sum(weight[bintype_good & bin_good])
+            bin_weight = np.sum(weight[bin_good & bintype_good])
         
         binfrac = bin_weight / all_weight
         e_binfrac = np.sqrt(binfrac * (binfrac + 1) / all_weight)
         
         return binfrac, e_binfrac
     
-    def binary_fraction_photometric(self, filttable, mag_filter, blue_filter, red_filter, min_q, max_q=None, min_mass=None, max_mass=None,
+    def binary_fraction_photometric(self, filttable, mag_filter, blue_filter, red_filter, min_q=0.6, max_q=None, min_mass=None, max_mass=None,
                                           dmin=None, dmax=None, fluxdict=None, primary_flux_faint=None, primary_flux_brite=None, color_pad=0.1):
         """
         Calculate the binary fraction subject to some cuts. Use cuts on the CMD.
@@ -2222,43 +2292,45 @@ class Snapshot:
             # Generate a mass grid to figure out what masses the specified magnitude
             # cuts refer to; do this by interpolating mass wrt. magnitude.
             # Also calculate the corresponding blue/red mags
-            single_bool = (self.data['binflag'] != 1)
-            M = np.geomspace(np.min(self.data.loc[single_bool, 'm_MSUN']), find_MS_TO(self.age, self.z), 1000)
+            single_bool = np.isnan(self.data['st1'])
+            M = np.geomspace(np.min(self.data.loc[single_bool, 'm0']), find_MS_TO(self.age, self.z), 1000)
             fdict = SSE_MS_get_flux(M, self.z, self.age, filttable)
             
             mag_to_mass_interp = scipy.interpolate.interp1d(fdict[mag_filter], M)
             mag_to_blue_interp = scipy.interpolate.interp1d(fdict[mag_filter], fdict[blue_filter])
-            mag_to_red_interp = scipy.interpolate.interp1d(fdict[mag_filter], fdict[red_filter])
+            mag_to_red_interp  = scipy.interpolate.interp1d(fdict[mag_filter], fdict[red_filter])
         
             # For each the brite and faint mag, calculate a locus in CMD space corresponding to all
             # possible binaries with that as a primary
             q_arr = np.linspace(1e-2, 1, 1000)
+            
         if primary_flux_faint is not None:
             good_flux = np.ones(len(self.data)).astype(bool)
             
             cut_faint_mass = float(mag_to_mass_interp(primary_flux_faint))
             cut_faint_blue = float(mag_to_blue_interp(primary_flux_faint))
-            cut_faint_red = float(mag_to_red_interp(primary_flux_faint))
+            cut_faint_red  = float(mag_to_red_interp (primary_flux_faint))
             
             faint_cut_secondary_dict = SSE_MS_get_flux(q_arr * cut_faint_mass, self.z, self.age, filttable)
-            faint_cut_secondary_mag = faint_cut_secondary_dict[mag_filter]
+            faint_cut_secondary_mag  = faint_cut_secondary_dict[mag_filter]
             faint_cut_secondary_blue = faint_cut_secondary_dict[blue_filter]
-            faint_cut_secondary_red = faint_cut_secondary_dict[red_filter]
-            faint_cut_total_mag = add_mags(primary_flux_faint, faint_cut_secondary_mag)
+            faint_cut_secondary_red  = faint_cut_secondary_dict[red_filter]
+            faint_cut_total_mag   = add_mags(primary_flux_faint, faint_cut_secondary_mag)
             faint_cut_total_color = add_mags(cut_faint_blue, faint_cut_secondary_blue) - add_mags(cut_faint_red, faint_cut_secondary_red)
-            faint_cut_total_mag = np.append(primary_flux_faint, faint_cut_total_mag)
+            faint_cut_total_mag   = np.append(primary_flux_faint, faint_cut_total_mag)
             faint_cut_total_color = np.append(cut_faint_blue-cut_faint_red, faint_cut_total_color)
             
             faint_interp = scipy.interpolate.interp1d(faint_cut_total_mag, faint_cut_total_color)
 
             # Remove faint sources
-            good_flux[self.data[f'tot_absMag_{mag_filter}'] > faint_cut_total_mag[0]] = False
+            good_flux[self.data[f'absMag_{mag_filter}'] > faint_cut_total_mag[0]] = False
 
-            faint_locus = (self.data[f'tot_absMag_{mag_filter}'] < faint_cut_total_mag[0]) & (self.data[f'tot_absMag_{mag_filter}'] > faint_cut_total_mag[-1])
+            faint_locus = (self.data[f'absMag_{mag_filter}'] < faint_cut_total_mag[0]) & (self.data[f'absMag_{mag_filter}'] > faint_cut_total_mag[-1])
 
-            good_flux[faint_locus] = (self.data.loc[faint_locus, f'tot_absMag_{blue_filter}']-self.data.loc[faint_locus, f'tot_absMag_{red_filter}'] < faint_interp(self.data.loc[faint_locus, f'tot_absMag_{mag_filter}']))
+            good_flux[faint_locus] = (self.data.loc[faint_locus, f'absMag_{blue_filter}']-self.data.loc[faint_locus, f'absMag_{red_filter}'] < faint_interp(self.data.loc[faint_locus, f'absMag_{mag_filter}']))
             
             good = good & good_flux
+    
         if primary_flux_brite is not None:
             good_flux = np.ones(len(self.data)).astype(bool)
             
@@ -2278,28 +2350,28 @@ class Snapshot:
             brite_interp = scipy.interpolate.interp1d(brite_cut_total_mag, brite_cut_total_color)
             
             # Remove brite sources
-            good_flux[self.data[f'tot_absMag_{mag_filter}'] < brite_cut_total_mag[-1]] = False
+            good_flux[self.data[f'absMag_{mag_filter}'] < brite_cut_total_mag[-1]] = False
             
-            brite_locus = (self.data[f'tot_absMag_{mag_filter}'] < brite_cut_total_mag[0]) & (self.data[f'tot_absMag_{mag_filter}'] > brite_cut_total_mag[-1])
+            brite_locus = (self.data[f'absMag_{mag_filter}'] < brite_cut_total_mag[0]) & (self.data[f'absMag_{mag_filter}'] > brite_cut_total_mag[-1])
 
-            good_flux[brite_locus] = (self.data.loc[brite_locus, f'tot_absMag_{blue_filter}']-self.data.loc[brite_locus, f'tot_absMag_{red_filter}'] > brite_interp(self.data.loc[brite_locus, f'tot_absMag_{mag_filter}']))
+            good_flux[brite_locus] = (self.data.loc[brite_locus, f'absMag_{blue_filter}']-self.data.loc[brite_locus, f'absMag_{red_filter}'] > brite_interp(self.data.loc[brite_locus, f'absMag_{mag_filter}']))
 
             good = good & good_flux
         
         # Color pad, if specified
         if color_pad is not None:
-            single_bool = np.isin(self.data['startype'], [0, 1])
-            M = np.geomspace(np.min(self.data.loc[single_bool, 'm_MSUN']), find_MS_TO(self.age, self.z), 1000)
+            single_bool = np.isnan(self.data['st1']) & np.isin(self.data['st0'], [0, 1])
+            M = np.geomspace(np.min(self.data.loc[single_bool, 'm0']), find_MS_TO(self.age, self.z), 1000)
             fdict = SSE_MS_get_flux(M, self.z, self.age, filttable)
-            mag_arr = fdict[mag_filter]
+            mag_arr  = fdict[mag_filter]
             blue_arr = fdict[blue_filter]
-            red_arr = fdict[red_filter]
+            red_arr  = fdict[red_filter]
             
             # Turn-off is just the bluest point on the model isochrone
             turnoff_color = np.min(blue_arr - red_arr)
             turnoff_mag = mag_arr[blue_arr-red_arr == turnoff_color][0]
             
-            good_color = ((self.data[f'tot_absMag_{blue_filter}'] - self.data[f'tot_absMag_{red_filter}']) > turnoff_color - 0.1)
+            good_color = ((self.data[f'absMag_{blue_filter}'] - self.data[f'absMag_{red_filter}']) > turnoff_color - 0.1)
             good = good & good_color
         
         # Use SSE prescriptions
@@ -2311,15 +2383,15 @@ class Snapshot:
             M_min = min_q * M
             filtdict_min = SSE_MS_get_flux(M_min, self.z, self.age, filttable)
             
-            mag_min = add_mags(filtdict[mag_filter], filtdict_min[mag_filter])
+            mag_min  = add_mags(filtdict[mag_filter ], filtdict_min[mag_filter ])
             blue_min = add_mags(filtdict[blue_filter], filtdict_min[blue_filter])
-            red_min = add_mags(filtdict[red_filter], filtdict_min[red_filter])
+            red_min  = add_mags(filtdict[red_filter ], filtdict_min[red_filter ])
             
             interp_min = scipy.interpolate.interp1d(mag_min, blue_min-red_min,
                                                     bounds_error=False, kind='linear', fill_value=np.nan) # lin. interp. color vs. mag
-            red_good = (self.data.loc[good, f'tot_absMag_{blue_filter}']-self.data.loc[good, f'tot_absMag_{red_filter}'] > interp_min(self.data.loc[good, f'tot_absMag_{mag_filter}']))
+            red_good = (self.data.loc[good, f'absMag_{blue_filter}']-self.data.loc[good, f'absMag_{red_filter}'] > interp_min(self.data.loc[good, f'absMag_{mag_filter}']))
         else:
-            raise ValueError('Must have min_q > 0. For photometry-independent idenfication, use binary_fraction().')
+            raise ValueError('Must have min_q > 0. For photometry-independent identification, use binary_fraction().')
         
         if max_q is not None:
             M_max = max_q * M
@@ -2331,7 +2403,7 @@ class Snapshot:
             
             interp_max = scipy.interpolate.interp1d(mag_max, blue_max-red_max,
                                                     bounds_error=False, kind='linear', fill_value=np.nan) # lin. interp. color vs. mag
-            blue_good = (self.data.loc[good, f'tot_absMag_{blue_filter}']-self.data.loc[good, f'tot_absMag_{red_filter}'] < interp_max(self.data.loc[good, f'tot_absMag_{mag_filter}']))
+            blue_good = (self.data.loc[good, f'absMag_{blue_filter}']-self.data.loc[good, f'absMag_{red_filter}'] < interp_max(self.data.loc[good, f'absMag_{mag_filter}']))
         else:
             blue_good = np.ones(len(self.data.loc[good])).astype(bool)
         
@@ -2397,11 +2469,11 @@ class Snapshot:
 
         ##good = np.where((self.data['m_MSUN'] < mto) & (self.data['binflag'] != 1) & np.isin(self.data['startype'], [0, 1]))
         ##ms_singles = self.data.loc[good]
-        ##turnoff_mag = np.min(ms_singles[f'tot_obsMag_{mag_filter}'])
-        ##turnoff_color = np.min(ms_singles[f'tot_obsMag_{blue_filter}']-ms_singles[f'tot_obsMag_{red_filter}'])
+        ##turnoff_mag = np.min(ms_singles[f'obsMag_{mag_filter}'])
+        ##turnoff_color = np.min(ms_singles[f'obsMag_{blue_filter}']-ms_singles[f'obsMag_{red_filter}'])
         
-        single_bool = np.isin(self.data['startype'], [0, 1])
-        m_lower = 0.08#np.min([np.min(self.data.loc[single_bool, 'm_MSUN']), 0.08])
+        single_bool = np.isnan(self.data['st1']) & np.isin(self.data['st0'], [0, 1])
+        m_lower = 0.08#np.min([np.min(self.data.loc[single_bool, 'm0']), 0.08])
         
         M = np.geomspace(m_lower, find_MS_TO(self.age, self.z), 1000)
         fdict = SSE_MS_get_flux(M, self.z, self.age, filttable)
@@ -2415,14 +2487,157 @@ class Snapshot:
         
         
         # Identify observational blue stragglers
-        color_good = ((self.data[f'tot_absMag_{blue_filter}'] - self.data[f'tot_absMag_{red_filter}']) < turnoff_color - 0.1)
-        mag_good = (self.data[f'tot_absMag_{mag_filter}'] < turnoff_mag)
-        ms_singles_good = (np.isin(self.data['startype'], [0, 1]) & (self.data['binflag'] != 1))
-        ms_binaries_good = ((np.isin(self.data['bin_startype0'], [0, 1]) | np.isin(self.data['bin_startype1'], [0, 1]))
-                          & (~np.isin(self.data['bin_startype0'], [2, 3, 4, 5, 6, 7, 8, 9])
-                          & ~np.isin(self.data['bin_startype1'], [2, 3, 4, 5, 6, 7, 8, 9]))
-                          & (self.data['binflag'] == 1))
+        color_good = ((self.data[f'absMag_{blue_filter}'] - self.data[f'absMag_{red_filter}']) < turnoff_color - 0.1)
+        mag_good = (self.data[f'absMag_{mag_filter}'] < turnoff_mag)
+        ms_singles_good = np.isnan(self.data['st1']) & np.isin(self.data['st0'], [0, 1])
+        ms_binaries_good = ((np.isin(self.data['st0'], [0, 1]) | np.isin(self.data['st1'], [0, 1]))
+                          & (~np.isin(self.data['st0'], [2, 3, 4, 5, 6, 7, 8, 9])
+                          & ~np.isin(self.data['st1'], [2, 3, 4, 5, 6, 7, 8, 9]))
+                          & ~np.isnan(self.data['st1']))
         
         bs_cat = self.data[color_good & mag_good & (ms_singles_good | ms_binaries_good)]
 
         return bs_cat
+
+
+################################################################################
+# CODE FOR BENCHMARK TESTING SNAPSHOT LOADING
+################################################################################
+def benchmark(n=10):
+    import timeit, tracemalloc # For timing and memory usage comparison
+    (DIR, prefix, snapshot_type) = '/projects/b1095/newlin/cmc/test_cosmic4/rundir', 'initial', 'window'
+    model_dir1 = f'{DIR}/test'     # Corresponds to default CMC version updated to COSMIC v4.0, using snapshots with the old 'h5-table' format
+    model_dir2 = f'{DIR}/test_mod' # Corresponds to modified CMC version, using snapshots with new 'h5-per-column' format
+    snapfile1 = f'{model_dir1}/{prefix}.window.snapshots.h5' if snapshot_type == 'window' else f'{model_dir1}/{prefix}.snapshots.h5'
+    snapfile2 = f'{model_dir2}/{prefix}.window.snapshots.h5' if snapshot_type == 'window' else f'{model_dir2}/{prefix}.snapshots.h5'
+    (snapkey1, snapkey2) = ['0(t=0Gyr)', '0(tcount=1,t=0Gyr)'] if snapshot_type == 'window' else ['0(t=0)', '0(tcount=1,t=0)']
+    
+    # Load df2 first since it has the smaller data types, which df1 needs to be converted to for exact comparison.
+    # Also, drop columns that didn't exist in the old CMC snapshots
+    df2 = Snapshot(model_dir2, snapkey2, snapshot_type).data.drop(['bhspin0','bhspin1'],axis=1) 
+    df1 = Snapshot(model_dir1, snapkey1, snapshot_type).data.astype(df2.dtypes)
+    
+    binaries = ~np.isnan(df2.id1) 
+    (non_equal_columns, non_equal_columns_for_binaries_only) = [], []
+    for col in df2.keys(): # Loop through column names
+        if not df2[col].equals(df1[col]):
+            non_equal_columns.append(col)
+        if not df2.loc[binaries, col].equals(df1.loc[binaries, col]):
+            non_equal_columns_for_binaries_only.append(col)
+    
+    print("All values in the new snapshots match those in the old snapshots except for the following columns:\n\t\t", non_equal_columns, '\n')
+    print("These should be ['massc0', 'menv0', 'radc0', 'renv0', 'tms0', 'tacc0', 'bacc0', 'mass0_0', 'epoch0'], as the old 'h5-table' snapshot format\n"
+          "didn't store such data for singles, leaving nan values in the resulting DataFrame that are filled in the new 'h5-per-column' snapshot format.\n\n"
+          "Indeed, when considering only the binaries, all values in both snapshot formats match except in the following columns (should be none):\n\t\t",
+          non_equal_columns_for_binaries_only, '\n')
+
+    (file_size1, file_size2) = [os.path.getsize(X) for X in (snapfile1, snapfile2)]
+    size21 = file_size2 / file_size1
+    print(f"The new snapshot.h5 file in 'h5-per-column' format takes up {size21:.3f} as much storage space as the old snapshot file in 'h5-table' format.\n")
+
+    def func1(): return pd.read_hdf(snapfile1, snapkey1)
+    def func2(): return Snapshot(model_dir1, snapkey1, snapshot_type)
+    def func3(): return Snapshot(model_dir2, snapkey2, snapshot_type)
+    def func4(): return Snapshot(model_dir1, snapkey1, snapshot_type, columns='m0')
+    def func5(): return Snapshot(model_dir2, snapkey2, snapshot_type, columns='m0')
+
+    tracemalloc.start()
+    _    = func1();     peak_mem1 = tracemalloc.get_traced_memory()[0] / 1024 # Peak memory usage in KB
+    tracemalloc.stop()
+    tracemalloc.start()
+    _    = func2();     peak_mem2 = tracemalloc.get_traced_memory()[0] / 1024 # Peak memory usage in KB
+    tracemalloc.stop()
+    tracemalloc.start()
+    _    = func3();     peak_mem3 = tracemalloc.get_traced_memory()[0] / 1024 # Peak memory usage in KB
+    tracemalloc.stop()
+    (mem31, mem32) = peak_mem3/peak_mem1, peak_mem3/peak_mem2
+    
+    print(f"Averaged over {n} iterations, loading all columns in the new 'h5-per-column' snapshot format takes {mem31:.3f} times as much memory\n"
+          f"as using standard pd.read_hdf for the old 'h5-table' format, or {mem32:.3f} times as much as loading the old format with h5py.\n")
+
+    tracemalloc.start()
+    _    = func4();     peak_mem4 = tracemalloc.get_traced_memory()[0] / 1024 # Peak memory usage in KB
+    tracemalloc.stop()
+    tracemalloc.start()
+    _    = func5();     peak_mem5 = tracemalloc.get_traced_memory()[0] / 1024 # Peak memory usage in KB
+    tracemalloc.stop()
+    (mem51, mem54) = peak_mem5/peak_mem1, peak_mem5/peak_mem4
+
+    print(f"Averaged over {n} iterations, loading all columns in the new 'h5-per-column' snapshot format takes {mem51:.3f} times as much memory\n"
+          f"as using standard pd.read_hdf for the old 'h5-table' format, or {mem54:.3f} times as much as loading the old format with h5py.\n")
+
+    time1 = timeit.timeit(func1, number=n)
+    time2 = timeit.timeit(func2, number=n)
+    time3 = timeit.timeit(func3, number=n)
+    (time31, time32) = time3/time1, time3/time2
+    print(f"Averaged over {n} iterations, loading all columns in the new 'h5-per-column' snapshot format takes {time31:.3f} times as long\n"
+          f"as using standard pd.read_hdf for the old 'h5-table' format, or {time32:.3f} times as long as loading the old format with h5py.\n")
+
+    time4 = timeit.timeit(func4, number=n)
+    time5 = timeit.timeit(func5, number=n)
+    (time51, time54) = time5/time1, time5/time4
+    print(f"Averaged over {n} iterations, loading a single column in the new 'h5-per-column' snapshot format takes {time51:.3f} times as long\n"
+          f"as using standard pd.read_hdf for the old 'h5-table' format, or {time54:.3f} times as long as loading the old format with h5py.\n")
+    
+    print("Now checking that Snapshot class methods still work properly.\n")
+    
+    model_dir3 = '/projects/b1091/CMC_Grid_March2019/rundir/rv2/rg8/z0.002/4e5' # Tests loading of a snapshot in the old 'dat.gz' format from the CMC Cluster Catalog
+    snapkey3 = '0010'
+    S1 = Snapshot(model_dir1, dist=15, z=0.0014)# Loading last snapshot since the binary_fraction_photometric and get_blue_stragglers Snapshot class methods don't work on the first snapshot
+    S2 = Snapshot(model_dir2, dist=15, z=0.0014)
+    S3 = Snapshot(model_dir3, snapshot=snapkey3, dist=15, z=0.0014)
+    
+    print("The following Snapshot class methods work properly: __init__, list_snapshots, convert_units\n")
+    
+    for X in (S1, S2, S3): _ = X.make_cuts(dmin=0, dmax=1000)
+    print("The following Snapshot class methods seem to work properly: make_cuts, make_2d_projection\n")
+
+    for X in (S1, S2, S3): _ = X.add_photometry('filt_index.txt')
+    print("The following Snapshot class methods seem to work properly: add_photometry\n")
+
+    for X in (S1, S2, S3): X.calc_Teff()
+    print("The following Snapshot class methods seem to work properly: calc_Teff\n")
+
+    for X in (S1, S2, S3): X.calc_surface_gravity()
+    print("The following Snapshot class methods seem to work properly: calc_surface_gravity\n")
+
+    for X in (S1, S2, S3): _ = X.make_spatial_density_profile()
+    print("The following Snapshot class methods seem to work properly: make_spatial_density_profile\n")
+
+    for X in (S1, S2, S3): _ = X.make_velocity_dispersion_profile()
+    print("The following Snapshot class methods seem to work properly: make_velocity_dispersion_profile\n")
+
+    for X in (S1, S2, S3): _ = X.velocity_dispersion()
+    print("The following Snapshot class methods seem to work properly: velocity_dispersion\n")
+
+    for X in (S1, S2, S3): _ = X.make_mass_function()
+    print("The following Snapshot class methods seem to work properly: make_mass_function\n")
+
+    for X in (S1, S2, S3): _ = X.fit_mass_function_slope()
+    print("The following Snapshot class methods seem to work properly: fit_mass_function_slope\n")
+
+    for X in (S1, S2, S3): _ = X.make_smoothed_number_profile()
+    print("The following Snapshot class methods seem to work properly: make_smoothed_number_profile\n")
+
+    for X in (S1, S2, S3): _ = X.make_smoothed_brightness_profile('V', bins=80, startypes=list(range(0,10)), min_logr=-1.5)
+    print("The following Snapshot class methods seem to work properly: make_smoothed_brightness_profile\n")
+
+    for X in (S1, S2, S3): _ = X.make_smoothed_veldisp_profile()
+    print("The following Snapshot class methods seem to work properly: make_smoothed_veldisp_profile\n")
+
+    for X in (S1, S2, S3): _ = X.calculate_renclosed()
+    print("The following Snapshot class methods seem to work properly: calculate_renclosed\n")
+
+    for X in (S1, S2, S3): _ = X.make_paramdict()
+    print("The following Snapshot class methods seem to work properly: make_paramdict\n")
+
+    for X in (S1, S2, S3): _ = X.binary_fraction()
+    print("The following Snapshot class methods seem to work properly: binary_fraction\n")
+
+    for X in (S1, S2, S3): _ = X.binary_fraction_photometric('filt_index.txt', 'V', 'U', 'V')
+    print("The following Snapshot class methods seem to work properly: binary_fraction_photometric\n")
+
+    for X in (S1, S2, S3): _ = X.get_blue_stragglers('V', 'U', 'V', 'filt_index.txt')
+    print("The following Snapshot class methods seem to work properly: get_blue_stragglers\n")
+    
+    print("All Snapshot class methods seem to work properly. Terminating benchmark analysis.\n")
