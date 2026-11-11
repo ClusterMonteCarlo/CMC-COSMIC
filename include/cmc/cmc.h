@@ -710,9 +710,6 @@ typedef struct{
 * @brief Which objects can participate in three-body binary formation (0=all, 1=BHs only, 2=any COs)
 */
 	int ONLY_FORM_CO_THREEBODYBINARIES;
-#define PARAMDOC_HARDTRIPLE_MERGE_INNER_THRESHOLD "Threshold energy ratio for inner binary to automatically merge in a hard triple (default is 1e9)"
-/*** @brief Threshold energy ratio for inner binary to automatically merge in a hard triple (default is 1e9) */
-	double HARDTRIPLE_MERGE_INNER_THRESHOLD;
 #define PARAMDOC_BH_SNAPSHOTTING "toggles output bh snapshotting (0=off, 1=on)"
 /**
 * @brief toggles output bh snapshotting (0=off, 1=on)
@@ -2196,7 +2193,6 @@ void remove_star(long j, double phi_rtidal, double phi_zero);
 double function_q(long j, long double r, long double pot, long double E, long double J);
 void vt_add_kick(double *vt, double vs1, double vs2, struct rng_t113_state* rng_st);
 void binary_bh_merger(long k, long kb, long knew, int kprev0, int kprev1, struct rng_t113_state* rng_st);
-void binary_bh_merger_inside_triple(long k, long kb, long knew, int kprev0, int kprev1, struct rng_t113_state* rng_st);
 
 void parse_snapshot_windows(char *option_string);
 void print_snapshot_windows(void);
