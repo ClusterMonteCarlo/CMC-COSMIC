@@ -622,9 +622,20 @@ WIND FLAGS
 
                             ``3`` : Same as 2, but LBV-like mass loss for giants
                             and non-degenerate stars beyond the
-                            Humphreys-Davidson limit
+                            Humphreys-Davidson limit (with the LBV prescription
+                            set by ``LBV_flag``)
 
                          **windflag = 3**
+
+``LBV_flag``             Selects the model for Luminous Blue Variable (LBV) mass loss. 
+
+                            ``0`` : no LBV-like mass loss
+
+                            ``1`` : `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
+
+                            ``2`` : StarTrack (`Belczynski+2008 <https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract>`_)
+
+                         **LBV_flag = 2**
 
 ``eddlimflag``           Adjusts the dependence of mass loss on metallicity for stars near
                          the Eddington limit
