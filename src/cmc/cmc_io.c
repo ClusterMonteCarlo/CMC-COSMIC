@@ -989,7 +989,7 @@ if(myid==0) {
 				sscanf(values, "%d", &procs);
 				parsed.STREAMS = 1;
 	/* Meagan: new parameters for three-body binaries: THREEBODYBINARIES, MIN_BINARY_HARDNESS, ONLY_FORM_BH_THREEBODYBINARIES */
-	// Chris O'C: added BINARY_HARDNESS_POWER March 2026
+	// Chris O'C: added BINARY_HARDNESS_POWER March 2026, changed ONLY_FORM_BH_THREEBODYBINARIES to ONLY_FORM_CO_THREEBODYBINARIES, added HARDTRIPLE_MERGE_INNER_THRESHOLD
 			} else if (strcmp(parameter_name, "THREEBODYBINARIES") == 0) {
 				PRINT_PARSED(PARAMDOC_THREEBODYBINARIES);
 				sscanf(values, "%d", &THREEBODYBINARIES);
@@ -1002,10 +1002,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_MIN_BINARY_HARDNESS);
 				sscanf(values, "%lf", &MIN_BINARY_HARDNESS);
 				parsed.MIN_BINARY_HARDNESS = 1;
-			} else if (strcmp(parameter_name, "ONLY_FORM_BH_THREEBODYBINARIES") == 0) {
-				PRINT_PARSED(PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES);
-				sscanf(values, "%d", &ONLY_FORM_BH_THREEBODYBINARIES);
-				parsed.ONLY_FORM_BH_THREEBODYBINARIES = 1;
+			} else if (strcmp(parameter_name, "ONLY_FORM_CO_THREEBODYBINARIES") == 0) {
+				PRINT_PARSED(PARAMDOC_ONLY_FORM_CO_THREEBODYBINARIES);
+				sscanf(values, "%d", &ONLY_FORM_CO_THREEBODYBINARIES);
+				parsed.ONLY_FORM_CO_THREEBODYBINARIES = 1;
+			} else if (strcmp(parameter_name, "HARDTRIPLE_MERGE_INNER_THRESHOLD") == 0) {
+				PRINT_PARSED(PARAMDOC_HARDTRIPLE_MERGE_INNER_THRESHOLD);
+				sscanf(values, "%lf", &HARDTRIPLE_MERGE_INNER_THRESHOLD);
+				parsed.HARDTRIPLE_MERGE_INNER_THRESHOLD = 1;
 			} else if (strcmp(parameter_name, "BH_SNAPSHOTTING") == 0) {
 				PRINT_PARSED(PARAMDOC_BH_SNAPSHOTTING);
 				sscanf(values, "%d", &BH_SNAPSHOTTING);
@@ -1749,7 +1753,8 @@ if(myid==0) {
 	CHECK_PARSED(MIN_BINARY_HARDNESS, 1.0, PARAMDOC_MIN_BINARY_HARDNESS);
 	// Chris O'C - new parameter to adjust the hardness distribution for 3BBF
 	CHECK_PARSED(BINARY_HARDNESS_POWER, -5.5, PARAMDOC_BINARY_HARDNESS_POWER);
-	CHECK_PARSED(ONLY_FORM_BH_THREEBODYBINARIES, 1, PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES);
+	CHECK_PARSED(ONLY_FORM_CO_THREEBODYBINARIES, 1, PARAMDOC_ONLY_FORM_CO_THREEBODYBINARIES);
+	CHECK_PARSED(HARDTRIPLE_MERGE_INNER_THRESHOLD, 1e9, PARAMDOC_HARDTRIPLE_MERGE_INNER_THRESHOLD);
 	// default - 1: three-body binary formation only allowed for black holes
 	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);
 	CHECK_PARSED(MINIMUM_R, 0.0, PARAMDOC_MINIMUM_R);
@@ -2547,7 +2552,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
     if(RESTART_TCOUNT <= 0){
 		pararootfprintf(escfile, "#1:tcount #2:t #3:m[MSUN] #4:r #5:vr #6:vt #7:r_peri #8:r_apo #9:Rtidal #10:phi_rtidal #11:phi_zero #12:E #13:J #14:id #15:binflag #16:m0[MSUN] #17:m1[MSUN] #18:id0 #19:id1 #20:a #21:e #22:startype #23:bin_startype0 #24:bin_startype1 #25:rad0 #26:rad1 #27:tb #28:lum0 #29:lum1 #30:massc0 #31:massc1 #32:radc0 #33:radc1 #34:menv0 #35:menv1 #36:renv0 #37:renv1 #38:tms0 #39:tms1 #40:dmdt0 #41:dmdt1 #42:radrol0 #43:radrol1 #44:ospin0 #45:ospin1 #46:B0 #47:B1 #48:formation0 #49:formation1 #50:bacc0 #51:bacc1 #52:tacc0 #53:tacc1 #54:mass0_0 #55:mass0_1 #56:epoch0 #57:epoch1 #58:bhspin #59:bhspin1 #60:bhspin2 #61:ospin #62:B #63:formation\n"); // there was a $ in there and it was goofing up automatic parsing of outputs -- fixed by Chris O'C, March 2026
 	   // print header
-		pararootfprintf(triplefile, "#1:time #2:min0 #3:min1 #4:mout #5:Rin0 #6:Rin1 #7:Rout #8:ain #9:aout #10:ein #11:eout #12:ktypein0 #13:ktypein1 #14:ktypeout #15:Tlk_quad #16:Tlk_oct#17:eps_oct #18:T_GR #19:eps_GR\n");
+		pararootfprintf(triplefile, "#1:time #2:min0 #3:min1 #4:mout #5:Rin0 #6:Rin1 #7:Rout #8:ain #9:aout #10:ein #11:eout #12:Itot #13:ktypein0 #14:ktypein1 #15:ktypeout #16:Tlk_quad #17:Tlk_oct #18:eps_oct #19:T_GR #20:eps_GR #21:eta_in #22:eta_out \n");
 	   // print header
 		pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
 	   // print header
