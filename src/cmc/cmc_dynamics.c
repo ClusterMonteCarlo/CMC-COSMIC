@@ -170,7 +170,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 								}
 							}
 							else if (ONLY_FORM_CO_THREEBODYBINARIES==2) { // let any combination of COs be involved in 3bb (Chris O'C, Sept 2026)
-								if ( ((star[k1].se_k > 9) && (star[k1].se_k < 14)) && ((star[k2].se_k > 9) && (star[k2].se_k < 14)) && ((star[k3].se_k > 9) && (star[k3].se_k < 14)) || ((star[k1].se_k==14) && (star[k2].se_k==14) && (star[k3].se_k==14)) ) { // Trio of WD/NS or trio of BHs
+								if ( ((star[k1].se_k > 9) && (star[k1].se_k < 15)) && ((star[k2].se_k > 9) && (star[k2].se_k < 15)) && ((star[k3].se_k > 9) && (star[k3].se_k < 15)) ) {
 									form_binary = 1; // we will actually form it later
 									N3bbformed ++;
 								} else { // at least one object is not a CO; keep track of this 'light collision'
