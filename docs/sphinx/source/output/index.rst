@@ -555,6 +555,7 @@ List of triples formed dynamically in the cluster as a result of three- and four
 ``aout``                         Semi-major axis of outer binary [AU]
 ``ein``                          Eccentricity of inner binary
 ``eout``                         Eccentricity of outer binary
+``Iout``                         Mutual inclination of inner and outer orbits [deg]
 ``ktypein0``                     Inner object `_0` stellar type
 ``ktypein1``                     Inner object `_1` stellar type
 ``kytpeout``                     Outer object stellar type
@@ -563,6 +564,8 @@ List of triples formed dynamically in the cluster as a result of three- and four
 ``eps_oct``                      Octupole parameter
 ``T_GR``                         1PN precession timescale [yr]
 ``eps_GR``                       GR parameter: Tlk_quad/T_GR
+``eta_in``                       Inner binary hardness parameter [:math:`= G (m_{\rm in,0} + m_{\rm in,1}) / (a_{\rm in} \sigma^2)`]
+``eta_out``                      Outer binary hardness parameter [:math:`= G (m_{\rm in,0} + m_{\rm in,1} + m_{\rm out}) / (a_{\rm out} \sigma^2)`]
 ==============================  =====================================================
 
 initial.lagrad.dat
