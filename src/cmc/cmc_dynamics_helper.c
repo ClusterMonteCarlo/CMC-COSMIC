@@ -257,8 +257,6 @@ long create_binary(int idx, int dyn_0_se_1)
 	return(j);
 }
 
-
-
 /**
 * @brief Sort by mass: k1, k2, k3 in order of most massive to least massive. (parallel version of sort_three_masses)
 *
@@ -310,6 +308,52 @@ void sort_three_masses(long sq, long *k1, long *k2, long *k3) {
 		}
 	}
 	//parafprintf(threebbfile, "end of sort_three_masses function" );
+}
+
+/**
+* @brief randomly permute three objects -- alternative to sort_three_masses
+*
+* @param sq index of the first of the three consecutive stars
+* @param k1 variable to store the first star's index
+* @param k2 variable to store the second star's index
+* @param k3 variable to store the third star's index
+*/
+void shuffle_three_masses(long sq, long *k1, long *k2, long *k3, gsl_rng *rng) {
+/** Returns a random permutation of k1, k2, k3 */
+	//long g_sq0 = get_global_idx(sq);
+    //long g_sq1 = get_global_idx(sq+1);
+    //long g_sq2 = get_global_idx(sq+2);
+	double y = rng_t113_dbl_new(curr_st);
+	if (y < 1.0/6.0) {
+		*k1 = sq;
+		*k2 = sq + 1;
+		*k3 = sq + 2;
+	}
+	else if (y < 1.0/3.0) {
+		*k1 = sq;
+		*k2 = sq + 2;
+		*k3 = sq + 1;
+	}
+	else if (y < 0.5) {
+		*k1 = sq + 1;
+		*k2 = sq;
+		*k3 = sq + 2;
+	}
+	else if (y < 2.0/3.0) {
+		*k1 = sq + 1;
+		*k2 = sq + 2;
+		*k3 = sq;
+	}
+	else if (y < 5.0/6.0) {
+		*k1 = sq + 2;
+		*k2 = sq;
+		*k3 = sq + 1;
+	}
+	else {
+		*k1 = sq + 2;
+		*k2 = sq + 1;
+		*k3 = sq;
+	}
 }
 
 /**
@@ -381,11 +425,11 @@ void calc_3bb_encounter_dyns(long k1, long k2, long k3, double v1[4], double v2[
 
 }
 
-
 /**
 * @brief ?
 *
 * @param eta_min ?
+* @param eta_power ?
 * @param k1 index of star 1
 * @param k2 index of star 2
 * @param k3 index of star 3
@@ -394,7 +438,7 @@ void calc_3bb_encounter_dyns(long k1, long k2, long k3, double v1[4], double v2[
 *
 * @return ?
 */
-double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], double vrel3[4])
+double get_eta(double eta_min, double eta_power, long k1, long k2, long k3, double vrel12[4], double vrel3[4])
 {
 	double kk, eta, norm, area_max, area, eta_test, comp_ymax, comp_y, true_y;
 	double eta_max=50.0;
@@ -414,31 +458,30 @@ double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], doub
 	comp_y=1e6;
 	found_eta = 0;
 
-	/* normalize distribution, d(Rate)/d(eta) (differential rate of 3bb formation); take abs. value*/
-	norm = fabs(1.0/(-1*(pow(eta_max, -5.5)) + (pow(eta_min, -5.5)) + (kk + 2) * ( -1*(pow(eta_max, -4.5)) + (pow(eta_min, -4.5)) ) + 2 * kk * ( -1*(pow(eta_max, -3.5)) + (pow(eta_min, -3.5)))));
+
+	if (eta_power==-2.0){
+		eta_power=-2.01; //  avoid divergence of distribution at eta^-2
+		//TODO implement logarithmic distribution for this case
+	}
+
+	/* normalize distribution, d(Rate)/d(eta) ~ eta^-power (differential rate of 3bb formation); take abs. value*/
+	norm = fabs(1.0/(-1*(pow(eta_max, eta_power)) + (pow(eta_min, eta_power)) + (kk + 2) * ( -1*(pow(eta_max, eta_power+1.)) + (pow(eta_min, eta_power+1.)) ) + 2 * kk * ( -1*(pow(eta_max, eta_power+2.)) + (pow(eta_min, eta_power+2.)))));
 
 	/* now start a while loop that will keep restarting as long as the last computed comp_value was rejected */
 	while (found_eta == 0) {
 
 		/* total area under comparison curve in range of eta from eta_min to eta_max */
-	//	area_max = fabs(3.25*norm*((pow(eta_max,-4.0)) - (pow(eta_min, -4.0))));
-		area_max = fabs((2.0/7.0) * norm * kk * ((pow(eta_max,-3.5)) - (pow(eta_min, -3.5))));
+        area_max = fabs(norm * kk * ((pow(eta_max,2.+eta_power)) - (pow(eta_min, 2.+eta_power))) / (2.+eta_power));
 		/* choose area in range (0, area_max); this area corresponds to a particular value of eta */
 		area = rng_t113_dbl_new(curr_st)*area_max;
 		/* find the eta that corresponds to chosen area */
-		/* test coordinate 1 (x) */
-	//	eta_test = pow(((-2.0*area/(13.0*norm)) + pow(eta_min, -4.0)), -0.25);
-
-	// TODO: figure out this negative sign in front of 2 below - where did it come from??
-		eta_test = pow(((-7.0*area/(2.0*norm*kk)) + pow(eta_min, -3.5)), (-2.0/7.0));
+        eta_test = pow((pow(eta_min,2.+eta_power)+(pow(eta_max,2.+eta_power) - pow(eta_min,2.+eta_power))*(area/area_max)),1./(2.+eta_power)); //pow(((-3.0*area/(norm*kk)) + pow(eta_min, -3)), (-1.0/3.0));
 		/* now choose second test coordinate (y) by choosing a number between zero and the value of the comparison function at eta_test, comp_ymax */
-		comp_ymax = kk * norm * pow(eta_test, -4.5);
+		comp_ymax = kk * norm * pow(eta_test, 1.+eta_power);
 		comp_y = rng_t113_dbl_new(curr_st)*comp_ymax;
-		/* now accept or reject the point if it lies below/above true distribution: 
-		d(rate)/d(eta) ~ norm*(5*eta^-6 + 8*eta^-5) */
-	//	true_y = norm*(5.0*pow(eta_test, -6.0) + 8.0*pow(eta_test, -5.0));
-		true_y = norm*(5.5*pow(eta_test, -6.5) + (4.5 * kk +9.0) * (pow(eta_test, -5.5)) +7.0 * kk * (pow(eta_test, -4.5)));
-		if (comp_y < true_y) { /* fall within true distribution */
+		/* now accept or reject the point if it lies below/above true distribution: */
+        true_y = norm*(pow(eta_min,1.+eta_power) - pow(eta_test,1.+eta_power)) + (2.+kk)*(pow(eta_min,1.+eta_power) - pow(eta_test,1.+eta_power)) + 2.*kk*(pow(eta_min,2.+eta_power) - pow(eta_test,2.+eta_power));
+        if (comp_y < true_y) { /* fall within true distribution */
 			found_eta = 1;
 			eta = eta_test;
 		}
@@ -467,16 +510,19 @@ double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], doub
 * @param delta_E_3bb ?
 * @param rng gsl rng
 */
-void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_3bb, gsl_rng *rng)
+void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double eta_power, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_3bb, gsl_rng *rng)
 {
-	double PE_i, PE_f, KE_i, KE_f, KE_cmf_i, KE_cmf_f, delta_PE, delta_KE, delta_E, binary_cm;
+    double PE_i, PE_f, KE_i, KE_f, KE_cmf_i, KE_cmf_f, delta_PE, delta_KE, delta_E, binary_cm;
 	double m1, m2, m3;
 //  double ms, mb;
 	double r1, r2, r3;
+	//double starrad1, starrad2;
 	double cm_vel[4], v1_cmf[4], v2_cmf[4], v3_cmf[4];
-	double eta, Eb, ecc_max, ecc, r_p, semi_major;
+	double eta, Eb, ecc_max, ecc, r_p, semi_major; //, roche1, roche2, qb;
 	double vs_cmf[4], vb_cmf[4], vs[4], vb[4], angle3, angle4;
 	long j, knew;
+    double Yp; //, mba, mbb, ms, rba, rbb, rs;
+    // long kba, kbb, ks;
 	// Form new binary, set new binary/stellar properties, destroy old stars	
 	// Calculate Total potential energy of three stars (enforce cons. of potential energy at end to get new positions)
 	// Find energy of new binary
@@ -484,7 +530,6 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 	// Choose random direction for kick to single in COM frame - given direction of vs, know that vb points oppositely
 	// Solve cons. of momentum and cons. of energy to obtain scalar velocities of binary and single, vb and vs
 
-	
 	// INITIAL VALUES
     m1=star_m[get_global_idx(k1)];
     m2=star_m[get_global_idx(k2)];
@@ -492,12 +537,15 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
     r1=star_r[get_global_idx(k1)];
     r2=star_r[get_global_idx(k2)];
     r3=star_r[get_global_idx(k3)];
+	//starrad1=star[k1].rad;
+	//starrad2=star[k2].rad;
+	//rad3=star[k3].rad;
 
 	// Initial energy
     PE_i = madhoc*(m1*star_phi[get_global_idx(k1)] + m2*star_phi[get_global_idx(k2)] + m3*star_phi[get_global_idx(k3)]);
 	KE_i = 0.5*madhoc*(m1 * sqr(v1[0]) + m2 * sqr(v2[0]) + m3 * sqr(v3[0]));
 
-	// COM of candidate binary pair
+    // COM of candidate binary pair
 	binary_cm = (m1 * r1 + m2 * r2)/(m1 + m2);
 
 	for (j=1; j<=3; j++) {
@@ -522,24 +570,24 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 
 	// Initial kinetic energy of three stars in COM frame (relative to COM motion)
 	KE_cmf_i = 0.5*madhoc*(m1 * sqr(v1_cmf[0]) + m2 * sqr(v2_cmf[0]) + m3 * sqr(v3_cmf[0]));
-
-	// COMPUTE NEW QUANTITIES
-		// Binary orbital properties: 
-		//	binding energy: choose eta, then Eb = eta * <m> / sigma^2
-		//	eccentricity: chosen from thermal distribution
-	eta = get_eta(eta_min, k1, k2, k3, vrel12, vrel3);
-	Eb = -0.5*eta * ave_local_mass * sqr(sigma_local); //Note: ave_local_mass is already multiplied by madhoc
+    eta = get_eta(eta_min, eta_power, k1, k2, k3, vrel12, vrel3);
+    Eb = -0.5*eta * ave_local_mass * sqr(sigma_local); //Note: ave_local_mass is already multiplied by madhoc
 	// **Note binding energy is NEGATIVE
-	ecc_max = 1.0;
+	//ecc_max = 1.0;
+	semi_major = m1 * m2 * sqr(madhoc) / (-2*Eb);
+	// calculate Roche lobe radii (Eggleton 1983)
+	//roche1 = ((0.6 * pow(m2/m1, -2./3.) + log(1.+pow(m2/m1, -1./3.))) / (0.49 * pow(m2/m1, -2./3.))) * star[k1].rad;
+	//roche2 = ((0.6 * pow(m2/m1, 2./3.) + log(1.+pow(m2/m1, 1./3.))) / (0.49 * pow(m2/m1, 2./3.))) * star[k2].rad;
+	//ecc_max -= 2.*(roche1+roche2)/semi_major; // prevent interacting binaries from 3BBF;
+	ecc_max = 0.7; //1. - 2.*(((0.6 * pow(m2/m1, -2./3.) + log(1.+pow(m2/m1, -1./3.))) / (0.49 * pow(m2/m1, -2./3.))) * star[k1].rad + ((0.6 * pow(m2/m1, 2./3.) + log(1.+pow(m2/m1, 1./3.))) / (0.49 * pow(m2/m1, 2./3.))) * star[k2].rad)/semi_major; // prevent interacting binaries from 3BBF;
 	ecc = ecc_max * sqrt(rng_t113_dbl_new(curr_st)); 					
 	r_p = m1 * m2 * madhoc / (eta * sqr(sigma_local)); //note, for units, have madhoc^2 in numerator, and madhoc in the denominator ====> single power madhoc in numerator
-	semi_major = m1 * m2 * sqr(madhoc) / (-2*Eb);
 	// Using cons. of momentum and energy, can calculate scalar velocities of binary and single
 	vs_cmf[0] = sqrt((2.0*(KE_cmf_i-Eb)*((m1 + m2)/m3))/((madhoc)*(m1 + m2 + m3)));
 	vb_cmf[0] = 1.0*vs_cmf[0]*m3/(m1 + m2);
 
-	// Choose random direction for motion of single star
-	angle3 = rng_t113_dbl_new(curr_st) * PI; // polar angle - [0, PI)
+    // Choose random direction for motion of single star
+	angle3 = acos(2.0*rng_t113_dbl_new(curr_st) - 1.); // polar angle - [0, PI)
 	angle4 = rng_t113_dbl_new(curr_st) * 2.0 * PI; // azimuthal angle - [0, 2*PI)
 	// Compute vector velocities of single and binary
 	vs_cmf[1] = vs_cmf[0] * sin(angle3) * cos(angle4);
@@ -552,7 +600,7 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 	vb_cmf[2] = vb_cmf[0] * sin(PI - angle3) * sin(angle4 + PI);
 	vb_cmf[3] = vb_cmf[0] * cos(PI - angle3);
 
-	vs_cmf[0] = sqrt(sqr(vs_cmf[1]) + sqr(vs_cmf[2]) + sqr(vs_cmf[3]));
+    vs_cmf[0] = sqrt(sqr(vs_cmf[1]) + sqr(vs_cmf[2]) + sqr(vs_cmf[3]));
 	vb_cmf[0] = sqrt(sqr(vb_cmf[1]) + sqr(vb_cmf[2]) + sqr(vb_cmf[3]));
 
 	/* Final COM energy - Binding energy of new binary plus kinetic energy of single and binary, 
@@ -678,9 +726,7 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 
 
 		}
-
 }
-
 
 /**
 * @brief ?
@@ -2806,8 +2852,8 @@ void break_wide_binaries(struct rng_t113_state* rng_st)
                         star[i].vr *= exc_ratio;
                         star[i].vt *= exc_ratio;
                         Eexcess -= E_dump;
-                        set_star_EJ(k);
-                        star[k].interacted = 1;
+                        set_star_EJ(i); // formerly set_star_EJ(k); Chris O'C fixed this bug in August 2024
+                        star[i].interacted = 1; // formerly star[k].interacted = 1; see above
                     }
             }
         }

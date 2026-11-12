@@ -51,7 +51,7 @@
  *
  *-------------------------------------------------------------------------
  */
-#define NFIELDS  (hsize_t)  62
+#define NFIELDS  (hsize_t) 49 /* Number of columns in the snapshot files */
 
 /*************************** Parameters ******************************/
 /* Large number, but still SF_INFINITY - 1 <> SF_INFINITY */
@@ -133,71 +133,58 @@
  *-------------------------------------------------------------------------
  */
 
- typedef struct Snapshot
- {
-  long id;
-  double m;
-  double r;
-  double vr;
-  double vt;
-  double E;
-  double J;
-  long binflag;
-  double m0;
-  double m1;
-  long id0;
-  long id1;
-  double a;
-  double e;
-  int startype;
-  double luminosity;
-  double radius;
-  int bin_startype0;
-  int bin_startype1;
-  double bin_star_lum0;
-  double bin_star_lum1;
-  double bin_star_radius0;
-  double bin_star_radius1;
-  double bin_Eb;
-  double eta;
-  double star_phi;
-  double rad0;
-  double rad1;
-  double tb;
-  double lum0;
-  double lum1;
-  double massc0;
-  double massc1;
-  double radc0;
-  double radc1;
-  double menv0;
-  double menv1;
-  double renv0;
-  double renv1;
-  double tms0;
-  double tms1;
-  double dmdt0;
-  double dmdt1;
-  double radrol0;
-  double radrol1;
-  double ospin0;
-  double ospin1;
-  double B0;
-  double B1;
-  double formation0;
-  double formation1;
-  double bacc0;
-  double bacc1;
-  double tacc0;
-  double tacc1;
-  double mass0_0;
-  double mass0_1;
-  double epoch0;
-  double epoch1;
-  double ospin;
-  double B;
-  double formation;
- } Snapshot;
+typedef struct Snapshot
+{
+  float r;
+  float vr;
+  float vt;
+  float E;
+  float J;
+  float phi_r;
+  int id0;
+  int id1;
+  signed char st0;
+  signed char st1;
+  float m0;
+  float m1;
+  float a;
+  float e;
+  float eta;
+  float rad0;
+  float rad1;
+  float lum0;
+  float lum1;
+  float massc0;
+  float massc1;
+  float menv0;
+  float menv1;
+  float radc0;
+  float radc1;
+  float renv0;
+  float renv1;
+  float radrol0;
+  float radrol1;
+  float tms0;
+  float tms1;
+  float dmdt0;
+  float dmdt1;
+  float bacc0;
+  float bacc1;
+  float tacc0;
+  float tacc1;
+  float mass0_0;
+  float mass0_1;
+  float ospin0;
+  float ospin1;
+  float B0;
+  float B1;
+  float epoch0;
+  float epoch1;
+  signed char formation0;
+  signed char formation1;
+  float bhspin0;
+  float bhspin1;
+} Snapshot;
 
 //#1:time #2:k1 #3:k2 #4:k3 #5:id1 #6:id2 #7:id3 #8:m1 #9:m2 #10:m3 #11:type1 #12:type2 #13:type3 #14:rad1 #15:rad2 #16:rad3 #17:Eb #18:ecc #19:a(au) #20:rp(au)
 typedef struct LightCollision
@@ -680,11 +667,16 @@ typedef struct{
 #define PARAMDOC_STREAMS "to run the serial version with the given number of random streams - primarily used to mimic the parallel version running with the same no.of processors"
 	int STREAMS;
 /* Meagan - 3bb */
-#define PARAMDOC_THREEBODYBINARIES "toggles three-body binary formation (0=off, 1=on)"
+#define PARAMDOC_THREEBODYBINARIES "toggles three-body binary formation (0=off, 1=on w/ pairing by mass, 2=on w/ pairing at random)"
 /**
-* @brief toggles three-body binary formation (0=off, 1=on)
+* @brief toggles three-body binary formation (0=off, 1=on w/ pairing by mass, 2=on w/ pairing at random)
 */
 	int THREEBODYBINARIES;
+#define PARAMDOC_BINARY_HARDNESS_POWER "power law index for hardness of newly formed three-body binaries (default is -5.5)"
+/**
+ * @brief Power-law index for hardness of three-body binaries (default is -5.5).
+ */
+	double BINARY_HARDNESS_POWER;
 #define PARAMDOC_MIN_BINARY_HARDNESS "minimum hardness for newly formed three-body binaries"
 /**
 * @brief minimum hardness for newly formed three-body binaries
@@ -885,11 +877,16 @@ typedef struct{
 * @brief METISSE verbose output flag
 */
 	int METISSE_VERBOSE;
-#define PARAMDOC_TIDAL_TREATMENT "choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)"
+#define PARAMDOC_TIDAL_TREATMENT "choose the tidal cut-off criterion (0=apocenter criterion, 1=Giersz alpha energy criterion, 2=raw energy criterion)"
 /**
-* @brief choose the tidal cut-off criteria (0=radial criteria, 1=Giersz energy criteria)
+* @brief choose the tidal cut-off criterion (0=apocenter criterion, 1=Giersz alpha energy criterion, 2=raw energy criterion)
 */
 	int TIDAL_TREATMENT;
+#define PARAMDOC_RTIDAL_COEFF "adjust the apocenter escape criterion (if TIDAL_TREATMENT==0) by a coefficient RTIDAL_COEFF so that escape occurs when r_apo >= RTIDAL_COEFF * Rtidal"
+/**
+* @brief adjust the apocenter escape criterion (if TIDAL_TREATMENT==0) by a coefficient RTIDAL_COEFF so that escape occurs when r_apo >= RTIDAL_COEFF * Rtidal
+*/
+	int RTIDAL_COEFF;
 #define PARAMDOC_SS_COLLISION "perform physical stellar collisions (0=off, 1=on)"
 /**
 * @brief perform physical stellar collisions (0=off, 1=on)
@@ -1136,9 +1133,9 @@ typedef struct{
  * @brief Pulsar output interval in time steps
  * */
         int PULSAR_DELTACOUNT;
-#define PARAMDOC_CALCULATE10 "Write out information about 10\% lagrange radius (0=off, 1=on)"
+#define PARAMDOC_CALCULATE10 "Write out information about 10% lagrange radius (0=off, 1=on)"
 /**
-* @brief Write out information about 10\% lagrange radius (0=off, 1=on)
+* @brief Write out information about 10% lagrange radius (0=off, 1=on)
 */
         int CALCULATE10;
 #define PARAMDOC_OVERWRITE_RVIR "Instead of reading the virial radius from the fits file use this value [pc]"
@@ -1199,11 +1196,16 @@ typedef struct{
 * @brief hewind is a helium star mass-loss factor (0.5 normally).
 */
 	int BSE_HEWIND;
-#define PARAMDOC_BSE_WINDFLAG "windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars)."
+#define PARAMDOC_BSE_WINDFLAG "windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars; the LBV prescription is set by LBV_flag)."
 /**
-* @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars).
+* @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars; the LBV prescription is set by LBV_flag).
 */
 	int BSE_WINDFLAG;
+#define PARAMDOC_BSE_LBV_FLAG "LBV_flag sets the LBV-like mass loss for stars beyond the Humphreys-Davidson limit (0=none, 1=Hurley+2000, 2=StarTrack/Belczynski+08; 2 reproduces windflag=3 behavior of COSMIC < v3.7.2)."
+/**
+* @brief LBV_flag sets the LBV-like mass loss (0=none, 1=Hurley+2000, 2=StarTrack/Belczynski+08).
+*/
+	int BSE_LBV_FLAG;
 #define PARAMDOC_BSE_XI "neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally)."
 /**
  * * @brief neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
@@ -1244,6 +1246,11 @@ typedef struct{
 * @brief ceflag sets CE prescription used. = 0 sets Tout et al. method, = 3 activates de Kool common-envelope models (normally 0).
 */
 	int BSE_CEFLAG;
+#define PARAMDOC_BSE_CE2STAGEFLAG "ce2stageflag sets the CE energy formalism. = 0 uses the standard energy formalism, = 1 uses the two-stage formalism from Hirai & Mandel 2022 (normally 0)."
+/**
+* @brief ce2stageflag sets the CE energy formalism. = 0 uses the standard energy formalism, = 1 uses the two-stage formalism from Hirai & Mandel 2022 (normally 0).
+*/
+	int BSE_CE2STAGEFLAG;
 #define PARAMDOC_BSE_CEKICKFLAG "neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally)."
 /**
  * * @brief neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
@@ -2013,7 +2020,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 
 double simul_relax(gsl_rng *rng);
 double simul_relax_new(void);
-int destroy_bbh(double m1, double m2,double a,double e,double nlocal,double sigma,struct rng_t113_state* rng_st);
+int destroy_bbh(double m1,double m2,double a,double e,double nlocal,double sigma,struct rng_t113_state* rng_st);
 double simul_relax_new(void);
 void calc_sigma_r(long p, long N_LIMIT, double *sig_r, double *sig_sigma, long* sig_n, int r_0_mave_1);
 void break_wide_binaries(struct rng_t113_state* rng_st);
@@ -2023,11 +2030,16 @@ double sigma_r(double r);
 // Meagan
 /* three-body binary formation */
 void sort_three_masses(long sq, long *k1, long *k2, long *k3);
-double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], double vrel3[4]);
+//double get_eta(double eta_min, long k1, long k2, long k3, double vrel12[4], double vrel3[4]);
 void calc_3bb_encounter_dyns(long k1, long k2, long k3, double v1[4], double v2[4], double v3[4], double (*vrel12)[4], double (*vrel3)[4], gsl_rng *rng);
-void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_running, gsl_rng *rng);
+//void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_running, gsl_rng *rng);
 void calc_sigma_local(long k1, long p, long N_LIMIT, double *ave_local_mass, double *sigma_local);
 int remove_old_star(double time, long k);
+
+// Chris O'C -- generalized 3BBF
+void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double eta_power, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_running, gsl_rng *rng);
+void shuffle_three_masses(long sq, long *k1, long *k2, long *k3, gsl_rng *rng);
+double get_eta(double eta_min, double eta_power, long k1, long k2, long k3, double vrel12[4], double vrel3[4]);
 
 // Meagan
 /* extra output for bhs */

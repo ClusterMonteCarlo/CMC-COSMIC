@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('../../../tools'))
 # -- Project information -----------------------------------------------------
 
 project = 'cmc'
-copyright = '2021, Carl Rodriguez & Scott Coughlin'
+copyright = '2026, Team CMC'
 author = 'ClusterMonteCarlo'
 
 # The full version, including alpha/beta/rc tags

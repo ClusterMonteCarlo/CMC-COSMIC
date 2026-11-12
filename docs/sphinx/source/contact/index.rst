@@ -16,5 +16,5 @@ For issues with the initial conditions, open an issue on the COSMIC GitHub accou
 Contact us Directly
 ===================
 
-We'll be setting up either a mailing list or slack channel if there is sufficient interest from the community.  For now, you can email `Carl Rodriguez <mailto:carlrodriguez@cmu.edu>`_.
+For access to the CMC slack, where you can ask us questions directly, send an email to `Carl Rodriguez <mailto:carl.rodriguez@unc.edu>`_.
 

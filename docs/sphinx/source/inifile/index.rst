@@ -164,7 +164,9 @@ DYNAMICS FLAGS
 
                                      ``0`` : Off
 
-                                     ``1`` : On
+                                     ``1`` : On w/ pairing of two most massive bodies (Morscher et al., 2013)
+
+                                     ``2`` : On w/ pairing at random (Atallah et al., 2024)
 
                                     **THREEBODYBINARIES = 1**
 
@@ -178,11 +180,14 @@ DYNAMICS FLAGS
 
                                     **ONLY_FORM_BH_THREEBODYBINARIES = 1**
 
+``BINARY_HARDNESS_POWER``           Power-law index for hardness distribution of three-body binaries; common choices are -3 (Goodman & Hut 1993; Atallah+ 2024) and -5.5 (Morscher et al., 2013) ; default is -5.5.
+
+                                    **BINARY_HARDNESS_POWER = -5.5**
 
 ``MIN_BINARY_HARDNESS``             Minimum hardness ratio for forming three-body binaries (or breaking wide binaries if BINARY_BREAKING_MIN = 1)
 
 
-                                    **MIN_BINARY_HARDNESS = 5**
+                                    **MIN_BINARY_HARDNESS = 1**
 
 
 ``BINARY_BREAKING_MIN``             whether to use 10% of the interparticle seperation (0, default) or MIN_BINARY_HARDNESS (1) as the criterion for breaking wide binaries
@@ -301,13 +306,19 @@ TIDAL FIELD OPTIONS
 
                                  **TIDALLY_STRIP_STARS = 1**
 
-``TIDAL_TREATMENT``              choose the tidal cut-off criteria for removing stars
+``TIDAL_TREATMENT``              choose the tidal cut-off criterion for removing stars
 
-                                     ``0`` : radial criterion, :math:`{r_{\rm apo} > r_{t}}`
+                                     ``0`` : Apocenter/radial criterion, :math:`r_{\rm apo}' {\rm RTIDAL\_COEFF} \cdot r_t`.
 
-                                     ``1`` : Energy criterion, :math:`{\alpha E > \Phi(r_t)}`, following `Giersz et al. (2008) <https://ui.adsabs.harvard.edu/abs/2008MNRAS.388..429G/abstract>`_
+                                     ``1`` : Giersz alpha energy criterion, :math:`E > \alpha \phi(r_t)`, following `Giersz et al. (2008) <https://ui.adsabs.harvard.edu/abs/2008MNRAS.388..429G/abstract>`_. 
+
+                                     ``2`` : Raw/unmodified energy criterion, :math:`E > 1.5 \phi(r_t)`, predating the Giersz alpha energy criterion and retested in `Weatherford et al. (2024) <https://ui.adsabs.harvard.edu/abs/2024ApJ...967...42W/abstract>`_.
 
                                  **TIDAL_TREATMENT = 0**
+
+``RTIDAL_COEFF``                 A coefficient to multiply :math:`r_t` by when using the apocenter criterion for escape, :math:`r_{\rm apo} > {\rm RTIDAL\_COEFF} \cdot r_t`
+
+                                 **RTIDAL_COEFF = 1**
 
 ``USE_TT_FILE``                  whether to take the tidal boundary from a file (i.e. a tidal tensor)
 
@@ -611,9 +622,20 @@ WIND FLAGS
 
                             ``3`` : Same as 2, but LBV-like mass loss for giants
                             and non-degenerate stars beyond the
-                            Humphreys-Davidson limit
+                            Humphreys-Davidson limit (with the LBV prescription
+                            set by ``LBV_flag``)
 
                          **windflag = 3**
+
+``LBV_flag``             Selects the model for Luminous Blue Variable (LBV) mass loss. 
+
+                            ``0`` : no LBV-like mass loss
+
+                            ``1`` : `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
+
+                            ``2`` : StarTrack (`Belczynski+2008 <https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract>`_)
+
+                         **LBV_flag = 2**
 
 ``eddlimflag``           Adjusts the dependence of mass loss on metallicity for stars near
                          the Eddington limit
