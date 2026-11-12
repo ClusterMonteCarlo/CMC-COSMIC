@@ -1720,7 +1720,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	int i, j, isbinsingle=0, isbinbin=0, sid=-1, bid=-1, istriple, bi, nmerged;
 	long ksin=-1, kbin=-1, jbin, jbinp, knew, knewp=-1, oldk, knewt;
 	double t, bmax, wp, wx[4], wy[4], wz[4], vnew[4], alpha, BEi, BEf=0.0, eta_in=-1., eta_out=-1., ave_local_mass, sigma_local, energy_ratio;
-	bool is_hard_triple=0;
+	int is_hard_triple = 0;
 	fb_hier_t hier;
 	fb_units_t cmc_units, printing_units;
 	fb_ret_t retval;
