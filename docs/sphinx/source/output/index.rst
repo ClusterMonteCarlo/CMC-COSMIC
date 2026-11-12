@@ -132,36 +132,6 @@ Information for each encounter is printed between two lines of asterisks. Below 
       output: type=binary m0=0.211113 m1=0.148022 R0=0.22897 R1=0.170412 Eint1=0 Eint2=0 id0=33128 id1=1255329 a=0.09094 e=0.123848 ktype1=0 ktype2=0
       ********************************************************************************
 
-======================  =====================================================
-``type``                Encounter type (BS for binary-single or BB for binary-binary)
-``t``                   Time at which encounter occurred
-``b``                   Impact parameter [units of :math:`a` for binary-single or :math:`a_1+a_2` for binary-binary]
-``v``                   Relative velocity at infinity, :math:`v_c`
-``input: type``         Type of incoming particle (hierarchy): either single or binary
-``m``                   Body mass [:math:`M_{\odot}`]
-``R``                   Body radius [:math:`R_{\odot}`]
-``Eint``                Body internal energy
-``id``                  Body ID
-``ktype``               Body stellar type
-``a``                   Binary semi-major axis [AU]
-``e``                   Binary eccentricity
-``dE/E``                Fractional change in energy
-``DE``                  Total change in energy
-``DL/L``                Fractional change in angular momentum
-``DL``                  Change in angular momentum
-``DE_GW/E``             Fractional change in energy due to gravitational wave emission
-``DE_GW``               Energy loss due gravitational wave emission
-``v_esc_cluster``       Escape speed of the cluster where the encounter occured [:math:`{\rm km\,s}^{-1}`]
-``tcpu``                CPU time for integration (usually ~milliseconds, unless it's a GW capture)
-``ouput: type``         Type of outgoing particle (hierarchy): either single, binary, or triple (though note CMC breaks apart triples shortly thereafter)
-``nstar``               Number of stars post-encounter
-``nobj``                Number of separate hierarchies (single, binary, or triple) post-encounter
-``i [j k]``             Post-encounter configuration, with brackets enclosing mutually bound hierarchies and colons indicating collisions/mergers. In the
-                        above example, "0 [1 2]" indicates a single and binary. See below for a full list of possible outcomes.
-======================  =====================================================
-
-Bodies are labeled from 0 to 3. The binary-single and binary-binary encounters are denoted as BS and BB, respectively. For type=binary, indices 0 and 1
-in mass, radius, id, etc. denote the primary and secondary bodies in a binary.
 
 Possible outcomes for ``type=BS``:
 
