@@ -692,11 +692,11 @@ typedef struct{
 * @brief criterion to break soft binaries (0=interparticle, 1=MIN_BINARY_HARDNESS) 
 */
 	int BINARY_BREAKING_MIN;
-#define PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES "allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)"
+#define PARAMDOC_ONLY_FORM_CO_THREEBODYBINARIES "Which objects can participate in three-body binary formation (0=all, 1=BHs only, 2=any COs)"
 /**
-* @brief allow only black holes to form binaries via three-body binary formation (1=only black holes, 0=any object types)
+* @brief Which objects can participate in three-body binary formation (0=all, 1=BHs only, 2=any COs)
 */
-	int ONLY_FORM_BH_THREEBODYBINARIES;
+	int ONLY_FORM_CO_THREEBODYBINARIES;
 #define PARAMDOC_BH_SNAPSHOTTING "toggles output bh snapshotting (0=off, 1=on)"
 /**
 * @brief toggles output bh snapshotting (0=off, 1=on)
@@ -2013,7 +2013,7 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, fb_hier_t *hi
 double binint_get_mass(long k, long kp, long id);
 long binint_get_startype(long k, long kp, long id);
 long binint_get_indices(long k, long kp, long id, int *bi);
-void binint_log_obj(fb_obj_t *obj, fb_units_t units);
+void binint_log_obj(fb_obj_t *obj, fb_units_t units, long k);
 void binint_log_status(fb_ret_t retval, double vesc);
 void binint_log_collision(const char interaction_type[], long id, double mass, double r, fb_obj_t obj, long k, long kp, long startype);
 void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm, double vcm[4], gsl_rng *rng);

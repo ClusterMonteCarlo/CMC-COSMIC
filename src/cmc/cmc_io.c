@@ -979,7 +979,7 @@ if(myid==0) {
 				sscanf(values, "%d", &procs);
 				parsed.STREAMS = 1;
 	/* Meagan: new parameters for three-body binaries: THREEBODYBINARIES, MIN_BINARY_HARDNESS, ONLY_FORM_BH_THREEBODYBINARIES */
-	// Chris O'C: added BINARY_HARDNESS_POWER March 2026
+	// Chris O'C: added BINARY_HARDNESS_POWER March 2026, changed ONLY_FORM_BH_THREEBODYBINARIES to ONLY_FORM_CO_THREEBODYBINARIES
 			} else if (strcmp(parameter_name, "THREEBODYBINARIES") == 0) {
 				PRINT_PARSED(PARAMDOC_THREEBODYBINARIES);
 				sscanf(values, "%d", &THREEBODYBINARIES);
@@ -992,10 +992,10 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_MIN_BINARY_HARDNESS);
 				sscanf(values, "%lf", &MIN_BINARY_HARDNESS);
 				parsed.MIN_BINARY_HARDNESS = 1;
-			} else if (strcmp(parameter_name, "ONLY_FORM_BH_THREEBODYBINARIES") == 0) {
-				PRINT_PARSED(PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES);
-				sscanf(values, "%d", &ONLY_FORM_BH_THREEBODYBINARIES);
-				parsed.ONLY_FORM_BH_THREEBODYBINARIES = 1;
+			} else if (strcmp(parameter_name, "ONLY_FORM_CO_THREEBODYBINARIES") == 0) {
+				PRINT_PARSED(PARAMDOC_ONLY_FORM_CO_THREEBODYBINARIES);
+				sscanf(values, "%d", &ONLY_FORM_CO_THREEBODYBINARIES);
+				parsed.ONLY_FORM_CO_THREEBODYBINARIES = 1;
 			} else if (strcmp(parameter_name, "BH_SNAPSHOTTING") == 0) {
 				PRINT_PARSED(PARAMDOC_BH_SNAPSHOTTING);
 				sscanf(values, "%d", &BH_SNAPSHOTTING);
@@ -1752,7 +1752,7 @@ if(myid==0) {
 	CHECK_PARSED(MIN_BINARY_HARDNESS, 1.0, PARAMDOC_MIN_BINARY_HARDNESS);
 	// Chris O'C - new parameter to adjust the hardness distribution for 3BBF
 	CHECK_PARSED(BINARY_HARDNESS_POWER, -5.5, PARAMDOC_BINARY_HARDNESS_POWER);
-	CHECK_PARSED(ONLY_FORM_BH_THREEBODYBINARIES, 1, PARAMDOC_ONLY_FORM_BH_THREEBODYBINARIES);
+	CHECK_PARSED(ONLY_FORM_CO_THREEBODYBINARIES, 1, PARAMDOC_ONLY_FORM_CO_THREEBODYBINARIES);
 	// default - 1: three-body binary formation only allowed for black holes
 	CHECK_PARSED(BH_LOSS_CONE, 0, PARAMDOC_BH_LOSS_CONE);
 	CHECK_PARSED(MINIMUM_R, 0.0, PARAMDOC_MINIMUM_R);
@@ -2567,7 +2567,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 		                        "#41:bacc0 #42:bacc1 #43:tacc0 #44:tacc1 #45:mass0_0 #46:mass0_1 #47:ospin0 #48:ospin1 #49:B0 #50:B1 "
 		                        "#51:epoch0 #52:epoch1 $53:formation0 #54:formation1 #55:bhspin0 #56:bhspin1\n");
 	   // print header
-		pararootfprintf(triplefile, "#1:time #2:min0 #3:min1 #4:mout #5:Rin0 #6:Rin1 #7:Rout #8:ain #9:aout #10:ein #11:eout #12:ktypein0 #13:ktypein1 #14:ktypeout #15:Tlk_quad #16:Tlk_oct#17:eps_oct #18:T_GR #19:eps_GR\n");
+		pararootfprintf(triplefile, "#1:time #2:min0 #3:min1 #4:mout #5:Rin0 #6:Rin1 #7:Rout #8:ain #9:aout #10:ein #11:eout #12:Itot #13:ktypein0 #14:ktypein1 #15:ktypeout #16:Tlk_quad #17:Tlk_oct #18:eps_oct #19:T_GR #20:eps_GR #21:eta_in #22:eta_out \n");
 	   // print header
 		pararootfprintf(collisionfile, "# time interaction_type id_merger(mass_merger) id1(m1):id2(m2):id3(m3):... (r) type_merger type1 ...\n");
 	   // print header
