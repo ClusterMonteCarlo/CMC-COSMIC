@@ -1562,7 +1562,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 		pouttriple2=pow(obj->a*units.l/AU,3)/mtriple;
 		pintriple=pow(obj->obj[bid]->a*units.l/AU,3)/mtriplein;
                 tlkquad=(8.0/3.1415/15.0)*mtriple/(obj->obj[sid]->m*units.m/MSUN)*pouttriple2/pintriple*pow(1.0-pow(obj->e,2),1.5);
-		epsoct=abs(obj->obj[bid]->obj[0]->m*units.m/MSUN-obj->obj[bid]->obj[1]->m*units.m/MSUN)/mtriplein*(obj->obj[bid]->a*units.l/AU)/(obj->a*units.l/AU)*obj->e/(1.0-pow(obj->e,2));
+		epsoct=fabs(obj->obj[bid]->obj[0]->m*units.m/MSUN-obj->obj[bid]->obj[1]->m*units.m/MSUN)/mtriplein*(obj->obj[bid]->a*units.l/AU)/(obj->a*units.l/AU)*obj->e/(1.0-pow(obj->e,2));
 		tlkoct=tlkquad/epsoct;
 		tgr=pow(10.0,8)*pow(obj->obj[bid]->a*units.l/AU,2.5)/(3.0*pow(mtriplein,1.5))*(1.0-pow(obj->obj[bid]->e,2));
 		epsgr=tlkquad/tgr;
@@ -1841,7 +1841,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	/* now do something with the Fewbody result */
 	if ( !( (fabs(retval.DeltaEfrac) < 1.0e-3 || fabs(retval.DeltaE) < 1.0e-3) && 
 		 (fabs(retval.DeltaLfrac) < 1.0e-3 || fabs(retval.DeltaL) < 1.0e-3) ) && 
-         (!((fabs(retval.DeltaE_GWfrac) > 1.0e-3 || fabs(retval.DeltaE_GW > 1.0e-3)
+         (!((fabs(retval.DeltaE_GWfrac) > 1.0e-3 || fabs(retval.DeltaE_GW) > 1.0e-3
             ) && retval.PN_ON == 1))) /* did we have a significant energy error that wasn't from gravitational waves? */
     {
 		parafprintf(binintfile, "outcome: energy and/or angular momentum error\n");

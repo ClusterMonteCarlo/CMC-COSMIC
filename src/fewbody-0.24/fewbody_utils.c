@@ -315,32 +315,43 @@ void fb_check_ecc_for_inspiral(fb_obj_t *obj1, fb_obj_t *obj2, double sep_M, fb_
 	if (last_sep > 100 && sep_M < 100){
         fb_n_ecc(obj1,obj2,&a,&e,units);
 
-		obj1->e_100M[obj1->ncoll - 1] = e; 
-		obj2->e_100M[obj1->ncoll - 1] = e;
-		obj1->a_100M[obj1->ncoll - 1] = a; 
-		obj2->a_100M[obj1->ncoll - 1] = a;
+		obj1->e_100M_pending = e; 
+		obj2->e_100M_pending = e;
+		obj1->a_100M_pending = a; 
+		obj2->a_100M_pending = a;
 	}
 
     /* update the last a,e at 500M */
 	if (last_sep > 50 && sep_M < 50){
         fb_n_ecc(obj1,obj2,&a,&e,units);
 
-		obj1->e_50M[obj1->ncoll - 1] = e; 
-		obj2->e_50M[obj1->ncoll - 1] = e;
-		obj1->a_50M[obj1->ncoll - 1] = a; 
-		obj2->a_50M[obj1->ncoll - 1] = a;
+		obj1->e_50M_pending = e; 
+		obj2->e_50M_pending = e;
+		obj1->a_50M_pending = a; 
+		obj2->a_50M_pending = a;
 	}
 
     /* update the last a,e at 500M */
 	if (last_sep > 500 && sep_M < 500){
         fb_n_ecc(obj1,obj2,&a,&e,units);
 
-		obj1->e_500M[obj1->ncoll - 1] = e; 
-		obj2->e_500M[obj1->ncoll - 1] = e;
-		obj1->a_500M[obj1->ncoll - 1] = a; 
-		obj2->a_500M[obj1->ncoll - 1] = a;
+		obj1->e_500M_pending = e; 
+		obj2->e_500M_pending = e;
+		obj1->a_500M_pending = a; 
+		obj2->a_500M_pending = a;
 	}
 
+}
+
+/* mark the 50/100/500M inspiral orbits of an object as not recorded */
+void fb_reset_pending_orbit(fb_obj_t *obj)
+{
+	obj->a_50M_pending = 0.0;
+	obj->e_50M_pending = -1.0;
+	obj->a_100M_pending = 0.0;
+	obj->e_100M_pending = -1.0;
+	obj->a_500M_pending = 0.0;
+	obj->e_500M_pending = -1.0;
 }
 
 /* computes the pair-wise energy between two stars in the center-of-mass frame*/ 

@@ -127,9 +127,9 @@ int fb_nonks_func(double t, const double *y, double *f, void *params)
 			
 			
 			if (PN3) {
-				A6 = -((16+(1399/12-41*pi2/16)*nu+35.5*nu*nu)*SM3/r_mod3 +\
-				       nu*v2*SM2*(20827/840+123*pi2/64-nu*nu)/r_mod2 - \
-				       rdot2*SM2*(1+(22717/168+615/64*pi2)*nu+11*nu*nu/8-7*nu*nu*nu)/r_mod2 - \
+				A6 = -((16+(1399./12.-41*pi2/16)*nu+35.5*nu*nu)*SM3/r_mod3 +\
+				       nu*v2*SM2*(20827./840.+123*pi2/64-nu*nu)/r_mod2 - \
+				       rdot2*SM2*(1+(22717./168.+615./64.*pi2)*nu+11*nu*nu/8-7*nu*nu*nu)/r_mod2 - \
 				       0.25*nu*v6*(11-49*nu+52*nu*nu) + \
 				       35*rdot6*nu*(1-5*nu+5*nu*nu)/16 -\
 				       0.25*nu*SM*v4*(75+32*nu-40*nu*nu)/r_mod - \
@@ -137,7 +137,7 @@ int fb_nonks_func(double t, const double *y, double *f, void *params)
 				       nu*SM*rdot2*v2*(121-16*nu-20*nu*nu)/r_mod  + \
 				       3*nu*v4*rdot2*(20-79*nu+60*nu*nu)/8 -\
 				       15*nu*rdot4*v2*(4-18*nu+17*nu*nu)/8 )/clight4/clight2;
-				B6 = -rdot*((4+((5849/840)+(123/32)*pi2)*nu-25*nu*nu-8*nu*nu*nu)*SM2/\
+				B6 = -rdot*((4+((5849./840.)+(123./32.)*pi2)*nu-25*nu*nu-8*nu*nu*nu)*SM2/\
 					    r_mod2+nu*v4*(65-152*nu-48*nu*nu)/8+\
 					    15*nu*rdot4*(3-8*nu-2*nu*nu)/8+nu*(15+27*nu+10*nu*nu)*v2*\
 					    SM/r_mod-nu*SM*rdot2*(329+177*nu+108*nu*nu)/r_mod/6-\
