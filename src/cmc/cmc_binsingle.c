@@ -166,9 +166,9 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, fb_hi
 	/* set units to 1 since we're already in CGS */
 	fb_units.v = fb_units.l = fb_units.t = fb_units.m = fb_units.E = 1.0;
 	parafprintf(binintfile, "input: ");
-	binint_log_obj(hier->obj[0], fb_units);
+	binint_log_obj(hier->obj[0], fb_units, kbin);
 	parafprintf(binintfile, "input: ");
-	binint_log_obj(hier->obj[1], fb_units);
+	binint_log_obj(hier->obj[1], fb_units, kbin);
 
 	/* get the units and normalize */
 	bs_calcunits(hier->obj, &fb_units);

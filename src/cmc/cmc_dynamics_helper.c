@@ -1720,7 +1720,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 	int i, j, isbinsingle=0, isbinbin=0, sid=-1, bid=-1, istriple, bi, nmerged;
 	long ksin=-1, kbin=-1, jbin, jbinp, knew, knewp=-1, oldk, knewt;
 	double t, bmax, wp, wx[4], wy[4], wz[4], vnew[4], alpha, BEi, BEf=0.0, eta_in=-1., eta_out=-1., ave_local_mass, sigma_local, energy_ratio;
-	bool is_hard_triple=0;
+	int is_hard_triple=0;
 	fb_hier_t hier;
 	fb_units_t cmc_units, printing_units;
 	fb_ret_t retval;
@@ -1906,9 +1906,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				threeobjs[1] = *(hier.obj[i]->obj[bid]->obj[0]);
 				threeobjs[2] = *(hier.obj[i]->obj[bid]->obj[1]);
 
-				eprintf("sid = %d, bid = %d \n", sid, bid);
 				calc_sigma_local(k, AVEKERNEL, clus.N_MAX, &ave_local_mass, &sigma_local);
-				eprintf("ave_mass = %g Msun, sigma_local = %g km/s \n", ave_local_mass*cmc_units.m*units.m/MSUN, sigma_local*units.l/units.t/1e5);
 				
 				energy_from_inner = (hier.obj[i]->obj[bid]->obj[0]->m)*(hier.obj[i]->obj[bid]->obj[1]->m) / (2.0 * hier.obj[i]->obj[bid]->a);
 				energy_from_outer = -energy_from_inner - (fb_ketot(threeobjs, 3) + fb_petot(threeobjs, 3));
