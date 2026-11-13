@@ -268,6 +268,10 @@ int main(int argc, char *argv[])
 		calc_timestep(rng);
 		timeEndSimple(tmpTimeStart, &t_timestep);
 
+		/* reset SE mass loss only after calc_timestep (DTse) has used last step's value;
+		   it then accumulates over this step and is printed by print_results() below */
+		DMse = 0.0;
+
 		/* If we're using a tidal tensor, advance to the new orbit of 
 		 * the cluster */
 		if(USE_TT_FILE)
@@ -293,9 +297,6 @@ int main(int argc, char *argv[])
 
 		tmpTimeStart = timeStartSimple();
 		Prev_Dt = Dt;
-
-		/* evolve stars up to new time */
-		DMse = 0.0;
 
 		/* some numbers necessary to implement Stodolkiewicz's
 		 * energy conservation scheme */
