@@ -927,7 +927,7 @@ class Snapshot:
             self.data = convert_to_new_snapshot_columns(pd.read_csv(self.fname, sep=r'\s+', na_values='na', dtype=float, header=None, skiprows=2+start, nrows=length, usecols=usecols,
                 names=names)).iloc[start:stop][column_order] # Note: the [column_order] filter ensures the DataFrame preserves the column order input by the user
             with gzip.open(self.fname,'r') as f: first_line = f.readline().decode('utf-8')
-            time_scan = re.findall('\d+[\.]?\d*', first_line)
+            time_scan = re.findall(r'\d+[\.]?\d*', first_line)
             t_snapshot = time_scan[0] if time_scan else '0' # Sets t_snapshot = 0 for snapshot files without a time header
 
         # Also read in the time of the snapshot (code units) and convert to gyr
@@ -944,9 +944,9 @@ class Snapshot:
         if self.snapshot_format == 'dat.gz':
             for snap in glob(f"{self.model_dir}/{self.prefix}.snap[0-9][0-9][0-9][0-9].dat.gz"):
                 with gzip.open(snap,'r') as f: first_line = f.readline().decode('utf-8')
-                if not re.findall('\d+[\.]?\d*', first_line):
+                if not re.findall(r'\d+[\.]?\d*', first_line):
                     t_snapshot = 0.0; print('WARNING: Could not read snapshot age, assuming 0') # Returns time = 0 for snapshot files without a time header
-                else: t_snapshot = self.convert_units(float(re.findall('\d+[\.]?\d*', first_line)[0]), 'code', 'gyr')
+                else: t_snapshot = self.convert_units(float(re.findall(r'\d+[\.]?\d*', first_line)[0]), 'code', 'gyr')
                 if want_nrows:
                     nrows = -2 # Starts from -2 since the first two lines of the dat.gz file are the header
                     with gzip.open(snap, 'rb') as f:
@@ -966,7 +966,7 @@ class Snapshot:
                     elif self.snapshot_format == 'h5-per-column':
                         rows.append({"key":key, "tcount":int(key.split('=')[1].split(',')[0]),
                                      "time":float(key.split('=')[2].rstrip('GyrTrelTcr)')), "nrows":int(f[key].attrs["nrows"])})
-                t_unit = re.split( '\d+', rows[0]["key"] )[-1].rstrip(')')
+                t_unit = re.split( r'\d+', rows[0]["key"] )[-1].rstrip(')')
         if print_t_unit: print(f"Time unit for snapshot list: {t_unit}")
         return pd.DataFrame(rows).sort_values("time").reset_index(drop=True)
 
