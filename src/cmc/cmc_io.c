@@ -989,7 +989,7 @@ if(myid==0) {
 				sscanf(values, "%d", &procs);
 				parsed.STREAMS = 1;
 	/* Meagan: new parameters for three-body binaries: THREEBODYBINARIES, MIN_BINARY_HARDNESS, ONLY_FORM_BH_THREEBODYBINARIES */
-	// Chris O'C: added BINARY_HARDNESS_POWER March 2026, changed ONLY_FORM_BH_THREEBODYBINARIES to ONLY_FORM_CO_THREEBODYBINARIES
+	// Chris O'C: added BINARY_HARDNESS_POWER March 2026, renamed ONLY_FORM_BH_THREEBODYBINARIES to ONLY_FORM_CO_THREEBODYBINARIES (legacy name still supported)
 			} else if (strcmp(parameter_name, "THREEBODYBINARIES") == 0) {
 				PRINT_PARSED(PARAMDOC_THREEBODYBINARIES);
 				sscanf(values, "%d", &THREEBODYBINARIES);
@@ -1002,9 +1002,13 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_MIN_BINARY_HARDNESS);
 				sscanf(values, "%lf", &MIN_BINARY_HARDNESS);
 				parsed.MIN_BINARY_HARDNESS = 1;
-			} else if (strcmp(parameter_name, "ONLY_FORM_CO_THREEBODYBINARIES") == 0) {
+			} else if ((strcmp(parameter_name, "ONLY_FORM_CO_THREEBODYBINARIES") == 0) || (strcmp(parameter_name, "ONLY_FORM_BH_THREEBODYBINARIES") == 0)) {
 				PRINT_PARSED(PARAMDOC_ONLY_FORM_CO_THREEBODYBINARIES);
 				sscanf(values, "%d", &ONLY_FORM_CO_THREEBODYBINARIES);
+				if ((ONLY_FORM_CO_THREEBODYBINARIES < 0) || (ONLY_FORM_CO_THREEBODYBINARIES > 2)) {
+					eprintf("ONLY_FORM_CO_THREEBODYBINARIES must be 0, 1, or 2 (got %d).\n", ONLY_FORM_CO_THREEBODYBINARIES);
+					exit(1);
+				}
 				parsed.ONLY_FORM_CO_THREEBODYBINARIES = 1;
 			} else if (strcmp(parameter_name, "BH_SNAPSHOTTING") == 0) {
 				PRINT_PARSED(PARAMDOC_BH_SNAPSHOTTING);
