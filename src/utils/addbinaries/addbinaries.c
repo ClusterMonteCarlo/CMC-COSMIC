@@ -1165,7 +1165,7 @@ int main(int argc, char *argv[]){
 	double Ebmin, Ebmax, peak_a, min_a, max_a, max_a_hs, highmass_fb, mcrit, highmass_aind, highmass_mratio_low;
 	cmc_fits_data_t cfd;
 	char infilename[1024], outfilename[1024];
-	const char *short_opts = "i:o:N:l:p:a:A:H:m:M:I:s:b:n:f:G:k:q:h";
+	const char *short_opts = "i:o:N:l:p:a:A:H:m:M:Is:b:n:f:G:k:q:h";
 	const struct option long_opts[] = {
 		{"infile", required_argument, NULL, 'i'},
 		{"outfile", required_argument, NULL, 'o'},

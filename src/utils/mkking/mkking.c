@@ -379,7 +379,7 @@ int main(int argc, char *argv[]){
 		
 		error = 1.0/360.0*k1 - 128.0/4275.0*k3 - 2197.0/75240.0*k4
 			+ 1.0/50.0*k5 + 2.0/55.0*k6;
-		if (error>tol){
+		if (fabs(error)>tol){
 			h *= 0.5;
 			continue;
 		}
@@ -387,7 +387,7 @@ int main(int argc, char *argv[]){
 		x += incr(k1, k2, k3, k4, k5, k6);
 		y += incr(l1, l2, l3, l4, l5, l6);
 		t += h;
-		if (error<tol/2.0 && h<hmax/2.0){
+		if (fabs(error)<tol/2.0 && h<hmax/2.0){
 			h *= 2.0;
 		}
 

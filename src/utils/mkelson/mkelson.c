@@ -470,6 +470,7 @@ int main(int argc, char *argv[]){
 	if (gamma == 4.){
 		fprintf(stdout,"\nERROR: gamma=4 produces a special case of the hypergeometric function\n");		     fprintf(stdout,"\t\twhich lazy Carl has not implemented yet.\n");
 		fprintf(stdout,"\nBut gamma=4 is just a Plummer profile, so just use cmc_mkplummer.\n\n");
+		return(1);
 	}	
 
 	if (filename[0]==0){
