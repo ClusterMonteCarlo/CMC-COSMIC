@@ -2611,7 +2611,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
                 }
                 /* print header */ //Elena
                 if (WRITE_MORECOLL_INFO)
-                        pararootfprintf(morecollfile,"#1:TotalTime #2:collision-type #3:id0 #4:id1 #5:m0[MSUN] #6:m1[MSUN] #7:rad1[RSUN] #8:rad2[RSUN] #9:rho0_c[MSUN/RSUN^3] #10:rho1_c[MSUN/RSUN^3] #11:rho0_env[MSUN/RSUN^3] #12:rho1_env[MSUN/RSUN^3] #13:kstar0 #14:kstar1 #15:idr #16:mr[MSUN] #17:radr[RSUN] #18:rhor_c[MSUN/RSUN^3] #19:rhor_env[MSUN/RSUN^3] #20:kstar, #21:vinf[km/s], #22:rperi\n");
+                        pararootfprintf(morecollfile,"#1:TotalTime #2:collision-type #3:id0 #4:id1 #5:m0[MSUN] #6:m1[MSUN] #7:rad1[RSUN] #8:rad2[RSUN] #9:massc0[MSUN] #10:massc1[MSUN] #11:radc0[RSUN] #12:radc1[RSUN] #13:kstar0 #14:kstar1 #15:idr #16:mr[MSUN] #17:radr[RSUN] #18:massc_r[MSUN] #19:radc_r[RSUN] #20:kstar_r, #21:vinf[km/s], #22:rperi[RSUN]\n");
 	}/*if(RESTART_TCOUNT == 0)*/
 
 }
