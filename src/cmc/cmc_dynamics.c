@@ -294,14 +294,9 @@ are skipped if they already interacted in 3bb loop!  */
                                         collisions_multiple = COLL_FACTOR;
 				}
                                
-                                if (WD_TC > 0) {
-                                        if ((star[kp].se_k >= 10 && star[kp].se_k <= 12) && (star[k].se_k >= 10 && star[k].se_k <= 12)) {
-                                                collisions_multiple = WD_TC;
-                                        } else {
-                                                collisions_multiple = COLL_FACTOR;
-                                        }
-                                } else {
-                                        collisions_multiple = COLL_FACTOR;
+                                /* WD_TC only overrides for WD-WD pairs; otherwise keep the CO_TDE/COLL_FACTOR value above */
+                                if (WD_TC > 0 && (star[kp].se_k >= 10 && star[kp].se_k <= 12) && (star[k].se_k >= 10 && star[k].se_k <= 12)) {
+                                        collisions_multiple = WD_TC;
                                 }
                                 
                                 S_tc = 0.0;
