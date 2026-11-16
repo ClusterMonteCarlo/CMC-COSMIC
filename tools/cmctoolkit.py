@@ -322,7 +322,7 @@ def find_t_ms(z, m):
     m_FGB = 13.048*(z/0.02)**0.06/(1+0.0012*(0.02/z)**1.27)
 
     t_BGB = (a1+a2*m**4.+a3*m**5.5+m**7.)/(a4*m**2.+a5*m**7.)
-    x = np.max([0.95,np.min([0.95-0.03*(eta+0.30103)]),0.99])
+    x = np.max([0.95,np.min([0.95-0.03*(eta+0.30103),0.99])])
     mu = np.max([0.5, 1.0-0.01*np.max([a6/(m**a7), a8+a9/m**a10])])
     t_hook = mu*t_BGB
 
@@ -927,7 +927,7 @@ class Snapshot:
             self.data = convert_to_new_snapshot_columns(pd.read_csv(self.fname, sep=r'\s+', na_values='na', dtype=float, header=None, skiprows=2+start, nrows=length, usecols=usecols,
                 names=names)).iloc[start:stop][column_order] # Note: the [column_order] filter ensures the DataFrame preserves the column order input by the user
             with gzip.open(self.fname,'r') as f: first_line = f.readline().decode('utf-8')
-            time_scan = re.findall('\d+[\.]?\d*', first_line)
+            time_scan = re.findall(r'\d+[\.]?\d*', first_line)
             t_snapshot = time_scan[0] if time_scan else '0' # Sets t_snapshot = 0 for snapshot files without a time header
 
         # Also read in the time of the snapshot (code units) and convert to gyr
@@ -944,9 +944,9 @@ class Snapshot:
         if self.snapshot_format == 'dat.gz':
             for snap in glob(f"{self.model_dir}/{self.prefix}.snap[0-9][0-9][0-9][0-9].dat.gz"):
                 with gzip.open(snap,'r') as f: first_line = f.readline().decode('utf-8')
-                if not re.findall('\d+[\.]?\d*', first_line):
+                if not re.findall(r'\d+[\.]?\d*', first_line):
                     t_snapshot = 0.0; print('WARNING: Could not read snapshot age, assuming 0') # Returns time = 0 for snapshot files without a time header
-                else: t_snapshot = self.convert_units(float(re.findall('\d+[\.]?\d*', first_line)[0]), 'code', 'gyr')
+                else: t_snapshot = self.convert_units(float(re.findall(r'\d+[\.]?\d*', first_line)[0]), 'code', 'gyr')
                 if want_nrows:
                     nrows = -2 # Starts from -2 since the first two lines of the dat.gz file are the header
                     with gzip.open(snap, 'rb') as f:
@@ -966,7 +966,7 @@ class Snapshot:
                     elif self.snapshot_format == 'h5-per-column':
                         rows.append({"key":key, "tcount":int(key.split('=')[1].split(',')[0]),
                                      "time":float(key.split('=')[2].rstrip('GyrTrelTcr)')), "nrows":int(f[key].attrs["nrows"])})
-                t_unit = re.split( '\d+', rows[0]["key"] )[-1].rstrip(')')
+                t_unit = re.split( r'\d+', rows[0]["key"] )[-1].rstrip(')')
         if print_t_unit: print(f"Time unit for snapshot list: {t_unit}")
         return pd.DataFrame(rows).sort_values("time").reset_index(drop=True)
 
@@ -1321,8 +1321,8 @@ class Snapshot:
         Adds surface gravity columns to snapshot table.
 
         Adds the following columns:
-        g0[CM/S] : Surface gravity for the primary star in a binary or a single star
-        g1[CM/S] : Surface gravity for the secondary star in a binary, np.nan for a single
+        g0[CM/S2] : Surface gravity for the primary star in a binary or a single star
+        g1[CM/S2] : Surface gravity for the secondary star in a binary, np.nan for a single
 
         Parameters
         ----------
@@ -2087,13 +2087,13 @@ class Snapshot:
         paramdict['sighl_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=startype_ms)[1][0]
         
         if np.sum(np.isin(st0, startype_giant)) + np.sum(np.isin(st1, startype_giant)) != 0:
-            paramdict['sig_ms'  ] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_giant)[1][0]
-            paramdict['sighm_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'], startypes=startype_giant)[1][0]
-            paramdict['sighl_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=startype_giant)[1][0]
+            paramdict['sig_giant'] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_giant)[1][0]
+            paramdict['sighm_giant'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'], startypes=startype_giant)[1][0]
+            paramdict['sighl_giant'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=startype_giant)[1][0]
         else:
-            paramdict['sig_ms'  ] = np.nan
-            paramdict['sighm_ms'] = np.nan
-            paramdict['sighl_ms'] = np.nan
+            paramdict['sig_giant'] = np.nan
+            paramdict['sighm_giant'] = np.nan
+            paramdict['sighl_giant'] = np.nan
         
         for ii in range(16):
             if paramdict[f'N_{ii}'] != 0:
