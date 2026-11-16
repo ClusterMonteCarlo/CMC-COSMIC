@@ -11,47 +11,41 @@ class collision:
 	
 	"""
 		
-	def parse_one_coll(self,args):
-		_,out_id,_,out_m,_ = re.split('=|\(|\)',args[2])
-		_,id1,_,m1,_,_,id2,_,m2,_ = re.split('=|\(|\)|:',args[3])
-		self.out_id = int(out_id)
-		self.out_mass = float(out_m)
-		self.in_ids = (int(id1),int(id2))
-		self.in_masses =(float(m1),float(m2))
-		km = args[5].split('=')[1]
-		k1 = args[6].split('=')[1]
-		k2 = args[7].split('=')[1].rstrip()
-		self.out_type = int(km)
-		self.in_types = (int(k1),int(k2))
-		
-	def parse_two_coll(self,args):
-		_,out_id,_,out_m,_ = re.split('=|\(|\)',args[2])
-		_,id1,_,m1,_,_,id2,_,m2,_,_,id3,_,m3,_ = re.split('=|\(|\)|:',args[3])
-		self.out_id = int(out_id)
-		self.out_mass = float(out_m)
-		self.in_ids = (int(id1),int(id2),int(id3))
-		self.in_masses = (float(m1),float(m2),float(m3))
-		km = args[5].split('=')[1]
-		k1 = args[6].split('=')[1]
-		k2 = args[7].split('=')[1]
-		k3 = args[8].split('=')[1].rstrip()
-		self.out_type = int(km)
-		self.in_types = (int(k1),int(k2),int(k3))
+	def parse_coll(self,args):
+		"""Parse a collision line with any number of colliders.
 
-	def parse_three_coll(self,args):
-		_,out_id,_,out_m,_ = re.split('=|\(|\)',args[2])
-		_,id1,_,m1,_,_,id2,_,m2,_,_,id3,_,m3,_,_,id4,_,m4,_ = re.split('=|\(|\)|:',args[3])
+		The number of colliders is inferred from the colon-separated
+		id(mass) list, and the remaining fields are looked up by name
+		(typem, type1, ..., rad1[RSUN], ...), so extra or reordered
+		key=value fields at the end of the line do not break parsing.
+		"""
+		_,out_id,_,out_m,_ = re.split(r'=|\(|\)',args[2])
 		self.out_id = int(out_id)
 		self.out_mass = float(out_m)
-		self.in_ids = (int(id1),int(id2),int(id3),int(id4))
-		self.in_masses = (float(m1),float(m2),float(m3),float(m4))
-		km = args[5].split('=')[1]
-		k1 = args[6].split('=')[1]
-		k2 = args[7].split('=')[1]
-		k3 = args[8].split('=')[1]
-		k4 = args[9].split('=')[1].rstrip()
-		self.out_type = int(km)
-		self.in_types = (int(k1),int(k2),int(k3),int(k4))
+
+		ids = []
+		masses = []
+		for coll in args[3].split(':'):
+			_,id_i,_,m_i,_ = re.split(r'=|\(|\)',coll)
+			ids.append(int(id_i))
+			masses.append(float(m_i))
+		self.in_ids = tuple(ids)
+		self.in_masses = tuple(masses)
+		ncoll = len(ids)
+
+		fields = dict(arg.split('=',1) for arg in args[5:] if '=' in arg)
+		self.out_type = int(fields['typem'])
+		self.in_types = tuple(int(fields['type%d'%(j+1)]) for j in range(ncoll))
+
+		# Optional fields; older collision files used rad1=... without units
+		for fmt in ('rad%d[RSUN]','rad%d'):
+			if all(fmt%(j+1) in fields for j in range(ncoll)):
+				self.in_radii = tuple(float(fields[fmt%(j+1)]) for j in range(ncoll))
+				break
+		for key,attr in (('b[RSUN]','b_RSUN'),('vinf[km/s]','vinf_KMS'),
+		                 ('rperi','rperi_RSUN'),('coll_mult','coll_mult')):
+			if key in fields:
+				setattr(self,attr,float(fields[key]))
 
 	def __init__(self, string):
 		args = string.split()
@@ -60,20 +54,7 @@ class collision:
 		self.radius = float(args[4].split('=')[1].rstrip(')'))
 		self.type = args[1]
 		
-		if self.type == 'single-single':
-			self.parse_one_coll(args)
-		elif self.type == 'binary-single':
-			if len(args) == 8:
-				self.parse_one_coll(args)
-			else:
-				self.parse_two_coll(args)
-		elif self.type == 'binary-binary':
-			if len(args) == 8:
-				self.parse_one_coll(args)
-			elif len(args) == 9:
-				self.parse_two_coll(args)
-			else:
-				self.parse_three_coll(args)
+		self.parse_coll(args)
 
 
 class se_merger:
@@ -89,8 +70,8 @@ class se_merger:
 	"""
 		
 	def parse_disrupt_1(self,args): #same as the collision file
-		_,out_id,_,out_m,_ = re.split('=|\(|\)',args[2])
-		_,id1,_,m1,_,_,id2,_,m2,_ = re.split('=|\(|\)|:',args[3])
+		_,out_id,_,out_m,_ = re.split(r'=|\(|\)',args[2])
+		_,id1,_,m1,_,_,id2,_,m2,_ = re.split(r'=|\(|\)|:',args[3])
 		self.out_id = int(out_id)
 		self.out_mass = float(out_m)
 		self.in_ids = (int(id1),int(id2))
@@ -102,8 +83,8 @@ class se_merger:
 		self.in_types = (int(k1),int(k2))
 				
 	def parse_disrupt_both(self,args):
-		_,id1,_,m1,_ = re.split('=|\(|\)',args[2])
-		_,id2,_,m2,_ = re.split('=|\(|\)',args[3])
+		_,id1,_,m1,_ = re.split(r'=|\(|\)',args[2])
+		_,id2,_,m2,_ = re.split(r'=|\(|\)',args[3])
 
 		self.out_id = -1
 		self.out_mass = -1
@@ -471,7 +452,7 @@ class conversion_file:
 
 
 	def __init__(self,filename):
-	   self.parse_conv_file(filename)
+		self.parse_conv_file(filename)
 
 	@property
 	def time_nb_relax(self):

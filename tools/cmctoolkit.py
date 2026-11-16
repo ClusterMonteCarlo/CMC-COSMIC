@@ -322,7 +322,7 @@ def find_t_ms(z, m):
     m_FGB = 13.048*(z/0.02)**0.06/(1+0.0012*(0.02/z)**1.27)
 
     t_BGB = (a1+a2*m**4.+a3*m**5.5+m**7.)/(a4*m**2.+a5*m**7.)
-    x = np.max([0.95,np.min([0.95-0.03*(eta+0.30103)]),0.99])
+    x = np.max([0.95,np.min([0.95-0.03*(eta+0.30103),0.99])])
     mu = np.max([0.5, 1.0-0.01*np.max([a6/(m**a7), a8+a9/m**a10])])
     t_hook = mu*t_BGB
 
@@ -1321,8 +1321,8 @@ class Snapshot:
         Adds surface gravity columns to snapshot table.
 
         Adds the following columns:
-        g0[CM/S] : Surface gravity for the primary star in a binary or a single star
-        g1[CM/S] : Surface gravity for the secondary star in a binary, np.nan for a single
+        g0[CM/S2] : Surface gravity for the primary star in a binary or a single star
+        g1[CM/S2] : Surface gravity for the secondary star in a binary, np.nan for a single
 
         Parameters
         ----------
@@ -2087,13 +2087,13 @@ class Snapshot:
         paramdict['sighl_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=startype_ms)[1][0]
         
         if np.sum(np.isin(st0, startype_giant)) + np.sum(np.isin(st1, startype_giant)) != 0:
-            paramdict['sig_ms'  ] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_giant)[1][0]
-            paramdict['sighm_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'], startypes=startype_giant)[1][0]
-            paramdict['sighl_ms'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=startype_giant)[1][0]
+            paramdict['sig_giant'] = self.make_smoothed_veldisp_profile(bins=1, startypes=startype_giant)[1][0]
+            paramdict['sighm_giant'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhm'], startypes=startype_giant)[1][0]
+            paramdict['sighl_giant'] = self.make_smoothed_veldisp_profile(bins=1, dmax=paramdict['rhl'], startypes=startype_giant)[1][0]
         else:
-            paramdict['sig_ms'  ] = np.nan
-            paramdict['sighm_ms'] = np.nan
-            paramdict['sighl_ms'] = np.nan
+            paramdict['sig_giant'] = np.nan
+            paramdict['sighm_giant'] = np.nan
+            paramdict['sighl_giant'] = np.nan
         
         for ii in range(16):
             if paramdict[f'N_{ii}'] != 0:
