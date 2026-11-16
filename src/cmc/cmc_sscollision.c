@@ -806,7 +806,7 @@ void sscollision_do(long k, long kp, double rperimax, double w[4], double W, dou
                 binary[star[knew].binind].e = efinal;
                 binary[star[knew].binind].m1 = mass_k;
                 binary[star[knew].binind].m2 = mass_kp;
-                binary[star[knew].binind].rad2 = star[k].rad;
+                binary[star[knew].binind].rad1 = star[k].rad;
                 binary[star[knew].binind].rad2 = star[kp].rad;
                 binary[star[knew].binind].Eint1 = star[k].Eint;
                 binary[star[knew].binind].Eint2 = star[kp].Eint;
@@ -1617,6 +1617,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double k
                   while (bse_get_bcm(j,1) >= 0.0 && j<BCM_NUM_ROWS) {
                     j++;
                   }
+                  j--; /* last filled row, not the end marker */
                         //if(j>1){
                         //  tempbinary.bse_bcm_B[tbi] == bse_get_bcm(j-1,33+tbi);
                         //}
@@ -1648,7 +1649,7 @@ void merge_two_stars(star_t *star1, star_t *star2, star_t *merged_star, double k
                 } else {
                    merged_star->se_scm_B = bse_get_bcm(j,34);
                    } */
-                  if(j > 1){
+                  if(j >= 1){
                      merged_star->se_scm_B = bse_get_bcm(j,33+tbi);
                      if(tempbinary.bse_kw[tbi] == 13) {
                         dprintf("sscoll, pulsar bin. merge5: %g %g %g \n",tempbinary.bse_B_0[tbi],tempbinary.bse_ospin[tbi],merged_star->se_scm_B);
