@@ -843,7 +843,9 @@ void comp_multi_mass_percent(){
 	for (i = 0; i <NO_MASS_BINS; i++) {
 		int mcnt;
 		if (number_inbin[i] == 0) {
-			continue;
+			for(mcnt=0; mcnt<MASS_PC_COUNT; mcnt++){
+				multi_mass_r[i][mcnt] = 0.0;
+			}
 		} else if (number_inbin[i] == 1) {
 			for(mcnt=0; mcnt<MASS_PC_COUNT; mcnt++){
 				multi_mass_r[i][mcnt] = r_inbin[i];

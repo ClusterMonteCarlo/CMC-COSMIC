@@ -4118,16 +4118,16 @@ void load_restart_file(){
 	mpi_triplefile_ofst_total=0;
 	mpi_newbhfile_ofst_total=0;
 	mpi_bhmergerfile_ofst_total=0;
+	mpi_threebbfile_ofst_total=0;
+	mpi_threebbprobabilityfile_ofst_total=0;
+	mpi_lightcollisionfile_ofst_total=0;
+	mpi_threebbdebugfile_ofst_total=0;
     }
 
 	next_restart_t = CHECKPOINT_INTERVAL;
 	NEXT_RESTART = local_restart + 1;
 
 	/*Bit of arrray-based housekeeping*/
-	mpi_threebbfile_ofst_total=0;
-	mpi_threebbprobabilityfile_ofst_total=0;
-	mpi_lightcollisionfile_ofst_total=0;
-	mpi_threebbdebugfile_ofst_total=0;
 	star_r[0] = ZERO; 
 	star_r[clus.N_STAR + 1] = SF_INFINITY;
 	cenma.m_new= star_m[0];
