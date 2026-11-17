@@ -1,20 +1,115 @@
 # time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)
-t=0.00420101 disruptboth id1=56738(m1=-0.5) id2=105831(m2=54.704) (r=0.0432397) type1=5 type2=1
-t=0.00595053 disrupt1 idr=29899(mr=49.6975) id1=29899(m1=41.5492):id2=103038(m2=10.8418) (r=0.821881) typer=4 type1=2 type2=1
-t=0.00623412 disrupt2 idr=108017(mr=5.8251) id1=78601(m1=37.0762):id2=108017(m2=5.82494) (r=0.94253) typer=1 type1=1 type2=1
-t=0.00653084 disrupt1 idr=33494(mr=41.8324) id1=33494(m1=37.4549):id2=103437(m2=6.60618) (r=0.0283583) typer=4 type1=4 type2=1
-t=0.00800044 disrupt1 idr=35605(mr=31.8676) id1=35605(m1=30.2391):id2=103647(m2=3.50375) (r=0.228668) typer=4 type1=4 type2=1
-t=0.00830133 disruptboth id1=74049(m1=25.775) id2=157121(m2=47.5755) (r=0.126987) type1=4 type2=4
-t=0.00928889 disruptboth id1=91837(m1=18.3107) id2=109367(m2=3.08222) (r=1.80168) type1=4 type2=1
-t=0.00991299 disruptboth id1=41550(m1=5.40096) id2=104255(m2=14.3437) (r=0.166824) type1=4 type2=1
-t=0.0102794 disruptboth id1=72794(m1=17.2388) id2=107438(m2=24.2033) (r=1.1298) type1=14 type2=5
-t=0.0106703 disruptboth id1=69410(m1=12.5777) id2=107113(m2=17.7171) (r=0.18769) type1=5 type2=1
-t=0.0108798 disruptboth id1=32870(m1=8.34666) id2=103361(m2=15.9674) (r=0.349107) type1=5 type2=1
-t=0.011132 disruptboth id1=88958(m1=11.2507) id2=109097(m2=17.1137) (r=1.55047) type1=5 type2=1
-t=0.0114617 disruptboth id1=94902(m1=3.78701) id2=109664(m2=12.8646) (r=1.55471) type1=4 type2=1
-t=0.0128796 disruptboth id1=73956(m1=7.45518) id2=107539(m2=19.2271) (r=1.37561) type1=5 type2=4
-t=0.0136889 disruptboth id1=9365(m1=5.74346) id2=100936(m2=7.0315) (r=0.106722) type1=5 type2=1
-t=0.0140273 disruptboth id1=67170(m1=3.9605) id2=106894(m2=15.1282) (r=0.0791924) type1=5 type2=1
-t=0.0150063 disruptboth id1=68469(m1=2.92118) id2=107025(m2=13.9559) (r=0.0594436) type1=5 type2=1
-t=0.0155513 disruptboth id1=35258(m1=2.20391) id2=103607(m2=13.4691) (r=0.575796) type1=8 type2=1
-t=0.0168174 disruptboth id1=34024(m1=2.74625) id2=103492(m2=11.3218) (r=0.0185204) type1=5 type2=1
+t=0.000364846 disruptboth id1=22408(m1=7.12852) id2=100032(m2=22.3405) (r=0.293465) type1=1 type2=1 rad1[RSUN]=18.7485 rad2[RSUN]=7.68652
+t=0.000364846 disruptboth id1=936(m1=7.19857) id2=100002(m2=27.5793) (r=0.310407) type1=1 type2=1 rad1[RSUN]=18.3277 rad2[RSUN]=11.6378
+t=0.000364846 disruptboth id1=29344(m1=19.8139) id2=100042(m2=32.4591) (r=0.264244) type1=4 type2=4 rad1[RSUN]=435.251 rad2[RSUN]=150.557
+t=0.000364846 disruptboth id1=44403(m1=7.12917) id2=100061(m2=20.7001) (r=0.60927) type1=1 type2=1 rad1[RSUN]=18.7808 rad2[RSUN]=6.90506
+t=0.000364846 disruptboth id1=45673(m1=10.3495) id2=100064(m2=35.1678) (r=0.857276) type1=4 type2=1 rad1[RSUN]=2320.52 rad2[RSUN]=14.9819
+t=0.000364846 disruptboth id1=72982(m1=18.6312) id2=100106(m2=31.5067) (r=0.881509) type1=14 type2=1 rad1[RSUN]=7.86849e-05 rad2[RSUN]=16.9845
+t=0.000364846 disruptboth id1=99781(m1=7.61956) id2=100133(m2=20.3753) (r=3.37211) type1=1 type2=1 rad1[RSUN]=17.1561 rad2[RSUN]=6.76367
+t=0.00040539 disruptboth id1=19762(m1=6.39507) id2=100028(m2=18.3624) (r=0.319591) type1=4 type2=1 rad1[RSUN]=84.6152 rad2[RSUN]=6.44155
+t=0.00040539 disruptboth id1=10231(m1=5.36607) id2=100011(m2=24.0492) (r=0.43203) type1=4 type2=1 rad1[RSUN]=83.9322 rad2[RSUN]=10.8589
+t=0.00040539 disruptboth id1=25690(m1=6.27815) id2=100036(m2=41.7026) (r=0.702945) type1=7 type2=1 rad1[RSUN]=1.07516 rad2[RSUN]=9.40649
+t=0.00040539 disruptboth id1=14462(m1=16.9036) id2=100021(m2=22.9534) (r=0.825577) type1=4 type2=1 rad1[RSUN]=2084.28 rad2[RSUN]=9.56537
+t=0.00040539 disruptboth id1=81189(m1=5.33398) id2=100115(m2=26.647) (r=1.40622) type1=4 type2=1 rad1[RSUN]=87.2792 rad2[RSUN]=16.1961
+t=0.00040539 disruptboth id1=78352(m1=6.71676) id2=100113(m2=44.0471) (r=1.7522) type1=7 type2=1 rad1[RSUN]=1.09022 rad2[RSUN]=10.6335
+t=0.00040539 disruptboth id1=33373(m1=14.8438) id2=100049(m2=27.7765) (r=1.84897) type1=4 type2=1 rad1[RSUN]=2015.01 rad2[RSUN]=14.4929
+t=0.000476282 disruptboth id1=52701(m1=13.513) id2=100073(m2=19.9934) (r=0.457254) type1=4 type2=1 rad1[RSUN]=1705.85 rad2[RSUN]=8.14044
+t=0.000476282 disruptboth id1=61064(m1=11.816) id2=100090(m2=16.9013) (r=0.826867) type1=2 type2=1 rad1[RSUN]=17.8152 rad2[RSUN]=6.12499
+t=0.000476282 disruptboth id1=52340(m1=13.9819) id2=100071(m2=24.44) (r=0.827605) type1=4 type2=1 rad1[RSUN]=1855.47 rad2[RSUN]=15.7478
+t=0.000476282 disruptboth id1=44053(m1=13.2709) id2=100059(m2=24.9007) (r=0.924718) type1=4 type2=4 rad1[RSUN]=736.344 rad2[RSUN]=64.3408
+t=0.000476282 disruptboth id1=78351(m1=11.4126) id2=100112(m2=18.108) (r=1.12062) type1=1 type2=1 rad1[RSUN]=15.7405 rad2[RSUN]=6.79017
+t=0.000476282 disruptboth id1=66195(m1=11.5517) id2=100096(m2=22.9407) (r=1.16255) type1=1 type2=1 rad1[RSUN]=16.2334 rad2[RSUN]=12.0963
+t=0.000476282 disruptboth id1=73951(m1=6.25568) id2=100108(m2=23.301) (r=2.31561) type1=1 type2=1 rad1[RSUN]=15.6497 rad2[RSUN]=12.9112
+t=0.000476282 disruptboth id1=84297(m1=11.1794) id2=100117(m2=24.0113) (r=2.99171) type1=1 type2=1 rad1[RSUN]=14.9552 rad2[RSUN]=14.9178
+t=0.00058384 disruptboth id1=26740(m1=3.38145) id2=100038(m2=19.944) (r=0.213371) type1=4 type2=1 rad1[RSUN]=368.262 rad2[RSUN]=10.972
+t=0.00058384 disruptboth id1=17878(m1=3.36191) id2=100026(m2=35.0013) (r=0.256336) type1=7 type2=1 rad1[RSUN]=0.919387 rad2[RSUN]=9.12616
+t=0.00058384 disruptboth id1=9447(m1=8.19488) id2=100009(m2=13.4625) (r=0.262724) type1=1 type2=1 rad1[RSUN]=14.1877 rad2[RSUN]=4.94201
+t=0.00058384 disruptboth id1=9389(m1=5.91309) id2=100008(m2=15.3987) (r=0.244621) type1=1 type2=1 rad1[RSUN]=10.0504 rad2[RSUN]=5.92665
+t=0.00058384 disrupt2 idr=110350(mr=25.7842) id1=36059(m1=19.662):id2=100052(m2=19.4013) (r=0.333177) typer=14 type1=1 type2=1 radr[RSUN]=0.000109325 rad1[RSUN]=10.428 rad2[RSUN]=9.92348
+t=0.00058384 disruptboth id1=20796(m1=8.60661) id2=100030(m2=19.6237) (r=0.367499) type1=4 type2=1 rad1[RSUN]=45.2694 rad2[RSUN]=10.3503
+t=0.00058384 disruptboth id1=17034(m1=10.0566) id2=100024(m2=21.8481) (r=0.463245) type1=4 type2=4 rad1[RSUN]=1512.63 rad2[RSUN]=1434.03
+t=0.00058384 disruptboth id1=27086(m1=2.83847) id2=100039(m2=17.4008) (r=0.464447) type1=1 type2=1 rad1[RSUN]=13.342 rad2[RSUN]=7.36854
+t=0.00058384 disruptboth id1=7892(m1=6.55239) id2=100006(m2=16.803) (r=0.466979) type1=1 type2=1 rad1[RSUN]=10.9403 rad2[RSUN]=6.86853
+t=0.00058384 disruptboth id1=29162(m1=3.54392) id2=100041(m2=14.5178) (r=0.473699) type1=4 type2=1 rad1[RSUN]=45.0809 rad2[RSUN]=5.44549
+t=0.00058384 disruptboth id1=52388(m1=2.54652) id2=100072(m2=14.0939) (r=0.606488) type1=1 type2=1 rad1[RSUN]=11.1456 rad2[RSUN]=5.23508
+t=0.00058384 disruptboth id1=32402(m1=7.68536) id2=100046(m2=12.8522) (r=0.652451) type1=1 type2=1 rad1[RSUN]=12.7385 rad2[RSUN]=4.67822
+t=0.00058384 disruptboth id1=63415(m1=3.09188) id2=100095(m2=14.3518) (r=0.685612) type1=4 type2=1 rad1[RSUN]=50.2486 rad2[RSUN]=5.3615
+t=0.00058384 disruptboth id1=49207(m1=2.91838) id2=100068(m2=18.2045) (r=0.806835) type1=1 type2=1 rad1[RSUN]=11.2482 rad2[RSUN]=8.18828
+t=0.00058384 disruptboth id1=49128(m1=3.91174) id2=100067(m2=17.1555) (r=0.897044) type1=4 type2=1 rad1[RSUN]=86.5496 rad2[RSUN]=7.15404
+t=0.00058384 disruptboth id1=85211(m1=6.01662) id2=100118(m2=12.29) (r=0.949352) type1=1 type2=1 rad1[RSUN]=10.1864 rad2[RSUN]=4.44939
+t=0.00058384 disruptboth id1=71987(m1=3.18918) id2=100102(m2=16.6324) (r=0.98093) type1=4 type2=1 rad1[RSUN]=66.5867 rad2[RSUN]=6.73862
+t=0.00058384 disruptboth id1=89306(m1=8.76945) id2=100119(m2=15.6335) (r=2.02267) type1=4 type2=1 rad1[RSUN]=47.4321 rad2[RSUN]=6.06699
+t=0.00058384 disruptboth id1=98297(m1=2.79256) id2=100130(m2=16.1453) (r=2.53067) type1=1 type2=1 rad1[RSUN]=14.4941 rad2[RSUN]=6.39461
+t=0.00058384 disruptboth id1=61784(m1=5.99596) id2=100091(m2=16.8267) (r=2.58383) type1=1 type2=1 rad1[RSUN]=10.159 rad2[RSUN]=6.88702
+t=0.000669887 disruptboth id1=4512(m1=4.63157) id2=100005(m2=11.2464) (r=0.243897) type1=4 type2=1 rad1[RSUN]=50.747 rad2[RSUN]=4.31875
+t=0.000669887 disruptboth id1=7972(m1=2.16198) id2=100007(m2=16.5405) (r=0.306485) type1=1 type2=1 rad1[RSUN]=11.6724 rad2[RSUN]=8.99922
+t=0.000669887 disruptboth id1=11972(m1=2.30273) id2=100014(m2=11.6048) (r=0.354649) type1=4 type2=1 rad1[RSUN]=36.4028 rad2[RSUN]=4.48475
+t=0.000669887 disruptboth id1=10861(m1=2.56328) id2=100012(m2=12.8872) (r=0.382698) type1=4 type2=1 rad1[RSUN]=479.842 rad2[RSUN]=5.15297
+t=0.000669887 disruptboth id1=1737(m1=2.30264) id2=100004(m2=16.2401) (r=0.4053) type1=4 type2=1 rad1[RSUN]=45.8427 rad2[RSUN]=8.42415
+t=0.000669887 disruptboth id1=58139(m1=4.40404) id2=100085(m2=12.9942) (r=0.577475) type1=4 type2=1 rad1[RSUN]=40.1635 rad2[RSUN]=5.22098
+t=0.000669887 disruptboth id1=12902(m1=3.7006) id2=100016(m2=15.4471) (r=0.616924) type1=1 type2=1 rad1[RSUN]=11.556 rad2[RSUN]=7.2646
+t=0.000669887 disruptboth id1=1210(m1=2.28782) id2=100003(m2=15.9449) (r=0.663464) type1=4 type2=1 rad1[RSUN]=52.6601 rad2[RSUN]=7.93831
+t=0.000669887 disruptboth id1=45584(m1=4.72806) id2=100063(m2=16.965) (r=0.721822) type1=4 type2=1 rad1[RSUN]=59.5767 rad2[RSUN]=9.99971
+t=0.000669887 disruptboth id1=34799(m1=2.29146) id2=100051(m2=12.2774) (r=0.733426) type1=1 type2=1 rad1[RSUN]=11.2108 rad2[RSUN]=4.8202
+t=0.000669887 disruptboth id1=71744(m1=4.83003) id2=100101(m2=14.5479) (r=0.770994) type1=4 type2=1 rad1[RSUN]=725.139 rad2[RSUN]=6.32465
+t=0.000669887 disruptboth id1=44078(m1=2.20134) id2=100060(m2=10.9552) (r=0.823159) type1=1 type2=1 rad1[RSUN]=12.7641 rad2[RSUN]=4.18935
+t=0.000669887 disruptboth id1=73312(m1=2.76435) id2=100107(m2=13.5869) (r=0.866261) type1=4 type2=1 rad1[RSUN]=445.54 rad2[RSUN]=5.59294
+t=0.000669887 disruptboth id1=66783(m1=2.22661) id2=100097(m2=16.2768) (r=0.87364) type1=4 type2=1 rad1[RSUN]=37.1695 rad2[RSUN]=8.48994
+t=0.000669887 disruptboth id1=37411(m1=2.25442) id2=100055(m2=15.9731) (r=1.03933) type1=1 type2=1 rad1[RSUN]=12.5253 rad2[RSUN]=7.98539
+t=0.000669887 disruptboth id1=20165(m1=5.79576) id2=100029(m2=15.9974) (r=1.118) type1=4 type2=1 rad1[RSUN]=1250.56 rad2[RSUN]=8.02307
+t=0.000669887 disruptboth id1=89928(m1=4.41948) id2=100120(m2=17.7608) (r=1.38273) type1=4 type2=1 rad1[RSUN]=40.5933 rad2[RSUN]=12.82
+t=0.000728999 disruptboth id1=49623(m1=2.00882) id2=100069(m2=15.2831) (r=0.202503) type1=4 type2=1 rad1[RSUN]=41.2933 rad2[RSUN]=9.30011
+t=0.000728999 disruptboth id1=13164(m1=3.25362) id2=100019(m2=11.3216) (r=0.405997) type1=4 type2=1 rad1[RSUN]=103.303 rad2[RSUN]=4.61996
+t=0.000728999 disrupt1 idr=126112(mr=19.9931) id1=15638(m1=16.4517):id2=100023(m2=15.3699) (r=0.557762) typer=4 type1=4 type2=1 radr[RSUN]=2122.26 rad1[RSUN]=40.112 rad2[RSUN]=9.55657
+t=0.000728999 disruptboth id1=63013(m1=2.91976) id2=100094(m2=15.1728) (r=0.559544) type1=4 type2=1 rad1[RSUN]=36.2871 rad2[RSUN]=9.00059
+t=0.000728999 disruptboth id1=47411(m1=1.97943) id2=100066(m2=14.1684) (r=0.572484) type1=4 type2=1 rad1[RSUN]=35.1301 rad2[RSUN]=7.06346
+t=0.000728999 disruptboth id1=54809(m1=2.10047) id2=100079(m2=14.1573) (r=0.575591) type1=4 type2=1 rad1[RSUN]=38.5374 rad2[RSUN]=7.04862
+t=0.000728999 disruptboth id1=32196(m1=2.06651) id2=100044(m2=23.4135) (r=0.633896) type1=4 type2=1 rad1[RSUN]=449.237 rad2[RSUN]=6.79431
+t=0.000728999 disruptboth id1=58423(m1=3.05816) id2=100086(m2=14.7425) (r=0.70022) type1=4 type2=1 rad1[RSUN]=45.3926 rad2[RSUN]=8.02289
+t=0.000728999 disruptboth id1=72581(m1=2.09098) id2=100105(m2=22.3184) (r=0.800569) type1=4 type2=1 rad1[RSUN]=472.587 rad2[RSUN]=7.74753
+t=0.000728999 disruptboth id1=53297(m1=1.98398) id2=100075(m2=15.3199) (r=0.809306) type1=4 type2=1 rad1[RSUN]=35.3396 rad2[RSUN]=9.40631
+t=0.000728999 disruptboth id1=99362(m1=2.20419) id2=100132(m2=10.6329) (r=3.6514) type1=4 type2=1 rad1[RSUN]=303.103 rad2[RSUN]=4.25426
+t=0.000838979 disruptboth id1=14532(m1=2.48491) id2=100022(m2=14.4221) (r=0.398798) type1=4 type2=1 rad1[RSUN]=55.4905 rad2[RSUN]=9.07639
+t=0.000838979 disruptboth id1=27529(m1=2.57131) id2=100040(m2=12.4394) (r=0.550055) type1=4 type2=1 rad1[RSUN]=113.796 rad2[RSUN]=5.72538
+t=0.000838979 disruptboth id1=37099(m1=2.51923) id2=100053(m2=14.8504) (r=0.581093) type1=4 type2=1 rad1[RSUN]=70.2583 rad2[RSUN]=10.6704
+t=0.000838979 disruptboth id1=81253(m1=1.88711) id2=100116(m2=12.3761) (r=0.644073) type1=1 type2=1 rad1[RSUN]=11.231 rad2[RSUN]=5.66582
+t=0.000838979 disruptboth id1=37221(m1=1.87157) id2=100054(m2=12.4232) (r=0.706671) type1=4 type2=1 rad1[RSUN]=42.6553 rad2[RSUN]=5.70894
+t=0.000838979 disruptboth id1=54482(m1=2.3729) id2=100078(m2=15.1449) (r=0.733682) type1=4 type2=4 rad1[RSUN]=36.6679 rad2[RSUN]=33.8102
+t=0.000838979 disruptboth id1=38323(m1=1.91901) id2=100057(m2=13.0837) (r=0.774956) type1=4 type2=1 rad1[RSUN]=43.3338 rad2[RSUN]=6.43252
+t=0.000838979 disruptboth id1=52941(m1=1.87628) id2=100074(m2=12.9363) (r=0.790602) type1=1 type2=1 rad1[RSUN]=11.0803 rad2[RSUN]=6.25238
+t=0.000838979 disruptboth id1=62475(m1=1.87792) id2=100092(m2=9.60863) (r=0.877803) type1=1 type2=1 rad1[RSUN]=11.1793 rad2[RSUN]=3.88495
+t=0.000838979 disruptboth id1=56079(m1=2.58914) id2=100082(m2=11.2432) (r=0.912265) type1=4 type2=1 rad1[RSUN]=136.26 rad2[RSUN]=4.78885
+t=0.000838979 disruptboth id1=93537(m1=2.42391) id2=100126(m2=9.96017) (r=0.940233) type1=4 type2=1 rad1[RSUN]=41.7992 rad2[RSUN]=4.05689
+t=0.000838979 disruptboth id1=62711(m1=1.90266) id2=100093(m2=13.0676) (r=1.08824) type1=4 type2=1 rad1[RSUN]=54.1801 rad2[RSUN]=6.41122
+t=0.000838979 disruptboth id1=72172(m1=2.63191) id2=100104(m2=9.63669) (r=1.14464) type1=4 type2=1 rad1[RSUN]=203.145 rad2[RSUN]=3.89832
+t=0.000838979 disruptboth id1=76155(m1=2.33496) id2=100110(m2=13.016) (r=1.30805) type1=4 type2=1 rad1[RSUN]=34.8401 rad2[RSUN]=6.34852
+t=0.000838979 disruptboth id1=58596(m1=2.05831) id2=100087(m2=20.323) (r=1.67651) type1=4 type2=4 rad1[RSUN]=1141.51 rad2[RSUN]=35.1599
+t=0.000838979 disruptboth id1=59887(m1=1.88549) id2=100089(m2=13.5368) (r=1.67785) type1=4 type2=1 rad1[RSUN]=34.6753 rad2[RSUN]=7.08684
+t=0.000838979 disruptboth id1=92487(m1=2.5033) id2=100123(m2=13.1171) (r=1.72191) type1=4 type2=1 rad1[RSUN]=62.4839 rad2[RSUN]=6.47628
+t=0.000838979 disrupt1 idr=189160(mr=8.62491) id1=75916(m1=15.2845):id2=100109(m2=15.2052) (r=1.75919) typer=14 type1=4 type2=4 radr[RSUN]=3.65696e-05 rad1[RSUN]=34.4608 rad2[RSUN]=33.9017
+t=0.000838979 disrupt1 idr=194414(mr=2.66301) id1=90517(m1=15.7999):id2=100121(m2=15.5287) (r=2.08807) typer=13 type1=4 type2=4 radr[RSUN]=1.4e-05 rad1[RSUN]=231.449 rad2[RSUN]=45.0705
+t=0.000838979 disruptboth id1=94936(m1=1.86234) id2=100128(m2=12.0816) (r=2.61545) type1=1 type2=1 rad1[RSUN]=11.3744 rad2[RSUN]=5.40632
+t=0.000838979 disruptboth id1=18533(m1=2.00696) id2=100027(m2=24.7632) (r=2.80408) type1=7 type2=1 rad1[RSUN]=0.705478 rad2[RSUN]=7.29672
+t=0.000838979 disruptboth id1=99042(m1=2.17449) id2=100131(m2=13.0367) (r=3.05675) type1=4 type2=1 rad1[RSUN]=39.3832 rad2[RSUN]=6.37403
+t=0.00089454 disruptboth id1=76511(m1=1.82681) id2=103947(m2=6.70443) (r=1.50926) type1=4 type2=1 rad1[RSUN]=609.092 rad2[RSUN]=2.69625
+t=0.00100627 disruptboth id1=65000(m1=1.5467) id2=103370(m2=6.28105) (r=0.906542) type1=1 type2=1 rad1[RSUN]=10.1646 rad2[RSUN]=2.66214
+t=0.00100627 disruptboth id1=64778(m1=1.56106) id2=103354(m2=8.5534) (r=1.19109) type1=4 type2=1 rad1[RSUN]=36.1814 rad2[RSUN]=3.63204
+t=0.00110328 disruptboth id1=77270(m1=1.41094) id2=103980(m2=7.53661) (r=1.23847) type1=4 type2=1 rad1[RSUN]=38.4723 rad2[RSUN]=3.25427
+t=0.00126225 disruptboth id1=59709(m1=1.38424) id2=103099(m2=7.79776) (r=0.567531) type1=8 type2=1 rad1[RSUN]=0.548023 rad2[RSUN]=3.56717
+t=0.00126225 disruptboth id1=87194(m1=1.31063) id2=104483(m2=1.52633) (r=2.04848) type1=4 type2=1 rad1[RSUN]=48.3966 rad2[RSUN]=1.10645
+t=0.00126225 disruptboth id1=89543(m1=1.36838) id2=104598(m2=17.1891) (r=3.16544) type1=4 type2=1 rad1[RSUN]=0.544288 rad2[RSUN]=5.34696
+t=0.00140738 disruptboth id1=55698(m1=1.27758) id2=102900(m2=15.7251) (r=2.41514) type1=7 type2=1 rad1[RSUN]=0.475535 rad2[RSUN]=4.90349
+t=0.00147457 disruptboth id1=5528(m1=1.27758) id2=100391(m2=3.24676) (r=0.426191) type1=4 type2=1 rad1[RSUN]=104.711 rad2[RSUN]=1.65306
+t=0.0015629 disruptboth id1=77818(m1=1.27758) id2=104009(m2=5.63249) (r=1.2202) type1=5 type2=1 rad1[RSUN]=711.785 rad2[RSUN]=2.64202
+t=0.00174762 disruptboth id1=10461(m1=1.27758) id2=100647(m2=2.42604) (r=0.72931) type1=4 type2=1 rad1[RSUN]=36.0538 rad2[RSUN]=1.3626
+t=0.00174762 disrupt1 idr=178652(mr=9.77787) id1=62762(m1=8.85022):id2=103246(m2=1.95577) (r=1.5518) typer=4 type1=1 type2=1 radr[RSUN]=39.3353 rad1[RSUN]=7.47749 rad2[RSUN]=1.20285
+t=0.00186841 disrupt1 idr=178653(mr=16.7413) id1=85724(m1=8.66832):id2=104411(m2=8.60262) (r=1.55405) typer=4 type1=4 type2=4 radr[RSUN]=889.969 rad1[RSUN]=41.1909 rad2[RSUN]=88.1109
+t=0.00186841 disruptboth id1=95587(m1=1.27758) id2=104892(m2=4.75454) (r=2.11058) type1=4 type2=1 rad1[RSUN]=53.237 rad2[RSUN]=2.31399
+t=0.00250731 disruptboth id1=80873(m1=1.26078) id2=104145(m2=6.63235) (r=1.90868) type1=4 type2=1 rad1[RSUN]=35.5435 rad2[RSUN]=4.5627
+t=0.00300403 disruptboth id1=11702(m1=1.242) id2=100705(m2=3.7121) (r=0.412073) type1=4 type2=1 rad1[RSUN]=37.2362 rad2[RSUN]=1.98851
+t=0.00300403 disrupt1 idr=136620(mr=1.29188) id1=36230(m1=6.69947):id2=101946(m2=1.47326) (r=0.840372) typer=12 type1=4 type2=1 radr[RSUN]=0.00341161 rad1[RSUN]=50.6155 rad2[RSUN]=1.10696
+t=0.00316219 disrupt2 idr=152382(mr=7.1598) id1=63700(m1=1.22574):id2=103292(m2=6.21879) (r=1.09536) typer=4 type1=7 type2=1 radr[RSUN]=92.6036 rad1[RSUN]=0.264917 rad2[RSUN]=6.17643
+t=0.00342706 disrupt2 idr=157636(mr=1.242) id1=30371(m1=1.242):id2=101623(m2=5.98787) (r=1.16435) typer=13 type1=13 type2=1 radr[RSUN]=1.4e-05 rad1[RSUN]=1.4e-05 rad2[RSUN]=5.89074
+t=0.00358046 disrupt2 idr=178654(mr=7.07479) id1=79443(m1=0.948192):id2=104075(m2=6.64876) (r=1.67645) typer=6 type1=11 type2=1 radr[RSUN]=794.903 rad1[RSUN]=0.00863921 rad2[RSUN]=6.08873
+t=0.00467521 disrupt1 idr=147128(mr=5.8583) id1=12674(m1=5.12702):id2=100755(m2=4.9689) (r=1.05031) typer=4 type1=1 type2=1 radr[RSUN]=103.027 rad1[RSUN]=5.53488 rad2[RSUN]=4.45591
+t=0.00545079 disrupt2 idr=168144(mr=1.30551) id1=44250(m1=1.01685):id2=102328(m2=5.1115) (r=1.45595) typer=12 type1=11 type2=1 radr[RSUN]=0.0031285 rad1[RSUN]=0.00786795 rad2[RSUN]=5.49399
