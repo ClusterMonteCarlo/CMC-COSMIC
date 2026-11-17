@@ -203,10 +203,18 @@ AIC   1
 USSN   1
 # PISN turns on pair-instability SN and pulsations ala Belczynski+2016 or Spera+Mapelli 2017 (0=off, 1=Belczynski, 2=SM)
 PISN   -2
+# ppi_co_shift shifts the CO core mass thresholds of (pulsational) pair instability; only for pisn=-4.
+PPI_CO_SHIFT   0.0
+# ppi_extra_ml is extra mass loss (Msun) for stars that undergo pulsational pair instability; only for pisn=-4.
+PPI_EXTRA_ML   0.0
 # Opening angle (in degrees) for SN kicks around the north pole of the star.  Default (180) means isotropic kicks
 POLAR_KICK_ANGLE   90.0
 # natal_kick_array is a 6-length array for user-input values for the SN natal kick formatted as: (vk1, vk2, phi1, phi2, theta1, theta2)
 NATAL_KICK_ARRAY   [[-100.0,-100.0,-100.0,-100.0,0],[-100.0,-100.0,-100.0,-100.0,0.0]]
+# mm_mu_ns is the NS kick scaling prefactor of the Mandel & Mueller 2020 kick prescription; only for kickflag=6.
+MM_MU_NS   400.0
+# mm_mu_bh is the BH kick scaling prefactor of the Mandel & Mueller 2020 kick prescription; only for kickflag=6.
+MM_MU_BH   200.0
 # 0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN
 REMNANTFLAG   4
 # mxns is the maximum NS mass (1.8, remnantflag=0; 3.0, remnantflag=1).
@@ -215,6 +223,18 @@ MXNS   3.0
 REMBAR_MASSLOSS   0.5
 # wd_mass_lim limits the maximum WD mass to the Chandrasekhar mass during mic. (0-without limit for mic; 1-with limits for mic)
 WD_MASS_LIM   1
+# fryer_mass_limit limits the Fryer+2012 remnant mass to the total mass (0) or to the core mass (1) at core collapse; for remnantflag=3,4.
+FRYER_MASS_LIMIT   0
+# fryer_fmix is the mixing fraction of the Fryer+2022 remnant mass model; only for remnantflag=7.
+FRYER_FMIX   1.0
+# fryer_mcrit_nsbh is the critical core mass (Msun) between NSs and BHs in the Fryer+2022 model; only for remnantflag=7.
+FRYER_MCRIT_NSBH   5.75
+# maltsev_mode sets how the Maltsev+2025 remnant fits are extrapolated in metallicity (0=full range, 1=boundary values outside Z/Zsun=[1/50,1], 2=boundary values outside [1/10,1]); only for remnantflag=6.
+MALTSEV_MODE   0
+# maltsev_fallback is the fallback fraction for partial fallback in the Maltsev+2025 prescription ([0,1], or -1 for the Ugolini+25 relation); only for remnantflag=6.
+MALTSEV_FALLBACK   0.5
+# maltsev_pf_prob is the probability that partial fallback forms a BH in the Maltsev+2025 prescription; only for remnantflag=6.
+MALTSEV_PF_PROB   0.1
 # different functions for setting the BH spin from single stars
 BHSPINFLAG   0
 # spin magnitudes for BHs from BSE
@@ -227,6 +247,8 @@ GAMMA   -2
 DON_LIM   -1
 # acc_lim is the accretor limit during RLO mass transfer
 ACC_LIM   -1
+# smt_periastron_check checks for contact at periastron during stable mass transfer (0=no, 1=yes).
+SMT_PERIASTRON_CHECK   0
 # tflag > 0 activates tidal circularisation (1).
 TFLAG   1
 # ST_tide sets which tidal method to use. 0=Hurley+2002, 1=StarTrack: Belczynski+2008. Note, here startrack method does not use a better integration scheme (yet) but simply  follows similar set up to startrack (including initial vrot, using roche-lobe check at periastron, and circularisation and synchronisation at start of MT).

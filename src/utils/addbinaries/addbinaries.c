@@ -209,6 +209,17 @@ void assign_binaries(cmc_fits_data_t *cfd, long Nbin, int limits, double peak_a,
 	bse_set_hewind(BSE_HEWIND);
 	bse_set_windflag(BSE_WINDFLAG);
 	bse_set_LBV_flag(2);
+	bse_set_maltsev_mode(0);
+	bse_set_maltsev_fallback(0.5);
+	bse_set_maltsev_pf_prob(0.1);
+	bse_set_fryer_mass_limit(0);
+	bse_set_fryer_fmix(1.0);
+	bse_set_fryer_mcrit_nsbh(5.75);
+	bse_set_ppi_co_shift(0.0);
+	bse_set_ppi_extra_ml(0.0);
+	bse_set_mm_mu_ns(400.0);
+	bse_set_mm_mu_bh(200.0);
+	bse_set_smt_periastron_check(0);
 	bse_set_eddlimflag(BSE_EDDLIMFLAG);
 	bse_set_pisn(BSE_PISN);
 	bse_set_ecsn(BSE_ECSN);

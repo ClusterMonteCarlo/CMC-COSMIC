@@ -256,6 +256,17 @@ void bse_set_neta(double neta); /* Reimers mass-loss coefficent (neta*4x10^-13; 
 void bse_set_bwind(double bwind); /* binary enhanced mass loss parameter (inactive for single) */
 void bse_set_hewind(double hewind); /* helium star mass loss factor (1.0 normally) */
 void bse_set_LBV_flag(int LBV_flag); /* LBV-like mass loss (0=none, 1=Hurley+2000, 2=StarTrack) */
+void bse_set_maltsev_mode(int maltsev_mode); /* metallicity range of the Maltsev+2025 fits (0=all Z, 1=fits in [1/50,1] Zsun, 2=fits in [1/10,1] Zsun; remnantflag=6) */
+void bse_set_maltsev_fallback(double maltsev_fallback); /* fallback fraction for partial fallback in Maltsev+2025 ([0,1], -1=Ugolini+25; remnantflag=6) */
+void bse_set_maltsev_pf_prob(double maltsev_pf_prob); /* probability that partial fallback forms a BH in Maltsev+2025 (remnantflag=6) */
+void bse_set_fryer_mass_limit(int fryer_mass_limit); /* Fryer+2012 remnant mass limited to total (0) or core (1) mass (remnantflag=3,4) */
+void bse_set_fryer_fmix(double fryer_fmix); /* mixing fraction of the Fryer+2022 model (remnantflag=7) */
+void bse_set_fryer_mcrit_nsbh(double fryer_mcrit_nsbh); /* NS/BH critical core mass of the Fryer+2022 model in Msun (remnantflag=7) */
+void bse_set_ppi_co_shift(double ppi_co_shift); /* shift of the (P)PISN CO core mass thresholds (pisn=-4) */
+void bse_set_ppi_extra_ml(double ppi_extra_ml); /* extra mass loss in Msun for PPISN (pisn=-4) */
+void bse_set_mm_mu_ns(double mm_mu_ns); /* NS kick scaling prefactor of Mandel & Mueller 2020 (kickflag=6) */
+void bse_set_mm_mu_bh(double mm_mu_bh); /* BH kick scaling prefactor of Mandel & Mueller 2020 (kickflag=6) */
+void bse_set_smt_periastron_check(double smt_periastron_check); /* check for contact at periastron during stable mass transfer (0=no, 1=yes) */
 void bse_set_windflag(int windflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
 void bse_set_eddlimflag(int eddlimflag); /* Sets wind prescription (0=BSE, 1=StarTrack, 2=Vink; 0) */
 // rejuvflag toggles between the original BSE prescription for MS mixing and 

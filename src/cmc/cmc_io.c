@@ -1442,6 +1442,50 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_LBV_FLAG);
 				sscanf(values, "%d", &BSE_LBV_FLAG);
 				parsed.BSE_LBV_FLAG = 1;
+			} else if (strcmp(parameter_name, "MALTSEV_MODE")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MALTSEV_MODE);
+				sscanf(values, "%d", &BSE_MALTSEV_MODE);
+				parsed.BSE_MALTSEV_MODE = 1;
+			} else if (strcmp(parameter_name, "MALTSEV_FALLBACK")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MALTSEV_FALLBACK);
+				sscanf(values, "%lf", &BSE_MALTSEV_FALLBACK);
+				parsed.BSE_MALTSEV_FALLBACK = 1;
+			} else if (strcmp(parameter_name, "MALTSEV_PF_PROB")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MALTSEV_PF_PROB);
+				sscanf(values, "%lf", &BSE_MALTSEV_PF_PROB);
+				parsed.BSE_MALTSEV_PF_PROB = 1;
+			} else if (strcmp(parameter_name, "FRYER_MASS_LIMIT")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_FRYER_MASS_LIMIT);
+				sscanf(values, "%d", &BSE_FRYER_MASS_LIMIT);
+				parsed.BSE_FRYER_MASS_LIMIT = 1;
+			} else if (strcmp(parameter_name, "FRYER_FMIX")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_FRYER_FMIX);
+				sscanf(values, "%lf", &BSE_FRYER_FMIX);
+				parsed.BSE_FRYER_FMIX = 1;
+			} else if (strcmp(parameter_name, "FRYER_MCRIT_NSBH")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_FRYER_MCRIT_NSBH);
+				sscanf(values, "%lf", &BSE_FRYER_MCRIT_NSBH);
+				parsed.BSE_FRYER_MCRIT_NSBH = 1;
+			} else if (strcmp(parameter_name, "PPI_CO_SHIFT")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_PPI_CO_SHIFT);
+				sscanf(values, "%lf", &BSE_PPI_CO_SHIFT);
+				parsed.BSE_PPI_CO_SHIFT = 1;
+			} else if (strcmp(parameter_name, "PPI_EXTRA_ML")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_PPI_EXTRA_ML);
+				sscanf(values, "%lf", &BSE_PPI_EXTRA_ML);
+				parsed.BSE_PPI_EXTRA_ML = 1;
+			} else if (strcmp(parameter_name, "MM_MU_NS")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MM_MU_NS);
+				sscanf(values, "%lf", &BSE_MM_MU_NS);
+				parsed.BSE_MM_MU_NS = 1;
+			} else if (strcmp(parameter_name, "MM_MU_BH")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MM_MU_BH);
+				sscanf(values, "%lf", &BSE_MM_MU_BH);
+				parsed.BSE_MM_MU_BH = 1;
+			} else if (strcmp(parameter_name, "SMT_PERIASTRON_CHECK")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_SMT_PERIASTRON_CHECK);
+				sscanf(values, "%lf", &BSE_SMT_PERIASTRON_CHECK);
+				parsed.BSE_SMT_PERIASTRON_CHECK = 1;
                         } else if (strcmp(parameter_name, "EDDLIMFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_EDDLIMFLAG);
                                 sscanf(values, "%d", &BSE_EDDLIMFLAG);
@@ -1832,6 +1876,81 @@ if(myid==0) {
         // LBV_flag=0: none// LBV_flag=1: Hurley+2000// LBV_flag=2: StarTrack (Belczynski+08)
         // default=2, which reproduces windflag=3 in COSMIC < v3.7.2
         CHECK_PARSED(BSE_LBV_FLAG, 2, PARAMDOC_BSE_LBV_FLAG);
+
+        // maltsev_mode sets the mode to use the Maltsev remnant mass prescription (only relevant if remnantflag=6)
+        // (introduced in COSMIC v3.7.0)
+        // maltsev_mode=0: extrapolate the Maltsev+25 fits to the full range of metallicities
+        // maltsev_mode=1: extrapolate the fits only within Z/Zsun=[1/50,1], use boundary values outside this range
+        // maltsev_mode=2: no extrapolation: use the fits only within Z/Zsun=[1/10,1], use boundary values outside this range
+        // default=0 (COSMIC's default)
+        CHECK_PARSED(BSE_MALTSEV_MODE, 0, PARAMDOC_BSE_MALTSEV_MODE);
+
+        // maltsev_fallback sets the fallback fraction for partial fallback in the Maltsev remnant mass prescription
+        // (only relevant if remnantflag=6): Mrem = M_NS + maltsev_fallback*(M_core,total - M_NS), with M_NS = 1.4 Msun
+        // (introduced in COSMIC v3.7.0)
+        // range [0,1]: sets the fallback fraction// maltsev_fallback=-1: linear relation with the CO core mass from Ugolini+25
+        // default=0.5 (COSMIC's default)
+        CHECK_PARSED(BSE_MALTSEV_FALLBACK, 0.5, PARAMDOC_BSE_MALTSEV_FALLBACK);
+
+        // maltsev_pf_prob sets the probability of partial fallback leading to BH formation in the Maltsev remnant mass
+        // prescription when the CO core mass is in the partial fallback regime M2 <= M_CO <= M3 (only relevant if remnantflag=6)
+        // (introduced in COSMIC v3.7.0)
+        // range [0,1]
+        // default=0.1 (COSMIC's default)
+        CHECK_PARSED(BSE_MALTSEV_PF_PROB, 0.1, PARAMDOC_BSE_MALTSEV_PF_PROB);
+
+        // fryer_mass_limit sets the mass limit to use when applying a remnant mass prescription from Fryer+12 (remnantflag=3 or 4)
+        // (introduced in COSMIC v3.7.2)
+        // fryer_mass_limit=0: limit the remnant mass to the total stellar mass at the time of core collapse
+        // fryer_mass_limit=1: limit the remnant mass to the total core mass at the time of core collapse
+        // default=0 (COSMIC's default)
+        CHECK_PARSED(BSE_FRYER_MASS_LIMIT, 0, PARAMDOC_BSE_FRYER_MASS_LIMIT);
+
+        // fryer_fmix sets the mixing fraction for the Fryer+2022 SN model (remnantflag=7)
+        // (introduced in COSMIC v3.7.8)
+        // positive values
+        // default=1.0 (COSMIC's default)
+        CHECK_PARSED(BSE_FRYER_FMIX, 1.0, PARAMDOC_BSE_FRYER_FMIX);
+
+        // fryer_mcrit_nsbh sets the critical core mass (solar masses) for delineating between NSs and BHs
+        // with the Fryer+2022 SN model (remnantflag=7)
+        // (introduced in COSMIC v3.7.8)
+        // positive values
+        // default=5.75 (COSMIC's default)
+        CHECK_PARSED(BSE_FRYER_MCRIT_NSBH, 5.75, PARAMDOC_BSE_FRYER_MCRIT_NSBH);
+
+        // ppi_co_shift shifts the CO core mass thresholds for pulsational pair instability and pair instability SNe
+        // by a constant amount (only relevant if pisn=-4); the default threshold is 38 Msun
+        // (introduced in COSMIC v3.7.2)
+        // positive values shift the threshold upwards, negative values downwards
+        // default=0.0 (COSMIC's default: no change)
+        CHECK_PARSED(BSE_PPI_CO_SHIFT, 0.0, PARAMDOC_BSE_PPI_CO_SHIFT);
+
+        // ppi_extra_ml sets the amount of extra mass loss in Msun applied to stars that go through
+        // pulsational pair instability (only relevant if pisn=-4)
+        // (introduced in COSMIC v3.7.2)
+        // positive values: extra mass loss reduces the final remnant mass
+        // default=0.0 (COSMIC's default: no extra mass loss)
+        CHECK_PARSED(BSE_PPI_EXTRA_ML, 0.0, PARAMDOC_BSE_PPI_EXTRA_ML);
+
+        // mm_mu_ns sets the NS kick scaling prefactor for the Mandel & Mueller 2020 kick prescription (only relevant if kickflag=6)
+        // (introduced in COSMIC v3.7.0)
+        // positive values
+        // default=400.0 (COSMIC's default)
+        CHECK_PARSED(BSE_MM_MU_NS, 400.0, PARAMDOC_BSE_MM_MU_NS);
+
+        // mm_mu_bh sets the BH kick scaling prefactor for the Mandel & Mueller 2020 kick prescription (only relevant if kickflag=6)
+        // (introduced in COSMIC v3.7.0)
+        // positive values
+        // default=200.0 (COSMIC's default)
+        CHECK_PARSED(BSE_MM_MU_BH, 200.0, PARAMDOC_BSE_MM_MU_BH);
+
+        // smt_periastron_check determines whether to check for contact at periastron for binaries
+        // that are undergoing stable mass transfer
+        // (introduced in COSMIC v3.7.8)
+        // smt_periastron_check=0: do not check// smt_periastron_check=1: check
+        // default=0 (COSMIC's default)
+        CHECK_PARSED(BSE_SMT_PERIASTRON_CHECK, 0, PARAMDOC_BSE_SMT_PERIASTRON_CHECK);
 
         // eddlimflag turns on metallicity dependence on winds, affecting the
         // mass-loss rate of low-metallicity stars near the Eddington limit

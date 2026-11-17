@@ -943,11 +943,32 @@ KICK FLAGS
 
                             ``-3`` : uses a polynomial fit to `Table 5 in Woosley 2019 <https://ui.adsabs.harvard.edu/abs/2019ApJ...878...49W/abstract>`_
 
+                            ``-4`` : uses the top-down approach from Renzo+2022, with
+                            adjustable parameters (*ppi_co_shift*, *ppi_extra_ml*) from Hendriks+2023
+
                             ``positive values`` : turns on pulsational pair
                             instability SN and sets the maximum mass of the allowed
                             remnant
 
                          **pisn = -2**
+
+``ppi_co_shift``         Shifts the CO core mass thresholds for pulsational pair
+                         instability and pair instability SNe (default threshold 38 Msun)
+                         by a constant amount; only used when *pisn* = -4
+                         (COSMIC >= v3.7.2)
+
+                            ``positive values`` : shift the thresholds to higher masses
+
+                            ``negative values`` : shift the thresholds to lower masses
+
+                         **ppi_co_shift = 0.0**
+
+``ppi_extra_ml``         Extra mass loss in Msun for stars that go through pulsational
+                         pair instability; only used when *pisn* = -4 (COSMIC >= v3.7.2)
+
+                            ``values >= 0`` : extra mass loss, which reduces the remnant mass
+
+                         **ppi_extra_ml = 0.0**
 
 ``bhsigmafrac``          Sets a fractional modification which scales down *sigma*
                          for BHs. This works in addition to whatever is chosen for
@@ -988,50 +1009,124 @@ KICK FLAGS
                             a supernova has already occurred
 
                          **natal_kick_array = [[-100.0,-100.0,-100.0,-100.0,0.0][-100.0,-100.0,-100.0,-100.0,0.0]]**
+
+``mm_mu_ns``             NS kick scaling prefactor for the Mandel & Mueller 2020
+                         kick prescription; only used when *kickflag* = 6 (COSMIC >= v3.7.0)
+
+                            ``positive values`` : sets the NS kick scaling prefactor
+
+                         **mm_mu_ns = 400.0**
+
+``mm_mu_bh``             BH kick scaling prefactor for the Mandel & Mueller 2020
+                         kick prescription; only used when *kickflag* = 6 (COSMIC >= v3.7.0)
+
+                            ``positive values`` : sets the BH kick scaling prefactor
+
+                         **mm_mu_bh = 200.0**
 =======================  =====================================================
 
     
 REMNANT MASS FLAGS
 ------------------
 
-===================  =====================================================
-``remnantflag``      Determines the remnant mass prescription used for NSs and BHs.
+=======================  =====================================================
+``remnantflag``          Determines the remnant mass prescription used for NSs and BHs.
 
-                            ``0`` : follows `Section 6 of Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
-                            (default BSE)
+                                ``0`` : follows `Section 6 of Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
+                                (default BSE)
 
-                            ``1`` : follows `Belczynski+2002 <https://ui.adsabs.harvard.edu/abs/2002ApJ...572..407B/abstract>`_
+                                ``1`` : follows `Belczynski+2002 <https://ui.adsabs.harvard.edu/abs/2002ApJ...572..407B/abstract>`_
 
-                            ``2`` : follows `Belczynski+2008 <https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract>`_
+                                ``2`` : follows `Belczynski+2008 <https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract>`_
 
-                            ``3`` : follows the rapid prescription from `Fryer+2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...749...91F/abstract>`_, with updated proto-core mass from `Giacobbo & Mapelli 2020 <https://ui.adsabs.harvard.edu/abs/2020ApJ...891..141G/abstract>`_
+                                ``3`` : follows the rapid prescription from `Fryer+2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...749...91F/abstract>`_, with updated proto-core mass from `Giacobbo & Mapelli 2020 <https://ui.adsabs.harvard.edu/abs/2020ApJ...891..141G/abstract>`_
 
-                            ``4`` : delayed prescription from `Fryer+2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...749...91F/abstract>`_
+                                ``4`` : delayed prescription from `Fryer+2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...749...91F/abstract>`_
 
-                     **remnantflag = 4**
+                                ``5`` : follows Mandel & Mueller 2020 (stochastic); recommended with *kickflag* = 6,
+                                *mxns* = 2.0 and *rembar_massloss* = 0.1
 
-``mxns``             Sets the boundary between the maximum NS mass
-                     and the minimum BH mass
+                                ``6`` : follows Maltsev+2025, with additions from Willcox+2025 for BH masses
 
-                            ``positive values`` : sets the NS/BH mass bounary
+                                ``7`` : follows Fryer+2022; NSs and BHs are separated by *fryer_mcrit_nsbh*,
+                                so *mxns* is not used
 
-                     **mxns = 3.0**
+                         **remnantflag = 4**
 
-``rembar_massloss``  Determines the prescriptions for mass conversion from
-                     baryonic to gravitational mass during the collapse of
-                     the proto-compact object
+``mxns``                 Sets the boundary between the maximum NS mass
+                         and the minimum BH mass
 
-                            ``positive values`` : sets the maximum amount of mass loss, which should be about 10% of the maximum mass of an iron core (:math:`{\sim 5 \mathrm{M}_\odot}` Fryer, private communication)
+                                ``positive values`` : sets the NS/BH mass bounary
 
-                            ``-1 < *rembar_massloss* < 0`` : assumes that proto-compact objects lose a constant fraction of their baryonic mass when collapsing to a black hole (e.g., *rembar_massloss* = -0.1 gives the black hole a gravitational mass that is 90% of the proto-compact object's baryonic mass)
+                         **mxns = 3.0**
 
-                     **rembar_massloss = 0.5**
+``rembar_massloss``      Determines the prescriptions for mass conversion from
+                         baryonic to gravitational mass during the collapse of
+                         the proto-compact object
 
-``wd_mass_lim``      Determines if the maximum white dwarf mass is limited to
-                     the chandrasekhar mass during merger induced collapse. 1 implements the limit, while 0 does not.
+                                ``positive values`` : sets the maximum amount of mass loss, which should be about 10% of the maximum mass of an iron core (:math:`{\sim 5 \mathrm{M}_\odot}` Fryer, private communication)
 
-                     **wd_mass_lim = 1**
-===================  =====================================================
+                                ``-1 < *rembar_massloss* < 0`` : assumes that proto-compact objects lose a constant fraction of their baryonic mass when collapsing to a black hole (e.g., *rembar_massloss* = -0.1 gives the black hole a gravitational mass that is 90% of the proto-compact object's baryonic mass)
+
+                         **rembar_massloss = 0.5**
+
+``wd_mass_lim``          Determines if the maximum white dwarf mass is limited to
+                         the chandrasekhar mass during merger induced collapse. 1 implements the limit, while 0 does not.
+
+                         **wd_mass_lim = 1**
+
+``fryer_mass_limit``     Sets the mass limit for the Fryer+2012 prescriptions;
+                         only used when *remnantflag* = 3 or 4 (COSMIC >= v3.7.2)
+
+                                ``0`` : limit the remnant mass to the total stellar mass at core collapse
+
+                                ``1`` : limit the remnant mass to the core mass at core collapse
+
+                         **fryer_mass_limit = 0**
+
+``fryer_fmix``           Mixing fraction of the Fryer+2022 remnant mass model;
+                         only used when *remnantflag* = 7 (COSMIC >= v3.7.8)
+
+                                ``positive values`` : sets the mixing fraction
+
+                         **fryer_fmix = 1.0**
+
+``fryer_mcrit_nsbh``     Critical core mass in Msun between NSs and BHs in the Fryer+2022
+                         remnant mass model; only used when *remnantflag* = 7 (COSMIC >= v3.7.8)
+
+                                ``positive values`` : sets the critical core mass
+
+                         **fryer_mcrit_nsbh = 5.75**
+
+``maltsev_mode``         Sets the metallicity range of the Maltsev+2025 fits;
+                         only used when *remnantflag* = 6 (COSMIC >= v3.7.0)
+
+                                ``0`` : extrapolate the fits to all metallicities
+
+                                ``1`` : use the fits within Z/Zsun = [1/50, 1] and the boundary values outside
+
+                                ``2`` : no extrapolation: use the fits within Z/Zsun = [1/10, 1] and the boundary values outside
+
+                         **maltsev_mode = 0**
+
+``maltsev_fallback``     Fallback fraction *f* for partial fallback in the Maltsev+2025
+                         prescription, :math:`M_{\rm rem} = M_{\rm NS} + f (M_{\rm core,total} - M_{\rm NS})`, with :math:`M_{\rm NS} = 1.4` Msun;
+                         only used when *remnantflag* = 6 (COSMIC >= v3.7.0)
+
+                                ``values between [0, 1]`` : sets *f*
+
+                                ``-1`` : uses the relation with CO core mass from Ugolini+25
+
+                         **maltsev_fallback = 0.5**
+
+``maltsev_pf_prob``      Probability that partial fallback forms a BH in the
+                         Maltsev+2025 prescription, for CO core masses in the partial
+                         fallback range; only used when *remnantflag* = 6 (COSMIC >= v3.7.0)
+
+                                ``values between [0, 1]`` : sets the probability
+
+                         **maltsev_pf_prob = 0.1**
+=======================  =====================================================
 
 
 REMNANT SPIN FLAGS
@@ -1078,63 +1173,72 @@ GR ORBITAL DECAY FLAG
 MASS TRANSFER FLAGS
 -------------------
 
-=======================  =====================================================
-``eddfac``               Eddington limit factor for mass transfer.
+==========================  =====================================================
+``eddfac``                  Eddington limit factor for mass transfer.
 
-                            ``1`` : mass transfer rate is limited by the
-                            Eddington rate following Equation 67 in
-                            `Hurley+2002 <https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract>`_
+                               ``1`` : mass transfer rate is limited by the
+                               Eddington rate following Equation 67 in
+                               `Hurley+2002 <https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract>`_
 
-                            ``values >1`` : permit super-Eddington accretion
-                            up to value of *eddfac*
+                               ``values >1`` : permit super-Eddington accretion
+                               up to value of *eddfac*
 
-                         **eddfac = 1.0**
+                            **eddfac = 1.0**
 
-``gamma``                Angular momentum prescriptions for mass lost during RLO
-                         at super-Eddington mass transfer rates
+``gamma``                   Angular momentum prescriptions for mass lost during RLO
+                            at super-Eddington mass transfer rates
 
-                            ``-1`` : assumes the lost material carries away the
-                            specific angular momentum of the primary
+                               ``-1`` : assumes the lost material carries away the
+                               specific angular momentum of the primary
 
-                            ``-2`` : assumes material is lost from the system as
-                            if it is a wind from the secondary
+                               ``-2`` : assumes material is lost from the system as
+                               if it is a wind from the secondary
 
-                            ``>0`` : assumes that the lost material takes away a
-                            fraction *gamma* of the orbital angular momentum
+                               ``>0`` : assumes that the lost material takes away a
+                               fraction *gamma* of the orbital angular momentum
 
-                         **gamma = -2.0**
+                            **gamma = -2.0**
 
-``don_lim``              Calculates the rate of thermal mass loss through Roche
-                         overflow mass transfer from the donor star
+``don_lim``                 Calculates the rate of thermal mass loss through Roche
+                            overflow mass transfer from the donor star
 
-                            ``-1`` : donor mass loss rate is calculated following
-                            `Hurley+2002 <https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract>`_
+                               ``-1`` : donor mass loss rate is calculated following
+                               `Hurley+2002 <https://ui.adsabs.harvard.edu/abs/2002MNRAS.329..897H/abstract>`_
 
-                            ``-2`` : donor mass loss rate is calculated following
-                            `Claeys+2014 <https://ui.adsabs.harvard.edu/abs/2014A%26A...563A..83C/abstract>`_
+                               ``-2`` : donor mass loss rate is calculated following
+                               `Claeys+2014 <https://ui.adsabs.harvard.edu/abs/2014A%26A...563A..83C/abstract>`_
 
-                         **don_lim = -1**
+                            **don_lim = -1**
 
-``acc_lim``              Limits the amount of mass accreted during Roche overflow
+``acc_lim``                 Limits the amount of mass accreted during Roche overflow
 
-                            ``-1`` : limited to 10x's the thermal rate of the accretor
-                            for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars
+                               ``-1`` : limited to 10x's the thermal rate of the accretor
+                               for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars
 
-                            ``-2`` : limited to 1x's the thermal rate of the accretor
-                            for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars
+                               ``-2`` : limited to 1x's the thermal rate of the accretor
+                               for MS/HG/CHeB and unlimited for GB/EAGB/AGB stars
 
-                            ``-3`` : limited to 10x's the thermal rate of the accretor
-                            for all stars
+                               ``-3`` : limited to 10x's the thermal rate of the accretor
+                               for all stars
 
-                            ``-4`` : limited to 1x's the thermal rate of the accretor
-                            for all stars
+                               ``-4`` : limited to 1x's the thermal rate of the accretor
+                               for all stars
 
-                            ``>=0`` : sets overall accretion fraction of donor mass
-                            as in Belcyznski+2008 w/ acc_lim = 0.5
+                               ``>=0`` : sets overall accretion fraction of donor mass
+                               as in Belcyznski+2008 w/ acc_lim = 0.5
 
-                         **acc_lim = -1**
+                            **acc_lim = -1**
 
-=======================  =====================================================
+``smt_periastron_check``    Determines whether to check for contact at periastron for
+                            binaries undergoing stable mass transfer (COSMIC >= v3.7.8)
+
+                               ``0`` : no check
+
+                               ``1`` : check for contact at periastron
+
+                            **smt_periastron_check = 0**
+
+==========================  =====================================================
 
 
 TIDES FLAGS

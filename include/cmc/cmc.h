@@ -1206,6 +1206,61 @@ typedef struct{
 * @brief LBV_flag sets the LBV-like mass loss (0=none, 1=Hurley+2000, 2=StarTrack/Belczynski+08).
 */
 	int BSE_LBV_FLAG;
+#define PARAMDOC_BSE_MALTSEV_MODE "maltsev_mode sets how the Maltsev+2025 remnant fits are extrapolated in metallicity (0=full range, 1=boundary values outside Z/Zsun=[1/50,1], 2=boundary values outside [1/10,1]); only for remnantflag=6."
+/**
+* @brief maltsev_mode sets how the Maltsev+2025 remnant fits are extrapolated in metallicity (0=full range, 1=boundary values outside Z/Zsun=[1/50,1], 2=boundary values outside [1/10,1]); only for remnantflag=6.
+*/
+	int BSE_MALTSEV_MODE;
+#define PARAMDOC_BSE_MALTSEV_FALLBACK "maltsev_fallback is the fallback fraction for partial fallback in the Maltsev+2025 prescription ([0,1], or -1 for the Ugolini+25 relation); only for remnantflag=6."
+/**
+* @brief maltsev_fallback is the fallback fraction for partial fallback in the Maltsev+2025 prescription ([0,1], or -1 for the Ugolini+25 relation); only for remnantflag=6.
+*/
+	int BSE_MALTSEV_FALLBACK;
+#define PARAMDOC_BSE_MALTSEV_PF_PROB "maltsev_pf_prob is the probability that partial fallback forms a BH in the Maltsev+2025 prescription; only for remnantflag=6."
+/**
+* @brief maltsev_pf_prob is the probability that partial fallback forms a BH in the Maltsev+2025 prescription; only for remnantflag=6.
+*/
+	int BSE_MALTSEV_PF_PROB;
+#define PARAMDOC_BSE_FRYER_MASS_LIMIT "fryer_mass_limit limits the Fryer+2012 remnant mass to the total mass (0) or to the core mass (1) at core collapse; for remnantflag=3,4."
+/**
+* @brief fryer_mass_limit limits the Fryer+2012 remnant mass to the total mass (0) or to the core mass (1) at core collapse; for remnantflag=3,4.
+*/
+	int BSE_FRYER_MASS_LIMIT;
+#define PARAMDOC_BSE_FRYER_FMIX "fryer_fmix is the mixing fraction of the Fryer+2022 remnant mass model; only for remnantflag=7."
+/**
+* @brief fryer_fmix is the mixing fraction of the Fryer+2022 remnant mass model; only for remnantflag=7.
+*/
+	int BSE_FRYER_FMIX;
+#define PARAMDOC_BSE_FRYER_MCRIT_NSBH "fryer_mcrit_nsbh is the critical core mass (Msun) between NSs and BHs in the Fryer+2022 model; only for remnantflag=7."
+/**
+* @brief fryer_mcrit_nsbh is the critical core mass (Msun) between NSs and BHs in the Fryer+2022 model; only for remnantflag=7.
+*/
+	int BSE_FRYER_MCRIT_NSBH;
+#define PARAMDOC_BSE_PPI_CO_SHIFT "ppi_co_shift shifts the CO core mass thresholds of (pulsational) pair instability; only for pisn=-4."
+/**
+* @brief ppi_co_shift shifts the CO core mass thresholds of (pulsational) pair instability; only for pisn=-4.
+*/
+	int BSE_PPI_CO_SHIFT;
+#define PARAMDOC_BSE_PPI_EXTRA_ML "ppi_extra_ml is extra mass loss (Msun) for stars that undergo pulsational pair instability; only for pisn=-4."
+/**
+* @brief ppi_extra_ml is extra mass loss (Msun) for stars that undergo pulsational pair instability; only for pisn=-4.
+*/
+	int BSE_PPI_EXTRA_ML;
+#define PARAMDOC_BSE_MM_MU_NS "mm_mu_ns is the NS kick scaling prefactor of the Mandel & Mueller 2020 kick prescription; only for kickflag=6."
+/**
+* @brief mm_mu_ns is the NS kick scaling prefactor of the Mandel & Mueller 2020 kick prescription; only for kickflag=6.
+*/
+	int BSE_MM_MU_NS;
+#define PARAMDOC_BSE_MM_MU_BH "mm_mu_bh is the BH kick scaling prefactor of the Mandel & Mueller 2020 kick prescription; only for kickflag=6."
+/**
+* @brief mm_mu_bh is the BH kick scaling prefactor of the Mandel & Mueller 2020 kick prescription; only for kickflag=6.
+*/
+	int BSE_MM_MU_BH;
+#define PARAMDOC_BSE_SMT_PERIASTRON_CHECK "smt_periastron_check checks for contact at periastron during stable mass transfer (0=no, 1=yes)."
+/**
+* @brief smt_periastron_check checks for contact at periastron during stable mass transfer (0=no, 1=yes).
+*/
+	int BSE_SMT_PERIASTRON_CHECK;
 #define PARAMDOC_BSE_XI "neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally)."
 /**
  * * @brief neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
