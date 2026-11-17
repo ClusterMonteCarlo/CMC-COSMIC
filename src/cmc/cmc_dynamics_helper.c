@@ -1469,9 +1469,9 @@ long binint_get_indices(long k, long kp, long id, int *bi)
 * @brief ?
 *
 * @param obj ?
-* @param fb_units ?
+* @param units ?
 */
-void binint_log_obj(fb_obj_t *obj, fb_units_t fb_units, long k)
+void binint_log_obj(fb_obj_t *obj, fb_units_t units, long k)
 {
 	int bid, sid, i;
 	char dumstring[FB_MAX_STRING_LENGTH], idstring1[FB_MAX_STRING_LENGTH], idstring2[FB_MAX_STRING_LENGTH], idstring3[FB_MAX_STRING_LENGTH];
@@ -1486,7 +1486,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t fb_units, long k)
 			strncat(idstring1, dumstring, FB_MAX_STRING_LENGTH);
 		}
 		/* then print to log */
-		parafprintf(binintfile, "type=single m=%g R=%g Eint=%g id=%s ktype=%d\n", obj->m*fb_units.m/MSUN, obj->R*fb_units.l/RSUN, obj->Eint*fb_units.E, idstring1, obj->k_type);
+		parafprintf(binintfile, "type=single m=%g R=%g Eint=%g id=%s ktype=%d\n", obj->m*units.m/MSUN, obj->R*units.l/RSUN, obj->Eint*units.E, idstring1, obj->k_type);
 	} else if (fb_n_hier(obj) == 2) {
 		/* first write id strings */
 		snprintf(idstring1, FB_MAX_STRING_LENGTH, "%ld", obj->obj[0]->id[0]);
@@ -1501,11 +1501,11 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t fb_units, long k)
 		}
 		/* then print to log */
 		parafprintf(binintfile, "type=binary m0=%g m1=%g R0=%g R1=%g Eint1=%g Eint2=%g id0=%s id1=%s a=%g e=%g ktype1=%d ktype2=%d\n", 
-			obj->obj[0]->m*fb_units.m/MSUN, obj->obj[1]->m*fb_units.m/MSUN, 
-			obj->obj[0]->R*fb_units.l/RSUN, obj->obj[1]->R*fb_units.l/RSUN, 
-			obj->obj[0]->Eint*fb_units.E, obj->obj[1]->Eint*fb_units.E, 
+			obj->obj[0]->m*units.m/MSUN, obj->obj[1]->m*units.m/MSUN, 
+			obj->obj[0]->R*units.l/RSUN, obj->obj[1]->R*units.l/RSUN, 
+			obj->obj[0]->Eint*units.E, obj->obj[1]->Eint*units.E, 
 			idstring1, idstring2, 
-			obj->a*fb_units.l/AU, obj->e,
+			obj->a*units.l/AU, obj->e,
 			obj->obj[0]->k_type, obj->obj[1]->k_type);
 	} else if (fb_n_hier(obj) == 3) {
 		/* identify inner binary */
@@ -1535,11 +1535,11 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t fb_units, long k)
 		}
 		/* then print to log */
 		parafprintf(binintfile, "type=triple min0=%g min1=%g mout=%g Rin0=%g Rin1=%g Rout=%g Eintin0=%g Eintin1=%g Eintout=%g idin1=%s idin2=%s idout=%s ain=%g aout=%g ein=%g eout=%g ktypein1=%d ktypein1=%d ktypeout=%d\n",
-			obj->obj[bid]->obj[0]->m*fb_units.m/MSUN, obj->obj[bid]->obj[1]->m*fb_units.m/MSUN, obj->obj[sid]->m*fb_units.m/MSUN,
-			obj->obj[bid]->obj[0]->R*fb_units.l/RSUN, obj->obj[bid]->obj[1]->R*fb_units.l/RSUN, obj->obj[sid]->R*fb_units.l/RSUN,
-			obj->obj[bid]->obj[0]->Eint*fb_units.E, obj->obj[bid]->obj[1]->Eint*fb_units.E, obj->obj[sid]->Eint*fb_units.E,
+			obj->obj[bid]->obj[0]->m*units.m/MSUN, obj->obj[bid]->obj[1]->m*units.m/MSUN, obj->obj[sid]->m*units.m/MSUN,
+			obj->obj[bid]->obj[0]->R*units.l/RSUN, obj->obj[bid]->obj[1]->R*units.l/RSUN, obj->obj[sid]->R*units.l/RSUN,
+			obj->obj[bid]->obj[0]->Eint*units.E, obj->obj[bid]->obj[1]->Eint*units.E, obj->obj[sid]->Eint*units.E,
 			idstring1, idstring2, idstring3, 
-			obj->obj[bid]->a*fb_units.l/AU, obj->a*fb_units.l/AU,
+			obj->obj[bid]->a*units.l/AU, obj->a*units.l/AU,
 			obj->obj[bid]->e, obj->e,
 			obj->obj[bid]->obj[0]->k_type, obj->obj[bid]->obj[1]->k_type, obj->obj[sid]->k_type);
 
@@ -1559,22 +1559,22 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t fb_units, long k)
                 i12 = 180.0/3.14159*acos(fb_dot(LL1, LL2)/(fb_mod(LL1)*fb_mod(LL2)));
 
 		/* And some of the relevant timescales */
-		mtriplein=obj->obj[bid]->obj[0]->m*fb_units.m/MSUN+obj->obj[bid]->obj[1]->m*fb_units.m/MSUN;
-		mtriple=mtriplein+obj->obj[sid]->m*fb_units.m/MSUN;
-		pouttriple2=pow(obj->a*fb_units.l/AU,3)/mtriple;
-		pintriple=pow(obj->obj[bid]->a*fb_units.l/AU,3)/mtriplein;
-                tlkquad=(8.0/3.1415/15.0)*mtriple/(obj->obj[sid]->m*fb_units.m/MSUN)*pouttriple2/pintriple*pow(1.0-pow(obj->e,2),1.5);
-		epsoct=fabs(obj->obj[bid]->obj[0]->m*fb_units.m/MSUN-obj->obj[bid]->obj[1]->m*fb_units.m/MSUN)/mtriplein*(obj->obj[bid]->a*fb_units.l/AU)/(obj->a*fb_units.l/AU)*obj->e/(1.0-pow(obj->e,2));
+		mtriplein=obj->obj[bid]->obj[0]->m*units.m/MSUN+obj->obj[bid]->obj[1]->m*units.m/MSUN;
+		mtriple=mtriplein+obj->obj[sid]->m*units.m/MSUN;
+		pouttriple2=pow(obj->a*units.l/AU,3)/mtriple;
+		pintriple=pow(obj->obj[bid]->a*units.l/AU,3)/mtriplein;
+                tlkquad=(8.0/3.1415/15.0)*mtriple/(obj->obj[sid]->m*units.m/MSUN)*pouttriple2/pintriple*pow(1.0-pow(obj->e,2),1.5);
+		epsoct=abs(obj->obj[bid]->obj[0]->m*units.m/MSUN-obj->obj[bid]->obj[1]->m*units.m/MSUN)/mtriplein*(obj->obj[bid]->a*units.l/AU)/(obj->a*units.l/AU)*obj->e/(1.0-pow(obj->e,2));
 		tlkoct=tlkquad/epsoct;
-		tgr=pow(10.0,8)*pow(obj->obj[bid]->a*fb_units.l/AU,2.5)/(3.0*pow(mtriplein,1.5))*(1.0-pow(obj->obj[bid]->e,2));
+		tgr=pow(10.0,8)*pow(obj->obj[bid]->a*units.l/AU,2.5)/(3.0*pow(mtriplein,1.5))*(1.0-pow(obj->obj[bid]->e,2));
 		epsgr=tlkquad/tgr;
-		eta_in = (obj->obj[bid]->m*fb_units.m/units.m) / (obj->obj[bid]->a*fb_units.l/units.l) / sqr(sigma_local); // inner binary hardness -- added by Chris O'C in Sept 2026
-		eta_out = (obj->obj[bid]->m + obj->obj[sid]->m)*(fb_units.m/units.m) / (obj->a*fb_units.l/units.l) / sqr(sigma_local); // outer binary hardness
+		eta_in = obj->obj[bid]->m / obj->obj[bid]->a / sqr(sigma_local); // inner binary hardness -- added by Chris O'C in Sept 2026
+		eta_out = (obj->obj[bid]->m + obj->obj[sid]->m) / obj->a / sqr(sigma_local); // outer binary hardness
 
         parafprintf(triplefile, "%.18g %g %g %g %g %g %g %g %g %g %g %g %d %d %d %g %g %g %g %g %g %g\n",
-                    TotalTime, obj->obj[bid]->obj[0]->m*fb_units.m/MSUN, obj->obj[bid]->obj[1]->m*fb_units.m/MSUN, obj->obj[sid]->m*fb_units.m/MSUN,
-                    obj->obj[bid]->obj[0]->R*fb_units.l/RSUN, obj->obj[bid]->obj[1]->R*fb_units.l/RSUN, obj->obj[sid]->R*fb_units.l/RSUN,
-                    obj->obj[bid]->a*fb_units.l/AU, obj->a*fb_units.l/AU, obj->obj[bid]->e, obj->e, i12,
+                    TotalTime, obj->obj[bid]->obj[0]->m*units.m/MSUN, obj->obj[bid]->obj[1]->m*units.m/MSUN, obj->obj[sid]->m*units.m/MSUN,
+                    obj->obj[bid]->obj[0]->R*units.l/RSUN, obj->obj[bid]->obj[1]->R*units.l/RSUN, obj->obj[sid]->R*units.l/RSUN,
+                    obj->obj[bid]->a*units.l/AU, obj->a*units.l/AU, obj->obj[bid]->e, obj->e, i12,
                     obj->obj[bid]->obj[0]->k_type, obj->obj[bid]->obj[1]->k_type, obj->obj[sid]->k_type,
 					tlkquad,tlkoct,epsoct,tgr,epsgr,eta_in,eta_out);
 	} else {
@@ -1719,7 +1719,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 {
 	int i, j, isbinsingle=0, isbinbin=0, sid=-1, bid=-1, istriple, bi, nmerged;
 	long ksin=-1, kbin=-1, jbin, jbinp, knew, knewp=-1, oldk, knewt;
-	double t, bmax, wp, wx[4], wy[4], wz[4], vnew[4], alpha, BEi, BEf=0.0, eta_in=-1., eta_out=-1., ave_local_mass, sigma_local;
+	double t, bmax, wp, wx[4], wy[4], wz[4], vnew[4], alpha, BEi, BEf=0.0, eta_in=-1., eta_out=-1., ave_local_mass, sigma_local, energy_ratio;
 	int is_hard_triple = 0;
 	fb_hier_t hier;
 	fb_units_t cmc_units, printing_units;
@@ -1910,9 +1910,10 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				
 				energy_from_inner = (hier.obj[i]->obj[bid]->obj[0]->m)*(hier.obj[i]->obj[bid]->obj[1]->m) / (2.0 * hier.obj[i]->obj[bid]->a);
 				energy_from_outer = -energy_from_inner - (fb_ketot(threeobjs, 3) + fb_petot(threeobjs, 3));
+				energy_ratio = fabs(energy_from_outer) / fabs(Etotal.P+Etotal.K);
 				
-				eta_in = (hier.obj[i]->obj[bid]->m*cmc_units.m) / (hier.obj[i]->obj[bid]->a*cmc_units.l) / sqr(sigma_local); // n.b. using speed-based definition of hardness
-				eta_out = (hier.obj[i]->m*cmc_units.m) / (hier.obj[i]->a*cmc_units.l) / sqr(sigma_local);  // ditto
+				eta_in = hier.obj[i]->obj[bid]->m / hier.obj[i]->obj[bid]->a / sqr(sigma_local); // n.b. using speed-based definition of hardness
+				eta_out =  hier.obj[i]->m / hier.obj[i]->a / sqr(sigma_local);  // ditto
 
 				/* Unless fewbody has screwed up the classification, this can't happen, but better safe than sorry */
 				if (energy_from_outer < 0) {
@@ -2631,16 +2632,7 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 					} else {
 						binary[star[knewt].binind].id2 = tempstar.id;
 					}
-					// populate knewt binary fields from the triple's outer orbit -- suggested by Copilot during automatic Github PR review
- 					binary[star[knewt].binind].a = hier.obj[i]->a * cmc_units.l;
- 					binary[star[knewt].binind].e = hier.obj[i]->e;
- 					binary[star[knewt].binind].bse_tb = sqrt(cub(binary[star[knewt].binind].a * units.l / AU) /
- 							(binary[star[knewt].binind].bse_mass[0] + binary[star[knewt].binind].bse_mass[1])) * 365.25;
- 					star_m[get_global_idx(knewt)] = binary[star[knewt].binind].m1 + binary[star[knewt].binind].m2;
- 					compress_binary(&star[knewt], &binary[star[knewt].binind]);
- 					set_star_EJ(knewt);
- 					set_star_news(knewt);
- 					set_star_olds(knewt);
+					
 					/* destroy the two intermediate objects */
 					destroy_obj(knew);
 					destroy_obj(knewp);
