@@ -187,9 +187,9 @@ fb_ret_t binsingle(double *t, long ksin, long kbin, double W, double bmax, doubl
 	/* set units to 1 since we're already in CGS */
 	//fb_units.v = fb_units.l = fb_units.t = fb_units.m = fb_units.E = 1.0;
 	parafprintf(binintfile, "input: ");
-	binint_log_obj(hier->obj[0], fb_units, k);
+	binint_log_obj(hier->obj[0], fb_units, ksin);
 	parafprintf(binintfile, "input: ");
-	binint_log_obj(hier->obj[1], fb_units, k);
+	binint_log_obj(hier->obj[1], fb_units, kbin);
 
 	/* call fewbody! */
 	retval = fewbody(input, fb_units, hier, t, rng, curr_st);

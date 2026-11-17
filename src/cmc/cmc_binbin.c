@@ -216,7 +216,7 @@ fb_ret_t binbin(double *t, long k, long kp, double W, double bmax, double rcm, f
 	parafprintf(binintfile, "input: ");
 	binint_log_obj(hier->obj[0], fb_units, k);
 	parafprintf(binintfile, "input: ");
-	binint_log_obj(hier->obj[1], fb_units, k);
+	binint_log_obj(hier->obj[1], fb_units, kp);
 	
 	/* call fewbody! */
 	retval = fewbody(input, fb_units, hier, t, rng, curr_st);
