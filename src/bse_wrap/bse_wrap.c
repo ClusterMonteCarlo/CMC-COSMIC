@@ -586,7 +586,8 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
     int disrupt=0;
     double tphys=0.0;
 
-    kick_(kw, m1, m1n, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, &snvars_.sigma, kick_info, &disrupt, &tphys);
+    double sigmahold = snvars_.sigma;
+    kick_(kw, m1, m1n, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, &sigmahold, kick_info, &disrupt, &tphys);
 }
 
 /**
@@ -705,9 +706,10 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double kick_info[19][2], 
   tphys = (*tempbinary).bse_tphys;
   /* deltam_1, deltam_2, dtm are METISSE-only; SSE path ignores them. */
   double comenv_deltam_1 = 0.0, comenv_deltam_2 = 0.0, comenv_dtm = 0.0;
+  double sigmahold = snvars_.sigma;
   comenv_(&((*tempbinary).bse_mass0[0]), &((*tempbinary).bse_mass[0]), &((*tempbinary).bse_massc[0]), &(AJ[0]), &JSPIN1, &((*tempbinary).bse_kw[0]),
 	  &((*tempbinary).bse_mass0[1]), &((*tempbinary).bse_mass[1]), &((*tempbinary).bse_massc[1]), &(AJ[1]), &JSPIN2, &((*tempbinary).bse_kw[1]),
-	  zpars, &((*tempbinary).e), &((*tempbinary).a), &(JORB), &COEL, &star1, &star2, &vk, kick_info, &((*tempbinary).bse_bcm_formation[0]), &((*tempbinary).bse_bcm_formation[1]), &snvars_.sigma, &((*tempbinary).bse_bhspin[0]),&((*tempbinary).bse_bhspin[1]),&binstate,&mergertype,&jp,&tphys,&switchedCE,rad,tms,&evolve_type,&disrupt,lumin,B_0,bacc,tacc,epoch,menv_bpp,renv_bpp,&comenv_deltam_1,&comenv_deltam_2,&comenv_dtm);
+	  zpars, &((*tempbinary).e), &((*tempbinary).a), &(JORB), &COEL, &star1, &star2, &vk, kick_info, &((*tempbinary).bse_bcm_formation[0]), &((*tempbinary).bse_bcm_formation[1]), &sigmahold, &((*tempbinary).bse_bhspin[0]),&((*tempbinary).bse_bhspin[1]),&binstate,&mergertype,&jp,&tphys,&switchedCE,rad,tms,&evolve_type,&disrupt,lumin,B_0,bacc,tacc,epoch,menv_bpp,renv_bpp,&comenv_deltam_1,&comenv_deltam_2,&comenv_dtm);
   //printf("kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1]);
   //printf("\n");
   ////
