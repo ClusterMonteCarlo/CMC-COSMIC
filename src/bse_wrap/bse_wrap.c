@@ -214,7 +214,9 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
         in_epoch[i] = epoch[i]; in_tms[i] = tms[i];   in_bhspin[i] = bhspin[i];
     }
 
+    double xi_in = windvars_.xi;
     evolv2_(kstar,mass,tb,ecc,z,tphysf,dtp,mass0,rad,lum,massc,radc, menv,renv,ospin,B_0,bacc,tacc,epoch,tms,bhspin,tphys,zpars, kick_info, &bpp_index_out, &bcm_index_out);
+    windvars_.xi = xi_in;
 
     /* ---- [mass-gain check] sanity checks on one isolated evolv2 call ----
      * Flags calls in which
