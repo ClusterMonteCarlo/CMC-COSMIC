@@ -528,7 +528,7 @@ void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, do
      renv = envelope radius
      k2 = radius of gyration of envelope
    */
-  int kidx=0;
+  int kidx=1;
 
   hrdiag_(mass, aj, mt, tm, tn, tscls, lums, GB, zpars, r, lum, kw, mc, rc, menv, renv, k2, bhspin, &kidx);
 }
