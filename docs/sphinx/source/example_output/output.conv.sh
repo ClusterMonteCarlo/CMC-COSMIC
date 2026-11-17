@@ -3,25 +3,25 @@
 # outfile prefix
 outprefix=output
 # code unit of mass (cgs)
-massunitcgs=1.25845e+38
+massunitcgs=1.26303e+38
 # code unit of mass (M_sun)
-massunitmsun=63270.5
+massunitmsun=63500.5
 # code unit of stellar mass (cgs)
-mstarunitcgs=1.25845e+33
+mstarunitcgs=1.26303e+33
 # code unit of stellar mass (M_Sun)
-mstarunitmsun=0.632705
+mstarunitmsun=0.635005
 # code unit of length (cgs)
-lengthunitcgs=3.0857e+18
+lengthunitcgs=2.46856e+19
 # code unit of length (parsecs)
-lengthunitparsec=1
+lengthunitparsec=8
 # code unit of time (cgs)
-timeunitcgs=2.70787e+16
+timeunitcgs=6.11611e+17
 # code unit of time (Myr)
-timeunitsmyr=858.091
+timeunitsmyr=19381.2
 # N-body  unit of time (cgs)
-nbtimeunitcgs=1.87053e+12
+nbtimeunitcgs=4.22486e+13
 # N-body unit of time (Myr)
-nbtimeunitsmyr=0.0592749
+nbtimeunitsmyr=1.33881
 
 cat $outprefix.dyn.dat | grep -vE '^#' | awk '{print $1*'$timeunitsmyr', $8/$21}' > $outprefix.tmyr_rcrh.dat
 prunedata.pl -d 30 $outprefix.tmyr_rcrh.dat > $outprefix.tmyr_rcrh-pruned.dat

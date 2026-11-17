@@ -20,6 +20,7 @@ void restart_stellar_evolution(void){
   bse_set_bwind(BSE_BWIND);
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
+  bse_set_LBV_flag(BSE_LBV_FLAG);
   bse_set_eddlimflag(BSE_EDDLIMFLAG);
   bse_set_pisn(BSE_PISN);
   bse_set_ecsn(BSE_ECSN);
@@ -39,6 +40,7 @@ void restart_stellar_evolution(void){
   bse_set_lambdaf(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
   bse_set_cehestarflag(BSE_CEHESTARFLAG);
+  bse_set_ce2stageflag(BSE_CE2STAGEFLAG);
   bse_set_cemergeflag(BSE_CEMERGEFLAG);
   bse_set_cekickflag(BSE_CEKICKFLAG);
   bse_set_tflag(BSE_TFLAG);
@@ -133,6 +135,7 @@ void stellar_evolution_init(void){
   bse_set_bwind(BSE_BWIND);
   bse_set_hewind(BSE_HEWIND);
   bse_set_windflag(BSE_WINDFLAG);
+  bse_set_LBV_flag(BSE_LBV_FLAG);
   bse_set_eddlimflag(BSE_EDDLIMFLAG);
   bse_set_pisn(BSE_PISN);
   bse_set_ecsn(BSE_ECSN);
@@ -151,6 +154,7 @@ void stellar_evolution_init(void){
   bse_set_alpha1(BSE_ALPHA1); /* FIXME: is 3 too high? (normally 1.0) */
   bse_set_lambdaf(BSE_LAMBDAF);
   bse_set_ceflag(BSE_CEFLAG);
+  bse_set_ce2stageflag(BSE_CE2STAGEFLAG);
   bse_set_cehestarflag(BSE_CEHESTARFLAG);
   bse_set_cemergeflag(BSE_CEMERGEFLAG);
   bse_set_cekickflag(BSE_CEKICKFLAG);
@@ -217,7 +221,10 @@ void stellar_evolution_init(void){
 
   /* set collisions matrix */
   bse_instar();
-  dprintf("se_init: %g %g %g %d %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %g\n", BSE_NETA, BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG, BSE_PISN, BSE_ALPHA1, BSE_LAMBDAF, BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG, BSE_RTMSFLAG, BSE_BHFLAG, BSE_REMNANTFLAG, BSE_MXNS, BSE_IDUM, BSE_SIGMA, BSE_BHSIGMAFRAC, BSE_BETA, BSE_EDDFAC, BSE_GAMMA, BSE_POLAR_KICK_ANGLE);
+  dprintf("se_init: %g %g %g %d %g %g %g %d %d %d %d %d %d %g %d %g %g %g %g %g %g %g\n",
+            BSE_NETA  , BSE_BWIND, BSE_HEWIND, BSE_WINDFLAG   , BSE_PISN    , BSE_ALPHA1, BSE_LAMBDAF    ,
+            BSE_CEFLAG, BSE_TFLAG, BSE_IFFLAG, BSE_WDFLAG     , BSE_RTMSFLAG, BSE_BHFLAG, BSE_REMNANTFLAG,
+            BSE_MXNS  , BSE_IDUM , BSE_SIGMA , BSE_BHSIGMAFRAC, BSE_BETA    , BSE_EDDFAC, BSE_GAMMA      , BSE_POLAR_KICK_ANGLE);
 
   for (k=1; k<=mpiEnd-mpiBegin+1; k++) {
     long g_k = get_global_idx(k);
@@ -726,7 +733,7 @@ void do_stellar_evolution(gsl_rng *rng)
 			}
 			parafprintf (newbhfile, "\n");
 		}
-		if (kprev1!=14 && binary[kb].bse_kw[1]==14 && binary[kb].id2 != 0) { // newly formed BH
+		if (kprev1!=14 && binary[kb].bse_kw[1]==14) { // newly formed BH
 			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], prev_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bhspin[1],VKO[1]);
 			for (ii=0; ii<19; ii++){
 			    parafprintf (newbhfile, " %g", kick_info[ii][1]);
@@ -743,7 +750,7 @@ void do_stellar_evolution(gsl_rng *rng)
                         }
                         parafprintf(newnsfile, "\n");
                 }
-                if (kprev1!=13 && binary[kb].bse_kw[1]==13 && binary[kb].id2 != 0) { // newly formed NS
+                if (kprev1!=13 && binary[kb].bse_kw[1]==13) { // newly formed NS
                         parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], prev_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bcm_formation[1],VKO[1],kprev1);
                         for (ii=0; ii<19; ii++){
                             parafprintf (newnsfile, " %g", kick_info[ii][1]);
@@ -776,6 +783,8 @@ void do_stellar_evolution(gsl_rng *rng)
       MPI_Recv(&temp, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &stat);
       DMse += temp;
     }
+  //MPI: all ranks need the global DMse so DTse (computed on every rank in GetTimeStep) agrees
+  MPI_Bcast(&DMse, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	timeEndSimple(tmpTimeStart, &t_comm);
 }
 
