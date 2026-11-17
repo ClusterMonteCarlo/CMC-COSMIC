@@ -507,10 +507,9 @@ double get_eta(double eta_min, double eta_power, long k1, long k2, long k3, doub
 * @param v3[4] ?
 * @param vrel12[4] ?
 * @param vrel3[4] ?
-* @param delta_E_3bb ?
 * @param rng gsl rng
 */
-void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double eta_power, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], double delta_E_3bb, gsl_rng *rng)
+void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_binary, double eta_min, double eta_power, double ave_local_mass, double n_local, double sigma_local, double v1[4], double v2[4], double v3[4], double vrel12[4], double vrel3[4], gsl_rng *rng)
 {
     double PE_i, PE_f, KE_i, KE_f, KE_cmf_i, KE_cmf_f, delta_PE, delta_KE, delta_E, binary_cm;
 	double m1, m2, m3;
@@ -697,7 +696,7 @@ void make_threebodybinary(double P_3bb, long k1, long k2, long k3, long form_bin
 		parafprintf(threebbdebugfile, "%ld %ld %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", knew, star[knew].id, star_r[get_global_idx(knew)], star_m[get_global_idx(knew)], vs_cmf[0], vs_cmf[1], vs_cmf[2], vs_cmf[3], vb_cmf[0], vb_cmf[1], vb_cmf[2], vb_cmf[3], vs[0], vs[1], vs[2], vs[3], vb[0], vb[1], vb[2], vb[3], ave_local_mass, n_local,sigma_local, eta, Eb, ecc, r_p, semi_major, PE_i, PE_f, KE_cmf_i, KE_cmf_f, KE_i, KE_f, delta_PE, delta_KE, delta_E);
 		//parafprintf(threebbdebugfile, "Internal Energies:  Eint1=%g  Eint2=%g  Eint_binary=%g\n", star[k1].Eint, star[k2].Eint, star[knew].Eint);
 
-		// running total for simulation - change in energy occuring during 3bb formation procedure
+		// running total for simulation (global delta_E_3bb, per rank) - change in energy occuring during 3bb formation procedure
 		delta_E_3bb += delta_E;
 
 		// Set E and J for new objects
@@ -2762,7 +2761,7 @@ void break_wide_binaries(struct rng_t113_state* rng_st)
 	double W, vorb, m, v2, Eexcess=0.0, exc_ratio, nlocal, llocal;
     double E_dump, E_dump_capacity, E_dump_factor=0.8;
     double length_factor = BINARY_DISTANCE_BREAKING;
-    double Eexcess_prev, Eexcess_check;
+    double Eexcess_prev, Eexcess_check, Eexcess_transit;
     double hardness, mAveLocal, sigma2;
 	MPI_Status stat;
 
@@ -2838,7 +2837,10 @@ void break_wide_binaries(struct rng_t113_state* rng_st)
             MPI_Recv(&Eexcess_prev, 1, MPI_DOUBLE, ( myid - 1), 0, MPI_COMM_WORLD, &stat);
         timeEndSimple(tmpTimeStart, &t_comm);
 
-        Eexcess = Eexcess_prev;
+        if(myid == procs-1)
+            Eexcess += Eexcess_prev;	/* last rank sent nothing: keep own leftover, add incoming */
+        else
+            Eexcess = Eexcess_prev;		/* own leftover already sent to myid+1 */
         for (i = 1; i <= clus.N_MAX_NEW; i++) {
             g_i = get_global_idx(i);
             m = star_m[g_i];
@@ -2857,12 +2859,19 @@ void break_wide_binaries(struct rng_t113_state* rng_st)
                     }
             }
         }
+        /* stop once no energy is left to forward, i.e. any remainder sits
+           on the last rank, which has already tried to place it */
+        Eexcess_transit = (myid != procs-1) ? Eexcess : 0.0;
         tmpTimeStart = timeStartSimple();
-        MPI_Allreduce(&Eexcess, &Eexcess_check, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
+        MPI_Allreduce(&Eexcess_transit, &Eexcess_check, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		
         timeEndSimple(tmpTimeStart, &t_comm);
 	}
-	/* keep track of the energy that's vanishing due to our negligence */
-	Eoops += -Eexcess;
+	/* keep track of the energy that's vanishing due to our negligence;
+	   Eoops is not reduced (root prints it), so add the global total on every rank */
+    tmpTimeStart = timeStartSimple();
+    MPI_Allreduce(&Eexcess, &Eexcess_check, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    timeEndSimple(tmpTimeStart, &t_comm);
+	Eoops += -Eexcess_check;
 }
 
 /**

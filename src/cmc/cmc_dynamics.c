@@ -179,7 +179,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 							/* Here is where new binary properties are calculated.
 								if form_binary=1, the new binary will be created, but if form_binary=0,
 								the interaction will be logged in lightcollision log  */
-							make_threebodybinary(P_3bb, k1, k2, k3, form_binary, eta_min, eta_power, ave_local_mass, n_local, sigma_local, v1, v2, v3, vrel12, vrel3, delta_E_3bb, rng);
+							make_threebodybinary(P_3bb, k1, k2, k3, form_binary, eta_min, eta_power, ave_local_mass, n_local, sigma_local, v1, v2, v3, vrel12, vrel3, rng);
 						} else { // Probability of 3bb formation too low ==> No binary formed
 							form_binary = 0;
 							/* do nothing; check 3bb formation for next 3 stars */
