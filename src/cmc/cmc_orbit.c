@@ -49,7 +49,7 @@ long get_positive_Q_index(long index, double E, double J) {
       ktemp++; fevals++;
       Qtemp = function_q(g_si, star_r[ktemp], star_phi[ktemp], E, J);
     } while (Qtemp <= 0.0 && ktemp <= clus.N_MAX);		
-    if (ktemp >= clus.N_MAX) {
+    if (ktemp > clus.N_MAX) {
       dprintf("There is no positive Q index for index=%li, star.id=%li!\n", index, 
           star[index].id);
       return(-1);

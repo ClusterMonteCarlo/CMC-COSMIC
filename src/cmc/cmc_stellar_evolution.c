@@ -826,7 +826,6 @@ void write_stellar_data(void){
     parafprintf(stel_file, "%g ", star[k].se_bacc);
     parafprintf(stel_file, "%g ", star[k].se_tacc);
     parafprintf(stel_file, "\n");
-    parafprintf(stel_file, "%08d ", get_global_idx(k));
   }
 
   mpi_para_file_write(mpi_stel_file_wrbuf, &mpi_stel_file_len, &mpi_stel_file_ofst_total, &mpi_stel_file);
