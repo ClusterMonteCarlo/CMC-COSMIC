@@ -924,16 +924,21 @@ void bse_set_bcm_bpp_cols(void){
     };
 
     // BCM_COLUMNS → ALL_COLUMNS (38 elements)
+    // Resulting CMC bcm columns (1-based): 1 tphys, 2 kstar_1, 3 mass0_1, 4 mass_1, 5 lum_1, 6 rad_1, 7 teff_1,
+    // 8 massc_he_layer_1, 9 radc_1, 10 menv_1, 11 renv_1, 12 epoch_1, 13 omega_spin_1, 14 deltam_1, 15 RRLO_1,
+    // 16-29 the same for star 2, 30 porb, 31 sep, 32 ecc, 33 B_1, 34 B_2, 35 SN_1, 36 SN_2, 37 bin_state, 38 merger_type
     int bcm_to_all[38] = {
-        0,  3, 19,  1, 21, 17, 23, 15, 25, 27,  /* tphys..menv_1 */
-        29, 39, 31, 43,  8,  4, 20,  2, 22, 18,  /* renv_1..rad_2 */
-        24, 16, 26, 28, 30, 40, 32, 44,  9,  6,  /* teff_2..porb */
-        5,  7, 33, 34, 45, 46, 47, 48           /* sep..merger_type */
+        0,  3, 21,  1, 23, 19, 25, 15, 27, 29,  /* tphys..menv_1 */
+        31, 41, 33, 45,  8,  4, 22,  2, 24, 20,  /* renv_1..rad_2 */
+        26, 16, 28, 30, 32, 42, 34, 46,  9,  6,  /* teff_2..porb */
+        5,  7, 35, 36, 47, 48, 49, 50           /* sep..merger_type */
     };
 
+    // CMC bcm columns 39-52: evol_type, aj_1, aj_2, tms_1, tms_2, bacc_1, bacc_2, tacc_1, tacc_2, bhspin_1,
+    // bhspin_2, massc_co_layer_1, massc_co_layer_2, metallicity
     int bcm_to_all_extra[14] = {
-       10, 11, 12, 13, 14, 35, 36, 37, 38, 41,
-       42, 49, 50, 51
+       10, 11, 12, 13, 14, 37, 38, 39, 40, 43,
+       44, 17, 18, 51
     };
 
     for(i=0 ; i < BCM_NUM_COLUMNS ; i++)
