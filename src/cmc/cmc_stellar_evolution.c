@@ -58,6 +58,7 @@ void restart_stellar_evolution(void){
   bse_set_qcflag(BSE_QCFLAG);
   bse_set_don_lim(BSE_DON_LIM);
   bse_set_acc_lim(BSE_ACC_LIM);
+  bse_set_smt_q(BSE_SMT_Q);
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_rtmsflag(BSE_RTMSFLAG);
@@ -184,6 +185,7 @@ void stellar_evolution_init(void){
   bse_set_qcflag(BSE_QCFLAG);
   bse_set_don_lim(BSE_DON_LIM);
   bse_set_acc_lim(BSE_ACC_LIM);
+  bse_set_smt_q(BSE_SMT_Q);
   bse_set_ifflag(BSE_IFFLAG);
   bse_set_wdflag(BSE_WDFLAG);
   bse_set_rtmsflag(BSE_RTMSFLAG);

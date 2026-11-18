@@ -830,6 +830,7 @@ void bse_set_rejuvflag(int rejuvflag) { flags_.rejuvflag = rejuvflag; }
 void bse_set_qcflag(int qcflag) { flags_.qcflag = qcflag; }
 void bse_set_don_lim(double don_lim) { mtvars_.don_lim = don_lim; }
 void bse_set_acc_lim(double acc_lim) { mtvars_.acc_lim[0] = acc_lim; mtvars_.acc_lim[1] = acc_lim; }
+void bse_set_smt_q(double smt_q) { mtvars_.smt_q = smt_q; }
 void bse_set_ussn(int ussn) { ceflags_.ussn = ussn; }
 void bse_set_neta(double neta) { windvars_.neta = neta; }
 void bse_set_bwind(double bwind) { windvars_.bwind = bwind; }

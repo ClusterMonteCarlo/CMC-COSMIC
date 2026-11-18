@@ -1554,6 +1554,10 @@ if(myid==0) {
                                 PRINT_PARSED(PARAMDOC_BSE_ACC_LIM);
                                 sscanf(values, "%lf", &BSE_ACC_LIM);
                                 parsed.BSE_ACC_LIM = 1;
+                        } else if (strcmp(parameter_name, "SMT_Q")==0) {
+                                PRINT_PARSED(PARAMDOC_BSE_SMT_Q);
+                                sscanf(values, "%lf", &BSE_SMT_Q);
+                                parsed.BSE_SMT_Q = 1;
                         } else if (strcmp(parameter_name, "SIGMA")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_SIGMA);
                                 sscanf(values, "%lf", &BSE_SIGMA);
@@ -1873,9 +1877,10 @@ if(myid==0) {
 
         // LBV_flag sets the LBV-like mass loss beyond the Humphreys-Davidson limit
         // (introduced in COSMIC v3.7.2; previously part of windflag=3)
-        // LBV_flag=0: none// LBV_flag=1: Hurley+2000// LBV_flag=2: StarTrack (Belczynski+08)
-        // default=2, which reproduces windflag=3 in COSMIC < v3.7.2
-        CHECK_PARSED(BSE_LBV_FLAG, 2, PARAMDOC_BSE_LBV_FLAG);
+		// LBV_flag=0: none// LBV_flag=1: Hurley+2000// LBV_flag=2: StarTrack (Belczynski+10)
+        // LBV_flag=3: StarTrack (Belczynski+10), replacing the other winds instead of adding to them
+        // default=3, which reproduces windflag=3 in COSMIC < v3.7.2
+        CHECK_PARSED(BSE_LBV_FLAG, 3, PARAMDOC_BSE_LBV_FLAG);
 
         // maltsev_mode sets the mode to use the Maltsev remnant mass prescription (only relevant if remnantflag=6)
         // (introduced in COSMIC v3.7.0)
@@ -2039,6 +2044,14 @@ if(myid==0) {
         // acc_lim = -3: assumes the accretion is limited by 10*tkh_acc for all fusing stars
         // acc_lim = -4: assumes the accretion is limited by tkh_for all fusing stars
         CHECK_PARSED(BSE_ACC_LIM, -1, PARAMDOC_BSE_ACC_LIM);
+
+        // smt_q is the donor-to-accretor mass ratio at and above which mass transfer is forced to be
+        // stable, fully non-conservative, with the lost mass carrying the donor's specific angular momentum (Olejak+25)
+        // (introduced in COSMIC v4.3.4)
+        // smt_q > 0: Mdon/Macc >= smt_q is forced stable
+        // smt_q = -1: off
+        // default=-1
+        CHECK_PARSED(BSE_SMT_Q, -1, PARAMDOC_BSE_SMT_Q);
 
         // qcflag is an integer flag that sets the model to determine which critical mass ratios to use for the onset of unstable mass transfer and/or a common envelope. NOTE: this is overridden by qcrit_array if any of the values are non-zero.
         // 0: standard BSE
