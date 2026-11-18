@@ -1970,8 +1970,8 @@ if(myid==0) {
 
         // hewind is a helium star mass loss factor, between 0 and 1
         // only applies if windflag=0, otherwise it is overwritten
-        // default=1.0
-        CHECK_PARSED(BSE_HEWIND, 1.0, PARAMDOC_BSE_HEWIND);
+        // default=0.5
+        CHECK_PARSED(BSE_HEWIND, 0.5, PARAMDOC_BSE_HEWIND);
 
         // beta is wind velocity factor: proportional to vwind^2
         // beta<0: follows StarTrack 2008// beta=0.125: stock BSE
@@ -2087,19 +2087,19 @@ if(myid==0) {
         CHECK_PARSED(BSE_BDECAYFAC, 1, PARAMDOC_BSE_BDECAYFAC);
         CHECK_PARSED(BSE_HTPMB, 1, PARAMDOC_BSE_HTPMB);
         CHECK_PARSED(BSE_ST_CR, 1, PARAMDOC_BSE_ST_CR);
-        CHECK_PARSED(BSE_ST_TIDE, 0, PARAMDOC_BSE_ST_TIDE);
+        CHECK_PARSED(BSE_ST_TIDE, 1, PARAMDOC_BSE_ST_TIDE);
         
 	//
         // aic=1 turns on low kicks for accretion induced collapse
         // works even if ecsn=0
         // default=1
-        CHECK_PARSED(BSE_REJUVFLAG, 1.0, PARAMDOC_BSE_REJUVFLAG);
+        CHECK_PARSED(BSE_REJUVFLAG, 0, PARAMDOC_BSE_REJUVFLAG);
 
 
         // ussn=1 uses reduced kicks (drawn from the sigmadiv distritbuion) for ultra-stripped supernovae
         // these happen whenever a He-star undergoes a CE with a compact companion
-        // default=0
-        CHECK_PARSED(BSE_USSN, 0, PARAMDOC_BSE_USSN);
+        // default=1
+        CHECK_PARSED(BSE_USSN, 1, PARAMDOC_BSE_USSN);
 
         // pisn>0 allows for (pulsational) pair instability supernovae
         // and sets the maximum mass of the remnant
@@ -2107,7 +2107,7 @@ if(myid==0) {
         // pisn=-2 uses a polynomial fit to Table 1 Marchant 2018
         // pisn=-3 uses a polynomial fit to Table 5 in Woosley 2019
         // pisn=0 turns off (pulsational) pair instability supernovae
-        // default=45
+        // default=-2
         CHECK_PARSED(BSE_PISN, -2, PARAMDOC_BSE_PISN);
 
         // bhsigmafrac sets the fractional modification used for scaling down the sigma for BHs
@@ -2117,7 +2117,7 @@ if(myid==0) {
 
         CHECK_PARSED(BSE_GRFLAG, 1, PARAMDOC_BSE_GRFLAG);
 
-        CHECK_PARSED(BSE_KICKFLAG, 0, PARAMDOC_BSE_KICKFLAG);
+        CHECK_PARSED(BSE_KICKFLAG, 1, PARAMDOC_BSE_KICKFLAG);
 
         CHECK_PARSED(BSE_ZSUN, 0.014, PARAMDOC_BSE_ZSUN);
 
@@ -2197,7 +2197,7 @@ if(myid==0) {
         // ck is related to magnetic field evolution of pulsars, see Kiel+2008
         // default=1000
         CHECK_PARSED(BSE_CK, 1000.00, PARAMDOC_BSE_CK);
-        CHECK_PARSED(BSE_REJUV_FAC, 0.1, PARAMDOC_BSE_REJUV_FAC);
+        CHECK_PARSED(BSE_REJUV_FAC, 1.0, PARAMDOC_BSE_REJUV_FAC);
 
 
 	CHECK_PARSED(BH_RADIUS_MULTIPLYER, 5, PARAMDOC_BH_RADIUS_MULTIPLYER);
