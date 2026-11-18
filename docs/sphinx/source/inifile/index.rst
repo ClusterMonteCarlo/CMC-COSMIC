@@ -831,31 +831,55 @@ KICK FLAGS
 ----------
 
 =======================  =====================================================
-``kickflag``             Sets the particular natal kick prescription to use
+``kickflag``             Sets the particular natal kick prescription to use.
                          Note that ``sigmadiv``, ``bhflag``, ``bhsigmafrac``,
-                         ``aic``, and ``ussn``, which are described below, are
-                         only used when ``kickflag=0``
+                         ``aic``, and ``ussn``, which are described below, depend on
+                         the selected prescription. Positive values use the
+                         Pfahl+2002 prescription for handling natal kicks.
 
-                            ``0`` : The standard COSMIC kick prescription, where
+                            ``1`` : The standard COSMIC kick prescription, where
                             kicks are drawn from a bimodal distribution with
                             standard FeCCSN getting a kick drawn from a Maxwellian
-                            distribution with dispersion parameter ``sigma`` and ECSN
+                            distribution with dispersion parameter ``sigma`` and ECSN/USSN
                             are drawn according to ``sigmadiv``. This setting has
                             additional possible options for ``bhflag``, ``bhsigmafrac``,
                             ``aic`` and ``ussn``.
 
-                            ``-1`` : Natal kicks are drawn according to ``sigma`` and
+                            ``2`` : Natal kicks are drawn according to ``sigma`` and
                             scaled by the ejecta mass and remnant mass following Eq. 1 of
                             `Giacobbo & Mapelli 2020 <https://ui.adsabs.harvard.edu/abs/2020ApJ...891..141G/abstract>`_
 
-                            ``-2`` : Natal kicks are drawn according to ``sigma`` and
+                            ``3`` : Natal kicks are drawn according to ``sigma`` and
                             scaled by just the ejecta mass following Eq. 2 of
                             `Giacobbo & Mapelli 2020 <https://ui.adsabs.harvard.edu/abs/2020ApJ...891..141G/abstract>`_
 
-                            ``-3`` : Natal kicks are drawn according to Eq. 1 of
+                            ``4`` : Natal kicks are drawn according to Eq. 1 of
                             `Bray & Eldridge 2016 <https://ui.adsabs.harvard.edu/abs/2016MNRAS.461.3747B/abstract>`_
 
-                         **default=0**
+                            ``5`` : Same as 1, but uses the kick prescription of
+                            Disberg & Mandel 2025 for CCSN
+
+                            ``6`` : Mandel & Mueller 2020: the kick velocity is drawn based on
+                            the mass of the formed NS or BH, with scaling parameters
+                            ``mm_mu_ns`` and ``mm_mu_bh``
+
+                            ``7`` : gravitational tug-boat mechanism in asymmetric
+                            core-collapse explosions from Janka 2017, in the form of
+                            Eq. 2 of Chattaraj et al. 2026
+
+                            ``8`` : Eq. 1 of Richards et al. 2023 (similar to 4, with
+                            different parameters)
+
+                            ``9`` : NS and BH base kick speeds from the all-NS parent law
+                            of Shariat et al. 2026 (Table 2); BH speeds are multiplied by
+                            ``bhsigmafrac`` and then modified by ``bhflag``
+
+                            ``-1`` to ``-6`` : same as 1 to 6, but using the old
+                            Kiel & Hurley 2009 prescription for changing the orbital
+                            configuration of the binary, available for reproducibility
+                            purposes but not recommended for new work
+
+                         **kickflag = 1**
 
 ``sigma``                Sets the dispersion in the Maxwellian for the
                          SN kick velocity in km/s
@@ -945,6 +969,8 @@ KICK FLAGS
 
                             ``-4`` : uses the top-down approach from Renzo+2022, with
                             adjustable parameters (*ppi_co_shift*, *ppi_extra_ml*) from Hendriks+2023
+
+                            ``-5`` : uses Belczynski 'weak' PISN pulsations
 
                             ``positive values`` : turns on pulsational pair
                             instability SN and sets the maximum mass of the allowed
@@ -1326,16 +1352,16 @@ PULSAR FLAGS
 ``bconst``               Sets the magnetic field decay time-scale for pulsars following
                          Section 3 of `Kiel+2008 <https://academic.oup.com/mnras/article/388/1/393/1013977>`_.
 
-                            ``negative values`` : sets k in Myr from Equation 8 to
-                            -1 * *bconst*
+                            ``positive values`` : sets :math:`{\tau}`\ :sub:`B` in Myr
+                            in Equation 2 to *bconst*
 
                          **bconst = 3000**
 
-``ck``                   Sets the magnetic field decay time-scale for pulsars following
+``ck``                   Sets the scaling parameter for the decay of the magnetic field
+                         of pulsars with the amount of mass accreted, following
                          Section 3 of `Kiel+2008 <https://academic.oup.com/mnras/article/388/1/393/1013977>`_.
 
-                            ``negative values`` : sets :math:`{\tau}`\ :sub:`b` in Myr
-                            from Equation 2 to  -1 * *ck*
+                            ``positive values`` : sets k in Equation 8 to *ck*
 
                          **ck = 1000**
 =======================  =====================================================
