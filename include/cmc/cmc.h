@@ -1271,9 +1271,9 @@ typedef struct{
  * * @brief neta > 0 turns wind mass-loss on, is also the Reimers mass-loss coefficent (neta*4x10^-13: 0.5 normally).
  * */
         int BSE_ACC2;
-#define PARAMDOC_BSE_PISN "PISN turns on pair-instability SN and pulsations ala Belczynski+2016 or Spera+Mapelli 2017 (0=off, 1=Belczynski, 2=SM)"
+#define PARAMDOC_BSE_PISN "pisn allows for (pulsational) pair instability supernovae and sets either the model to use or the maximum mass of the remnant (0=off, -1=Spera & Mapelli 2017, -2=fit to Marchant+2018, -3=fit to Woosley 2019, -4=Renzo+2022 with adjustable parameters from Hendriks+2023, -5=Belczynski 'weak' PISN pulsations, positive values=maximum mass of the remnant)."
 /**
-* @brief PISN flag turns ou pair-instability SN and pulsations for massive stars.
+* @brief pisn allows for (pulsational) pair instability supernovae and sets either the model to use or the maximum mass of the remnant (0=off, -1=Spera & Mapelli 2017, -2=fit to Marchant+2018, -3=fit to Woosley 2019, -4=Renzo+2022 with adjustable parameters from Hendriks+2023, -5=Belczynski 'weak' PISN pulsations, positive values=maximum mass of the remnant).
 */
 	int BSE_PISN;
 #define PARAMDOC_BSE_ECSN "ECSN turns on electron capture supernova, 1 is on, 0 is off" 
@@ -1443,9 +1443,9 @@ typedef struct{
 * @brief remnantflag = 0 gives the NS/BH mass distribution from default BSE; 1 uses the distribution of Belczynski et al. 2002, ApJ, 572, 407 (1), while 2, 3, and 4 give you the standard, 'rapid' and 'delayed' models of Fryer et al. 2012, ApJ, 749, 91
 */
         int BSE_GRFLAG;
-#define PARAMDOC_BSE_KICKFLAG "0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN"
+#define PARAMDOC_BSE_KICKFLAG "kickflag sets the natal kick prescription (1=standard COSMIC, 2=Giacobbo & Mapelli 2020 Eq. 1, 3=Giacobbo & Mapelli 2020 Eq. 2, 4=Bray & Eldridge 2016, 5=as 1 with Disberg & Mandel 2025 for CCSN, 6=Mandel & Mueller 2020, 7=Janka 2017 as in Chattaraj et al. 2026, 8=Richards et al. 2023, 9=Shariat et al. 2026; -1 to -6=as 1 to 6 with the old Kiel & Hurley 2009 prescription for the orbit)."
 /**
-* @brief remnantflag = 0 gives the NS/BH mass distribution from default BSE; 1 uses the distribution of Belczynski et al. 2002, ApJ, 572, 407 (1), while 2, 3, and 4 give you the standard, 'rapid' and 'delayed' models of Fryer et al. 2012, ApJ, 749, 91
+* @brief kickflag sets the natal kick prescription (1=standard COSMIC, 2=Giacobbo & Mapelli 2020 Eq. 1, 3=Giacobbo & Mapelli 2020 Eq. 2, 4=Bray & Eldridge 2016, 5=as 1 with Disberg & Mandel 2025 for CCSN, 6=Mandel & Mueller 2020, 7=Janka 2017 as in Chattaraj et al. 2026, 8=Richards et al. 2023, 9=Shariat et al. 2026; -1 to -6=as 1 to 6 with the old Kiel & Hurley 2009 prescription for the orbit).
 */
         int BSE_KICKFLAG;
 #define PARAMDOC_BSE_ZSUN "0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN"
@@ -1458,9 +1458,9 @@ typedef struct{
 * @brief remnantflag = 0 gives the NS/BH mass distribution from default BSE; 1 uses the distribution of Belczynski et al. 2002, ApJ, 572, 407 (1), while 2, 3, and 4 give you the standard, 'rapid' and 'delayed' models of Fryer et al. 2012, ApJ, 749, 91
 */
         int BSE_REMBAR_MASSLOSS;
-#define PARAMDOC_BSE_REMNANTFLAG "0 is default BSE, 1 is Belczynski 2002 Model, 2 is Belczynski 2008, 3 is Fryer 2012 'Rapid' SN, 4 is Fryer 2012 'Delayed' SN"
+#define PARAMDOC_BSE_REMNANTFLAG "remnantflag sets the remnant mass prescription for NSs and BHs (0=Hurley+2000 (default BSE), 1=Belczynski+2002, 2=Belczynski+2008, 3=Fryer+2012 rapid, 4=Fryer+2012 delayed, 5=Mandel & Mueller 2020, 6=Maltsev+2025, 7=Fryer+2022)."
 /**
-* @brief remnantflag = 0 gives the NS/BH mass distribution from default BSE; 1 uses the distribution of Belczynski et al. 2002, ApJ, 572, 407 (1), while 2, 3, and 4 give you the standard, 'rapid' and 'delayed' models of Fryer et al. 2012, ApJ, 749, 91
+* @brief remnantflag sets the remnant mass prescription for NSs and BHs (0=Hurley+2000 (default BSE), 1=Belczynski+2002, 2=Belczynski+2008, 3=Fryer+2012 rapid, 4=Fryer+2012 delayed, 5=Mandel & Mueller 2020, 6=Maltsev+2025, 7=Fryer+2022).
 */
 	int BSE_REMNANTFLAG;
 #define PARAMDOC_BSE_MXNS "mxns is the maximum NS mass (1.8, remnantflag=0; 3.0, remnantflag=1)."
