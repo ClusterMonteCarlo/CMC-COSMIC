@@ -79,10 +79,7 @@
    used when collisions are checked for.  */
 #define XCOLLTC 4.0 /* tidal capture */
 #define XCOLLSS 1.5 /* simple sticky spheres */
-/* rperi = XBS * a */
-#define XBS 2.0
-/* rperi = XBB * (a_1 + a_2) */
-#define XBB 2.0
+/* XBS and XBB (rperi prefactors for bin-sin and bin-bin) are now input parameters; see cmc_vars.h */
 /* hard soft boundary XHS=vorb/W */
 #define XHS 0.7
 /* safety factor used in the black hole accretion routine */
@@ -664,6 +661,16 @@ typedef struct{
 * @brief toggles binary--single interactions (0=off, 1=on)
 */
 	int BINSINGLE;
+#define PARAMDOC_XBB "prefactor for max pericenter of binary--binary interactions: rperi = XBB * (a1*(1+m2/m1)^(1/3) + a2*(1+m1/m2)^(1/3)) (default=2.0)"
+/**
+* @brief prefactor for max pericenter of binary--binary interactions
+*/
+	int XBB;
+#define PARAMDOC_XBS "prefactor for max pericenter of binary--single interactions: rperi = XBS * a * (1+m_sin/m_bin)^(1/3) (default=2.0)"
+/**
+* @brief prefactor for max pericenter of binary--single interactions
+*/
+	int XBS;
 #define PARAMDOC_STREAMS "to run the serial version with the given number of random streams - primarily used to mimic the parallel version running with the same no.of processors"
 	int STREAMS;
 /* Meagan - 3bb */
@@ -1664,17 +1671,29 @@ typedef struct{
 */
 	double mR_ave;
 /**
-* @brief  average of a for binaries
+* @brief  maximum single star mass
 */
-	double a_ave;
+	double m_sin_max;
 /**
-* @brief  average of a^2 for binaries
+* @brief  maximum binary star mass
 */
-	double a2_ave;
+	double m_bin_max;
 /**
-* @brief  average of m*a for binaries
+* @brief  average of a*H for binaries, H = (1 + m_sin_max/m_bin)^(1/3) (Hills factor w/ single perturber)
 */
-	double ma_ave;
+	double ahills_sin_ave;
+/**
+* @brief  average of (a*H)^2 for binaries, H = (1 + m_sin_max/m_bin)^(1/3) (Hills factor w/ single perturber)
+*/
+	double ahills2_sin_ave;
+/**
+* @brief  average of (a*H)^2 for binaries, H = (1 + m_bin_max/m_bin)^(1/3) (Hills factor w/ binary perturber)
+*/
+	double ahills2_bin_ave;
+/**
+* @brief  average of m*a*H for binaries, H = (1 + m_bin_max/m_bin)^(1/3) (Hills factor w/ binary perturber)
+*/
+	double mahills_bin_ave;
 } central_t;
 
 /* useful structure for core quantities */
