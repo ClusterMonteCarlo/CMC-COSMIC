@@ -160,18 +160,22 @@ void dynamics_apply(double dt, gsl_rng *rng)
 							//  TODO: should really check if a three-body induced collision would happen - simply check rp to see if stars would be in contact - if so, make them collide instead.
 
 							/* For now, can choose whether to allow any star types 
-								to be involved in 3bb formation, or only BHs */
-							if (ONLY_FORM_BH_THREEBODYBINARIES) { // let only BHs be involved in 3bb
+								to be involved in 3bb formation, only BHs, and only COs (BHs, NSs, WDs) */
+							if (ONLY_FORM_CO_THREEBODYBINARIES==1) { // let only BHs be involved in 3bb
 								if (star[k1].se_k==14 && star[k2].se_k==14 && star[k3].se_k==14) { // ALL objects BHs - form binary
 									form_binary = 1; // we will actually form it later
 									N3bbformed ++;
 								} else { // at least one object is not a BH; keep track of this 'light collision'
 									form_binary = 0; // BUT DO NOT form a binary
 								}
-
-								/* Allow all star types to be involved with 3bb formation. 
-									This is fine in point mass approximation, where we 
-									don't have to worry about physical collisions */
+							}
+							else if (ONLY_FORM_CO_THREEBODYBINARIES==2) { // let any combination of COs be involved in 3bb (Chris O'C, Sept 2026)
+								if ( ((star[k1].se_k > 9) && (star[k1].se_k < 15)) && ((star[k2].se_k > 9) && (star[k2].se_k < 15)) && ((star[k3].se_k > 9) && (star[k3].se_k < 15)) ) {
+									form_binary = 1; // we will actually form it later
+									N3bbformed ++;
+								} else { // at least one object is not a CO; keep track of this 'light collision'
+									form_binary = 0; // BUT DO NOT form a binary
+								}
 							} else {  
 								form_binary = 1;
 								N3bbformed ++;
