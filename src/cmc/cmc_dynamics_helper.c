@@ -2632,14 +2632,14 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						binary[star[knew].binind].rad1*units.l/RSUN, binary[star[knew].binind].rad2*units.l/RSUN);
 				
 					// copy knewp's properties into knewt (slot sid)
-					cp_SEvars_to_star(knewp, 0, &tempstar);
-					cp_m_to_star(knewp, 0, &tempstar);
+					cp_SEvars_to_star(knewp, -1, &tempstar);
+					cp_m_to_star(knewp, -1, &tempstar);
 					cp_starSEvars_to_binmember(tempstar, star[knewt].binind, sid);
 					cp_starmass_to_binmember(tempstar, star[knewt].binind, sid);
 					if (!(sid)) {
-						binary[star[knewt].binind].id1 = tempstar.id;
+						binary[star[knewt].binind].id1 = star[knewp].id;
 					} else {
-						binary[star[knewt].binind].id2 = tempstar.id;
+						binary[star[knewt].binind].id2 = star[knewp].id;
 					}
 					// populate knewt binary fields from the triple's outer orbit -- suggested by Copilot during automatic Github PR review
  					binary[star[knewt].binind].a = hier.obj[i]->a * cmc_units.l;
