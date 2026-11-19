@@ -2595,10 +2595,6 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 				binary[star[knew].binind].bse_tb = sqrt(cub(binary[star[knew].binind].a * units.l / AU)/(binary[star[knew].binind].bse_mass[0]+binary[star[knew].binind].bse_mass[1]))*365.25;
 				
 				/* track binding energy */
-				BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc) / 
-					(2.0 * binary[star[knew].binind].a) 
-					- binary[star[knew].binind].Eint1 - binary[star[knew].binind].Eint2
-					- star[knewp].Eint;
                 compress_binary(&star[knew], &binary[star[knew].binind]);
 
 				if (is_hard_triple) {	
@@ -2632,14 +2628,14 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
 						binary[star[knew].binind].rad1*units.l/RSUN, binary[star[knew].binind].rad2*units.l/RSUN);
 				
 					// copy knewp's properties into knewt (slot sid)
-					cp_SEvars_to_star(knewp, 0, &tempstar);
-					cp_m_to_star(knewp, 0, &tempstar);
+					cp_SEvars_to_star(knewp, -1, &tempstar);
+					cp_m_to_star(knewp, -1, &tempstar);
 					cp_starSEvars_to_binmember(tempstar, star[knewt].binind, sid);
 					cp_starmass_to_binmember(tempstar, star[knewt].binind, sid);
 					if (!(sid)) {
-						binary[star[knewt].binind].id1 = tempstar.id;
+						binary[star[knewt].binind].id1 = binary[star[knewp].binind].id1;
 					} else {
-						binary[star[knewt].binind].id2 = tempstar.id;
+						binary[star[knewt].binind].id2 = binary[star[knewp].binind].id2;
 					}
 					// populate knewt binary fields from the triple's outer orbit -- suggested by Copilot during automatic Github PR review
  					binary[star[knewt].binind].a = hier.obj[i]->a * cmc_units.l;
@@ -2651,10 +2647,14 @@ void binint_do(long k, long kp, double rperi, double w[4], double W, double rcm,
  					set_star_EJ(knewt);
  					set_star_news(knewt);
  					set_star_olds(knewt);
+					BEf += binary[star[knewt].binind].m1 * binary[star[knewt].binind].m2 * sqr(madhoc) / (2.0 * binary[star[knewt].binind].a) 
+						- binary[star[knewt].binind].Eint1 - binary[star[knewt].binind].Eint2;
 					/* destroy the two intermediate objects */
 					destroy_obj(knew);
 					destroy_obj(knewp);
 				} else {
+					BEf += binary[star[knew].binind].m1 * binary[star[knew].binind].m2 * sqr(madhoc) / (2.0 * binary[star[knew].binind].a) 
+						- binary[star[knew].binind].Eint1 - binary[star[knew].binind].Eint2 - star[knewp].Eint;
 					star[knewp].E_excess = energy_from_outer * cmc_units.E; 
 				}
 			}
