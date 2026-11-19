@@ -473,7 +473,7 @@ List of triples formed dynamically in the cluster as a result of three- and four
 ``aout``                         Semi-major axis of outer binary [AU]
 ``ein``                          Eccentricity of inner binary
 ``eout``                         Eccentricity of outer binary
-``Iout``                         Mutual inclination of inner and outer orbits [deg]
+``Itot``                         Mutual inclination of inner and outer orbits [deg]
 ``ktypein0``                     Inner object `_0` stellar type
 ``ktypein1``                     Inner object `_1` stellar type
 ``kytpeout``                     Outer object stellar type
