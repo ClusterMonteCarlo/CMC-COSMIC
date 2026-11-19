@@ -115,7 +115,7 @@ void stellar_evolve(cmc_fits_data_t *cfd)
 	bse_set_bwind(BSE_BWIND);
 	bse_set_hewind(BSE_HEWIND);
 	bse_set_windflag(BSE_WINDFLAG);
-	bse_set_LBV_flag(2);
+	bse_set_LBV_flag(3);
 	bse_set_maltsev_mode(0);
 	bse_set_maltsev_fallback(0.5);
 	bse_set_maltsev_pf_prob(0.1);
