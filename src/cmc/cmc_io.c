@@ -1442,6 +1442,50 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BSE_LBV_FLAG);
 				sscanf(values, "%d", &BSE_LBV_FLAG);
 				parsed.BSE_LBV_FLAG = 1;
+			} else if (strcmp(parameter_name, "MALTSEV_MODE")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MALTSEV_MODE);
+				sscanf(values, "%d", &BSE_MALTSEV_MODE);
+				parsed.BSE_MALTSEV_MODE = 1;
+			} else if (strcmp(parameter_name, "MALTSEV_FALLBACK")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MALTSEV_FALLBACK);
+				sscanf(values, "%lf", &BSE_MALTSEV_FALLBACK);
+				parsed.BSE_MALTSEV_FALLBACK = 1;
+			} else if (strcmp(parameter_name, "MALTSEV_PF_PROB")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MALTSEV_PF_PROB);
+				sscanf(values, "%lf", &BSE_MALTSEV_PF_PROB);
+				parsed.BSE_MALTSEV_PF_PROB = 1;
+			} else if (strcmp(parameter_name, "FRYER_MASS_LIMIT")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_FRYER_MASS_LIMIT);
+				sscanf(values, "%d", &BSE_FRYER_MASS_LIMIT);
+				parsed.BSE_FRYER_MASS_LIMIT = 1;
+			} else if (strcmp(parameter_name, "FRYER_FMIX")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_FRYER_FMIX);
+				sscanf(values, "%lf", &BSE_FRYER_FMIX);
+				parsed.BSE_FRYER_FMIX = 1;
+			} else if (strcmp(parameter_name, "FRYER_MCRIT_NSBH")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_FRYER_MCRIT_NSBH);
+				sscanf(values, "%lf", &BSE_FRYER_MCRIT_NSBH);
+				parsed.BSE_FRYER_MCRIT_NSBH = 1;
+			} else if (strcmp(parameter_name, "PPI_CO_SHIFT")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_PPI_CO_SHIFT);
+				sscanf(values, "%lf", &BSE_PPI_CO_SHIFT);
+				parsed.BSE_PPI_CO_SHIFT = 1;
+			} else if (strcmp(parameter_name, "PPI_EXTRA_ML")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_PPI_EXTRA_ML);
+				sscanf(values, "%lf", &BSE_PPI_EXTRA_ML);
+				parsed.BSE_PPI_EXTRA_ML = 1;
+			} else if (strcmp(parameter_name, "MM_MU_NS")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MM_MU_NS);
+				sscanf(values, "%lf", &BSE_MM_MU_NS);
+				parsed.BSE_MM_MU_NS = 1;
+			} else if (strcmp(parameter_name, "MM_MU_BH")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_MM_MU_BH);
+				sscanf(values, "%lf", &BSE_MM_MU_BH);
+				parsed.BSE_MM_MU_BH = 1;
+			} else if (strcmp(parameter_name, "SMT_PERIASTRON_CHECK")==0) {
+				PRINT_PARSED(PARAMDOC_BSE_SMT_PERIASTRON_CHECK);
+				sscanf(values, "%lf", &BSE_SMT_PERIASTRON_CHECK);
+				parsed.BSE_SMT_PERIASTRON_CHECK = 1;
                         } else if (strcmp(parameter_name, "EDDLIMFLAG")== 0) {
                                 PRINT_PARSED(PARAMDOC_BSE_EDDLIMFLAG);
                                 sscanf(values, "%d", &BSE_EDDLIMFLAG);
@@ -1713,7 +1757,7 @@ if(myid==0) {
 	CHECK_PARSED(RELAXATION, 1, PARAMDOC_RELAXATION);
 	CHECK_PARSED(TIDALLY_STRIP_STARS, 1, PARAMDOC_TIDALLY_STRIP_STARS);
 	CHECK_PARSED(THETASEMAX, 1.412, PARAMDOC_THETASEMAX);
-	CHECK_PARSED(STELLAR_EVOLUTION, 0, PARAMDOC_STELLAR_EVOLUTION);
+	CHECK_PARSED(STELLAR_EVOLUTION, 1, PARAMDOC_STELLAR_EVOLUTION);
 	CHECK_PARSED(STELLAR_ENGINE, 0, PARAMDOC_STELLAR_ENGINE);
 	CHECK_PARSED(PATH_TO_TRACKS, NULL, PARAMDOC_PATH_TO_TRACKS);
 	CHECK_PARSED(PATH_TO_HE_TRACKS, NULL, PARAMDOC_PATH_TO_HE_TRACKS);
@@ -1730,13 +1774,13 @@ if(myid==0) {
 	CHECK_PARSED(WIND_FACTOR, 1.0, PARAMDOC_WIND_FACTOR);
 	CHECK_PARSED(TIDAL_TREATMENT, 0, PARAMDOC_TIDAL_TREATMENT);
 	CHECK_PARSED(RTIDAL_COEFF, 1.0, PARAMDOC_RTIDAL_COEFF);
-	CHECK_PARSED(SS_COLLISION, 0, PARAMDOC_SS_COLLISION);
+	CHECK_PARSED(SS_COLLISION, 1, PARAMDOC_SS_COLLISION);
 	CHECK_PARSED(TIDAL_CAPTURE, 0, PARAMDOC_TIDAL_CAPTURE);
 	CHECK_PARSED(CO_TDE, 0, PARAMDOC_CO_TDE);
     CHECK_PARSED(WD_TC, 0, PARAMDOC_WD_TC);
     CHECK_PARSED(TDE_SPINUP, 0, PARAMDOC_TDE_SPINUP);
     CHECK_PARSED(S_TDE, 0.2, PARAMDOC_S_TDE);
-	CHECK_PARSED(BH_CAPTURE, 0, PARAMDOC_BH_CAPTURE);
+	CHECK_PARSED(BH_CAPTURE, 1, PARAMDOC_BH_CAPTURE);
     CHECK_PARSED(TC_POLYTROPE, 0, PARAMDOC_TC_POLYTROPE);
     CHECK_PARSED(TC_FACTOR, 1.0, PARAMDOC_TC_FACTOR);
     CHECK_PARSED(COLL_FACTOR, 1.0, PARAMDOC_COLL_FACTOR);
@@ -1748,7 +1792,7 @@ if(myid==0) {
 	CHECK_PARSED(BINSINGLE, 1, PARAMDOC_BINSINGLE);
 	CHECK_PARSED(STREAMS, 1, PARAMDOC_STREAMS);
 	/*Meagan: new parameters for 3-body binary formation*/
-	CHECK_PARSED(THREEBODYBINARIES, 0, PARAMDOC_THREEBODYBINARIES);
+	CHECK_PARSED(THREEBODYBINARIES, 1, PARAMDOC_THREEBODYBINARIES);
 	CHECK_PARSED(MIN_BINARY_HARDNESS, 1.0, PARAMDOC_MIN_BINARY_HARDNESS);
 	// Chris O'C - new parameter to adjust the hardness distribution for 3BBF
 	CHECK_PARSED(BINARY_HARDNESS_POWER, -5.5, PARAMDOC_BINARY_HARDNESS_POWER);
@@ -1766,20 +1810,20 @@ if(myid==0) {
 	CHECK_PARSED(DF_INTEGRATED_CRITERION,0, PARAMDOC_DF_INTEGRATED_CRITERION);
 	CHECK_PARSED(INITIAL_VALUE_DF_INTEGRAND,0., PARAMDOC_INITIAL_VALUE_DF_INTEGRAND);
 
-	CHECK_PARSED(T_MAX, 20.0, PARAMDOC_T_MAX);
-	CHECK_PARSED(T_MAX_PHYS, 12.0, PARAMDOC_T_MAX_PHYS);
-	CHECK_PARSED(T_MAX_COUNT, 1000000, PARAMDOC_T_MAX_COUNT);
+	CHECK_PARSED(T_MAX, 100.0, PARAMDOC_T_MAX);
+	CHECK_PARSED(T_MAX_PHYS, 13.8, PARAMDOC_T_MAX_PHYS);
+	CHECK_PARSED(T_MAX_COUNT, 10000000, PARAMDOC_T_MAX_COUNT);
 	CHECK_PARSED(MAX_WCLOCK_TIME, 2592000, PARAMDOC_MAX_WCLOCK_TIME);
 	CHECK_PARSED(CHECKPOINT_INTERVAL, 43200, PARAMDOC_CHECKPOINT_INTERVAL);
 	CHECK_PARSED(CHECKPOINTS_TO_KEEP, 1, PARAMDOC_CHECKPOINTS_TO_KEEP);
-	CHECK_PARSED(STOPATCORECOLLAPSE, 1, PARAMDOC_STOPATCORECOLLAPSE);
-	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT, 0.5, PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT);
+	CHECK_PARSED(STOPATCORECOLLAPSE, 0, PARAMDOC_STOPATCORECOLLAPSE);
+	CHECK_PARSED(TERMINAL_ENERGY_DISPLACEMENT, 10.0, PARAMDOC_TERMINAL_ENERGY_DISPLACEMENT);
 
 	CHECK_PARSED(BH_SNAPSHOTTING, 0, PARAMDOC_BH_SNAPSHOTTING);
 	CHECK_PARSED(BH_SNAPSHOT_DELTACOUNT, 50, PARAMDOC_BH_SNAPSHOT_DELTACOUNT);
 	CHECK_PARSED(PULSAR_DELTACOUNT, 50, PARAMDOC_PULSAR_DELTACOUNT);    //Shi: new parameter
-	CHECK_PARSED(SNAPSHOTTING, 0, PARAMDOC_SNAPSHOTTING);
-	CHECK_PARSED(SNAPSHOT_DELTACOUNT, 250, PARAMDOC_SNAPSHOT_DELTACOUNT);
+	CHECK_PARSED(SNAPSHOTTING, 1, PARAMDOC_SNAPSHOTTING);
+	CHECK_PARSED(SNAPSHOT_DELTACOUNT, 1000, PARAMDOC_SNAPSHOT_DELTACOUNT);
 	CHECK_PARSED(SNAPSHOT_CORE_COLLAPSE, 0, PARAMDOC_SNAPSHOT_CORE_COLLAPSE);
 	CHECK_PARSED(SNAPSHOT_WINDOWS, NULL, PARAMDOC_SNAPSHOT_WINDOWS);
 	CHECK_PARSED(SNAPSHOT_WINDOW_UNITS, "Trel", PARAMDOC_SNAPSHOT_WINDOW_UNITS);
@@ -1796,7 +1840,7 @@ if(myid==0) {
 	CHECK_PARSED(SG_PARTICLE_FRACTION, 0.95, PARAMDOC_SG_PARTICLE_FRACTION);
 	CHECK_PARSED(FORCE_RLX_STEP, 0, PARAMDOC_FORCE_RLX_STEP);
     CHECK_PARSED(DT_HARD_BINARIES, 0, PARAMDOC_DT_HARD_BINARIES);
-    CHECK_PARSED(HARD_BINARY_KT, 1, PARAMDOC_HARD_BINARY_KT);
+    CHECK_PARSED(HARD_BINARY_KT, 0.7, PARAMDOC_HARD_BINARY_KT);
 	CHECK_PARSED(BH_LC_FDT, 0.0, PARAMDOC_BH_LC_FDT);
 	CHECK_PARSED(AVEKERNEL, 20, PARAMDOC_AVEKERNEL);
 	CHECK_PARSED(MIN_CHUNK_SIZE, 20, PARAMDOC_MIN_CHUNK_SIZE);
@@ -1833,6 +1877,81 @@ if(myid==0) {
         // default=2, which reproduces windflag=3 in COSMIC < v3.7.2
         CHECK_PARSED(BSE_LBV_FLAG, 2, PARAMDOC_BSE_LBV_FLAG);
 
+        // maltsev_mode sets the mode to use the Maltsev remnant mass prescription (only relevant if remnantflag=6)
+        // (introduced in COSMIC v3.7.0)
+        // maltsev_mode=0: extrapolate the Maltsev+25 fits to the full range of metallicities
+        // maltsev_mode=1: extrapolate the fits only within Z/Zsun=[1/50,1], use boundary values outside this range
+        // maltsev_mode=2: no extrapolation: use the fits only within Z/Zsun=[1/10,1], use boundary values outside this range
+        // default=0 (COSMIC's default)
+        CHECK_PARSED(BSE_MALTSEV_MODE, 0, PARAMDOC_BSE_MALTSEV_MODE);
+
+        // maltsev_fallback sets the fallback fraction for partial fallback in the Maltsev remnant mass prescription
+        // (only relevant if remnantflag=6): Mrem = M_NS + maltsev_fallback*(M_core,total - M_NS), with M_NS = 1.4 Msun
+        // (introduced in COSMIC v3.7.0)
+        // range [0,1]: sets the fallback fraction// maltsev_fallback=-1: linear relation with the CO core mass from Ugolini+25
+        // default=0.5 (COSMIC's default)
+        CHECK_PARSED(BSE_MALTSEV_FALLBACK, 0.5, PARAMDOC_BSE_MALTSEV_FALLBACK);
+
+        // maltsev_pf_prob sets the probability of partial fallback leading to BH formation in the Maltsev remnant mass
+        // prescription when the CO core mass is in the partial fallback regime M2 <= M_CO <= M3 (only relevant if remnantflag=6)
+        // (introduced in COSMIC v3.7.0)
+        // range [0,1]
+        // default=0.1 (COSMIC's default)
+        CHECK_PARSED(BSE_MALTSEV_PF_PROB, 0.1, PARAMDOC_BSE_MALTSEV_PF_PROB);
+
+        // fryer_mass_limit sets the mass limit to use when applying a remnant mass prescription from Fryer+12 (remnantflag=3 or 4)
+        // (introduced in COSMIC v3.7.2)
+        // fryer_mass_limit=0: limit the remnant mass to the total stellar mass at the time of core collapse
+        // fryer_mass_limit=1: limit the remnant mass to the total core mass at the time of core collapse
+        // default=0 (COSMIC's default)
+        CHECK_PARSED(BSE_FRYER_MASS_LIMIT, 0, PARAMDOC_BSE_FRYER_MASS_LIMIT);
+
+        // fryer_fmix sets the mixing fraction for the Fryer+2022 SN model (remnantflag=7)
+        // (introduced in COSMIC v3.7.8)
+        // positive values
+        // default=1.0 (COSMIC's default)
+        CHECK_PARSED(BSE_FRYER_FMIX, 1.0, PARAMDOC_BSE_FRYER_FMIX);
+
+        // fryer_mcrit_nsbh sets the critical core mass (solar masses) for delineating between NSs and BHs
+        // with the Fryer+2022 SN model (remnantflag=7)
+        // (introduced in COSMIC v3.7.8)
+        // positive values
+        // default=5.75 (COSMIC's default)
+        CHECK_PARSED(BSE_FRYER_MCRIT_NSBH, 5.75, PARAMDOC_BSE_FRYER_MCRIT_NSBH);
+
+        // ppi_co_shift shifts the CO core mass thresholds for pulsational pair instability and pair instability SNe
+        // by a constant amount (only relevant if pisn=-4); the default threshold is 38 Msun
+        // (introduced in COSMIC v3.7.2)
+        // positive values shift the threshold upwards, negative values downwards
+        // default=0.0 (COSMIC's default: no change)
+        CHECK_PARSED(BSE_PPI_CO_SHIFT, 0.0, PARAMDOC_BSE_PPI_CO_SHIFT);
+
+        // ppi_extra_ml sets the amount of extra mass loss in Msun applied to stars that go through
+        // pulsational pair instability (only relevant if pisn=-4)
+        // (introduced in COSMIC v3.7.2)
+        // positive values: extra mass loss reduces the final remnant mass
+        // default=0.0 (COSMIC's default: no extra mass loss)
+        CHECK_PARSED(BSE_PPI_EXTRA_ML, 0.0, PARAMDOC_BSE_PPI_EXTRA_ML);
+
+        // mm_mu_ns sets the NS kick scaling prefactor for the Mandel & Mueller 2020 kick prescription (only relevant if kickflag=6)
+        // (introduced in COSMIC v3.7.0)
+        // positive values
+        // default=400.0 (COSMIC's default)
+        CHECK_PARSED(BSE_MM_MU_NS, 400.0, PARAMDOC_BSE_MM_MU_NS);
+
+        // mm_mu_bh sets the BH kick scaling prefactor for the Mandel & Mueller 2020 kick prescription (only relevant if kickflag=6)
+        // (introduced in COSMIC v3.7.0)
+        // positive values
+        // default=200.0 (COSMIC's default)
+        CHECK_PARSED(BSE_MM_MU_BH, 200.0, PARAMDOC_BSE_MM_MU_BH);
+
+        // smt_periastron_check determines whether to check for contact at periastron for binaries
+        // that are undergoing stable mass transfer
+        // (introduced in COSMIC v3.7.8)
+        // smt_periastron_check=0: do not check// smt_periastron_check=1: check
+        // default=0 (COSMIC's default)
+        CHECK_PARSED(BSE_SMT_PERIASTRON_CHECK, 0, PARAMDOC_BSE_SMT_PERIASTRON_CHECK);
+
         // eddlimflag turns on metallicity dependence on winds, affecting the
         // mass-loss rate of low-metallicity stars near the Eddington limit
         // (see Grafener et al. 2011, Giacobbo et al. 2018)
@@ -1851,8 +1970,8 @@ if(myid==0) {
 
         // hewind is a helium star mass loss factor, between 0 and 1
         // only applies if windflag=0, otherwise it is overwritten
-        // default=1.0
-        CHECK_PARSED(BSE_HEWIND, 1.0, PARAMDOC_BSE_HEWIND);
+        // default=0.5
+        CHECK_PARSED(BSE_HEWIND, 0.5, PARAMDOC_BSE_HEWIND);
 
         // beta is wind velocity factor: proportional to vwind^2
         // beta<0: follows StarTrack 2008// beta=0.125: stock BSE
@@ -1968,13 +2087,13 @@ if(myid==0) {
         CHECK_PARSED(BSE_BDECAYFAC, 1, PARAMDOC_BSE_BDECAYFAC);
         CHECK_PARSED(BSE_HTPMB, 1, PARAMDOC_BSE_HTPMB);
         CHECK_PARSED(BSE_ST_CR, 1, PARAMDOC_BSE_ST_CR);
-        CHECK_PARSED(BSE_ST_TIDE, 0, PARAMDOC_BSE_ST_TIDE);
+        CHECK_PARSED(BSE_ST_TIDE, 1, PARAMDOC_BSE_ST_TIDE);
         
 	//
         // aic=1 turns on low kicks for accretion induced collapse
         // works even if ecsn=0
         // default=1
-        CHECK_PARSED(BSE_REJUVFLAG, 1.0, PARAMDOC_BSE_REJUVFLAG);
+        CHECK_PARSED(BSE_REJUVFLAG, 0, PARAMDOC_BSE_REJUVFLAG);
 
 
         // ussn=1 uses reduced kicks (drawn from the sigmadiv distritbuion) for ultra-stripped supernovae
@@ -1988,7 +2107,7 @@ if(myid==0) {
         // pisn=-2 uses a polynomial fit to Table 1 Marchant 2018
         // pisn=-3 uses a polynomial fit to Table 5 in Woosley 2019
         // pisn=0 turns off (pulsational) pair instability supernovae
-        // default=45
+        // default=-2
         CHECK_PARSED(BSE_PISN, -2, PARAMDOC_BSE_PISN);
 
         // bhsigmafrac sets the fractional modification used for scaling down the sigma for BHs
@@ -1998,7 +2117,7 @@ if(myid==0) {
 
         CHECK_PARSED(BSE_GRFLAG, 1, PARAMDOC_BSE_GRFLAG);
 
-        CHECK_PARSED(BSE_KICKFLAG, 0, PARAMDOC_BSE_KICKFLAG);
+        CHECK_PARSED(BSE_KICKFLAG, 1, PARAMDOC_BSE_KICKFLAG);
 
         CHECK_PARSED(BSE_ZSUN, 0.014, PARAMDOC_BSE_ZSUN);
 
@@ -2078,7 +2197,7 @@ if(myid==0) {
         // ck is related to magnetic field evolution of pulsars, see Kiel+2008
         // default=1000
         CHECK_PARSED(BSE_CK, 1000.00, PARAMDOC_BSE_CK);
-        CHECK_PARSED(BSE_REJUV_FAC, 0.1, PARAMDOC_BSE_REJUV_FAC);
+        CHECK_PARSED(BSE_REJUV_FAC, 1.0, PARAMDOC_BSE_REJUV_FAC);
 
 
 	CHECK_PARSED(BH_RADIUS_MULTIPLYER, 5, PARAMDOC_BH_RADIUS_MULTIPLYER);

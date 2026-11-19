@@ -214,7 +214,9 @@ void bse_evolv2(int *kstar, double *mass0, double *mass, double *rad, double *lu
         in_epoch[i] = epoch[i]; in_tms[i] = tms[i];   in_bhspin[i] = bhspin[i];
     }
 
+    double xi_in = windvars_.xi;
     evolv2_(kstar,mass,tb,ecc,z,tphysf,dtp,mass0,rad,lum,massc,radc, menv,renv,ospin,B_0,bacc,tacc,epoch,tms,bhspin,tphys,zpars, kick_info, &bpp_index_out, &bcm_index_out);
+    windvars_.xi = xi_in;
 
     /* ---- [mass-gain check] sanity checks on one isolated evolv2 call ----
      * Flags calls in which
@@ -528,7 +530,7 @@ void bse_hrdiag(double *mass, double *aj, double *mt, double *tm, double *tn, do
      renv = envelope radius
      k2 = radius of gyration of envelope
    */
-  int kidx=0;
+  int kidx=1;
 
   hrdiag_(mass, aj, mt, tm, tn, tscls, lums, GB, zpars, r, lum, kw, mc, rc, menv, renv, k2, bhspin, &kidx);
 }
@@ -586,7 +588,8 @@ void bse_kick(int *kw, double *m1, double *m1n, double *m2, double *ecc, double 
     int disrupt=0;
     double tphys=0.0;
 
-    kick_(kw, m1, m1n, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, &snvars_.sigma, kick_info, &disrupt, &tphys);
+    double sigmahold = snvars_.sigma;
+    kick_(kw, m1, m1n, m1n, m2, ecc, sep, jorb, vk, snstar, r2, fallback, &sigmahold, kick_info, &disrupt, &tphys);
 }
 
 /**
@@ -705,9 +708,10 @@ void bse_comenv(bse_binary *tempbinary, double *zpars, double kick_info[19][2], 
   tphys = (*tempbinary).bse_tphys;
   /* deltam_1, deltam_2, dtm are METISSE-only; SSE path ignores them. */
   double comenv_deltam_1 = 0.0, comenv_deltam_2 = 0.0, comenv_dtm = 0.0;
+  double sigmahold = snvars_.sigma;
   comenv_(&((*tempbinary).bse_mass0[0]), &((*tempbinary).bse_mass[0]), &((*tempbinary).bse_massc[0]), &(AJ[0]), &JSPIN1, &((*tempbinary).bse_kw[0]),
 	  &((*tempbinary).bse_mass0[1]), &((*tempbinary).bse_mass[1]), &((*tempbinary).bse_massc[1]), &(AJ[1]), &JSPIN2, &((*tempbinary).bse_kw[1]),
-	  zpars, &((*tempbinary).e), &((*tempbinary).a), &(JORB), &COEL, &star1, &star2, &vk, kick_info, &((*tempbinary).bse_bcm_formation[0]), &((*tempbinary).bse_bcm_formation[1]), &snvars_.sigma, &((*tempbinary).bse_bhspin[0]),&((*tempbinary).bse_bhspin[1]),&binstate,&mergertype,&jp,&tphys,&switchedCE,rad,tms,&evolve_type,&disrupt,lumin,B_0,bacc,tacc,epoch,menv_bpp,renv_bpp,&comenv_deltam_1,&comenv_deltam_2,&comenv_dtm);
+	  zpars, &((*tempbinary).e), &((*tempbinary).a), &(JORB), &COEL, &star1, &star2, &vk, kick_info, &((*tempbinary).bse_bcm_formation[0]), &((*tempbinary).bse_bcm_formation[1]), &sigmahold, &((*tempbinary).bse_bhspin[0]),&((*tempbinary).bse_bhspin[1]),&binstate,&mergertype,&jp,&tphys,&switchedCE,rad,tms,&evolve_type,&disrupt,lumin,B_0,bacc,tacc,epoch,menv_bpp,renv_bpp,&comenv_deltam_1,&comenv_deltam_2,&comenv_dtm);
   //printf("kw1i=%d kw2i=%d m1f=%g m2f=%g r1f=%g r2f=%g ", (*tempbinary).bse_kw[0], (*tempbinary).bse_kw[1], (*tempbinary).bse_mass[0], (*tempbinary).bse_mass[1], (*tempbinary).bse_radius[0], (*tempbinary).bse_radius[1]);
   //printf("\n");
   ////
@@ -832,6 +836,17 @@ void bse_set_bwind(double bwind) { windvars_.bwind = bwind; }
 void bse_set_hewind(double hewind) { windvars_.hewind = hewind; }
 void bse_set_windflag(int windflag) { flags_.windflag = windflag; }
 void bse_set_LBV_flag(int LBV_flag) { windvars_.LBV_flag = LBV_flag; }
+void bse_set_maltsev_mode(int maltsev_mode) { flags_.maltsev_mode = maltsev_mode; }
+void bse_set_maltsev_fallback(double maltsev_fallback) { snvars_.maltsev_fallback = maltsev_fallback; }
+void bse_set_maltsev_pf_prob(double maltsev_pf_prob) { snvars_.maltsev_pf_prob = maltsev_pf_prob; }
+void bse_set_fryer_mass_limit(int fryer_mass_limit) { snvars_.fryer_mass_limit = fryer_mass_limit; }
+void bse_set_fryer_fmix(double fryer_fmix) { snvars_.fryer_fmix = fryer_fmix; }
+void bse_set_fryer_mcrit_nsbh(double fryer_mcrit_nsbh) { snvars_.fryer_mcrit_nsbh = fryer_mcrit_nsbh; }
+void bse_set_ppi_co_shift(double ppi_co_shift) { snvars_.ppi_co_shift = ppi_co_shift; }
+void bse_set_ppi_extra_ml(double ppi_extra_ml) { snvars_.ppi_extra_ml = ppi_extra_ml; }
+void bse_set_mm_mu_ns(double mm_mu_ns) { snvars_.mm_mu_ns = mm_mu_ns; }
+void bse_set_mm_mu_bh(double mm_mu_bh) { snvars_.mm_mu_bh = mm_mu_bh; }
+void bse_set_smt_periastron_check(double smt_periastron_check) { mtvars_.smt_periastron_check = smt_periastron_check; }
 void bse_set_pisn(double pisn) { snvars_.pisn = pisn; }
 void bse_set_ecsn(double ecsn) { snvars_.ecsn = ecsn; }
 void bse_set_ecsn_mlow(double ecsn_mlow) { snvars_.ecsn_mlow = ecsn_mlow; }
@@ -922,16 +937,21 @@ void bse_set_bcm_bpp_cols(void){
     };
 
     // BCM_COLUMNS → ALL_COLUMNS (38 elements)
+    // Resulting CMC bcm columns (1-based): 1 tphys, 2 kstar_1, 3 mass0_1, 4 mass_1, 5 lum_1, 6 rad_1, 7 teff_1,
+    // 8 massc_he_layer_1, 9 radc_1, 10 menv_1, 11 renv_1, 12 epoch_1, 13 omega_spin_1, 14 deltam_1, 15 RRLO_1,
+    // 16-29 the same for star 2, 30 porb, 31 sep, 32 ecc, 33 B_1, 34 B_2, 35 SN_1, 36 SN_2, 37 bin_state, 38 merger_type
     int bcm_to_all[38] = {
-        0,  3, 19,  1, 21, 17, 23, 15, 25, 27,  /* tphys..menv_1 */
-        29, 39, 31, 43,  8,  4, 20,  2, 22, 18,  /* renv_1..rad_2 */
-        24, 16, 26, 28, 30, 40, 32, 44,  9,  6,  /* teff_2..porb */
-        5,  7, 33, 34, 45, 46, 47, 48           /* sep..merger_type */
+        0,  3, 21,  1, 23, 19, 25, 15, 27, 29,  /* tphys..menv_1 */
+        31, 41, 33, 45,  8,  4, 22,  2, 24, 20,  /* renv_1..rad_2 */
+        26, 16, 28, 30, 32, 42, 34, 46,  9,  6,  /* teff_2..porb */
+        5,  7, 35, 36, 47, 48, 49, 50           /* sep..merger_type */
     };
 
+    // CMC bcm columns 39-52: evol_type, aj_1, aj_2, tms_1, tms_2, bacc_1, bacc_2, tacc_1, tacc_2, bhspin_1,
+    // bhspin_2, massc_co_layer_1, massc_co_layer_2, metallicity
     int bcm_to_all_extra[14] = {
-       10, 11, 12, 13, 14, 35, 36, 37, 38, 41,
-       42, 49, 50, 51
+       10, 11, 12, 13, 14, 37, 38, 39, 40, 43,
+       44, 17, 18, 51
     };
 
     for(i=0 ; i < BCM_NUM_COLUMNS ; i++)
