@@ -26,6 +26,7 @@ void dynamics_apply(double dt, gsl_rng *rng)
 	double relbeta[4]={PI/2.0,PI/4.0,PI/8.0,PI/16.0}, maverelbeta[4]={0.0,0.0,0.0,0.0}, raverelbeta[4]={0.0,0.0,0.0,0.0};
 	double qaverelbeta[4]={0.0,0.0,0.0,0.0};
 	double mass_k, mass_kp; //Bharath: MPI
+	double mass_bin, mass_sin; // masses for tidal (Hills) factor in bin-sin cross section
 /* Meagan: added these variables for three-body binary formation */
 	long sq, k1, k2, k3, form_binary;
 	double n_threshold, triplet_count, num_triplets_averaged=200;
@@ -246,7 +247,9 @@ are skipped if they already interacted in 3bb loop!  */
 	
 		if (star[k].binind > 0 && star[kp].binind > 0) {
 			/* binary--binary cross section */
-			rperi = XBB * (binary[star[k].binind].a + binary[star[kp].binind].a);
+			/* each binary's a is scaled by its own tidal (Hills) factor (1 + m_perturber/m_binary)^(1/3) */
+			rperi = XBB * (binary[star[k].binind].a * pow(1.0 + mass_kp/mass_k, 1.0/3.0)
+			             + binary[star[kp].binind].a * pow(1.0 + mass_k/mass_kp, 1.0/3.0));
 
 			if (BINBIN) {
 				S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));
@@ -257,13 +260,17 @@ are skipped if they already interacted in 3bb loop!  */
 			if (star[k].binind > 0) {
 				kbin = k;
 				ksin = kp;
+				mass_bin = mass_k;
+				mass_sin = mass_kp;
 			} else {
 				kbin = kp;
 				ksin = k;
+				mass_bin = mass_kp;
+				mass_sin = mass_k;
 			}
 
-			/* binary--single cross section */
-			rperi = XBS * binary[star[kbin].binind].a;
+			/* binary--single cross section, with tidal (Hills) factor (1 + m_sin/m_bin)^(1/3) */
+			rperi = XBS * binary[star[kbin].binind].a * pow(1.0 + mass_sin/mass_bin, 1.0/3.0);
 
 			if (BINSINGLE) {
 				S = PI * sqr(rperi) * (1.0 + 2.0*madhoc*(mass_k+mass_kp)/(rperi*sqr(W)));

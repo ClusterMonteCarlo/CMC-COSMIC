@@ -147,6 +147,16 @@ DYNAMICS FLAGS
                                     **BINSINGLE = 1**
 
 
+``XBB``                             Prefactor for the maximum pericenter of binary--binary encounters: rperi = XBB * (a1*(1+m2/m1)^(1/3) + a2*(1+m1/m2)^(1/3))
+
+                                    **XBB = 2.0**
+
+
+``XBS``                             Prefactor for the maximum pericenter of binary--single encounters: rperi = XBS * a * (1+m_sin/m_bin)^(1/3)
+
+                                    **XBS = 2.0**
+
+
 ``BH_CAPTURE``                      Turn on post-Newtonian corrections for black holes. NOTE: this activates GW captures for both single BHs and during fewbody encounters.  Note if SS_COLLISION=0 and BH_CAPTURE=1, GW captures will happen only in fewbody.
 
                                      ``0`` : Off

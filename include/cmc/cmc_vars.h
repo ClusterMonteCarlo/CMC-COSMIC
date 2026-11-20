@@ -74,6 +74,7 @@ _EXTERN_ int MASS_PC_BH_INCLUDE;
 */
 _EXTERN_ int SAMPLESIZE;
 _EXTERN_ int BINSINGLE, BINBIN;
+_EXTERN_ double XBS, XBB;
 /**
 * @brief Variable specified as command line argument or input parameter which indicates the number or streams (or number of processors to mimic) to be used in a serial run in order to mimic a parallel run.
 */

@@ -1251,6 +1251,7 @@ void central_calculate(void)
 	double m=0.0, *rhoj, mrho, Vrj, rhojsum, Msincentral, Mbincentral, Vcentral, rcentral;
 	long J=6, i, j, jmin, jmax, nave, Ncentral;
 	double rhoj2sum;
+	double temp_mass, hills_sin, hills_bin; // for tidal (Hills) factor averages
 
 	//MPI: The first part is done on all nodes, since they mostly need only the duplicated arrays. The second part is done on the root node, and broadcasted to all other nodes. Parallelization is mostly trivial and easily understandable from reading the code.
 	/* average over all stars out to half-mass radius */
@@ -1367,9 +1368,33 @@ void central_calculate(void)
 	central.w2_ave = 0.0;
 	central.R2_ave = 0.0;
 	central.mR_ave = 0.0;
-	central.a_ave = 0.0;
-	central.a2_ave = 0.0;
-	central.ma_ave = 0.0;
+	central.m_sin_max = 0.0;
+	central.m_bin_max = 0.0;
+	central.ahills_sin_ave = 0.0;
+	central.ahills2_sin_ave = 0.0;
+	central.ahills2_bin_ave = 0.0;
+	central.mahills_bin_ave = 0.0;
+
+	if(NUM_CENTRAL_STARS > End[0] - Start[0])
+	{
+		eprintf("Central stars dont fit in root node!\n");
+		MPI_Abort(MPI_COMM_WORLD, -1);
+	}
+
+	/* maximum single and binary masses among the central stars; used as the perturber mass
+	   in the tidal (Hills) factor of the bin-sin and bin-bin timestep estimates */
+	if(myid==0)
+	{
+		for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
+			j = get_global_idx(i);
+			temp_mass = star_m[j] / ((double) clus.N_STAR);
+			if (star[i].binind == 0) {
+				central.m_sin_max = MAX(central.m_sin_max, temp_mass);
+			} else {
+				central.m_bin_max = MAX(central.m_bin_max, temp_mass);
+			}
+		}
+	}
 
 		//MPI: In the case when the central stars dont all lie in the root node, this just cant be done only by the root node. But assuming that case will never happen, we'll just throw an error for such cases.
 	for (i=1; i<=MIN(NUM_CENTRAL_STARS, clus.N_STAR); i++) {
@@ -1399,39 +1424,49 @@ void central_calculate(void)
 
 				Mbincentral += star_m[j] / ((double) clus.N_STAR);
 				central.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
-				central.a_ave += binary[star[i].binind].a;
-				central.a2_ave += sqr(binary[star[i].binind].a);
-				central.ma_ave += star_m[j] / ((double) clus.N_STAR) * binary[star[i].binind].a;
+				temp_mass = star_m[j] / ((double) clus.N_STAR);
+				hills_sin = pow(1.0 + central.m_sin_max/temp_mass, 1.0/3.0);
+				hills_bin = pow(1.0 + central.m_bin_max/temp_mass, 1.0/3.0);
+				central.ahills_sin_ave += binary[star[i].binind].a * hills_sin;
+				central.ahills2_sin_ave += sqr(binary[star[i].binind].a * hills_sin);
+				central.ahills2_bin_ave += sqr(binary[star[i].binind].a * hills_bin);
+				central.mahills_bin_ave += temp_mass * binary[star[i].binind].a * hills_bin;
 			}
 		}
 	}
 
 	tmpTimeStart = timeStartSimple();
 	//MPI: Packing into array to optimize communication.
-	double *buf_bcast_dbl = (double*) malloc(10 * sizeof(double));
+	double *buf_bcast_dbl = (double*) malloc(13 * sizeof(double));
 	buf_bcast_dbl[0] = central.w2_ave;
 	buf_bcast_dbl[1] = Msincentral;
 	buf_bcast_dbl[2] = central.mR_ave;
 	buf_bcast_dbl[3] = Mbincentral;
-	buf_bcast_dbl[4] = central.ma_ave;
-	buf_bcast_dbl[5] = central.a2_ave;
-	buf_bcast_dbl[6] = central.a_ave;
-	buf_bcast_dbl[7] = central.v_sin_rms;
-	buf_bcast_dbl[8] = central.v_bin_rms;
-	buf_bcast_dbl[9] = central.R2_ave;
+	buf_bcast_dbl[4] = central.v_sin_rms;
+	buf_bcast_dbl[5] = central.v_bin_rms;
+	buf_bcast_dbl[6] = central.R2_ave;
+	buf_bcast_dbl[7] = central.m_sin_max;
+	buf_bcast_dbl[8] = central.m_bin_max;
+	buf_bcast_dbl[9] = central.ahills_sin_ave;
+	buf_bcast_dbl[10] = central.ahills2_sin_ave;
+	buf_bcast_dbl[11] = central.ahills2_bin_ave;
+	buf_bcast_dbl[12] = central.mahills_bin_ave;
 
-	MPI_Bcast( buf_bcast_dbl, 10, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+	MPI_Bcast( buf_bcast_dbl, 13, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
 	central.w2_ave = buf_bcast_dbl[0];
 	Msincentral = buf_bcast_dbl[1];
 	central.mR_ave = buf_bcast_dbl[2];
 	Mbincentral = buf_bcast_dbl[3];
-	central.ma_ave = buf_bcast_dbl[4];
-	central.a2_ave = buf_bcast_dbl[5];
-	central.a_ave = buf_bcast_dbl[6];
-	central.v_sin_rms = buf_bcast_dbl[7];
-	central.v_bin_rms = buf_bcast_dbl[8];
-	central.R2_ave = buf_bcast_dbl[9];
+	central.v_sin_rms = buf_bcast_dbl[4];
+	central.v_bin_rms = buf_bcast_dbl[5];
+	central.R2_ave = buf_bcast_dbl[6];
+	central.m_sin_max = buf_bcast_dbl[7];
+	central.m_bin_max = buf_bcast_dbl[8];
+	central.ahills_sin_ave = buf_bcast_dbl[9];
+	central.ahills2_sin_ave = buf_bcast_dbl[10];
+	central.ahills2_bin_ave = buf_bcast_dbl[11];
+	central.mahills_bin_ave = buf_bcast_dbl[12];
 	free(buf_bcast_dbl);
 	
 	long *buf_bcast_long = (long*) malloc(3 * sizeof(long));
@@ -1474,15 +1509,17 @@ void central_calculate(void)
 	if (central.N_bin != 0) {
 		central.m_bin_ave = Mbincentral / ((double) central.N_bin);
 		central.v_bin_rms = sqrt(central.v_bin_rms / ((double) central.N_bin));
-		central.a_ave /= ((double) central.N_bin);
-		central.a2_ave /= ((double) central.N_bin);
-		central.ma_ave /= ((double) central.N_bin);
+		central.ahills_sin_ave /= ((double) central.N_bin);
+		central.ahills2_sin_ave /= ((double) central.N_bin);
+		central.ahills2_bin_ave /= ((double) central.N_bin);
+		central.mahills_bin_ave /= ((double) central.N_bin);
 	} else {
 		central.m_bin_ave = 0.0;
 		central.v_bin_rms = 0.0;
-		central.a_ave = 0.0;
-		central.a2_ave = 0.0;
-		central.ma_ave = 0.0;
+		central.ahills_sin_ave = 0.0;
+		central.ahills2_sin_ave = 0.0;
+		central.ahills2_bin_ave = 0.0;
+		central.mahills_bin_ave = 0.0;
 	}
 
 
@@ -1557,18 +1594,22 @@ central_t
 central_hard_binary(double ktmin, central_t old_cent) {
   int i, Ncentral; 
   double Rcentral, Vcentral, kTcore, Mbincentral;
+  double temp_mass, hills_sin, hills_bin;
   central_t cent;
-  
+
   cent= old_cent;
 
-  cent.a_ave=0.;
-  cent.a2_ave=0.;
   cent.v_bin_rms=0.;
-  cent.ma_ave=0.;
   cent.m_bin_ave=0.;
   cent.n_bin=0.;
   cent.rho_bin=0.;
   cent.N_bin=0;
+  cent.m_sin_max=0.;
+  cent.m_bin_max=0.;
+  cent.ahills_sin_ave=0.;
+  cent.ahills2_sin_ave=0.;
+  cent.ahills2_bin_ave=0.;
+  cent.mahills_bin_ave=0.;
 
   if(NUM_CENTRAL_STARS > End[0] - Start[0])
   {
@@ -1582,6 +1623,16 @@ central_hard_binary(double ktmin, central_t old_cent) {
   Vcentral= 4./3.*PI*cub(Rcentral);
   kTcore= core_kT(Ncentral, AVEKERNEL);
   rootprintf("kTcore is %g\n", kTcore);
+
+  /* maximum single and binary masses among the central stars (perturber mass for Hills factor) */
+  for (i=1; i<Ncentral+1; i++) {
+    temp_mass= star_m[i] * madhoc;
+    if (star[i].binind == 0) {
+      cent.m_sin_max= MAX(cent.m_sin_max, temp_mass);
+    } else {
+      cent.m_bin_max= MAX(cent.m_bin_max, temp_mass);
+    }
+  }
 
   Mbincentral=0.;
   for (i=1; i<Ncentral+1; i++) {
@@ -1599,16 +1650,21 @@ central_hard_binary(double ktmin, central_t old_cent) {
 
     cent.N_bin++;
     cent.v_bin_rms += sqr(star[i].vr) + sqr(star[i].vt);
-    cent.a_ave += a;
-    cent.a2_ave += a*a;
-    Mbincentral += star_m[i] * madhoc;
-    cent.ma_ave += star_m[i] *madhoc * a;
+    temp_mass= star_m[i] * madhoc;
+    hills_sin= pow(1. + cent.m_sin_max/temp_mass, 1./3.);
+    hills_bin= pow(1. + cent.m_bin_max/temp_mass, 1./3.);
+    Mbincentral += temp_mass;
+    cent.ahills_sin_ave += a * hills_sin;
+    cent.ahills2_sin_ave += sqr(a * hills_sin);
+    cent.ahills2_bin_ave += sqr(a * hills_bin);
+    cent.mahills_bin_ave += temp_mass * a * hills_bin;
   }
   if (cent.N_bin>0) {
-    cent.a_ave/= cent.N_bin;
-    cent.a2_ave/= cent.N_bin;
     cent.v_bin_rms/= cent.N_bin;
-    cent.ma_ave/= cent.N_bin;
+    cent.ahills_sin_ave/= cent.N_bin;
+    cent.ahills2_sin_ave/= cent.N_bin;
+    cent.ahills2_bin_ave/= cent.N_bin;
+    cent.mahills_bin_ave/= cent.N_bin;
     cent.m_bin_ave= Mbincentral/cent.N_bin;
     cent.n_bin= cent.N_bin/Vcentral;
     cent.rho_bin= Mbincentral/Vcentral;

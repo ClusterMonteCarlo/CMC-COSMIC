@@ -974,6 +974,14 @@ if(myid==0) {
 				PRINT_PARSED(PARAMDOC_BINSINGLE);
 				sscanf(values, "%d", &BINSINGLE);
 				parsed.BINSINGLE = 1;
+			} else if (strcmp(parameter_name, "XBB") == 0) {
+				PRINT_PARSED(PARAMDOC_XBB);
+				sscanf(values, "%lf", &XBB);
+				parsed.XBB = 1;
+			} else if (strcmp(parameter_name, "XBS") == 0) {
+				PRINT_PARSED(PARAMDOC_XBS);
+				sscanf(values, "%lf", &XBS);
+				parsed.XBS = 1;
 			} else if (strcmp(parameter_name, "STREAMS") == 0) {
 				PRINT_PARSED(PARAMDOC_STREAMS);
 				sscanf(values, "%d", &procs);
@@ -1790,6 +1798,8 @@ if(myid==0) {
 	CHECK_PARSED(PREAGING, 0, PARAMDOC_PREAGING);
 	CHECK_PARSED(BINBIN, 1, PARAMDOC_BINBIN);
 	CHECK_PARSED(BINSINGLE, 1, PARAMDOC_BINSINGLE);
+	CHECK_PARSED(XBB, 2.0, PARAMDOC_XBB);
+	CHECK_PARSED(XBS, 2.0, PARAMDOC_XBS);
 	CHECK_PARSED(STREAMS, 1, PARAMDOC_STREAMS);
 	/*Meagan: new parameters for 3-body binary formation*/
 	CHECK_PARSED(THREEBODYBINARIES, 1, PARAMDOC_THREEBODYBINARIES);
