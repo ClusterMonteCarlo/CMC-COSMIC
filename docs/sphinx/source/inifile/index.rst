@@ -633,9 +633,12 @@ WIND FLAGS
 
                             ``1`` : `Hurley+2000 <https://ui.adsabs.harvard.edu/abs/2000MNRAS.315..543H/abstract>`_
 
-                            ``2`` : StarTrack (`Belczynski+2008 <https://ui.adsabs.harvard.edu/abs/2008ApJS..174..223B/abstract>`_)
+                            ``2`` : StarTrack (`Belczynski+2010 <https://ui.adsabs.harvard.edu/abs/2010ApJ...714.1217B/abstract>`_)
 
-                         **LBV_flag = 2**
+                            ``3`` : StarTrack, as for ``2``, but replacing the other
+                            winds instead of being added to them
+
+                         **LBV_flag = 3**
 
 ``eddlimflag``           Adjusts the dependence of mass loss on metallicity for stars near
                          the Eddington limit
@@ -1264,7 +1267,25 @@ MASS TRANSFER FLAGS
 
                             **smt_periastron_check = 0**
 
+``smt_q``                   Donor-to-accretor mass ratio (Mdon/Macc) at and above which
+                            Roche overflow is forced to be stable and fully
+                            non-conservative, with the lost mass carrying away the
+                            specific angular momentum of the donor, following
+                            `Olejak+2025 <https://scixplorer.org/abs/2025arXiv251110728O/abstract>`_
+
+                               ``>=0`` : systems with Mdon/Macc >= smt_q are forced
+                               to have stable mass transfer (``0`` makes all
+                               mass transfer stable)
+
+                               ``-1`` : off
+
+                            **smt_q = -1**
+
 ==========================  =====================================================
+
+.. warning::
+
+    ``smt_q`` is not yet supported in CMC; keep it at ``-1``. COSMIC's forced-stable mass-transfer state is reset at every CMC stellar-evolution step, so it does not persist through a mass-transfer episode as it does in standalone COSMIC.
 
 
 TIDES FLAGS

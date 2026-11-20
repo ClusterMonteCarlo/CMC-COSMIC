@@ -199,7 +199,7 @@ extern struct {
         htpmb, st_cr, st_tide, bdecayfac, grflag,
         bhms_coll_flag, wd_mass_lim, rtmsflag, maltsev_mode;
 } flags_;
-extern struct { double don_lim, acc_lim[2], Mbh_initial, smt_periastron_check; } mtvars_;
+extern struct { double don_lim, acc_lim[2], Mbh_initial, smt_periastron_check, smt_q; } mtvars_;
 extern struct { int ce2stageflag, ceflag, cekickflag, cemergeflag, cehestarflag, ussn; } ceflags_;
 extern struct { int pisn_track[2]; } trackers_;
 extern struct { double zsun; } metvars_;
@@ -255,7 +255,7 @@ void bse_set_metisse_inputs(char *path_to_tracks, char *path_to_he_tracks,
 void bse_set_neta(double neta); /* Reimers mass-loss coefficent (neta*4x10^-13; 0.5 normally) */
 void bse_set_bwind(double bwind); /* binary enhanced mass loss parameter (inactive for single) */
 void bse_set_hewind(double hewind); /* helium star mass loss factor (1.0 normally) */
-void bse_set_LBV_flag(int LBV_flag); /* LBV-like mass loss (0=none, 1=Hurley+2000, 2=StarTrack) */
+void bse_set_LBV_flag(int LBV_flag); /* LBV-like mass loss (0=none, 1=Hurley+2000, 2=StarTrack, 3=StarTrack replacing other winds) */
 void bse_set_maltsev_mode(int maltsev_mode); /* metallicity range of the Maltsev+2025 fits (0=all Z, 1=fits in [1/50,1] Zsun, 2=fits in [1/10,1] Zsun; remnantflag=6) */
 void bse_set_maltsev_fallback(double maltsev_fallback); /* fallback fraction for partial fallback in Maltsev+2025 ([0,1], -1=Ugolini+25; remnantflag=6) */
 void bse_set_maltsev_pf_prob(double maltsev_pf_prob); /* probability that partial fallback forms a BH in Maltsev+2025 (remnantflag=6) */
@@ -289,6 +289,7 @@ void bse_set_st_cr(int st_cr); /* Sets Pair-instability pulsations and supernoa 
 void bse_set_ussn(int ussn); /* Sets Pair-instability pulsations and supernoa */
 void bse_set_don_lim(double don_lim); /* Set donor limits for RLO mass loss */
 void bse_set_acc_lim(double acc_lim); /* Set accretor limits for RLO mass accretion */
+void bse_set_smt_q(double smt_q); /* Mdon/Macc above which RLO is forced stable and non-conservative (Olejak+25); -1 = off */
 
 void bse_set_zsun(double zsun);
 

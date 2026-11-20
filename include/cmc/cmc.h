@@ -1201,9 +1201,9 @@ typedef struct{
 * @brief windflag sets which wind prescription to use (0=BSE, 1=StarTrack, 2=Vink, 3=Vink+LBV for all stars; the LBV prescription is set by LBV_flag).
 */
 	int BSE_WINDFLAG;
-#define PARAMDOC_BSE_LBV_FLAG "LBV_flag sets the LBV-like mass loss for stars beyond the Humphreys-Davidson limit (0=none, 1=Hurley+2000, 2=StarTrack/Belczynski+08; 2 reproduces windflag=3 behavior of COSMIC < v3.7.2)."
+#define PARAMDOC_BSE_LBV_FLAG "LBV_flag sets the LBV-like mass loss for stars beyond the Humphreys-Davidson limit (0=none, 1=Hurley+2000, 2=StarTrack/Belczynski+10, 3=StarTrack/Belczynski+10 replacing the other winds instead of adding to them; 3 reproduces windflag=3 behavior of COSMIC < v3.7.2)."
 /**
-* @brief LBV_flag sets the LBV-like mass loss (0=none, 1=Hurley+2000, 2=StarTrack/Belczynski+08).
+* @brief LBV_flag sets the LBV-like mass loss (0=none, 1=Hurley+2000, 2=StarTrack/Belczynski+10, 3=StarTrack/Belczynski+10 replacing the other winds).
 */
 	int BSE_LBV_FLAG;
 #define PARAMDOC_BSE_MALTSEV_MODE "maltsev_mode sets how the Maltsev+2025 remnant fits are extrapolated in metallicity (0=full range, 1=boundary values outside Z/Zsun=[1/50,1], 2=boundary values outside [1/10,1]); only for remnantflag=6."
@@ -1336,6 +1336,11 @@ typedef struct{
 *   * * @brief acc_lim = 0 is standard BSE limits, acc_lim=-1 is same as 0 but 1*thermal instaead of 10, acc_lim=-2 assumes 10*tkh for all fusing stars, acc_lim=-3 assumes 1*tkh for all fusing stars, acc_lim > 0 applies an overall fraction of donor mass loss as the accretion limit. 
 *   * */
         int BSE_ACC_LIM;
+#define PARAMDOC_BSE_SMT_Q "smt_q is the donor-to-accretor mass ratio at and above which Roche-lobe overflow is forced to be stable and fully non-conservative, with the lost mass carrying the specific angular momentum of the donor (Olejak+25); -1 turns this off."
+/**
+*   * * @brief smt_q >= 0 forces stable, non-conservative mass transfer for Mdon/Macc >= smt_q (Olejak+25); smt_q = -1 turns this off. Not yet supported in CMC.
+*   * */
+        int BSE_SMT_Q;
 #define PARAMDOC_BSE_SIGMA "sigma is the Maxwellian dispersion for SN kick speeds (265 km/s)."
 /**
  * * @brief sigma is the Maxwellian dispersion for SN kick speeds (265 km/s).
