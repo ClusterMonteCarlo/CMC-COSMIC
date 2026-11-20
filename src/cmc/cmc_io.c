@@ -2048,8 +2048,10 @@ if(myid==0) {
         // smt_q is the donor-to-accretor mass ratio at and above which mass transfer is forced to be
         // stable, fully non-conservative, with the lost mass carrying the donor's specific angular momentum (Olejak+25)
         // (introduced in COSMIC v4.3.4)
-        // smt_q > 0: Mdon/Macc >= smt_q is forced stable
+        // smt_q >= 0: Mdon/Macc >= smt_q is forced stable (0: all mass transfer is stable)
         // smt_q = -1: off
+        // WARNING: not yet supported in CMC; COSMIC's continue_stable latch is local to evolv2
+        // and is reset at every CMC stellar-evolution step
         // default=-1
         CHECK_PARSED(BSE_SMT_Q, -1, PARAMDOC_BSE_SMT_Q);
 

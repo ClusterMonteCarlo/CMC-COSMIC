@@ -1273,14 +1273,19 @@ MASS TRANSFER FLAGS
                             specific angular momentum of the donor, following
                             `Olejak+2025 <https://scixplorer.org/abs/2025arXiv251110728O/abstract>`_
 
-                               ``>0`` : systems with Mdon/Macc >= smt_q are forced
-                               to have stable mass transfer
+                               ``>=0`` : systems with Mdon/Macc >= smt_q are forced
+                               to have stable mass transfer (``0`` makes all
+                               mass transfer stable)
 
                                ``-1`` : off
 
                             **smt_q = -1**
 
 ==========================  =====================================================
+
+.. warning::
+
+    ``smt_q`` is not yet supported in CMC; keep it at ``-1``. COSMIC's forced-stable mass-transfer state is reset at every CMC stellar-evolution step, so it does not persist through a mass-transfer episode as it does in standalone COSMIC.
 
 
 TIDES FLAGS

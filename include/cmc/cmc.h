@@ -1338,7 +1338,7 @@ typedef struct{
         int BSE_ACC_LIM;
 #define PARAMDOC_BSE_SMT_Q "smt_q is the donor-to-accretor mass ratio at and above which Roche-lobe overflow is forced to be stable and fully non-conservative, with the lost mass carrying the specific angular momentum of the donor (Olejak+25); -1 turns this off."
 /**
-*   * * @brief smt_q > 0 forces stable, non-conservative mass transfer for Mdon/Macc >= smt_q (Olejak+25); smt_q = -1 turns this off.
+*   * * @brief smt_q >= 0 forces stable, non-conservative mass transfer for Mdon/Macc >= smt_q (Olejak+25); smt_q = -1 turns this off. Not yet supported in CMC.
 *   * */
         int BSE_SMT_Q;
 #define PARAMDOC_BSE_SIGMA "sigma is the Maxwellian dispersion for SN kick speeds (265 km/s)."
