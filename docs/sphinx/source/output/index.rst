@@ -293,19 +293,27 @@ Similarly to the binint file, the collision file can be processed using the :ref
 initial.semergedisrupt.log
 --------------------------
 
-This file lists all stellar mergers that occur through binary evolution in each simulation. 
+This file lists all stellar mergers and disruptions that occur through binary evolution in each simulation. Each line is one event, with the fields given as ``name=value``.
+For ``disrupt1`` and ``disrupt2`` (one star is left), the line is
 
-======  ======================  =====================================================
-0       ``t``                   Time
-1       ``interaction type``    Interaction type e.g., disrupted1, disrupted2, disrupted both
-2       ``idr(mr)``             ID_remnant(mass of the remnant)
-3       ``id1(r1)``             ID_1 (mass of body_1)
-4       ``id2(m2)``             ID_2 (mass of body_2)
-5       ``r``                   Distance from the center of cluster
-6       ``typer``               Stellar type of merger
-7       ``type1``               Stellar type of body_1 
-8       ``type2``               Stellar type of body_2 
-======  ======================  =====================================================
+``tcount=.. TotalTime=.. disrupt1 idr=..(mr=..) id0=..(m0=..):id1=..(m1=..) (r=..) ktyper=.. ktype0=.. ktype1=.. radr[RSUN]=.. rad0[RSUN]=.. rad1[RSUN]=..``
+
+and for ``disruptboth`` (two single stars are left) it is
+
+``tcount=.. TotalTime=.. disruptboth idr0=..(mr0=..) idr1=..(mr1=..) id0=..(m0=..):id1=..(m1=..) (r=..) ktyper0=.. ktyper1=.. ktype0=.. ktype1=.. radr0[RSUN]=.. radr1[RSUN]=.. rad0[RSUN]=.. rad1[RSUN]=..``
+
+==========================  =====================================================
+``tcount``                  Time step number
+``TotalTime``               Time
+``interaction type``        ``disrupt1``, ``disrupt2`` or ``disruptboth``
+``idr(mr)``                 ID (mass) of the remaining star (``idr0(mr0)``, ``idr1(mr1)`` for ``disruptboth``)
+``id0(m0):id1(m1)``         IDs (masses) of the two stars of the binary before the event
+``r``                       Distance from the center of cluster
+``ktyper``                  Stellar type of the remaining star (``ktyper0``, ``ktyper1`` for ``disruptboth``)
+``ktype0``, ``ktype1``      Stellar types of the two stars before the event
+``radr``                    Radius of the remaining star(s) [RSUN]
+``rad0``, ``rad1``          Radii of the two stars before the event [RSUN]
+==========================  =====================================================
 
 
 The semergedisrupt file can also be processed using the :ref:`load_interaction_file <cmcparser>` command

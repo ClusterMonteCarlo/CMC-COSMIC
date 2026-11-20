@@ -597,7 +597,7 @@ void remove_star(long j, double phi_rtidal, double phi_zero) {
 	// Etidal += star[j].E * m / clus.N_STAR;
 
 	/* logging */
-	parafprintf(escfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g",
+	parafprintf(escfile, "%ld %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g %.8g ",
 	        /* 0*/  tcount,
 	        /* 1*/  TotalTime,
 	        /* 2*/  r,

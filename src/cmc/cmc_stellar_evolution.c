@@ -747,18 +747,24 @@ void do_stellar_evolution(gsl_rng *rng)
   long prev_id1 = binary[kb].id1;
   long prev_id2 = binary[kb].id2;
        
-	handle_bse_outcome(k, kb, kick_info, tphysf, kprev0, kprev1, VKO);
+	long single_id = handle_bse_outcome(k, kb, kick_info, tphysf, kprev0, kprev1, VKO);
+  /* ids written to the BH/NS formation files. If only one member is left (single_id != 0), it is now a
+     single star with a new id: write that id (prev_id1/prev_id2 keep the old ids).
+     If a member was already a BH (NS) in that case, the product is that BH (NS) having merged with its
+     companion, not a newly formed one, even if BSE put it in the other member's slot: write no row. */
+  long out_id1 = single_id ? single_id : prev_id1;
+  long out_id2 = single_id ? single_id : prev_id2;
 
-	if (WRITE_BH_INFO) {
+	if (WRITE_BH_INFO && (!single_id || (kprev0!=14 && kprev1!=14))) {
 		if (kprev0!=14 && binary[kb].bse_kw[0]==14) { // newly formed BH
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], prev_id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bhspin[0], VKO[0]);
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], out_id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bhspin[0], VKO[0]);
 			for (ii=0; ii<19; ii++){
 			    parafprintf (newbhfile, " %g", kick_info[ii][0]);
 			}
 			parafprintf (newbhfile, "\n");
 		}
 		if (kprev1!=14 && binary[kb].bse_kw[1]==14) { // newly formed BH
-			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], prev_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bhspin[1],VKO[1]);
+			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], out_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bhspin[1],VKO[1]);
 			for (ii=0; ii<19; ii++){
 			    parafprintf (newbhfile, " %g", kick_info[ii][1]);
 			}
@@ -766,16 +772,16 @@ void do_stellar_evolution(gsl_rng *rng)
 		}
 	}
 
-        if (WRITE_MOREPULSAR_INFO) {
+        if (WRITE_MOREPULSAR_INFO && (!single_id || (kprev0!=13 && kprev1!=13))) {
                 if (kprev0!=13 && binary[kb].bse_kw[0]==13) { // newly formed NS
-                        parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], prev_id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bcm_formation[0], VKO[0], kprev0);
+                        parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], out_id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bcm_formation[0], VKO[0], kprev0);
                         for (ii=0; ii<19; ii++){
                             parafprintf (newnsfile, " %g", kick_info[ii][0]);
                         }
                         parafprintf(newnsfile, "\n");
                 }
                 if (kprev1!=13 && binary[kb].bse_kw[1]==13) { // newly formed NS
-                        parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], prev_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bcm_formation[1],VKO[1],kprev1);
+                        parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], out_id2, binary[kb].bse_zams_mass[1],binary[kb].bse_mass0[1], binary[kb].bse_mass[1], binary[kb].bse_bcm_formation[1],VKO[1],kprev1);
                         for (ii=0; ii<19; ii++){
                             parafprintf (newnsfile, " %g", kick_info[ii][1]);
                         }
@@ -896,14 +902,20 @@ void write_stellar_data(void){
 }
 
 /**
-* @brief ?
+* @brief Applies the result of one BSE step of binary kb to the cluster: updates the binary's masses,
+* radii and orbit, applies supernova kicks, and replaces the binary by one or two single stars if BSE
+* merged or disrupted it (disrupt1, disrupt2, disruptboth).
 *
-* @param k index of star 1
-* @param kb index of star 2
-* @param kick_info ?
-* @param tphysf ?
+* @param k index of the star that holds the binary
+* @param kb index of the binary in the binary array
+* @param kick_info kick information returned by BSE for this step, one column per binary member
+* @param tphysf physical time [Myr] the binary was evolved to; single stars left over are evolved to this time
+* @param kprev0 stellar type of binary member 0 before this BSE step
+* @param kprev1 stellar type of binary member 1 before this BSE step
+* @param VKO output: kick speed given to the object(s) in this step (set to 0 if there is no kick)
+* @return id of the single star left when only one member remains after this step (disrupt1, disrupt2); 0 otherwise
 */
-void handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf, int kprev0, int kprev1, double VKO[2])
+long handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf, int kprev0, int kprev1, double VKO[2])
 {
   int j, jj;
   long knew=0, knewp=0, convert;
@@ -1073,13 +1085,22 @@ void handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf,
     knewp = create_star(k, 1);
     cp_binmemb_to_star(k, 0, knew);
     cp_binmemb_to_star(k, 1, knewp);
+    /* cp_binmemb_to_star sets star_m from binary[kb].m1/m2, which are the masses from before this
+       BSE step; use the masses after it, as in the disrupt1/disrupt2 branches */
+    star_m[get_global_idx(knew)] = star[knew].se_mt * MSUN / units.mstar;
+    star_m[get_global_idx(knewp)] = star[knewp].se_mt * MSUN / units.mstar;
     DMse -= (star_m[get_global_idx(knew)] + star_m[get_global_idx(knewp)]) * madhoc;
     /*Elena: Modifying output */
-    parafprintf(semergedisruptfile, "t=%g disruptboth id1=%ld(m1=%g) id2=%ld(m2=%g) (r=%g) type1=%d type2=%d rad1[RSUN]=%g rad2[RSUN]=%g\n",
-      TotalTime,
-      star[knew].id, star[knew].se_mt, 
-      star[knewp].id, star_m[get_global_idx(knewp)] * units.mstar / FB_CONST_MSUN,
-		star_r[get_global_idx(k)], kprev0, kprev1, binary[kb].rad1 * units.l / RSUN, binary[kb].rad2 * units.l / RSUN);
+    /* the products (r0, r1) are the two single stars after this step; star0/star1 are the binary before it */
+    parafprintf(semergedisruptfile, "tcount=%ld TotalTime=%g disruptboth idr0=%ld(mr0=%g) idr1=%ld(mr1=%g) id0=%ld(m0=%g):id1=%ld(m1=%g) (r=%g) ktyper0=%d ktyper1=%d ktype0=%d ktype1=%d radr0[RSUN]=%g radr1[RSUN]=%g rad0[RSUN]=%g rad1[RSUN]=%g\n",
+      tcount, TotalTime,
+      star[knew].id, star[knew].se_mt,
+      star[knewp].id, star[knewp].se_mt,
+      binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
+      binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
+		star_r[get_global_idx(k)], star[knew].se_k, star[knewp].se_k, kprev0, kprev1,
+		star[knew].rad * units.l / RSUN, star[knewp].rad * units.l / RSUN,
+		binary[kb].rad1 * units.l / RSUN, binary[kb].rad2 * units.l / RSUN);
 
     destroy_obj(k);
 
@@ -1158,8 +1179,8 @@ void handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf,
 		binary_bh_merger(k, kb, knew, kprev0, kprev1, curr_st);
 
     /*Elena: Modifying output */
-    parafprintf(semergedisruptfile, "t=%g disrupt1 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d radr[RSUN]=%g rad1[RSUN]=%g rad2[RSUN]=%g\n",
-      TotalTime,
+    parafprintf(semergedisruptfile, "tcount=%ld TotalTime=%g disrupt1 idr=%ld(mr=%g) id0=%ld(m0=%g):id1=%ld(m1=%g) (r=%g) ktyper=%d ktype0=%d ktype1=%d radr[RSUN]=%g rad0[RSUN]=%g rad1[RSUN]=%g\n",
+      tcount, TotalTime,
       star[knew].id, star[knew].se_mt,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
@@ -1224,8 +1245,8 @@ void handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf,
 	if(kprev0 == 14 && kprev1 == 14)
 		binary_bh_merger(k, kb, knew, kprev0, kprev1, curr_st);
 
-    parafprintf(semergedisruptfile, "t=%g disrupt2 idr=%ld(mr=%g) id1=%ld(m1=%g):id2=%ld(m2=%g) (r=%g) typer=%d type1=%d type2=%d radr[RSUN]=%g rad1[RSUN]=%g rad2[RSUN]=%g\n",
-      TotalTime,
+    parafprintf(semergedisruptfile, "tcount=%ld TotalTime=%g disrupt2 idr=%ld(mr=%g) id0=%ld(m0=%g):id1=%ld(m1=%g) (r=%g) ktyper=%d ktype0=%d ktype1=%d radr[RSUN]=%g rad0[RSUN]=%g rad1[RSUN]=%g\n",
+      tcount, TotalTime,
       star[knew].id, star[knew].se_mt,
       binary[kb].id1, binary[kb].m1 * units.mstar / FB_CONST_MSUN,
       binary[kb].id2, binary[kb].m2 * units.mstar / FB_CONST_MSUN,
@@ -1354,6 +1375,8 @@ void handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf,
         	}
 	}
 
+	/* id of the single star left when one member is gone (new id), 0 otherwise */
+	return (knew && !knewp) ? star[knew].id : 0;
 }
 
 /**

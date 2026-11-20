@@ -2699,7 +2699,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 		                        "#21:e #22:eta #23:rad0 #24:rad1 #25:lum0 #26:lum1 #27:massc0 #28:massc1 #29:menv0 #30:menv1 "
 		                        "#31:radc0 #32:radc1 #33:renv0 #34:renv1 #35:radrol0 #36:radrol1 #37:tms0 #38:tms1 #39:dmdt0 #40:dmdt1 "
 		                        "#41:bacc0 #42:bacc1 #43:tacc0 #44:tacc1 #45:mass0_0 #46:mass0_1 #47:ospin0 #48:ospin1 #49:B0 #50:B1 "
-		                        "#51:epoch0 #52:epoch1 $53:formation0 #54:formation1 #55:bhspin0 #56:bhspin1\n");
+		                        "#51:epoch0 #52:epoch1 #53:formation0 #54:formation1 #55:bhspin0 #56:bhspin1\n");
 	   // print header
 		pararootfprintf(triplefile, "#1:time #2:min0 #3:min1 #4:mout #5:Rin0 #6:Rin1 #7:Rout #8:ain #9:aout #10:ein #11:eout #12:ktypein0 #13:ktypein1 #14:ktypeout #15:Tlk_quad #16:Tlk_oct#17:eps_oct #18:T_GR #19:eps_GR\n");
 	   // print header
@@ -2707,7 +2707,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 	   // print header
 		pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)+(r1,r2,r_peri)+vinf[km/s]+rcm[pc]+(mc0,mc1,rc0,rc1)->[(id1,m1,k1)-a[AU],e-(id2,m2,k2)]+(r1,r2)\n");
 	   // print header
-		pararootfprintf(semergedisruptfile, "# time interaction_type id_rem(mass_rem) id1(m1):id2(m2) (r)\n");
+		pararootfprintf(semergedisruptfile, "# tcount TotalTime interaction_type idr(mr) ... id0(m0):id1(m1) (r) ktyper ... ktype0 ktype1 radr[RSUN] ... rad0[RSUN] rad1[RSUN]\n");
 	   //Sourav:  print header
 		pararootfprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 		pararootfprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");

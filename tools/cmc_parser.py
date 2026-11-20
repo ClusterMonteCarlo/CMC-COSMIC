@@ -67,45 +67,39 @@ class se_merger:
 	Note that the instances can also be accessed as a dictionary by using
 	collision_intance.__dict__
 	
+	Lines look like (one line each):
+	tcount=.. TotalTime=.. disrupt1 idr=..(mr=..) id0=..(m0=..):id1=..(m1=..) (r=..) ktyper=.. ktype0=.. ktype1=.. radr[RSUN]=.. rad0[RSUN]=.. rad1[RSUN]=..
+	tcount=.. TotalTime=.. disruptboth idr0=..(mr0=..) idr1=..(mr1=..) id0=..(m0=..):id1=..(m1=..) (r=..) ktyper0=.. ktyper1=.. ktype0=.. ktype1=.. radr0[RSUN]=.. radr1[RSUN]=.. rad0[RSUN]=.. rad1[RSUN]=..
+	(disrupt2 as disrupt1). The fields are looked up by name.
 	"""
-		
-	def parse_disrupt_1(self,args): #same as the collision file
-		_,out_id,_,out_m,_ = re.split(r'=|\(|\)',args[2])
-		_,id1,_,m1,_,_,id2,_,m2,_ = re.split(r'=|\(|\)|:',args[3])
-		self.out_id = int(out_id)
-		self.out_mass = float(out_m)
-		self.in_ids = (int(id1),int(id2))
-		self.in_masses =(float(m1),float(m2))
-		km = args[5].split('=')[1]
-		k1 = args[6].split('=')[1]
-		k2 = args[7].split('=')[1].rstrip()
-		self.out_type = int(km)
-		self.in_types = (int(k1),int(k2))
-				
-	def parse_disrupt_both(self,args):
-		_,id1,_,m1,_ = re.split(r'=|\(|\)',args[2])
-		_,id2,_,m2,_ = re.split(r'=|\(|\)',args[3])
 
-		self.out_id = -1
-		self.out_mass = -1
-		self.in_ids = (int(id1),int(id2))
-		self.in_masses = (float(m1),float(m2))
-		k1 = args[5].split('=')[1]
-		k2 = args[6].split('=')[1].rstrip()
-		self.out_type = -1
-		self.in_types = (int(k1),int(k2))
-
-	def __init__(self, string):		
+	def __init__(self, string):
 		args = string.split()
-		
-		self.time = float(args[0].split('=')[1])
-		self.radius = float(args[4].split('=')[1].rstrip(')'))
-		self.type = args[1]
-		
-		if self.type == 'disrupt1' or self.type == 'disrupt2':
-			self.parse_disrupt_1(args)
+		self.type = args[2]
+
+		fields = {}
+		for arg in args:
+			for key,val in re.findall(r'([A-Za-z_0-9]+(?:\[RSUN\])?)=([^()\s:=]+)',arg):
+				fields[key] = val
+
+		self.tcount = int(fields['tcount'])
+		self.time = float(fields['TotalTime'])
+		self.radius = float(fields['r'])
+		self.in_ids = (int(fields['id0']),int(fields['id1']))
+		self.in_masses = (float(fields['m0']),float(fields['m1']))
+		self.in_types = (int(fields['ktype0']),int(fields['ktype1']))
+		self.in_radii = (float(fields['rad0[RSUN]']),float(fields['rad1[RSUN]']))
+
+		if self.type == 'disruptboth':
+			self.out_ids = (int(fields['idr0']),int(fields['idr1']))
+			self.out_masses = (float(fields['mr0']),float(fields['mr1']))
+			self.out_types = (int(fields['ktyper0']),int(fields['ktyper1']))
+			self.out_radii = (float(fields['radr0[RSUN]']),float(fields['radr1[RSUN]']))
 		else:
-			self.parse_disrupt_both(args)
+			self.out_id = int(fields['idr'])
+			self.out_mass = float(fields['mr'])
+			self.out_type = int(fields['ktyper'])
+			self.out_radius = float(fields['radr[RSUN]'])
 
 class star:
 	"""
