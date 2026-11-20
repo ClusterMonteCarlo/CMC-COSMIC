@@ -1471,7 +1471,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 	int bid, sid, i;
 	char dumstring[FB_MAX_STRING_LENGTH], idstring1[FB_MAX_STRING_LENGTH], idstring2[FB_MAX_STRING_LENGTH], idstring3[FB_MAX_STRING_LENGTH];
 	double mtriplein, mtriple, pouttriple2, pintriple, tlkquad, epsoct, tlkoct, tgr, epsgr;
-	double l0[3], l1[3], LL1[3], LL2[3], i12;
+	double cosi12, i12;
 	
 	if (fb_n_hier(obj) == 1) {
 		/* first write id string */
@@ -1542,18 +1542,14 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 
 		/* In addition, for triples we may want the full configuration of the system*/
 
-		/* Fist compute the inclincation of the two binaries*/
-		fb_cross(obj->obj[bid]->obj[0]->x, obj->obj[bid]->obj[0]->v, l0);
-                fb_cross(obj->obj[bid]->obj[1]->x, obj->obj[bid]->obj[1]->v, l1);
-                for (i=0; i<3; i++) {
-                	LL1[i] = obj->obj[bid]->obj[0]->m * l0[i] + obj->obj[bid]->obj[1]->m * l1[i];
-                }
-                fb_cross(obj->obj[0]->x, obj->obj[0]->v, l0);
-                fb_cross(obj->obj[1]->x, obj->obj[1]->v, l1);
-                for (i=0; i<3; i++) {
-                	LL2[i] = obj->obj[0]->m * l0[i] + obj->obj[1]->m * l1[i];
-                }
-                i12 = 180.0/3.14159*acos(fb_dot(LL1, LL2)/(fb_mod(LL1)*fb_mod(LL2)));
+		/* First compute the mutual inclination of the inner and outer orbits.
+		   Use the orbital angular momentum unit vectors set by fb_upsync, which are computed
+		   relative to each orbit's own center of mass. (The star x's and v's are relative to the
+		   center of mass of the whole encounter, so building L directly from them would mix in
+		   the motion of the inner binary's and the triple's centers of mass.) */
+		cosi12 = fb_dot(obj->obj[bid]->Lhat, obj->Lhat);
+		cosi12 = FB_MAX(-1.0, FB_MIN(1.0, cosi12)); /* guard acos against round-off */
+		i12 = 180.0/FB_CONST_PI*acos(cosi12);
 
 		/* And some of the relevant timescales */
 		mtriplein=obj->obj[bid]->obj[0]->m*units.m/MSUN+obj->obj[bid]->obj[1]->m*units.m/MSUN;
