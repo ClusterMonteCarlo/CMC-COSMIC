@@ -2573,7 +2573,7 @@ MPI: In the parallel version, IO is done in the following way. Some files requir
 	   // print header
 		pararootfprintf(tidalcapturefile, "# time interaction_type (id1,m1,k1)+(id2,m2,k2)+(r1,r2,r_peri)+vinf[km/s]+rcm[pc]+(mc0,mc1,rc0,rc1)->[(id1,m1,k1)-a[AU],e-(id2,m2,k2)]+(r1,r2)\n");
 	   // print header
-		pararootfprintf(semergedisruptfile, "# tcount TotalTime interaction_type id_rem(mass_rem) id0(m0):id1(m1) (r)\n");
+		pararootfprintf(semergedisruptfile, "# tcount TotalTime interaction_type idr(mr) ... id0(m0):id1(m1) (r) ktyper ... ktype0 ktype1 radr[RSUN] ... rad0[RSUN] rad1[RSUN]\n");
 	   //Sourav:  print header
 		pararootfprintf(removestarfile, "#single destroyed: time star_id star_mass(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");
 		pararootfprintf(removestarfile, "#binary destroyed: time obj_id bin_id removed_comp_id left_comp_id m1(MSun) m2(MSun) removed_m(MSun) left_m(MSun) left_m_sing(MSun) star_age(Gyr) star_birth(Gyr) star_lifetime(Gyr)\n");

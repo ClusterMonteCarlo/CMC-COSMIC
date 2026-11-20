@@ -731,7 +731,7 @@ void do_stellar_evolution(gsl_rng *rng)
   long out_id1 = single_id ? single_id : prev_id1;
   long out_id2 = single_id ? single_id : prev_id2;
 
-	if (WRITE_BH_INFO && !(single_id && (kprev0==14 || kprev1==14))) {
+	if (WRITE_BH_INFO && (!single_id || (kprev0!=14 && kprev1!=14))) {
 		if (kprev0!=14 && binary[kb].bse_kw[0]==14) { // newly formed BH
 			parafprintf(newbhfile, "%.18g %g 1 %ld %g %g %g %g %g", TotalTime, star_r[g_k], out_id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bhspin[0], VKO[0]);
 			for (ii=0; ii<19; ii++){
@@ -748,7 +748,7 @@ void do_stellar_evolution(gsl_rng *rng)
 		}
 	}
 
-        if (WRITE_MOREPULSAR_INFO && !(single_id && (kprev0==13 || kprev1==13))) {
+        if (WRITE_MOREPULSAR_INFO && (!single_id || (kprev0!=13 && kprev1!=13))) {
                 if (kprev0!=13 && binary[kb].bse_kw[0]==13) { // newly formed NS
                         parafprintf(newnsfile, "%.18g %g 1 %ld %g %g %g %g %g %d", TotalTime, star_r[g_k], out_id1, binary[kb].bse_zams_mass[0], binary[kb].bse_mass0[0], binary[kb].bse_mass[0], binary[kb].bse_bcm_formation[0], VKO[0], kprev0);
                         for (ii=0; ii<19; ii++){
@@ -879,12 +879,18 @@ void write_stellar_data(void){
 }
 
 /**
-* @brief ?
+* @brief Applies the result of one BSE step of binary kb to the cluster: updates the binary's masses,
+* radii and orbit, applies supernova kicks, and replaces the binary by one or two single stars if BSE
+* merged or disrupted it (disrupt1, disrupt2, disruptboth).
 *
-* @param k index of star 1
-* @param kb index of star 2
-* @param kick_info ?
-* @param tphysf ?
+* @param k index of the star that holds the binary
+* @param kb index of the binary in the binary array
+* @param kick_info kick information returned by BSE for this step, one column per binary member
+* @param tphysf physical time [Myr] the binary was evolved to; single stars left over are evolved to this time
+* @param kprev0 stellar type of binary member 0 before this BSE step
+* @param kprev1 stellar type of binary member 1 before this BSE step
+* @param VKO output: kick speed given to the object(s) in this step (set to 0 if there is no kick)
+* @return id of the single star left when only one member remains after this step (disrupt1, disrupt2); 0 otherwise
 */
 long handle_bse_outcome(long k, long kb, double kick_info[19][2], double tphysf, int kprev0, int kprev1, double VKO[2])
 {
