@@ -1542,11 +1542,7 @@ void binint_log_obj(fb_obj_t *obj, fb_units_t units)
 
 		/* In addition, for triples we may want the full configuration of the system*/
 
-		/* First compute the mutual inclination of the inner and outer orbits.
-		   Use the orbital angular momentum unit vectors set by fb_upsync, which are computed
-		   relative to each orbit's own center of mass. (The star x's and v's are relative to the
-		   center of mass of the whole encounter, so building L directly from them would mix in
-		   the motion of the inner binary's and the triple's centers of mass.) */
+		/* First compute the mutual inclination of the inner and outer orbits. */
 		cosi12 = fb_dot(obj->obj[bid]->Lhat, obj->Lhat);
 		cosi12 = FB_MAX(-1.0, FB_MIN(1.0, cosi12)); /* guard acos against round-off */
 		i12 = 180.0/FB_CONST_PI*acos(cosi12);
