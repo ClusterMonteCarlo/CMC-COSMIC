@@ -120,6 +120,12 @@ int main(int argc, char *argv[])
 		/* copy the input data which has been read from the input file into the cfd struct in parser() into the star and binary data structures */
 		get_star_data(argc, argv, rng);
 
+		/* MPI: free the full-N cfd initial-conditions arrays now that they've been copied
+		 * into the per-rank star[]/binary[] arrays and the global star_m/star_r.  Only the
+		 * scalar header fields are used afterward.  Previously never freed → ~3 GB/rank was
+		 * held for the entire run on every rank. */
+		cmc_free_fits_data_t(&cfd);
+
 		/* Initializes rng states for parallel version and serial mimic */
 		set_rng_states();
 	} else {
